@@ -11,7 +11,7 @@ namespace Barotrauma
     {
         private Texture2D backgroundTexture,monsterTexture,titleTexture;
 
-        readonly RenderTarget2D renderTarget;
+        private RenderTarget2D renderTarget;
 
         float state;
 
@@ -80,6 +80,11 @@ namespace Barotrauma
             titleTexture = TextureLoader.FromFile("Content/UI/titleText.png");
 
             renderTarget = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            GameMain.Instance.OnResolutionChanged += () => 
+            {
+                renderTarget?.Dispose();
+                renderTarget = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            };
 
             DrawLoadingText = true;
         }
@@ -140,7 +145,7 @@ namespace Barotrauma
 
             if (WaterRenderer.Instance != null)
             {
-                WaterRenderer.Instance.ScrollWater(deltaTime);
+                WaterRenderer.Instance.ScrollWater(Vector2.One * 10.0f, deltaTime);
                 WaterRenderer.Instance.RenderWater(spriteBatch, renderTarget, null, 0.0f);
             }
             

@@ -27,10 +27,14 @@ namespace Barotrauma
 
         public SinglePlayerCampaign(GameModePreset preset, object param)
             : base(preset, param)
-        {            
-            endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 220, 20, 200, 25), TextManager.Get("EndRound"), null, Alignment.TopLeft, Alignment.Center, "");
-            endRoundButton.Font = GUI.SmallFont;
-            endRoundButton.OnClicked = TryEndRound;
+        {
+            int buttonHeight = (int)(HUDLayoutSettings.ButtonAreaTop.Height * 0.7f);
+            endRoundButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle(HUDLayoutSettings.ButtonAreaTop.Right - 200, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 200, buttonHeight), GUICanvas.Instance),
+                TextManager.Get("EndRound"), textAlignment: Alignment.Center)
+            {
+                Font = GUI.SmallFont,
+                OnClicked = TryEndRound
+            };
 
             foreach (JobPrefab jobPrefab in JobPrefab.List)
             {
@@ -55,7 +59,7 @@ namespace Barotrauma
 
             isRunning = true;
 
-            CrewManager.StartRound();
+            CrewManager.InitSinglePlayerRound();
         }
 
         public bool TryHireCharacter(HireManager hireManager, CharacterInfo characterInfo)
@@ -92,9 +96,7 @@ namespace Barotrauma
         public override void Draw(SpriteBatch spriteBatch)
         {
             if (!isRunning|| GUI.DisableHUD) return;
-
-            CrewManager.Draw(spriteBatch);
-
+            
             if (Submarine.MainSub == null) return;
 
             Submarine leavingSub = GetLeavingSub();
@@ -120,7 +122,7 @@ namespace Barotrauma
                 endRoundButton.Visible = false;
             }
 
-            endRoundButton.Draw(spriteBatch);
+            endRoundButton.DrawManually(spriteBatch);
         }
 
         public override void AddToGUIUpdateList()
@@ -140,7 +142,7 @@ namespace Barotrauma
 
             CrewManager.Update(deltaTime);
 
-            endRoundButton.Update(deltaTime);
+            endRoundButton.UpdateManually(deltaTime);
 
             if (!crewDead)
             {
@@ -193,11 +195,14 @@ namespace Barotrauma
                 {
                     Map.MoveToNextLocation();
                 }
+                else
+                {
+                    Map.SelectLocation(-1);
+                }
                 Map.ProgressWorld();
 
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
-
 
             if (!success)
             {
@@ -205,19 +210,27 @@ namespace Barotrauma
 
                 if (summaryScreen != null)
                 {
-                    summaryScreen = summaryScreen.children[0];
-                    summaryScreen.RemoveChild(summaryScreen.children.Find(c => c is GUIButton));
+                    summaryScreen = summaryScreen.Children.First();
+                    var buttonArea = summaryScreen.Children.First().FindChild("buttonarea");
+                    buttonArea.ClearChildren();
 
-                    var okButton = new GUIButton(new Rectangle(-120, 0, 100, 30), TextManager.Get("LoadGameButton"), Alignment.BottomRight, "", summaryScreen);
-                    okButton.OnClicked += (GUIButton button, object obj) => 
+
+                    summaryScreen.RemoveChild(summaryScreen.Children.FirstOrDefault(c => c is GUIButton));
+
+                    var okButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform),
+                        TextManager.Get("LoadGameButton"))
                     {
-                        GameMain.GameSession.LoadPrevious();
-                        GameMain.LobbyScreen.Select();
-                        GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox);
-                        return true;
+                        OnClicked = (GUIButton button, object obj) =>
+                        {
+                            GameMain.GameSession.LoadPrevious();
+                            GameMain.LobbyScreen.Select();
+                            GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox);
+                            return true;
+                        }
                     };
 
-                    var quitButton = new GUIButton(new Rectangle(0, 0, 100, 30), TextManager.Get("QuitButton"), Alignment.BottomRight, "", summaryScreen);
+                    var quitButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform),
+                        TextManager.Get("QuitButton"));
                     quitButton.OnClicked += GameMain.LobbyScreen.QuitToMainMenu;
                     quitButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox); return true; };
                 }
@@ -273,6 +286,7 @@ namespace Barotrauma
             var cinematic = new TransitionCinematic(leavingSubs, GameMain.GameScreen.Cam, 5.0f);
 
             SoundPlayer.OverrideMusicType = CrewManager.GetCharacters().Any(c => !c.IsDead) ? "endround" : "crewdead";
+            SoundPlayer.OverrideMusicDuration = 18.0f;
 
             CoroutineManager.StartCoroutine(EndCinematic(cinematic), "EndCinematic");
 
@@ -283,18 +297,12 @@ namespace Barotrauma
         {
             while (cinematic.Running)
             {
-                if (Submarine.MainSub == null) yield return CoroutineStatus.Success;
+                if (Submarine.MainSub == null) yield return CoroutineStatus.Success;                
 
                 yield return CoroutineStatus.Running;
             }
 
-            if (Submarine.MainSub == null) yield return CoroutineStatus.Success;
-
-            End("");
-
-            yield return new WaitForSeconds(18.0f);
-            
-            SoundPlayer.OverrideMusicType = null;
+            if (Submarine.MainSub != null) End("");
 
             yield return CoroutineStatus.Success;
         }
@@ -317,6 +325,16 @@ namespace Barotrauma
             }
 
             campaign.Money = element.GetAttributeInt("money", 0);
+            campaign.CheatsEnabled = element.GetAttributeBool("cheatsenabled", false);
+            if (campaign.CheatsEnabled)
+            {
+                DebugConsole.CheatsEnabled = true;
+                if (GameMain.Config.UseSteam && !SteamAchievementManager.CheatsEnabled)
+                {
+                    SteamAchievementManager.CheatsEnabled = true;
+                    new GUIMessageBox("Cheats enabled", "Cheat commands have been enabled on the campaign. You will not receive Steam Achievements until you restart the game.");
+                }
+            }
 
             //backwards compatibility with older save files
             if (campaign.map == null)
@@ -333,10 +351,9 @@ namespace Barotrauma
 
         public override void Save(XElement element)
         {
-            XElement modeElement = new XElement("SinglePlayerCampaign");
-            
-            modeElement.Add(new XAttribute("money", Money));
-            
+            XElement modeElement = new XElement("SinglePlayerCampaign",
+                new XAttribute("money", Money),
+                new XAttribute("cheatsenabled", CheatsEnabled));
             CrewManager.Save(modeElement);
             Map.Save(modeElement);
 

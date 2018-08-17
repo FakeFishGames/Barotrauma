@@ -337,14 +337,6 @@ namespace Barotrauma
                 fireSource.Remove();
             }
             fireSources.Clear();
-
-#if CLIENT
-            if (soundChannel != null)
-            {
-                soundChannel.Dispose();
-                soundChannel = null;
-            }
-#endif
             
             if (entityGrids != null)
             {
@@ -372,15 +364,7 @@ namespace Barotrauma
                 fireSource.Remove();
             }
             fireSources.Clear();
-
-#if CLIENT
-            if (soundChannel != null)
-            {
-                soundChannel.Dispose();
-                soundChannel = null;
-            }
-#endif
-
+            
             if (entityGrids != null)
             {
                 foreach (EntityGrid entityGrid in entityGrids)
@@ -413,7 +397,7 @@ namespace Barotrauma
             if (Math.Abs(lastSentVolume - waterVolume) > Volume * 0.1f ||
                 Math.Abs(lastSentOxygen - OxygenPercentage) > 5f)
             {
-                if (GameMain.Server != null)
+                if (GameMain.Server != null && !IdFreed)
                 {
                     sendUpdateTimer -= deltaTime;
                     if (sendUpdateTimer < 0.0f)
@@ -557,13 +541,12 @@ namespace Barotrauma
             if (GameMain.Server != null) GameMain.Server.CreateEntityEvent(this);
         }
 
-        public List<Hull> GetConnectedHulls(int? searchDepth)
+        public IEnumerable<Hull> GetConnectedHulls(int? searchDepth)
         {
-            return GetAdjacentHulls(new List<Hull>(), 0, searchDepth);
-
+            return GetAdjacentHulls(new HashSet<Hull>(), 0, searchDepth);
         }
 
-        private List<Hull> GetAdjacentHulls(List<Hull> connectedHulls, int steps, int? searchDepth)
+        private HashSet<Hull> GetAdjacentHulls(HashSet<Hull> connectedHulls, int steps, int? searchDepth)
         {
             connectedHulls.Add(this);
 
@@ -573,18 +556,49 @@ namespace Barotrauma
             {
                 for (int i = 0; i < 2 && i < g.linkedTo.Count; i++)
                 {
-                    Hull hull = g.linkedTo[i] as Hull;
-                    if (hull != null && !connectedHulls.Contains(hull))
+                    if (g.linkedTo[i] is Hull hull && !connectedHulls.Contains(hull))
                     {
                         hull.GetAdjacentHulls(connectedHulls, steps++, searchDepth);
-                    }                    
+                    }
                 }
             }
 
             return connectedHulls;
         }
 
-        //returns the water block which contains the point (or null if it isn't inside any)
+        /// <summary>
+        /// Approximate distance from this hull to the target hull, moving through open gaps without passing through walls.
+        /// Uses a greedy algo and may not use the most optimal path. Returns float.MaxValue if no path is found.
+        /// </summary>
+        public float GetApproximateDistance(Hull target, float maxDistance)
+        {
+            return GetApproximateHullDistance(new HashSet<Hull>(), target, 0.0f, maxDistance);
+        }
+
+        private float GetApproximateHullDistance(HashSet<Hull> connectedHulls, Hull target, float distance, float maxDistance)
+        {
+            if (distance >= maxDistance) return float.MaxValue;
+            if (this == target) return distance;
+
+            connectedHulls.Add(this);
+
+            foreach (Gap g in ConnectedGaps)
+            {
+                if (g.Open <= 0.0f && (g.ConnectedDoor == null || !g.ConnectedDoor.IsOpen)) continue;
+                for (int i = 0; i < 2 && i < g.linkedTo.Count; i++)
+                {
+                    if (g.linkedTo[i] is Hull hull && !connectedHulls.Contains(hull))
+                    {
+                        float dist = hull.GetApproximateHullDistance(connectedHulls, target, distance + Vector2.Distance(g.Position, this.Position), maxDistance);
+                        if (dist < float.MaxValue) return dist;
+                    }
+                }
+            }
+
+            return float.MaxValue;
+        }
+
+        //returns the hull which contains the point (or null if it isn't inside any)
         public static Hull FindHull(Vector2 position, Hull guess = null, bool useWorldCoordinates = true)
         {
             if (entityGrids == null) return null;
@@ -594,10 +608,38 @@ namespace Barotrauma
                 if (Submarine.RectContains(useWorldCoordinates ? guess.WorldRect : guess.rect, position)) return guess;
             }
 
-            var entities = EntityGrid.GetEntities(entityGrids, position, useWorldCoordinates);
-            foreach (Hull hull in entities)
+            foreach (EntityGrid entityGrid in entityGrids)
             {
-                if (Submarine.RectContains(useWorldCoordinates ? hull.WorldRect : hull.rect, position)) return hull;
+                if (entityGrid.Submarine != null && !entityGrid.Submarine.Loading)
+                {
+                    System.Diagnostics.Debug.Assert(!entityGrid.Submarine.Removed);
+                    Rectangle borders = entityGrid.Submarine.Borders;
+                    if (useWorldCoordinates)
+                    {
+                        Vector2 worldPos = entityGrid.Submarine.WorldPosition;
+                        borders.Location += new Point((int)worldPos.X, (int)worldPos.Y);
+                    }
+                    else
+                    {
+                        borders.Location += new Point((int)entityGrid.Submarine.HiddenSubPosition.X, (int)entityGrid.Submarine.HiddenSubPosition.Y);
+
+                    }
+
+                    if (position.X < borders.X || position.X > borders.Right || position.Y > borders.Y || position.Y < borders.Y - borders.Height)
+                    {
+                        continue;
+                    }
+                }
+
+                Vector2 transformedPosition = position;
+                if (useWorldCoordinates) transformedPosition -= entityGrid.Submarine.Position;
+
+                var entities = entityGrid.GetEntities(transformedPosition);
+                if (entities == null) continue;
+                foreach (Hull hull in entities)
+                {
+                    if (Submarine.RectContains(hull.rect, transformedPosition)) return hull;
+                }
             }
 
             return null;
@@ -692,7 +734,7 @@ namespace Barotrauma
                 if (item.GetComponent<Items.Components.Reactor>() != null) roomItems.Add("reactor");
                 if (item.GetComponent<Items.Components.Engine>() != null) roomItems.Add("engine");
                 if (item.GetComponent<Items.Components.Steering>() != null) roomItems.Add("steering");
-                if (item.GetComponent<Items.Components.Radar>() != null) roomItems.Add("sonar");
+                if (item.GetComponent<Items.Components.Sonar>() != null) roomItems.Add("sonar");
             }
 
             if (roomItems.Contains("reactor"))
@@ -793,7 +835,7 @@ namespace Barotrauma
             }            
         }
 
-        public static void Load(XElement element, Submarine submarine)
+        public static Hull Load(XElement element, Submarine submarine)
         {
             Rectangle rect = Rectangle.Empty;
             if (element.Attribute("rect") != null)
@@ -811,10 +853,9 @@ namespace Barotrauma
             }
 
             Hull h = new Hull(MapEntityPrefab.Find("Hull"), rect, submarine);
-
             h.waterVolume = element.GetAttributeFloat("pressure", 0.0f);
-
             h.ID = (ushort)int.Parse(element.Attribute("ID").Value);
+            return h;
         }
 
         public override XElement Save(XElement parentElement)

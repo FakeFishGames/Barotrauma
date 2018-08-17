@@ -15,11 +15,7 @@ namespace Barotrauma
         public const int MaxDecalsPerHull = 10;
         
         private List<Decal> decals = new List<Decal>();
-
-        private Sound currentFlowSound;
-        private SoundChannel soundChannel;
-        private float soundVolume;
-
+        
         public override bool DrawBelowWater
         {
             get
@@ -60,23 +56,27 @@ namespace Barotrauma
         
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
-            int width = 450;
-            int height = 150;
+            int width = 600, height = 150;
             int x = GameMain.GraphicsWidth / 2 - width / 2, y = 30;
+            
+            editingHUD = new GUIListBox(new RectTransform(new Point(width, height), GUI.Canvas) { ScreenSpaceOffset = new Point(x, y) })
+            {
+                UserData = this
+            };
+            
+            GUIListBox listBox = (GUIListBox)editingHUD;
+            new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true);
 
-            editingHUD = new GUIListBox(new Rectangle(x, y, width, height), "");
-            editingHUD.UserData = this;
-
-            new SerializableEntityEditor(this, inGame, editingHUD, true);
-
-            editingHUD.SetDimensions(new Point(editingHUD.Rect.Width, MathHelper.Clamp(editingHUD.children.Sum(c => c.Rect.Height), 50, editingHUD.Rect.Height)));
-
+            editingHUD.RectTransform.NonScaledSize = new Point(
+                editingHUD.RectTransform.NonScaledSize.X,
+                MathHelper.Clamp(listBox.Content.Children.Sum(c => c.Rect.Height), 50, editingHUD.RectTransform.NonScaledSize.Y));
+            
             return editingHUD;
         }
 
         public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
         {
-            if (editingHUD != null && editingHUD.UserData == this) editingHUD.Draw(spriteBatch);
+            if (editingHUD != null && editingHUD.UserData == this) editingHUD.DrawManually(spriteBatch);
         }
 
         public override void UpdateEditing(Camera cam)
@@ -86,7 +86,7 @@ namespace Barotrauma
                 editingHUD = CreateEditingHUD(Screen.Selected != GameMain.SubEditorScreen);
             }
 
-            editingHUD.Update((float)Timing.Step);
+            editingHUD.UpdateManually((float)Timing.Step);
 
             if (!PlayerInput.KeyDown(Keys.Space)) return;
             bool lClick = PlayerInput.LeftButtonClicked();
@@ -152,60 +152,9 @@ namespace Barotrauma
             }
 
             decals.RemoveAll(d => d.FadeTimer >= d.LifeTime);
-
-            float strongestFlow = 0.0f;
-            foreach (Gap gap in ConnectedGaps)
-            {
-                if (gap.IsRoomToRoom)
-                {
-                    //only the first linked hull plays the flow sound
-                    if (gap.linkedTo[1] == this) continue;
-                }
-
-                float gapFlow = gap.LerpedFlowForce.Length();
-
-                if (gapFlow > strongestFlow)
-                {
-                    strongestFlow = gapFlow;
-                }
-            }
-
-            if (strongestFlow > 1.0f)
-            {
-                soundVolume = soundVolume + ((strongestFlow < 100.0f) ? -deltaTime * 0.5f : deltaTime * 0.5f);
-                soundVolume = MathHelper.Clamp(soundVolume, 0.0f, 1.0f);
-
-                int index = (int)Math.Floor(MathHelper.Lerp(0, SoundPlayer.FlowSounds.Count - 1, strongestFlow / 600.0f));
-                index = Math.Min(index, SoundPlayer.FlowSounds.Count - 1);
-
-                var flowSound = SoundPlayer.FlowSounds[index];
-                if (flowSound != currentFlowSound && soundChannel != null)
-                {
-                    soundChannel.Dispose(); soundChannel = null;
-                    currentFlowSound = null;
-                }
-
-                currentFlowSound = flowSound;
-                if (soundChannel == null || !soundChannel.IsPlaying)
-                {
-                    soundChannel = currentFlowSound.Play(new Vector3(WorldPosition.X, WorldPosition.Y, 0.0f), soundVolume);
-                    soundChannel.Looping = true;
-                    //TODO: tweak
-                    float range = Math.Min(strongestFlow * 5.0f, 2000.0f);
-                    soundChannel.Near = range * 0.4f;
-                    soundChannel.Far = range;
-                }
-            }
-            else
-            {
-                if (soundChannel != null)
-                {
-                    soundChannel.Dispose(); soundChannel = null;
-                    currentFlowSound = null;
-                }
-            }
-
-            for (int i = 0; i < waveY.Length; i++)
+                        
+            if (waterVolume < 1.0f) return;
+            for (int i = 1; i < waveY.Length - 1; i++)
             {
                 float maxDelta = Math.Max(Math.Abs(rightDelta[i]), Math.Abs(leftDelta[i]));
                 if (maxDelta > Rand.Range(1.0f, 10.0f))

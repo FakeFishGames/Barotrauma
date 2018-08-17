@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -13,6 +14,7 @@ namespace Barotrauma
     {
         private GUIFrame menu;
         private GUIFrame infoFrame;
+        private GUIFrame myCharacterFrame;
         private GUIListBox playerList;
 
         private GUIListBox subList, modeList, chatBox;
@@ -24,11 +26,19 @@ namespace Barotrauma
             }
         }
 
+        private GUIScrollBar levelDifficultyScrollBar;
+
         private GUIButton[] traitorProbabilityButtons;
         private GUITextBlock traitorProbabilityText;
 
+        private GUIButton[] botCountButtons;
+        private GUITextBlock botCountText;
+
+        private GUIButton[] botSpawnModeButtons;
+        private GUITextBlock botSpawnModeText;
+
         private GUIButton[] missionTypeButtons;
-        private GUIComponent missionTypeBlock;
+        private GUIComponent missionTypeContainer;
 
         private GUIListBox jobList;
 
@@ -42,13 +52,13 @@ namespace Barotrauma
         }
 
         private GUIFrame defaultModeContainer, campaignContainer;
+        private GUIButton campaignViewButton, spectateButton, settingsButton;
 
-        private GUIButton campaignViewButton;
+        private GUITickBox playYourself;
 
-        private GUIFrame myPlayerFrame;
-
+        private GUIFrame playerInfoContainer;
+        private GUIImage playerHeadSprite;
         private GUIFrame jobInfoFrame;
-
         private GUIFrame playerFrame;
 
         private GUITickBox autoRestartBox;
@@ -64,6 +74,20 @@ namespace Barotrauma
         private GUITextBox serverMessage;
 
         private float autoRestartTimer;
+
+        //elements that can only be used by the host
+        private List<GUIComponent> clientDisabledElements = new List<GUIComponent>();
+        //elements that aren't shown client-side
+        private List<GUIComponent> clientHiddenElements = new List<GUIComponent>();
+
+        private bool AllowSubSelection
+        {
+            get
+            {
+                return GameMain.Server != null || GameMain.NetworkMember.Voting.AllowSubVoting ||
+                    (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.SelectSub));
+            }
+        }
 
         public GUITextBox ServerMessage
         {
@@ -118,6 +142,13 @@ namespace Barotrauma
             set { StartButton.Enabled = value; }
         }
 
+        public GUIFrame MyCharacterFrame
+        {
+            get { return myCharacterFrame; }
+        }
+
+        public bool MyCharacterFrameOpen;
+
         public GUIFrame InfoFrame
         {
             get { return infoFrame; }
@@ -147,8 +178,8 @@ namespace Barotrauma
 
         public int MissionTypeIndex
         {
-            get { return (int)missionTypeBlock.UserData; }
-            set { missionTypeBlock.UserData = value; }
+            get { return (int)missionTypeContainer.UserData; }
+            set { missionTypeContainer.UserData = value; }
         }
         
         public List<JobPrefab> JobPreferences
@@ -156,7 +187,7 @@ namespace Barotrauma
             get
             {
                 List<JobPrefab> jobPreferences = new List<JobPrefab>();
-                foreach (GUIComponent child in jobList.children)
+                foreach (GUIComponent child in jobList.Content.Children)
                 {
                     JobPrefab jobPrefab = child.UserData as JobPrefab;
                     if (jobPrefab == null) continue;
@@ -177,8 +208,10 @@ namespace Barotrauma
                 if (levelSeed == value) return;
 
                 levelSeed = value;
-                backgroundSprite = LocationType.Random(levelSeed).Background;
+                backgroundSprite = LocationType.Random(levelSeed)?.Background;
                 seedBox.Text = levelSeed;
+
+                if (GameMain.Server != null) lastUpdateID++;
             }
         }
 
@@ -201,299 +234,381 @@ namespace Barotrauma
 
             Rectangle panelRect = new Rectangle(0, 0, width, height);
 
-            menu = new GUIFrame(panelRect, Color.Transparent, Alignment.Center, null);
-            //menu.Padding = GUI.style.smallPadding;
+            menu = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), GUI.Canvas, Anchor.Center), style: null);
+
+            float panelSpacing = 0.02f;
 
             //server info panel ------------------------------------------------------------
 
-            infoFrame = new GUIFrame(new Rectangle(0, 0, (int)(panelRect.Width * 0.7f), (int)(panelRect.Height * 0.6f)), "", menu);
-            infoFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
+            infoFrame = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.6f), menu.RectTransform));
+
+            defaultModeContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), infoFrame.RectTransform, Anchor.Center), style: null);
+            campaignContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), infoFrame.RectTransform, Anchor.Center), style: null)
+            {
+                Visible = false
+            };
 
             //chatbox ----------------------------------------------------------------------
-            GUIFrame chatFrame = new GUIFrame(
-                new Rectangle(0, (int)(panelRect.Height * 0.6f + 20),
-                    (int)(panelRect.Width * 0.7f),
-                    (int)(panelRect.Height * 0.4f - 20)),
-                "", menu);
-            chatFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 40.0f);
+            GUIFrame chatFrame = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.4f - panelSpacing), menu.RectTransform, Anchor.BottomLeft));
+            GUIFrame paddedChatFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.85f), chatFrame.RectTransform, Anchor.Center), style: null);
 
-            chatBox = new GUIListBox(new Rectangle(0, 0, 0, chatFrame.Rect.Height - 80), Color.White, "", chatFrame);
-            textBox = new GUITextBox(new Rectangle(0, 25, 0, 25), Alignment.Bottom, "", chatFrame);
-            textBox.MaxTextLength = ChatMessage.MaxLength;
-            textBox.Font = GUI.SmallFont;
+            chatBox = new GUIListBox(new RectTransform(new Point(paddedChatFrame.Rect.Width, paddedChatFrame.Rect.Height - 30), paddedChatFrame.RectTransform) { IsFixedSize = false });
+            textBox = new GUITextBox(new RectTransform(new Point(paddedChatFrame.Rect.Width, 20), paddedChatFrame.RectTransform, Anchor.BottomLeft) { IsFixedSize = false })
+            {
+                MaxTextLength = ChatMessage.MaxLength,
+                Font = GUI.SmallFont
+            };
 
             //player info panel ------------------------------------------------------------
 
-            myPlayerFrame = new GUIFrame(
-                new Rectangle((int)(panelRect.Width * 0.7f + 20), 0,
-                    (int)(panelRect.Width * 0.3f - 20), (int)(panelRect.Height * 0.6f)),
-                "", menu);
-            myPlayerFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
+            myCharacterFrame = new GUIFrame(new RectTransform(new Vector2(0.3f - panelSpacing, 0.6f), menu.RectTransform, Anchor.TopRight));
+            playerInfoContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), myCharacterFrame.RectTransform, Anchor.Center), style: null);
 
-            //player list ------------------------------------------------------------------
-
-            GUIFrame playerListFrame = new GUIFrame(
-                new Rectangle((int)(panelRect.Width * 0.7f + 20), (int)(panelRect.Height * 0.6f + 20),
-                    (int)(panelRect.Width * 0.3f - 20), (int)(panelRect.Height * 0.4f - 20)),
-                "", menu);
-
-            playerListFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 40.0f);
-
-            playerList = new GUIListBox(new Rectangle(0, 0, 0, 0), null, "", playerListFrame);
-            playerList.OnSelected = SelectPlayer;
-
-            defaultModeContainer = new GUIFrame(new Rectangle(0, 10, 0, 0), null, infoFrame);
-
-            campaignContainer = new GUIFrame(new Rectangle(0, 20, 0, 0), null, infoFrame);
-            campaignContainer.Visible = false;
-
-            //submarine list ------------------------------------------------------------------
-
-            int columnWidth = infoFrame.Rect.Width / 3 - 5;
-            int columnX = 0;
-
-            new GUITextBlock(new Rectangle(columnX, 110, columnWidth, 30), TextManager.Get("Submarine"), "", defaultModeContainer);
-            subList = new GUIListBox(new Rectangle(columnX, 140, columnWidth, defaultModeContainer.Rect.Height - 170), Color.White, "", defaultModeContainer);
-            subList.OnSelected = VotableClicked;
-
-            var voteText = new GUITextBlock(new Rectangle(columnX, 110, columnWidth, 30), TextManager.Get("Votes"), "", Alignment.TopLeft, Alignment.TopRight, defaultModeContainer);
-            voteText.UserData = "subvotes";
-            voteText.Visible = false;
-
-            columnX += columnWidth + 20;
-
-
-            //respawn shuttle ------------------------------------------------------------------
-
-            shuttleTickBox = new GUITickBox(new Rectangle(columnX, 110, 20, 20), TextManager.Get("RespawnShuttle"), Alignment.Left, defaultModeContainer);
-            shuttleList = new GUIDropDown(new Rectangle(columnX, 140, columnWidth, 20), "", "", defaultModeContainer);
-            shuttleTickBox.Selected = true;
-            shuttleTickBox.OnSelected = (GUITickBox box) =>
+            playYourself = new GUITickBox(new RectTransform(new Vector2(0.06f, 0.06f), myCharacterFrame.RectTransform) { RelativeOffset = new Vector2(0.05f,0.05f) },
+                TextManager.Get("PlayYourself"))
             {
-                shuttleList.Enabled = box.Selected;
-                if (GameMain.Server != null) lastUpdateID++;
+                OnSelected = TogglePlayYourself,
+                UserData = "playyourself"
+            };
+
+            var toggleMyPlayerFrame = new GUIButton(new RectTransform(new Point(25, 70), myCharacterFrame.RectTransform, Anchor.TopLeft, Pivot.TopRight), "", style: "GUIButtonHorizontalArrow");
+            toggleMyPlayerFrame.OnClicked += (GUIButton btn, object userdata) =>
+            {
+                MyCharacterFrameOpen = !MyCharacterFrameOpen;
+                foreach (GUIComponent child in btn.Children)
+                {
+                    child.SpriteEffects = MyCharacterFrameOpen ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+                }
                 return true;
             };
 
+            //player list ------------------------------------------------------------------
+
+            GUIFrame playerListFrame = new GUIFrame(new RectTransform(new Vector2(0.3f - panelSpacing, 0.4f - panelSpacing), menu.RectTransform, Anchor.BottomRight));
+            GUIFrame paddedPlayerListFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.85f), playerListFrame.RectTransform, Anchor.Center), style: null);
+
+            playerList = new GUIListBox(new RectTransform(Vector2.One, paddedPlayerListFrame.RectTransform))
+            {
+                OnSelected = SelectPlayer
+            };
+
+            //--------------------------------------------------------------------------------------------------------------------------------
+            //infoframe contents
+            //--------------------------------------------------------------------------------------------------------------------------------
+
+            var infoColumnContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.7f - 0.02f, 0.75f), defaultModeContainer.RectTransform, Anchor.BottomLeft), 
+                isHorizontal: true, childAnchor: Anchor.BottomLeft)
+                { RelativeSpacing = 0.02f, Stretch = true };
+            var leftInfoColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.35f, 1.0f), infoColumnContainer.RectTransform, Anchor.BottomLeft))
+                { RelativeSpacing = 0.02f, Stretch = true };
+            var midInfoColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.35f, 1.0f), infoColumnContainer.RectTransform, Anchor.BottomLeft))
+                { RelativeSpacing = 0.02f, Stretch = true };
+
+            var rightInfoColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.9f), defaultModeContainer.RectTransform, Anchor.TopRight))
+                { RelativeSpacing = 0.02f, Stretch = true };
+            
+            var topButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), rightInfoColumn.RectTransform), isHorizontal: true, childAnchor: Anchor.TopRight)
+            {
+                RelativeSpacing = 0.05f,
+                Stretch = true
+            };
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.03f), rightInfoColumn.RectTransform), style: null);
+
+            //server info ------------------------------------------------------------------
+
+            var serverName = new GUITextBox(new RectTransform(new Vector2(0.3f, 0.05f), defaultModeContainer.RectTransform))
+            {
+                TextGetter = GetServerName,
+                Enabled = GameMain.Server != null,
+                OnTextChanged = ChangeServerName
+            };
+            clientDisabledElements.Add(serverName);
+
+            serverMessage = new GUITextBox(new RectTransform(new Vector2(infoColumnContainer.RectTransform.RelativeSize.X, 0.15f), defaultModeContainer.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.07f) })
+            {
+                Wrap = true,
+                OnTextChanged = UpdateServerMessage
+            };
+            clientDisabledElements.Add(serverMessage);
+            
+            settingsButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), topButtonContainer.RectTransform, Anchor.TopRight),
+                TextManager.Get("ServerSettingsButton"));
+            clientHiddenElements.Add(settingsButton);
+
+            var showLogButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), topButtonContainer.RectTransform, Anchor.TopRight),
+                TextManager.Get("ServerLog"))
+            {
+                OnClicked = (GUIButton button, object userData) =>
+                {
+                    if (GameMain.Server.ServerLog.LogFrame == null)
+                    {
+                        GameMain.Server.ServerLog.CreateLogFrame();
+                    }
+                    else
+                    {
+                        GameMain.Server.ServerLog.LogFrame = null;
+                        GUI.KeyboardDispatcher.Subscriber = null;
+                    }
+                    return true;
+                }
+            };
+            clientHiddenElements.Add(showLogButton);
+
+            //submarine list ------------------------------------------------------------------
+            
+            var subLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftInfoColumn.RectTransform), TextManager.Get("Submarine"));
+            subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.9f), leftInfoColumn.RectTransform))
+            {
+                OnSelected = VotableClicked
+            };
+
+            var voteText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), subLabel.RectTransform, Anchor.TopRight),
+                TextManager.Get("Votes"), textAlignment: Alignment.CenterRight)
+            {
+                UserData = "subvotes",
+                Visible = false
+            };
+
+            //respawn shuttle ------------------------------------------------------------------
+
+            shuttleTickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform), TextManager.Get("RespawnShuttle"))
+            {
+                Selected = true,
+                OnSelected = (GUITickBox box) =>
+                {
+                    shuttleList.Enabled = box.Selected;
+                    if (GameMain.Server != null) lastUpdateID++;
+                    return true;
+                }
+            };
+            shuttleList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform));
+
             //gamemode ------------------------------------------------------------------
 
-            new GUITextBlock(new Rectangle(columnX, 170, 0, 30), TextManager.Get("GameMode"), "", defaultModeContainer);
-            modeList = new GUIListBox(new Rectangle(columnX, 200, columnWidth, defaultModeContainer.Rect.Height - 230), "", defaultModeContainer);
-            modeList.OnSelected = VotableClicked;
+            var modeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform), TextManager.Get("GameMode"));
+            modeList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), midInfoColumn.RectTransform))
+            {
+                OnSelected = VotableClicked
+            };
 
-            voteText = new GUITextBlock(new Rectangle(columnX, 170, columnWidth, 30), TextManager.Get("Votes"), "", Alignment.TopLeft, Alignment.TopRight, defaultModeContainer);
-            voteText.UserData = "modevotes";
-            voteText.Visible = false;
+            voteText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), modeLabel.RectTransform, Anchor.TopRight),
+                TextManager.Get("Votes"), textAlignment: Alignment.CenterRight)
+            {
+                UserData = "modevotes",
+                Visible = false
+            };
 
             foreach (GameModePreset mode in GameModePreset.list)
             {
                 if (mode.IsSinglePlayer) continue;
 
-                GUITextBlock textBlock = new GUITextBlock(
-                    new Rectangle(0, 0, 0, 25),
-                    mode.Name, "ListBoxElement",
-                    Alignment.TopLeft, Alignment.CenterLeft,
-                    modeList);
-                textBlock.ToolTip = mode.Description;
-                textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
-                textBlock.UserData = mode;
+                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), modeList.Content.RectTransform),
+                    mode.Name, style: "ListBoxElement", textAlignment: Alignment.CenterLeft)
+                {
+                    ToolTip = mode.Description,
+                    UserData = mode
+                };
             }
 
             //mission type ------------------------------------------------------------------
 
-            missionTypeBlock = new GUITextBlock(new Rectangle(columnX, -10, 300, 20), TextManager.Get("MissionType"), "", Alignment.BottomLeft, Alignment.CenterLeft, defaultModeContainer);
-            missionTypeBlock.Padding = Vector4.Zero;
-            missionTypeBlock.UserData = 0;
+            missionTypeContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform), isHorizontal: true)
+            {
+                UserData = 0,
+                Visible = false,
+                Stretch = true
+            };
 
+            var missionTypeText = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), missionTypeContainer.RectTransform),
+                TextManager.Get("MissionType"));
             missionTypeButtons = new GUIButton[2];
-
-            missionTypeButtons[0] = new GUIButton(new Rectangle(100, 0, 20, 20), "<", Alignment.BottomLeft, "", missionTypeBlock);
-            missionTypeButtons[0].UserData = -1;
-
-            new GUITextBlock(new Rectangle(120, 0, 80, 20), TextManager.Get("Random"), "", Alignment.BottomLeft, Alignment.Center, missionTypeBlock).UserData = 0;
-
-            missionTypeButtons[1] = new GUIButton(new Rectangle(200, 0, 20, 20), ">", Alignment.BottomLeft, "", missionTypeBlock);
-            missionTypeButtons[1].UserData = 1;
-
-            missionTypeBlock.Visible = false;
-
-            columnX += columnWidth + 20;
-
-            //gamemode description ------------------------------------------------------------------
-
-            //var modeDescription = new GUITextBlock(
-            //    new Rectangle(columnX, 150, (int)(columnWidth * 1.2f), infoFrame.Rect.Height - 150 - 80), 
-            //    "", "", Alignment.TopLeft, Alignment.TopLeft, infoFrame, true, GUI.SmallFont);
-            //modeDescription.Color = Color.Black * 0.3f;
-
-            //modeList.UserData = modeDescription;
-
-            //columnX += modeDescription.Rect.Width + 20;
+            missionTypeButtons[0] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), missionTypeContainer.RectTransform), "<")
+            {
+                UserData = -1
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.4f, 1.0f), missionTypeContainer.RectTransform),
+                TextManager.Get("Random"), textAlignment: Alignment.Center)
+            {
+                UserData = 0
+            };
+            missionTypeButtons[1] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), missionTypeContainer.RectTransform), ">")
+            {
+                UserData = 1
+            };
+            clientDisabledElements.AddRange(missionTypeButtons);
 
             //seed ------------------------------------------------------------------
 
-            new GUITextBlock(new Rectangle(columnX, 110, 180, 20),
-                TextManager.Get("LevelSeed"), "", Alignment.Left, Alignment.TopLeft, defaultModeContainer);
-
-            seedBox = new GUITextBox(new Rectangle(columnX, 140, columnWidth / 2, 20),
-                Alignment.TopLeft, "", defaultModeContainer);
-            seedBox.OnTextChanged = SelectSeed;
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), TextManager.Get("LevelSeed"));
+            seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform))
+            {
+                OnTextChanged = SelectSeed
+            };
+            clientDisabledElements.Add(seedBox);
             LevelSeed = ToolBox.RandomSeed(8);
 
+            //level difficulty ------------------------------------------------------------------
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), TextManager.Get("LevelDifficulty"));
+            levelDifficultyScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), barSize: 0.1f);
+            clientDisabledElements.Add(levelDifficultyScrollBar);
+
             //traitor probability ------------------------------------------------------------------
+            
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.03f), rightInfoColumn.RectTransform), style: null); //spacing
 
-            new GUITextBlock(new Rectangle(columnX, 170, 20, 20), TextManager.Get("Traitors"), "", defaultModeContainer);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), TextManager.Get("Traitors"));
 
+            var traitorProbContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), isHorizontal: true);
             traitorProbabilityButtons = new GUIButton[2];
-
-            traitorProbabilityButtons[0] = new GUIButton(new Rectangle(columnX, 195, 20, 20), "<", "", defaultModeContainer);
-            traitorProbabilityButtons[0].UserData = -1;
-
-            traitorProbabilityText = new GUITextBlock(new Rectangle(columnX + 20, 195, 80, 20), TextManager.Get("No"), null, null, Alignment.Center, "", defaultModeContainer);
-
-            traitorProbabilityButtons[1] = new GUIButton(new Rectangle(columnX + 100, 195, 20, 20), ">", "", defaultModeContainer);
-            traitorProbabilityButtons[1].UserData = 1;
-
-
-            //automatic restart ------------------------------------------------------------------
-
-            autoRestartBox = new GUITickBox(new Rectangle(columnX, 230, 20, 20), TextManager.Get("AutoRestart"), Alignment.TopLeft, defaultModeContainer);
-            autoRestartBox.OnSelected = ToggleAutoRestart;
-
-            var restartText = new GUITextBlock(new Rectangle(columnX, 255, 20, 20), "", "", defaultModeContainer);
-            restartText.Font = GUI.SmallFont;
-            restartText.TextGetter = AutoRestartText;
-
-            //server info ------------------------------------------------------------------
-
-            var serverName = new GUITextBox(new Rectangle(0, 0, 200, 20), null, null, Alignment.TopLeft, Alignment.TopLeft, "", defaultModeContainer);
-            serverName.TextGetter = GetServerName;
-            serverName.Enabled = GameMain.Server != null;
-            serverName.OnTextChanged = ChangeServerName;
-
-            serverMessage = new GUITextBox(new Rectangle(0, 30, 360, 70), null, null, Alignment.TopLeft, Alignment.TopLeft, "", defaultModeContainer);
-            serverMessage.Wrap = true;
-            serverMessage.OnTextChanged = UpdateServerMessage;
-
-            var showLogButton = new GUIButton(new Rectangle(0, 0, 100, 20), TextManager.Get("ServerLog"), Alignment.TopRight, "", infoFrame);
-            showLogButton.UserData = "showlog";
-            showLogButton.OnClicked = (GUIButton button, object userData) =>
+            traitorProbabilityButtons[0] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), traitorProbContainer.RectTransform), "<")
             {
-                if (GameMain.Server.ServerLog.LogFrame == null)
-                {
-                    GameMain.Server.ServerLog.CreateLogFrame();
-                }
-                else
-                {
-                    GameMain.Server.ServerLog.LogFrame = null;
-                    GUIComponent.KeyboardDispatcher.Subscriber = null;
-                }
-                return true;
+                UserData = -1
             };
+            traitorProbabilityText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), traitorProbContainer.RectTransform), TextManager.Get("No"), textAlignment: Alignment.Center);
+            traitorProbabilityButtons[1] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), traitorProbContainer.RectTransform), ">")
+            {
+                UserData = 1
+            };
+            clientDisabledElements.AddRange(traitorProbabilityButtons);
+
+            //bot count ------------------------------------------------------------------
+
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.03f), rightInfoColumn.RectTransform), style: null); //spacing
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), TextManager.Get("BotCount"));
+            var botCountContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), isHorizontal: true);
+            botCountButtons = new GUIButton[2];
+            botCountButtons[0] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), botCountContainer.RectTransform), "<")
+            {
+                UserData = -1
+            };
+            botCountText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), botCountContainer.RectTransform), "0", textAlignment: Alignment.Center);
+            botCountButtons[1] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), botCountContainer.RectTransform), ">")
+            {
+                UserData = 1
+            };
+            clientDisabledElements.AddRange(botCountButtons);
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), TextManager.Get("BotSpawnMode"));
+            var botSpawnModeContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), isHorizontal: true);
+            botSpawnModeButtons = new GUIButton[2];
+            botSpawnModeButtons[0] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), botSpawnModeContainer.RectTransform), "<")
+            {
+                UserData = -1
+            };
+            botSpawnModeText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), botSpawnModeContainer.RectTransform), "", textAlignment: Alignment.Center);
+            botSpawnModeButtons[1] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), botSpawnModeContainer.RectTransform), ">")
+            {
+                UserData = 1
+            };
+            clientDisabledElements.AddRange(botSpawnModeButtons);
+
+            //misc buttons ------------------------------------------------------------------
+            
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.03f), rightInfoColumn.RectTransform), style: null); //spacing
+
+            autoRestartBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), TextManager.Get("AutoRestart"))
+            {
+                OnSelected = ToggleAutoRestart
+            };
+            clientDisabledElements.Add(autoRestartBox);
+            var restartText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), "", font: GUI.SmallFont)
+            {
+                TextGetter = AutoRestartText
+            };
+
+            StartButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), defaultModeContainer.RectTransform, Anchor.BottomRight),
+                TextManager.Get("StartGameButton"), style: "GUIButtonLarge");
+            clientHiddenElements.Add(StartButton);
+            
+            campaignViewButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), defaultModeContainer.RectTransform, Anchor.BottomRight),
+                TextManager.Get("CampaignView"), style: "GUIButtonLarge")
+            {
+                OnClicked = (btn, obj) => { ToggleCampaignView(true); return true; },
+                Visible = false
+            };
+
+            spectateButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), defaultModeContainer.RectTransform, Anchor.BottomRight),
+                TextManager.Get("SpectateButton"), style: "GUIButtonLarge");
         }
 
         public override void Deselect()
         {
             textBox.Deselect();
+            myCharacterFrame.GetChild<GUIButton>().Visible = true;
         }
 
         public override void Select()
         {
             if (GameMain.NetworkMember == null) return;
-
+            Character.Controlled = null;
             GameMain.LightManager.LosEnabled = false;
 
             textBox.Select();
-
             textBox.OnEnterPressed = GameMain.NetworkMember.EnterChatMessage;
             textBox.OnTextChanged = GameMain.NetworkMember.TypingChatMessage;
 
-            Character.Controlled = null;
-            //GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
-
-            subList.Enabled = GameMain.Server != null || GameMain.NetworkMember.Voting.AllowSubVoting ||
-                (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.SelectSub));
-            shuttleList.Enabled = subList.Enabled;
+            myCharacterFrame.RectTransform.AbsoluteOffset = new Point(0, 0);
+            myCharacterFrame.GetChild<GUIButton>().Visible = false;
+            
+            subList.Enabled = AllowSubSelection || GameMain.Server != null;
+            shuttleList.Enabled = AllowSubSelection || GameMain.Server != null;
 
             modeList.Enabled = 
                 GameMain.Server != null || GameMain.NetworkMember.Voting.AllowModeVoting || 
                 (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.SelectMode));
-
-            seedBox.Enabled = GameMain.Server != null;
-            serverMessage.Enabled = GameMain.Server != null;
-            autoRestartBox.Enabled = GameMain.Server != null;
-
-            traitorProbabilityButtons[0].Enabled = GameMain.Server != null;
-            traitorProbabilityButtons[1].Enabled = GameMain.Server != null;
-
-            missionTypeButtons[0].Enabled = GameMain.Server != null;
-            missionTypeButtons[1].Enabled = GameMain.Server != null;
-
-            ServerName = (GameMain.Server == null) ? ServerName : GameMain.Server.Name;
-
-            infoFrame.RemoveChild(StartButton);
-            infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "settingsButton"));
-            infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "spectateButton"));
-
-            InfoFrame.FindChild("showlog").Visible = GameMain.Server != null;
             
-            if (campaignViewButton == null)
-            {
-                campaignViewButton = new GUIButton(new Rectangle(-80, 0, 120, 30), TextManager.Get("CampaignView"), Alignment.BottomRight, "", defaultModeContainer);
-                campaignViewButton.OnClicked = (btn, obj) => { ToggleCampaignView(true); return true; };
-                campaignViewButton.Visible = false;
-            }
+            ServerName = (GameMain.Server == null) ? ServerName : GameMain.Server.Name;
+            
+            //disable/hide elements the clients are not supposed to use/see
+            clientDisabledElements.ForEach(c => c.Enabled = GameMain.Server != null);
+            clientHiddenElements.ForEach(c => c.Visible = GameMain.Server != null);
 
-            if (myPlayerFrame.children.Find(c => c.UserData as string == "playyourself") == null)
+            spectateButton.Visible = GameMain.Client != null && GameMain.Client.GameStarted;            
+            if (GameMain.NetworkMember.CharacterInfo != null)
             {
-                var playYourself = new GUITickBox(new Rectangle(0, 0, 20, 20), TextManager.Get("PlayYourself"), Alignment.TopLeft, myPlayerFrame);
-                playYourself.Selected = GameMain.NetworkMember.CharacterInfo != null;
-                playYourself.OnSelected = TogglePlayYourself;
-                playYourself.UserData = "playyourself";
-
-                if (GameMain.NetworkMember.CharacterInfo != null)
-                {
-                    TogglePlayYourself(playYourself);
-                }
-            }
+                TogglePlayYourself(playYourself);
+            }            
 
             if (IsServer && GameMain.Server != null)
             {
                 List<Submarine> subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus)).ToList();
+
+                StartButton.OnClicked = GameMain.Server.StartGameClicked;
+                settingsButton.OnClicked = GameMain.Server.ToggleSettingsFrame;
 
                 int prevSelectedSub = subList.SelectedIndex;
                 UpdateSubList(subList, subsToShow);
 
                 int prevSelectedShuttle = shuttleList.SelectedIndex;
                 UpdateSubList(shuttleList, subsToShow);
-
                 modeList.OnSelected = VotableClicked;
                 modeList.OnSelected = SelectMode;
                 subList.OnSelected = VotableClicked;
                 subList.OnSelected = SelectSub;
-
                 shuttleList.OnSelected = SelectSub;
 
-                traitorProbabilityButtons[0].OnClicked = ToggleTraitorsEnabled;
-                traitorProbabilityButtons[1].OnClicked = ToggleTraitorsEnabled;
+                levelDifficultyScrollBar.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+                {
+                    SetLevelDifficulty(barScroll * 100.0f);
+                    return true;
+                };
 
-                missionTypeButtons[0].OnClicked = ToggleMissionType;
-                missionTypeButtons[1].OnClicked = ToggleMissionType;
-
-                StartButton = new GUIButton(new Rectangle(0, 0, 80, 30), TextManager.Get("StartGameButton"), Alignment.BottomRight, "", defaultModeContainer);
-                StartButton.OnClicked = GameMain.Server.StartGameClicked;
-
-                GUIButton settingsButton = new GUIButton(new Rectangle(-110, 0, 80, 20), TextManager.Get("ServerSettingsButton"), Alignment.TopRight, "", infoFrame);
-                settingsButton.OnClicked = GameMain.Server.ToggleSettingsFrame;
-                settingsButton.UserData = "settingsButton";
-
+                traitorProbabilityButtons[0].OnClicked = traitorProbabilityButtons[1].OnClicked = ToggleTraitorsEnabled;
+                botCountButtons[0].OnClicked = botCountButtons[1].OnClicked = ChangeBotCount;
+                botSpawnModeButtons[0].OnClicked = botSpawnModeButtons[1].OnClicked = ChangeBotSpawnMode;
+                missionTypeButtons[0].OnClicked = missionTypeButtons[1].OnClicked = ToggleMissionType;
+                
                 if (subList.Selected == null) subList.Select(Math.Max(0, prevSelectedSub));
                 if (shuttleList.Selected == null)
                 {
-                    var shuttles = shuttleList.GetChildren().FindAll(c => c.UserData is Submarine && ((Submarine)c.UserData).HasTag(SubmarineTag.Shuttle));
+                    var shuttles = shuttleList.GetChildren().Where(c => c.UserData is Submarine && ((Submarine)c.UserData).HasTag(SubmarineTag.Shuttle));
                     if (prevSelectedShuttle == -1 && shuttles.Any())
                     {
-                        shuttleList.SelectItem(shuttles[0].UserData);
+                        shuttleList.SelectItem(shuttles.First().UserData);
                     }
                     else
                     {
@@ -501,20 +616,20 @@ namespace Barotrauma
                     }
                 }
 
+                GameAnalyticsManager.SetCustomDimension01("multiplayer");
+                
                 if (GameModePreset.list.Count > 0 && modeList.Selected == null) modeList.Select(0);
-
                 GameMain.Server.Voting.ResetVotes(GameMain.Server.ConnectedClients);
             }
             else if (GameMain.Client != null)
             {
-                if (GameMain.Client.GameStarted)
-                {
-                    GUIButton spectateButton = new GUIButton(new Rectangle(0, 0, 80, 30), TextManager.Get("SpectateButton"), Alignment.BottomRight, "", infoFrame);
-                    spectateButton.OnClicked = GameMain.Client.SpectateClicked;
-                    spectateButton.UserData = "spectateButton";
-                }
-
                 GameMain.Client.Voting.ResetVotes(GameMain.Client.ConnectedClients);
+                if (!playYourself.Selected)
+                {
+                    playYourself.Selected = true;
+                    TogglePlayYourself(playYourself);
+                }
+                spectateButton.OnClicked = GameMain.Client.SpectateClicked;
             }
 
             GameMain.NetworkMember.EndVoteCount = 0;
@@ -530,8 +645,8 @@ namespace Barotrauma
             if (GameMain.Server.RandomizeSeed) LevelSeed = ToolBox.RandomSeed(8);
             if (GameMain.Server.SubSelectionMode == SelectionMode.Random)
             {
-                var nonShuttles = subList.children.FindAll(c => c.UserData is Submarine && !((Submarine)c.UserData).HasTag(SubmarineTag.Shuttle));
-                subList.Select(nonShuttles[Rand.Range(0, nonShuttles.Count)].UserData);
+                var nonShuttles = subList.Content.Children.Where(c => c.UserData is Submarine && !((Submarine)c.UserData).HasTag(SubmarineTag.Shuttle));
+                subList.Select(nonShuttles.GetRandom());
             }
             if (GameMain.Server.ModeSelectionMode == SelectionMode.Random)
             {
@@ -543,124 +658,149 @@ namespace Barotrauma
         public void ShowSpectateButton()
         {
             if (GameMain.Client == null) return;
-
-            infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "spectateButton"));
-            GUIButton spectateButton = new GUIButton(new Rectangle(0, 0, 80, 30), TextManager.Get("SpectateButton"), Alignment.BottomRight, "", infoFrame);
-            spectateButton.OnClicked = GameMain.Client.SpectateClicked;
-            spectateButton.UserData = "spectateButton";
+            spectateButton.Visible = true;
         }
 
         private void UpdatePlayerFrame(CharacterInfo characterInfo)
         {
-            if (myPlayerFrame.children.Count <= 2)
+            playerInfoContainer.ClearChildren();
+
+            GUIComponent infoContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.85f), playerInfoContainer.RectTransform, Anchor.BottomCenter), childAnchor: Anchor.TopCenter);                
+            GUIComponent headContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 0.2f), infoContainer.RectTransform, Anchor.TopCenter), isHorizontal: true)
             {
-                myPlayerFrame.ClearChildren();
-                
-                var playYourself = new GUITickBox(new Rectangle(0, 0, 20, 20), TextManager.Get("PlayYourself"), Alignment.TopLeft, myPlayerFrame);
-                playYourself.Selected = GameMain.NetworkMember.CharacterInfo != null;
-                playYourself.OnSelected = TogglePlayYourself;
-                playYourself.UserData = "playyourself";                
-                
-                GUIButton toggleHead = new GUIButton(new Rectangle(0, 50, 15, 15), "<", "", myPlayerFrame);
-                toggleHead.UserData = -1;
-                toggleHead.OnClicked = ToggleHead;
-                toggleHead = new GUIButton(new Rectangle(60, 50, 15, 15), ">", "", myPlayerFrame);
-                toggleHead.UserData = 1;
-                toggleHead.OnClicked = ToggleHead;
+                Stretch = true
+            };
 
-                new GUITextBlock(new Rectangle(100, 30, 200, 30), TextManager.Get("Gender"), "", myPlayerFrame);
+            GUIButton toggleHead = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), headContainer.RectTransform), "", style: "GUIButtonHorizontalArrow")
+            {
+                UserData = -1,
+                OnClicked = ToggleHead
+            };
+            toggleHead.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipHorizontally);
+            playerHeadSprite = new GUIImage(new RectTransform(new Vector2(0.3f, 1.0f), headContainer.RectTransform), sprite: null, scaleToFit: true)
+            {
+                UserData = "playerhead"
+            };
+            toggleHead = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), headContainer.RectTransform), style: "GUIButtonHorizontalArrow")
+            {
+                UserData = 1,
+                OnClicked = ToggleHead
+            };
 
-                GUIButton maleButton = new GUIButton(new Rectangle(100, 50, 60, 20), TextManager.Get("Male"),
-                    Alignment.TopLeft, "", myPlayerFrame);
-                maleButton.UserData = Gender.Male;
-                maleButton.OnClicked += SwitchGender;
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), infoContainer.RectTransform),
+                TextManager.Get("Gender"), textAlignment: Alignment.Center);
+            GUIComponent genderContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.06f), infoContainer.RectTransform), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
 
-                GUIButton femaleButton = new GUIButton(new Rectangle(170, 50, 60, 20), TextManager.Get("Female"),
-                    Alignment.TopLeft, "", myPlayerFrame);
-                femaleButton.UserData = Gender.Female;
-                femaleButton.OnClicked += SwitchGender;
+            GUIButton maleButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), genderContainer.RectTransform),
+                TextManager.Get("Male"))
+            {
+                UserData = Gender.Male,
+                OnClicked = SwitchGender
+            };
 
-                new GUITextBlock(new Rectangle(0, 120, 20, 30), TextManager.Get("JobPreferences"), "", myPlayerFrame);
+            GUIButton femaleButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), genderContainer.RectTransform),
+                TextManager.Get("Female"))
+            {
+                UserData = Gender.Female,
+                OnClicked = SwitchGender
+            };
 
-                jobList = new GUIListBox(new Rectangle(0, 150, 0, 0), "", myPlayerFrame);
-                jobList.Enabled = false;
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform), 
+                TextManager.Get("JobPreferences"));
 
-                int i = 1;
-                foreach (string jobName in GameMain.Config.JobNamePreferences)
+            jobList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), infoContainer.RectTransform))
+            {
+                Enabled = false
+            };
+
+            int i = 1;
+            foreach (string jobName in GameMain.Config.JobNamePreferences)
+            {
+                JobPrefab job = JobPrefab.List.Find(x => x.Name == jobName);
+                if (job == null) continue;
+
+                var jobFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), jobList.Content.RectTransform), style: "ListBoxElement")
                 {
-                    JobPrefab job = JobPrefab.List.Find(x => x.Name == jobName);
-                    if (job == null)
-                    {
-                        continue;
-                    }
+                    UserData = job
+                };
+                GUITextBlock jobText = new GUITextBlock(new RectTransform(new Vector2(0.66f, 1.0f), jobFrame.RectTransform, Anchor.CenterRight),
+                    i + ". " + job.Name + "    ", textAlignment: Alignment.CenterLeft);
 
-                    GUITextBlock jobText = new GUITextBlock(new Rectangle(0, 0, 0, 20),  i + ". " + job.Name + "    ", 
-                        "", Alignment.Left, Alignment.Right, jobList, false,
-                        GameMain.GraphicsWidth<1000 ? GUI.SmallFont : GUI.Font);
-                    jobText.UserData = job;
+                var jobButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.8f), jobFrame.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.02f, 0.0f) },
+                    isHorizontal: true, childAnchor: Anchor.CenterLeft)
+                {
+                    RelativeSpacing = 0.03f
+                };
 
-                    GUIButton infoButton = new GUIButton(new Rectangle(0, 2, 15, 15), "?", "", jobText);
-                    infoButton.UserData = -1;
-                    infoButton.OnClicked += ViewJobInfo;
+                int buttonSize = jobButtonContainer.Rect.Height;
+                GUIButton infoButton = new GUIButton(new RectTransform(new Point(buttonSize, buttonSize), jobButtonContainer.RectTransform), "?")
+                {
+                    UserData = job,
+                    OnClicked = ViewJobInfo
+                };
 
-                    GUIButton upButton = new GUIButton(new Rectangle(30, 2, 15, 15), "", "", jobText);
-                    //TODO: make GUIImages align correctly when scaled/rotated 
-                    //so there's no need to do this ↓
-                    new GUIImage(new Rectangle(3, 2, 0, 0), GUI.Arrow, Alignment.Center, upButton).Scale = 0.6f;
-                    upButton.UserData = -1;
-                    upButton.OnClicked += ChangeJobPreference;
+                GUIButton upButton = new GUIButton(new RectTransform(new Point(buttonSize, buttonSize), jobButtonContainer.RectTransform), "")
+                {
+                    UserData = -1,
+                    OnClicked = ChangeJobPreference
+                };
+                new GUIImage(new RectTransform(new Vector2(0.8f, 0.8f), upButton.RectTransform, Anchor.Center), GUI.Arrow, scaleToFit: true);
 
-                    GUIButton downButton = new GUIButton(new Rectangle(50, 2, 15, 15), "", "", jobText);
-                    var downArrow = new GUIImage(new Rectangle(13, 14, 0, 0), GUI.Arrow, Alignment.Center, downButton);
-                    downArrow.Rotation = MathHelper.Pi;
-                    downArrow.Scale = 0.6f;
-
-                    downButton.UserData = 1;
-                    downButton.OnClicked += ChangeJobPreference;
-                }
-
-                UpdateJobPreferences(jobList);
-
-                UpdatePlayerHead(characterInfo);
+                GUIButton downButton = new GUIButton(new RectTransform(new Point(buttonSize, buttonSize), jobButtonContainer.RectTransform), "")
+                {
+                    UserData = 1,
+                    OnClicked = ChangeJobPreference
+                };
+                new GUIImage(new RectTransform(new Vector2(0.8f, 0.8f), downButton.RectTransform, Anchor.Center), GUI.Arrow, scaleToFit: true)
+                {
+                    Rotation = MathHelper.Pi
+                };
             }
+
+            UpdateJobPreferences(jobList);
+
+            UpdatePlayerHead(characterInfo);
+            
         }
         
         public bool TogglePlayYourself(GUITickBox tickBox)
         {
             if (tickBox.Selected)
             {
-                GameMain.NetworkMember.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, GameMain.NetworkMember.Name, Gender.None, null);
+                GameMain.NetworkMember.CharacterInfo = 
+                    new CharacterInfo(Character.HumanConfigFile, GameMain.NetworkMember.Name, GameMain.Config.CharacterGender, null);
+                GameMain.NetworkMember.CharacterInfo.HeadSpriteId = GameMain.Config.CharacterHeadIndex; 
+
                 UpdatePlayerFrame(GameMain.NetworkMember.CharacterInfo);
             }
             else
             {
-                myPlayerFrame.ClearChildren();
+                playerInfoContainer.ClearChildren();
                 
                 GameMain.NetworkMember.CharacterInfo = null;
                 GameMain.NetworkMember.Character = null;
 
-                new GUITextBlock(Rectangle.Empty, TextManager.Get("PlayingAsSpectator"), "", Alignment.Center, Alignment.Center, myPlayerFrame, true);
-
-                var playYourself = new GUITickBox(new Rectangle(0, 0, 20, 20), TextManager.Get("PlayYourself"), Alignment.TopLeft, myPlayerFrame);
-                playYourself.OnSelected = TogglePlayYourself;
-                playYourself.UserData = "playyourself";
+                new GUITextBlock(new RectTransform(Vector2.One, playerInfoContainer.RectTransform, Anchor.Center), 
+                    TextManager.Get("PlayingAsSpectator"),
+                    textAlignment: Alignment.Center);
             }
             return false;
         }
 
         public void SetAllowSpectating(bool allowSpectating)
         {
-            GUITickBox playYourselfTickBox = myPlayerFrame?.FindChild("playyourself") as GUITickBox;
-            if (playYourselfTickBox == null) return;
-            
             //show the player config menu if spectating is not allowed
-            if (!playYourselfTickBox.Selected && !allowSpectating)
+            if (!playYourself.Selected && !allowSpectating)
             {
-                playYourselfTickBox.Selected = !playYourselfTickBox.Selected;
-                TogglePlayYourself(playYourselfTickBox);
+                playYourself.Selected = !playYourself.Selected;
+                TogglePlayYourself(playYourself);
             }
             //hide "play yourself" tickbox if spectating is not allowed
-            playYourselfTickBox.Visible = allowSpectating;            
+            playYourself.Visible = allowSpectating;            
         }
 
         public void SetAutoRestart(bool enabled, float timer = 0.0f)
@@ -690,15 +830,15 @@ namespace Barotrauma
         {
             if (missionTypeIndex < 0 || missionTypeIndex >= MissionPrefab.MissionTypes.Count) return;
 
-            missionTypeBlock.GetChild<GUITextBlock>().Text = MissionPrefab.MissionTypes[missionTypeIndex];
-            missionTypeBlock.UserData = missionTypeIndex;
+            ((GUITextBlock)missionTypeContainer.GetChild(2)).Text = MissionPrefab.MissionTypes[missionTypeIndex];
+            missionTypeContainer.UserData = missionTypeIndex;
         }
 
         public bool ToggleMissionType(GUIButton button, object userData)
         {
             if (GameMain.Server == null) return false;
 
-            int missionTypeIndex = (int)missionTypeBlock.UserData;
+            int missionTypeIndex = (int)missionTypeContainer.UserData;
             missionTypeIndex += (int)userData;
 
             if (missionTypeIndex < 0) missionTypeIndex = MissionPrefab.MissionTypes.Count - 1;
@@ -710,13 +850,27 @@ namespace Barotrauma
 
             return true;
         }
-
+        
         public bool ToggleTraitorsEnabled(GUIButton button, object userData)
         {
             ToggleTraitorsEnabled((int)userData);
             return true;
         }
-        
+
+        public bool ChangeBotCount(GUIButton button, object userData)
+        {
+            if (GameMain.Server == null) return false;
+            SetBotCount(GameMain.Server.BotCount + (int)userData);
+            return true;
+        }
+
+        public bool ChangeBotSpawnMode(GUIButton button, object userData)
+        {
+            if (GameMain.Server == null) return false;
+            SetBotSpawnMode(GameMain.Server.BotSpawnMode == BotSpawnMode.Fill ? BotSpawnMode.Normal : BotSpawnMode.Fill);
+            return true;
+        }
+
         private bool SelectSub(GUIComponent component, object obj)
         {
             if (GameMain.Server == null) return false;
@@ -728,8 +882,21 @@ namespace Barotrauma
             //hash will be null if opening the sub file failed -> don't select the sub
             if (string.IsNullOrWhiteSpace(hash))
             {
-                (component as GUITextBlock).TextColor = Color.DarkRed * 0.8f;
-                component.CanBeFocused = false;
+                GUITextBlock submarineTextBlock = component.GetChild<GUITextBlock>();
+                if (submarineTextBlock != null)
+                {
+                    submarineTextBlock.TextColor = Color.DarkRed * 0.8f;
+                    submarineTextBlock.CanBeFocused = false;
+                }
+                else
+                {
+                    DebugConsole.ThrowError("Failed to select submarine. Selected GUIComponent was of the type \"" + (component == null ? "null" : component.GetType().ToString()) + "\".");
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "NetLobbyScreen.SelectSub:InvalidComponent", 
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Failed to select submarine. Selected GUIComponent was of the type \"" + (component == null ? "null" : component.GetType().ToString()) + "\".");
+                }
+
 
                 StartButton.Enabled = false;
 
@@ -744,37 +911,45 @@ namespace Barotrauma
         public void UpdateSubList(GUIComponent subList, List<Submarine> submarines)
         {
             if (subList == null) return;
-
-            subList.ClearChildren();
-
+            
             if (submarines.Count == 0 && GameMain.Server != null)
             {
                 DebugConsole.ThrowError("No submarines found!");
             }
-
+             
             foreach (Submarine sub in submarines)
             {
                 AddSubmarine(subList, sub);
             }
         }
 
-        public void AddSubmarine(GUIComponent subList, Submarine sub)
+        private void AddSubmarine(GUIComponent subList, Submarine sub)
         {
-            var frame = new GUIFrame(new Rectangle(0, 0, 0, 25), "ListBoxElement", subList)
+            if (subList is GUIListBox)
+            {
+                subList = ((GUIListBox)subList).Content;
+            }
+            else if (subList is GUIDropDown)
+            {
+                subList = ((GUIDropDown)subList).ListBox.Content;
+            }
+
+            var frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), subList.RectTransform) { MinSize = new Point(0, 20) },
+                style: "ListBoxElement")
             {
                 ToolTip = sub.Description,
                 UserData = sub
             };
 
-            var subTextBlock = new GUITextBlock(
-                new Rectangle(20, 0, 0, 0), ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 65), "",
-                Alignment.TopLeft, Alignment.CenterLeft, frame)
+            int buttonSize = (int)(frame.Rect.Height * 0.8f);
+            var subTextBlock = new GUITextBlock(new RectTransform(new Vector2(0.8f, 1.0f), frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(buttonSize + 5, 0) },
+                ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 65), textAlignment: Alignment.CenterLeft)
             {
                 CanBeFocused = false
             };
 
-            var matchingSub = Submarine.SavedSubmarines.Find(s => s.Name == sub.Name && s.MD5Hash.Hash == sub.MD5Hash.Hash);
-            if (matchingSub == null) matchingSub = Submarine.SavedSubmarines.Find(s => s.Name == sub.Name);
+            var matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == sub.Name && s.MD5Hash.Hash == sub.MD5Hash.Hash);
+            if (matchingSub == null) matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == sub.Name);
 
             if (matchingSub == null)
             {
@@ -788,58 +963,69 @@ namespace Barotrauma
             }
             else
             {
-                if (subList == shuttleList || subList == shuttleList.ListBox)
+                if (subList == shuttleList || subList == shuttleList.ListBox || subList == shuttleList.ListBox.Content)
                 {
                     subTextBlock.TextColor = new Color(subTextBlock.TextColor, sub.HasTag(SubmarineTag.Shuttle) ? 1.0f : 0.6f);
                 }
 
-                GUIButton infoButton = new GUIButton(new Rectangle(0, 0, 20, 20), "?", Alignment.CenterLeft, "", frame);
-                infoButton.UserData = sub;
+                GUIButton infoButton = new GUIButton(new RectTransform(new Point(buttonSize, buttonSize), frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point((int)(buttonSize * 0.2f), 0) }, "?")
+                {
+                    UserData = sub
+                };
                 infoButton.OnClicked += (component, userdata) =>
                 {
-                    var msgBox = new GUIMessageBox("", "", 550, 400);
-                    ((Submarine)userdata).CreatePreviewWindow(msgBox.InnerFrame);
+                    ((Submarine)userdata).CreatePreviewWindow(new GUIMessageBox("", "", 550, 400));
                     return true;
                 };
             }
 
             if (sub.HasTag(SubmarineTag.Shuttle))
             {
-                new GUITextBlock(new Rectangle(-20, 0, 0, 25), TextManager.Get("Shuttle"), "", Alignment.CenterRight, Alignment.CenterRight, subTextBlock, false, GUI.SmallFont)
+                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), frame.RectTransform, Anchor.CenterRight),
+                    TextManager.Get("Shuttle"), textAlignment: Alignment.CenterRight, font: GUI.SmallFont)
                 {
                     TextColor = subTextBlock.TextColor * 0.8f,
                     ToolTip = subTextBlock.ToolTip,
                     CanBeFocused = false
                 };
+                //make shuttles more dim in the sub list (selecting a shuttle as the main sub is allowed but not recommended)
+                if (subList == this.subList.Content)
+                {
+                    subTextBlock.TextColor *= 0.5f;
+                    foreach (GUIComponent child in frame.Children)
+                    {
+                        child.Color *= 0.5f;
+                    }
+                }
             }
         }
 
         public bool VotableClicked(GUIComponent component, object userData)
         {
             if (GameMain.Client == null) return false;
-
+            
             VoteType voteType;
-            if (component.Parent == GameMain.NetLobbyScreen.SubList)
+            if (component.Parent == GameMain.NetLobbyScreen.SubList.Content)
             {
                 if (!GameMain.Client.Voting.AllowSubVoting)
                 {
                     if (GameMain.Client.HasPermission(ClientPermissions.SelectSub))
                     {
-                        GameMain.Client.RequestSelectSub(component.Parent.children.IndexOf(component));
+                        GameMain.Client.RequestSelectSub(component.Parent.GetChildIndex(component));
                         return true;
                     }
                     return false;
                 }
                 voteType = VoteType.Sub;
             }
-            else if (component.Parent == GameMain.NetLobbyScreen.ModeList)
+            else if (component.Parent == GameMain.NetLobbyScreen.ModeList.Content)
             {
                 if (!((GameModePreset)userData).Votable) return false;
                 if (!GameMain.Client.Voting.AllowModeVoting)
                 {
                     if (GameMain.Client.HasPermission(ClientPermissions.SelectMode))
                     {
-                        GameMain.Client.RequestSelectMode(component.Parent.children.IndexOf(component));
+                        GameMain.Client.RequestSelectMode(component.Parent.GetChildIndex(component));
                         return true;
                     }
                     return false;
@@ -877,23 +1063,19 @@ namespace Barotrauma
 
         public void AddPlayer(string name)
         {
-            GUITextBlock textBlock = new GUITextBlock(
-                new Rectangle(0, 0, playerList.Rect.Width - 20, 25), name,
-                 "", Alignment.Left, Alignment.Left,
-                playerList);
-
-            textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
-            textBlock.UserData = name;
+            GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), playerList.Content.RectTransform),
+                name, textAlignment: Alignment.CenterLeft)
+            {
+                UserData = name
+            };
 
             if (GameMain.Server != null) lastUpdateID++;
         }
 
         public void RemovePlayer(string name)
         {
-            GUIComponent child = playerList.children.Find(c => c.UserData as string == name);
-
+            GUIComponent child = playerList.Content.GetChildByUserData(name);
             if (child != null) playerList.RemoveChild(child);
-
             if (GameMain.Server != null) lastUpdateID++;
         }
 
@@ -907,31 +1089,38 @@ namespace Barotrauma
                 if (selectedClient.ID == GameMain.Client.ID) return false;
 
                 if (!GameMain.Client.HasPermission(ClientPermissions.Ban) &&
-                    !GameMain.Client.HasPermission(ClientPermissions.Kick) && 
+                    !GameMain.Client.HasPermission(ClientPermissions.Kick) &&
                     !GameMain.Client.Voting.AllowVoteKick)
                 {
                     return false;
                 }
-            }            
+            }
 
-            playerFrame = new GUIFrame(new Rectangle(0, 0, 0, 0), Color.Black * 0.6f);
+            playerFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.6f);
+            var playerFrameInner = new GUIFrame(new RectTransform(GameMain.Server != null ? new Point(450, 370) : new Point(450, 150), playerFrame.RectTransform, Anchor.Center));
+            var paddedPlayerFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), playerFrameInner.RectTransform, Anchor.Center))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
 
-            var playerFrameInner = new GUIFrame(GameMain.Server != null ? new Rectangle(0, 0, 450, 370) : new Rectangle(0, 0, 450, 150), null, Alignment.Center, "", playerFrame);
-            playerFrameInner.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
-
-            new GUITextBlock(new Rectangle(0, 0, 200, 20), obj.ToString(),
-                "", Alignment.TopLeft, Alignment.TopLeft,
-                playerFrameInner, false, GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), 
+                text: obj.ToString(), font: GUI.LargeFont);
 
             if (GameMain.Server != null)
             {
                 playerFrame.UserData = selectedClient;
 
-                new GUITextBlock(new Rectangle(0, 25, 150, 15), selectedClient.Connection.RemoteEndPoint.Address.ToString(), "", playerFrameInner);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform),
+                     selectedClient.Connection.RemoteEndPoint.Address.ToString());
 
-                new GUITextBlock(new Rectangle(0, 45, 0, 15), TextManager.Get("Rank"), "", playerFrameInner);
-                var rankDropDown = new GUIDropDown(new Rectangle(0, 70, 150, 20), TextManager.Get("Rank"), "", playerFrameInner);
-                rankDropDown.UserData = selectedClient;
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedPlayerFrame.RectTransform), 
+                    TextManager.Get("Rank"));
+                var rankDropDown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform),
+                    TextManager.Get("Rank"))
+                {
+                    UserData = selectedClient
+                };
                 foreach (PermissionPreset permissionPreset in PermissionPreset.List)
                 {
                     rankDropDown.AddItem(permissionPreset.Name, permissionPreset, permissionPreset.Description);
@@ -958,12 +1147,25 @@ namespace Barotrauma
                     return true;
                 };
 
-                var permissionsBox = new GUIFrame(new Rectangle(0, 125, (int)(playerFrameInner.Rect.Width * 0.5f), 160), null, playerFrameInner);
-                permissionsBox.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-                permissionsBox.UserData = selectedClient;
+                var permissionLabels = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedPlayerFrame.RectTransform), isHorizontal: true)
+                {
+                    Stretch = true,
+                    RelativeSpacing = 0.05f
+                };
+                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), permissionLabels.RectTransform), TextManager.Get("Permissions"));
+                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), permissionLabels.RectTransform), TextManager.Get("PermittedConsoleCommands"));
+                
+                var permissionContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.4f), paddedPlayerFrame.RectTransform), isHorizontal: true)
+                {
+                    Stretch = true,
+                    RelativeSpacing = 0.05f
+                };
 
-                new GUITextBlock(new Rectangle(0, 100, permissionsBox.Rect.Width, 15), TextManager.Get("Permissions"), "", playerFrameInner);
-                int x = 0, y = 0;
+                var permissionsBox = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), permissionContainer.RectTransform))
+                {
+                    UserData = selectedClient
+                };
+                
                 foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                 {
                     if (permission == ClientPermissions.None) continue;
@@ -973,47 +1175,47 @@ namespace Barotrauma
 
                     string permissionStr = attributes.Length > 0 ? attributes[0].Description : permission.ToString();
 
-                    var permissionTick = new GUITickBox(new Rectangle(x, y, 15, 15), permissionStr, Alignment.TopLeft, GUI.SmallFont, permissionsBox);
-                    permissionTick.UserData = permission;
-                    permissionTick.Selected = selectedClient.HasPermission(permission);
-
-                    permissionTick.OnSelected = (tickBox) =>
+                    var permissionTick = new GUITickBox(new RectTransform(new Vector2(0.15f, 0.15f), permissionsBox.Content.RectTransform),
+                        permissionStr, font: GUI.SmallFont)
                     {
-                        //reset rank to custom
-                        rankDropDown.SelectItem(null);
+                        UserData = permission,
+                        Selected = selectedClient.HasPermission(permission),
 
-                        var client = playerFrame.UserData as Client;
-                        if (client == null) return false;
+                        OnSelected = (tickBox) =>
+                        {
+                            //reset rank to custom
+                            rankDropDown.SelectItem(null);
 
-                        var thisPermission = (ClientPermissions)tickBox.UserData;
+                            var client = playerFrame.UserData as Client;
+                            if (client == null) return false;
 
-                        if (tickBox.Selected)
-                            client.GivePermission(thisPermission);
-                        else
-                            client.RemovePermission(thisPermission);
+                            var thisPermission = (ClientPermissions)tickBox.UserData;
 
-                        GameMain.Server.UpdateClientPermissions(client);
+                            if (tickBox.Selected)
+                                client.GivePermission(thisPermission);
+                            else
+                                client.RemovePermission(thisPermission);
 
-                        return true;
+                            GameMain.Server.UpdateClientPermissions(client);
+
+                            return true;
+                        }
                     };
-
-                    y += 20;
-                    if (y >= permissionsBox.Rect.Height - 15)
-                    {
-                        y = 0;
-                        x += 120;
-                    }
                 }
 
-                new GUITextBlock(new Rectangle(0, 100, (int)(playerFrameInner.Rect.Width * 0.5f), 15), TextManager.Get("PermittedConsoleCommands"), "", Alignment.TopRight, Alignment.TopLeft, playerFrameInner, true);
-                var commandList = new GUIListBox(new Rectangle(0, 125, (int)(playerFrameInner.Rect.Width * 0.5f), 160), "", Alignment.TopRight, playerFrameInner);
-                commandList.UserData = selectedClient;
+                var commandList = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), permissionContainer.RectTransform))
+                {
+                    UserData = selectedClient
+                };
                 foreach (DebugConsole.Command command in DebugConsole.Commands)
                 {
-                    var commandTickBox = new GUITickBox(new Rectangle(0, 0, 15, 15), command.names[0], Alignment.TopLeft, GUI.SmallFont, commandList);
-                    commandTickBox.Selected = selectedClient.PermittedConsoleCommands.Contains(command);
-                    commandTickBox.ToolTip = command.help;
-                    commandTickBox.UserData = command;
+                    var commandTickBox = new GUITickBox(new RectTransform(new Vector2(0.15f, 0.15f), commandList.Content.RectTransform),
+                        command.names[0], font: GUI.SmallFont)
+                    {
+                        Selected = selectedClient.PermittedConsoleCommands.Contains(command),
+                        ToolTip = command.help,
+                        UserData = command
+                    };
                     commandTickBox.OnSelected += (GUITickBox tickBox) =>
                     {
                         //reset rank to custom
@@ -1038,37 +1240,57 @@ namespace Barotrauma
                 }
             }
 
-            if (GameMain.Server != null || GameMain.Client.HasPermission(ClientPermissions.Kick))
-            {
-                var kickButton = new GUIButton(new Rectangle(0, 0, 80, 20), TextManager.Get("Kick"), Alignment.BottomLeft, "", playerFrameInner);
-                kickButton.UserData = obj;
-                kickButton.OnClicked += KickPlayer;
-                kickButton.OnClicked += ClosePlayerFrame;
-            }
-
+            var buttonAreaUpper = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true);
+            var buttonAreaLower = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true);
+            
             if (GameMain.Server != null || GameMain.Client.HasPermission(ClientPermissions.Ban))
             {
-                var banButton = new GUIButton(new Rectangle(90, 0, 80, 20), TextManager.Get("Ban"), Alignment.BottomLeft, "", playerFrameInner);
-                banButton.UserData = obj;
+                var banButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform),
+                    TextManager.Get("Ban"))
+                {
+                    UserData = obj
+                };
                 banButton.OnClicked += BanPlayer;
                 banButton.OnClicked += ClosePlayerFrame;
 
-                var rangebanButton = new GUIButton(new Rectangle(180, 0, 80, 20), TextManager.Get("BanRange"), Alignment.BottomLeft, "", playerFrameInner);
-                rangebanButton.UserData = obj;
+                var rangebanButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform),
+                    TextManager.Get("BanRange"))
+                {
+                    UserData = obj
+                };
                 rangebanButton.OnClicked += BanPlayerRange;
                 rangebanButton.OnClicked += ClosePlayerFrame;
             }
-            
+
+
             if (GameMain.Client != null && GameMain.Client.Voting.AllowVoteKick && selectedClient != null)
             {
-                var kickVoteButton = new GUIButton(new Rectangle(0, -30, 120, 20), TextManager.Get("VoteToKick"), Alignment.BottomLeft, "", playerFrameInner);
-                kickVoteButton.Enabled = !selectedClient.HasKickVoteFromID(GameMain.Client.ID);
-                kickVoteButton.UserData = selectedClient;
-                kickVoteButton.OnClicked += GameMain.Client.VoteForKick;
-            }        
+                var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
+                    TextManager.Get("VoteToKick"))
+                {
+                    Enabled = !selectedClient.HasKickVoteFromID(GameMain.Client.ID),
+                    OnClicked = GameMain.Client.VoteForKick,
+                    UserData = selectedClient
+                };
+            }
 
-            var closeButton = new GUIButton(new Rectangle(0, 0, 100, 20), TextManager.Get("Close"), Alignment.BottomRight, "", playerFrameInner);
-            closeButton.OnClicked = ClosePlayerFrame;
+            if (GameMain.Server != null || GameMain.Client.HasPermission(ClientPermissions.Kick))
+            {
+                var kickButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
+                    TextManager.Get("Kick"))
+                {
+                    UserData = obj
+                };
+                kickButton.OnClicked = KickPlayer;
+                kickButton.OnClicked += ClosePlayerFrame;
+            }
+
+            var closeButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform, Anchor.BottomRight),
+                TextManager.Get("Close"))
+            {
+                IgnoreLayoutGroups = true,
+                OnClicked = ClosePlayerFrame
+            };
 
             return false;
         }
@@ -1105,35 +1327,23 @@ namespace Barotrauma
         {
             playerList.ClearChildren();
 
-            if (GameMain.Server != null) lastUpdateID++;
+            //if (GameMain.Server != null) lastUpdateID++; //TODO: not used, remove?
         }
 
         public override void AddToGUIUpdateList()
         {
             base.AddToGUIUpdateList();
-
-            if (campaignSetupUI != null)
-            {
-                campaignSetupUI.AddToGUIUpdateList();
-            }
-            else if (jobInfoFrame != null)
-            {
-                jobInfoFrame.AddToGUIUpdateList();
-            }
-            else if (playerFrame != null)
-            {
-                playerFrame.AddToGUIUpdateList();
-            }
-            else
-            {
-                menu.AddToGUIUpdateList();
-            }
+              
+            menu.AddToGUIUpdateList();              
+            playerFrame?.AddToGUIUpdateList();  
+            campaignSetupUI?.AddToGUIUpdateList();
+            jobInfoFrame?.AddToGUIUpdateList();
         }
         
         public List<Submarine> GetSubList()
         {
             List<Submarine> subs = new List<Submarine>();
-            foreach (GUIComponent component in subList.children)
+            foreach (GUIComponent component in subList.Content.Children)
             {
                 if (component.UserData is Submarine) subs.Add((Submarine)component.UserData);
             }
@@ -1144,35 +1354,10 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
-
-            if (jobInfoFrame != null)
-            {
-                jobInfoFrame.Update((float)deltaTime);
-            }
-            else if (playerFrame != null)
-            {
-                playerFrame.Update((float)deltaTime);
-            }
-            else
-            {
-                menu.Update((float)deltaTime);
-            }
-
-            if (campaignContainer.Visible && campaignUI != null)
-            {
-                campaignUI.Update((float)deltaTime);
-            }
-
+                        
             if (campaignSetupUI != null)
             {
-                if (!campaignSetupUI.Visible)
-                {
-                    campaignSetupUI = null;
-                }
-                else
-                {
-                    campaignSetupUI.Update((float)deltaTime);
-                }
+                if (!campaignSetupUI.Visible) campaignSetupUI = null;                
             }
 
             if (autoRestartTimer != 0.0f && autoRestartBox.Selected)
@@ -1184,33 +1369,10 @@ namespace Barotrauma
         {
             graphics.Clear(Color.Black);
 
-            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
+            GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite);
 
-            if (backgroundSprite != null)
-            {
-                spriteBatch.Draw(backgroundSprite.Texture, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero,
-                    Math.Max((float)GameMain.GraphicsWidth / backgroundSprite.SourceRect.Width, (float)GameMain.GraphicsHeight / backgroundSprite.SourceRect.Height),
-                    SpriteEffects.None, 0.0f);
-            }
-
-            menu.Draw(spriteBatch);
-
-            if (jobInfoFrame != null) jobInfoFrame.Draw(spriteBatch);
-            
-            if (campaignContainer.Visible && campaignUI != null)
-            {
-                campaignUI.Draw(spriteBatch);
-            }
-
-            if (campaignSetupUI != null)
-            {
-                campaignSetupUI.Draw(spriteBatch);
-            }
-
-            if (playerFrame != null) playerFrame.Draw(spriteBatch);
-
-            GUI.Draw((float)deltaTime, spriteBatch, null);
-
+            spriteBatch.Begin(SpriteSortMode.Immediate, rasterizerState: GameMain.ScissorTestEnable);
+            GUI.Draw(Cam, spriteBatch);
             spriteBatch.End();
         }
 
@@ -1218,43 +1380,38 @@ namespace Barotrauma
         {
             float prevSize = chatBox.BarSize;
 
-            while (chatBox.CountChildren > 20)
+            while (chatBox.Content.CountChildren > 20)
             {
-                chatBox.RemoveChild(chatBox.children[1]);
+                chatBox.RemoveChild(chatBox.Content.Children.First());
             }
 
-            GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, chatBox.Rect.Width - 20, 0),
-                (message.Type == ChatMessageType.Private ? TextManager.Get("PrivateMessageTag") + " " : "") + message.TextWithSender,
-                ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, message.Color,
-                Alignment.Left, Alignment.TopLeft, "", null, true, GUI.SmallFont);
-            msg.UserData = message;
-            msg.CanBeFocused = false;
-
-            msg.Padding = new Vector4(20, 0, 0, 0);
-            chatBox.AddChild(msg);
+            GUITextBlock msg = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), chatBox.Content.RectTransform),
+                text: (message.Type == ChatMessageType.Private ? TextManager.Get("PrivateMessageTag") + " " : "") + message.TextWithSender,
+                textColor: message.Color,
+                color: ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f,
+                wrap: true, font: GUI.SmallFont)
+            {
+                UserData = message,
+                CanBeFocused = false,
+            };
+            //chatBox.AddChild(msg);
 
             if ((prevSize == 1.0f && chatBox.BarScroll == 0.0f) || (prevSize < 1.0f && chatBox.BarScroll == 1.0f)) chatBox.BarScroll = 1.0f;
         }
 
         private void UpdatePlayerHead(CharacterInfo characterInfo)
         {
-            GUIComponent existing = myPlayerFrame.FindChild("playerhead");
-            if (existing != null) myPlayerFrame.RemoveChild(existing);
-
-            GUIImage image = new GUIImage(new Rectangle(20, 40, 30, 30), characterInfo.HeadSprite, Alignment.TopLeft, myPlayerFrame);
-            image.UserData = "playerhead";
+            playerHeadSprite.Sprite = characterInfo.HeadSprite;
         }
 
         private bool ToggleHead(GUIButton button, object userData)
         {
-            int dir = (int)userData;
-
             if (GameMain.NetworkMember.CharacterInfo == null) return true;
 
+            int dir = (int)userData;
             GameMain.NetworkMember.CharacterInfo.HeadSpriteId += dir;
-
+            GameMain.Config.CharacterHeadIndex = GameMain.NetworkMember.CharacterInfo.HeadSpriteId;
             UpdatePlayerHead(GameMain.NetworkMember.CharacterInfo);
-
             return true;
         }
 
@@ -1262,16 +1419,16 @@ namespace Barotrauma
         {
             Gender gender = (Gender)obj;
             GameMain.NetworkMember.CharacterInfo.Gender = gender;
-
+            GameMain.Config.CharacterGender = GameMain.NetworkMember.CharacterInfo.Gender;
             UpdatePlayerHead(GameMain.NetworkMember.CharacterInfo);
             return true;
         }
 
         public void SelectMode(int modeIndex)
         {
-            if (modeIndex < 0 || modeIndex >= modeList.children.Count || modeList.SelectedIndex == modeIndex) return;
+            if (modeIndex < 0 || modeIndex >= modeList.Content.CountChildren || modeList.SelectedIndex == modeIndex) return;
 
-            if (((GameModePreset)modeList.children[modeIndex].UserData).Name == "Campaign")
+            if (((GameModePreset)modeList.Content.GetChild(modeIndex).UserData).Name == "Campaign")
             {
                 if (GameMain.Server != null)
                 {
@@ -1284,8 +1441,8 @@ namespace Barotrauma
                 ToggleCampaignMode(false);
             }
 
-            modeList.Select(modeIndex, true);            
-            missionTypeBlock.Visible = SelectedMode != null && SelectedMode.Name == "Mission";
+            modeList.Select(modeIndex, true);
+            missionTypeContainer.Visible = SelectedMode != null && SelectedMode.Name == "Mission";
         }
 
         private bool SelectMode(GUIComponent component, object obj)
@@ -1294,8 +1451,8 @@ namespace Barotrauma
             
             GameModePreset modePreset = obj as GameModePreset;
             if (modePreset == null) return false;
-            
-            missionTypeBlock.Visible = modePreset.Name == "Mission";
+
+            missionTypeContainer.Visible = modePreset.Name == "Mission";
 
             if (modePreset.Name == "Campaign")
             {
@@ -1312,7 +1469,7 @@ namespace Barotrauma
                 ToggleCampaignMode(false);
             }
 
-            lastUpdateID++;
+            if (GameMain.Server != null) lastUpdateID++;
             return true;
         }
 
@@ -1326,77 +1483,83 @@ namespace Barotrauma
         {
             ToggleCampaignView(enabled);
 
-            subList.Enabled = !enabled;
-            shuttleList.Enabled = !enabled;
-            seedBox.Enabled = !enabled;
+            subList.Enabled = !enabled && AllowSubSelection;
+            shuttleList.Enabled = !enabled && AllowSubSelection;
+            seedBox.Enabled = !enabled && GameMain.Server != null;
 
             if (campaignViewButton != null) campaignViewButton.Visible = enabled;
-            if (StartButton != null) StartButton.Visible = !enabled;            
+            if (StartButton != null) StartButton.Visible = !enabled && GameMain.Server != null;            
 
             if (enabled)
             {
                 if (campaignUI == null || campaignUI.Campaign != GameMain.GameSession.GameMode)
                 {
-                    campaignContainer.ClearChildren();                    
+                    campaignContainer.ClearChildren();
 
-                    campaignUI = new CampaignUI(GameMain.GameSession.GameMode as CampaignMode, campaignContainer);
-                    campaignUI.StartRound = () => { GameMain.Server.StartGame(); };
+                    campaignUI = new CampaignUI(GameMain.GameSession.GameMode as CampaignMode, campaignContainer)
+                    {
+                        StartRound = () => { GameMain.Server.StartGame(); }
+                    };
 
-                    var backButton = new GUIButton(new Rectangle(0, -20, 100, 30), TextManager.Get("Back"), "", campaignContainer);
-                    backButton.ClampMouseRectToParent = false;
+                    var backButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.1f), campaignContainer.RectTransform),
+                        TextManager.Get("Back"));
                     backButton.OnClicked += (btn, obj) => { ToggleCampaignView(false); return true; };
 
-                    int buttonX = backButton.Rect.Width + 50;
+                    var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 0.1f), campaignContainer.RectTransform) { RelativeOffset = new Vector2(0.3f, 0.0f) },
+                        isHorizontal: true)
+                    {
+                        Stretch = true,
+                        RelativeSpacing = 0.05f
+                    };
+
+
                     List<CampaignUI.Tab> tabTypes = new List<CampaignUI.Tab>() { CampaignUI.Tab.Map, CampaignUI.Tab.Store };
                     foreach (CampaignUI.Tab tab in tabTypes)
                     {
-                        var tabButton = new GUIButton(new Rectangle(buttonX, -10, 100, 20), tab.ToString(), "", campaignContainer);
-                        tabButton.ClampMouseRectToParent = false;
+                        var tabButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonContainer.RectTransform), tab.ToString());
                         tabButton.OnClicked += (btn, obj) =>
                         {
                             campaignUI.SelectTab(tab);
                             return true;
                         };
-                        buttonX += 110;
                     }
 
-                    var moneyText = new GUITextBlock(new Rectangle(120,0,200,20), TextManager.Get("Credit"), "", Alignment.BottomLeft, Alignment.TopLeft, campaignContainer);
-                    moneyText.TextGetter = campaignUI.GetMoney;
+                    var moneyText = new GUITextBlock(new RectTransform(new Vector2(0.25f, 0.1f), campaignContainer.RectTransform, Anchor.BottomLeft),
+                        TextManager.Get("Credit"))
+                    {
+                        TextGetter = campaignUI.GetMoney
+                    };
 
-                    var restartText = new GUITextBlock(new Rectangle(-backButton.Rect.Width - 30, -10, 130, 30), "", "", Alignment.BottomRight, Alignment.BottomRight, campaignContainer);
-                    restartText.Font = GUI.SmallFont;
-                    restartText.TextGetter = AutoRestartText;
+                    var restartText = new GUITextBlock(new RectTransform(new Vector2(0.25f, 0.1f), campaignContainer.RectTransform, Anchor.BottomRight), "", font: GUI.SmallFont)
+                    {
+                        TextGetter = AutoRestartText
+                    };
                 }
                 modeList.Select(2, true);
             }
 
-            if (GameMain.Server != null)
-            {
-                lastUpdateID++;
-            }
+            if (GameMain.Server != null) lastUpdateID++;
         }
 
         private bool SelectSeed(GUITextBox textBox, string seed)
         {
             if (GameMain.Server == null) return false;
             if (string.IsNullOrWhiteSpace(seed)) return false;
-
             LevelSeed = seed;
-            lastUpdateID++;
-
             return true;
         }
         
         private bool ViewJobInfo(GUIButton button, object obj)
         {
-            GUIComponent jobText = button.Parent;
-
-            JobPrefab jobPrefab = jobText.UserData as JobPrefab;
+            JobPrefab jobPrefab = button.UserData as JobPrefab;
             if (jobPrefab == null) return false;
 
             jobInfoFrame = jobPrefab.CreateInfoFrame();
-            GUIButton closeButton = new GUIButton(new Rectangle(0, 0, 100, 20), TextManager.Get("Close"), Alignment.BottomRight, "", jobInfoFrame.children[0]);
-            closeButton.OnClicked = CloseJobInfo;
+            GUIButton closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), jobInfoFrame.GetChild(0).GetChild(0).RectTransform, Anchor.BottomRight),
+                TextManager.Get("Close"))
+            {
+                OnClicked = CloseJobInfo
+            };
             return true;
         }
 
@@ -1408,16 +1571,13 @@ namespace Barotrauma
 
         private bool ChangeJobPreference(GUIButton button, object obj)
         {
-            GUIComponent jobText = button.Parent;
-            GUIListBox jobList = jobText.Parent as GUIListBox;
+            GUIComponent jobText = button.Parent.Parent;
 
-            int index = jobList.children.IndexOf(jobText);
+            int index = jobList.Content.GetChildIndex(jobText);
             int newIndex = index + (int)obj;
-            if (newIndex < 0 || newIndex > jobList.children.Count - 1) return false;
+            if (newIndex < 0 || newIndex > jobList.Content.CountChildren - 1) return false;
 
-            GUIComponent temp = jobList.children[newIndex];
-            jobList.children[newIndex] = jobText;
-            jobList.children[index] = temp;
+            jobText.RectTransform.RepositionChildInHierarchy(newIndex);
 
             UpdateJobPreferences(jobList);
 
@@ -1429,22 +1589,28 @@ namespace Barotrauma
             listBox.Deselect();
             List<string> jobNamePreferences = new List<string>();
 
-            for (int i = 0; i < listBox.children.Count; i++)
+            for (int i = 0; i < listBox.Content.CountChildren; i++)
             {
                 float a = (float)(i - 1) / 3.0f;
                 a = Math.Min(a, 3);
                 Color color = new Color(1.0f - a, (1.0f - a) * 0.6f, 0.0f, 0.3f);
 
-                listBox.children[i].Color = color;
-                listBox.children[i].HoverColor = color;
-                listBox.children[i].SelectedColor = color;
-                
-                (listBox.children[i] as GUITextBlock).Text = (i+1) + ". " + (listBox.children[i].UserData as JobPrefab).Name;
+                GUIComponent child = listBox.Content.GetChild(i);
 
-                jobNamePreferences.Add((listBox.children[i].UserData as JobPrefab).Name);
+                child.Color = color;
+                child.HoverColor = color;
+                child.SelectedColor = color;
+
+                (child.GetChild<GUITextBlock>()).Text = (i + 1) + ". " + (child.UserData as JobPrefab).Name;
+
+                jobNamePreferences.Add((child.UserData as JobPrefab).Name);
             }
 
-            GameMain.Config.JobNamePreferences = jobNamePreferences;
+            if (!GameMain.Config.JobNamePreferences.SequenceEqual(jobNamePreferences))
+            {
+                GameMain.Config.JobNamePreferences = jobNamePreferences;
+                GameMain.Config.Save();
+            }
         }
 
         public Pair<string, string> FailedSelectedSub;
@@ -1460,15 +1626,22 @@ namespace Barotrauma
                 return false;
             }
 
-            Submarine sub = Submarine.SavedSubmarines.Find(m => m.Name == subName && m.MD5Hash.Hash == md5Hash);
-            if (sub == null) sub = Submarine.SavedSubmarines.Find(m => m.Name == subName);
+            Submarine sub = Submarine.SavedSubmarines.FirstOrDefault(m => m.Name == subName && m.MD5Hash.Hash == md5Hash);
+            if (sub == null) sub = Submarine.SavedSubmarines.FirstOrDefault(m => m.Name == subName);
 
-            var matchingListSub = subList.children.Find(c => c.UserData == sub);
+            var matchingListSub = subList.Content.GetChildByUserData(sub);
             if (matchingListSub != null)
             {
-                subList.OnSelected -= VotableClicked;
-                subList.Select(subList.children.IndexOf(matchingListSub), true);
-                subList.OnSelected += VotableClicked;
+                if (subList.Parent is GUIDropDown subDropDown)
+                {
+                    subDropDown.SelectItem(sub);
+                }
+                else
+                {
+                    subList.OnSelected -= VotableClicked;
+                    subList.Select(subList.Content.GetChildIndex(matchingListSub), true);
+                    subList.OnSelected += VotableClicked;
+                }
 
                 if (subList == SubList)
                     FailedSelectedSub = null;
@@ -1513,7 +1686,7 @@ namespace Barotrauma
                 requestFileBox.Buttons[0].OnClicked += (GUIButton button, object userdata) =>
                 {
                     string[] fileInfo = (string[])userdata;
-                    GameMain.Client.RequestFile(FileTransferType.Submarine, fileInfo[0], fileInfo[1]);
+                    GameMain.Client?.RequestFile(FileTransferType.Submarine, fileInfo[0], fileInfo[1]);
                     return true;
                 };
                 requestFileBox.Buttons[1].OnClicked += requestFileBox.Close;

@@ -13,6 +13,8 @@ namespace Barotrauma
     {
         private static Dictionary<string, XDocument> cachedConfigs = new Dictionary<string, XDocument>();
 
+        private static ushort idCounter;
+
         public string Name;
         public string DisplayName
         {
@@ -68,11 +70,15 @@ namespace Barotrauma
 
         public bool StartItemsGiven;
 
-        public Pair<CauseOfDeathType, AfflictionPrefab> CauseOfDeath;
+        public CauseOfDeath CauseOfDeath;
 
         public byte TeamID;
 
         private NPCPersonalityTrait personalityTrait;
+
+        //unique ID given to character infos in MP
+        //used by clients to identify which infos are the same to prevent duplicate characters in round summary
+        public ushort ID;
 
         public List<ushort> PickedItemIDs
         {
@@ -140,6 +146,9 @@ namespace Barotrauma
 
         public CharacterInfo(string file, string name = "", Gender gender = Gender.None, JobPrefab jobPrefab = null)
         {
+            ID = idCounter;
+            idCounter++;
+
             this.File = file;
 
             headSpriteRange = new Vector2[2];
@@ -222,6 +231,9 @@ namespace Barotrauma
 
         public CharacterInfo(XElement element)
         {
+            ID = idCounter;
+            idCounter++;
+
             Name = element.GetAttributeString("name", "unnamed");
 
             string genderStr = element.GetAttributeString("gender", "male").ToLowerInvariant();
@@ -329,18 +341,37 @@ namespace Barotrauma
             return salary;
         }
 
-        public void IncreaseSkillLevel(string skillName, float increase)
+        public void IncreaseSkillLevel(string skillName, float increase, Vector2 worldPos)
         {
             if (Job == null) return;
 
-            int prevLevel = (int)Job.GetSkillLevel(skillName);
+            float prevLevel = Job.GetSkillLevel(skillName);
             Job.IncreaseSkillLevel(skillName, increase);
 
+            float newLevel = Job.GetSkillLevel(skillName);
 #if CLIENT
-            int newLevel = (int)Job.GetSkillLevel(skillName);
-            if (newLevel > prevLevel)
+            if (newLevel - prevLevel > 0.1f)
             {
-                new GUIMessageBox("Skill level increased!", Name + "'s " + skillName + " skill increased to " + newLevel + "!");
+                GUI.AddMessage(
+                    "+" + ((int)((newLevel - prevLevel) * 100.0f)).ToString() + " XP",
+                    Color.Green,
+                    worldPos,
+                    Vector2.UnitY * 10.0f);
+            }
+            else if (prevLevel % 0.1f > 0.05f && newLevel % 0.1f < 0.05f)
+            {
+                GUI.AddMessage(
+                    "+10 XP",
+                    Color.Green,
+                    worldPos,
+                    Vector2.UnitY * 10.0f);
+            }
+
+            if ((int)newLevel > (int)prevLevel)
+            {
+                GUI.AddMessage(
+                    TextManager.Get("SkillIncreased").Replace("[name]", Name).Replace("[skillname]", skillName).Replace("[newlevel]", ((int)newLevel).ToString()), 
+                    Color.Green);
             }
 #endif
         }

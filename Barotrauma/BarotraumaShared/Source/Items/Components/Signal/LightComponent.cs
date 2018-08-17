@@ -13,15 +13,14 @@ namespace Barotrauma.Items.Components
     partial class LightComponent : Powered, IServerSerializable, IDrawableComponent
     {
         private Color lightColor;
-
-        private float range;
-
         private float lightBrightness;
-
+        private float blinkFrequency;
+        private float range;
         private float flicker;
-
         private bool castShadows;
 
+        private float blinkTimer;
+        
         public PhysicsBody ParentBody;
 
         [Editable(0.0f, 2048.0f), Serialize(100.0f, true)]
@@ -76,7 +75,17 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [InGameEditable, Serialize("1.0,1.0,1.0,1.0", true)]
+        [Editable, Serialize(0.0f, true)]
+        public float BlinkFrequency
+        {
+            get { return blinkFrequency; }
+            set
+            {
+                blinkFrequency = MathHelper.Clamp(value, 0.0f, 60.0f);
+            }
+        }
+
+        [Editable, Serialize("1.0,1.0,1.0,1.0", true)]
         public Color LightColor
         {
             get { return lightColor; }
@@ -130,6 +139,7 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             UpdateOnActiveEffects(deltaTime);
+            if (AITarget != null) AITarget.Enabled = voltage > minVoltage || powerConsumption <= 0.0f;
 
 #if CLIENT
             light.ParentSub = item.Submarine;
@@ -176,7 +186,10 @@ namespace Barotrauma.Items.Components
             if (Rand.Range(0.0f, 1.0f) < 0.05f && voltage < Rand.Range(0.0f, minVoltage))
             {
 #if CLIENT
-                if (voltage > 0.1f) sparkSounds[Rand.Int(sparkSounds.Length)].Play(1.0f, 400.0f, item.WorldPosition);
+                if (voltage > 0.1f && sparkSounds.Count > 0) 
+                {
+                    SoundPlayer.PlaySound(sparkSounds[Rand.Int(sparkSounds.Count)], 1.0f, 400.0f, item.WorldPosition, item.CurrentHull);
+                }
 #endif
                 lightBrightness = 0.0f;
             }
@@ -185,12 +198,26 @@ namespace Barotrauma.Items.Components
                 lightBrightness = MathHelper.Lerp(lightBrightness, Math.Min(voltage, 1.0f), 0.1f);
             }
 
-#if CLIENT
-            light.Color = lightColor * lightBrightness * (1.0f-Rand.Range(0.0f,Flicker));
-            light.Range = range * (float)Math.Sqrt(lightBrightness);
-#endif
-            item.SightRange = Math.Max(range * (float)Math.Sqrt(lightBrightness), item.SightRange);
+            if (blinkFrequency > 0.0f)
+            {
+                blinkTimer = (blinkTimer + deltaTime * blinkFrequency) % 1.0f;                
+            }
 
+            if (blinkTimer > 0.5f)
+            {
+#if CLIENT
+                light.Color = Color.Transparent;
+#endif
+            }
+            else
+            {
+#if CLIENT
+                light.Color = lightColor * lightBrightness * (1.0f - Rand.Range(0.0f, Flicker));
+                light.Range = range;
+#endif
+                item.SightRange = Math.Max(range * (float)Math.Sqrt(lightBrightness), item.SightRange);
+            }
+            
             voltage = 0.0f;
         }
 
@@ -206,9 +233,9 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
-            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power);
+            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
 
             switch (connection.Name)
             {

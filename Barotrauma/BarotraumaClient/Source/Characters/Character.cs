@@ -13,10 +13,14 @@ namespace Barotrauma
 {
     partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable
     {
+        public static bool DisableControls;
+
         protected float soundTimer;
         protected float soundInterval;
         protected float hudInfoTimer;
         protected bool hudInfoVisible;
+
+        protected float lastRecvPositionUpdateTime;
 
         float hudInfoHeight;
 
@@ -31,13 +35,11 @@ namespace Barotrauma
             set
             {
                 if (controlled == value) return;
-                CharacterHealth.OpenHealthWindow = null;
                 controlled = value;
-
-                if (controlled != null)
-                {
-                    controlled.Enabled = true;
-                }
+                if (controlled != null) controlled.Enabled = true;
+                GameMain.GameSession?.CrewManager?.SetCharacterSelected(controlled);
+                CharacterHealth.OpenHealthWindow = null;
+                
             }
         }
         
@@ -62,6 +64,20 @@ namespace Barotrauma
             set { distortStrength = MathHelper.Clamp(value, 0.0f, 1.0f); }
         }
 
+        private float radialDistortStrength;
+        public float RadialDistortStrength
+        {
+            get { return radialDistortStrength; }
+            set { radialDistortStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
+        }
+
+        private float chromaticAberrationStrength;
+        public float ChromaticAberrationStrength
+        {
+            get { return chromaticAberrationStrength; }
+            set { chromaticAberrationStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
+        }
+
         partial void InitProjSpecific(XDocument doc)
         {
             soundInterval = doc.Root.GetAttributeFloat("soundinterval", 10.0f);
@@ -70,7 +86,7 @@ namespace Barotrauma
 
             for (int i = 0; i < Enum.GetNames(typeof(InputType)).Length; i++)
             {
-                keys[i] = new Key(GameMain.Config.KeyBind((InputType)i));
+                keys[i] = new Key((InputType)i);
             }
 
             var soundElements = doc.Root.Elements("sound").ToList();
@@ -137,15 +153,18 @@ namespace Barotrauma
             }  
 
             Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
-            if (DebugConsole.IsOpen || GUI.PauseMenuOpen ||
-                (GameMain.GameSession?.CrewManager?.CrewCommander != null && GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
+            if (GUI.PauseMenuOpen)
+            {
+                cam.OffsetAmount = 0.0f;
+            }
+            else if (SelectedConstruction != null &&
+                SelectedConstruction.components.Any(ic => ic.GuiFrame != null && (GUI.MouseOn == ic.GuiFrame || ic.GuiFrame.IsParentOf(GUI.MouseOn))))
             {
                 cam.OffsetAmount = 0.0f;
             }
             else if (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
             {
-                if (DebugConsole.IsOpen || GUI.PauseMenuOpen || IsUnconscious ||
-                    (GameMain.GameSession?.CrewManager?.CrewCommander != null && GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
+                if (GUI.PauseMenuOpen || IsUnconscious)
                 {
                     if (deltaTime > 0.0f) cam.OffsetAmount = 0.0f;
                 }
@@ -192,9 +211,9 @@ namespace Barotrauma
         {
             if (GameMain.NetworkMember != null && controlled == this)
             {
-                string chatMessage = causeOfDeath.First == CauseOfDeathType.Affliction ?
-                    causeOfDeath.Second.SelfCauseOfDeathDescription :
-                    TextManager.Get("Self_CauseOfDeathDescription." + causeOfDeath.First.ToString());
+                string chatMessage = CauseOfDeath.Type == CauseOfDeathType.Affliction ?
+                    CauseOfDeath.Affliction.SelfCauseOfDeathDescription :
+                    TextManager.Get("Self_CauseOfDeathDescription." + CauseOfDeath.Type.ToString());
 
                 if (GameMain.Client != null) chatMessage += " " + TextManager.Get("DeathChatNotification");
 
@@ -215,8 +234,8 @@ namespace Barotrauma
             {
                 GameMain.GameSession.CrewManager.RemoveCharacter(this);
             }
-
-            if (GameMain.Client != null && GameMain.Client.Character == this) GameMain.Client.Character = null;
+            
+            if (GameMain.NetworkMember?.Character == this) GameMain.NetworkMember.Character = null;
 
             if (Lights.LightManager.ViewTarget == this) Lights.LightManager.ViewTarget = null;
         }
@@ -250,7 +269,7 @@ namespace Barotrauma
 
             if (controlled == this)
             {
-                health.UpdateHUD(deltaTime);
+                CharacterHealth.UpdateHUD(deltaTime);
             }
         }
 
@@ -267,7 +286,7 @@ namespace Barotrauma
             if (controlled == this)
             {
                 CharacterHUD.AddToGUIUpdateList(this);
-                health.AddToGUIUpdateList();
+                CharacterHealth.AddToGUIUpdateList();
             }
         }
         
@@ -278,10 +297,10 @@ namespace Barotrauma
             AnimController.Draw(spriteBatch);
         }
 
-        public void DrawHUD(SpriteBatch spriteBatch, Camera cam)
+        public void DrawHUD(SpriteBatch spriteBatch, Camera cam, bool drawHealth = true)
         {
             CharacterHUD.Draw(spriteBatch, this, cam);
-            health.DrawHUD(spriteBatch, new Vector2(0.0f, 0.0f));
+            if (drawHealth) CharacterHealth.DrawHUD(spriteBatch);
         }
 
         public virtual void DrawFront(SpriteBatch spriteBatch, Camera cam)
@@ -327,12 +346,13 @@ namespace Barotrauma
             float cursorDist = Vector2.Distance(WorldPosition, cam.ScreenToWorld(PlayerInput.MousePosition));
             float hudInfoAlpha = MathHelper.Clamp(1.0f - (cursorDist - (hoverRange - fadeOutRange)) / fadeOutRange, 0.2f, 1.0f);
             
-            if (hudInfoVisible && info != null)
+            if (hudInfoVisible && info != null &&
+                (controlled == null || this != controlled.focusedCharacter))
             {
                 string name = Info.DisplayName;
                 if (controlled == null && name != Info.Name) name += " " + TextManager.Get("Disguised");
 
-                Vector2 namePos = new Vector2(pos.X, pos.Y - 10.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(Info.Name) * 0.5f / cam.Zoom;
+                Vector2 namePos = new Vector2(pos.X, pos.Y - 10.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(name) * 0.5f / cam.Zoom;
 
                 Vector2 screenSize = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             	Vector2 viewportSize = new Vector2(cam.WorldView.Width, cam.WorldView.Height);
@@ -356,7 +376,7 @@ namespace Barotrauma
                 }
             }
 
-            if (isDead) return;
+            if (IsDead) return;
             
             if (Vitality < MaxVitality * 0.98f && hudInfoVisible)
             {
@@ -398,7 +418,7 @@ namespace Barotrauma
             if (matchingSounds.Count == 0) return;
 
             var selectedSound = matchingSounds[Rand.Int(matchingSounds.Count)];
-            selectedSound.Sound.Play(1.0f, selectedSound.Range, AnimController.WorldPosition);
+            SoundPlayer.PlaySound(selectedSound.Sound, 1.0f, selectedSound.Range, AnimController.WorldPosition, CurrentHull);
         }
 
         partial void ImplodeFX()

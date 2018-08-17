@@ -6,9 +6,7 @@ namespace Barotrauma.Items.Components
     {
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            var focusTarget = GetFocusTarget();
-            if (focusTarget == null) return;
-            if (character.ViewTarget == focusTarget)
+            if (focusTarget != null && character.ViewTarget == focusTarget)
             {
                 foreach (ItemComponent ic in focusTarget.components)
                 {

@@ -1,4 +1,5 @@
 ﻿using FarseerPhysics;
+using FarseerPhysics.Common;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
@@ -27,11 +28,24 @@ namespace Barotrauma
 
         private float attachCooldown;
 
+        private Limb attachLimb;
+        
         private List<Joint> attachJoints = new List<Joint>();
 
         public List<Joint> AttachJoints
         {
             get { return attachJoints; }
+        }
+
+        public Vector2? WallAttachPos
+        {
+            get;
+            private set;
+        }
+
+        public bool IsAttached
+        {
+            get { return attachJoints.Count > 0; }
         }
 
         public LatchOntoAI(XElement element, EnemyAIController enemyAI)
@@ -40,6 +54,13 @@ namespace Barotrauma
             attachToSub = element.GetAttributeBool("attachtosub", false);
             minDeattachSpeed = element.GetAttributeFloat("mindeattachspeed", 3.0f);
             maxDeattachSpeed = Math.Max(minDeattachSpeed, element.GetAttributeFloat("maxdeattachspeed", 10.0f));
+
+            LimbType attachLimbType;
+            if (Enum.TryParse(element.GetAttributeString("attachlimb", "Head"), out attachLimbType))
+            {
+                attachLimb = enemyAI.Character.AnimController.GetLimb(attachLimbType);
+            }
+            if (attachLimb == null) attachLimb = enemyAI.Character.AnimController.MainLimb;
 
             enemyAI.Character.OnDeath += OnCharacterDeath;
         }
@@ -58,6 +79,7 @@ namespace Barotrauma
             if (character.Submarine != null)
             {
                 DeattachFromBody();
+                WallAttachPos = null;
                 return;
             }
 
@@ -69,8 +91,12 @@ namespace Barotrauma
             {
                 transformedAttachPos += ConvertUnits.ToSimUnits(attachTargetSubmarine.Position);
             }
+            if (transformedAttachPos != Vector2.Zero)
+            {
+                WallAttachPos = transformedAttachPos;
+            }
 
-           switch (enemyAI.State)
+            switch (enemyAI.State)
             {
                 case AIController.AIState.None:
                     if (attachToWalls && character.Submarine == null && Level.Loaded != null)
@@ -110,7 +136,6 @@ namespace Barotrauma
                         {
                             //close enough to a wall -> attach
                             character.AnimController.Collider.MoveToPos(wallAttachPos, 1.0f);
-                            var attachLimb = character.AnimController.MainLimb;
                             AttachToBody(character.AnimController.Collider, attachLimb.body, attachTargetBody, wallAttachPos);
                             enemyAI.SteeringManager.Reset();
                         }
@@ -119,7 +144,7 @@ namespace Barotrauma
                             //move closer to the wall
                             DeattachFromBody();
                             enemyAI.SteeringManager.SteeringAvoid(deltaTime, 1.0f, 0.1f);
-                            enemyAI.SteeringManager.SteeringSeek(wallAttachPos);
+                            enemyAI.SteeringManager.SteeringSeek(wallAttachPos, 2.0f);
                         }
                     }
                     break;
@@ -129,11 +154,12 @@ namespace Barotrauma
                         if (attachToSub && wallAttachPos != Vector2.Zero && attachTargetBody != null &&
                             Vector2.DistanceSquared(transformedAttachPos, enemyAI.AttackingLimb.SimPosition) < enemyAI.AttackingLimb.attack.Range * enemyAI.AttackingLimb.attack.Range)
                         {
-                            AttachToBody(character.AnimController.Collider, character.AnimController.MainLimb.body, attachTargetBody, transformedAttachPos);
+                            AttachToBody(character.AnimController.Collider, attachLimb.body, attachTargetBody, transformedAttachPos);
                         }
                     }
                     break;
                 default:
+                    WallAttachPos = null;
                     DeattachFromBody();
                     break;
             }
@@ -169,19 +195,28 @@ namespace Barotrauma
                 if (attachJoints[0].BodyB == targetBody) return;
                 DeattachFromBody();
             }
-
-            var limbJoint = new DistanceJoint(attachLimb.FarseerBody, targetBody, attachLimb.GetFrontLocal(), targetBody.GetLocalPoint(attachPos), false)
+            
+            Vector2 attachLimbFront = attachLimb.GetFrontLocal();
+            float angle = MathUtils.VectorToAngle(attachPos - collider.SimPosition) - MathHelper.PiOver2;
+            attachLimb.SetTransform(attachPos + Vector2.Normalize(collider.SimPosition - attachPos) * attachLimbFront.Length(), angle);
+            
+            var limbJoint = new WeldJoint(attachLimb.FarseerBody, targetBody, attachLimb.GetFrontLocal(), targetBody.GetLocalPoint(attachPos), false)
             {
+
                 CollideConnected = false,
-                Length = 0.1f
+                //Length = 0.1f
             };
+
+
+            Vector2 colliderFront = collider.GetFrontLocal();
+            collider.SetTransform(attachPos + Vector2.Normalize(collider.SimPosition - attachPos) * colliderFront.Length(), angle);
+
             GameMain.World.AddJoint(limbJoint);
             attachJoints.Add(limbJoint);
-
-            var colliderJoint = new DistanceJoint(collider.FarseerBody, targetBody, collider.GetFrontLocal(), targetBody.GetLocalPoint(attachPos), false)
+            var colliderJoint = new WeldJoint(collider.FarseerBody, targetBody, collider.GetFrontLocal(), targetBody.GetLocalPoint(attachPos), false)
             {
-                CollideConnected = true,
-                Length = 0.1f
+                CollideConnected = false,
+                //Length = 0.1f
             };
             GameMain.World.AddJoint(colliderJoint);
             attachJoints.Add(colliderJoint);
@@ -196,7 +231,7 @@ namespace Barotrauma
             attachJoints.Clear();
         }
 
-        private void OnCharacterDeath(Character character, CauseOfDeathType causeOfDeath)
+        private void OnCharacterDeath(Character character, CauseOfDeath causeOfDeath)
         {
             DeattachFromBody();
             character.OnDeath -= OnCharacterDeath;

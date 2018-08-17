@@ -68,6 +68,11 @@ namespace Barotrauma
             get { return Position.Y < DamageDepth; }
         }
 
+        public Submarine Submarine
+        {
+            get { return submarine; }
+        }
+
         public SubmarineBody(Submarine sub)
         {
             this.submarine = sub;
@@ -112,9 +117,10 @@ namespace Barotrauma
                     Rectangle rect = wall.Rect;
 
                     FixtureFactory.AttachRectangle(
-                          ConvertUnits.ToSimUnits(rect.Width),
-                          ConvertUnits.ToSimUnits(rect.Height),
+                          ConvertUnits.ToSimUnits(wall.BodyWidth),
+                          ConvertUnits.ToSimUnits(wall.BodyHeight),
                           50.0f,
+                          -wall.BodyRotation,
                           ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2)),
                           farseerBody, this);
                 }
@@ -132,8 +138,6 @@ namespace Barotrauma
                         farseerBody, this);
                 }
             }
-
-
 
             farseerBody.BodyType = BodyType.Dynamic;
             farseerBody.CollisionCategories = Physics.CollisionWall;
@@ -193,6 +197,11 @@ namespace Barotrauma
 
                 Body.CorrectPosition(memPos, deltaTime, out newVelocity, out newPosition);
                 Vector2 moveAmount = ConvertUnits.ToDisplayUnits(newPosition - Body.SimPosition);
+                newVelocity = newVelocity.ClampLength(100.0f);
+                if (!MathUtils.IsValid(newVelocity))
+                {
+                    return;
+                }
 
                 List<Submarine> subsToMove = submarine.GetConnectedSubs();
                 foreach (Submarine dockedSub in subsToMove)
@@ -212,7 +221,7 @@ namespace Barotrauma
                     closestSub = Character.Controlled.Submarine;
                 }
 
-                bool displace = moveAmount.Length() > 100.0f;
+                bool displace = moveAmount.LengthSquared() > 100.0f * 100.0f;
                 foreach (Submarine sub in subsToMove)
                 {
                     sub.PhysicsBody.SetTransform(sub.PhysicsBody.SimPosition + ConvertUnits.ToSimUnits(moveAmount), 0.0f);
@@ -221,12 +230,12 @@ namespace Barotrauma
                     if (displace) sub.SubBody.DisplaceCharacters(moveAmount);
                 }
 
-                if (closestSub != null && subsToMove.Contains(closestSub))                     
+                if (closestSub != null && subsToMove.Contains(closestSub))
                 {
                     GameMain.GameScreen.Cam.Position += moveAmount;
-                    if (GameMain.GameScreen.Cam.TargetPos != Vector2.Zero) GameMain.GameScreen.Cam.TargetPos += moveAmount;    
-            
-                    if (Character.Controlled!=null) Character.Controlled.CursorPosition += moveAmount;
+                    if (GameMain.GameScreen.Cam.TargetPos != Vector2.Zero) GameMain.GameScreen.Cam.TargetPos += moveAmount;
+
+                    if (Character.Controlled != null) Character.Controlled.CursorPosition += moveAmount;
                 }
 
                 return;
@@ -256,8 +265,7 @@ namespace Barotrauma
             //-------------------------
 
             Vector2 totalForce = CalculateBuoyancy();
-            
-            if (Body.LinearVelocity.LengthSquared() > 0.000001f)
+            if (Body.LinearVelocity.LengthSquared() > 0.0001f)
             {
                 //TODO: sync current drag with clients?
                 float attachedMass = 0.0f;
@@ -295,6 +303,7 @@ namespace Barotrauma
             worldBorders.Location += MathUtils.ToPoint(ConvertUnits.ToDisplayUnits(Body.SimPosition));
 
             Vector2 translateDir = Vector2.Normalize(subTranslation);
+            if (!MathUtils.IsValid(translateDir)) translateDir = Vector2.UnitY;
 
             foreach (Character c in Character.CharacterList)
             {
@@ -385,27 +394,24 @@ namespace Barotrauma
 
         public bool OnCollision(Fixture f1, Fixture f2, Contact contact)
         {
-            Limb limb = f2.Body.UserData as Limb;
-            if (limb != null)
+            if (f2.Body.UserData is Limb limb)
             {
                 bool collision = CheckLimbCollision(contact, limb);
                 if (collision) HandleLimbCollision(contact, limb);
                 return collision;
             }
 
-            VoronoiCell cell = f2.Body.UserData as VoronoiCell;
-            if (cell != null)
+            if (f2.UserData is VoronoiCell cell)
             {
-                HandleLevelCollision(contact, Vector2.Normalize(ConvertUnits.ToDisplayUnits(Body.SimPosition) - cell.Center));
+                Vector2 collisionNormal = Vector2.Normalize(ConvertUnits.ToDisplayUnits(Body.SimPosition) - cell.Center);
+                if (!MathUtils.IsValid(collisionNormal)) collisionNormal = Rand.Vector(1.0f);
+                HandleLevelCollision(contact, collisionNormal);
                 return true;
             }
 
-            Structure structure = f2.Body.UserData as Structure;
-            if (structure != null)
+            if (f2.Body.UserData is Structure structure)
             {
-                Vector2 normal;
-                FixedArray2<Vector2> points;
-                contact.GetWorldManifold(out normal, out points);
+                contact.GetWorldManifold(out Vector2 normal, out FixedArray2<Vector2> points);
                 if (contact.FixtureA.Body == f1.Body)
                 {
                     normal = -normal;
@@ -415,8 +421,7 @@ namespace Barotrauma
                 return true;
             }
 
-            Submarine otherSub = f2.Body.UserData as Submarine;
-            if (otherSub != null)
+            if (f2.Body.UserData is Submarine otherSub)
             {
                 HandleSubCollision(contact, otherSub);
                 return true;
@@ -461,7 +466,9 @@ namespace Barotrauma
         {
             if (limb.Mass > 100.0f)
             {
-                Vector2 normal = Vector2.Normalize(Body.SimPosition - limb.SimPosition);
+                Vector2 normal = Vector2.DistanceSquared(Body.SimPosition, limb.SimPosition) < 0.0001f ?
+                    Vector2.UnitY :
+                    Vector2.Normalize(Body.SimPosition - limb.SimPosition);
 
                 float impact = Math.Min(Vector2.Dot(Velocity - limb.LinearVelocity, -normal), 50.0f) / 5.0f * Math.Min(limb.Mass / 200.0f, 1);
 
@@ -491,18 +498,14 @@ namespace Barotrauma
             //if the limb is in contact with the level, apply an artifical impact to prevent the sub from bouncing on top of it
             //not a very realistic way to handle the collisions (makes it seem as if the characters were made of reinforced concrete),
             //but more realistic than bouncing and prevents using characters as "bumpers" that prevent all collision damage
-
-            //TODO: apply impact damage and/or gib the character that got crushed between the sub and the level?
             Vector2 avgContactNormal = Vector2.Zero;
             foreach (Contact levelContact in levelContacts)
             {
-                Vector2 contactNormal;
-                FixedArray2<Vector2> temp;
-                levelContact.GetWorldManifold(out contactNormal, out temp);
+                levelContact.GetWorldManifold(out Vector2 contactNormal, out FixedArray2<Vector2> temp);
 
                 //if the contact normal is pointing from the limb towards the level cell it's touching, flip the normal
-                VoronoiCell cell = levelContact.FixtureB.Body.UserData is VoronoiCell ?
-                    ((VoronoiCell)levelContact.FixtureB.Body.UserData) : ((VoronoiCell)levelContact.FixtureA.Body.UserData);
+                VoronoiCell cell = levelContact.FixtureB.UserData is VoronoiCell ?
+                    ((VoronoiCell)levelContact.FixtureB.UserData) : ((VoronoiCell)levelContact.FixtureA.UserData);
 
                 var cellDiff = ConvertUnits.ToDisplayUnits(limb.body.SimPosition) - cell.Center;
                 if (Vector2.Dot(contactNormal, cellDiff) < 0)
@@ -518,15 +521,30 @@ namespace Barotrauma
             avgContactNormal /= levelContacts.Count;
             
             float contactDot = Vector2.Dot(Body.LinearVelocity, -avgContactNormal);
-            if (contactDot > 0.0f)
+            if (contactDot > 0.001f)
             {
-                Body.LinearVelocity -= Vector2.Normalize(Body.LinearVelocity) * contactDot;
+                Vector2 velChange = Vector2.Normalize(Body.LinearVelocity) * contactDot;
+                if (!MathUtils.IsValid(velChange))
+                {
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "SubmarineBody.HandleLimbCollision:" + submarine.ID,
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Invalid velocity change in SubmarineBody.HandleLimbCollision (submarine velocity: " + Body.LinearVelocity
+                        + ", avgContactNormal: " + avgContactNormal
+                        + ", contactDot: " + contactDot
+                        + ", velChange: " + velChange + ")");
+                    return;
+                }
+
+
+                Body.LinearVelocity -= velChange;
 
                 float damageAmount = contactDot * Body.Mass / limb.character.Mass;
 
                 Vector2 n;
                 FixedArray2<Vector2> contactPos;
                 contact.GetWorldManifold(out n, out contactPos);
+                limb.character.LastDamageSource = submarine;
                 limb.character.DamageLimb(ConvertUnits.ToDisplayUnits(contactPos[0]), limb, 
                     new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(damageAmount) }, 0.0f, true, 0.0f);
 
@@ -619,8 +637,8 @@ namespace Barotrauma
                 levelContact.GetWorldManifold(out contactNormal, out temp);
 
                 //if the contact normal is pointing from the sub towards the level cell we collided with, flip the normal
-                VoronoiCell cell = levelContact.FixtureB.Body.UserData is VoronoiCell ? 
-                    ((VoronoiCell)levelContact.FixtureB.Body.UserData) : ((VoronoiCell)levelContact.FixtureA.Body.UserData);
+                VoronoiCell cell = levelContact.FixtureB.UserData is VoronoiCell ? 
+                    ((VoronoiCell)levelContact.FixtureB.UserData) : ((VoronoiCell)levelContact.FixtureA.UserData);
 
                 var cellDiff = ConvertUnits.ToDisplayUnits(Body.SimPosition) - cell.Center;
                 if (Vector2.Dot(contactNormal, cellDiff) < 0)
@@ -639,7 +657,10 @@ namespace Barotrauma
             float contactDot = Vector2.Dot(otherSub.PhysicsBody.LinearVelocity, -avgContactNormal);
             if (contactDot > 0.0f)
             {
-                otherSub.PhysicsBody.LinearVelocity -= Vector2.Normalize(otherSub.PhysicsBody.LinearVelocity) * contactDot;
+                if (otherSub.PhysicsBody.LinearVelocity.LengthSquared() > 0.0001f)
+                {
+                    otherSub.PhysicsBody.LinearVelocity -= Vector2.Normalize(otherSub.PhysicsBody.LinearVelocity) * contactDot;
+                }
 
                 impact = Vector2.Dot(otherSub.Velocity, normal);
                 otherSub.SubBody.ApplyImpact(impact, normal, contact);
@@ -665,23 +686,18 @@ namespace Barotrauma
                 GameMain.GameScreen.Cam.Shake = impact * 2.0f;
             }
 
-            Vector2 impulse = direction * impact * 0.5f;
-
-            float length = impulse.Length();
-            if (length > 5.0f) impulse = (impulse / length) * 5.0f;
-
+            Vector2 impulse = direction * impact * 0.5f;            
+            impulse = impulse.ClampLength(5.0f);            
             foreach (Character c in Character.CharacterList)
             {
                 if (c.Submarine != submarine) continue;
-
                 if (impact > 2.0f) c.SetStun((impact - 2.0f) * 0.1f);
-
+                
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
-                    limb.body.ApplyLinearImpulse(limb.Mass * impulse);
+                    limb.body.ApplyLinearImpulse(limb.Mass * impulse, 20.0f);
                 }
-
-                c.AnimController.Collider.ApplyLinearImpulse(c.AnimController.Collider.Mass * impulse);
+                c.AnimController.Collider.ApplyLinearImpulse(c.AnimController.Collider.Mass * impulse, 20.0f);
             }
 
             foreach (Item item in Item.ItemList)
@@ -689,7 +705,7 @@ namespace Barotrauma
                 if (item.Submarine != submarine || item.CurrentHull == null || 
                     item.body == null || !item.body.Enabled) continue;
 
-                item.body.ApplyLinearImpulse(item.body.Mass * impulse);                
+                item.body.ApplyLinearImpulse(item.body.Mass * impulse, 20.0f);
             }
 
             var damagedStructures = Explosion.RangedStructureDamage(ConvertUnits.ToDisplayUnits(lastContactPoint), impact * 50.0f, impact * ImpactDamageMultiplier);
@@ -713,7 +729,7 @@ namespace Barotrauma
                     "StructureBlunt",
                     impact * 10.0f,
                     ConvertUnits.ToDisplayUnits(lastContactPoint),
-                    MathHelper.Clamp(maxDamage * 4.0f, 1000.0f, 4000.0f),
+                    MathHelper.Clamp(maxDamage * 4.0f, 2000.0f, 10000.0f),
                     maxDamageStructure.Tags);            
             }
 #endif

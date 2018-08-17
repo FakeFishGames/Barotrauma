@@ -4,15 +4,15 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma.Tutorials
 {
-    class BasicTutorial : TutorialType
+    class BasicTutorial : Tutorial
     {
-        public BasicTutorial(string name)
-            : base(name)
+        public BasicTutorial(XElement element)
+            : base(element)
         {
-
         }
 
         public override IEnumerable<object> UpdateState()
@@ -150,7 +150,7 @@ namespace Barotrauma.Tutorials
                 + "Deselect the reactor by pressing E and head to the command room at the right edge of the vessel.");
 
             Steering steering = Item.ItemList.Find(i => i.HasTag("tutorialsteering")).GetComponent<Steering>();
-            Radar radar = steering.Item.GetComponent<Radar>();
+            Sonar sonar = steering.Item.GetComponent<Sonar>();
 
             while (Vector2.Distance(Controlled.Position, steering.Item.Position) > 150.0f)
             {
@@ -249,7 +249,7 @@ namespace Barotrauma.Tutorials
 
             infoBox = CreateInfoFrame("Connect the wire to the junction box by pulling it to the power connection, the same way you did with the navigation terminal.");
 
-            while (radar.Voltage < 0.1f)
+            while (sonar.Voltage < 0.1f)
             {
                 yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
@@ -264,13 +264,13 @@ namespace Barotrauma.Tutorials
 
             infoBox = CreateInfoFrame("You can take a look at the area around the sub by selecting the \"Active Sonar\" checkbox.");
 
-            while (!radar.IsActive)
+            while (!sonar.IsActive)
             {
                 yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
             yield return new WaitForSeconds(0.5f);
 
-            infoBox = CreateInfoFrame("The green rectangle in the middle is the submarine, and the flickering shapes outside it are the walls of an underwater cavern. "
+            infoBox = CreateInfoFrame("The blue rectangle in the middle is the submarine, and the flickering shapes outside it are the walls of an underwater cavern. "
                 + "Try moving the submarine by clicking somewhere on the monitor and dragging the pointer to the direction you want to go to.");
 
             while (steering.TargetVelocity == Vector2.Zero && steering.TargetVelocity.Length() < 50.0f)
@@ -297,13 +297,13 @@ namespace Barotrauma.Tutorials
 
             var moloch = Character.Create(
                 "Content/Characters/Moloch/moloch.xml", 
-                steering.Item.WorldPosition + new Vector2(3000.0f, -500.0f));
+                steering.Item.WorldPosition + new Vector2(3000.0f, -500.0f), "");
 
             moloch.PlaySound(CharacterSound.SoundType.Attack);
 
             yield return new WaitForSeconds(1.0f);
 
-            infoBox = CreateInfoFrame("Uh-oh... Something enormous just appeared on the radar.");
+            infoBox = CreateInfoFrame("Uh-oh... Something enormous just appeared on the sonar.");
 
             List<Structure> windows = new List<Structure>();
             foreach (Structure s in Structure.WallList)
@@ -608,6 +608,8 @@ namespace Barotrauma.Tutorials
             infoBox = CreateInfoFrame("That was all there is to this tutorial! Now you should be able to handle " +
             "most of the basic tasks on board the submarine.");
 
+            Completed = true;
+
             yield return new WaitForSeconds(4.0f);
 
             Controlled = null;
@@ -633,9 +635,7 @@ namespace Barotrauma.Tutorials
 
             return Character.Controlled.Inventory.FindItem(itemName) != null;
         }
-
-
-
+        
         protected IEnumerable<object> KeepReactorRunning(Reactor reactor)
         {
             do

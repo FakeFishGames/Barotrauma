@@ -13,7 +13,7 @@ namespace Barotrauma
 {
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
     {
-        List<ItemComponent> activeHUDs = new List<ItemComponent>();
+        private List<ItemComponent> activeHUDs = new List<ItemComponent>();
 
         public override Sprite Sprite
         {
@@ -81,10 +81,14 @@ namespace Barotrauma
 
                 if (body == null)
                 {
-                    if (prefab.ResizeHorizontal || prefab.ResizeVertical || SpriteEffects.HasFlag(SpriteEffects.FlipHorizontally) || SpriteEffects.HasFlag(SpriteEffects.FlipVertically))
+                    bool flipHorizontal = (SpriteEffects & SpriteEffects.FlipHorizontally) != 0;
+                    bool flipVertical = (SpriteEffects & SpriteEffects.FlipVertically) != 0;
+
+                    if (prefab.ResizeHorizontal || prefab.ResizeVertical || flipHorizontal || flipVertical)
                     {
-                        selectedSprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color);
-                        fadeInBrokenSprite?.Sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color * fadeInBrokenSpriteAlpha, Point.Zero, selectedSprite.Depth - 0.000001f);
+                        selectedSprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color);
+                        fadeInBrokenSprite?.Sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color * fadeInBrokenSpriteAlpha,
+                            depth: selectedSprite.Depth - 0.000001f);
 
                     }
                     else
@@ -125,14 +129,25 @@ namespace Barotrauma
                 selectedSprite.effects = oldEffects;
             }
 
-
-            List<IDrawableComponent> staticDrawableComponents = new List<IDrawableComponent>(drawableComponents); //static list to compensate for drawable toggling
-            for (int i = 0; i < staticDrawableComponents.Count; i++)
+            //use a backwards for loop because the drawable components may disable drawing, 
+            //causing them to be removed from the list
+            for (int i = drawableComponents.Count - 1; i >= 0; i--)
             {
-                staticDrawableComponents[i].Draw(spriteBatch, editing);
+                drawableComponents[i].Draw(spriteBatch, editing);
             }
 
-            if (GameMain.DebugDraw && aiTarget != null) aiTarget.Draw(spriteBatch);
+            if (GameMain.DebugDraw)
+            {
+                aiTarget?.Draw(spriteBatch);
+                var containedItems = ContainedItems;
+                if (containedItems != null)
+                {
+                    foreach (Item item in containedItems)
+                    {
+                        item.AiTarget?.Draw(spriteBatch);
+                    }
+                }
+            }
 
             if (!editing || (body != null && !body.Enabled))
             {
@@ -179,7 +194,7 @@ namespace Barotrauma
                 editingHUD = CreateEditingHUD(Screen.Selected != GameMain.SubEditorScreen);
             }
 
-            editingHUD.Update((float)Timing.Step);
+            editingHUD.UpdateManually((float)Timing.Step);
 
             if (Screen.Selected != GameMain.SubEditorScreen) return;
 
@@ -220,25 +235,28 @@ namespace Barotrauma
 
         public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
         {
-            if (editingHUD != null && editingHUD.UserData == this) editingHUD.Draw(spriteBatch);
+            if (editingHUD != null && editingHUD.UserData == this) editingHUD.DrawManually(spriteBatch);
         }
 
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
-            int width = 450;
-            int height = 150;
+            int width = 450, height = 150;
             int x = GameMain.GraphicsWidth / 2 - width / 2, y = 30;
+            
+            editingHUD = new GUIListBox(new RectTransform(new Point(width, height), GUI.Canvas) { ScreenSpaceOffset = new Point(x, y) })
+            {
+                UserData = this
+            };
 
-            editingHUD = new GUIListBox(new Rectangle(x, y, width, height), "");
-            editingHUD.UserData = this;
             GUIListBox listBox = (GUIListBox)editingHUD;
             listBox.Spacing = 5;
             
-            var itemEditor = new SerializableEntityEditor(this, inGame, editingHUD, true);
+            var itemEditor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true);
             
             if (!inGame && Linkable)
             {
-                itemEditor.AddCustomContent(new GUITextBlock(new Rectangle(0, 0, 0, 20), "Hold space to link to another item", "", null, GUI.SmallFont), 1);
+                itemEditor.AddCustomContent(new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, 20)), 
+                    TextManager.Get("HoldToLink"), font: GUI.SmallFont), 1);
             }            
 
             foreach (ItemComponent ic in components)
@@ -255,19 +273,24 @@ namespace Barotrauma
                     }
                 }
 
-                var componentEditor = new SerializableEntityEditor(ic, inGame, editingHUD, !inGame);
-
+                var componentEditor = new SerializableEntityEditor(listBox.Content.RectTransform, ic, inGame, showName: !inGame);
+                
                 if (inGame) continue;
 
                 foreach (RelatedItem relatedItem in ic.requiredItems)
                 {
-                    var textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 20), relatedItem.Type.ToString() + " required", "", Alignment.TopLeft, Alignment.CenterLeft, null, false, GUI.SmallFont);
-                    textBlock.Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f);
+                    var textBlock = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, 20)),
+                        relatedItem.Type.ToString() + " required", font: GUI.SmallFont)
+                    {
+                        Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f)
+                    };
                     componentEditor.AddCustomContent(textBlock, 1);
 
-                    GUITextBox namesBox = new GUITextBox(new Rectangle(0, 0, 180, 20), Alignment.Right, "", textBlock);
-                    namesBox.Font = GUI.SmallFont;
-                    namesBox.Text = relatedItem.JoinedNames;
+                    GUITextBox namesBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), textBlock.RectTransform, Anchor.CenterRight))
+                    {
+                        Font = GUI.SmallFont,
+                        Text = relatedItem.JoinedNames
+                    };
 
                     namesBox.OnDeselected += (textBox, key) =>
                     {
@@ -281,19 +304,17 @@ namespace Barotrauma
                         textBox.Text = relatedItem.JoinedNames;
                         return true;
                     };
-
-                    y += 20;
                 }
             }
 
-            int contentHeight = (int)(editingHUD.children.Sum(c => c.Rect.Height) + (listBox.children.Count - 1) * listBox.Spacing + listBox.Padding.Y + listBox.Padding.W);
-
-            editingHUD.SetDimensions(new Point(editingHUD.Rect.Width, MathHelper.Clamp(contentHeight, 50, editingHUD.Rect.Height)));
+            int contentHeight = editingHUD.Children.Sum(c => c.Rect.Height) + (listBox.CountChildren - 1) * listBox.Spacing;
+            editingHUD.RectTransform.NonScaledSize =
+                new Point(editingHUD.RectTransform.NonScaledSize.X, MathHelper.Clamp(contentHeight, 50, editingHUD.RectTransform.NonScaledSize.Y));
 
             return editingHUD;
         }
         
-        public virtual void UpdateHUD(Camera cam, Character character)
+        public virtual void UpdateHUD(Camera cam, Character character, float deltaTime)
         {
             if (condition <= 0.0f)
             {
@@ -333,18 +354,12 @@ namespace Barotrauma
 
             foreach (ItemComponent ic in activeHUDs)
             {
-                if (ic.CanBeSelected) ic.UpdateHUD(character);
+                if (ic.CanBeSelected) ic.UpdateHUD(character, deltaTime);
             }
         }
 
         public virtual void DrawHUD(SpriteBatch spriteBatch, Camera cam, Character character)
         {
-            if (condition <= 0.0f)
-            {
-                FixRequirement.DrawHud(spriteBatch, this, character);
-                return;
-            }
-
             if (HasInGameEditableProperties)
             {
                 DrawEditing(spriteBatch, cam);
@@ -403,7 +418,16 @@ namespace Barotrauma
                     (components[componentIndex] as IServerSerializable).ClientRead(type, msg, sendingTime);
                     break;
                 case NetEntityEvent.Type.InventoryState:
-                    ownInventory.ClientRead(type, msg, sendingTime);
+                    int containerIndex = msg.ReadRangedInteger(0, components.Count - 1);
+                    (components[containerIndex] as ItemContainer).Inventory.ClientRead(type, msg, sendingTime);
+                    break;
+                case NetEntityEvent.Type.Repair:
+                    for (int i = 0; i < FixRequirements.Count; i++)
+                    {
+                        ushort fixerID = msg.ReadUInt16();
+                        FixRequirements[i].CurrentFixer = fixerID == 0 ? null : FindEntityByID(fixerID) as Character;
+                        FixRequirements[i].FixProgress = msg.ReadRangedSingle(0.0f, 1.0f, 8);
+                    }
                     break;
                 case NetEntityEvent.Type.Status:
                     condition = msg.ReadRangedSingle(0.0f, prefab.Health, 8);
@@ -413,12 +437,12 @@ namespace Barotrauma
                         if (Condition <= 0.0f)
                         {
                             for (int i = 0; i < FixRequirements.Count; i++)
-                                FixRequirements[i].Fixed = msg.ReadBoolean();
+                                FixRequirements[i].FixProgress = msg.ReadRangedSingle(0.0f, 1.0f, 8);
                         }
                         else
                         {
                             for (int i = 0; i < FixRequirements.Count; i++)
-                                FixRequirements[i].Fixed = true;
+                                FixRequirements[i].FixProgress = 1.0f;
                         }
                     }
                     break;
@@ -429,11 +453,14 @@ namespace Barotrauma
 
                     Character target = FindEntityByID(targetID) as Character;
                     Limb targetLimb = targetLimbID < target.AnimController.Limbs.Length ? target.AnimController.Limbs[targetLimbID] : null;
+                    //ignore deltatime - using an item with the useOnSelf buttons is instantaneous
+                    ApplyStatusEffects(actionType, 1.0f, target, targetLimb, true);
 
-                    ApplyStatusEffects(actionType, (float)Timing.Step, target, targetLimb, true);
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
                     ReadPropertyChange(msg);
+                    break;
+                case NetEntityEvent.Type.Invalid:
                     break;
             }
         }
@@ -452,11 +479,12 @@ namespace Barotrauma
                 case NetEntityEvent.Type.ComponentState:
                     int componentIndex = (int)extraData[1];
                     msg.WriteRangedInteger(0, components.Count - 1, componentIndex);
-
                     (components[componentIndex] as IClientSerializable).ClientWrite(msg, extraData);
                     break;
                 case NetEntityEvent.Type.InventoryState:
-                    ownInventory.ClientWrite(msg, extraData);
+                    int containerIndex = (int)extraData[1];
+                    msg.WriteRangedInteger(0, components.Count - 1, containerIndex);
+                    (components[containerIndex] as ItemContainer).Inventory.ClientWrite(msg, extraData);
                     break;
                 case NetEntityEvent.Type.Repair:
                     if (FixRequirements.Count > 0)
@@ -487,12 +515,25 @@ namespace Barotrauma
             float newRotation = msg.ReadRangedSingle(0.0f, MathHelper.TwoPi, 7);
             bool awake = msg.ReadBoolean();
             Vector2 newVelocity = Vector2.Zero;
-
+            
             if (awake)
             {
                 newVelocity = new Vector2(
                     msg.ReadRangedSingle(-MaxVel, MaxVel, 12),
                     msg.ReadRangedSingle(-MaxVel, MaxVel, 12));
+            }
+
+            if (!MathUtils.IsValid(newPosition) || !MathUtils.IsValid(newRotation) || !MathUtils.IsValid(newVelocity))
+            {
+                string errorMsg = "Received invalid position data for the item \"" + Name
+                    + "\" (position: " + newPosition + ", rotation: " + newRotation + ", velocity: " + newVelocity + ")";
+#if DEBUG
+                DebugConsole.ThrowError(errorMsg);
+#endif
+                GameAnalyticsManager.AddErrorEventOnce("Item.ClientReadPosition:InvalidData" + ID,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    errorMsg);
+                return;
             }
 
             if (body == null)
@@ -504,7 +545,7 @@ namespace Barotrauma
             body.FarseerBody.Awake = awake;
             if (body.FarseerBody.Awake)
             {
-                if ((newVelocity - body.LinearVelocity).Length() > 8.0f) body.LinearVelocity = newVelocity;
+                if ((newVelocity - body.LinearVelocity).LengthSquared() > 8.0f * 8.0f) body.LinearVelocity = newVelocity;
             }
             else
             {
@@ -524,11 +565,12 @@ namespace Barotrauma
 
             if ((newPosition - SimPosition).Length() > body.LinearVelocity.Length() * 2.0f)
             {
-                body.SetTransform(newPosition, newRotation);
-
-                Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
-                rect.X = (int)(displayPos.X - rect.Width / 2.0f);
-                rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
+                if (body.SetTransform(newPosition, newRotation))
+                {
+                    Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
+                    rect.X = (int)(displayPos.X - rect.Width / 2.0f);
+                    rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
+                }
             }
         }
 

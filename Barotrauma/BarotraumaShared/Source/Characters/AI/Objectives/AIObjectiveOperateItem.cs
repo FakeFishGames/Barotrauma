@@ -99,10 +99,10 @@ namespace Barotrauma
                             return;
                         }
 
-                        for (int i = 0; i < CharacterInventory.SlotTypes.Length; i++)
+                        for (int i = 0; i < character.Inventory.Capacity; i++)
                         {
-                            if (CharacterInventory.SlotTypes[i] == InvSlotType.Any ||
-                                !holdable.AllowedSlots.Any(s => s.HasFlag(CharacterInventory.SlotTypes[i])))
+                            if (character.Inventory.SlotTypes[i] == InvSlotType.Any ||
+                                !holdable.AllowedSlots.Any(s => s.HasFlag(character.Inventory.SlotTypes[i])))
                             {
                                 continue;
                             }

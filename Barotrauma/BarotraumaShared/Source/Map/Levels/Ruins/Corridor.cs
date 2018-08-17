@@ -8,12 +8,7 @@ namespace Barotrauma.RuinGeneration
     class Corridor : RuinShape
     {
         private bool isHorizontal;
-
-        public Rectangle Rect
-        {
-            get { return rect; }
-        }
-
+        
         public bool IsHorizontal
         {
             get { return isHorizontal; }

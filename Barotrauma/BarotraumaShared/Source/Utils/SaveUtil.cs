@@ -33,9 +33,9 @@ namespace Barotrauma
             {
                 ClearFolder(tempPath, new string[] { GameMain.GameSession.Submarine.FilePath });
             }
-            catch
+            catch (Exception e)
             {
-
+                DebugConsole.ThrowError("Failed to clear folder", e);
             }
 
             try
@@ -107,8 +107,9 @@ namespace Barotrauma
             {
                 DecompressToDirectory(filePath, tempPath, null);
             }
-            catch
+            catch (Exception e)
             {
+                DebugConsole.ThrowError("Error decompressing " + filePath, e);
                 return null;
             }
 
@@ -312,24 +313,25 @@ namespace Barotrauma
                 while (DecompressFile(sDir, zipStream, progress)) ;
         }
         
-        private static void ClearFolder(string FolderName, string[] ignoredFiles = null)
+        public static void ClearFolder(string FolderName, string[] ignoredFiles = null)
         {
             DirectoryInfo dir = new DirectoryInfo(FolderName);
 
             foreach (FileInfo fi in dir.GetFiles())
             {
-                bool ignore = false;
-                foreach (string ignoredFile in ignoredFiles)
+                if (ignoredFiles != null)
                 {
-                    if (Path.GetFullPath(fi.FullName).Equals(Path.GetFullPath(ignoredFile)))
+                    bool ignore = false;
+                    foreach (string ignoredFile in ignoredFiles)
                     {
-                        ignore = true;
-                        break;
+                        if (Path.GetFullPath(fi.FullName).Equals(Path.GetFullPath(ignoredFile)))
+                        {
+                            ignore = true;
+                            break;
+                        }
                     }
+                    if (ignore) continue;
                 }
-
-                if (ignore) continue;
-
                 fi.IsReadOnly = false;
                 fi.Delete();
             }

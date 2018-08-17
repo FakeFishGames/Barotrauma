@@ -15,14 +15,17 @@ namespace Barotrauma
 
         public Item[] Items;
         protected bool[] hideEmptySlot;
-
-        private bool isSubInventory;
-
+        
         public bool Locked;
 
         private ushort[] receivedItemIDs;
         private float syncItemsDelay;
         private CoroutineHandle syncItemsCoroutine;
+
+        public int Capacity
+        {
+            get { return capacity; }
+        }
 
         public Inventory(Entity owner, int capacity, Vector2? centerPos = null, int slotsPerRow = 5)
         {
@@ -42,6 +45,7 @@ namespace Barotrauma
                 slotSpriteSmall = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(532, 395, 75, 71), null, 0);
                 slotSpriteVertical = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(672, 218, 75, 144), null, 0);
                 slotSpriteHorizontal = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(476, 186, 160, 75), null, 0);
+                slotSpriteRound = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(681, 373, 58, 64), null, 0);
                 EquipIndicator = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(673, 182, 73, 27), null, 0);
                 EquipIndicatorOn = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(679, 108, 67, 21), null, 0);
             }
@@ -150,7 +154,7 @@ namespace Barotrauma
             }
         }
 
-        private void CreateNetworkEvent()
+        protected virtual void CreateNetworkEvent()
         {
             if (GameMain.Server != null)
             {
@@ -203,7 +207,7 @@ namespace Barotrauma
             syncItemsDelay = 1.0f;
         }
 
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Barotrauma.Networking.Client c)
+        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
             List<Item> prevItems = new List<Item>(Items);
             ushort[] newItemIDs = new ushort[capacity];
@@ -213,6 +217,12 @@ namespace Barotrauma
                 newItemIDs[i] = msg.ReadUInt16();
             }
 
+            if (this is CharacterInventory)
+            {
+                if (Owner == null || !(Owner is Character)) return;
+                if (!((CharacterInventory)this).AccessibleWhenAlive && !((Character)Owner).IsDead) return;
+            }
+
             if (c == null || c.Character == null || !c.Character.CanAccessInventory(this))
             {
                 return;
@@ -220,12 +230,17 @@ namespace Barotrauma
 
             for (int i = 0; i < capacity; i++)
             {
-                if (newItemIDs[i] == 0)
+                if (newItemIDs[i] == 0 || (Entity.FindEntityByID(newItemIDs[i]) as Item != Items[i]))
                 {
-                    if (Items[i] != null) Items[i].Drop(c.Character);
-                    System.Diagnostics.Debug.Assert(Items[i]==null);
+                    if (Items[i] != null) Items[i].Drop();
+                    System.Diagnostics.Debug.Assert(Items[i] == null);
                 }
-                else
+            }
+
+
+            for (int i = 0; i < capacity; i++)
+            {
+                if (newItemIDs[i] > 0)
                 {
                     var item = Entity.FindEntityByID(newItemIDs[i]) as Item;
                     if (item == null || item == Items[i]) continue;
@@ -238,7 +253,7 @@ namespace Barotrauma
                 }
             }
 
-            GameMain.Server.CreateEntityEvent(Owner as IServerSerializable, new object[] { NetEntityEvent.Type.InventoryState });
+            CreateNetworkEvent();
 
             foreach (Item item in Items.Distinct())
             {
@@ -278,64 +293,6 @@ namespace Barotrauma
             {
                 msg.Write((ushort)(Items[i] == null ? 0 : Items[i].ID));
             }
-        }
-
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
-        {
-            receivedItemIDs = new ushort[capacity];
-
-            for (int i = 0; i < capacity; i++)
-            {
-                receivedItemIDs[i] = msg.ReadUInt16();
-            }
-
-            if (syncItemsDelay > 0.0f)
-            {
-                //delay applying the new state if less than 1 second has passed since this client last sent a state to the server
-                //prevents the inventory from briefly reverting to an old state if items are moved around in quick succession
-                if (syncItemsCoroutine != null) CoroutineManager.StopCoroutines(syncItemsCoroutine);
-
-                syncItemsCoroutine = CoroutineManager.StartCoroutine(SyncItemsAfterDelay());
-            }
-            else
-            {
-                ApplyReceivedState();
-            }
-        }
-
-        private IEnumerable<object> SyncItemsAfterDelay()
-        {
-            while (syncItemsDelay > 0.0f)
-            {
-                syncItemsDelay -= CoroutineManager.DeltaTime;
-                yield return CoroutineStatus.Running;
-            }
-
-            ApplyReceivedState();
-
-            yield return CoroutineStatus.Success;
-        }
-
-        private void ApplyReceivedState()
-        {
-            if (receivedItemIDs == null) return;
-
-            for (int i = 0; i < capacity; i++)
-            {
-                if (receivedItemIDs[i] == 0)
-                {
-                    if (Items[i] != null) Items[i].Drop();
-                }
-                else
-                {
-                    var item = Entity.FindEntityByID(receivedItemIDs[i]) as Item;
-                    if (item == null) continue;
-
-                    TryPutItem(item, i, true, true, null, false);
-                }
-            }
-
-            receivedItemIDs = null;
         }
     }
 }

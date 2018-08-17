@@ -24,6 +24,12 @@ namespace Barotrauma.Sounds
             protected set;
         }
 
+        public bool FilledByNetwork
+        {
+            get;
+            protected set;
+        }
+
         private uint alBuffer;
         public uint ALBuffer
         {
@@ -52,11 +58,12 @@ namespace Barotrauma.Sounds
         public float BaseNear;
         public float BaseFar;
         
-        public Sound(SoundManager owner,string filename,bool stream)
+        public Sound(SoundManager owner,string filename,bool stream,bool filledByNetwork)
         {
             Owner = owner;
             Filename = filename;
             Stream = stream;
+            FilledByNetwork = filledByNetwork;
 
             BaseGain = 1.0f;
             BaseNear = 100.0f;
@@ -99,34 +106,29 @@ namespace Barotrauma.Sounds
             return Owner.IsPlaying(this);
         }
 
-        public SoundChannel Play(float gain, float range, Vector2 position)
+        public virtual SoundChannel Play(float gain, float range, Vector2 position, bool muffle = false)
         {
-            return new SoundChannel(this, gain, new Vector3(position.X,position.Y,0.0f), range * 0.4f, range, "default");
+            return new SoundChannel(this, gain, new Vector3(position.X, position.Y, 0.0f), range * 0.4f, range, "default", muffle);
         }
 
-        public SoundChannel Play(Vector2 position)
+        public virtual SoundChannel Play(Vector3? position, float gain, bool muffle = false)
         {
-            return new SoundChannel(this, BaseGain, new Vector3(position.X, position.Y, 0.0f), BaseNear, BaseFar, "default");
+            return new SoundChannel(this, gain, position, BaseNear, BaseFar, "default", muffle);
         }
 
-        public SoundChannel Play(Vector3? position, float gain)
-        {
-            return new SoundChannel(this, gain, position, BaseNear, BaseFar, "default");
-        }
-
-        public SoundChannel Play(float gain)
+        public virtual SoundChannel Play(float gain)
         {
             return Play(null, gain);
         }
 
-        public SoundChannel Play()
+        public virtual SoundChannel Play()
         {
             return Play(BaseGain);
         }
 
-        public SoundChannel Play(float gain,string category)
+        public SoundChannel Play(float? gain, string category)
         {
-            return new SoundChannel(this, gain, null, BaseNear, BaseFar, category);
+            return new SoundChannel(this, gain ?? BaseGain, null, BaseNear, BaseFar, category);
         }
 
         public abstract int FillStreamBuffer(int samplePos, short[] buffer);

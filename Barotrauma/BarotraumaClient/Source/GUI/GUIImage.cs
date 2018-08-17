@@ -12,7 +12,9 @@ namespace Barotrauma
 
         private Rectangle sourceRect;
 
-        bool crop;
+        private bool crop;
+
+        private bool scaleToFit;
         
         public bool Crop
         {
@@ -43,41 +45,44 @@ namespace Barotrauma
             set { sourceRect = value; }
         }
 
-        public GUIImage(Rectangle rect, string spritePath, Alignment alignment, GUIComponent parent = null)
-            : this(rect, new Sprite(spritePath, Vector2.Zero), alignment, parent)
+        public Sprite Sprite
         {
+            get { return sprite; }
+            set
+            {
+                if (sprite == value) return;
+                sprite = value;
+                sourceRect = sprite.SourceRect;
+                if (scaleToFit) RecalculateScale();                
+            }
         }
 
-        public GUIImage(Rectangle rect, Sprite sprite, Alignment alignment, GUIComponent parent = null)
-            : this(rect, sprite==null ? Rectangle.Empty : sprite.SourceRect, sprite, alignment, parent)
+        public GUIImage(RectTransform rectT, Sprite sprite, Rectangle? sourceRect = null, bool scaleToFit = false) : base(null, rectT)
         {
-        }
-
-        public GUIImage(Rectangle rect, Rectangle sourceRect, Sprite sprite, Alignment alignment, GUIComponent parent = null)
-            : base(null)
-        {
-            this.rect = rect;
-
-            this.alignment = alignment;
-
+            this.scaleToFit = scaleToFit;
+            Sprite = sprite;
+            if (sourceRect.HasValue)
+            {
+                this.sourceRect = sourceRect.Value;
+            }
+            else
+            {
+                this.sourceRect = sprite == null ? Rectangle.Empty : sprite.SourceRect;
+            }
             color = Color.White;
-
-            //alpha = 1.0f;
-
-            Scale = 1.0f;
-
-            this.sprite = sprite;
-
-            if (rect.Width == 0) this.rect.Width = (int)sprite.size.X;
-            if (rect.Height == 0) this.rect.Height = (int)Math.Min(sprite.size.Y, sprite.size.Y * (this.rect.Width / sprite.size.X));
-
-            this.sourceRect = sourceRect;
-
-            if (parent != null) parent.AddChild(this);
-            this.parent = parent;
+            hoverColor = Color.White;
+            selectedColor = Color.White;
+            if (!scaleToFit)
+            {
+                Scale = 1.0f;
+            }
+            else
+            {
+                rectT.SizeChanged += RecalculateScale;
+            }
         }
 
-        public override void Draw(SpriteBatch spriteBatch)
+        protected override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
 
@@ -87,11 +92,16 @@ namespace Barotrauma
 
             if (sprite != null && sprite.Texture != null)
             {
-                spriteBatch.Draw(sprite.Texture, new Vector2(rect.X, rect.Y), sourceRect, currColor * (currColor.A / 255.0f), Rotation, Vector2.Zero,
+                spriteBatch.Draw(sprite.Texture, Rect.Center.ToVector2(), sourceRect, currColor * (currColor.A / 255.0f), Rotation, sprite.size / 2,
                     Scale, SpriteEffects.None, 0.0f);
             }          
-            
-            DrawChildren(spriteBatch);
+        }
+
+        private void RecalculateScale()
+        {
+            Scale = sprite.SourceRect.Width == 0 || sprite.SourceRect.Height == 0 ?
+                1.0f :
+                Math.Min(RectTransform.Rect.Width / (float)sprite.SourceRect.Width, RectTransform.Rect.Height / (float)sprite.SourceRect.Height);
         }
     }
 }

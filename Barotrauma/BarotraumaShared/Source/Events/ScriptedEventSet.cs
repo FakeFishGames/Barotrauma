@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 
@@ -42,6 +43,7 @@ namespace Barotrauma
             MinDistanceTraveled = element.GetAttributeFloat("mindistancetraveled", 0.0f);
             MinMissionTime = element.GetAttributeFloat("minmissiontime", 0.0f);
 
+            Commonness[""] = 1.0f;
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -79,9 +81,9 @@ namespace Barotrauma
         public static void LoadPrefabs()
         {
             List = new List<ScriptedEventSet>();
-            var configFiles = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.RandomEvents);
+            var configFiles = GameMain.Instance.GetFilesOfType(ContentType.RandomEvents);
 
-            if (configFiles.Count == 0)
+            if (!configFiles.Any())
             {
                 DebugConsole.ThrowError("No config files for random events found in the selected content package");
                 return;

@@ -8,14 +8,9 @@ using Voronoi2;
 namespace Barotrauma
 {
     partial class Map
-    {
-        const int DifficultyZones = 9;
+    {        
+        private MapGenerationParams generationParams;
         
-        public const int DefaultSize = 2000;
-
-        Vector2 difficultyIncrease = new Vector2(5.0f, 10.0f);
-        Vector2 difficultyCutoff = new Vector2(80.0f, 100.0f);
-
         private List<Level> levels;
 
         private List<Location> locations;
@@ -31,8 +26,9 @@ namespace Barotrauma
         private LocationConnection selectedConnection;
 
         public Action<Location, LocationConnection> OnLocationSelected;
-        public Action<Location> OnLocationChanged;
-
+        //from -> to
+        public Action<Location, Location> OnLocationChanged;
+        
         public Location CurrentLocation
         {
             get { return currentLocation; }
@@ -68,11 +64,11 @@ namespace Barotrauma
             get { return locations; }
         }
 
-        public Map(string seed, int size)
+        public Map(string seed)
         {
+            generationParams = MapGenerationParams.Instance;
             this.seed = seed;
-
-            this.size = size;
+            this.size = generationParams.Size;
 
             levels = new List<Level>();
 
@@ -80,17 +76,9 @@ namespace Barotrauma
 
             connections = new List<LocationConnection>();
 
-#if CLIENT
-            if (iceTexture == null) iceTexture = new Sprite("Content/Map/iceSurface.png", Vector2.Zero);
-            if (iceCraters == null) iceCraters = TextureLoader.FromFile("Content/Map/iceCraters.png");
-            if (iceCrack == null)   iceCrack = TextureLoader.FromFile("Content/Map/iceCrack.png");
-
-            if (circleTexture == null) circleTexture = GUI.CreateCircle(512, true);
-     
-#endif
             Rand.SetSyncedSeed(ToolBox.StringToInt(this.seed));
 
-            GenerateLocations();
+            Generate();
 
             //start from the colony furthest away from the center
             float largestDist = 0.0f;
@@ -112,66 +100,135 @@ namespace Barotrauma
             {
                 connection.Level = Level.CreateRandom(connection);
             }
+
+            InitProjectSpecific();
         }
 
-        private void GenerateLocations()
+        partial void InitProjectSpecific();
+        
+        public float[,] Noise;
+
+        private void GenerateNoiseMap(int octaves, float persistence)
         {
+            float z = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server);
+            Noise = new float[generationParams.NoiseResolution, generationParams.NoiseResolution];
+            
+            float min = float.MaxValue, max = 0.0f;
+            for (int x = 0; x < generationParams.NoiseResolution; x++)
+            {
+                for (int y = 0; y < generationParams.NoiseResolution; y++)
+                {
+                    Noise[x, y] = (float)PerlinNoise.OctavePerlin(
+                        (double)x / generationParams.NoiseResolution, 
+                        (double)y / generationParams.NoiseResolution, 
+                        z, generationParams.NoiseFrequency, octaves, persistence);
+                    min = Math.Min(Noise[x, y], min);
+                    max = Math.Max(Noise[x, y], max);
+                }
+            }
+
+            float radius = generationParams.NoiseResolution / 2;
+            Vector2 center = Vector2.One * radius;
+            float range = max - min;
+            
+            float centerDarkenRadius = radius * generationParams.CenterDarkenRadius;            
+            float edgeDarkenRadius = radius * generationParams.EdgeDarkenRadius;
+            for (int x = 0; x < generationParams.NoiseResolution; x++)
+            {
+                for (int y = 0; y < generationParams.NoiseResolution; y++)
+                {
+                    //normalize the noise to 0-1 range
+                    Noise[x, y] = (Noise[x, y] - min) / range;
+
+                    float dist = Vector2.Distance(center, new Vector2(x, y));
+                    if (dist < centerDarkenRadius)
+                    {
+                        float angle = (float)Math.Atan2(y - center.Y, x - center.X);
+                        float phase = angle * generationParams.CenterDarkenWaveFrequency + Noise[x, y] * generationParams.CenterDarkenWavePhaseNoise;
+                        float currDarkenRadius = centerDarkenRadius * (0.6f + (float)Math.Sin(phase) * 0.4f);
+                        if (dist < currDarkenRadius)
+                        {
+                            float darkenAmount = 1.0f - (dist / currDarkenRadius);
+                            Noise[x, y] = MathHelper.Lerp(Noise[x, y], Noise[x, y] * (1.0f - generationParams.CenterDarkenStrength), darkenAmount);
+                        }
+                    }
+                    if (dist > edgeDarkenRadius)
+                    {
+                        float darkenAmount = Math.Min((dist - edgeDarkenRadius) / (radius - edgeDarkenRadius), 1.0f);
+                        Noise[x, y] = MathHelper.Lerp(Noise[x, y], 1.0f - generationParams.EdgeDarkenStrength, darkenAmount);
+                    }
+                }
+            }
+        }
+
+        partial void GenerateNoiseMapProjSpecific();
+
+        private void Generate()
+        {
+            connections.Clear();
+            locations.Clear();
+
+            GenerateNoiseMap(generationParams.NoiseOctaves, generationParams.NoisePersistence);
+
             List<Vector2> sites = new List<Vector2>();
             float mapRadius = size / 2;
             Vector2 mapCenter = new Vector2(mapRadius, mapRadius);
 
-            float zoneRadius = size / 2 / DifficultyZones;
-            for (int i = 0; i < DifficultyZones; i++)
+            float locationRadius = mapRadius * generationParams.LocationRadius;
+
+            for (float x = mapCenter.X - locationRadius; x < mapCenter.X + locationRadius; x += generationParams.VoronoiSiteInterval)
             {
-                for (int j = 0; j < (i + 1) * MathHelper.Pi * 5; j++)
+                for (float y = mapCenter.Y - locationRadius; y < mapCenter.Y + locationRadius; y += generationParams.VoronoiSiteInterval)
                 {
-                    float thisZoneRadius = (i + 1.0f) * zoneRadius;
-                    sites.Add(mapCenter + Rand.Vector(thisZoneRadius - Rand.Range(0.0f, zoneRadius, Rand.RandSync.Server), Rand.RandSync.Server));
+                    float noiseVal = Noise[(int)(x / size * generationParams.NoiseResolution), (int)(y / size * generationParams.NoiseResolution)];
+                    if (Rand.Range(generationParams.VoronoiSitePlacementMinVal, 1.0f, Rand.RandSync.Server) < 
+                        noiseVal * generationParams.VoronoiSitePlacementProbability)
+                    {
+                        sites.Add(new Vector2(x, y));
+                    }
                 }
             }
 
             Voronoi voronoi = new Voronoi(0.5f);
             List<GraphEdge> edges = voronoi.MakeVoronoiGraph(sites, size, size);
+            float zoneRadius = size / 2 / generationParams.DifficultyZones;
 
             sites.Clear();
             foreach (GraphEdge edge in edges)
             {
-                if (edge.point1 == edge.point2) continue;
-
-                //remove points from the edge of the map
-                /*if (edge.point1.X == 0 || edge.point1.X == size) continue;
-                if (edge.point1.Y == 0 || edge.point1.Y == size) continue;
-                if (edge.point2.X == 0 || edge.point2.X == size) continue;
-                if (edge.point2.Y == 0 || edge.point2.Y == size) continue;*/
-
-                if (Vector2.DistanceSquared(edge.point1, mapCenter) >= mapRadius * mapRadius ||
-                    Vector2.DistanceSquared(edge.point2, mapCenter) >= mapRadius * mapRadius) continue;
+                if (edge.Point1 == edge.Point2) continue;
+                
+                if (Vector2.DistanceSquared(edge.Point1, mapCenter) >= locationRadius * locationRadius ||
+                    Vector2.DistanceSquared(edge.Point2, mapCenter) >= locationRadius * locationRadius) continue;
 
                 Location[] newLocations = new Location[2];
-                newLocations[0] = locations.Find(l => l.MapPosition == edge.point1 || l.MapPosition == edge.point2);
-                newLocations[1] = locations.Find(l => l != newLocations[0] && (l.MapPosition == edge.point1 || l.MapPosition == edge.point2));
+                newLocations[0] = locations.Find(l => l.MapPosition == edge.Point1 || l.MapPosition == edge.Point2);
+                newLocations[1] = locations.Find(l => l != newLocations[0] && (l.MapPosition == edge.Point1 || l.MapPosition == edge.Point2));
 
                 for (int i = 0; i < 2; i++)
                 {
                     if (newLocations[i] != null) continue;
 
-                    Vector2[] points = new Vector2[] { edge.point1, edge.point2 };
+                    Vector2[] points = new Vector2[] { edge.Point1, edge.Point2 };
 
                     int positionIndex = Rand.Int(1, Rand.RandSync.Server);
 
                     Vector2 position = points[positionIndex];
                     if (newLocations[1 - i] != null && newLocations[1 - i].MapPosition == position) position = points[1 - positionIndex];
-                    float dddd = Vector2.Distance(position, mapCenter);
-                    int zone = MathHelper.Clamp(DifficultyZones - (int)Math.Floor(Vector2.Distance(position, mapCenter) / zoneRadius), 1, DifficultyZones);
+                    int zone = MathHelper.Clamp(generationParams.DifficultyZones - (int)Math.Floor(Vector2.Distance(position, mapCenter) / zoneRadius), 1, generationParams.DifficultyZones);
                     newLocations[i] = Location.CreateRandom(position, zone);
                     locations.Add(newLocations[i]);
                 }
-                //int seed = (newLocations[0].GetHashCode() | newLocations[1].GetHashCode());
-                connections.Add(new LocationConnection(newLocations[0], newLocations[1]));
+
+                var newConnection = new LocationConnection(newLocations[0], newLocations[1]);
+                float centerDist = Vector2.Distance(newConnection.CenterPos, mapCenter);
+                newConnection.Difficulty = MathHelper.Clamp(((1.0f - centerDist / mapRadius) * 100) + Rand.Range(-10.0f, 10.0f, Rand.RandSync.Server), 0, 100);
+
+                connections.Add(newConnection);
             }
 
             //remove connections that are too short
-            float minDistance = 50.0f;
+            float minDistance = generationParams.MinConnectionDistance;
             for (int i = connections.Count - 1; i >= 0; i--)
             {
                 LocationConnection connection = connections[i];
@@ -223,30 +280,29 @@ namespace Barotrauma
             foreach (LocationConnection connection in connections)
             {
                 float centerDist = Vector2.Distance(connection.CenterPos, mapCenter);
-                connection.Difficulty = MathHelper.Clamp(((1.0f - centerDist / mapRadius) * 100) + Rand.Range(-10.0f, 10.0f, Rand.RandSync.Server),0, 100);
-
-                Vector2 start = connection.Locations[0].MapPosition;
-                Vector2 end = connection.Locations[1].MapPosition;
-                int generations = (int)(Math.Sqrt(Vector2.Distance(start, end) / 10.0f));
-                connection.CrackSegments = MathUtils.GenerateJaggedLine(start, end, generations, 5.0f);
+                connection.Difficulty = MathHelper.Clamp(((1.0f - centerDist / mapRadius) * 100) + Rand.Range(-10.0f, 10.0f, Rand.RandSync.Server), 0, 100);
             }
-            
+
             AssignBiomes();
+
+            GenerateNoiseMapProjSpecific();
         }
 
         private void AssignBiomes()
         {
+            float locationRadius = size * 0.5f * generationParams.LocationRadius;
+
             var biomes = LevelGenerationParams.GetBiomes();
             Vector2 centerPos = new Vector2(size, size) / 2;
-            for (int i = 0; i<DifficultyZones; i++)
+            for (int i = 0; i < generationParams.DifficultyZones; i++)
             {
-                List<Biome> allowedBiomes = biomes.FindAll(b => b.AllowedZones.Contains(DifficultyZones - i + 1));
-                float zoneRadius = size / 2 * ((i + 1.0f) / DifficultyZones);
+                List<Biome> allowedBiomes = biomes.FindAll(b => b.AllowedZones.Contains(generationParams.DifficultyZones - i));
+                float zoneRadius = locationRadius * ((i + 1.0f) / generationParams.DifficultyZones);
                 foreach (LocationConnection connection in connections)
                 {
                     if (connection.Biome != null) continue;
 
-                    if (i == DifficultyZones - 1 ||
+                    if (i == generationParams.DifficultyZones - 1 ||
                         Vector2.Distance(connection.Locations[0].MapPosition, centerPos) < zoneRadius ||
                         Vector2.Distance(connection.Locations[1].MapPosition, centerPos) < zoneRadius)
                     {
@@ -301,13 +357,14 @@ namespace Barotrauma
         
         public void MoveToNextLocation()
         {
+            Location prevLocation = currentLocation;
             selectedConnection.Passed = true;
 
             currentLocation = selectedLocation;
             currentLocation.Discovered = true;
             selectedLocation = null;
 
-            OnLocationChanged?.Invoke(currentLocation);
+            OnLocationChanged?.Invoke(prevLocation, currentLocation);
         }
 
         public void SetLocation(int index)
@@ -324,10 +381,11 @@ namespace Barotrauma
                 return;
             }
 
+            Location prevLocation = currentLocation;
             currentLocation = locations[index];
             currentLocation.Discovered = true;
 
-            OnLocationChanged?.Invoke(currentLocation);
+            OnLocationChanged?.Invoke(prevLocation, currentLocation);
         }
 
         public void SelectLocation(int index)
@@ -423,21 +481,21 @@ namespace Barotrauma
                     }
                 }
 
-                float probabilitySum = readyTypeChanges.Sum(m => m.Probability);
-                float randomNumber = Rand.Range(0.0f, 1.0f);
-
-                foreach (LocationTypeChange typeChange in readyTypeChanges)
+                //select a random type change
+                if (Rand.Range(0.0f, 1.0f) < readyTypeChanges.Sum(t => t.Probability))
                 {
-                    if (randomNumber <= typeChange.Probability)
+                    var selectedTypeChange = 
+                        ToolBox.SelectWeightedRandom(readyTypeChanges, readyTypeChanges.Select(t => t.Probability).ToList(), Rand.RandSync.Unsynced);
+                    if (selectedTypeChange != null)
                     {
-                        location.ChangeType(LocationType.List.Find(lt => lt.Name.ToLowerInvariant() == typeChange.ChangeTo.ToLowerInvariant()));
+                        string prevName = location.Name;
+                        location.ChangeType(LocationType.List.Find(lt => lt.Name.ToLowerInvariant() == selectedTypeChange.ChangeTo.ToLowerInvariant()));
+                        ChangeLocationType(location, prevName, selectedTypeChange);
                         location.TypeChangeTimer = -1;
                         break;
                     }
-
-                    randomNumber -= typeChange.Probability;
-                } 
-
+                }
+                
                 if (allowedTypeChanges.Count > 0)
                 {
                     location.TypeChangeTimer++;
@@ -449,23 +507,22 @@ namespace Barotrauma
             }
         }
 
+        partial void ChangeLocationType(Location location, string prevName, LocationTypeChange change);
+
         public static Map LoadNew(XElement element)
         {
-            string mapSeed = element.GetAttributeString("seed", "a");
-
-            int size = element.GetAttributeInt("size", DefaultSize);
-            Map map = new Map(mapSeed, size);
-            map.Load(element);
+            string mapSeed = element.GetAttributeString("seed", "a");            
+            Map map = new Map(mapSeed);
+            map.Load(element, false);
 
             return map;
         }
 
-        public void Load(XElement element)
+        public void Load(XElement element, bool showNotifications)
         {
             SetLocation(element.GetAttributeInt("currentlocation", 0));
 
-            Version saveVersion;
-            if (!Version.TryParse(element.GetAttributeString("version", ""), out saveVersion))
+            if (!Version.TryParse(element.GetAttributeString("version", ""), out _))
             {
                 DebugConsole.ThrowError("Incompatible map save file, loading the game failed.");
                 return;
@@ -477,12 +534,21 @@ namespace Barotrauma
                 {
                     case "location":
                         string locationType = subElement.GetAttributeString("type", "");
-                        int locationIndex = subElement.GetAttributeInt("i", 0);
+                        Location location = locations[subElement.GetAttributeInt("i", 0)];
                         int typeChangeTimer = subElement.GetAttributeInt("changetimer", 0);
 
-                        locations[locationIndex].Discovered = true;
-                        locations[locationIndex].ChangeType(LocationType.List.Find(lt => lt.Name.ToLowerInvariant() == locationType.ToLowerInvariant()));
-                        locations[locationIndex].TypeChangeTimer = typeChangeTimer;
+                        string prevLocationName = location.Name;
+                        LocationType prevLocationType = location.Type;
+                        location.Discovered = true;
+                        location.ChangeType(LocationType.List.Find(lt => lt.Name.ToLowerInvariant() == locationType.ToLowerInvariant()));
+                        location.TypeChangeTimer = typeChangeTimer;
+                        if (showNotifications && prevLocationType != location.Type)
+                        {
+                            ChangeLocationType(
+                                location,
+                                prevLocationName,
+                                prevLocationType.CanChangeTo.Find(c => c.ChangeTo.ToLowerInvariant() == location.Type.Name.ToLowerInvariant()));
+                        }
                         break;
                     case "connection":
                         int connectionIndex = subElement.GetAttributeInt("i", 0);
@@ -502,7 +568,6 @@ namespace Barotrauma
             mapElement.Add(new XAttribute("version", GameMain.Version.ToString()));
             mapElement.Add(new XAttribute("currentlocation", CurrentLocationIndex));
             mapElement.Add(new XAttribute("seed", Seed));
-            mapElement.Add(new XAttribute("size", size));
 
             for (int i = 0; i < locations.Count; i++)
             {
@@ -525,6 +590,8 @@ namespace Barotrauma
                 var connection = connections[i];
                 if (!connection.Passed) continue;
 
+                connection.CheckMissionCompleted();
+
                 var connectionElement = new XElement("connection", new XAttribute("i", i));
                 if (connection.MissionsCompleted > 0)
                 {
@@ -533,7 +600,7 @@ namespace Barotrauma
 
                 mapElement.Add(connectionElement);
             }
-
+            
             element.Add(mapElement);
         }
     }

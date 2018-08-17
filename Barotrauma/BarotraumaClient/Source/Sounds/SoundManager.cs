@@ -9,7 +9,7 @@ namespace Barotrauma.Sounds
 {
     public class SoundManager : IDisposable
     {
-        public const int SOURCE_COUNT = 16;
+        public const int SOURCE_COUNT = 32;
         
         private IntPtr alcDevice;
         private OpenTK.ContextHandle alcContext;
@@ -201,7 +201,6 @@ namespace Barotrauma.Sounds
             ListenerPosition = Vector3.Zero;
             ListenerTargetVector = new Vector3(0.0f, 0.0f, 1.0f);
             ListenerUpVector = new Vector3(0.0f, -1.0f, 0.0f);
-
         }
 
         public Sound LoadSound(string filename,bool stream=false)
@@ -301,6 +300,21 @@ namespace Barotrauma.Sounds
                 }
             }
             return false;
+        }
+
+        public SoundChannel GetChannelFromSound(Sound sound)
+        {
+            lock (playingChannels)
+            {
+                for (int i = 0; i < SOURCE_COUNT; i++)
+                {
+                    if (playingChannels[i] != null && playingChannels[i].Sound == sound)
+                    {
+                        if (playingChannels[i].IsPlaying) return playingChannels[i];
+                    }
+                }
+            }
+            return null;
         }
 
         public void KillChannels(Sound sound)
@@ -422,8 +436,15 @@ namespace Barotrauma.Sounds
                         }
                     }
                 }
-                Thread.Sleep(300);
+                Thread.Sleep(50); //TODO: use a separate thread for network audio?
             }
+        }
+
+        public string GetCaptureDeviceName(int i)
+        {
+            if (alcCaptureDeviceNames == null) return "[N/A]";
+            if (i < 0 || i >= alcCaptureDeviceNames.Count) return "[N/A]";
+            return alcCaptureDeviceNames[i];
         }
 
         public void Dispose()

@@ -11,12 +11,10 @@ namespace Barotrauma.Items.Components
     {
         enum UsableIn
         {
-            Air,Water,Both
+            Air, Water, Both
         };
 
         private float force;
-
-        private string particles;
 
         private float useState;
         
@@ -30,6 +28,7 @@ namespace Barotrauma.Items.Components
         }
 
 #if CLIENT
+        private string particles;
         [Serialize("", false)]
         public string Particles
         {
@@ -74,6 +73,8 @@ namespace Barotrauma.Items.Components
             }
 
             Vector2 dir = Vector2.Normalize(character.CursorPosition - character.Position);
+            //move upwards if the cursor is at the position of the character
+            if (!MathUtils.IsValid(dir)) dir = Vector2.UnitY;
 
             Vector2 propulsion = dir * force;
 

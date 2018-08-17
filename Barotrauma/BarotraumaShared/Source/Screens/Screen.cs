@@ -24,7 +24,8 @@
             {
                 selected.Deselect();
 #if CLIENT
-                GUIComponent.KeyboardDispatcher.Subscriber = null;
+                GUI.KeyboardDispatcher.Subscriber = null;
+                GUI.ScreenChanged = true;
 #endif
             }
             selected = this;

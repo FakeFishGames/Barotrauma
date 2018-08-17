@@ -12,7 +12,7 @@ namespace Barotrauma
         Attack,
         Run, Crouch,
         Chat, RadioChat, CrewOrders,
-        Ragdoll
+        Ragdoll, Health
     }
 
     public class KeyOrMouse
@@ -95,12 +95,31 @@ namespace Barotrauma
     {
         private bool hit, hitQueue;
         private bool held, heldQueue;
-
-        private KeyOrMouse binding;
         
+#if CLIENT
+        private InputType inputType;
+
+        public Key(InputType inputType)
+        {
+            this.inputType = inputType;
+        }
+
+        private KeyOrMouse binding
+        {
+            get { return GameMain.Config.KeyBind(inputType); }
+        }        
+#else
+        private KeyOrMouse binding;
+
         public Key(KeyOrMouse binding)
         {
             this.binding = binding;
+        }
+#endif
+
+        public KeyOrMouse State
+        {
+            get { return binding; }
         }
 
         public bool Hit
@@ -126,12 +145,7 @@ namespace Barotrauma
                 held = value;
             }
         }
-
-        public KeyOrMouse State
-        {
-            get { return binding; }
-        }
-
+        
         public void SetState()
         {
             hit = binding.IsHit();
@@ -171,7 +185,6 @@ namespace Barotrauma
             get { return hitQueue; }
         }
 
-
         public void Reset()
         {
             hit = false;
@@ -183,7 +196,6 @@ namespace Barotrauma
             hit = false;
             //stateQueue = false;
         }
-
 
         public void ResetHeld()
         {

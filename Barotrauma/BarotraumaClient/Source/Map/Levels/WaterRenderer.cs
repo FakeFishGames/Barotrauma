@@ -34,6 +34,8 @@ namespace Barotrauma
         public const int DefaultBufferSize = 1500;
         public const int DefaultIndoorsBufferSize = 3000;
 
+        const float DistortionScale = 0.5f;
+
         public Vector2 WavePos
         {
             get;
@@ -69,14 +71,14 @@ namespace Barotrauma
         public WaterRenderer(GraphicsDevice graphicsDevice, ContentManager content)
         {
 #if WINDOWS
-            WaterEffect = content.Load<Effect>("watershader");
+            WaterEffect = content.Load<Effect>("Effects/watershader");
 #endif
 #if LINUX || OSX
 
-            WaterEffect = content.Load<Effect>("watershader_opengl");
+            WaterEffect = content.Load<Effect>("Effects/watershader_opengl");
 #endif
 
-            waterTexture = TextureLoader.FromFile("Content/waterbump.png");
+            waterTexture = TextureLoader.FromFile("Content/Effects/waterbump.png");
             WaterEffect.Parameters["xWaterBumpMap"].SetValue(waterTexture);
             WaterEffect.Parameters["waterColor"].SetValue(waterColor.ToVector4());
 
@@ -94,8 +96,9 @@ namespace Barotrauma
             spriteBatch.GraphicsDevice.BlendState = BlendState.AlphaBlend;
             
             WaterEffect.Parameters["xTexture"].SetValue(texture);
-            WaterEffect.Parameters["xWaveWidth"].SetValue(0.5f);
-            WaterEffect.Parameters["xWaveHeight"].SetValue(0.5f);
+            float waveStrength = cam == null ? 0.5f : 0.5f * cam.Zoom;
+            WaterEffect.Parameters["xWaveWidth"].SetValue(waveStrength);
+            WaterEffect.Parameters["xWaveHeight"].SetValue(waveStrength);
             if (blurAmount > 0.0f)
             {
                 WaterEffect.CurrentTechnique = WaterEffect.Techniques["WaterShaderBlurred"];
@@ -109,9 +112,10 @@ namespace Barotrauma
             Vector2 offset = WavePos;
             if (cam != null)
             {
-                offset += cam.Position - new Vector2(cam.WorldView.Width / 2.0f, -cam.WorldView.Height / 2.0f);
+                offset += (cam.Position - new Vector2(cam.WorldView.Width / 2.0f, -cam.WorldView.Height / 2.0f));
                 offset.Y += cam.WorldView.Height;
                 offset.X += cam.WorldView.Width;
+                offset *= DistortionScale;
             }
             offset.Y = -offset.Y;
             WaterEffect.Parameters["xUvOffset"].SetValue(new Vector2((offset.X / GameMain.GraphicsWidth) % 1.0f, (offset.Y / GameMain.GraphicsHeight) % 1.0f));
@@ -121,7 +125,7 @@ namespace Barotrauma
             {
                 WaterEffect.Parameters["xBumpScale"].SetValue(new Vector2(
                         (float)cam.WorldView.Width / GameMain.GraphicsWidth,
-                        (float)cam.WorldView.Height / GameMain.GraphicsHeight));
+                        (float)cam.WorldView.Height / GameMain.GraphicsHeight) * DistortionScale);
                 WaterEffect.Parameters["xTransform"].SetValue(cam.ShaderTransform
                     * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f);
                 WaterEffect.Parameters["xUvTransform"].SetValue(cam.ShaderTransform
@@ -166,6 +170,7 @@ namespace Barotrauma
                     offset += cam.Position - new Vector2(cam.WorldView.Width / 2.0f, -cam.WorldView.Height / 2.0f);
                     offset.Y += cam.WorldView.Height;
                     offset.X += cam.WorldView.Width;
+                    offset *= DistortionScale;
                 }
                 offset.Y = -offset.Y;
                 WaterEffect.Parameters["xUvOffset"].SetValue(new Vector2((offset.X / GameMain.GraphicsWidth) % 1.0f, (offset.Y / GameMain.GraphicsHeight) % 1.0f));
@@ -176,9 +181,9 @@ namespace Barotrauma
             }
         }
 
-        public void ScrollWater(float deltaTime)
+        public void ScrollWater(Vector2 vel, float deltaTime)
         {
-            WavePos = WavePos + Vector2.One * 10.0f * deltaTime;
+            WavePos = WavePos - vel * deltaTime;
         }
 
         public void RenderAir(GraphicsDevice graphicsDevice, Camera cam, RenderTarget2D texture, Matrix transform)

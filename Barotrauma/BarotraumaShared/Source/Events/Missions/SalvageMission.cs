@@ -1,7 +1,6 @@
 ﻿using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -15,7 +14,7 @@ namespace Barotrauma
 
         private int state;
 
-        public override Vector2 RadarPosition
+        public override Vector2 SonarPosition
         {
             get
             {
@@ -26,7 +25,7 @@ namespace Barotrauma
         public SalvageMission(MissionPrefab prefab, Location[] locations)
             : base(prefab, locations)
         {
-            string itemName = prefab.XmlConfig.GetAttributeString("itemname", "");
+            string itemName = prefab.ConfigElement.GetAttributeString("itemname", "");
 
             itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
             if (itemPrefab == null)
@@ -34,11 +33,10 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Error in SalvageMission: couldn't find an item prefab with the name " + itemName);
                 return;
             }
-
-            string spawnPositionTypeStr = prefab.XmlConfig.GetAttributeString("spawntype", "");
-
+            
+            string spawnPositionTypeStr = prefab.ConfigElement.GetAttributeString("spawntype", "");
             if (string.IsNullOrWhiteSpace(spawnPositionTypeStr) ||
-                !Enum.TryParse<Level.PositionType>(spawnPositionTypeStr, true, out spawnPositionType))
+                !Enum.TryParse(spawnPositionTypeStr, true, out spawnPositionType))
             {
                 spawnPositionType = Level.PositionType.Cave | Level.PositionType.Ruin;
             }

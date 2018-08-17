@@ -23,13 +23,18 @@ namespace Barotrauma
 
         private float? footRotation;
 
+        //the angle of the collider when standing (i.e. out of water)
+        private float colliderStandAngle;
+
         private float deathAnimTimer, deathAnimDuration = 5.0f;
 
-        public FishAnimController(Character character, XElement element)
-            : base(character, element)
+        public FishAnimController(Character character, XElement element, string seed)
+            : base(character, element, seed)
         {
             waveAmplitude   = ConvertUnits.ToSimUnits(element.GetAttributeFloat("waveamplitude", 0.0f));
             waveLength      = ConvertUnits.ToSimUnits(element.GetAttributeFloat("wavelength", 0.0f));
+
+            colliderStandAngle = MathHelper.ToRadians(element.GetAttributeFloat("colliderstandangle", 0.0f));
 
             steerTorque     = element.GetAttributeFloat("steertorque", 25.0f);
             
@@ -55,19 +60,10 @@ namespace Barotrauma
 
             if (character.IsDead || character.IsUnconscious || character.Stun > 0.0f)
             {
+                Collider.Enabled = false;
                 Collider.FarseerBody.FixedRotation = false;
-
-                if (character.IsRemotePlayer)
-                {
-                    MainLimb.pullJoint.WorldAnchorB = Collider.SimPosition;
-                    MainLimb.pullJoint.Enabled = true;
-                }
-                else
-                {
-                    Collider.LinearVelocity = (MainLimb.SimPosition - Collider.SimPosition) * 60.0f;
-                    Collider.SmoothRotate(MainLimb.Rotation);
-                }
-
+                Collider.SetTransformIgnoreContacts(MainLimb.SimPosition, MainLimb.Rotation);
+                
                 if (character.IsDead && deathAnimTimer < deathAnimDuration)
                 {
                     deathAnimTimer += deltaTime;
@@ -106,10 +102,11 @@ namespace Barotrauma
             }
             else if (currentHull != null && CanEnterSubmarine)
             {
-                if (Math.Abs(MathUtils.GetShortestAngle(Collider.Rotation, 0.0f)) > 0.001f)
+                //rotate collider back upright
+                float standAngle = dir == Direction.Right ? colliderStandAngle : -colliderStandAngle;
+                if (Math.Abs(MathUtils.GetShortestAngle(Collider.Rotation, standAngle)) > 0.001f)
                 {
-                    //rotate collider back upright
-                    Collider.AngularVelocity = MathUtils.GetShortestAngle(Collider.Rotation, 0.0f) * 60.0f;
+                    Collider.AngularVelocity = MathUtils.GetShortestAngle(Collider.Rotation, standAngle) * 60.0f;
                     Collider.FarseerBody.FixedRotation = false;
                 }
                 else
@@ -174,10 +171,17 @@ namespace Barotrauma
                             (Dir < 0.0f && head.SimPosition.X > MainLimb.SimPosition.X && tail.SimPosition.X < MainLimb.SimPosition.X);
                     }
 
-                    Flip();
-                    if ((mirror || !inWater) && !wrongway)
+                    if (wrongway)
                     {
-                        Mirror();
+                        base.Flip();
+                    }
+                    else
+                    {
+                        Flip();
+                        if (mirror || !inWater)
+                        {
+                            Mirror();
+                        }
                     }
                     flipTimer = 0.0f;
                 }
@@ -201,20 +205,9 @@ namespace Barotrauma
 
             Character targetCharacter = target;
             float eatSpeed = character.Mass / targetCharacter.Mass * 0.1f;
-
             eatTimer += (float)Timing.Step * eatSpeed;
 
-            Vector2 mouthPos = mouthLimb.SimPosition;
-            if (mouthLimb.MouthPos.HasValue)
-            {
-                float cos = (float)Math.Cos(mouthLimb.Rotation);
-                float sin = (float)Math.Sin(mouthLimb.Rotation);
-
-                mouthPos += new Vector2(
-                     mouthLimb.MouthPos.Value.X * cos - mouthLimb.MouthPos.Value.Y * sin,
-                     mouthLimb.MouthPos.Value.X * sin + mouthLimb.MouthPos.Value.Y * cos);
-            }
-
+            Vector2 mouthPos = GetMouthPosition().Value;
             Vector2 attackSimPosition = character.Submarine == null ? ConvertUnits.ToSimUnits(target.WorldPosition) : target.SimPosition;
 
             Vector2 limbDiff = attackSimPosition - mouthPos;
@@ -237,7 +230,8 @@ namespace Barotrauma
                     targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, 0.0f, 20.0f, 0.0f, false);
 
                     //keep severing joints until there is only one limb left
-                    LimbJoint[] nonSeveredJoints = Array.FindAll(targetCharacter.AnimController.LimbJoints, l => !l.IsSevered && l.CanBeSevered);
+                    LimbJoint[] nonSeveredJoints = Array.FindAll(targetCharacter.AnimController.LimbJoints,
+                        l => !l.IsSevered && l.CanBeSevered && l.LimbA != null && !l.LimbA.IsSevered && l.LimbB != null && !l.LimbB.IsSevered);
                     if (nonSeveredJoints.Length == 0)
                     {
                         //only one limb left, the character is now full eaten

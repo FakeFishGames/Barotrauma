@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using SharpFont;
 using System;
 using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -45,7 +46,12 @@ namespace Barotrauma
             public Rectangle texCoords;
         }
 
-        public ScalableFont(string filename, uint size, GraphicsDevice gd=null)
+        public ScalableFont(XElement element, GraphicsDevice gd = null)
+            : this (element.GetAttributeString("file", ""), (uint)element.GetAttributeInt("size", 14), gd)
+        {            
+        }
+
+        public ScalableFont(string filename, uint size, GraphicsDevice gd = null)
         {
             if (Lib == null) Lib = new Library();
             this.filename = filename;

@@ -26,6 +26,7 @@ namespace Barotrauma
 
         public float Shake;
         private Vector2 shakePosition;
+        private float shakeTimer;
         private Vector2 shakeTargetPosition;
         
         //the area of the world inside the camera view
@@ -100,20 +101,14 @@ namespace Barotrauma
 
         public Camera()
         {
-            zoom = 1.0f;
+            zoom = prevZoom = 1.0f;
             rotation = 0.0f;
             position = Vector2.Zero;
 
-            worldView = new Rectangle(0,0, 
-                GameMain.GraphicsWidth,
-                GameMain.GraphicsHeight);
+            CreateMatrices();
+            GameMain.Instance.OnResolutionChanged += () => { CreateMatrices(); };
 
-            resolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-
-            viewMatrix = 
-                Matrix.CreateTranslation(new Vector3(GameMain.GraphicsWidth / 2.0f, GameMain.GraphicsHeight / 2.0f, 0));
-
-            UpdateTransform();
+            UpdateTransform(false);
         }
 
         public Vector2 TargetPos
@@ -126,7 +121,13 @@ namespace Barotrauma
         public void Translate(Vector2 amount)
         {
             position += amount;
+        }
 
+        private void CreateMatrices()
+        {
+            resolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            worldView = new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            viewMatrix = Matrix.CreateTranslation(new Vector3(GameMain.GraphicsWidth / 2.0f, GameMain.GraphicsHeight / 2.0f, 0));
         }
 
         public void UpdateTransform(bool interpolate = true)
@@ -152,11 +153,11 @@ namespace Barotrauma
 
             if (Character.Controlled == null)
             {
-                GameMain.SoundManager.ListenerPosition = new Vector3(WorldViewCenter.X, WorldViewCenter.Y, 0.0f);
+                GameMain.SoundManager.ListenerPosition = new Vector3(WorldViewCenter.X, WorldViewCenter.Y, -(100.0f / zoom));
             }
             else
             {
-                GameMain.SoundManager.ListenerPosition = new Vector3(Character.Controlled.WorldPosition.X, Character.Controlled.WorldPosition.Y, 0.0f);
+                GameMain.SoundManager.ListenerPosition = new Vector3(Character.Controlled.WorldPosition.X, Character.Controlled.WorldPosition.Y, -(100.0f / zoom));
             }
             
 
@@ -177,7 +178,7 @@ namespace Barotrauma
             Vector2 moveCam = Vector2.Zero;
             if (targetPos == Vector2.Zero)
             {
-                if (allowMove && GUIComponent.KeyboardDispatcher.Subscriber == null)
+                if (allowMove && GUI.KeyboardDispatcher.Subscriber == null)
                 {
                     if (PlayerInput.KeyDown(Keys.LeftShift)) moveSpeed *= 2.0f;
                     if (PlayerInput.KeyDown(Keys.LeftControl)) moveSpeed *= 0.5f;
@@ -229,9 +230,19 @@ namespace Barotrauma
                 moveCam = diff / MoveSmoothness;
             }
 
-            shakeTargetPosition = Rand.Vector(Shake);
-            shakePosition = Vector2.Lerp(shakePosition, shakeTargetPosition, 0.5f);
-            Shake = MathHelper.Lerp(Shake, 0.0f, deltaTime * 2.0f);
+            if (Shake < 0.01f)
+            {
+                shakePosition = Vector2.Zero;
+                shakeTimer = 0.0f;
+            }
+            else
+            {
+                shakeTimer += deltaTime * 5.0f;
+                Vector2 noisePos = new Vector2((float)PerlinNoise.Perlin(shakeTimer, shakeTimer, 0) - 0.5f, (float)PerlinNoise.Perlin(shakeTimer, shakeTimer, 0.5f) - 0.5f);
+
+                shakePosition = noisePos * Shake * 2.0f;
+                Shake = MathHelper.Lerp(Shake, 0.0f, deltaTime * 2.0f);
+            }
 
             Translate(moveCam + shakePosition);
         }

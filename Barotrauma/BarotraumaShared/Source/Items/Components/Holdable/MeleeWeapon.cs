@@ -24,6 +24,11 @@ namespace Barotrauma.Items.Components
 
         private float reloadTimer;
 
+        public Character User
+        {
+            get { return user; }
+        }
+
         [Serialize(0.0f, false)]
         public float Range
         {
@@ -178,14 +183,12 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Limb limb in user.AnimController.Limbs)
                 {
-                    try
+                    if (limb.body.FarseerBody != null)
                     {
-                        item.body.FarseerBody.RestoreCollisionWith(limb.body.FarseerBody);
-                    }
-
-                    catch
-                    {
-                        continue;
+                        if (GameMain.World.BodyList.Contains(limb.body.FarseerBody))
+                        {
+                            item.body.FarseerBody.RestoreCollisionWith(limb.body.FarseerBody);
+                        }
                     }
                 }
             }
@@ -251,10 +254,12 @@ namespace Barotrauma.Items.Components
             {
                 if (targetLimb != null)
                 {
+                    targetLimb.character.LastDamageSource = item;
                     attack.DoDamageToLimb(user, targetLimb, item.WorldPosition, 1.0f);
                 }
                 else if (targetCharacter != null)
                 {
+                    targetLimb.character.LastDamageSource = item;
                     attack.DoDamage(user, targetCharacter, item.WorldPosition, 1.0f);
                 }
                 else if (targetStructure != null)

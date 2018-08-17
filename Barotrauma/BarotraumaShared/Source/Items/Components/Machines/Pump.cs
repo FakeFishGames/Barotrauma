@@ -15,6 +15,8 @@ namespace Barotrauma.Items.Components
         
         public Hull hull1;
 
+        private bool hasPower;
+
         [Serialize(0.0f, true)]
         public float FlowPercentage
         {
@@ -34,7 +36,7 @@ namespace Barotrauma.Items.Components
             set { maxFlow = value; } 
         }
 
-        float currFlow;
+        private float currFlow;
         public float CurrFlow
         {
             get 
@@ -43,23 +45,7 @@ namespace Barotrauma.Items.Components
                 return Math.Abs(currFlow); 
             }
         }
-
-        public override bool IsActive
-        {
-            get
-            {
-                return base.IsActive;
-            }
-            set
-            {
-                base.IsActive = value;
-
-#if CLIENT
-                if (isActiveTickBox != null) isActiveTickBox.Selected = value;
-#endif
-            }
-        }
-
+        
         public Pump(Item item, XElement element)
             : base(item, element)
         {
@@ -85,6 +71,7 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             currFlow = 0.0f;
+            hasPower = false;
 
             if (targetLevel != null)
             {
@@ -98,9 +85,13 @@ namespace Barotrauma.Items.Components
 
             if (voltage < minVoltage) return;
 
+            hasPower = true;
+
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            if (hull1 == null) return;
+            //check the hull if the item is movable
+            if (item.body != null) GetHull();
+            if (hull1 == null) return;            
 
             float powerFactor = currPowerConsumption <= 0.0f ? 1.0f : voltage;
 
@@ -118,10 +109,10 @@ namespace Barotrauma.Items.Components
             hull1 = Hull.FindHull(item.WorldPosition, item.CurrentHull);
         }
         
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
-            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power);
-            
+            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
+
             if (connection.Name == "toggle")
             {
                 IsActive = !IsActive;
@@ -132,18 +123,16 @@ namespace Barotrauma.Items.Components
             }
             else if (connection.Name == "set_speed")
             {
-                float tempSpeed;
-                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out tempSpeed))
+                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempSpeed))
                 {
                     flowPercentage = MathHelper.Clamp(tempSpeed, -100.0f, 100.0f);
                 }
             }
             else if (connection.Name == "set_targetlevel")
             {
-                float tempTarget;
-                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out tempTarget))
+                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempTarget))
                 {
-                    targetLevel = MathHelper.Clamp((tempTarget+100.0f)/2.0f, 0.0f, 100.0f);
+                    targetLevel = MathHelper.Clamp((tempTarget + 100.0f) / 2.0f, 0.0f, 100.0f);
                 }
             }
 
@@ -152,12 +141,19 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
+            if (GameMain.Client != null) return false;
+
             if (objective.Option.ToLowerInvariant() == "stop pumping")
             {
+                if (FlowPercentage > 0.0f) item.CreateServerEvent(this);
                 FlowPercentage = 0.0f;
             }
             else
             {
+                if (!IsActive || FlowPercentage > -100.0f)
+                {
+                    item.CreateServerEvent(this);
+                }
                 IsActive = true;
                 FlowPercentage = -100.0f;
             }
