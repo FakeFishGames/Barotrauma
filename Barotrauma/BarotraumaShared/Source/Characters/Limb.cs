@@ -296,7 +296,7 @@ namespace Barotrauma
                         attack = new Attack(subElement, (character == null ? "null" : character.Name) + ", limb " + type);
                         break;
                     case "damagemodifier":
-                        damageModifiers.Add(new DamageModifier(subElement));
+                        damageModifiers.Add(new DamageModifier(subElement, character.Name));
                         break;
                 }
             }

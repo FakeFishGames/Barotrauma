@@ -282,23 +282,45 @@ namespace Barotrauma
                         }
                         break;
                     case "affliction":
-                        string afflictionName = subElement.GetAttributeString("name", "").ToLowerInvariant();
-                        float afflictionStrength = subElement.GetAttributeFloat(1.0f, "amount", "strength");
-
-                        AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.Find(ap => ap.Name.ToLowerInvariant() == afflictionName);
-                        if (afflictionPrefab == null)
+                        AfflictionPrefab afflictionPrefab;
+                        if (subElement.Attribute("name") != null)
                         {
-                            DebugConsole.ThrowError("Affliction prefab \"" + afflictionName + "\" not found.");
+                            DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - define afflictions using identifiers instead of names.");
+                            string afflictionName = subElement.GetAttributeString("name", "").ToLowerInvariant();
+                            afflictionPrefab = AfflictionPrefab.List.Find(ap => ap.Name.ToLowerInvariant() == afflictionName);
+                            if (afflictionPrefab == null)
+                            {
+                                DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - Affliction prefab \"" + afflictionName + "\" not found.");
+                            }
                         }
                         else
                         {
-                            Afflictions.Add(afflictionPrefab.Instantiate(afflictionStrength));
+                            string afflictionIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
+                            afflictionPrefab = AfflictionPrefab.List.Find(ap => ap.Identifier.ToLowerInvariant() == afflictionIdentifier);
+                            if (afflictionPrefab == null)
+                            {
+                                DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - Affliction prefab \"" + afflictionIdentifier + "\" not found.");
+                            }
                         }
+
+                        float afflictionStrength = subElement.GetAttributeFloat(1.0f, "amount", "strength");
+                        Afflictions.Add(afflictionPrefab.Instantiate(afflictionStrength));
+                        
                         break;
                     case "reduceaffliction":
-                        ReduceAffliction.Add(new Pair<string, float>(
-                            subElement.GetAttributeString("name", "").ToLowerInvariant(),
-                            subElement.GetAttributeFloat(1.0f, "amount", "strength", "reduceamount")));
+                        if (subElement.Attribute("name") != null)
+                        {
+                            DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - define afflictions using identifiers or types instead of names.");
+                            ReduceAffliction.Add(new Pair<string, float>(
+                                subElement.GetAttributeString("name", "").ToLowerInvariant(),
+                                subElement.GetAttributeFloat(1.0f, "amount", "strength", "reduceamount")));
+                        }
+                        else
+                        {
+                            ReduceAffliction.Add(new Pair<string, float>(
+                                (subElement.GetAttributeString("identifier", null) ?? subElement.GetAttributeString("type", null)).ToLowerInvariant(),
+                                subElement.GetAttributeFloat(1.0f, "amount", "strength", "reduceamount")));
+                        }
                         break;
                     case "spawnitem":
                         var newSpawnItem = new ItemSpawnInfo(subElement);
