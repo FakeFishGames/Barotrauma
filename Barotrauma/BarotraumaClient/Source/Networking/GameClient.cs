@@ -1088,7 +1088,7 @@ namespace Barotrauma.Networking
                             bool allowSpectating        = inc.ReadBoolean();
 
                             YesNoMaybe traitorsEnabled  = (YesNoMaybe)inc.ReadRangedInteger(0, 2);
-                            int missionTypeIndex        = inc.ReadRangedInteger(0, MissionPrefab.MissionTypes.Count - 1);
+                            int missionTypeIndex        = inc.ReadRangedInteger(0, Enum.GetValues(typeof(MissionType)).Length - 1);
                             int modeIndex               = inc.ReadByte();
 
                             string levelSeed            = inc.ReadString();

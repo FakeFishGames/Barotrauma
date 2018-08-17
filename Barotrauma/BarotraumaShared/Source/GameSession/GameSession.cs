@@ -93,7 +93,7 @@ namespace Barotrauma
         }
 
 
-        public GameSession(Submarine submarine, string savePath, GameModePreset gameModePreset, string missionType = "")
+        public GameSession(Submarine submarine, string savePath, GameModePreset gameModePreset, MissionType missionType = MissionType.None)
             : this(submarine, savePath)
         {
             CrewManager = new CrewManager(gameModePreset != null && gameModePreset.IsSinglePlayer);
