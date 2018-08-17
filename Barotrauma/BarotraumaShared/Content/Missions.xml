@@ -3,6 +3,7 @@
   <SalvageMission 
     name="Salvaging an artifact" 
     identifier="salvageskyholderartifactruins"
+    type="Salvage"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="10"
     reward="1000"
@@ -32,6 +33,7 @@
   <SalvageMission
     name="Salvaging an artifact"
     identifier="salvagethermalartifactruins"
+    type="Salvage"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="10"
     reward="2000"
@@ -61,6 +63,7 @@
   <SalvageMission
     name="Salvaging an artifact"
     identifier="salvagethermalartifactcave"
+    type="Salvage"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="5"
     reward="1500"
@@ -90,6 +93,7 @@
   <SalvageMission
     name="Salvaging an artifact"
     identifier="salvagenasonovartifactruin"
+    type="Salvage"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="10"
     reward="2000"
@@ -119,6 +123,7 @@
   <SalvageMission
     name="Salvaging an artifact"
     identifier="salvagenasonovartifactcave"
+    type="Salvage"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="5"
     reward="1500"
@@ -148,6 +153,7 @@
   <MonsterMission
     name="Killing a Moloch"
     identifier="killmoloch"
+    type="Monster"
     description="A particularly aggressive Moloch has been terrorizing vessels traveling between [location1] and [location2]. A reward of 1000 credits has been promised to those who kill the creature."
     commonness="10"
     reward="1000"
@@ -174,6 +180,7 @@
   <MonsterMission
     name="Killing a Tiger Thresher"
     identifier="killtigerthresher"
+    type="Monster"
     description="A particularly aggressive Tiger Thresher has been terrorizing vessels traveling between [location1] and [location2]. A reward of 800 credits has been promised to those who kill the creature."
     commonness="10"
     reward="800"
@@ -201,6 +208,7 @@
   <MonsterMission
     name="Beast from the Abyss"
     identifier="killendworm"
+    type="Monster"
     description="Seismic readings are indicating that something colossal has emerged from the depths of Europa into the passageway between [location1] and [location2]. All transports through the passageway have been canceled for now and a reward of 10,000 has been promised to those who get rid of whatever is causing the seismic activity."
     commonness="2"
     reward="10000"
@@ -218,8 +226,9 @@
   </MonsterMission>
 
   <MonsterMission
-    name="Salvaging an artifact" 
+    name="Salvaging an artifact"
     identifier="salvagekillmoloch"
+    type="Monster"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="5"
     reward="1000"
@@ -244,6 +253,7 @@
   <MonsterMission
     name="Salvaging a Derelict"
     identifier="salvagekillcarrier"
+    type="Monster"
     description="A small cargo vessel went missing approximately two months ago when transporting xenomaterials from [location1] to [location2]. The vessel was presumed to be taken by the abyss, but now its emergency beacon seems to have been activated near [location2]. Find the vessel and recover the cargo."
     commonness="10"
     reward="1000"
@@ -265,7 +275,8 @@
   
   <CargoMission
     name="Explosive cargo"
-    identifier="cargocompound"
+    identifier="cargocompoundn"
+    type="Cargo"
     description="A local arms dealer is offering 200 credits in exchange for delivering two crates of high explosives to a customer in [location2]."
     commonness="10"
     reward="500"
@@ -300,6 +311,7 @@
   <CargoMission
     name="Explosive cargo"
     identifier="cargovolatilecompoundn"
+    type="Cargo"
     description="A local arms dealer is offering 200 credits in exchange for delivering two crates of high explosives to a customer in [location2]."
     commonness="5"
     reward="200"
@@ -337,6 +349,7 @@
   <CargoMission
     name="Chemical shipment"
     identifier="cargochemicals"
+    type="Cargo"
     description="Reseachers of [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of 200 credits."
     commonness="10"
     reward="200"
@@ -369,6 +382,7 @@
   <CargoMission
     name="Biohazard"
     identifier="cargohuskeggs"
+    type="Cargo"
     description="Local reseachers are offering 500 credits for delivering a container of husk parasite eggs to [location2]."
     commonness="10"
     reward="500"
@@ -394,6 +408,7 @@
   <CargoMission
     name="Handle with care"
     identifier="cargonitroglycerin"
+    type="Cargo"
     description="Local reseachers are offering 2000 credits for delivering a large amount of nitroglycerin to [location2]."
     commonness="15"
     reward="2000"
@@ -426,6 +441,7 @@
   <CargoMission
     name="Praise the Honkmother"
     identifier="cargoclowngear"
+    type="Cargo"
     description="A local clown syndicate is offering 100 credits for delivering a shipment of clowning supplies to [location2]."
     commonness="2"
     reward="100"
@@ -452,6 +468,7 @@
   <CombatMission
     name="Search and Destroy"
     identifier="pvpmission"
+    type="Combat"
     
     descriptionneutral="A Coalition vessel has been dispatched from [location1] to destroy a renegade vessel at the outskirts of [location2]."
     description1="A renegade vessel has been detected at the outskirts of [location2]. Treason against the Europa Coalition is punishable by death - eliminate the renegades by any means necessary."

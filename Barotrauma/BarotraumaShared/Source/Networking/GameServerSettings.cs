@@ -315,7 +315,7 @@ namespace Barotrauma.Networking
             get { return maxPlayers; }
         }
 
-        public List<string> AllowedRandomMissionTypes
+        public List<MissionType> AllowedRandomMissionTypes
         {
             get;
             set;
@@ -468,9 +468,17 @@ namespace Barotrauma.Networking
                 if (min > -1 && max > -1) AllowedClientNameChars.Add(new Pair<int, int>(min, max));
             }
 
-            AllowedRandomMissionTypes = doc.Root.GetAttributeStringArray(
-                "AllowedRandomMissionTypes",
-                MissionPrefab.MissionTypes.ToArray()).ToList();
+            AllowedRandomMissionTypes = new List<MissionType>();
+            string[] allowedMissionTypeNames = doc.Root.GetAttributeStringArray(
+                "AllowedRandomMissionTypes", Enum.GetValues(typeof(MissionType)).Cast<MissionType>().Select(m => m.ToString()).ToArray());
+            foreach (string missionTypeName in allowedMissionTypeNames)
+            {
+                if (Enum.TryParse(missionTypeName, out MissionType missionType))
+                {
+                    if (missionType == Barotrauma.MissionType.None) continue;
+                    AllowedRandomMissionTypes.Add(missionType);
+                }
+            }
 
             if (GameMain.NetLobbyScreen != null
 #if CLIENT

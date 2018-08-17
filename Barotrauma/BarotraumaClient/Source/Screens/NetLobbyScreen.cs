@@ -836,10 +836,11 @@ namespace Barotrauma
 
         public void SetMissionType(int missionTypeIndex)
         {
-            if (missionTypeIndex < 0 || missionTypeIndex >= MissionPrefab.MissionTypes.Count) return;
-
-            ((GUITextBlock)missionTypeContainer.GetChild(2)).Text = MissionPrefab.MissionTypes[missionTypeIndex];
-            missionTypeContainer.UserData = missionTypeIndex;
+            if (missionTypeIndex < 0 || missionTypeIndex >= Enum.GetValues(typeof(MissionType)).Length) return;
+            
+            //TODO: get mission type text from xml
+            ((GUITextBlock)missionTypeContainer.GetChild(2)).Text = ((MissionType)missionTypeIndex).ToString();
+            missionTypeContainer.UserData = ((MissionType)missionTypeIndex);
         }
 
         public bool ToggleMissionType(GUIButton button, object userData)
@@ -849,8 +850,8 @@ namespace Barotrauma
             int missionTypeIndex = (int)missionTypeContainer.UserData;
             missionTypeIndex += (int)userData;
 
-            if (missionTypeIndex < 0) missionTypeIndex = MissionPrefab.MissionTypes.Count - 1;
-            if (missionTypeIndex >= MissionPrefab.MissionTypes.Count) missionTypeIndex = 0;
+            if (missionTypeIndex < 0) missionTypeIndex = Enum.GetValues(typeof(MissionType)).Length - 1;
+            if (missionTypeIndex >= Enum.GetValues(typeof(MissionType)).Length) missionTypeIndex = 0;
 
             SetMissionType(missionTypeIndex);
 

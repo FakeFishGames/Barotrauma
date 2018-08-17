@@ -127,7 +127,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    MissionPrefab.MissionTypes.ToArray()
+                    Enum.GetValues(typeof(MissionType)).Cast<string>().ToArray()
                 };
             }));
 
