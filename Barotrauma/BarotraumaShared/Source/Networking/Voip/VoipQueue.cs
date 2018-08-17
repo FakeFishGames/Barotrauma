@@ -9,7 +9,7 @@ namespace Barotrauma.Networking
 
     public class VoipQueue : IDisposable
     {
-        public const int BUFFER_COUNT = 5;
+        public const int BUFFER_COUNT = 8;
         protected int[] bufferLengths;
         protected byte[][] buffers;
         protected int newestBufferInd;
