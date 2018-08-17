@@ -38,6 +38,19 @@
     <OrderDialog.operatereactor>[name], roperate the eactor!</OrderDialog.operatereactor>
     <OrderDialog.operatereactor.powerup>[name], rower pup the eactor!</OrderDialog.operatereactor.powerup>
     <OrderDialog.operatereactor.shutdown>[name], rutdown the sheactor!</OrderDialog.operatereactor.shutdown>
+    
+  - AI conversation files are a bit of a special case, as they can be added/removed by content packages and replaced by translation files.
+    When creating a mod with custom AI conversations, you simply configure the files in the content package the same way as in the Vanilla content package.
+    If you want to translate a conversation file, you should add the translated file to the Content/NPCConversations-folder, 
+    and use the identifier attribute to define which file it replaces.
+    
+    If you for example are creating a russian translation of the vanilla game, you should create a conversation file that's configured as:
+      <Conversations identifier="vanillaconversations" Language="Russian">
+    
+    If you wanted to create a more comprehensive translation that also translates some common mods, you could add multiple translation files:
+      <Conversations identifier="barotraumaexpandedconversations" Language="Russian">
+      <Conversations identifier="mememod" Language="Russian">
+    
 -->
 
 <infotexts language="English">    

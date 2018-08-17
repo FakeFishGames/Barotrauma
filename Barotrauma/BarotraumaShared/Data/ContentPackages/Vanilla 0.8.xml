@@ -69,7 +69,7 @@
   <MapGenerationParameters file="Content/Map/MapGenerationParameters.xml" />
   <LevelGenerationParameters file="Content/Map/LevelGenerationParameters.xml" />  
   <Missions file="Content/Missions.xml" />
-  <NPCConversations file="Content/Characters/Human/NpcConversations.xml"/>
+  <NPCConversations file="Content/NPCConversations/NpcConversations.xml"/>
   <Jobs file="Content/Jobs.xml" />
   <Sounds file="Content/Sounds/sounds.xml" />
   <Tutorials file="Content/Tutorials/Tutorials.xml" />
