@@ -123,7 +123,7 @@ namespace Barotrauma
             if (string.IsNullOrEmpty(sp.name)) sp.name = element.Name.ToString();
             sp.identifier = element.GetAttributeString("identifier", "");
 
-            string translatedName = TextManager.Get(sp.identifier + ".Name", true);
+            string translatedName = TextManager.Get("EntityName." + sp.identifier, true);
             if (!string.IsNullOrEmpty(translatedName)) sp.name = translatedName;
 
             sp.Tags = new HashSet<string>();
@@ -177,9 +177,9 @@ namespace Barotrauma
             {
                 sp.Aliases = aliases.Split(',');
             }
-            
+
             SerializableProperty.DeserializeProperties(sp, element);
-            string translatedDescription = TextManager.Get(sp.identifier + ".Description", true);
+            string translatedDescription = TextManager.Get("EntityDescription." + sp.identifier, true);
             if (!string.IsNullOrEmpty(translatedDescription)) sp.Description = translatedDescription;
 
             //backwards compatibility
