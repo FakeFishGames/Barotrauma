@@ -447,7 +447,7 @@ namespace Barotrauma.Items.Components
             
             switch (objective.Option.ToLowerInvariant())
             {
-                case "power up":
+                case "powerup":
 #if CLIENT
                     onOffSwitch.BarScroll = 0.0f;
 #endif

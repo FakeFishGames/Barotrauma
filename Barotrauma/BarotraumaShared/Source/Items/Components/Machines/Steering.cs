@@ -407,7 +407,7 @@ namespace Barotrauma.Items.Components
         {
             switch (objective.Option.ToLowerInvariant())
             {
-                case "maintain position":
+                case "maintainposition":
                     if (!posToMaintain.HasValue)
                     {
                         unsentChanges = true;
@@ -419,14 +419,14 @@ namespace Barotrauma.Items.Components
                     AutoPilot = true;
                     MaintainPos = true;
                     break;
-                case "navigate back":
+                case "navigateback":
                     if (!AutoPilot || MaintainPos || LevelEndSelected || !LevelStartSelected)
                     {
                         unsentChanges = true;
                     }
                     SetDestinationLevelStart();
                     break;
-                case "navigate to destination":
+                case "navigatetodestination":
                     if (!AutoPilot || MaintainPos || !LevelEndSelected || LevelStartSelected)
                     {
                         unsentChanges = true;

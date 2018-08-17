@@ -204,9 +204,9 @@
   <Location>Sijainti</Location>
   <HireUnavailable>Ei ole vuokrattavissa.</HireUnavailable>
   <Mission>Tehtävä</Mission>
-  <Reward>Palkinto</Reward>
-  <Credit>Luotto</Credit>
-  <Credits>Laajuus</Credits>
+  <Reward>Palkkio: [reward] krediittiä</Reward>
+  <Credit>Krediitti</Credit>
+  <PlayerCredits>Varat: [credits] krediittiä</PlayerCredits>
   <!-- Ingame menus -->
   <InfoButton>Tiedot</InfoButton>
   <EndRound>Lopeta kierros</EndRound>
@@ -611,6 +611,70 @@
   <DialogSonarTargetLarge>Jotain isoa sonarissa [suuntaan]!</DialogSonarTargetLarge>
   <DialogSonarTargetMultiple>[count] tavoitteet sonarissa [suuntaan]!</DialogSonarTargetMultiple>
   <DialogSonarTargetMultiple>Meillä on [määrä] tavoitteita [suuntaan]!</DialogSonarTargetMultiple>
+  
+  <OrderName.follow>Seuraa</OrderName.follow>
+  <OrderNameDoing.follow>Seuraa</OrderNameDoing.follow>
+  <OrderDialog.follow>[name], seuraa minua!</OrderDialog.follow>
+  <OrderName.Wait>Odota</OrderName.Wait>
+  <OrderNameDoing.Wait>Odottaa</OrderNameDoing.Wait>
+  <OrderDialog.wait>[name], pysy siinä!</OrderDialog.wait>
+  <OrderName.dismissed>Vapaa</OrderName.dismissed>
+  <OrderNameDoing.dismissed>Vapautettu</OrderNameDoing.dismissed>
+  <OrderDialog.dismissed>[name], vapaa tehtävistä!</OrderDialog.dismissed>
+  <OrderName.operatereactor>Operoi reaktoria</OrderName.operatereactor>
+  <OrderNameDoing.operatereactor>Operoi reaktoria</OrderNameDoing.operatereactor>
+  <OrderOptions.operatereactor>Käynnistä, Sammuta</OrderOptions.operatereactor>
+  <OrderDialog.operatereactor>[name], operoi reaktoria!</OrderDialog.operatereactor>
+  <OrderDialog.operatereactor.powerup>[name], käynnistä reaktori!</OrderDialog.operatereactor.powerup>
+  <OrderDialog.operatereactor.shutdown>[name], sammuta reaktori!</OrderDialog.operatereactor.shutdown>
+  <OrderName.operateweapons>Operoi aseita</OrderName.operateweapons>
+  <OrderNameDoing.operateweapons>Operoi aseita</OrderNameDoing.operateweapons>
+  <OrderOptions.operateweapons>Tuli vapaa, Tuli seis</OrderOptions.operateweapons>
+  <OrderDialog.operateweapons>[name], aseisiin!</OrderDialog.operateweapons>
+  <OrderDialog.operateweapons.fireatwill>[name], tuli vapaa!</OrderDialog.operateweapons.fireatwill>
+  <OrderDialog.operateweapons.holdfire>[name], tuli seis!</OrderDialog.operateweapons.holdfire>
+  <OrderName.steer>Ohjaa</OrderName.steer>
+  <OrderNameDoing.steer>Ohjaa</OrderNameDoing.steer>
+  <OrderOptions.steer>Seis, Taaksepäin, Eteenpäin</OrderOptions.steer>
+  <OrderDialog.steer>[name], ohjaa alusta!</OrderDialog.steer>
+  <OrderDialog.steer.maintainposition>[name], pidä positio!</OrderDialog.steer.maintainposition>
+  <OrderDialog.steer.navigateback>[name], kurssi taaksepäin!</OrderDialog.steer.navigateback>
+  <OrderDialog.steer.navigatetodestination>[name], kurssi eteenpäin!</OrderDialog.steer.navigatetodestination>
+  <OrderName.fixleaks>Korjaa vuotoja</OrderName.fixleaks>
+  <OrderNameDoing.fixleaks>Korjaa vuotoja</OrderNameDoing.fixleaks>
+  <OrderDialog.fixleaks>[name], korjaa vuotoja!</OrderDialog.fixleaks>
+  <OrderName.extinguishfires>Sammuta palot</OrderName.extinguishfires>
+  <OrderNameDoing.extinguishfires>Sammuttaa paloja</OrderNameDoing.extinguishfires>
+  <OrderDialog.extinguishfires>[name], sammuta tulipalot!</OrderDialog.extinguishfires>
+  <OrderName.chargebatteries>Operoi paristoja</OrderName.chargebatteries>
+  <OrderNameDoing.chargebatteries>Operoi paristoja</OrderNameDoing.chargebatteries>
+  <OrderOptions.chargebatteries>Lataa, Keskeytä lataus</OrderOptions.chargebatteries>
+  <OrderDialog.chargebatteries>[name], operoi paristoja!</OrderDialog.chargebatteries>
+  <OrderDialog.chargebatteries.charge>[name], lataa paristot!</OrderDialog.chargebatteries.charge>
+  <OrderDialog.chargebatteries.stopcharging>[name], keskeytä paristojen lataus!</OrderDialog.chargebatteries.stopcharging>
+  <OrderName.pumpwater>Operoi pumppuja</OrderName.pumpwater>
+  <OrderNameDoing.pumpwater>Operoi pumppuja</OrderNameDoing.pumpwater>
+  <OrderOptions.pumpwater>Käynnistä pumput, Pysäytä pumput</OrderOptions.pumpwater>
+  <OrderDialog.pumpwater>[name], operoi pumppuja!</OrderDialog.pumpwater>
+  <OrderDialog.pumpwater.pumpout>[name], pumput täysille!</OrderDialog.pumpwater.pumpout>
+  <OrderDialog.pumpwater.stoppumping>[name], pysäytä pumput!</OrderDialog.pumpwater.stoppumping>
+  <OrderName.rescue>Ensiapu</OrderName.rescue>
+  <OrderNameDoing.rescue>Antaa ensiapua</OrderNameDoing.rescue>
+  <OrderDialog.rescue>[name], anna ensiapua jos joku sitä tarvitsee!</OrderDialog.rescue>
+  <OrderName.repairsystems>Korjaa laitteita</OrderName.repairsystems>
+  <OrderNameDoing.repairsystems>Korjaa laitteita</OrderNameDoing.repairsystems>
+  <OrderDialog.repairsystems>[name], korjaa vaurioituneet laitteet!</OrderDialog.repairsystems>
+  <OrderName.reportfire>Raportoi tulipalo</OrderName.reportfire>
+  <OrderDialog.reportfire>Tulipalo huoneessa [roomname]!</OrderDialog.reportfire>
+  <OrderName.reportbreach>Raportoi vuoto</OrderName.reportbreach>
+  <OrderDialog.reportbreach>Vuoto huoneessa [roomname]!</OrderDialog.reportbreach>
+  <OrderName.reportintruders>Raportoi hyökkääjä</OrderName.reportintruders>
+  <OrderDialog.reportintruders>Vihollisia huoneessa [roomname]!</OrderDialog.reportintruders>
+  <OrderName.reportbrokendevices>Raportoi vaurioitunut laite</OrderName.reportbrokendevices>
+  <OrderDialog.reportbrokendevices>Vaurioituneita laitteita huoneessa [roomname]!</OrderDialog.reportbrokendevices>
+  <OrderName.requestfirstaid>Pyydä ensiapua</OrderName.requestfirstaid>
+  <OrderDialog.requestfirstaid>Lääkintämies huoneeseen [roomname]!</OrderDialog.requestfirstaid>
+
   <!-- Status -->
   <Deceased>Kuollut</Deceased>
   <Unconscious>Tajuton</Unconscious>
@@ -645,7 +709,7 @@
   <LoadingScreenTip>Euroopan vedenalaisen ekosysteemin dynamiikkaa ei vieläkään täysin ymmärretä, mutta uskotaan, että elintarvikeketjun perusta muodostuu useimmiten kemosynteettisistä bakteereista.</LoadingScreenTip>
   <LoadingScreenTip>Eurooppa-koalitio alkoi kauppa- ja yhteistyösopimuksena kahden suurimman europanelakohteen ja kourallisen yksityisten puolisotilaallisten ryhmien välillä, mutta vähitellen kasvoi siitä, mikä on lähinnä euroopan hallitus.</LoadingScreenTip>
   <LoadingScreenTip>Hyvin laiskannut aloite, jolla autetaan ajajat menestymään jännittävään ympäristöön sisällyttämällä ammattiviihdyttäjiä miehistöihin, pidettiin viivytyksettä epäonnistuneeksi ja lopetettiin.</LoadingScreenTip>
-  
+
   <!-- Entity names and descriptions -->
   <EntityName.hull>Runko</EntityName.hull>
   <EntityDescription.hull>Rungot määrittävät, mitkä osat katsotaan "osaston sisällä". Yleensä jokaisen huoneen on oltava rungon mukana.</EntityDescription.hull>
@@ -699,4 +763,21 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  
 </infotexts>

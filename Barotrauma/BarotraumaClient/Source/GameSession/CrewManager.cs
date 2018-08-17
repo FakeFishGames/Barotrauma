@@ -644,19 +644,21 @@ namespace Barotrauma
             foreach (Item item in matchingItems)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), orderContainer.RectTransform), item != null ? item.Name : order.Name);
-                
-                foreach (string orderOption in order.Options)
-                {
-                    var optionButton = new GUIButton(new RectTransform(new Point(orderContainer.Rect.Width, 20), orderContainer.RectTransform),
-                        orderOption, style: "GUITextBox");
 
-                    optionButton.UserData = item == null ? order : new Order(order, item, item.components.Find(ic => ic.GetType() == order.ItemComponentType));
-                    optionButton.OnClicked += (btn, userData) =>
+                for (int i = 0; i < order.Options.Length; i++)
+                {
+                    string option = order.Options[i];
+                    var optionButton = new GUIButton(new RectTransform(new Point(orderContainer.Rect.Width, 20), orderContainer.RectTransform),
+                        order.OptionNames[i], style: "GUITextBox")
                     {
-                        if (Character.Controlled == null) return false;
-                        SetCharacterOrder(character, userData as Order, orderOption, Character.Controlled);
-                        orderTargetFrame = null;
-                        return true;
+                        UserData = item == null ? order : new Order(order, item, item.components.Find(ic => ic.GetType() == order.ItemComponentType)),
+                        OnClicked = (btn, userData) =>
+                        {
+                            if (Character.Controlled == null) return false;
+                            SetCharacterOrder(character, userData as Order, option, Character.Controlled);
+                            orderTargetFrame = null;
+                            return true;
+                        }
                     };
                 }
             }

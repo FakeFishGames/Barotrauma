@@ -4,6 +4,12 @@
   - The file must be encoded using UTF-8 for special symbols (e.g. non-english alphabets) to work.
     In Notepad the encoding can be selected in the save dialog. In Notepad++ it's selected in the encoding menu.
     
+  - The game automatically loads all the xml files in the Texts-folder, and uses the ones that in the same
+    language that the user has selected. 
+      
+  - Text files should not be included in content package configs, but mods can include additional texts files in
+    case you want to add things such as new item names/descriptions or provide translation files for your mod.
+    
   - There are a couple of console commands that may be helpful for translating the game:
     - dumptexts writes all of the texts in this file into Content/Texts/EnglishVanilla.txt, removing all the xml tags
     - loadtexts reads the lines from Content/Texts/EnglishVanilla.txt and inserts them back to this xml file.
@@ -24,6 +30,14 @@
     <AfflictionDescription.internaldamage>Dizzle to interizzle oizzle interizzle bleedizzle or broizzle boizzle.</AfflictionDescription.internaldamage>
     <AfflictionCauseOfDeath.internaldamage>Died of interizzle injurizzle</AfflictionCauseOfDeath.internaldamage>
     <AfflictionCauseOfDeathSelf.internaldamage>You have succizzle to your interizzle injurizzle </AfflictionCauseOfDeathSelf.internaldamage>
+    
+  - AI order/report texts can be translated using the AITag of the order, as follows:
+    <OrderName.operatereactor>Roperate eactor</OrderName.operatereactor>
+    <OrderOptions.operatereactor>Ower Pup, Dut shown</OrderOptions.operatereactor>
+    <OrderNameDoing.operatereactor>Roperating eactor</OrderNameDoing.operatereactor>
+    <OrderDialog.operatereactor>[name], roperate the eactor!</OrderDialog.operatereactor>
+    <OrderDialog.operatereactor.powerup>[name], rower pup the eactor!</OrderDialog.operatereactor.powerup>
+    <OrderDialog.operatereactor.shutdown>[name], rutdown the sheactor!</OrderDialog.operatereactor.shutdown>
 -->
 
 <infotexts language="English">    
@@ -266,9 +280,9 @@
   <Location>Location</Location>
   <HireUnavailable>No-one available for hire.</HireUnavailable>
   <Mission>Mission</Mission>
-  <Reward>Reward</Reward>
+  <Reward>Reward: [reward] credits</Reward>
   <Credit>Credit</Credit>
-  <Credits>Credits</Credits>
+  <PlayerCredits>Credits: [credits]</PlayerCredits>
 
   <!-- Ingame menus -->
   <InfoButton>Info</InfoButton>
@@ -699,7 +713,53 @@
   <DialogSonarTargetLarge>Something big on the sonar at [direction]!</DialogSonarTargetLarge>
   <DialogSonarTargetMultiple>[count] targets on the sonar at [direction]!</DialogSonarTargetMultiple>
   <DialogSonarTargetMultiple>We've got [count] targets at [direction]!</DialogSonarTargetMultiple>
-
+  <OrderDialog.follow>[name], follow me!</OrderDialog.follow>
+  <OrderDialog.wait>[name], wait there!</OrderDialog.wait>
+  <OrderDialog.wait>[name], stay where you are!</OrderDialog.wait>
+  <OrderDialog.dismissed>[name], you are dismissed!</OrderDialog.dismissed>
+  <OrderDialog.operatereactor>[name], operate the reactor!</OrderDialog.operatereactor>
+  <OrderDialog.operatereactor>[name], man the reactor!</OrderDialog.operatereactor>
+  <OrderDialog.operatereactor.powerup>[name], power up the reactor!</OrderDialog.operatereactor.powerup>
+  <OrderDialog.operatereactor.shutdown>[name], shut down the reactor!</OrderDialog.operatereactor.shutdown>
+  <OrderDialog.operateweapons>[name], operate the weapons!</OrderDialog.operateweapons>
+  <OrderDialog.operateweapons>[name], man the weapons!</OrderDialog.operateweapons>
+  <OrderDialog.operateweapons>[name], man the guns!</OrderDialog.operateweapons>
+  <OrderDialog.operateweapons.fireatwill>[name], fire at will!</OrderDialog.operateweapons.fireatwill>
+  <OrderDialog.operateweapons.holdfire>[name], hold fire!</OrderDialog.operateweapons.holdfire>
+  <OrderDialog.steer>[name], man the helm!</OrderDialog.steer>
+  <OrderDialog.steer>[name], steer the submarine!</OrderDialog.steer>
+  <OrderDialog.steer.maintainposition>[name], maintain position!</OrderDialog.steer.maintainposition>
+  <OrderDialog.steer.maintainposition>[name], hold our position!</OrderDialog.steer.maintainposition>
+  <OrderDialog.steer.navigateback>[name], set the course back!</OrderDialog.steer.navigateback>
+  <OrderDialog.steer.navigatetodestination>[name], navigate onwards!</OrderDialog.steer.navigatetodestination>
+  <OrderDialog.steer.navigatetodestination>[name], set the course  onwards!</OrderDialog.steer.navigatetodestination>
+  <OrderDialog.steer.navigatetodestination>[name], set the course to our destination!</OrderDialog.steer.navigatetodestination>
+  <OrderDialog.fixleaks>[name], start fixing leaks!</OrderDialog.fixleaks>
+  <OrderDialog.fixleaks>[name], take care of any leaks!</OrderDialog.fixleaks>
+  <OrderDialog.extinguishfires>[name], extinguish the fire!</OrderDialog.extinguishfires>
+  <OrderDialog.chargebatteries>[name], operate the batteries!</OrderDialog.chargebatteries>
+  <OrderDialog.chargebatteries.charge>[name], charge the batteries!</OrderDialog.chargebatteries.charge>
+  <OrderDialog.chargebatteries.charge>[name], make sure all batteries are charged!</OrderDialog.chargebatteries.charge>
+  <OrderDialog.chargebatteries.stopcharging>[name], stop charging the batteries!</OrderDialog.chargebatteries.stopcharging>
+  <OrderDialog.pumpwater>[name], start pumping out water!</OrderDialog.pumpwater>
+  <OrderDialog.pumpwater.pumpout>[name], start pumping out water!</OrderDialog.pumpwater.pumpout>
+  <OrderDialog.pumpwater.stoppumping>[name], shut down the pumps!</OrderDialog.pumpwater.stoppumping>
+  <OrderDialog.pumpwater.stoppumping>[name], stop the pumps!</OrderDialog.pumpwater.stoppumping>
+  <OrderDialog.rescue>[name], rescue anyone in distress!</OrderDialog.rescue>
+  <OrderDialog.rescue>[name], give medical aid to anyone in need!</OrderDialog.rescue>
+  <OrderDialog.repairsystems>[name], repair all damaged systems!</OrderDialog.repairsystems>
+  <OrderDialog.repairsystems>[name], take care of any broken devices!</OrderDialog.repairsystems>
+  <OrderDialog.reportfire>Fire in [roomname]!</OrderDialog.reportfire>
+  <OrderDialog.reportfire>[roomname] is on fire!</OrderDialog.reportfire>
+  <OrderDialog.reportbreach>Hull breach in [roomname]!</OrderDialog.reportbreach>
+  <OrderDialog.reportbreach>Leak in [roomname]!</OrderDialog.reportbreach>
+  <OrderDialog.reportintruders>Intruders in [roomname]!</OrderDialog.reportintruders>
+  <OrderDialog.reportintruders>Hostiles in [roomname]!</OrderDialog.reportintruders>
+  <OrderDialog.reportbrokendevices>Broken devices in [roomname]!</OrderDialog.reportbrokendevices>
+  <OrderDialog.reportbrokendevices>Need someone to repair devices in [roomname]!</OrderDialog.reportbrokendevices>
+  <OrderDialog.requestfirstaid>Need a medic in [roomname]!</OrderDialog.requestfirstaid>
+  <OrderDialog.requestfirstaid>Need medical assistance in [roomname]!</OrderDialog.requestfirstaid>
+  
   <!-- Status -->
   <Deceased>Deceased</Deceased>
   <Unconscious>Unconscious</Unconscious>
@@ -790,6 +850,7 @@
   <weldingtool.Name>Eldingway Ooltay</weldingtool.Name>
   <weldingtool.Description>Oneway ofway ethay ostmay ucialcray oolstay onway oardbay ethay ubmarinesay. Alsoway orksway underwaterway.</weldingtool.Description>
   -->
+
 
 
 
