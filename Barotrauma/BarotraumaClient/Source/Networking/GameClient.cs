@@ -25,9 +25,6 @@ namespace Barotrauma.Networking
         private List<string> permittedConsoleCommands = new List<string>();
 
         private bool connected;
-
-        private byte myID;
-
         private List<Client> otherClients;
 
         public VoipClient VoipClient
@@ -57,10 +54,7 @@ namespace Barotrauma.Networking
         //has the client been given a character to control this round
         public bool HasSpawned;
 
-        public byte ID
-        {
-            get { return myID; }
-        }
+        public byte ID { get; private set; }
 
         public override List<Client> ConnectedClients
         {
@@ -995,7 +989,7 @@ namespace Barotrauma.Networking
 
         private void ReadInitialUpdate(NetIncomingMessage inc)
         {
-            myID = inc.ReadByte();
+            ID = inc.ReadByte();
             VoipClient = new VoipClient(this, client);
 
             UInt16 subListCount = inc.ReadUInt16();
@@ -1116,10 +1110,16 @@ namespace Barotrauma.Networking
                                 GameMain.NetLobbyScreen.SetBotSpawnMode(botSpawnMode);                                
                                 GameMain.NetLobbyScreen.SetAutoRestart(autoRestartEnabled, autoRestartTimer);
 
-                                ConnectedClients.Clear();
+                                ConnectedClients.ForEach(c => {
+                                    if (!clientIDs.Any(n => n == c.ID) || !clientNames.Any(n => n == c.Name)) c.Dispose();
+                                });
+                                ConnectedClients.RemoveAll(c => !clientIDs.Any(n => n == c.ID) || !clientNames.Any(n => n == c.Name));
                                 GameMain.NetLobbyScreen.ClearPlayers();
                                 for (int i = 0; i < clientNames.Count; i++)
                                 {
+                                    GameMain.NetLobbyScreen.AddPlayer(clientNames[i]);
+                                    if (clientIDs[i] == ID) continue;
+                                    if (ConnectedClients.Any(c => c.ID == clientIDs[i])) continue;
                                     var newClient = new Client(clientNames[i], clientIDs[i]);
                                     if (characterIDs[i] > 0)
                                     {
@@ -1127,7 +1127,6 @@ namespace Barotrauma.Networking
                                     }
 
                                     ConnectedClients.Add(newClient);
-                                    GameMain.NetLobbyScreen.AddPlayer(newClient.Name);
                                 }
 
                                 Voting.AllowSubVoting = allowSubVoting;
@@ -1611,7 +1610,7 @@ namespace Barotrauma.Networking
                     };
                     if (GameMain.NetworkMember.ConnectedClients != null)
                     {
-                        kickVoteButton.Enabled = !client.HasKickVoteFromID(myID);
+                        kickVoteButton.Enabled = !client.HasKickVoteFromID(ID);
                     }
                 }                
             }

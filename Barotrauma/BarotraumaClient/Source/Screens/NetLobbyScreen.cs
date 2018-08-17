@@ -211,7 +211,7 @@ namespace Barotrauma
                 backgroundSprite = LocationType.Random(levelSeed)?.Background;
                 seedBox.Text = levelSeed;
 
-                lastUpdateID++;
+                if (GameMain.Server != null) lastUpdateID++;
             }
         }
 
@@ -1327,7 +1327,7 @@ namespace Barotrauma
         {
             playerList.ClearChildren();
 
-            if (GameMain.Server != null) lastUpdateID++;
+            //if (GameMain.Server != null) lastUpdateID++; //TODO: not used, remove?
         }
 
         public override void AddToGUIUpdateList()
@@ -1469,7 +1469,7 @@ namespace Barotrauma
                 ToggleCampaignMode(false);
             }
 
-            lastUpdateID++;
+            if (GameMain.Server != null) lastUpdateID++;
             return true;
         }
 
@@ -1538,10 +1538,7 @@ namespace Barotrauma
                 modeList.Select(2, true);
             }
 
-            if (GameMain.Server != null)
-            {
-                lastUpdateID++;
-            }
+            if (GameMain.Server != null) lastUpdateID++;
         }
 
         private bool SelectSeed(GUITextBox textBox, string seed)

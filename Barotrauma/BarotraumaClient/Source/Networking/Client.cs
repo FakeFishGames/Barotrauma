@@ -23,5 +23,18 @@ namespace Barotrauma.Networking
             }
             VoipSound = new VoipSound(GameMain.SoundManager,VoipQueue);
         }
+
+        partial void DisposeProjSpecific()
+        {
+            if (GameMain.Client != null)
+            {
+                GameMain.Client.VoipClient.UnregisterQueue(VoipQueue);
+            }
+            if (VoipSound != null)
+            {
+                VoipSound.Dispose();
+                VoipSound = null;
+            }
+        }
     }
 }

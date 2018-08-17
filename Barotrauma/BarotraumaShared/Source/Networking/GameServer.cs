@@ -18,7 +18,7 @@ namespace Barotrauma.Networking
         private List<Client> connectedClients = new List<Client>();
 
         //for keeping track of disconnected clients in case the reconnect shortly after
-        private List<Client> disconnectedClients = new List<Client>();
+        //private List<Client> disconnectedClients = new List<Client>();
 
         private int roundStartSeed;
 
@@ -479,6 +479,7 @@ namespace Barotrauma.Networking
                 }
             }
 
+            /*TODO: doesn't seem to be used, remove?
             for (int i = disconnectedClients.Count - 1; i >= 0; i-- )
             {
                 disconnectedClients[i].DeleteDisconnectedTimer -= deltaTime;
@@ -490,8 +491,9 @@ namespace Barotrauma.Networking
                     disconnectedClients[i].Character = null;
                 }
 
+                disconnectedClients[i].Dispose();
                 disconnectedClients.RemoveAt(i);
-            }
+            }*/
 
             foreach (Client c in connectedClients)
             {
@@ -515,7 +517,8 @@ namespace Barotrauma.Networking
                             {
                                 case NetConnectionStatus.Disconnected:
                                     var connectedClient = connectedClients.Find(c => c.Connection == inc.SenderConnection);
-                                    /*if (connectedClient != null && !disconnectedClients.Contains(connectedClient))
+                                    /*TODO: not used, remove?
+                                    if (connectedClient != null && !disconnectedClients.Contains(connectedClient))
                                     {
                                         connectedClient.deleteDisconnectedTimer = NetConfig.DeleteDisconnectedTime;
                                         disconnectedClients.Add(connectedClient);
@@ -1804,6 +1807,7 @@ namespace Barotrauma.Networking
             Log(msg, ServerLog.MessageType.ServerMessage);
 
             client.Connection.Disconnect(targetmsg);
+            client.Dispose();
             connectedClients.Remove(client);
 
 #if CLIENT
