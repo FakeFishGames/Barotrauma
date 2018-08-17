@@ -6,20 +6,28 @@ namespace Barotrauma
 {
     partial class MapEntityPrefab
     {
-        public virtual void DrawPlacing(SpriteBatch spriteBatch, Camera cam)
+        public virtual void DrawPlacing(SpriteBatch spriteBatch, Camera cam, Rectangle? placeRect = null)
         {
-            Vector2 placeSize = Submarine.GridSize;
-
-            if (placePosition == Vector2.Zero)
+            if (placeRect.HasValue)
+            {
+                Rectangle drawRect = placeRect.Value;
+                if (Submarine.MainSub != null)
+                {
+                    drawRect.Location -= Submarine.MainSub.Position.ToPoint();
+                }
+                drawRect.Y = -drawRect.Y;
+                GUI.DrawRectangle(spriteBatch, drawRect, Color.DarkBlue);
+            }
+            else if (placePosition == Vector2.Zero)
             {
                 Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
 
                 GUI.DrawLine(spriteBatch, new Vector2(position.X - GameMain.GraphicsWidth, -position.Y), new Vector2(position.X + GameMain.GraphicsWidth, -position.Y), Color.White, 0, (int)(2.0f / cam.Zoom));
-
                 GUI.DrawLine(spriteBatch, new Vector2(position.X, -(position.Y - GameMain.GraphicsHeight)), new Vector2(position.X, -(position.Y + GameMain.GraphicsHeight)), Color.White, 0, (int)(2.0f / cam.Zoom));
             }
             else
             {
+                Vector2 placeSize = Submarine.GridSize;
                 Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
 
                 if (ResizeHorizontal) placeSize.X = position.X - placePosition.X;

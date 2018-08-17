@@ -30,10 +30,10 @@ namespace Barotrauma
                 var moreAgentsMsgBox = ChatMessage.Create(null, moreAgentsMessage, ChatMessageType.MessageBox, null);
                 
                 Client client = server.ConnectedClients.Find(c => c.Character == Character);
-                GameMain.Server.SendChatMessage(greetingChatMsg, client);
-                GameMain.Server.SendChatMessage(moreAgentsChatMsg, client);
-                GameMain.Server.SendChatMessage(greetingMsgBox, client);
-                GameMain.Server.SendChatMessage(moreAgentsMsgBox, client);
+                GameMain.Server.SendDirectChatMessage(greetingChatMsg, client);
+                GameMain.Server.SendDirectChatMessage(moreAgentsChatMsg, client);
+                GameMain.Server.SendDirectChatMessage(greetingMsgBox, client);
+                GameMain.Server.SendDirectChatMessage(moreAgentsMsgBox, client);
             }
 
 #if CLIENT
@@ -108,10 +108,9 @@ namespace Barotrauma
             codeWords = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
             codeResponse = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
 
-            while (traitorCount-- >= 0)
+            while (traitorCount-- > 0)
             {
-                if (traitorCandidates.Count <= 0)
-                    break;
+                if (traitorCandidates.Count <= 0) break;
 
                 int traitorIndex = Rand.Int(traitorCandidates.Count);
                 Character traitorCharacter = traitorCandidates[traitorIndex];

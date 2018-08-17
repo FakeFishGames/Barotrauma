@@ -1,58 +1,71 @@
-﻿using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
     class DelayComponent : ItemComponent
     {
-        const int SignalQueueSize = 500;
-
-        //the output is sent if both inputs have received a signal within the timeframe
-        private TimeSpan delay;
-
-        private Queue<Tuple<string, DateTime>> signalQueue;
-        
-        [InGameEditable, Serialize(1.0f, true)]
-        public float Delay
+        class DelayedSignal
         {
-            get { return (float)delay.TotalSeconds; }
-            set
-            {
-                float seconds = MathHelper.Clamp(value, 0.0f, 60.0f);
+            public readonly string Signal;
+            public readonly float SignalStrength;
+            public float SendTimer;
 
-                delay = new TimeSpan(0,0,0,0, (int)(seconds*1000.0f));
+            public DelayedSignal(string signal, float signalStrength, float sendTimer)
+            {
+                Signal = signal;
+                SignalStrength = signalStrength;
+                SendTimer = sendTimer;
             }
         }
+
+        const int SignalQueueSize = 500;
+
+        private Queue<DelayedSignal> signalQueue;
         
+        [InGameEditable(MinValueFloat = 0.0f, MaxValueFloat = 60.0f), Serialize(1.0f, true)]
+        public float Delay
+        {
+            get;
+            set;
+        }
+
+        [InGameEditable(ToolTip = "Should the component discard previously received signals when a new one is received."), Serialize(false, true)]
+        public bool ResetWhenSignalReceived
+        {
+            get;
+            set;
+        }
+
         public DelayComponent(Item item, XElement element)
             : base (item, element)
         {
-            signalQueue = new Queue<Tuple<string, DateTime>>();
-
+            signalQueue = new Queue<DelayedSignal>();
             IsActive = true;
         }
 
         public override void Update(float deltaTime, Camera cam)
         {
-            while (signalQueue.Any() && signalQueue.Peek().Item2 + delay <= DateTime.Now)
+            foreach (var val in signalQueue)
+            {
+                val.SendTimer -= deltaTime;
+            }
+
+            while (signalQueue.Count > 0 && signalQueue.Peek().SendTimer <= 0.0f)
             {
                 var signalOut = signalQueue.Dequeue();
-
-                item.SendSignal(0, signalOut.Item1, "signal_out", null);
+                item.SendSignal(0, signalOut.Signal, "signal_out", null, signalStrength: signalOut.SignalStrength);
             }
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
             switch (connection.Name)
             {
                 case "signal_in":
                     if (signalQueue.Count >= SignalQueueSize) return;
-
-                    signalQueue.Enqueue(new Tuple<string, DateTime>(signal, DateTime.Now));
+                    if (ResetWhenSignalReceived) signalQueue.Clear();
+                    signalQueue.Enqueue(new DelayedSignal(signal, signalStrength, Delay));
                     break;
             }
         }

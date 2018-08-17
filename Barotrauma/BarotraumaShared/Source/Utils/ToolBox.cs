@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,30 +12,40 @@ namespace Barotrauma
         public T1 First { get; set; }
         public T2 Second { get; set; }
 
-        public static Pair<T1, T2> Create(T1 first, T2 second)
+        public Pair(T1 first, T2 second)
         {
-            Pair<T1, T2> pair = new Pair<T1, T2>();
-            pair.First  = first;
-            pair.Second = second;
+            First  = first;
+            Second = second;
+        }
+    }
 
-            return pair;
+    public class Triplet<T1, T2, T3>
+    {
+        public T1 First { get; set; }
+        public T2 Second { get; set; }
+        public T3 Third { get; set; }
+
+        public Triplet(T1 first, T2 second, T3 third)
+        {
+            First = first;
+            Second = second;
+            Third = third;
         }
     }
 
     public static partial class ToolBox
     {
-
         public static bool IsProperFilenameCase(string filename)
         {
-            char[] delimiters = { '/','\\' };
+            char[] delimiters = { '/', '\\' };
             string[] subDirs = filename.Split(delimiters);
             string originalFilename = filename;
             filename = "";
 
-            for (int i=0;i<subDirs.Length-1;i++)
+            for (int i = 0; i < subDirs.Length - 1; i++)
             {
                 filename += subDirs[i] + "/";
-                
+
                 if (i == subDirs.Length - 2)
                 {
                     string[] filePaths = Directory.GetFiles(filename);
@@ -51,7 +62,7 @@ namespace Barotrauma
 
                 string[] dirPaths = Directory.GetDirectories(filename);
 
-                if (!dirPaths.Any(s => s.Equals(filename+subDirs[i+1],StringComparison.Ordinal)))
+                if (!dirPaths.Any(s => s.Equals(filename + subDirs[i + 1], StringComparison.Ordinal)))
                 {
                     if (dirPaths.Any(s => s.Equals(filename + subDirs[i + 1], StringComparison.OrdinalIgnoreCase)))
                     {
@@ -72,8 +83,8 @@ namespace Barotrauma
             if (str == null || maxCharacters < 0) return null;
 
             if (maxCharacters < 4 || str.Length <= maxCharacters) return str;
-            
-            return str.Substring(0, maxCharacters-3) + "...";            
+
+            return str.Substring(0, maxCharacters - 3) + "...";
         }
 
         public static string RandomSeed(int length)
@@ -122,8 +133,8 @@ namespace Barotrauma
 
             if (n == 0 || m == 0) return 0;
 
-            for (int i = 0; i <= n; d[i, 0] = i++);
-            for (int j = 0; j <= m; d[0, j] = j++);
+            for (int i = 0; i <= n; d[i, 0] = i++) ;
+            for (int j = 0; j <= m; d[0, j] = j++) ;
 
             for (int i = 1; i <= n; i++)
             {
@@ -136,7 +147,7 @@ namespace Barotrauma
                         d[i - 1, j - 1] + cost);
                 }
             }
-            
+
             return d[n, m];
         }
 
@@ -157,47 +168,38 @@ namespace Barotrauma
             }
         }
 
+        private static Dictionary<string, List<string>> cachedLines = new Dictionary<string, List<string>>();
         public static string GetRandomLine(string filePath)
         {
-            try
+            List<string> lines;
+            if (cachedLines.ContainsKey(filePath))
             {
-                string randomLine = "";
-                StreamReader file = new StreamReader(filePath);                
-
-                var lines = File.ReadLines(filePath).ToList();
-                int lineCount = lines.Count;
-
-                if (lineCount == 0)
+                lines = cachedLines[filePath];
+            }
+            else
+            {
+                try
                 {
-                    DebugConsole.ThrowError("File \"" + filePath + "\" is empty!");
-                    file.Close();
+                    using (StreamReader file = new StreamReader(filePath))
+                    {
+                        lines = File.ReadLines(filePath).ToList();
+                        cachedLines.Add(filePath, lines);
+                        if (lines.Count == 0)
+                        {
+                            DebugConsole.ThrowError("File \"" + filePath + "\" is empty!");
+                            return "";
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Couldn't open file \"" + filePath + "\"!", e);
                     return "";
                 }
-
-                int lineNumber = Rand.Int(lineCount, Rand.RandSync.Server);
-
-                int i = 0;
-                    
-                foreach (string line in lines)
-                {
-                    if (i == lineNumber)
-                    {
-                        randomLine = line;
-                        break;
-                    }
-                    i++;
-                }
-
-                file.Close();
-                
-                return randomLine;
             }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Couldn't open file \"" + filePath + "\"!", e);
 
-                return "";
-            }            
+            if (lines.Count == 0) return "";
+            return lines[Rand.Range(0, lines.Count, Rand.RandSync.Server)];
         }
 
         /// <summary>
@@ -212,6 +214,35 @@ namespace Barotrauma
             buffer.Write(data);
 
             return buffer;
+        }
+
+        public static T SelectWeightedRandom<T>(IList<T> objects, IList<float> weights, Rand.RandSync randSync)
+        {
+            return SelectWeightedRandom(objects, weights, Rand.GetRNG(randSync));
+        }
+
+        public static T SelectWeightedRandom<T>(IList<T> objects, IList<float> weights, Random random)
+        {
+            if (objects.Count == 0) return default(T);
+
+            if (objects.Count != weights.Count)
+            {
+                DebugConsole.ThrowError("Error in SelectWeightedRandom, number of objects does not match the number of weights.\n" + Environment.StackTrace);
+                return objects[0];
+            }
+
+            float totalWeight = weights.Sum();
+
+            float randomNum = (float)(random.NextDouble() * totalWeight);
+            for (int i = 0; i < objects.Count; i++)
+            {
+                if (randomNum <= weights[i])
+                {
+                    return objects[i];
+                }
+                randomNum -= weights[i];
+            }
+            return default(T);
         }
     }
 }

@@ -37,7 +37,7 @@ namespace Barotrauma.Particles
 
             for (int i = 0; i < Prefab.ParticleAmount; i++)
             {
-                Emit(position, hullGuess, particleRotation);
+                Emit(position, hullGuess, angle, particleRotation);
             }
         }
 
@@ -89,7 +89,9 @@ namespace Barotrauma.Particles
         public readonly float ScaleMin, ScaleMax;
         
         public readonly int ParticleAmount;
-        public readonly float ParticlesPerSecond;        
+        public readonly float ParticlesPerSecond;
+
+        public readonly bool CopyEntityAngle;
 
         public ParticleEmitterPrefab(XElement element)
         {
@@ -135,6 +137,8 @@ namespace Barotrauma.Particles
 
             ParticlesPerSecond = element.GetAttributeInt("particlespersecond", 0);
             ParticleAmount = element.GetAttributeInt("particleamount", 0);
+
+            CopyEntityAngle = element.GetAttributeBool("copyentityangle", false);
         }
     }
 }

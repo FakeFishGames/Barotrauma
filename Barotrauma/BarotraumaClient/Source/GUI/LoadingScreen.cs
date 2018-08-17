@@ -11,7 +11,7 @@ namespace Barotrauma
     {
         private Texture2D backgroundTexture,monsterTexture,titleTexture;
 
-        readonly RenderTarget2D renderTarget;
+        private RenderTarget2D renderTarget;
 
         float state;
 
@@ -20,7 +20,7 @@ namespace Barotrauma
         public Vector2 TitlePosition;
 
         private float? loadState;
-#if !LINUX
+#if !(LINUX || OSX)
         Video splashScreenVideo;
         VideoPlayer videoPlayer;
 #endif
@@ -57,7 +57,7 @@ namespace Barotrauma
 
         public LoadingScreen(GraphicsDevice graphics)
         {
-#if !LINUX
+#if !(LINUX || OSX)
 
             if (GameMain.Config.EnableSplashScreen)
             {
@@ -80,6 +80,11 @@ namespace Barotrauma
             titleTexture = TextureLoader.FromFile("Content/UI/titleText.png");
 
             renderTarget = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            GameMain.Instance.OnResolutionChanged += () => 
+            {
+                renderTarget?.Dispose();
+                renderTarget = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            };
 
             DrawLoadingText = true;
         }
@@ -87,7 +92,7 @@ namespace Barotrauma
         
         public void Draw(SpriteBatch spriteBatch, GraphicsDevice graphics, float deltaTime)
         {
-#if !LINUX
+#if !(LINUX || OSX)
             if (GameMain.Config.EnableSplashScreen && splashScreenVideo != null)
             {
                 try
@@ -138,10 +143,10 @@ namespace Barotrauma
 
             graphics.SetRenderTarget(null);
 
-            if (Hull.renderer != null)
+            if (WaterRenderer.Instance != null)
             {
-                Hull.renderer.ScrollWater(deltaTime);
-                Hull.renderer.RenderBack(spriteBatch, renderTarget, 0.0f);
+                WaterRenderer.Instance.ScrollWater(Vector2.One * 10.0f, deltaTime);
+                WaterRenderer.Instance.RenderWater(spriteBatch, renderTarget, null, 0.0f);
             }
             
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
@@ -178,7 +183,7 @@ namespace Barotrauma
 
         }
 
-#if !LINUX
+#if !(LINUX || OSX)
         private void DrawSplashScreen(SpriteBatch spriteBatch)
         {
             if (videoPlayer == null)

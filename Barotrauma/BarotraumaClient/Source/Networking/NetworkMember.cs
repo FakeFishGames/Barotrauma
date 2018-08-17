@@ -1,12 +1,13 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
+using System.Linq;
 
 namespace Barotrauma.Networking
 {
     abstract partial class NetworkMember
     {
         protected CharacterInfo characterInfo;
-
         protected Character myCharacter;
 
         public CharacterInfo CharacterInfo
@@ -22,42 +23,45 @@ namespace Barotrauma.Networking
         }
 
         protected GUIFrame inGameHUD;
-        protected GUIListBox chatBox;
-        protected GUITextBox chatMsgBox;
+        protected ChatBox chatBox;
+
+        private float myCharacterFrameOpenState;
 
         public GUIFrame InGameHUD
         {
             get { return inGameHUD; }
         }
-        
+
         private void InitProjSpecific()
         {
-            inGameHUD = new GUIFrame(new Rectangle(0, 0, 0, 0), null, null);
-            inGameHUD.CanBeFocused = false;
+            inGameHUD = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
+            {
+                CanBeFocused = false
+            };
 
-            int width = (int)MathHelper.Clamp(GameMain.GraphicsWidth * 0.35f, 350, 500);
-            int height = (int)MathHelper.Clamp(GameMain.GraphicsHeight * 0.15f, 100, 200);
-            chatBox = new GUIListBox(new Rectangle(
-                GameMain.GraphicsWidth - 20 - width,
-                GameMain.GraphicsHeight - 40 - 25 - height,
-                width, height),
-                Color.White * 0.5f, "", inGameHUD);
-            chatBox.Padding = Vector4.Zero;
+            chatBox = new ChatBox(inGameHUD, false);
+            chatBox.OnEnterMessage += EnterChatMessage;
+            chatBox.OnTextChanged += TypingChatMessage;
+        }
 
-            chatMsgBox = new GUITextBox(
-                new Rectangle(chatBox.Rect.X, chatBox.Rect.Y + chatBox.Rect.Height + 20, chatBox.Rect.Width, 25),
-                Color.White * 0.5f, Color.Black, Alignment.TopLeft, Alignment.Left, "", inGameHUD);
-            chatMsgBox.Font = GUI.SmallFont;
-            chatMsgBox.MaxTextLength = ChatMessage.MaxLength;
-            chatMsgBox.Padding = Vector4.Zero;
-            chatMsgBox.OnEnterPressed = EnterChatMessage;
-            chatMsgBox.OnTextChanged = TypingChatMessage;
+        protected void SetRadioButtonColor()
+        {
+            if (Character.Controlled == null || !Character.Controlled.CanSpeak)
+            {
+                chatBox.RadioButton.GetChild<GUIImage>().Color = new Color(60, 60, 60, 255);
+            }
+            else
+            {
+                var radioItem = Character.Controlled?.Inventory?.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
+                chatBox.RadioButton.GetChild<GUIImage>().Color =
+                    (radioItem != null && Character.Controlled.HasEquippedItem(radioItem) && radioItem.GetComponent<WifiComponent>().CanTransmit()) ?
+                    Color.White : new Color(60, 60, 60, 255);
+            }
         }
 
         public bool TypingChatMessage(GUITextBox textBox, string text)
         {
-            string tempStr;
-            string command = ChatMessage.GetChatMessageCommand(text, out tempStr);
+            string command = ChatMessage.GetChatMessageCommand(text, out _);
             switch (command)
             {
                 case "r":
@@ -69,10 +73,18 @@ namespace Barotrauma.Networking
                     textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Dead];
                     break;
                 default:
-                    if (command != "") //PMing
+                    if (Character.Controlled != null && (Character.Controlled.IsDead || !Character.Controlled.CanSpeak))
+                    {
+                        textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Dead];
+                    }
+                    else if (command != "") //PMing
+                    {
                         textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Private];
+                    }
                     else
+                    {
                         textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
+                    }
                     break;
             }
 
@@ -85,7 +97,7 @@ namespace Barotrauma.Networking
 
             if (string.IsNullOrWhiteSpace(message))
             {
-                if (textBox == chatMsgBox) textBox.Deselect();
+                if (textBox == chatBox.InputBox) textBox.Deselect();
                 return false;
             }
 
@@ -98,39 +110,90 @@ namespace Barotrauma.Networking
                 GameMain.Client.SendChatMessage(message);
             }
 
-            if (textBox == chatMsgBox) textBox.Deselect();
+            if (textBox == chatBox.InputBox) textBox.Deselect();
 
             return true;
         }
 
         public virtual void AddToGUIUpdateList()
         {
-            if (gameStarted && Screen.Selected == GameMain.GameScreen)
+            if (gameStarted && 
+                Screen.Selected == GameMain.GameScreen)
             {
                 inGameHUD.AddToGUIUpdateList();
+
+                if (Character.Controlled == null)
+                {
+                    GameMain.NetLobbyScreen.MyCharacterFrame.AddToGUIUpdateList();
+                }
+            }
+        }
+
+        public void UpdateHUD(float deltaTime)
+        {
+            GUITextBox msgBox = (Screen.Selected == GameMain.GameScreen ? chatBox.InputBox : GameMain.NetLobbyScreen.TextBox);
+            if (gameStarted && Screen.Selected == GameMain.GameScreen)
+            {
+                if (!GUI.DisableHUD)
+                {
+                    inGameHUD.UpdateManually(deltaTime);
+                    chatBox.Update(deltaTime);
+
+                    if (Character.Controlled == null)
+                    {
+                        myCharacterFrameOpenState = GameMain.NetLobbyScreen.MyCharacterFrameOpen ? myCharacterFrameOpenState + deltaTime * 5 : myCharacterFrameOpenState - deltaTime * 5;
+                        myCharacterFrameOpenState = MathHelper.Clamp(myCharacterFrameOpenState, 0.0f, 1.0f);
+
+                        var myCharFrame = GameMain.NetLobbyScreen.MyCharacterFrame;
+                        int padding = GameMain.GraphicsWidth - myCharFrame.Parent.Rect.Right;
+
+                        myCharFrame.RectTransform.AbsoluteOffset =
+                            Vector2.SmoothStep(new Vector2(-myCharFrame.Rect.Width - padding, 0.0f), new Vector2(-padding, 0), myCharacterFrameOpenState).ToPoint();
+                    }
+                }
+                if (Character.Controlled == null || Character.Controlled.IsDead)
+                {
+                    GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
+                    GameMain.LightManager.LosEnabled = false;
+                }
+            }
+
+
+            //tab doesn't autoselect the chatbox when debug console is open, 
+            //because tab is used for autocompleting console commands
+            if ((PlayerInput.KeyHit(InputType.Chat) || PlayerInput.KeyHit(InputType.RadioChat)) &&
+                !DebugConsole.IsOpen && (Screen.Selected != GameMain.GameScreen || msgBox.Visible))
+            {
+                if (msgBox.Selected)
+                {
+                    if (msgBox == chatBox.InputBox) chatBox.HideTimer = 0.0f;
+                    msgBox.Text = "";
+                    msgBox.Deselect();
+                }
+                else
+                {
+                    msgBox.Select();
+                    if (Screen.Selected == GameMain.GameScreen && PlayerInput.KeyHit(InputType.RadioChat))
+                    {
+                        msgBox.Text = "r; ";
+                        msgBox.OnTextChanged?.Invoke(msgBox, msgBox.Text);
+                    }
+                }
             }
         }
 
         public virtual void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
             if (!gameStarted || Screen.Selected != GameMain.GameScreen || GUI.DisableHUD) return;
-
-            GameMain.GameSession.CrewManager.Draw(spriteBatch);
-
-            inGameHUD.Draw(spriteBatch);
+            
+            inGameHUD.DrawManually(spriteBatch);
 
             if (EndVoteCount > 0)
             {
-                if (GameMain.NetworkMember.myCharacter == null)
-                {
-                    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 180.0f, 40),
-                        "Votes to end the round (y/n): " + EndVoteCount + "/" + (EndVoteMax - EndVoteCount), Color.White, null, 0, GUI.SmallFont);
-                }
-                else
-                {
-                    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 140.0f, 40),
-                        "Votes (y/n): " + EndVoteCount + "/" + (EndVoteMax - EndVoteCount), Color.White, null, 0, GUI.SmallFont);
-                }
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 180.0f, 40),
+                    TextManager.Get("EndRoundVotes").Replace("[y]", EndVoteCount.ToString()).Replace("[n]", (EndVoteMax - EndVoteCount).ToString()),
+                    Color.White,
+                    font: GUI.SmallFont);
             }
 
             if (respawnManager != null)
@@ -140,12 +203,14 @@ namespace Barotrauma.Networking
                 if (respawnManager.CurrentState == RespawnManager.State.Waiting &&
                     respawnManager.CountdownStarted)
                 {
-                    respawnInfo = respawnManager.UsingShuttle ? "Respawn Shuttle dispatching in " : "Respawning players in ";
-                    respawnInfo = respawnManager.RespawnTimer <= 0.0f ? "" : respawnInfo + ToolBox.SecondsToReadableTime(respawnManager.RespawnTimer);
+                    respawnInfo = TextManager.Get(respawnManager.UsingShuttle ? "RespawnShuttleDispatching" : "RespawningIn");
+                    respawnInfo = respawnInfo.Replace("[time]", ToolBox.SecondsToReadableTime(respawnManager.RespawnTimer));
                 }
                 else if (respawnManager.CurrentState == RespawnManager.State.Transporting)
                 {
-                    respawnInfo = respawnManager.TransportTimer <= 0.0f ? "" : "Shuttle leaving in " + ToolBox.SecondsToReadableTime(respawnManager.TransportTimer);
+                    respawnInfo = respawnManager.TransportTimer <= 0.0f ? 
+                        "" : 
+                        TextManager.Get("RespawnShuttleLeavingIn").Replace("[time]", ToolBox.SecondsToReadableTime(respawnManager.TransportTimer));
                 }
 
                 if (!string.IsNullOrEmpty(respawnInfo))
@@ -154,7 +219,6 @@ namespace Barotrauma.Networking
                         new Vector2(120.0f, 10),
                         respawnInfo, Color.White, null, 0, GUI.SmallFont);
                 }
-
             }
         }
 
@@ -162,41 +226,55 @@ namespace Barotrauma.Networking
         {
             return false;
         }
-        
+
         public void CreateKickReasonPrompt(string clientName, bool ban, bool rangeBan = false)
         {
-            var banReasonPrompt = new GUIMessageBox(ban ? "Reason for the ban?" : "Reason for kicking?", "", new string[] { "OK", "Cancel" }, 400, 300);
-            var banReasonBox = new GUITextBox(new Rectangle(0, 30, 0, 50), Alignment.TopCenter, "", banReasonPrompt.children[0]);
-            banReasonBox.Wrap = true;
-            banReasonBox.MaxTextLength = 100;
+            var banReasonPrompt = new GUIMessageBox(
+                TextManager.Get(ban ? "BanReasonPrompt" : "KickReasonPrompt"),
+                "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") }, 400, 300);
+
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.6f), banReasonPrompt.InnerFrame.RectTransform, Anchor.Center));
+            var banReasonBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.3f), content.RectTransform))
+            {
+                Wrap = true,
+                MaxTextLength = 100
+            };
 
             GUINumberInput durationInputDays = null, durationInputHours = null;
             GUITickBox permaBanTickBox = null;
 
             if (ban)
             {
-                new GUITextBlock(new Rectangle(0, 80, 0, 0), "Duration:", "", banReasonPrompt.children[0]);
-                permaBanTickBox = new GUITickBox(new Rectangle(0, 110, 15, 15), "Permanent", Alignment.TopLeft, banReasonPrompt.children[0]);
-                permaBanTickBox.Selected = true;
+                new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.15f), content.RectTransform), TextManager.Get("BanDuration"));
+                permaBanTickBox = new GUITickBox(new RectTransform(new Vector2(0.8f, 0.15f), content.RectTransform) { RelativeOffset = new Vector2(0.05f, 0.0f) }, 
+                    TextManager.Get("BanPermanent"))
+                {
+                    Selected = true
+                };
 
-                var durationContainer = new GUIFrame(new Rectangle(0, 130, 0, 40), null, banReasonPrompt.children[0]);
-                durationContainer.Visible = false;
+                var durationContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.15f), content.RectTransform), isHorizontal: true)
+                {
+                    Visible = false
+                };
 
                 permaBanTickBox.OnSelected += (tickBox) =>
                 {
                     durationContainer.Visible = !tickBox.Selected;
                     return true;
                 };
-                
-                new GUITextBlock(new Rectangle(0, 0, 30, 20), "Days:", "", Alignment.TopLeft, Alignment.CenterLeft, durationContainer);
-                durationInputDays = new GUINumberInput(new Rectangle(40, 0, 50, 20), "", GUINumberInput.NumberType.Int, durationContainer);
-                durationInputDays.MinValueInt = 0;
-                durationInputDays.MaxValueFloat = 1000;
 
-                new GUITextBlock(new Rectangle(100, 0, 30, 20), "Hours:", "", Alignment.TopLeft, Alignment.CenterLeft, durationContainer);
-                durationInputHours = new GUINumberInput(new Rectangle(150, 0, 50, 20), "", GUINumberInput.NumberType.Int, durationContainer);
-                durationInputDays.MinValueInt = 0;
-                durationInputDays.MaxValueFloat = 24;
+                durationInputDays = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1.0f), durationContainer.RectTransform), GUINumberInput.NumberType.Int)
+                {
+                    MinValueInt = 0,
+                    MaxValueFloat = 1000
+                };
+                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), durationContainer.RectTransform), TextManager.Get("Days"));
+                durationInputHours = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1.0f), durationContainer.RectTransform), GUINumberInput.NumberType.Int)
+                {
+                    MinValueInt = 0,
+                    MaxValueFloat = 24
+                };
+                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), durationContainer.RectTransform), TextManager.Get("Hours"));
             }
 
             banReasonPrompt.Buttons[0].OnClicked += (btn, userData) =>

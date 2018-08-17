@@ -8,17 +8,10 @@ namespace Barotrauma
 {
     class Biome
     {
-        public enum MapPlacement
-        {
-            Random = 1,
-            Center = 2,
-            Edge = 4
-        }
-
         public readonly string Name;
         public readonly string Description;
 
-        public readonly MapPlacement Placement;
+        public readonly List<int> AllowedZones = new List<int>();
         
         public Biome(string name, string description)
         {
@@ -30,25 +23,31 @@ namespace Barotrauma
         {
             Name = element.GetAttributeString("name", "Biome");
             Description = element.GetAttributeString("description", "");
-            
-            string[] placementsStrs = element.GetAttributeString("MapPlacement", "Default").Split(',');
-            foreach (string placementStr in placementsStrs)
-            {
-                MapPlacement parsedPlacement;            
-                if (Enum.TryParse(placementStr.Trim(), out parsedPlacement))
-                {
-                    Placement |= parsedPlacement;
-                }
-            }
 
+            string allowedZonesStr = element.GetAttributeString("AllowedZones", "1,2,3,4,5,6,7,8,9");
+            string[] zoneIndices = allowedZonesStr.Split(',');
+            for (int i = 0; i < zoneIndices.Length; i++)
+            {
+                int zoneIndex = -1;
+                if (!int.TryParse(zoneIndices[i].Trim(), out zoneIndex))
+                {
+                    DebugConsole.ThrowError("Error in biome config \"" + Name + "\" - \"" + zoneIndices[i] + "\" is not a valid zone index.");
+                    continue;
+                }
+                AllowedZones.Add(zoneIndex);
+            }
         }
     }
 
     class LevelGenerationParams : ISerializableEntity
     {
+        public static List<LevelGenerationParams> LevelParams
+        {
+            get { return levelParams; }
+        }
+
         private static List<LevelGenerationParams> levelParams;
         private static List<Biome> biomes;
-
 
         public string Name
         {
@@ -90,6 +89,17 @@ namespace Barotrauma
         //which biomes can this type of level appear in
         private List<Biome> allowedBiomes = new List<Biome>();
 
+        public IEnumerable<Biome> AllowedBiomes
+        {
+            get { return allowedBiomes; }
+        }
+
+        public Color AmbientLightColor
+        {
+            get;
+            set;
+        }
+
         public Color BackgroundColor
         {
             get;
@@ -103,7 +113,7 @@ namespace Barotrauma
         }
 
         [Serialize(1000, false)]
-        public int BackgroundSpriteAmount
+        public int LevelObjectAmount
         {
             get;
             set;
@@ -129,6 +139,7 @@ namespace Barotrauma
             set { height = Math.Max(value, 2000.0f); }
         }
 
+        [Serialize("3000.0, 3000.0", false)]
         public Vector2 VoronoiSiteInterval
         {
             get { return voronoiSiteInterval; }
@@ -150,6 +161,7 @@ namespace Barotrauma
             }
         }
 
+        [Serialize("5000.0, 10000.0", false)]
         public Vector2 MainPathNodeIntervalRange
         {
             get { return mainPathNodeIntervalRange; }
@@ -167,6 +179,7 @@ namespace Barotrauma
             set { smallTunnelCount = MathHelper.Clamp(value, 0, 100); }
         }
 
+        [Serialize("5000.0, 10000.0", false)]
         public Vector2 SmallTunnelLengthRange
         {
             get { return smallTunnelLengthRange; }
@@ -175,6 +188,13 @@ namespace Barotrauma
                 smallTunnelLengthRange.X = MathHelper.Clamp(value.X, 100.0f, width);
                 smallTunnelLengthRange.Y = MathHelper.Clamp(value.Y, smallTunnelLengthRange.X, width);
             }
+        }
+
+        [Serialize(0, false)]
+        public int FloatingIceChunkCount
+        {
+            get;
+            set;
         }
 
         [Serialize(-300000.0f, false)]
@@ -244,6 +264,19 @@ namespace Barotrauma
             get { return bottomHoleProbability; }
             set { bottomHoleProbability = MathHelper.Clamp(value, 0.0f, 1.0f); }
         }
+
+        [Serialize(1.0f, false)]
+        public float WaterParticleScale
+        {
+            get;
+            private set;
+        }
+
+        public Sprite BackgroundSprite { get; private set; }
+        public Sprite BackgroundTopSprite { get; private set; }
+        public Sprite WallSprite { get; private set; }
+        public Sprite WallEdgeSprite { get; private set; }
+        public Sprite WaterParticles { get; private set; }
         
         public static List<Biome> GetBiomes()
         {
@@ -283,16 +316,13 @@ namespace Barotrauma
             Vector3 colorVector = element.GetAttributeVector3("BackgroundColor", new Vector3(50, 46, 20));
             BackgroundColor = new Color((int)colorVector.X, (int)colorVector.Y, (int)colorVector.Z);
 
+            colorVector = element.GetAttributeVector3("AmbientLightColor", colorVector);
+            AmbientLightColor = new Color((int)colorVector.X, (int)colorVector.Y, (int)colorVector.Z);
+
             colorVector = element.GetAttributeVector3("WallColor", new Vector3(255,255,255));
             WallColor = new Color((int)colorVector.X, (int)colorVector.Y, (int)colorVector.Z);
-
-            VoronoiSiteInterval = element.GetAttributeVector2("VoronoiSiteInterval", new Vector2(3000, 3000));
-
+            
             VoronoiSiteVariance = element.GetAttributeVector2("VoronoiSiteVariance", new Vector2(voronoiSiteInterval.X, voronoiSiteInterval.Y) * 0.4f);
-
-            MainPathNodeIntervalRange = element.GetAttributeVector2("MainPathNodeIntervalRange", new Vector2(5000.0f, 10000.0f));
-
-            SmallTunnelLengthRange = element.GetAttributeVector2("SmallTunnelLengthRange", new Vector2(5000.0f, 10000.0f));
             
             string biomeStr = element.GetAttributeString("biomes", "");
 
@@ -316,6 +346,28 @@ namespace Barotrauma
                     allowedBiomes.Add(matchingBiome);
                 }
             }
+
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "background":
+                        BackgroundSprite = new Sprite(subElement);
+                        break;
+                    case "backgroundtop":
+                        BackgroundTopSprite = new Sprite(subElement);
+                        break;
+                    case "wall":
+                        WallSprite = new Sprite(subElement);
+                        break;
+                    case "walledge":
+                        WallEdgeSprite = new Sprite(subElement);
+                        break;
+                    case "waterparticles":
+                        WaterParticles = new Sprite(subElement);
+                        break;
+                }
+            }
         }
 
         public static void LoadPresets()
@@ -323,10 +375,10 @@ namespace Barotrauma
             levelParams = new List<LevelGenerationParams>();
             biomes = new List<Biome>();
 
-            var files = GameMain.SelectedPackage.GetFilesOfType(ContentType.LevelGenerationParameters);
+            var files = GameMain.Instance.GetFilesOfType(ContentType.LevelGenerationParameters);
             if (!files.Any())
             {
-                files.Add("Content/Map/LevelGenerationParameters.xml");
+                files = new List<string>() { "Content/Map/LevelGenerationParameters.xml" };
             }
             
             List<XElement> biomeElements = new List<XElement>();

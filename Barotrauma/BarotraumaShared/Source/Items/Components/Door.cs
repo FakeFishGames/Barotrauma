@@ -30,6 +30,9 @@ namespace Barotrauma.Items.Components
 
         private bool isHorizontal;
 
+        private bool createdNewGap;
+        private bool autoOrientGap;
+
         private bool isStuck;
         
         private bool? predictedState;
@@ -102,11 +105,12 @@ namespace Barotrauma.Items.Components
                     rect.Width += 10;
                 }
 
-                linkedGap = new Gap(rect, Item.Submarine);
+                linkedGap = new Gap(rect, !isHorizontal, Item.Submarine);
                 linkedGap.Submarine = item.Submarine;
                 linkedGap.PassAmbientLight = window != Rectangle.Empty;
                 linkedGap.Open = openState;
                 item.linkedTo.Add(linkedGap);
+                createdNewGap = true;
                 return linkedGap;
             }
         }
@@ -150,6 +154,7 @@ namespace Barotrauma.Items.Components
         {
             isHorizontal = element.GetAttributeBool("horizontal", false);
             canBePicked = element.GetAttributeBool("canbepicked", false);
+            autoOrientGap = element.GetAttributeBool("autoorientgap", false);
 
             foreach (XElement subElement in element.Elements())
             {
@@ -197,7 +202,7 @@ namespace Barotrauma.Items.Components
         {
             base.Move(amount);
             
-            body.SetTransform(body.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
+            body?.SetTransform(body.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
 
 #if CLIENT
             UpdateConvexHulls();
@@ -223,7 +228,7 @@ namespace Barotrauma.Items.Components
 
             SetState(predictedState == null ? !isOpen : !predictedState.Value, false, true); //crowbar function
 #if CLIENT
-            PlaySound(ActionType.OnPicked, item.WorldPosition);
+            PlaySound(ActionType.OnPicked, item.WorldPosition, picker);
 #endif
             return false;
         }
@@ -314,6 +319,7 @@ namespace Barotrauma.Items.Components
         {
             LinkedGap.ConnectedDoor = this;
             LinkedGap.Open = openState;
+            if (createdNewGap && autoOrientGap) linkedGap.AutoOrient();
 
 #if CLIENT
             Vector2[] corners = GetConvexHullCorners(Rectangle.Empty);
@@ -334,9 +340,13 @@ namespace Barotrauma.Items.Components
                 body.Remove();
                 body = null;
             }
-
-
-            if (linkedGap != null) linkedGap.Remove();
+            
+            //no need to remove the gap if we're unloading the whole submarine
+            //otherwise the gap will be removed twice and cause console warnings
+            if (!Submarine.Unloading)
+            {
+                if (linkedGap != null) linkedGap.Remove();
+            }
 
             doorSprite.Remove();
             if (weldedSprite != null) weldedSprite.Remove();
@@ -349,6 +359,14 @@ namespace Barotrauma.Items.Components
 
         private void PushCharactersAway()
         {
+            if (!MathUtils.IsValid(item.SimPosition))
+            {
+                DebugConsole.ThrowError("Failed to push a character out of a doorway - position of the door is not valid (" + item.SimPosition + ")");
+                GameAnalyticsManager.AddErrorEventOnce("PushCharactersAway:DoorPosInvalid", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                      "Failed to push a character out of a doorway - position of the door is not valid (" + item.SimPosition + ").");
+                return;
+            }
+
             //push characters out of the doorway when the door is closing/opening
             Vector2 simPos = ConvertUnits.ToSimUnits(new Vector2(item.Rect.X, item.Rect.Y));
 
@@ -360,6 +378,16 @@ namespace Barotrauma.Items.Components
 
             foreach (Character c in Character.CharacterList)
             {
+                if (!c.Enabled) continue;
+                if (!MathUtils.IsValid(c.SimPosition))
+                {
+                    DebugConsole.ThrowError("Failed to push a character out of a doorway - position of the character \"" + c.Name + "\" is not valid (" + c.SimPosition + ")");
+                    GameAnalyticsManager.AddErrorEventOnce("PushCharactersAway:CharacterPosInvalid", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Failed to push a character out of a doorway - position of the character \"" + c.Name + "\" is not valid (" + c.SimPosition + ")." +
+                        " Removed: " + c.Removed +
+                        " Remoteplayer: " + c.IsRemotePlayer);
+                    continue;
+                }
                 int dir = isHorizontal ? Math.Sign(c.SimPosition.Y - item.SimPosition.Y) : Math.Sign(c.SimPosition.X - item.SimPosition.X);
 
                 List<PhysicsBody> bodies = c.AnimController.Limbs.Select(l => l.body).ToList();
@@ -368,17 +396,24 @@ namespace Barotrauma.Items.Components
                 foreach (PhysicsBody body in bodies)
                 {
                     float diff = 0.0f;
+                    if (!MathUtils.IsValid(body.SimPosition))
+                    {
+                        DebugConsole.ThrowError("Failed to push a limb out of a doorway - position of the body (character \"" + c.Name + "\") is not valid (" + body.SimPosition + ")");
+                        GameAnalyticsManager.AddErrorEventOnce("PushCharactersAway:LimbPosInvalid", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            "Failed to push a character out of a doorway - position of the character \"" + c.Name + "\" is not valid (" + body.SimPosition + ")." +
+                            " Removed: " + c.Removed +
+                            " Remoteplayer: " + c.IsRemotePlayer);
+                        continue;
+                    }
 
                     if (isHorizontal)
                     {
                         if (body.SimPosition.X < simPos.X || body.SimPosition.X > simPos.X + simSize.X) continue;
-
                         diff = body.SimPosition.Y - item.SimPosition.Y;
                     }
                     else
                     {
                         if (body.SimPosition.Y > simPos.Y || body.SimPosition.Y < simPos.Y - simSize.Y) continue;
-
                         diff = body.SimPosition.X - item.SimPosition.X;
                     }
                    
@@ -418,7 +453,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
             if (isStuck) return;
 
@@ -477,14 +512,18 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
+        public override void ServerWrite(Lidgren.Network.NetBuffer msg, Client c, object[] extraData = null)
         {
+            base.ServerWrite(msg, c, extraData);
+
             msg.Write(isOpen);
             msg.WriteRangedSingle(stuck, 0.0f, 100.0f, 8);
         }
 
-        public void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer msg, float sendingTime)
+        public override void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer msg, float sendingTime)
         {
+            base.ClientRead(type, msg, sendingTime);
+
             SetState(msg.ReadBoolean(), true);
             Stuck = msg.ReadRangedSingle(0.0f, 100.0f, 8);
             

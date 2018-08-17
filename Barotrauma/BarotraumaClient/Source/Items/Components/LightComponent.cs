@@ -9,6 +9,11 @@ namespace Barotrauma.Items.Components
     {
         private LightSource light;
 
+        public LightSource Light
+        {
+            get { return light; }
+        }
+
         public void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch, bool editing = false)
         {
             if (light.LightSprite != null && (item.body == null || item.body.Enabled))

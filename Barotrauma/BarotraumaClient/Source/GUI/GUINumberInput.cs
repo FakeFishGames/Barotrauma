@@ -26,12 +26,35 @@ namespace Barotrauma
             set
             {
                 inputType = value;
-                plusButton.Visible = inputType == NumberType.Int;
-                minusButton.Visible = inputType == NumberType.Int;
+                plusButton.Visible = inputType == NumberType.Int ||
+                    (inputType == NumberType.Float && MinValueFloat > float.MinValue && MaxValueFloat < float.MaxValue);
+                minusButton.Visible = plusButton.Visible;
             }
         }
 
-        public float? MinValueFloat, MaxValueFloat;
+        private float? minValueFloat, maxValueFloat;
+        public float? MinValueFloat
+        {
+            get { return minValueFloat; }
+            set
+            {
+                minValueFloat = value;
+                plusButton.Visible = inputType == NumberType.Int ||
+                    (inputType == NumberType.Float && MinValueFloat > float.MinValue && MaxValueFloat < float.MaxValue);
+                minusButton.Visible = plusButton.Visible;
+            }                
+        }
+        public float? MaxValueFloat
+        {
+            get { return maxValueFloat; }
+            set
+            {
+                maxValueFloat = value;
+                plusButton.Visible = inputType == NumberType.Int ||
+                    (inputType == NumberType.Float && MinValueFloat > float.MinValue && MaxValueFloat < float.MaxValue);
+                minusButton.Visible = plusButton.Visible;
+            }
+        }
 
         private float floatValue;
         public float FloatValue
@@ -85,29 +108,74 @@ namespace Barotrauma
             }
         }
 
-        public GUINumberInput(Rectangle rect, string style, NumberType inputType, GUIComponent parent = null)
-            : this(rect, style, inputType, Alignment.TopLeft, parent)
+        private float pressedTimer;
+        private float pressedDelay = 0.5f;
+        private bool IsPressedTimerRunning { get { return pressedTimer > 0; } }
+
+        public GUINumberInput(RectTransform rectT, NumberType inputType, string style = "", Alignment textAlignment = Alignment.Center) : base(style, rectT)
         {
-        }
-
-        public GUINumberInput(Rectangle rect, string style, NumberType inputType, Alignment alignment, GUIComponent parent = null)
-            : base(style)
-        {
-            this.rect = rect;
-
-            this.alignment = alignment;
-
-            if (parent != null)
-                parent.AddChild(this);
-
-            textBox = new GUITextBox(Rectangle.Empty, style, this);
-            textBox.OnTextChanged += TextChanged;
+            textBox = new GUITextBox(new RectTransform(Vector2.One, rectT), textAlignment: textAlignment, style: style)
+            {
+                ClampText = false,
+                OnTextChanged = TextChanged
+            };
             
-            plusButton = new GUIButton(new Rectangle(0, 0, 15, rect.Height / 2), "+", null, Alignment.TopRight, Alignment.Center, style, this);
-            plusButton.OnClicked += ChangeIntValue;
+
+            int height = Rect.Height / 2;
+            var buttonSize = new Point(height, height);
+
+            plusButton = new GUIButton(new RectTransform(buttonSize, rectT, Anchor.TopRight)
+            {
+                IsFixedSize = false
+            }, "+");
+            plusButton.OnButtonDown += () =>
+            {
+                pressedTimer = pressedDelay;
+                return true;
+            };
+            plusButton.OnClicked += PlusButtonClicked;
+            plusButton.OnPressed += () =>
+            {
+                if (!IsPressedTimerRunning)
+                {
+                    if (inputType == NumberType.Int)
+                    {
+                        IntValue++;
+                    }
+                    else if (maxValueFloat.HasValue && minValueFloat.HasValue)
+                    {
+                        FloatValue += (MaxValueFloat.Value - minValueFloat.Value) / 100.0f;
+                    }
+                }
+                return true;
+            };
             plusButton.Visible = inputType == NumberType.Int;
-            minusButton = new GUIButton(new Rectangle(0, 0, 15, rect.Height / 2), "-", null, Alignment.BottomRight, Alignment.Center, style, this);
-            minusButton.OnClicked += ChangeIntValue;
+
+            minusButton = new GUIButton(new RectTransform(buttonSize, rectT, Anchor.BottomRight)
+            {
+                IsFixedSize = false
+            }, "-");
+            minusButton.OnButtonDown += () =>
+            {
+                pressedTimer = pressedDelay;
+                return true;
+            };
+            minusButton.OnClicked += MinusButtonClicked;
+            minusButton.OnPressed += () =>
+            {
+                if (!IsPressedTimerRunning)
+                {
+                    if (inputType == NumberType.Int)
+                    {
+                        IntValue--;
+                    }
+                    else if (maxValueFloat.HasValue && minValueFloat.HasValue)
+                    {                        
+                        FloatValue -= (MaxValueFloat.Value - minValueFloat.Value) / 100.0f;
+                    }
+                }
+                return true;
+            };
             minusButton.Visible = inputType == NumberType.Int;
 
             if (inputType == NumberType.Int)
@@ -141,16 +209,32 @@ namespace Barotrauma
 
             InputType = inputType;
         }
-        
-        private bool ChangeIntValue(GUIButton button, object userData)
+
+        private bool PlusButtonClicked(GUIButton button, object userData)
         {
-            if (button == plusButton)
+            if (inputType == NumberType.Int)
             {
                 IntValue++;
             }
-            else
+            else if (inputType == NumberType.Float)
+            {
+                if (!maxValueFloat.HasValue || !minValueFloat.HasValue) return false;
+                FloatValue += (MaxValueFloat.Value - minValueFloat.Value) / 10.0f;
+            }
+
+            return false;
+        }
+
+        private bool MinusButtonClicked(GUIButton button, object userData)
+        {
+            if (inputType == NumberType.Int)
             {
                 IntValue--;
+            }
+            else if (inputType == NumberType.Float)
+            {
+                if (!maxValueFloat.HasValue || !minValueFloat.HasValue) return false;
+                FloatValue -= (MaxValueFloat.Value - minValueFloat.Value) / 10.0f;
             }
 
             return false;
@@ -201,11 +285,13 @@ namespace Barotrauma
             return true;
         }
 
-        public override void Draw(SpriteBatch spriteBatch)
+        protected override void Update(float deltaTime)
         {
-            if (!Visible) return;
-
-            DrawChildren(spriteBatch);
+            base.Update(deltaTime);
+            if (IsPressedTimerRunning)
+            {
+                pressedTimer -= deltaTime;
+            }
         }
     }
 }

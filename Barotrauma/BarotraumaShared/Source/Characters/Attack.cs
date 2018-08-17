@@ -1,26 +1,12 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 
 namespace Barotrauma
-{
-    enum CauseOfDeath
-    {
-        Damage, Bloodloss, Pressure, Suffocation, Drowning, Burn, Husk, Disconnected
-    }
-
-    [Flags]
-    public enum DamageType
-    {
-        None = 0,
-        Blunt = 1,
-        Slash = 2,
-        Burn = 4,
-        Any = Blunt | Slash | Burn
-    }
-
+{    
     public enum HitDetection
     {
         Distance,
@@ -30,16 +16,33 @@ namespace Barotrauma
     struct AttackResult
     {
         public readonly float Damage;
-        public readonly float Bleeding;
+        public readonly List<Affliction> Afflictions;
+
+        public readonly Limb HitLimb;
 
         public readonly List<DamageModifier> AppliedDamageModifiers;
-
-        public AttackResult(float damage, float bleeding, List<DamageModifier> appliedDamageModifiers = null)
+        
+        public AttackResult(List<Affliction> afflictions, Limb hitLimb, List<DamageModifier> appliedDamageModifiers = null)
         {
-            this.Damage = damage;
-            this.Bleeding = bleeding;
+            HitLimb = hitLimb;
+            Afflictions = new List<Affliction>();
 
-            this.AppliedDamageModifiers = appliedDamageModifiers;
+            foreach (Affliction affliction in afflictions)
+            {
+                Afflictions.Add(affliction.Prefab.Instantiate(affliction.Strength));
+            }
+            AppliedDamageModifiers = appliedDamageModifiers;
+            Damage = Afflictions.Sum(a => a.GetVitalityDecrease(null));
+        }
+
+        public AttackResult(float damage, List<DamageModifier> appliedDamageModifiers = null)
+        {
+            Damage = damage;
+            HitLimb = null;
+
+            Afflictions = null;
+
+            AppliedDamageModifiers = appliedDamageModifiers;
         }
     }
     
@@ -52,22 +55,16 @@ namespace Barotrauma
         public float Range { get; private set; }
 
         [Serialize(0.0f, false)]
-        public float DamageRange { get; private set; }
+        public float DamageRange { get; set; }
 
         [Serialize(0.0f, false)]
         public float Duration { get; private set; }
-
-        [Serialize(DamageType.None, false)]
-        public DamageType DamageType { get; private set; }
-
+        
         [Serialize(0.0f, false)]
         public float StructureDamage { get; private set; }
 
         [Serialize(0.0f, false)]
-        public float Damage { get; private set; }
-
-        [Serialize(0.0f, false)]
-        public float BleedingDamage { get; private set; }
+        public float ItemDamage { get; private set; }
 
         [Serialize(0.0f, false)]
         public float Stun { get; private set; }
@@ -90,20 +87,27 @@ namespace Barotrauma
         [Serialize(0.0f, false)]
         public float Priority { get; private set; }
 
+        public IEnumerable<StatusEffect> StatusEffects
+        {
+            get { return statusEffects; }
+        }
+
         //the indices of the limbs Force is applied on 
         //(if none, force is applied only to the limb the attack is attached to)
         public readonly List<int> ApplyForceOnLimbs;
-        
+
+        public readonly List<Affliction> Afflictions = new List<Affliction>();
+
         private readonly List<StatusEffect> statusEffects;
-
-        public float GetDamage(float deltaTime)
+        
+        public List<Affliction> GetMultipliedAfflictions(float multiplier)
         {
-            return (Duration == 0.0f) ? Damage : Damage * deltaTime;
-        }
-
-        public float GetBleedingDamage(float deltaTime)
-        {
-            return (Duration == 0.0f) ? BleedingDamage : BleedingDamage * deltaTime;
+            List<Affliction> multipliedAfflictions = new List<Affliction>();
+            foreach (Affliction affliction in Afflictions)
+            {
+                multipliedAfflictions.Add(affliction.Prefab.Instantiate(affliction.Strength * multiplier));
+            }
+            return multipliedAfflictions;
         }
 
         public float GetStructureDamage(float deltaTime)
@@ -111,13 +115,30 @@ namespace Barotrauma
             return (Duration == 0.0f) ? StructureDamage : StructureDamage * deltaTime;
         }
 
-        public Attack(float damage, float structureDamage, float bleedingDamage, float range = 0.0f)
+        public float GetItemDamage(float deltaTime)
         {
+            return (Duration == 0.0f) ? ItemDamage : ItemDamage * deltaTime;
+        }
+
+        public float GetTotalDamage(bool includeStructureDamage = false)
+        {
+            float totalDamage = includeStructureDamage ? StructureDamage : 0.0f;
+            foreach (Affliction affliction in Afflictions)
+            {
+                totalDamage += affliction.GetVitalityDecrease(null);
+            }
+            return totalDamage;
+        }
+
+        public Attack(float damage, float bleedingDamage, float burnDamage, float structureDamage, float range = 0.0f)
+        {
+            if (damage > 0.0f) Afflictions.Add(AfflictionPrefab.InternalDamage.Instantiate(damage));
+            if (bleedingDamage > 0.0f) Afflictions.Add(AfflictionPrefab.Bleeding.Instantiate(bleedingDamage));
+            if (burnDamage > 0.0f) Afflictions.Add(AfflictionPrefab.Burn.Instantiate(burnDamage));
+
             Range = range;
             DamageRange = range;
-            this.Damage = damage;
-            this.StructureDamage = structureDamage;
-            this.BleedingDamage = bleedingDamage;
+            StructureDamage = structureDamage;
         }
 
         public Attack(XElement element)
@@ -153,6 +174,20 @@ namespace Barotrauma
                         }
                         statusEffects.Add(StatusEffect.Load(subElement));
                         break;
+                    case "affliction":
+                        string afflictionName = subElement.GetAttributeString("name", "").ToLowerInvariant();
+                        float afflictionStrength = subElement.GetAttributeFloat("strength", 1.0f);
+
+                        AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.Find(ap => ap.Name.ToLowerInvariant() == afflictionName);
+                        if (afflictionPrefab == null)
+                        {
+                            DebugConsole.ThrowError("Affliction prefab \"" + afflictionName + "\" not found.");
+                        }
+                        else
+                        {
+                            Afflictions.Add(afflictionPrefab.Instantiate(afflictionStrength));
+                        }
+                        break;
                 }
 
             }
@@ -163,8 +198,7 @@ namespace Barotrauma
         {
             if (OnlyHumans)
             {
-                Character character = target as Character;
-                if (character != null && character.ConfigPath != Character.HumanConfigFile) return new AttackResult();
+                if (target is Character character && character.ConfigPath != Character.HumanConfigFile) return new AttackResult();
             }
 
             DamageParticles(deltaTime, worldPosition);
@@ -175,13 +209,24 @@ namespace Barotrauma
 
             foreach (StatusEffect effect in statusEffects)
             {
-                if (effect.Targets.HasFlag(StatusEffect.TargetType.This))
+                if (effect.HasTargetType(StatusEffect.TargetType.This))
                 {
                     effect.Apply(effectType, deltaTime, attacker, attacker);
                 }
-                if (effect.Targets.HasFlag(StatusEffect.TargetType.Character) && target is Character)
+                if (target is Character)
                 {
-                    effect.Apply(effectType, deltaTime, (Character)target, (Character)target);
+                    if (effect.HasTargetType(StatusEffect.TargetType.Character))
+                    {
+                        effect.Apply(effectType, deltaTime, (Character)target, (Character)target);
+                    }
+                    if (effect.HasTargetType(StatusEffect.TargetType.Limb))
+                    {
+                        effect.Apply(effectType, deltaTime, (Character)target, attackResult.HitLimb);
+                    }                    
+                    if (effect.HasTargetType(StatusEffect.TargetType.AllLimbs))
+                    {
+                        effect.Apply(effectType, deltaTime, (Character)target, ((Character)target).AnimController.Limbs.Cast<ISerializableEntity>().ToList());
+                    }
                 }
             }
 
@@ -205,14 +250,23 @@ namespace Barotrauma
 
             foreach (StatusEffect effect in statusEffects)
             {
-                if (effect.Targets.HasFlag(StatusEffect.TargetType.This))
+                if (effect.HasTargetType(StatusEffect.TargetType.This))
                 {
                     effect.Apply(effectType, deltaTime, attacker, attacker);
                 }
-                if (effect.Targets.HasFlag(StatusEffect.TargetType.Character))
+                if (effect.HasTargetType(StatusEffect.TargetType.Character))
                 {
                     effect.Apply(effectType, deltaTime, targetLimb.character, targetLimb.character);
                 }
+                if (effect.HasTargetType(StatusEffect.TargetType.Limb))
+                {
+                    effect.Apply(effectType, deltaTime, targetLimb.character, targetLimb);
+                }
+                if (effect.HasTargetType(StatusEffect.TargetType.AllLimbs))
+                {
+                    effect.Apply(effectType, deltaTime, targetLimb.character, targetLimb.character.AnimController.Limbs.Cast<ISerializableEntity>().ToList());
+                }
+
             }
 
             return attackResult;

@@ -1,11 +1,59 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Xml.Linq;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma.Items.Components
 {
     partial class ItemContainer : ItemComponent, IDrawableComponent
     {
-        //TODO: shouldn't this be overriding the base method?
+        private Sprite inventoryTopSprite;
+        private Sprite inventoryBackSprite;
+        private Sprite inventoryBottomSprite;
+
+        private GUICustomComponent guiCustomComponent;
+
+        public Sprite InventoryTopSprite
+        {
+            get { return inventoryTopSprite; }
+        }
+        public Sprite InventoryBackSprite
+        {
+            get { return inventoryBackSprite; }
+        }
+        public Sprite InventoryBottomSprite
+        {
+            get { return inventoryBottomSprite; }
+        }
+
+        partial void InitProjSpecific(XElement element)
+        {
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "topsprite":
+                        inventoryTopSprite = new Sprite(subElement);
+                        break;
+                    case "backsprite":
+                        inventoryBackSprite = new Sprite(subElement);
+                        break;
+                    case "bottomsprite":
+                        inventoryBottomSprite = new Sprite(subElement);
+                        break;
+                }
+            }
+            guiFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
+            {
+                CanBeFocused = false
+            };
+            guiCustomComponent = new GUICustomComponent(new RectTransform(Vector2.One, GuiFrame.RectTransform),
+                onDraw: (SpriteBatch spriteBatch, GUICustomComponent component) => { Inventory.Draw(spriteBatch); },
+                onUpdate: null)
+            {
+                CanBeFocused = false
+            };
+        }
+
         public void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
             if (hideItems || (item.body != null && !item.body.Enabled)) return;
@@ -22,8 +70,6 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                //item.body.Enabled = true;
-
                 Matrix transform = Matrix.CreateRotationZ(item.body.Rotation);
 
                 if (item.body.Dir == -1.0f)
@@ -54,15 +100,29 @@ namespace Barotrauma.Items.Components
                 transformedItemPos += transformedItemInterval;
             }
         }
-
-        public override void UpdateHUD(Character character)
+        
+        public override void UpdateHUD(Character character, float deltaTime)
         {
-            Inventory.Update((float)Timing.Step);
+            //if the item is in the character's inventory, no need to update the item's inventory 
+            //because the player can see it by hovering the cursor over the item
+            guiCustomComponent.Visible = item.ParentInventory?.Owner != character && DrawInventory;
+            if (!guiCustomComponent.Visible) return;
+
+            Inventory.Update(deltaTime);
         }
 
-        public override void DrawHUD(SpriteBatch spriteBatch, Character character)
+        public override void AddToGUIUpdateList()
         {
-            Inventory.Draw(spriteBatch);
+            GuiFrame?.AddToGUIUpdateList();
         }
+
+        /*public override void DrawHUD(SpriteBatch spriteBatch, Character character)
+        {
+            //if the item is in the character's inventory, no need to draw the item's inventory 
+            //because the player can see it by hovering the cursor over the item
+            if (item.ParentInventory?.Owner == character || !DrawInventory) return;
+            
+            Inventory.Draw(spriteBatch);            
+        }*/
     }
 }

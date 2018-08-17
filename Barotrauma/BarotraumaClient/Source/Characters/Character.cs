@@ -13,10 +13,14 @@ namespace Barotrauma
 {
     partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable
     {
+        public static bool DisableControls;
+
         protected float soundTimer;
         protected float soundInterval;
         protected float hudInfoTimer;
         protected bool hudInfoVisible;
+
+        protected float lastRecvPositionUpdateTime;
 
         float hudInfoHeight;
 
@@ -32,12 +36,10 @@ namespace Barotrauma
             {
                 if (controlled == value) return;
                 controlled = value;
-                CharacterHUD.Reset();
-
-                if (controlled != null)
-                {
-                    controlled.Enabled = true;
-                }
+                if (controlled != null) controlled.Enabled = true;
+                GameMain.GameSession?.CrewManager?.SetCharacterSelected(controlled);
+                CharacterHealth.OpenHealthWindow = null;
+                
             }
         }
         
@@ -48,6 +50,34 @@ namespace Barotrauma
             get { return hudProgressBars; }
         }
 
+        private float blurStrength;
+        public float BlurStrength
+        {
+            get { return blurStrength; }
+            set { blurStrength = MathHelper.Clamp(value, 0.0f, 1.0f); }
+        }
+
+        private float distortStrength;
+        public float DistortStrength
+        {
+            get { return distortStrength; }
+            set { distortStrength = MathHelper.Clamp(value, 0.0f, 1.0f); }
+        }
+
+        private float radialDistortStrength;
+        public float RadialDistortStrength
+        {
+            get { return radialDistortStrength; }
+            set { radialDistortStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
+        }
+
+        private float chromaticAberrationStrength;
+        public float ChromaticAberrationStrength
+        {
+            get { return chromaticAberrationStrength; }
+            set { chromaticAberrationStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
+        }
+
         partial void InitProjSpecific(XDocument doc)
         {
             soundInterval = doc.Root.GetAttributeFloat("soundinterval", 10.0f);
@@ -56,7 +86,7 @@ namespace Barotrauma
 
             for (int i = 0; i < Enum.GetNames(typeof(InputType)).Length; i++)
             {
-                keys[i] = new Key(GameMain.Config.KeyBind((InputType)i));
+                keys[i] = new Key((InputType)i);
             }
 
             var soundElements = doc.Root.Elements("sound").ToList();
@@ -115,18 +145,26 @@ namespace Barotrauma
                     cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, MathHelper.Clamp(Mass, 250.0f, 800.0f), deltaTime);
                 }
             }
-
+            
             cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
             if (AnimController.CurrentHull != null && AnimController.CurrentHull.Submarine != null)
             {
                 cursorPosition -= AnimController.CurrentHull.Submarine.Position;
-            }
+            }  
 
             Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
-            if (moveCam)
+            if (GUI.PauseMenuOpen)
             {
-                if (DebugConsole.IsOpen || GUI.PauseMenuOpen || IsUnconscious ||
-                    (GameMain.GameSession?.CrewManager?.CrewCommander != null && GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
+                cam.OffsetAmount = 0.0f;
+            }
+            else if (SelectedConstruction != null &&
+                SelectedConstruction.components.Any(ic => ic.GuiFrame != null && (GUI.MouseOn == ic.GuiFrame || ic.GuiFrame.IsParentOf(GUI.MouseOn))))
+            {
+                cam.OffsetAmount = 0.0f;
+            }
+            else if (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
+            {
+                if (GUI.PauseMenuOpen || IsUnconscious)
                 {
                     if (deltaTime > 0.0f) cam.OffsetAmount = 0.0f;
                 }
@@ -149,11 +187,11 @@ namespace Barotrauma
             DisableControls = false;
         }
 
-        partial void UpdateControlled(float deltaTime,Camera cam)
+        partial void UpdateControlled(float deltaTime, Camera cam)
         {
             if (controlled != this) return;
-            
-            ControlLocalPlayer(deltaTime, cam);            
+
+            ControlLocalPlayer(deltaTime, cam);
 
             Lights.LightManager.ViewTarget = this;
             CharacterHUD.Update(deltaTime, this);
@@ -168,32 +206,22 @@ namespace Barotrauma
                 hudProgressBars.Remove(pb.Key);
             }
         }
-
-        partial void DamageHUD(float amount)
-        {
-            if (controlled == this) CharacterHUD.TakeDamage(amount);
-        }
-
-        partial void UpdateOxygenProjSpecific(float prevOxygen)
-        {
-            if (prevOxygen > 0.0f && Oxygen <= 0.0f && controlled == this)
-            {
-                SoundPlayer.PlaySound("drown");
-            }
-        }
-
+        
         partial void KillProjSpecific()
         {
             if (GameMain.NetworkMember != null && controlled == this)
             {
-                string chatMessage = TextManager.Get("Self_CauseOfDeathDescription." + causeOfDeath.ToString());
+                string chatMessage = CauseOfDeath.Type == CauseOfDeathType.Affliction ?
+                    CauseOfDeath.Affliction.SelfCauseOfDeathDescription :
+                    TextManager.Get("Self_CauseOfDeathDescription." + CauseOfDeath.Type.ToString());
+
                 if (GameMain.Client != null) chatMessage += " " + TextManager.Get("DeathChatNotification");
 
                 GameMain.NetworkMember.AddChatMessage(chatMessage, ChatMessageType.Dead);
                 GameMain.LightManager.LosEnabled = false;
                 controlled = null;
             }
-
+            
             PlaySound(CharacterSound.SoundType.Die);
         }
 
@@ -206,15 +234,15 @@ namespace Barotrauma
             {
                 GameMain.GameSession.CrewManager.RemoveCharacter(this);
             }
-
-            if (GameMain.Client != null && GameMain.Client.Character == this) GameMain.Client.Character = null;
+            
+            if (GameMain.NetworkMember?.Character == this) GameMain.NetworkMember.Character = null;
 
             if (Lights.LightManager.ViewTarget == this) Lights.LightManager.ViewTarget = null;
         }
 
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
-            if (info != null || health < maxHealth * 0.98f)
+            if (info != null || Vitality < MaxVitality * 0.98f)
             {
                 hudInfoTimer -= deltaTime;
                 if (hudInfoTimer <= 0.0f)
@@ -238,6 +266,11 @@ namespace Barotrauma
                     hudInfoTimer = Rand.Range(0.5f, 1.0f);
                 }
             }
+
+            if (controlled == this)
+            {
+                CharacterHealth.UpdateHUD(deltaTime);
+            }
         }
 
         public static void AddAllToGUIUpdateList()
@@ -253,6 +286,7 @@ namespace Barotrauma
             if (controlled == this)
             {
                 CharacterHUD.AddToGUIUpdateList(this);
+                CharacterHealth.AddToGUIUpdateList();
             }
         }
         
@@ -263,9 +297,10 @@ namespace Barotrauma
             AnimController.Draw(spriteBatch);
         }
 
-        public void DrawHUD(SpriteBatch spriteBatch, Camera cam)
+        public void DrawHUD(SpriteBatch spriteBatch, Camera cam, bool drawHealth = true)
         {
             CharacterHUD.Draw(spriteBatch, this, cam);
+            if (drawHealth) CharacterHealth.DrawHUD(spriteBatch);
         }
 
         public virtual void DrawFront(SpriteBatch spriteBatch, Camera cam)
@@ -299,7 +334,7 @@ namespace Barotrauma
 
             if (speechBubbleTimer > 0.0f)
             {
-                GUI.SpeechBubbleIcon.Draw(spriteBatch, pos - Vector2.UnitY * 100.0f,
+                GUI.SpeechBubbleIcon.Draw(spriteBatch, pos - Vector2.UnitY * 30,
                     speechBubbleColor * Math.Min(speechBubbleTimer, 1.0f), 0.0f,
                     Math.Min(speechBubbleTimer, 1.0f));
             }
@@ -311,12 +346,13 @@ namespace Barotrauma
             float cursorDist = Vector2.Distance(WorldPosition, cam.ScreenToWorld(PlayerInput.MousePosition));
             float hudInfoAlpha = MathHelper.Clamp(1.0f - (cursorDist - (hoverRange - fadeOutRange)) / fadeOutRange, 0.2f, 1.0f);
             
-            if (hudInfoVisible && info != null)
+            if (hudInfoVisible && info != null &&
+                (controlled == null || this != controlled.focusedCharacter))
             {
                 string name = Info.DisplayName;
                 if (controlled == null && name != Info.Name) name += " " + TextManager.Get("Disguised");
 
-                Vector2 namePos = new Vector2(pos.X, pos.Y - 10.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(Info.Name) * 0.5f / cam.Zoom;
+                Vector2 namePos = new Vector2(pos.X, pos.Y - 10.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(name) * 0.5f / cam.Zoom;
 
                 Vector2 screenSize = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             	Vector2 viewportSize = new Vector2(cam.WorldView.Width, cam.WorldView.Height);
@@ -340,14 +376,14 @@ namespace Barotrauma
                 }
             }
 
-            if (isDead) return;
-
-            if (health < maxHealth * 0.98f && hudInfoVisible)
+            if (IsDead) return;
+            
+            if (Vitality < MaxVitality * 0.98f && hudInfoVisible)
             {
                 Vector2 healthBarPos = new Vector2(pos.X - 50, -pos.Y);
-                GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 15.0f), 
-                    health / maxHealth, 
-                    Color.Lerp(Color.Red, Color.Green, health / maxHealth) * 0.8f * hudInfoAlpha,
+                GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 15.0f),
+                    Vitality / MaxVitality, 
+                    Color.Lerp(Color.Red, Color.Green, Vitality / MaxVitality) * 0.8f * hudInfoAlpha,
                     new Color(0.5f, 0.57f, 0.6f, 1.0f) * hudInfoAlpha);
             }
         }
@@ -382,7 +418,7 @@ namespace Barotrauma
             if (matchingSounds.Count == 0) return;
 
             var selectedSound = matchingSounds[Rand.Int(matchingSounds.Count)];
-            selectedSound.Sound.Play(1.0f, selectedSound.Range, AnimController.WorldPosition);
+            SoundPlayer.PlaySound(selectedSound.Sound, 1.0f, selectedSound.Range, AnimController.WorldPosition, CurrentHull);
         }
 
         partial void ImplodeFX()

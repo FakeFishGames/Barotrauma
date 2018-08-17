@@ -104,6 +104,18 @@ namespace Barotrauma
                 && mouseState.RightButton == ButtonState.Released);
         }
 
+        public static bool MidButtonClicked()
+        {
+            return (GameMain.WindowActive &&
+                oldMouseState.MiddleButton == ButtonState.Pressed
+                && mouseState.MiddleButton == ButtonState.Released);
+        }
+
+        public static bool MidButtonHeld()
+        {
+            return GameMain.WindowActive && mouseState.MiddleButton == ButtonState.Pressed;
+        }
+
         public static bool DoubleClicked()
         {
             return GameMain.WindowActive && doubleClicked;
