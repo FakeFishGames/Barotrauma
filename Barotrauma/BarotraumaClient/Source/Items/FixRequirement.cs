@@ -2,12 +2,16 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Linq;
 
 namespace Barotrauma
 {
     partial class FixRequirement
     {
         private static GUIFrame frame;
+        private static GUIComponent requirementContainer;
+        private static GUIComponent itemTextContainer;
+        private static GUIComponent skillTextContainer;
 
         public bool CanBeFixed(Character character, GUIComponent reqFrame = null)
         {
@@ -18,9 +22,8 @@ namespace Barotrauma
 
                 if (reqFrame != null)
                 {
-                    GUIComponent component = reqFrame.children.Find(c => c.UserData as string == itemName);
-                    GUITextBlock text = component as GUITextBlock;
-                    if (text != null) text.TextColor = itemFound ? Color.LightGreen : Color.Red;
+                    GUIComponent component = reqFrame.GetChildByUserData(itemName);
+                    if (component is GUITextBlock text) text.TextColor = itemFound ? Color.LightGreen : Color.Red;
                 }
             }
 
@@ -31,9 +34,9 @@ namespace Barotrauma
 
                 if (reqFrame != null)
                 {
-                    GUIComponent component = reqFrame.children.Find(c => c.UserData as Skill == skill);
+                    GUIComponent component = reqFrame.GetChildByUserData(skill);
                     GUITextBlock text = component as GUITextBlock;
-                    if (text != null) text.TextColor = sufficientSkill ? Color.LightGreen : Color.Red;
+                    if (text != null) text.TextColor = sufficientSkill ? Color.LightGreen : Color.Orange;
                 }
             }
 
@@ -42,54 +45,90 @@ namespace Barotrauma
 
         private static void CreateGUIFrame(Item item)
         {
-            int width = 400, height = 500;
-            int y = 0;
-
-            frame = new GUIFrame(new Rectangle(0, 0, width, height), null, Alignment.Center, "");
-            frame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
-            frame.UserData = item;
-
-            new GUITextBlock(new Rectangle(0, 0, 200, 20), TextManager.Get("FixHeader").Replace("[itemname]", item.Name), "", frame);
-
-            y = y + 40;
+            int width = 400, height = 80;
             foreach (FixRequirement requirement in item.FixRequirements)
             {
-                GUIFrame reqFrame = new GUIFrame(
-                    new Rectangle(0, y, 0, 20 + Math.Max(requirement.requiredItems.Count, requirement.RequiredSkills.Count) * 15),
-                    Color.Transparent, null, frame);
-                reqFrame.UserData = requirement;
+                height += 60 + Math.Max(requirement.requiredItems.Count, requirement.RequiredSkills.Count) * 15;
+            }
 
+            frame = new GUIFrame(new RectTransform(new Point(width, height), GUI.Canvas, Anchor.Center))
+            {
+                UserData = item
+            };
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), frame.RectTransform, Anchor.Center))
+            {
+                Stretch = true
+            };
+            
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform),
+                TextManager.Get("FixHeader").Replace("[itemname]", item.Name));
+            
+            foreach (FixRequirement requirement in item.FixRequirements)
+            {
+                int maxRequirementCount = Math.Max(requirement.requiredItems.Count, requirement.RequiredSkills.Count);
+                GUIFrame reqFrame = new GUIFrame(new RectTransform(new Point(paddedFrame.Rect.Width, 60 + maxRequirementCount * 15), paddedFrame.RectTransform), style: null, color: Color.Black)
+                {
+                    UserData = requirement
+                };
 
-                var fixButton = new GUIButton(new Rectangle(0, 0, 50, 20), TextManager.Get("FixButton"), "", reqFrame);
-                fixButton.OnClicked = FixButtonPressed;
-                fixButton.UserData = requirement;
+                GUIFrame paddedReqFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), reqFrame.RectTransform), style: null)
+                {
+                    UserData = requirement
+                };
+                itemTextContainer = paddedReqFrame;
+                skillTextContainer = paddedReqFrame;
 
-                var tickBox = new GUITickBox(new Rectangle(70, 0, 20, 20), requirement.name, Alignment.Left, reqFrame);
-                tickBox.Enabled = false;
+                var tickBox = new GUITickBox(new RectTransform(new Point(20), paddedReqFrame.RectTransform), requirement.name)
+                {
+                    CanBeFocused = false,
+                    Enabled = false
+                };
 
                 int y2 = 20;
                 foreach (string itemName in requirement.requiredItems)
                 {
-                    var itemBlock = new GUITextBlock(new Rectangle(30, y2, 200, 15), itemName, "", reqFrame);
-                    itemBlock.Font = GUI.SmallFont;
-                    itemBlock.UserData = itemName;
-
+                    var itemBlock = new GUITextBlock(new RectTransform(new Point(200, 15), paddedReqFrame.RectTransform) { AbsoluteOffset = new Point(30, y2) },
+                        itemName, font: GUI.SmallFont)
+                    {
+                        UserData = itemName
+                    };
                     y2 += 15;
                 }
 
                 y2 = 20;
                 foreach (Skill skill in requirement.RequiredSkills)
                 {
-                    var skillBlock = new GUITextBlock(new Rectangle(0, y2, 200, 15), skill.Name + " - " + skill.Level, "", Alignment.Right, Alignment.TopLeft, reqFrame);
-                    skillBlock.Font = GUI.SmallFont;
-                    skillBlock.UserData = skill;
-
-
+                    var skillBlock = new GUITextBlock(new RectTransform(new Point(200, 15), paddedReqFrame.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(0, y2)},
+                        skill.Name + " - " + skill.Level, font: GUI.SmallFont)
+                    {
+                        Font = GUI.SmallFont,
+                        UserData = skill
+                    };
                     y2 += 15;
                 }
 
-                y += reqFrame.Rect.Height;
+                var progressBarArea = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.2f), paddedReqFrame.RectTransform, Anchor.BottomCenter), isHorizontal: true)
+                {
+                    Stretch = true,
+                    RelativeSpacing = 0.05f
+                };
+
+                var fixButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), progressBarArea.RectTransform),
+                    TextManager.Get("FixButton"))
+                {
+                    OnClicked = FixButtonPressed,
+                    UserData = requirement
+                };
+
+                var fixProgressBar = new GUIProgressBar(new RectTransform(new Vector2(0.8f, 1.0f), progressBarArea.RectTransform),
+                    color: Color.Green, barSize: 0.0f)
+                {
+                    IsHorizontal = true,
+                    ProgressGetter = () => { return requirement.fixProgress; }
+                };
             }
+
+            requirementContainer = paddedFrame;
         }
 
         private static bool FixButtonPressed(GUIButton button, object obj)
@@ -109,21 +148,13 @@ namespace Barotrauma
             else if (GameMain.Server != null)
             {
                 GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.Status });
-                requirement.Fixed = true;
+                requirement.CurrentFixer = Character.Controlled;
             }
             else
             {
-                requirement.Fixed = true;
+                requirement.CurrentFixer = Character.Controlled;
             }
-
-            if (GameMain.Client == null)
-            {
-                foreach (Skill skill in requirement.RequiredSkills)
-                {
-                    Character.Controlled.Info.IncreaseSkillLevel(skill.Name, skill.Level / 100.0f * SkillIncreaseMultiplier);
-                }
-            }
-
+            
             return true;
         }
 
@@ -131,8 +162,7 @@ namespace Barotrauma
         {
             if (frame == null) return;
 
-            bool unfixedFound = false;
-            foreach (GUIComponent child in frame.children)
+            foreach (GUIComponent child in requirementContainer.Children)
             {
                 FixRequirement requirement = child.UserData as FixRequirement;
                 if (requirement == null) continue;
@@ -140,41 +170,34 @@ namespace Barotrauma
                 if (requirement.Fixed)
                 {
                     child.Color = Color.LightGreen * 0.3f;
-                    child.GetChild<GUITickBox>().Selected = true;
+                    child.Children.First().GetChild<GUITickBox>().Selected = true;
                 }
                 else
                 {
-                    bool canBeFixed = requirement.CanBeFixed(character, child);
-                    unfixedFound = true;
-                    GUITickBox tickBox = child.GetChild<GUITickBox>();
-                    if (tickBox.Selected)
+                    foreach (string itemName in requirement.requiredItems)
                     {
-                        tickBox.Selected = canBeFixed;
-                        requirement.Fixed = canBeFixed;
+                        bool itemFound = (character.Inventory.FindItem(itemName) != null);
+                        
+                        GUIComponent component = itemTextContainer.GetChildByUserData(itemName);
+                        if (component is GUITextBlock text) text.TextColor = itemFound ? Color.LightGreen : Color.Red;
+                    }
 
+                    foreach (Skill skill in requirement.RequiredSkills)
+                    {
+                        float characterSkill = character.GetSkillLevel(skill.Name);
+                        bool sufficientSkill = characterSkill >= skill.Level;
+
+                        GUIComponent component = skillTextContainer.GetChildByUserData(skill);
+                        if (component is GUITextBlock text) text.TextColor = sufficientSkill ? Color.LightGreen : Color.Red;
                     }
                     child.Color = Color.Red * 0.2f;
                 }
             }
-            if (!unfixedFound)
-            {
-                item.Condition = item.Prefab.Health;
-                frame = null;
-            }
         }
-
-        public static void DrawHud(SpriteBatch spriteBatch, Item item, Character character)
-        {
-            if (frame == null) return;
-
-            frame.Draw(spriteBatch);
-        }
-
+        
         public static void AddToGUIUpdateList()
         {
-            if (frame == null) return;
-
-            frame.AddToGUIUpdateList();
+            frame?.AddToGUIUpdateList();
         }
 
         public static void UpdateHud(Item item, Character character)
@@ -184,10 +207,6 @@ namespace Barotrauma
                 CreateGUIFrame(item);
             }
             UpdateGUIFrame(item, character);
-
-            if (frame == null) return;
-
-            frame.Update((float)Timing.Step);
         }
     }
 }

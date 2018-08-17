@@ -16,7 +16,28 @@ namespace Barotrauma
     partial class Structure : MapEntity, IDamageable, IServerSerializable
     {
         private List<ConvexHull> convexHulls;
+
+        protected Vector2 textureScale = Vector2.One;
+        [Editable, Serialize("1.0, 1.0", true)]
+        public Vector2 TextureScale
+        {
+            get { return textureScale; }
+            set
+            {
+                textureScale = new Vector2(
+                    MathHelper.Clamp(value.X, 0.01f, 10),
+                    MathHelper.Clamp(value.Y, 0.01f, 10));
+            }
+        }
         
+        protected Vector2 textureOffset = Vector2.Zero;
+        [Editable, Serialize("0.0, 0.0", true)]
+        public Vector2 TextureOffset
+        {
+            get { return textureOffset; }
+            set { textureOffset = value; }
+        }
+
         private void GenerateConvexHull()
         {
             // If not null and not empty , remove the hulls from the system
@@ -31,7 +52,13 @@ namespace Barotrauma
             {
                 if (mergedSections.Count > 5)
                 {
-                    mergedSections.Add(section);
+                    int width = isHorizontal ? section.rect.Width : (int)BodyWidth;
+                    int height = isHorizontal ? (int)BodyHeight : section.rect.Height;
+                    mergedSections.Add(new WallSection(new Rectangle(
+                        section.rect.Center.X - width / 2,
+                        section.rect.Y - section.rect.Height / 2 + height / 2,
+                        width, height)));
+
                     GenerateMergedHull(mergedSections);
                     continue;
                 }
@@ -43,7 +70,12 @@ namespace Barotrauma
                 }
                 else
                 {
-                    mergedSections.Add(section);
+                    int width = isHorizontal ? section.rect.Width : (int)BodyWidth;
+                    int height = isHorizontal ? (int)BodyHeight : section.rect.Height;
+                    mergedSections.Add(new WallSection(new Rectangle(
+                        section.rect.Center.X - width / 2,
+                        section.rect.Y - section.rect.Height / 2 + height / 2,
+                        width, height)));
                 }
             }
 
@@ -60,6 +92,14 @@ namespace Barotrauma
             Rectangle mergedRect = GenerateMergedRect(mergedSections);
 
             var h = new ConvexHull(CalculateExtremes(mergedRect), Color.Black, this);
+
+            if (prefab.BodyRotation != 0.0f)
+            {
+                float rotation = MathHelper.ToRadians(prefab.BodyRotation);
+                if (FlippedX != FlippedY) rotation = -rotation;
+                h.Rotate(Position, -rotation);
+            }
+
             mergedSections.ForEach(x => x.hull = h);
             convexHulls.Add(h);
             mergedSections.Clear();
@@ -70,30 +110,31 @@ namespace Barotrauma
             if (editingHUD == null || editingHUD.UserData as Structure != this)
             {
                 editingHUD = CreateEditingHUD(Screen.Selected != GameMain.SubEditorScreen);
-            }
-
-            editingHUD.Update((float)Timing.Step);
+            }            
         }
 
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
-            int width = 450;
-            int height = 150;
+            int width = 600, height = 150;
             int x = GameMain.GraphicsWidth / 2 - width / 2, y = 30;
 
-            editingHUD = new GUIListBox(new Rectangle(x, y, width, height), "");
-            editingHUD.UserData = this;
-            
-            new SerializableEntityEditor(this, inGame, editingHUD, true);
-            
-            editingHUD.SetDimensions(new Point(editingHUD.Rect.Width, MathHelper.Clamp(editingHUD.children.Sum(c => c.Rect.Height), 50, editingHUD.Rect.Height)));
+            editingHUD = new GUIListBox(new RectTransform(new Point(width, height), GUI.Canvas) { ScreenSpaceOffset = new Point(x, y) })
+            {
+                UserData = this
+            };
+
+            GUIListBox listBox = (GUIListBox)editingHUD;
+            new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, elementHeight: 20);
+
+            int contentHeight = editingHUD.Children.Sum(c => c.Rect.Height) + (listBox.CountChildren - 1) * listBox.Spacing;
+            editingHUD.RectTransform.NonScaledSize =
+                new Point(editingHUD.RectTransform.NonScaledSize.X, MathHelper.Clamp(contentHeight, 50, editingHUD.RectTransform.NonScaledSize.Y));
 
             return editingHUD;
         }
 
         public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
         {
-            if (editingHUD != null && editingHUD.UserData == this) editingHUD.Draw(spriteBatch);
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
@@ -125,23 +166,38 @@ namespace Barotrauma
             float depth = prefab.sprite.Depth;
             depth -= (ID % 255) * 0.000001f;
 
+            Vector2 textureOffset = this.textureOffset;
+            if (FlippedX) textureOffset.X = -textureOffset.X;
+            if (FlippedY) textureOffset.Y = -textureOffset.Y;
+            
             if (back && damageEffect == null)
             {
                 if (prefab.BackgroundSprite != null)
                 {
+                    SpriteEffects oldEffects = prefab.BackgroundSprite.effects;
+                    prefab.BackgroundSprite.effects ^= SpriteEffects;
+
+                    Point backGroundOffset = new Point(
+                        MathUtils.PositiveModulo((int)-textureOffset.X, prefab.BackgroundSprite.SourceRect.Width),
+                        MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.BackgroundSprite.SourceRect.Height));
+
                     prefab.BackgroundSprite.DrawTiled(
                         spriteBatch,
                         new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
                         new Vector2(rect.Width, rect.Height),
-                        color, Point.Zero);
+                        color: color,
+                        textureScale: TextureScale,
+                        startOffset: backGroundOffset);
+
+                    prefab.BackgroundSprite.effects = oldEffects;
                 }
             }
 
-            SpriteEffects oldEffects = prefab.sprite.effects;
-            prefab.sprite.effects ^= SpriteEffects;
-
             if (back == prefab.sprite.Depth > 0.5f || editing)
             {
+                SpriteEffects oldEffects = prefab.sprite.effects;
+                prefab.sprite.effects ^= SpriteEffects;
+
                 for (int i = 0; i < sections.Length; i++)
                 {
                     if (damageEffect != null)
@@ -162,25 +218,45 @@ namespace Barotrauma
                         }
                     }
 
-                    Point textureOffset = new Point(
+                    Point sectionOffset = new Point(
                         Math.Abs(rect.Location.X - sections[i].rect.Location.X),
                         Math.Abs(rect.Location.Y - sections[i].rect.Location.Y));
-
-                    if (flippedX && isHorizontal)
-                    {
-                        textureOffset.X = rect.Width - textureOffset.X - sections[i].rect.Width;
-                    }
+                    
+                    if (FlippedX && isHorizontal) sectionOffset.X = sections[i].rect.Right - rect.Right;
+                    if (FlippedY && !isHorizontal) sectionOffset.Y = (rect.Y - rect.Height) - (sections[i].rect.Y - sections[i].rect.Height);
+                    
+                    sectionOffset.X += MathUtils.PositiveModulo((int)-textureOffset.X, prefab.sprite.SourceRect.Width);
+                    sectionOffset.Y += MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.sprite.SourceRect.Height);
 
                     prefab.sprite.DrawTiled(
                         spriteBatch,
                         new Vector2(sections[i].rect.X + drawOffset.X, -(sections[i].rect.Y + drawOffset.Y)),
                         new Vector2(sections[i].rect.Width, sections[i].rect.Height),
-                        color,
-                        textureOffset, depth);
+                        color: color,
+                        startOffset: sectionOffset, 
+                        depth: depth,
+                        textureScale: TextureScale);
                 }
+                prefab.sprite.effects = oldEffects;
             }
 
-            prefab.sprite.effects = oldEffects;
+            if (GameMain.DebugDraw)
+            {
+                if (bodies != null && prefab.BodyRotation != 0.0f)
+                {
+                    foreach (FarseerPhysics.Dynamics.Body body in bodies)
+                    {
+                        Vector2 pos = FarseerPhysics.ConvertUnits.ToDisplayUnits(body.Position);
+                        if (Submarine != null) pos += Submarine.Position;
+                        pos.Y = -pos.Y;
+                        GUI.DrawRectangle(spriteBatch,
+                            pos,
+                            prefab.BodyWidth > 0.0f ? prefab.BodyWidth : rect.Width,
+                            prefab.BodyHeight > 0.0f ? prefab.BodyHeight : rect.Height,
+                            -body.Rotation, Color.White);
+                    }
+                }
+            }
         }
     }
 }

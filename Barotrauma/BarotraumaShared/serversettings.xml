@@ -2,7 +2,8 @@
 <serversettings
   name="Server"
   ServerMessage=""
-  port="14242"
+  port="27015"
+  queryport="27016"
   password=""
   public="True"
   maxplayers="10"
@@ -24,9 +25,12 @@
   traitoruseratio="True"
   traitorratio="0.2"
   karmaenabled="False"
+  KillDisconnectedTime="30"
   SubSelection="Manual"
   ModeSelection="Manual"
   GameMode="SandBox"
   MissionType="Random"
   TraitorsEnabled="No"
+  autobantime="60"
+  maxautobantime="360"
  />

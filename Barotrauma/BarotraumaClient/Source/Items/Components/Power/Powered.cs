@@ -1,28 +1,31 @@
-﻿using Barotrauma.Sounds;
+﻿using System.Collections.Generic;
+using System.Xml.Linq;
+using Barotrauma.Sounds;
 
 namespace Barotrauma.Items.Components
 {
     partial class Powered : ItemComponent
     {
-        protected static Sound[] sparkSounds;
+        protected List<Sound> sparkSounds;
 
+        private Sound powerOnSound;
         private bool powerOnSoundPlayed;
-
-        private static Sound powerOnSound;
-
-        public static void ClearSounds()
+        
+        partial void InitProjectSpecific(XElement element)
         {
-            if (sparkSounds != null)
+            sparkSounds = new List<Sound>();
+            foreach (XElement subElement in element.Elements())
             {
-                for (int i = 0; i < 4; i++)
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    sparkSounds[i].Dispose();
+                    case "poweronsound":
+                        powerOnSound = Submarine.LoadRoundSound(subElement, false);
+                        break;
+                    case "sparksound":
+                        sparkSounds.Add(Submarine.LoadRoundSound(subElement, false));
+                        break;
                 }
             }
-            sparkSounds = null;
-
-            if (powerOnSound != null) powerOnSound.Dispose();
-            powerOnSound = null;
         }
     }
 }

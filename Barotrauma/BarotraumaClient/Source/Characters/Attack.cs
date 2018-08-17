@@ -7,6 +7,11 @@ namespace Barotrauma
 {
     partial class Attack
     {
+        public string StructureSoundType
+        {
+            get; private set;
+        }
+
         private Sound sound;
 
         private ParticleEmitter particleEmitter;
@@ -18,6 +23,8 @@ namespace Barotrauma
             {
                 sound = Submarine.LoadRoundSound(soundPath);
             }
+
+            StructureSoundType = element.GetAttributeString("structuresoundtype", "StructureBlunt");
 
             foreach (XElement subElement in element.Elements())
             {
@@ -40,7 +47,7 @@ namespace Barotrauma
 
             if (sound != null)
             {
-                sound.Play(1.0f, 500.0f, worldPosition);
+                SoundPlayer.PlaySound(sound, 1.0f, 500.0f, worldPosition);
             }
         }
     }

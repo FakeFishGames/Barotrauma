@@ -65,8 +65,8 @@ namespace Barotrauma
             {
                 goToObjective.TryComplete(deltaTime);
 
-                var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
-                if (pathSteering != null && pathSteering.CurrentPath != null &&
+                if (character.AIController.SteeringManager is IndoorsSteeringManager pathSteering && 
+                    pathSteering.CurrentPath != null &&
                     pathSteering.CurrentPath.Unreachable && !unreachable.Contains(goToObjective.Target))
                 {
                     unreachable.Add(goToObjective.Target as Hull);
@@ -235,17 +235,22 @@ namespace Barotrauma
             if (hull.OxygenPercentage < 30.0f) safety -= (30.0f - hull.OxygenPercentage) * 5.0f;
 
             if (safety <= 0.0f) return 0.0f;
-            
+
+            bool extinguishFires = 
+                character.AIController.ObjectiveManager?.CurrentOrder is AIObjectiveExtinguishFires ||
+                character.AIController.ObjectiveManager?.CurrentOrder is AIObjectiveExtinguishFire;
+
             float fireAmount = 0.0f;
             var nearbyHulls = hull.GetConnectedHulls(3);
             foreach (Hull hull2 in nearbyHulls)
             {
                 foreach (FireSource fireSource in hull2.FireSources)
                 {
-                    //increase priority if almost within damage range of a fire
-                    if (fireSource.IsInDamageRange(character, fireSource.DamageRange * 1.25f))
+                    //increase priority if near the damage range of a fire
+                    //if extinguishing fires, the character can go closer the damage range
+                    if (fireSource.IsInDamageRange(character, fireSource.DamageRange * (extinguishFires ? 1.25f : 5.0f)))
                     {
-                        fireAmount += Math.Max(fireSource.Size.X, 50.0f);
+                        fireAmount += Math.Max(fireSource.Size.X, AIObjectiveManager.OrderPriority + 1.0f);
                     }
                 }
             }

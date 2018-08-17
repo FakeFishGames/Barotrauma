@@ -20,6 +20,7 @@
       <Item name="Revolver" equip="false">
         <Item name="Revolver Round"/>
         <Item name="Revolver Round"/>
+        <Item name="Revolver Round"/>
       </Item>
     </Items>
   </Job>
@@ -120,10 +121,10 @@
        allowalways="true" minkarma="0.0"
        vitalitymodifier="-10">
     <Skills>
-      <Skill name="Weapons" level="20,30"/>
-      <Skill name="Mechanical Engineering" level="20,30"/>
-      <Skill name="Electrical Engineering" level="20,30"/>
-      <Skill name="Medical" level="10,20"/>
+      <Skill name="Weapons" level="20,32"/>
+      <Skill name="Mechanical Engineering" level="20,32"/>
+      <Skill name="Electrical Engineering" level="20,32"/>
+      <Skill name="Medical" level="10,22"/>
     </Skills>
     <Items>
       <Item name="ID Card" equip="true"/>

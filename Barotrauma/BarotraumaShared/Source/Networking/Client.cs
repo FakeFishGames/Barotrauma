@@ -5,10 +5,11 @@ using System.Linq;
 
 namespace Barotrauma.Networking
 {
-    class Client
+    partial class Client : IDisposable
     {
         public string Name;
         public byte ID;
+        public ulong SteamID;
 
         private float karma = 1.0f;
         public float Karma
@@ -29,10 +30,20 @@ namespace Barotrauma.Networking
 
         public byte TeamID = 0;
 
-        public Character Character;
+        private Character character;
+        public Character Character
+        {
+            get { return character; }
+            set
+            {
+                character = value;
+                if (character != null) HasSpawned = true;
+            }
+        }
         public CharacterInfo CharacterInfo;
         public NetConnection Connection { get; set; }
-        public bool InGame;
+        public bool InGame;        
+        public bool HasSpawned; //has the client spawned as a character during the current round
         
         public UInt16 LastRecvGeneralUpdate = 0;
         
@@ -44,6 +55,12 @@ namespace Barotrauma.Networking
 
         public UInt16 LastRecvCampaignUpdate = 0;
         public UInt16 LastRecvCampaignSave = 0;
+
+        public VoipQueue VoipQueue
+        {
+            get;
+            private set;
+        }
         
         public readonly List<ChatMessage> ChatMsgQueue = new List<ChatMessage>();
         public UInt16 LastChatMsgQueueID;
@@ -76,6 +93,8 @@ namespace Barotrauma.Networking
         
         public float DeleteDisconnectedTimer;
 
+        public HashSet<string> GivenAchievements = new HashSet<string>();
+
         public ClientPermissions Permissions = ClientPermissions.None;
         public List<DebugConsole.Command> PermittedConsoleCommands
         {
@@ -105,13 +124,14 @@ namespace Barotrauma.Networking
             get { return kickVoters.Count; }
         }
         
+        /*TODO: remove unused constructor?
         public Client(NetPeer server, string name, byte ID)
-            : this(name, ID)
+            : this(name, ID, false)
         {
             
-        }
+        }*/
 
-        public Client(string name, byte ID)
+        public Client(string name, byte ID, bool initVoip=true)
         {
             this.Name = name;
             this.ID = ID;
@@ -122,17 +142,26 @@ namespace Barotrauma.Networking
             votes = new object[Enum.GetNames(typeof(VoteType)).Length];
 
             JobPreferences = new List<JobPrefab>(JobPrefab.List.GetRange(0, Math.Min(JobPrefab.List.Count, 3)));
+        
+            if (initVoip) InitVoip();
+        }
+
+        partial void InitVoipProjSpecific();
+        private void InitVoip()
+        {
+            VoipQueue = new VoipQueue(ID, GameMain.Server != null, true);
+            if (GameMain.Server != null)
+            {
+                GameMain.Server.VoipServer.RegisterQueue(VoipQueue);
+            }
+            InitVoipProjSpecific();
         }
 
         public static bool IsValidName(string name)
         {
             if (name.Contains("\n") || name.Contains("\r")) return false;
-
-            return (name.All(c =>
-                c != ';' &&
-                c != ',' &&
-                c != '<' &&
-                c != '/'));
+            char[] disallowedChars = new char[] { ';', ',', '<', '>', '/', '\\', '[', ']', '"', '?' };
+            return !name.Any(c => disallowedChars.Contains(c));
         }
         
         public static string SanitizeName(string name)
@@ -221,6 +250,20 @@ namespace Barotrauma.Networking
                 client.kickVoters.RemoveAll(voter => !connectedClients.Contains(voter));
             }
         }
-        
+
+        partial void DisposeProjSpecific();
+        public void Dispose()
+        {
+            if (GameMain.Server != null)
+            {
+                GameMain.Server.VoipServer.UnregisterQueue(VoipQueue);
+            }
+            DisposeProjSpecific();
+            if (VoipQueue != null)
+            {
+                VoipQueue.Dispose();
+                VoipQueue = null;
+            }
+        }
     }
 }

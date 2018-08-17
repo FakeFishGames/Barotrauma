@@ -1,5 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="tigerthresher" humanoid="false" health="300.0" bleedingdecreasespeed="0.1">
+<Character name="tigerthresher" humanoid="false">
+
+  <health
+    vitality="300"
+    doesbleed="true"/>
 
   <sound file="Content/Characters/Tigerthresher/thresherattack1.ogg" state="Attack" />
   <sound file="Content/Characters/Tigerthresher/thresheridle1.ogg" state="None" />
@@ -14,15 +18,18 @@
     <targetpriority tag="dead" state="Eat" priority="60"/>
     <targetpriority tag="weaker" state="Attack" priority="50"/>
     <targetpriority tag="nasonov" state="Attack" priority="50"/>
+    <targetpriority tag="sonar" state="Attack" priority="45"/>
     <targetpriority tag="room" state="Attack" priority="40"/>
   </ai>
 
-  <ragdoll waveamplitude="30.0" 
-           wavelength="2500" 
-           steertorque="100"
-           swimspeed="4.0" 
-           swimspeedmultiplier="1.5"
-           canentersubmarine="false">
+  <ragdoll 
+    waveamplitude="30.0" 
+    minscale="0.8" maxscale="1.2"
+    wavelength="2500" 
+    steertorque="100"
+    swimspeed="4.0" 
+    swimspeedmultiplier="1.5"
+    canentersubmarine="false">
 
     <collider radius="50" height="185"/>
     
@@ -36,7 +43,8 @@
     <limb id = "1" width="16" height="103">
       <sprite texture="Content/Characters/Tigerthresher/tigerthresher.png" sourcerect="391,169,28,110" depth="0.025" origin="0.5,0.5"/>
       <damagedsprite texture="Content/Characters/Tigerthresher/damagedtigerthresher.png" sourcerect="391,169,28,110" origin="0.5,0.5"/>
-      <attack range="300" damagerange="150" duration="0.5" structuredamage="30" force="80" torque="80" targetforce="-50" severlimbsprobability="0.8">
+      <attack range="300" damagerange="150" duration="0.5" structuredamage="30" structuresoundtype="StructureSlash"
+              force="80" torque="80" targetforce="-50" severlimbsprobability="0.8">
         <affliction name="Internal Damage" strength="15"/>
         <affliction name="Bleeding" strength="50"/>
       </attack>

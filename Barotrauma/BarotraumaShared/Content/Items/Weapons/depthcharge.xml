@@ -2,6 +2,7 @@
 <Items>
   <Item
     name="Depth Charge Tube"
+    identifier="depthchargetube"
     category="Machine"
     focusonselected="true"
     offsetonselected="700"
@@ -14,6 +15,7 @@
             powerconsumption="0.0"/>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="trigger_in"/>
     </ConnectionPanel>
@@ -21,6 +23,7 @@
 
   <Item
     name="Depth Charge Loader"
+    identifier="depthchargeloader"
     category="Machine"
     linkable="true">
 
@@ -34,8 +37,9 @@
 
   <Item
     name="Depth Charge Shell"
+    identifier="depthchargeshell"
     category="Misc"
-    radarsize="5">
+    sonarsize="5">
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
@@ -48,11 +52,13 @@
 
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false"/>
 
-    <Projectile launchimpulse="5.0">
+    <Projectile characterusable="false" launchimpulse="5.0">
       <Attack structuredamage="1" damagetype="Blunt">
         <affliction name="Internal Damage" strength="10"/>
       </Attack>
-      <StatusEffect type="OnImpact" target="Contained" Condition="-100.0"/>
+      <StatusEffect type="OnImpact" target="Contained">
+        <Use/>
+      </StatusEffect>
     </Projectile>
 
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
@@ -63,8 +69,9 @@
 
   <Item
     name="Nuclear Depth Charge"
+    identifier="nucleardepthcharge"
     category="Misc"
-    radarsize="5">
+    sonarsize="5">
 
     <Deconstruct time="20">
       <Item name="Steel Bar"/>
@@ -78,15 +85,21 @@
 
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false"/>
 
-    <Projectile launchimpulse="5.0">
+    <Projectile characterusable="false" launchimpulse="5.0">
       <Attack structuredamage="1" damagetype="Blunt">
         <affliction name="Internal Damage" strength="10"/>
       </Attack>
       <StatusEffect type="OnImpact" Condition="-100.0" stun="10.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/bigexplosion.ogg" range="10000"/>
-        <Explosion range="1000.0" structuredamage="1000" damage="1000" stun="10" force="50.0"/>
+        <Explosion range="1000.0" structuredamage="1000" force="50.0">
+          <affliction name="Burn" strength="500"/>
+          <affliction name="Internal Damage" strength="500"/>
+          <affliction name="Stun" strength="5"/>
+        </Explosion>
       </StatusEffect>
-      <StatusEffect type="OnImpact" target="Contained" Condition="-100.0"/>
+      <StatusEffect type="OnImpact" target="Contained">
+        <Use/>
+      </StatusEffect>
     </Projectile>
 
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">

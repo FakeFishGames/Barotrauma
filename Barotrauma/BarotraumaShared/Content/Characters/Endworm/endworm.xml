@@ -1,5 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name ="endworm" humanoid="false" health="10000.0" doesbleed="false">
+<Character name ="endworm" humanoid="false">
+    
+  <health
+    vitality="10000.0"
+    doesbleed="false"/>
 
   <sound file="Content/Characters/Endworm/endwormidle.ogg" state="None" range="8000" />
   <sound file="Content/Characters/Endworm/endwormattack1.ogg" state="Attack" range="8000" />
@@ -54,7 +58,7 @@
 
     <limb id = "8" width="50" height="320">
       <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="755,552,137,470" depth="0.08" origin="0.5,0.5"/>
-      <attack range="1000" hitdetectiontype="Contact" duration="0.25" force="100" torque="-100" structuredamage="500" damagetype="slash">
+      <attack range="1000" hitdetectiontype="Contact" duration="0.25" force="100" torque="-100" structuredamage="500" structuresoundtype="StructureBlunt">
         <affliction name="Internal Damage" strength="30"/>
         <affliction name="Stun" strength="5"/>        
       </attack>
@@ -62,7 +66,7 @@
     
     <limb id = "9" width="50" height="320">
       <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="892,552,137,470" depth="0.08" origin="0.6,0.5"/>
-      <attack range="1000" hitdetectiontype="Contact" duration="0.25" force="100" torque="100" structuredamage="500" damagetype="slash">
+      <attack range="1000" hitdetectiontype="Contact" duration="0.25" force="100" torque="100" structuredamage="500" structuresoundtype="StructureBlunt">
         <affliction name="Internal Damage" strength="30"/>
         <affliction name="Stun" strength="5"/>
       </attack>

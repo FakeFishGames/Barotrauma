@@ -16,11 +16,26 @@ namespace Barotrauma
 
     static class MathUtils
     {
+        public static int PositiveModulo(int i, int n)
+        {
+            return (i % n + n) % n;
+        }
+
         public static Vector2 SmoothStep(Vector2 v1, Vector2 v2, float amount)
         {
             return new Vector2(
                  MathHelper.SmoothStep(v1.X, v2.X, amount),
                  MathHelper.SmoothStep(v1.Y, v2.Y, amount));
+        }
+
+        public static Vector2 ClampLength(this Vector2 v, float length)
+        {
+            float currLength = v.Length();
+            if (currLength > length)
+            {
+                return v / currLength * length;
+            }
+            return v;
         }
 
         public static float Round(float value, float div)
@@ -434,13 +449,13 @@ namespace Barotrauma
             return wrappedPoints;
         }
 
-        public static List<Vector2[]> GenerateJaggedLine(Vector2 start, Vector2 end, int generations, float offsetAmount)
+        public static List<Vector2[]> GenerateJaggedLine(Vector2 start, Vector2 end, int iterations, float offsetAmount)
         {
             List<Vector2[]> segments = new List<Vector2[]>();
 
             segments.Add(new Vector2[] { start, end });
             
-            for (int n = 0; n < generations; n++)
+            for (int n = 0; n < iterations; n++)
             {
                 for (int i = 0; i < segments.Count; i++)
                 {
@@ -460,6 +475,8 @@ namespace Barotrauma
 
                     i++;
                 }
+
+                offsetAmount *= 0.5f;
             }
 
             return segments;

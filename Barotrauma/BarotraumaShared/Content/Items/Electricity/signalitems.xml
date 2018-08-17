@@ -1,9 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-
 <Items>
-
   <Item
     name="Wire"
+    identifier="wire"
     category="Electrical"
     Tags="smallitem,wire"    
     linkable="true"
@@ -30,6 +29,7 @@
 
   <Item
     name="Red Wire"
+    identifier="redwire"
     category="Electrical"
     Tags="smallitem,wire"
     spritecolor="1.0,0.0,0.0,1.0"
@@ -56,6 +56,7 @@
 
   <Item
     name="Blue Wire"
+    identifier="bluewire"
     category="Electrical"
     Tags="smallitem,wire"
     spritecolor="0.0,0.6,1.0,1.0"    
@@ -82,6 +83,7 @@
 
   <Item
     name="Orange Wire"
+    identifier="orangewire"
     category="Electrical"
     Tags="smallitem,wire"
     spritecolor="1.0,0.5,0.0,1.0"    
@@ -108,6 +110,7 @@
 
   <Item
     name="FPGA Circuit"
+    identifier="fpgacircuit"
     category="Electrical"
     Tags="smallitem"    
     linkable="true"    
@@ -133,6 +136,7 @@
 
   <Item
     name="And Component"
+    identifier="andcomponent"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -161,6 +165,7 @@
     </Holdable>
     
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="signal_in1"/>
       <input name="signal_in2"/>
@@ -170,7 +175,42 @@
   </Item>
 
   <Item
+    name="Adder Component"
+    identifier="addercomponent"
+    category="Electrical"
+    Tags="smallitem"
+    linkable="false"
+    cargocontainername="Metal Crate"
+    price="10"
+    description="Outputs the sum of the received signals.">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="FPGA Circuit"/>
+    </Deconstruct>
+
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,80,16,16"/>
+
+    <AdderComponent canbeselected="true"/>
+
+    <Body width="16" height="16" density="30"/>
+
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
+              aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Holdable>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="signal_in1"/>
+      <input name="signal_in2"/>
+      <output name="signal_out"/>
+    </ConnectionPanel>
+  </Item>
+  
+  <Item
     name="Or Component"
+    identifier="orcomponent"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -199,6 +239,7 @@
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="signal_in1"/>
       <input name="signal_in2"/>
@@ -208,7 +249,8 @@
   </Item>
   
   <Item
-    name="Not Component"
+    name="Not Component"    
+    identifier="notcomponent"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -237,6 +279,7 @@
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="signal_in"/>
       <output name="signal_out"/>
@@ -245,6 +288,7 @@
 
   <Item
     name="Relay Component"
+    identifier="relaycomponent"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -263,13 +307,12 @@
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="48,16,16,16"/>
 
-    <RelayComponent canbeselected = "true">
+    <RelayComponent canbeselected="true" vulnerabletoemp="false">
       <GuiFrame rect="0,0,200,160" alignment="Center" style="ItemUI"/>
     </RelayComponent>
 
-    <fixrequirement name="Reset fuse">
+    <fixrequirement name="Reset fuse" fixDurationHighSkill="1" fixDurationLowSkill="5">
       <skill name="Electrical Engineering" level="30"/>
-      <item name="Screwdriver"/>
     </fixrequirement>
 
     <Body width="16" height="16" density="30"/>
@@ -280,6 +323,7 @@
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="power_in"/>
       <input name="signal_in1"/>
@@ -296,6 +340,7 @@
 
   <Item
     name="Delay Component"
+    identifier="delaycomponent"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -324,6 +369,7 @@
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="signal_in"/>
       <output name="signal_out"/>
@@ -332,6 +378,7 @@
   
   <Item
     name="Light Component"
+    identifier="lightcomponent"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -361,6 +408,7 @@
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
@@ -370,7 +418,8 @@
   </Item>
 
   <Item
-    name="Oxygen Detector"
+    name="Oxygen Detector"    
+    identifier="oxydetector"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -399,6 +448,7 @@
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <output name="signal_out"/>
     </ConnectionPanel>
@@ -406,6 +456,7 @@
 
   <Item
     name="Water Detector"
+    identifier="waterdetector"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -434,6 +485,7 @@
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <output name="signal_out"/>
     </ConnectionPanel>
@@ -441,6 +493,7 @@
   
   <Item
     name="Motion Detector"
+    identifier="motiondetector"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -469,6 +522,7 @@
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <output name="state_out"/>
     </ConnectionPanel>
@@ -476,6 +530,7 @@
 
   <Item
     name="Signal Check Component"
+    identifier="signalcheckcomponent"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -504,6 +559,7 @@
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="signal_in"/>
       <input name="set_output"/>
@@ -514,6 +570,7 @@
 
   <Item
     name="RegEx Find Component"
+    identifier="regexcomponent"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -542,6 +599,7 @@
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="signal_in"/>
       <output name="signal_out"/>
@@ -551,6 +609,7 @@
 
   <Item
     name="Oscillator"
+    identifier="oscillator"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -579,6 +638,7 @@
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="set_frequency"/>
       <input name="set_outputtype"/>
@@ -588,6 +648,7 @@
 
   <Item
     name="Wifi Component"
+    identifier="wificomponent"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -606,7 +667,7 @@
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,32,15,19"/>
 
-    <WifiComponent canbeselected = "true"/>
+    <WifiComponent canbeselected="true" MinChatMessageInterval="1.0" DiscardDuplicateChatMessages="true"/>
 
     <Body width="16" height="16" density="30"/>
 
@@ -616,6 +677,7 @@
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="signal_in"/>
       <output name="signal_out"/>
@@ -624,6 +686,7 @@
 
   <Item
     name="Emergency Siren"
+    identifier="emergencysiren"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -653,6 +716,7 @@
     </ItemComponent>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
@@ -661,6 +725,7 @@
   
   <Item
     name="Alarm Buzzer"
+    identifier="alarmbuzzer"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -690,6 +755,7 @@
     </ItemComponent>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
@@ -698,6 +764,7 @@
 
   <Item
     name="Camera"
+    identifier="camera"
     category="Electrical"
     Tags="smallitem"    
     focusonselected="true"
@@ -714,6 +781,7 @@
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,64,16,32"/>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="control_in"/>
     </ConnectionPanel>

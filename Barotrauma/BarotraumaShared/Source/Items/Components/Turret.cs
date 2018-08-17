@@ -12,22 +12,26 @@ namespace Barotrauma.Items.Components
 {
     partial class Turret : Powered, IDrawableComponent, IServerSerializable
     {
-        Sprite barrelSprite;
+        private Sprite barrelSprite;
 
-        Vector2 barrelPos;
+        private Vector2 barrelPos;
 
-        bool? hasLight;
-        LightComponent lightComponent;
+        private bool? hasLight;
+        private LightComponent lightComponent;
 
-        float rotation, targetRotation;
+        private float rotation, targetRotation;
 
-        float reload, reloadTime;
+        private float reload, reloadTime;
 
-        float minRotation, maxRotation;
+        private float minRotation, maxRotation;
 
-        float launchImpulse;
+        private float launchImpulse;
 
-        Camera cam;
+        private Camera cam;
+
+        private float angularVelocity;
+
+        private Character user;
 
         [Serialize("0,0", false)]
         public Vector2 BarrelPos
@@ -49,7 +53,7 @@ namespace Barotrauma.Items.Components
             set { launchImpulse = value; }
         }
 
-        [Serialize(5.0f, false)]
+        [Serialize(5.0f, false), Editable(0.0f, 1000.0f)]
         public float Reload
         {
             get { return reloadTime; }
@@ -70,6 +74,45 @@ namespace Barotrauma.Items.Components
 
                 rotation = (minRotation + maxRotation) / 2;
             }
+        }
+
+        [Serialize(5.0f, false), Editable(0.0f, 1000.0f)]
+        public float SpringStiffnessLowSkill
+        {
+            get;
+            private set;
+        }
+        [Serialize(2.0f, false), Editable(0.0f, 1000.0f)]
+        public float SpringStiffnessHighSkill
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(50.0f, false), Editable(0.0f, 1000.0f)]
+        public float SpringDampingLowSkill
+        {
+            get;
+            private set;
+        }
+        [Serialize(10.0f, false), Editable(0.0f, 1000.0f)]
+        public float SpringDampingHighSkill
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(1.0f, false), Editable(0.0f, 100.0f)]
+        public float RotationSpeedLowSkill
+        {
+            get;
+            private set;
+        }
+        [Serialize(5.0f, false), Editable(0.0f, 100.0f)]
+        public float RotationSpeedHighSkill
+        {
+            get;
+            private set;
         }
 
         public Turret(Item item, XElement element)
@@ -121,6 +164,8 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
+            UpdateProjSpecific(deltaTime);
+
             if (minRotation == maxRotation) return;
 
             float targetMidDiff = MathHelper.WrapAngle(targetRotation - (minRotation + maxRotation) / 2.0f);
@@ -132,20 +177,29 @@ namespace Barotrauma.Items.Components
                 targetRotation = (targetMidDiff < 0.0f) ? minRotation : maxRotation;
             }
 
-            float deltaRotation = MathHelper.WrapAngle(targetRotation-rotation);
-            deltaRotation = MathHelper.Clamp(deltaRotation, -0.5f, 0.5f) * 5.0f;
+            float degreeOfSuccess = user == null ? 0.5f : DegreeOfSuccess(user);            
+            if (degreeOfSuccess < 0.5f) degreeOfSuccess *= degreeOfSuccess; //the ease of aiming drops quickly with insufficient skill levels
+            float springStiffness = MathHelper.Lerp(SpringStiffnessLowSkill, SpringStiffnessHighSkill, degreeOfSuccess);
+            float springDamping = MathHelper.Lerp(SpringDampingLowSkill, SpringDampingHighSkill, degreeOfSuccess);
+            float rotationSpeed = MathHelper.Lerp(RotationSpeedLowSkill, RotationSpeedHighSkill, degreeOfSuccess);
 
-            rotation += deltaRotation * deltaTime;
+            angularVelocity += 
+                (MathHelper.WrapAngle(targetRotation - rotation) * springStiffness - angularVelocity * springDamping) * deltaTime;
+            angularVelocity = MathHelper.Clamp(angularVelocity, -rotationSpeed, rotationSpeed);
+
+            rotation += angularVelocity * deltaTime;
 
             float rotMidDiff = MathHelper.WrapAngle(rotation - (minRotation + maxRotation) / 2.0f);
 
             if (rotMidDiff < -maxDist)
             {
                 rotation = minRotation;
+                angularVelocity *= -0.5f;
             } 
             else if (rotMidDiff > maxDist)
             {
                 rotation = maxRotation;
+                angularVelocity *= -0.5f;
             }
 
             if ((bool)hasLight)
@@ -154,19 +208,30 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        partial void UpdateProjSpecific(float deltaTime);
+
         public override bool Use(float deltaTime, Character character = null)
         {
             if (GameMain.Client != null) return false;
 
             if (reload > 0.0f) return false;
+            
+            if (GetAvailablePower() < powerConsumption) return false;
+
+            foreach (MapEntity e in item.linkedTo)
+            {
+                //use linked projectile containers in case they have to react to it somehow
+                //(play a sound, spawn more projectiles)
+                Item linkedItem = e as Item;
+                if (linkedItem == null) continue;
+                ItemContainer projectileContainer = linkedItem.GetComponent<ItemContainer>();
+                if (projectileContainer != null) linkedItem.Use(deltaTime, null);
+            }
 
             var projectiles = GetLoadedProjectiles(true);
             if (projectiles.Count == 0) return false;
-
-            if (GetAvailablePower() < powerConsumption) return false;
             
             var batteries = item.GetConnectedComponents<PowerContainer>();
-
             float availablePower = 0.0f;
             foreach (PowerContainer battery in batteries)
             {
@@ -226,11 +291,16 @@ namespace Barotrauma.Items.Components
             {
                 GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.components.IndexOf(this), projectile });
             }
+
+            LaunchProjSpecific();
         }
+
+        partial void LaunchProjSpecific();
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-            var projectiles = GetLoadedProjectiles();
+
+
             if (GetAvailablePower() < powerConsumption)
             {
                 var batteries = item.GetConnectedComponents<PowerContainer>();
@@ -254,7 +324,24 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
             }
-            if (projectiles.Count == 0 || (projectiles.Count == 1 && objective.Option.ToLowerInvariant() != "fire at will"))
+
+            int projectileCount = 0;
+            int maxProjectileCount = 0;
+            foreach (MapEntity e in item.linkedTo)
+            {
+                var projectileContainer = e as Item;
+                if (projectileContainer == null) continue;
+                
+                var containedItems = projectileContainer.ContainedItems;
+                if (containedItems != null)
+                {
+                    var container = projectileContainer.GetComponent<ItemContainer>();
+                    if (containedItems != null) maxProjectileCount += container.Capacity;
+                    projectileCount += containedItems.Length;
+                }
+            }
+
+            if (projectileCount == 0 || (projectileCount < maxProjectileCount && objective.Option.ToLowerInvariant() != "fire at will"))
             {
                 ItemContainer container = null;
                 foreach (MapEntity e in item.linkedTo)
@@ -270,7 +357,7 @@ namespace Barotrauma.Items.Components
 
                 var containShellObjective = new AIObjectiveContainItem(character, container.ContainableItems[0].Names[0], container);
                 character?.Speak(TextManager.Get("DialogLoadTurret").Replace("[itemname]", item.Name), null, 0.0f, "loadturret", 30.0f);
-                containShellObjective.MinContainedAmount = projectiles.Count + 1;
+                containShellObjective.MinContainedAmount = projectileCount + 1;
                 containShellObjective.IgnoreAlreadyContainedItems = true;
                 objective.AddSubObjective(containShellObjective);
                 return false;
@@ -295,13 +382,13 @@ namespace Barotrauma.Items.Components
             if (closestEnemy == null) return false;
 
             character.CursorPosition = closestEnemy.WorldPosition;
-            if (item.Submarine!=null) character.CursorPosition -= item.Submarine.Position;
+            if (item.Submarine != null) character.CursorPosition -= item.Submarine.Position;
             character.SetInput(InputType.Aim, false, true);
 
-            float enemyAngle = MathUtils.VectorToAngle(closestEnemy.WorldPosition-item.WorldPosition);
+            float enemyAngle = MathUtils.VectorToAngle(closestEnemy.WorldPosition - item.WorldPosition);
             float turretAngle = -rotation;
 
-            if (Math.Abs(MathUtils.GetShortestAngle(enemyAngle, turretAngle)) > 0.01f) return false;
+            if (Math.Abs(MathUtils.GetShortestAngle(enemyAngle, turretAngle)) > 0.1f) return false;
 
             var pickedBody = Submarine.PickBody(ConvertUnits.ToSimUnits(item.WorldPosition), closestEnemy.SimPosition, null);
             if (pickedBody != null && !(pickedBody.UserData is Limb)) return false;
@@ -309,7 +396,7 @@ namespace Barotrauma.Items.Components
             if (objective.Option.ToLowerInvariant() == "fire at will")
             {
                 character?.Speak(TextManager.Get("DialogFireTurret").Replace("[itemname]", item.Name), null, 0.0f, "fireturret", 5.0f);
-                Use(deltaTime, character);
+                character.SetInput(InputType.Use, true, true);
             }
 
             return false;
@@ -348,49 +435,55 @@ namespace Barotrauma.Items.Components
             base.RemoveComponentSpecific();
 
             if (barrelSprite != null) barrelSprite.Remove();
+
+#if CLIENT
+            moveSoundChannel?.Dispose(); moveSoundChannel = null;
+            moveSound?.Dispose(); moveSound = null;
+            endMoveSound?.Dispose(); endMoveSound = null;
+            startMoveSound?.Dispose(); startMoveSound = null;
+#endif
         }
 
-        private List<Projectile> GetLoadedProjectiles(bool returnFirst = false, bool returnNull = false)
+        private List<Projectile> GetLoadedProjectiles(bool returnFirst = false)
         {
             List<Projectile> projectiles = new List<Projectile>();
-
             foreach (MapEntity e in item.linkedTo)
             {
                 var projectileContainer = e as Item;
                 if (projectileContainer == null) continue;
 
-                if (returnNull)
-                {
-                    var itemContainer = projectileContainer.GetComponent<ItemContainer>();
-                    if (itemContainer == null) continue;
-                    if (itemContainer.Inventory == null) continue;
-                    if (itemContainer.Inventory.Items == null) continue;
-                    for (int i = 0; i < itemContainer.Inventory.Items.Length; i++)
-                    {
-                        projectiles.Add(itemContainer.Inventory.Items[i]?.GetComponent<Projectile>());                        
-                    }
-                }
-                else
-                {
-                    var containedItems = projectileContainer.ContainedItems;
-                    if (containedItems == null) continue;
+                var containedItems = projectileContainer.ContainedItems;
+                if (containedItems == null) continue;
 
-                    for (int i = 0; i < containedItems.Length; i++)
+                for (int i = 0; i < containedItems.Length; i++)
+                {
+                    var projectileComponent = containedItems[i].GetComponent<Projectile>();
+                    if (projectileComponent != null)
                     {
-                        var projectileComponent = containedItems[i].GetComponent<Projectile>();
-                        if (projectileComponent != null)
-                        {
-                            projectiles.Add(projectileComponent);
-                            if (returnFirst) return projectiles;
-                        }
+                        projectiles.Add(projectileComponent);
+                        if (returnFirst) return projectiles;
                     }
+                    else
+                    {
+                        //check if the contained item is another itemcontainer with projectiles inside it
+                        if (containedItems[i].ContainedItems == null) continue;
+                        for (int j = 0; j < containedItems[i].ContainedItems.Length; j++)
+                        {
+                            projectileComponent = containedItems[i].ContainedItems[j].GetComponent<Projectile>();
+                            if (projectileComponent != null)
+                            {
+                                projectiles.Add(projectileComponent);
+                                if (returnFirst) return projectiles;
+                            }
+                        }
+                    }                    
                 }
             }
 
             return projectiles;
         }
 
-        public override void FlipX()
+        public override void FlipX(bool relativeToSub)
         {
             minRotation = (float)Math.PI - minRotation;
             maxRotation = (float)Math.PI - maxRotation;
@@ -404,28 +497,46 @@ namespace Barotrauma.Items.Components
                 minRotation += MathHelper.TwoPi;
                 maxRotation += MathHelper.TwoPi;
             }
+            rotation = (minRotation + maxRotation) / 2;
         }
-        
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power)
+
+        public override void FlipY(bool relativeToSub)
+        {
+            minRotation = -minRotation;
+            maxRotation = -maxRotation;
+
+            var temp = minRotation;
+            minRotation = maxRotation;
+            maxRotation = temp;
+
+            while (minRotation < 0)
+            {
+                minRotation += MathHelper.TwoPi;
+                maxRotation += MathHelper.TwoPi;
+            }
+            rotation = (minRotation + maxRotation) / 2;
+        }
+
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power, float signalStrength = 1.0f)
         {
             switch (connection.Name)
             {
                 case "position_in":
                     float.TryParse(signal, out targetRotation);
-
                     IsActive = true;
-
+                    user = sender;
                     break;
                 case "trigger_in":
                     item.Use((float)Timing.Step, sender);
+                    user = sender;
                     break;
             }
         }
 
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
-            //ID of the launched projectile
-            msg.Write(((Item)extraData[2]).ID);
+            Item item = (Item)extraData[2];
+            msg.Write(item.Removed ? (ushort)0 : item.ID);
         }
     }
 }

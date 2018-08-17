@@ -9,15 +9,19 @@ namespace Barotrauma.Particles
 {
     enum ParticleBlendState
     {
-        AlphaBlend, Additive, Distortion
+        AlphaBlend, Additive//, Distortion
     }
 
     class ParticleManager
     {
-        public static int particleCount;
-
         private const int MaxOutOfViewDist = 500;
-        
+
+        private int particleCount;
+        public int ParticleCount
+        {
+            get { return particleCount; }
+        }
+
         private int maxParticles;
         public int MaxParticles
         {
@@ -28,7 +32,7 @@ namespace Barotrauma.Particles
 
                 Particle[] newParticles = new Particle[value];
 
-                for (int i=0;i<Math.Min(maxParticles,value);i++)
+                for (int i = 0; i < Math.Min(maxParticles, value); i++)
                 {
                     newParticles[i] = particles[i];
                 }
@@ -54,7 +58,7 @@ namespace Barotrauma.Particles
         public void LoadPrefabs()
         {
             prefabs = new Dictionary<string, ParticlePrefab>();
-            foreach (string configFile in GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.Particles))
+            foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.Particles))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile);
                 if (doc == null || doc.Root == null) continue;
@@ -169,6 +173,17 @@ namespace Barotrauma.Particles
             }
         }
 
+        public Dictionary<ParticlePrefab, int> CountActiveParticles()
+        {
+            Dictionary<ParticlePrefab, int> activeParticles = new Dictionary<ParticlePrefab, int>();
+            for (int i = 0; i < particleCount; i++)
+            {
+                if (!activeParticles.ContainsKey(particles[i].Prefab)) activeParticles[particles[i].Prefab] = 0;
+                activeParticles[particles[i].Prefab]++;
+            }
+            return activeParticles;
+        }
+
         public void Draw(SpriteBatch spriteBatch, bool inWater, bool? inSub, ParticleBlendState blendState)
         {
             ParticlePrefab.DrawTargetType drawTarget = inWater ? ParticlePrefab.DrawTargetType.Water : ParticlePrefab.DrawTargetType.Air;
@@ -176,7 +191,8 @@ namespace Barotrauma.Particles
             for (int i = 0; i < particleCount; i++)
             {
                 if (particles[i].BlendState != blendState) continue;
-                if (!particles[i].DrawTarget.HasFlag(drawTarget)) continue;
+                //equivalent to !particles[i].DrawTarget.HasFlag(drawTarget) but garbage free and faster
+                if ((particles[i].DrawTarget & drawTarget) == 0) continue;
                 if (inSub.HasValue && (particles[i].CurrentHull == null) == inSub.Value) continue;
                 
                 particles[i].Draw(spriteBatch);

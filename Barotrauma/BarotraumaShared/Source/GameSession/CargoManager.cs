@@ -6,26 +6,38 @@ using System.Linq;
 
 namespace Barotrauma
 {
+    class PurchasedItem
+    {
+        public readonly ItemPrefab ItemPrefab;
+        public int Quantity;
+
+        public PurchasedItem(ItemPrefab itemPrefab, int quantity)
+        {
+            this.ItemPrefab = itemPrefab;
+            this.Quantity = quantity;
+        }
+    }
+
     class CargoManager
     {
-        private readonly List<ItemPrefab> purchasedItems;
+        private readonly List<PurchasedItem> purchasedItems;
 
         private readonly CampaignMode campaign;
 
         public Action OnItemsChanged;
 
-        public List<ItemPrefab> PurchasedItems
+        public List<PurchasedItem> PurchasedItems
         {
             get { return purchasedItems; }
         }
         
         public CargoManager(CampaignMode campaign)
         {
-            purchasedItems = new List<ItemPrefab>();
+            purchasedItems = new List<PurchasedItem>();
             this.campaign = campaign;
         }
 
-        public void SetPurchasedItems(List<ItemPrefab> items)
+        public void SetPurchasedItems(List<PurchasedItem> items)
         {
             purchasedItems.Clear();
             purchasedItems.AddRange(items);
@@ -33,33 +45,53 @@ namespace Barotrauma
             OnItemsChanged?.Invoke();
         }
 
-        public void PurchaseItem(ItemPrefab item)
+        public void PurchaseItem(ItemPrefab item, int quantity = 1)
         {
-            campaign.Money -= item.GetPrice(campaign.Map.CurrentLocation).BuyPrice;
-            purchasedItems.Add(item);
+            PurchasedItem purchasedItem = PurchasedItems.Find(pi => pi.ItemPrefab == item);
+
+            if (purchasedItem != null && quantity == 1)
+            {
+                campaign.Money -= item.GetPrice(campaign.Map.CurrentLocation).BuyPrice;
+                purchasedItem.Quantity += 1;
+            }
+            else
+            {
+                campaign.Money -= item.GetPrice(campaign.Map.CurrentLocation).BuyPrice * quantity;
+                purchasedItem = new PurchasedItem(item, quantity);
+                purchasedItems.Add(purchasedItem);
+            }
 
             OnItemsChanged?.Invoke();
         }
 
-        public void SellItem(ItemPrefab item)
+        public void SellItem(ItemPrefab item, int quantity = 1)
         {
-            campaign.Money += item.GetPrice(campaign.Map.CurrentLocation).BuyPrice;
-            purchasedItems.Remove(item);
+            campaign.Money += item.GetPrice(campaign.Map.CurrentLocation).BuyPrice * quantity;
+            PurchasedItem purchasedItem = PurchasedItems.Find(pi => pi.ItemPrefab == item);
+            if (purchasedItem != null && purchasedItem.Quantity - quantity > 0)
+            {
+                purchasedItem.Quantity -= quantity;
+            }
+            else
+            {
+                PurchasedItems.Remove(purchasedItem);
+            }
 
             OnItemsChanged?.Invoke();
         }
 
         public int GetTotalItemCost()
         {
-            return purchasedItems.Sum(i => i.GetPrice(campaign.Map.CurrentLocation).BuyPrice);
+            return purchasedItems.Sum(i => i.ItemPrefab.GetPrice(campaign.Map.CurrentLocation).BuyPrice * i.Quantity);
         }
 
         public void CreateItems()
         {
             CreateItems(purchasedItems);
+            OnItemsChanged?.Invoke();
         }
 
-        public static void CreateItems(List<ItemPrefab> itemsToSpawn)
+        public static void CreateItems(List<PurchasedItem> itemsToSpawn)
         {
             WayPoint wp = WayPoint.GetRandom(SpawnType.Cargo, null, Submarine.MainSub);
 
@@ -78,24 +110,25 @@ namespace Barotrauma
             }
 
             Dictionary<ItemContainer, int> availableContainers = new Dictionary<ItemContainer, int>();
-            foreach (ItemPrefab prefab in itemsToSpawn)
+            ItemPrefab containerPrefab = null;
+            foreach (PurchasedItem pi in itemsToSpawn)
             {
                 Vector2 position = new Vector2(
                     Rand.Range(cargoRoom.Rect.X + 20, cargoRoom.Rect.Right - 20),
-                    cargoRoom.Rect.Y - cargoRoom.Rect.Height + prefab.Size.Y / 2);
+                    cargoRoom.Rect.Y - cargoRoom.Rect.Height + pi.ItemPrefab.Size.Y / 2);
 
                 ItemContainer itemContainer = null;
-                if (!string.IsNullOrEmpty(prefab.CargoContainerName))
+                if (!string.IsNullOrEmpty(pi.ItemPrefab.CargoContainerName))
                 {
                     itemContainer = availableContainers.Keys.ToList().Find(ac => 
-                        ac.Item.Prefab.NameMatches(prefab.CargoContainerName) || 
-                        ac.Item.Prefab.Tags.Contains(prefab.CargoContainerName.ToLowerInvariant()));
+                        ac.Item.Prefab.NameMatches(pi.ItemPrefab.CargoContainerName) || 
+                        ac.Item.Prefab.Tags.Contains(pi.ItemPrefab.CargoContainerName.ToLowerInvariant()));
 
                     if (itemContainer == null)
                     {
-                        var containerPrefab = MapEntityPrefab.List.Find(ep => 
-                            ep.NameMatches(prefab.CargoContainerName) || 
-                            (ep.Tags != null && ep.Tags.Contains(prefab.CargoContainerName.ToLowerInvariant()))) as ItemPrefab;
+                        containerPrefab = MapEntityPrefab.List.Find(ep => 
+                            ep.NameMatches(pi.ItemPrefab.CargoContainerName) || 
+                            (ep.Tags != null && ep.Tags.Contains(pi.ItemPrefab.CargoContainerName.ToLowerInvariant()))) as ItemPrefab;
 
                         if (containerPrefab == null)
                         {
@@ -117,41 +150,57 @@ namespace Barotrauma
                         }
                     }                    
                 }
+                for (int i = 0; i < pi.Quantity; i++)
+                {
+                    if (itemContainer == null)
+                    {
+                        //no container, place at the waypoint
+                        if (GameMain.Server != null)
+                        {
+                            Entity.Spawner.AddToSpawnQueue(pi.ItemPrefab, position, wp.Submarine);
+                        }
+                        else
+                        {
+                            new Item(pi.ItemPrefab, position, wp.Submarine);
+                        }
+                        continue;
+                    }
+                    //if the intial container has been removed due to it running out of space, add a new container
+                    //of the same type and begin filling it
+                    if (!availableContainers.ContainsKey(itemContainer))
+                    {
+                        Item containerItemOverFlow = new Item(containerPrefab, position, wp.Submarine);
+                        itemContainer = containerItemOverFlow.GetComponent<ItemContainer>();
+                        availableContainers.Add(itemContainer, itemContainer.Capacity);
+                        if (GameMain.Server != null)
+                        {
+                            Entity.Spawner.CreateNetworkEvent(itemContainer.Item, false);
+                        }
+                    }
 
-                if (itemContainer == null)
-                {
-                    //no container, place at the waypoint
-                    if (GameMain.Server != null)
-                    {
-                        Entity.Spawner.AddToSpawnQueue(prefab, position, wp.Submarine);
-                    }
-                    else
-                    {
-                        new Item(prefab, position, wp.Submarine);
-                    }
-                }
-                else
-                {
                     //place in the container
                     if (GameMain.Server != null)
                     {
-                        Entity.Spawner.AddToSpawnQueue(prefab, itemContainer.Inventory);
+                        Entity.Spawner.AddToSpawnQueue(pi.ItemPrefab, itemContainer.Inventory);
                     }
                     else
                     {
-                        var item = new Item(prefab, position, wp.Submarine);
+                        var item = new Item(pi.ItemPrefab, position, wp.Submarine);
                         itemContainer.Inventory.TryPutItem(item, null);
                     }
 
                     //reduce the number of available slots in the container
-                    availableContainers[itemContainer]--;
-                    if (availableContainers[itemContainer] <= 0)
+                    //if there is a container
+                    if (availableContainers.ContainsKey(itemContainer))
+                    {
+                        availableContainers[itemContainer]--;
+                    }
+                    if (availableContainers.ContainsKey(itemContainer) && availableContainers[itemContainer] <= 0)
                     {
                         availableContainers.Remove(itemContainer);
-                    }
+                    }                    
                 }
             }
-
             itemsToSpawn.Clear();
         }
     }

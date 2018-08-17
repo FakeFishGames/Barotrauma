@@ -11,7 +11,7 @@ namespace Barotrauma.Particles
         public DecalManager()
         {
             prefabs = new Dictionary<string, DecalPrefab>();
-            foreach (string configFile in GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.Decals))
+            foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.Decals))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile);
                 if (doc == null || doc.Root == null) continue;

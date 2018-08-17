@@ -1,21 +1,16 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Barotrauma
 {
     class Graph
     {
-        public const int ArraySize = 100;
         private float[] values;
 
-        public Graph()
+        public Graph(int arraySize = 100)
         {
-            values = new float[ArraySize];
+            values = new float[arraySize];
         }
 
         public float LargestValue()

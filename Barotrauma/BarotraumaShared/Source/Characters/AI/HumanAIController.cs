@@ -17,6 +17,17 @@ namespace Barotrauma
 
         private float updateObjectiveTimer;
 
+        private bool shouldCrouch;
+        private float crouchRaycastTimer;
+        const float CrouchRaycastInterval = 1.0f;
+
+        private SteeringManager outsideSteering, insideSteering;
+
+        public override AIObjectiveManager ObjectiveManager
+        {
+            get { return objectiveManager; }
+        }
+
         public Order CurrentOrder
         {
             get;
@@ -31,7 +42,8 @@ namespace Barotrauma
 
         public HumanAIController(Character c) : base(c)
         {
-            steeringManager = new IndoorsSteeringManager(this, true, false);
+            insideSteering = new IndoorsSteeringManager(this, true, false);
+            outsideSteering = new SteeringManager(this);
 
             objectiveManager = new AIObjectiveManager(c);
             objectiveManager.AddObjective(new AIObjectiveFindSafety(c));
@@ -46,8 +58,20 @@ namespace Barotrauma
         public override void Update(float deltaTime)
         {
             if (DisableCrewAI || Character.IsUnconscious) return;
+            
+            if (Character.Submarine != null || selectedAiTarget?.Entity?.Submarine != null)
+            {
+                if (steeringManager != insideSteering) insideSteering.Reset();
+                steeringManager = insideSteering;
+            }
+            else
+            {
+                if (steeringManager != outsideSteering) outsideSteering.Reset();
+                steeringManager = outsideSteering;
+            }
 
-            (Character.AnimController as HumanoidAnimController).Crouching = false;
+            (Character.AnimController as HumanoidAnimController).Crouching = shouldCrouch;
+            CheckCrouching(deltaTime);
             Character.ClearInputs();
             
             if (updateObjectiveTimer > 0.0f)
@@ -81,7 +105,7 @@ namespace Barotrauma
             bool ignorePlatforms = Character.AnimController.TargetMovement.Y < -0.5f &&
                 (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
 
-            var currPath = (steeringManager as IndoorsSteeringManager).CurrentPath;
+            var currPath = (steeringManager as IndoorsSteeringManager)?.CurrentPath;
             if (currPath != null && currPath.CurrentNode != null)
             {
                 if (currPath.CurrentNode.SimPosition.Y < Character.AnimController.GetColliderBottom().Y)
@@ -94,10 +118,14 @@ namespace Barotrauma
 
             if (!Character.AnimController.InWater)
             {
-                Character.AnimController.TargetMovement = new Vector2(
+                Vector2 targetMovement = new Vector2(
                     Character.AnimController.TargetMovement.X,
                     MathHelper.Clamp(Character.AnimController.TargetMovement.Y, -1.0f, 1.0f)) * Character.SpeedMultiplier;
+                float maxSpeed = Character.GetCurrentMaxSpeed();
+                targetMovement.X = MathHelper.Clamp(targetMovement.X, -maxSpeed, maxSpeed);
+                targetMovement.Y = MathHelper.Clamp(targetMovement.Y, -maxSpeed, maxSpeed);
 
+                Character.AnimController.TargetMovement = targetMovement;
                 Character.SpeedMultiplier = 1.0f;
             }
 
@@ -173,7 +201,7 @@ namespace Barotrauma
                 }
             }
 
-            if (Character.Bleeding > 1.0f || Character.Vitality < Character.MaxVitality * 0.1f)
+            if (Character.CurrentHull != null && (Character.Bleeding > 1.0f || Character.Vitality < Character.MaxVitality * 0.1f))
             {
                 var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
                 newOrder = new Order(orderPrefab, Character.CurrentHull, null);
@@ -181,8 +209,6 @@ namespace Barotrauma
 
             if (newOrder != null)
             {
-#if CLIENT
-                //TODO: move crewmanager to shared project to allow ai crew to report things in dedicated server?
                 if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
                 {
                     Character.Speak(
@@ -191,10 +217,9 @@ namespace Barotrauma
                     if (GameMain.Server != null)
                     {
                         OrderChatMessage msg = new OrderChatMessage(newOrder, "", Character.CurrentHull, null, Character);
-                        GameMain.Server.SendOrderChatMessage(msg, null);
+                        GameMain.Server.SendOrderChatMessage(msg);
                     }
-                }             
-#endif
+                }
             }
         }
 
@@ -229,12 +254,12 @@ namespace Barotrauma
             combatObjective.MaxEnemyDamage = Math.Max(totalDamage, combatObjective.MaxEnemyDamage);
         }
 
-        public void SetOrder(Order order, string option)
+        public void SetOrder(Order order, string option, Character orderGiver, bool speak = true)
         {
             CurrentOrderOption = option;
             CurrentOrder = order;
-            objectiveManager.SetOrder(order, option);
-            Character.Speak(TextManager.Get("DialogAffirmative"), null, 1.0f);
+            objectiveManager.SetOrder(order, option, orderGiver);
+            if (speak && Character.CanSpeak) Character.Speak(TextManager.Get("DialogAffirmative"), null, 1.0f);
 
             SetOrderProjSpecific(order);
         }
@@ -243,6 +268,22 @@ namespace Barotrauma
         public override void SelectTarget(AITarget target)
         {
             selectedAiTarget = target;
+        }
+
+        private void CheckCrouching(float deltaTime)
+        {
+            crouchRaycastTimer -= deltaTime;
+            if (crouchRaycastTimer > 0.0f) return;
+
+            crouchRaycastTimer = CrouchRaycastInterval;
+
+            //start the raycast in front of the character in the direction it's heading to
+            Vector2 startPos = Character.SimPosition;
+            startPos.X += MathHelper.Clamp(Character.AnimController.TargetMovement.X, -1.0f, 1.0f);
+
+            //do a raycast upwards to find any walls
+            float minCeilingDist = Character.AnimController.Collider.height / 2 + Character.AnimController.Collider.radius + 0.1f;
+            shouldCrouch = Submarine.PickBody(startPos, startPos + Vector2.UnitY * minCeilingDist, null, Physics.CollisionWall) != null;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -18,10 +19,8 @@ namespace Barotrauma
         private string savePath;
 
         private Submarine submarine;
-
-#if CLIENT
+        
         public CrewManager CrewManager;
-#endif
 
         public double RoundStartTime;
 
@@ -93,27 +92,38 @@ namespace Barotrauma
             set { savePath = value; }
         }
 
-        public GameSession(Submarine submarine, string savePath, GameModePreset gameModePreset = null, string missionType = "")
+
+        public GameSession(Submarine submarine, string savePath, GameModePreset gameModePreset, string missionType = "")
+            : this(submarine, savePath)
+        {
+            CrewManager = new CrewManager(gameModePreset != null && gameModePreset.IsSinglePlayer);
+            GameMode = gameModePreset.Instantiate(missionType);
+        }
+
+        public GameSession(Submarine submarine, string savePath, GameModePreset gameModePreset, MissionPrefab missionPrefab)
+            : this(submarine, savePath)
+        {
+            CrewManager = new CrewManager(gameModePreset != null && gameModePreset.IsSinglePlayer);
+            GameMode = gameModePreset.Instantiate(missionPrefab);
+        }
+
+        private GameSession(Submarine submarine, string savePath)
         {
             Submarine.MainSub = submarine;
-
+            this.submarine = submarine;
             GameMain.GameSession = this;
-            
             EventManager = new EventManager(this);
-            
             this.savePath = savePath;
-
+            
 #if CLIENT
-            CrewManager = new CrewManager(gameModePreset != null && gameModePreset.IsSinglePlayer);
-
-            infoButton = new GUIButton(new Rectangle(10, 10, 100, 20), "Info", "", null);
+            int buttonHeight = (int)(HUDLayoutSettings.ButtonAreaTop.Height * 0.6f);
+            infoButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle(HUDLayoutSettings.ButtonAreaTop.X, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 100, buttonHeight), GUICanvas.Instance),
+                TextManager.Get("InfoButton"), textAlignment: Alignment.Center);
             infoButton.OnClicked = ToggleInfoFrame;
 #endif
-
-            if (gameModePreset != null) GameMode = gameModePreset.Instantiate(missionType);
-            this.submarine = submarine;
         }
-        
+
+
         public GameSession(Submarine selectedSub, string saveFile, XDocument doc)
             : this(selectedSub, saveFile)
         {
@@ -121,8 +131,7 @@ namespace Barotrauma
 
             GameMain.GameSession = this;
             selectedSub.Name = doc.Root.GetAttributeString("submarine", selectedSub.Name);
-
-
+            
             foreach (XElement subElement in doc.Root.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -130,18 +139,16 @@ namespace Barotrauma
 #if CLIENT
                     case "gamemode": //legacy support
                     case "singleplayercampaign":
+                        CrewManager = new CrewManager(true);
                         GameMode = SinglePlayerCampaign.Load(subElement);
                         break;
 #endif
                     case "multiplayercampaign":
-                        GameMode = MultiPlayerCampaign.LoadNew(subElement);
-#if CLIENT
                         CrewManager = new CrewManager(false);
-#endif
+                        GameMode = MultiPlayerCampaign.LoadNew(subElement);
                         break;
                 }
             }
-
         }
 
         private void CreateDummyLocations()
@@ -171,9 +178,9 @@ namespace Barotrauma
             SaveUtil.LoadGame(savePath);
         }
 
-        public void StartRound(string levelSeed, bool loadSecondSub = false)
+        public void StartRound(string levelSeed, float? difficulty = null, bool loadSecondSub = false)
         {
-            Level randomLevel = Level.CreateRandom(levelSeed);
+            Level randomLevel = Level.CreateRandom(levelSeed, difficulty);
 
             StartRound(randomLevel, true, loadSecondSub);
         }
@@ -182,6 +189,7 @@ namespace Barotrauma
         {
 #if CLIENT
             GameMain.LightManager.LosEnabled = GameMain.NetworkMember == null || GameMain.NetworkMember.CharacterInfo != null;
+            if (GameMain.Client == null) GameMain.LightManager.LosMode = GameMain.Config.LosMode;
 #endif
             this.level = level;
 
@@ -190,7 +198,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Couldn't start game session, submarine not selected");
                 return;
             }
-
+            
             if (reloadSub || Submarine.MainSub != submarine) submarine.Load(true);
             Submarine.MainSub = submarine;
             if (loadSecondSub)
@@ -220,34 +228,75 @@ namespace Barotrauma
             if (GameMode.Mission != null) Mission.Start(Level.Loaded);
 
             EventManager.StartRound(level);
+            SteamAchievementManager.OnStartRound();
 
-            if (GameMode != null) GameMode.MsgBox();
-
+            if (GameMode != null)
+            {
+                GameMode.MsgBox();
+                if (GameMode is MultiPlayerCampaign campaign && GameMain.Server != null)
+                {
+                    campaign.CargoManager.CreateItems();
+                }
+            }
+            
+            GameAnalyticsManager.AddDesignEvent("Submarine:" + submarine.Name);
+            GameAnalyticsManager.AddDesignEvent("Level", ToolBox.StringToInt(level.Seed));
+            GameAnalyticsManager.AddProgressionEvent(GameAnalyticsSDK.Net.EGAProgressionStatus.Start,
+                    GameMode.Name, (Mission == null ? "None" : Mission.GetType().ToString()));
+            
+            
 #if CLIENT
+            if (GameMode is SinglePlayerCampaign) SteamAchievementManager.OnBiomeDiscovered(level.Biome);            
             roundSummary = new RoundSummary(this);
 
             GameMain.GameScreen.ColorFade(Color.Black, Color.TransparentBlack, 5.0f);
-            SoundPlayer.SwitchMusic();
+
+            if (!(GameMode is TutorialMode))
+            {
+                GUI.AddMessage("", Color.Transparent, 3.0f, playSound: false);   
+                GUI.AddMessage(level.Biome.Name, Color.Lerp(Color.CadetBlue, Color.DarkRed, level.Difficulty / 100.0f), 5.0f, playSound: false);            
+                GUI.AddMessage(TextManager.Get("Destination") + ": " + EndLocation.Name, Color.CadetBlue, playSound: false);
+                GUI.AddMessage(TextManager.Get("Mission") + ": " + (Mission == null ? TextManager.Get("None") : Mission.Name), Color.CadetBlue, playSound: false);
+            }
 #endif
 
             RoundStartTime = Timing.TotalTime;
         }
 
+        public void Update(float deltaTime)
+        {
+            EventManager.Update(deltaTime);
+            GameMode?.Update(deltaTime);
+            Mission?.Update(deltaTime);
+
+            UpdateProjSpecific(deltaTime);
+        }
+
+        partial void UpdateProjSpecific(float deltaTime);
+
         public void EndRound(string endMessage)
         {
             if (Mission != null) Mission.End();
+            GameAnalyticsManager.AddProgressionEvent(
+                (Mission == null || Mission.Completed)  ? GameAnalyticsSDK.Net.EGAProgressionStatus.Complete : GameAnalyticsSDK.Net.EGAProgressionStatus.Fail,
+                GameMode.Name, 
+                (Mission == null ? "None" : Mission.GetType().ToString()));            
 
 #if CLIENT
             if (roundSummary != null)
             {
                 GUIFrame summaryFrame = roundSummary.CreateSummaryFrame(endMessage);
                 GUIMessageBox.MessageBoxes.Add(summaryFrame);
-                var okButton = new GUIButton(new Rectangle(0, 20, 100, 30), "Ok", Alignment.BottomRight, "", summaryFrame.children[0]);
-                okButton.OnClicked = (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(summaryFrame); return true; };
+                var okButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), summaryFrame.Children.First().Children.First().FindChild("buttonarea").RectTransform),
+                    TextManager.Get("OK"))
+                {
+                    OnClicked = (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(summaryFrame); return true; }
+                };
             }
 #endif
 
             EventManager.EndRound();
+            SteamAchievementManager.OnRoundEnded(this);
 
             currentMission = null;
 

@@ -14,7 +14,9 @@ namespace Barotrauma.Items.Components
         
         private DateTime resetDataTime;
 
-        bool hasPower;
+        private bool hasPower;
+
+        private Dictionary<Hull, HullData> hullDatas;
 
         [Editable(ToolTip = "Does the machine require inputs from water detectors in order to show the water levels inside rooms."), Serialize(false, true)]
         public bool RequireWaterDetectors
@@ -37,17 +39,16 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-
-        private Dictionary<Hull, HullData> hullDatas;
-
         public MiniMap(Item item, XElement element)
             : base(item, element)
         {
             IsActive = true;
-
             hullDatas = new Dictionary<Hull, HullData>();
+            InitProjSpecific(element);
         }
-        
+
+        partial void InitProjSpecific(XElement element);
+
         public override void Update(float deltaTime, Camera cam) 
         {
             //periodically reset all hull data
@@ -72,23 +73,17 @@ namespace Barotrauma.Items.Components
         
         public override bool Pick(Character picker)
         {
-            if (picker == null) return false;
-
-            //picker.SelectedConstruction = item;
-
-            return true;
+            return picker != null;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1.0f)
         {
-            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power);
+            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
 
             if (sender == null || sender.CurrentHull == null) return;
 
             Hull senderHull = sender.CurrentHull;
-
-            HullData hullData;
-            if (!hullDatas.TryGetValue(senderHull, out hullData))
+            if (!hullDatas.TryGetValue(senderHull, out HullData hullData))
             {
                 hullData = new HullData();
                 hullDatas.Add(senderHull, hullData);

@@ -1,8 +1,9 @@
 ﻿<locationtypes>
   <None
     name="Natural Formation"
+    namefile="Content/Map/locationNames.txt"
     commonness="5"
-    background="Content/Map/beaconbackground.jpg"
+    background="Content/Map/LocationPortraits/BeaconBackground.jpg"
     allowedzones="1,2,3,4,5,6,7,8,9">
     
     <nameformats f0="[name]"/>
@@ -10,24 +11,31 @@
     <Symbol texture="Content/Map/beaconSymbol.png"/>
     
     <!-- can only become inhabited if there's an adjacent inhabited location AND there are no adjacent lairs -->
-    
-    <ChangeTo type="Outpost" probability="0.5" requiredduration="3" 
+
+    <ChangeTo type="Outpost" probability="0.5" requiredduration="3"
               requiredadjacentlocations="Outpost,Military,Research,City"
-              disallowedadjacentlocations="Lair"/>
-    
-    <ChangeTo type="Military" probability="0.25" requiredduration="3" 
+              disallowedadjacentlocations="Lair">
+      <Message text="A new outpost has been established at [prevname]."/>
+    </ChangeTo>
+
+    <ChangeTo type="Military" probability="0.25" requiredduration="3"
               requiredadjacentlocations="Outpost,Military,Research,City"
-              disallowedadjacentlocations="Lair"/>
-    
-    <ChangeTo type="Research" probability="0.25" requiredduration="3" 
+              disallowedadjacentlocations="Lair">
+      <Message text="A new military outpost has been established at [prevname]."/>
+    </ChangeTo>
+
+    <ChangeTo type="Research" probability="0.25" requiredduration="3"
               requiredadjacentlocations="Outpost,Military,Research,City"
-              disallowedadjacentlocations="Lair"/>
+              disallowedadjacentlocations="Lair">
+      <Message text="A new research outpost has been established at [prevname]."/>
+    </ChangeTo>
   </None>
 
   <City
     name="Colony"
+    namefile="Content/Map/cityNames.txt"
     commonness="5"
-    background="Content/Map/citybackground.jpg"
+    background="Content/Map/LocationPortraits/WorkCamp_Mining1.jpg"
     allowedzones="1,2"
     halo="0,1,0,0.3">
 
@@ -39,17 +47,19 @@
     <Hireable name="Medical Doctor" commonness="1"/>
     <Hireable name="Security Officer" commonness="1"/>
     <Hireable name="Captain" commonness="1"/>
-    
+
     <nameformats
-      f0="The City of [name]"
-      f1="[name] City"
+      f0="[name]"
+      f1="The City of [name]"
+      f2="[name] City"
       f3="[name] Station"/>
   </City>
 
   <Outpost
     name="Habitation Outpost"
+    namefile="Content/Map/cityNames.txt"
     commonness="5"
-    background="Content/Map/beaconbackground.jpg"
+    background="Content/Map/LocationPortraits/HabitationOutpost.jpg"
     allowedzones="1,2,3"
     halo="0,1,0,0.2">
 
@@ -62,8 +72,11 @@
     <Hireable name="Security Officer" commonness="1"/>
     <Hireable name="Captain" commonness="1"/>
 
-    <!-- can become a city if there are no adjacent lairs -->    
-    <ChangeTo type="City" probability="0.1" requiredduration="5" disallowedadjacentlocations="Lair"/>
+    <!-- can become a city if there are no adjacent lairs -->
+    <ChangeTo type="City" probability="0.1" requiredduration="5" disallowedadjacentlocations="Lair">
+      <Message text="[prevname] has become [name]."/>
+      <Message text="[prevname] has become a city!"/>
+    </ChangeTo>
 
     <nameformats
       f0="[name] Habitation Outpost"
@@ -72,8 +85,9 @@
   
   <Military
     name="Military Outpost"
+    namefile="Content/Map/locationNames.txt"
     commonness="3"
-    background="Content/Map/militarybackground.jpg"
+    background="Content/Map/LocationPortraits/WorkCampMilitary.jpg"
     allowedzones="1,2,3,4"
     halo="0,1,0,0.4">
 
@@ -95,8 +109,9 @@
 
   <Research
     name="Research Outpost"
+    namefile="Content/Map/locationNames.txt"
     commonness="3"
-    background="Content/Map/researchbackground.jpg"
+    background="Content/Map/LocationPortraits/WorkCampResearchFacility.jpg"
     allowedzones="1,2,3"
     halo="0,1,0,0.2">
 
@@ -118,8 +133,9 @@
 
   <Lair
     name="Breeding Grounds"
+    namefile="Content/Map/alienNames.txt"
     commonness="2"
-    background="Content/Map/beaconbackground.jpg"
+    background="Content/Map/LocationPortraits/BeaconBackground.jpg"
     allowedzones="1,2,3,4,5,6,7,8,9"
     halo="1,0,0,0.4">
 
@@ -127,17 +143,19 @@
 
     <nameformats
       f0="[name] Breeding Grounds"
-      f1="[name] Reef"
-      f2="The Hives of [name]"/>
+      f1="The Hives of [name]"/>
 
     <!-- becomes an empty natural formation after being discovered (todo: require killing the monster(s) in the location) -->
-    <ChangeTo type="None" probability="1.0"/>
+    <ChangeTo type="None" probability="1.0">
+      <Message text="[prevname] have been depopulated."/>
+    </ChangeTo>
   </Lair>
 
   <Ruins
     name="Alien Ruins"
+    namefile="Content/Map/alienNames.txt"
     commonness="3"
-    background="Content/Map/beaconbackground.jpg"
+    background="Content/Map/LocationPortraits/BeaconBackground.jpg"
     allowedzones="3,4,5,6,7,8,9"
     halo="1,0,0,0.2">
 
@@ -146,8 +164,14 @@
     <nameformats
       f0="[name] Ruins"/>
 
-    <ChangeTo type="Research" probability="0.4" requiredduration="3" disallowedadjacentlocations="Lair"/>    
-    <ChangeTo type="Outpost" probability="0.05" requiredduration="3" disallowedadjacentlocations="Lair"/>
-    <ChangeTo type="Military" probability="0.05" requiredduration="3" disallowedadjacentlocations="Lair"/>
+    <ChangeTo type="Research" probability="0.4" requiredduration="3" disallowedadjacentlocations="Lair">
+      <Message text="A research outpost has been established at [prevname]."/>
+    </ChangeTo>
+    <ChangeTo type="Outpost" probability="0.05" requiredduration="3" disallowedadjacentlocations="Lair">
+      <Message text="An outpost has been established at [prevname]."/>
+    </ChangeTo>
+    <ChangeTo type="Military" probability="0.05" requiredduration="3" disallowedadjacentlocations="Lair">
+      <Message text="A military outpost has been established at [prevname]."/>
+    </ChangeTo>
   </Ruins>
 </locationtypes>

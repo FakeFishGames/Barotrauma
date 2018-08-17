@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -9,12 +8,11 @@ namespace Barotrauma
     partial class Mission
     {
         public readonly MissionPrefab Prefab;
-
         protected bool completed;
                 
         public readonly List<string> Headers;
         public readonly List<string> Messages;
-
+        
         public string Name
         {
             get { return Prefab.Name; }
@@ -51,102 +49,90 @@ namespace Barotrauma
             get { return completed; }
             set { completed = value; }
         }
-
+        
         public virtual bool AllowRespawn
         {
             get { return true; }
         }
 
-        public virtual string RadarLabel
-        {
-            get { return Prefab.RadarLabel; }
-        }
-
-        public virtual Vector2 RadarPosition
+        public virtual Vector2 SonarPosition
         {
             get { return Vector2.Zero; }
         }
         
+        public string SonarLabel
+        {
+            get { return Prefab.SonarLabel; }
+        }
+           
         public Mission(MissionPrefab prefab, Location[] locations)
         {
+            System.Diagnostics.Debug.Assert(locations.Length == 2);
+
             Prefab = prefab;
 
             Description = prefab.Description;
             SuccessMessage = prefab.SuccessMessage;
             FailureMessage = prefab.FailureMessage;
-
             Headers = new List<string>(prefab.Headers);
-            Messages = new List<string>(prefab.Messages);
-            
+            Messages = new List<string>(prefab.Messages);            
             for (int n = 0; n < 2; n++)
             {
                 if (Description != null) Description = Description.Replace("[location" + (n + 1) + "]", locations[n].Name);
-
                 if (SuccessMessage != null) SuccessMessage = SuccessMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
                 if (FailureMessage != null) FailureMessage = FailureMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
-
                 for (int m = 0; m < Messages.Count; m++)
                 {
                     Messages[m] = Messages[m].Replace("[location" + (n + 1) + "]", locations[n].Name);
                 }
             }
         }
-        
-        public static Mission CreateRandom(Location[] locations, MTRandom rand, bool requireCorrectLocationType, string missionType = "", bool isSinglePlayer = false)
+        public static Mission LoadRandom(Location[] locations, string seed, bool requireCorrectLocationType, string missionType = "", bool isSinglePlayer = false)
         {
+            return LoadRandom(locations, new MTRandom(ToolBox.StringToInt(seed)), requireCorrectLocationType, missionType, isSinglePlayer);
+        }
+
+        public static Mission LoadRandom(Location[] locations, MTRandom rand, bool requireCorrectLocationType, string missionType = "", bool isSinglePlayer = false)
+        {
+            //todo: use something else than strings to define the mission type
             missionType = missionType.ToLowerInvariant();
             
-            List<MissionPrefab> matchingMissions;
-            if (missionType == "random" || string.IsNullOrWhiteSpace(missionType))
+            List<MissionPrefab> allowedMissions = new List<MissionPrefab>();
+            if (missionType == "random")
             {
-                matchingMissions = new List<MissionPrefab>(MissionPrefab.List);
+                allowedMissions.AddRange(MissionPrefab.List);
+                if (GameMain.Server != null)
+                {
+                    allowedMissions.RemoveAll(mission => !GameMain.Server.AllowedRandomMissionTypes.Any(a => mission.TypeMatches(a)));
+                }
             }
             else if (missionType == "none")
             {
                 return null;
             }
+            else if (string.IsNullOrWhiteSpace(missionType))
+            {
+                allowedMissions.AddRange(MissionPrefab.List);
+            }
             else
             {
-                matchingMissions = MissionPrefab.List.FindAll(m => m.TypeName.ToString().ToLowerInvariant().Replace("mission", "") == missionType);
+                allowedMissions = MissionPrefab.List.FindAll(m => m.TypeMatches(missionType));
             }
-            
-            matchingMissions.RemoveAll(m => isSinglePlayer ? m.MultiplayerOnly : m.SingleplayerOnly);
 
+            allowedMissions.RemoveAll(m => isSinglePlayer ? m.MultiplayerOnly : m.SingleplayerOnly);            
             if (requireCorrectLocationType)
             {
-                matchingMissions.RemoveAll(m => !m.IsAllowed(locations[0], locations[1]));
+                allowedMissions.RemoveAll(m => !m.IsAllowed(locations[0], locations[1]));
             }
             
-            float probabilitySum = matchingMissions.Sum(m => m.Commonness);
+            float probabilitySum = allowedMissions.Sum(m => m.Commonness);            
             float randomNumber = (float)rand.NextDouble() * probabilitySum;
-            
-            foreach (MissionPrefab missionPrefab in matchingMissions)
+            foreach (MissionPrefab missionPrefab in allowedMissions)
             {
                 if (randomNumber <= missionPrefab.Commonness)
                 {
-                    Type t;
-                    string type = missionPrefab.TypeName;
-
-                    try
-                    {
-                        t = Type.GetType("Barotrauma." + type, true, true);
-                        if (t == null)
-                        {
-                            DebugConsole.ThrowError("Error in mission prefab " + missionPrefab.Name + "! Could not find a mission class of the type \"" + type + "\".");
-                            continue;
-                        }
-                    }
-                    catch
-                    {
-                        DebugConsole.ThrowError("Error in mission prefab " + missionPrefab.Name + "! Could not find a mission class of the type \"" + type + "\".");
-                        continue;
-                    }
-                    
-                    ConstructorInfo constructor = t.GetConstructor(new[] { typeof(MissionPrefab), typeof(Location[]) });                    
-                    object instance = constructor.Invoke(new object[] { missionPrefab, locations });                   
-                    return (Mission)instance;
+                    return missionPrefab.Instantiate(locations);
                 }
-
                 randomNumber -= missionPrefab.Commonness;
             }
 
@@ -178,8 +164,8 @@ namespace Barotrauma
         {
             var mode = GameMain.GameSession.GameMode as CampaignMode;
             if (mode == null) return;
-
-            mode.Money += Prefab.Reward;
+            
+            mode.Money += Reward;
         }
     }
 }

@@ -32,19 +32,7 @@ namespace Barotrauma
         public static NPCPersonalityTrait GetRandom(string seed)
         {
             var rand = new MTRandom(ToolBox.StringToInt(seed));
-
-            float totalCommonness = list.Sum(t => t.commonness);
-            float randomNumber = (float)(rand.NextDouble() * totalCommonness);
-            foreach (NPCPersonalityTrait trait in list)
-            {
-                if (randomNumber <= trait.commonness)
-                {
-                    return trait;
-                }
-
-                randomNumber -= trait.commonness;
-            }
-            return null;
+            return ToolBox.SelectWeightedRandom(list, list.Select(t => t.commonness).ToList(), rand);
         }
 
     }

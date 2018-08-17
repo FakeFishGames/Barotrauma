@@ -1,6 +1,7 @@
 ﻿<Items>
   <Item
     name="Headset"
+    identifier="headset"
     category="Equipment"    
     tags="smallitem"
     description="Allows remote communication between the crew."
@@ -15,7 +16,7 @@
 
     <Body width="12" height="8" density="10"/>
 
-    <WifiComponent range="35000.0" LinkToChat="true">
+    <WifiComponent range="35000.0" LinkToChat="true" MinChatMessageInterval="0.0">
       <RequiredItems name="Battery Cell" type="Contained"/>      
     </WifiComponent>
 
@@ -32,6 +33,7 @@
 
   <Item
     name="Clown Mask"
+    identifier="clownmask"
     category="Equipment"
     cargocontainername="Metal Crate"    
     tags="smallitem"
@@ -53,8 +55,9 @@
 
   <Item
     name="Clown Costume"
+    identifier="clowncostume"
     category="Equipment"
-    cargocontainername="Metal Crate"    
+    cargocontainername="Metal Crate"
     tags="smallitem"
     description="Praise the honkmother.">
 

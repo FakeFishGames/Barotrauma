@@ -408,11 +408,11 @@ namespace Barotrauma.RuinGeneration
                 wire.Item.MoveWithLevel = false;
 
                 var conn1 = door.Connections.Find(c => c.Name == "set_state");
-                conn1.AddLink(0, wire);
+                conn1.SetWire(0, wire);
                 wire.Connect(conn1, false);
 
                 var conn2 = sensor.Connections.Find(c => c.Name == "state_out");
-                conn2.AddLink(0, wire);
+                conn2.SetWire(0, wire);
                 wire.Connect(conn2, false);
             }
 
@@ -423,6 +423,7 @@ namespace Barotrauma.RuinGeneration
                 Alignment[] alignments = new Alignment[] { Alignment.Top, Alignment.Bottom, Alignment.Right, Alignment.Left, Alignment.Center };
 
                 var prop = RuinStructure.GetRandom(RuinStructureType.Prop, alignments[Rand.Int(alignments.Length, Rand.RandSync.Server)]);
+                if (prop == null) continue;
 
                 Vector2 size = (prop.Prefab is StructurePrefab) ? ((StructurePrefab)prop.Prefab).Size : Vector2.Zero;
 

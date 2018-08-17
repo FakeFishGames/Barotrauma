@@ -1,5 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="fractalguardian" humanoid="false" health="800.0" doesbleed="false" usebloodparticles="false">
+<Character name="fractalguardian" humanoid="false">
+
+  <health
+    vitality="800"
+    doesbleed="false"
+    usebloodparticles="false"/>
 
   <sound file="Content/Characters/Fractalguardian/guardian1.ogg" state="Attack" range="3000" />
   <sound file="Content/Characters/Fractalguardian/guardian2.ogg" state="Attack" range="3000" />
@@ -14,6 +19,7 @@
     hearing="2.0"
     attackcooldown="1">
     <targetpriority tag="human" state="Attack" priority="100"/>
+    <targetpriority tag="sonar" state="Attack" priority="50"/>
   </ai>
   
   <ragdoll waveamplitude="0.0" swimspeed="1.0" walkspeed="0.3" flip="false" canentersubmarine="false" rotatetowardsmovement="false">
@@ -23,19 +29,18 @@
     <!-- head -->
     <limb id = "0" radius="80" height="30" type="Head" steerforce="3.0">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="299,0,171,208" depth="0.05"/>
-      <attack type="Hit" range="120" damagerange="60" duration="0.2" force="10" targetforce="100">
+      <attack type="Hit" range="120" damagerange="60" duration="0.2" force="10" targetforce="100" structuresoundtype="StructureBlunt">
         <affliction name="Internal Damage" strength="50"/>
         <affliction name="Stun" strength="2"/>
       </attack>
     </limb>
-
 
     <limb id = "1" width="30" height="178">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="183,60,53,178" depth="0.08" origin="0.5,0.5"/>
     </limb>
     <limb id = "2" width="30" height="175">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="131,0,36,175" depth="0.1" origin="0.5,0.5"/>
-      <attack range="150" damagerange="75" duration="0.5" torque="150">
+      <attack range="150" damagerange="75" duration="0.5" torque="150" structuresoundtype="StructureSlash">
         <affliction name="Internal Damage" strength="10"/>
         <affliction name="Bleeding" strength="20"/>
         <affliction name="Stun" strength="1"/>
@@ -48,7 +53,7 @@
 
     <limb id = "4" width="30" height="175">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="131,0,36,175" depth="0.1" origin="0.5,0.5"/>
-      <attack range="150" damagerange="75" duration="0.5" torque="150">
+      <attack range="150" damagerange="75" duration="0.5" torque="150" structuresoundtype="StructureSlash">
         <affliction name="Internal Damage" strength="10"/>
         <affliction name="Bleeding" strength="20"/>
         <affliction name="Stun" strength="1"/>

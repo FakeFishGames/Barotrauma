@@ -10,9 +10,12 @@ namespace Barotrauma.Networking
     enum ClientPacketHeader
     {
         REQUEST_AUTH,   //ask the server if a password is needed, if so we'll get nonce for encryption
+        REQUEST_STEAMAUTH, //the same as REQUEST_AUTH, but in addition we want to authenticate the player's Steam ID
         REQUEST_INIT,   //ask the server to give you initialization
         UPDATE_LOBBY,   //update state in lobby
         UPDATE_INGAME,  //update state ingame
+
+        VOICE,
 
         FILE_REQUEST,   //request a (submarine) file from the server
         
@@ -37,6 +40,9 @@ namespace Barotrauma.Networking
         UPDATE_INGAME,      //update state ingame (character input and chat messages)
 
         PERMISSIONS,        //tell the client which special permissions they have (if any)
+        ACHIEVEMENT,        //give the client a steam achievement
+
+        VOICE,
 
         FILE_TRANSFER,
 
@@ -52,7 +58,7 @@ namespace Barotrauma.Networking
         VOTE,
         ENTITY_POSITION,
         ENTITY_EVENT,
-        ENTITY_EVENT_INITIAL
+        ENTITY_EVENT_INITIAL,
     }
 
     enum VoteType
@@ -64,13 +70,34 @@ namespace Barotrauma.Networking
         Kick
     }
 
+    enum DisconnectReason
+    {
+        Unknown,
+        Banned,
+        Kicked,
+        ServerShutdown,
+        ServerFull,
+        AuthenticationRequired,
+        SteamAuthenticationRequired,
+        SteamAuthenticationFailed,
+        SessionTaken,
+        TooManyFailedLogins,
+        NoName,
+        InvalidName,
+        NameTaken,
+        InvalidVersion,
+        MissingContentPackage,
+        IncompatibleContentPackage,
+        NotOnWhitelist,
+    }
+
     abstract partial class NetworkMember
     {
 #if DEBUG
         public Dictionary<string, long> messageCount = new Dictionary<string, long>();
 #endif
 
-        public NetPeer netPeer
+        public NetPeer NetPeer
         {
             get;
             protected set;
@@ -167,45 +194,13 @@ namespace Barotrauma.Networking
 
         public virtual void Update(float deltaTime) 
         {
-#if CLIENT
-            GUITextBox msgBox = (Screen.Selected == GameMain.GameScreen ? chatBox.InputBox : GameMain.NetLobbyScreen.TextBox);
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
-                msgBox.Visible = Character.Controlled == null || Character.Controlled.CanSpeak;
-
-                if (!GUI.DisableHUD)
-                {
-                    inGameHUD.Update(deltaTime);
-                    GameMain.GameSession.CrewManager.Update(deltaTime);
-                }
-                
-                if (Character.Controlled == null || Character.Controlled.IsDead)
-                {
-                    GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
-                    GameMain.LightManager.LosEnabled = false;
-                }
+                GameMain.GameSession.CrewManager.Update(deltaTime);
             }
 
-            //tab doesn't autoselect the chatbox when debug console is open, 
-            //because tab is used for autocompleting console commands
-            if ((PlayerInput.KeyHit(InputType.Chat) || PlayerInput.KeyHit(InputType.RadioChat)) &&
-                !DebugConsole.IsOpen && (Screen.Selected != GameMain.GameScreen || msgBox.Visible))
-            {
-                if (msgBox.Selected)
-                {
-                    msgBox.Text = "";
-                    msgBox.Deselect();
-                }
-                else
-                {
-                    msgBox.Select();
-                    if (Screen.Selected == GameMain.GameScreen && PlayerInput.KeyHit(InputType.RadioChat))
-                    {
-                        msgBox.Text = "r; ";
-                        msgBox.OnTextChanged?.Invoke(msgBox, msgBox.Text);
-                    }
-                }
-            }
+#if CLIENT
+            UpdateHUD(deltaTime);            
 #endif
         }
 

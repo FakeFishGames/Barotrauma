@@ -9,6 +9,8 @@ namespace Barotrauma
     {
         public readonly CargoManager CargoManager;
 
+        public bool CheatsEnabled;
+
         const int InitialMoney = 10000;
 
         protected Map map;
@@ -41,7 +43,7 @@ namespace Barotrauma
 
         public void GenerateMap(string seed)
         {
-            map = new Map(seed, Map.DefaultSize);
+            map = new Map(seed);
         }
 
         protected List<Submarine> GetSubsToLeaveBehind(Submarine leavingSub)

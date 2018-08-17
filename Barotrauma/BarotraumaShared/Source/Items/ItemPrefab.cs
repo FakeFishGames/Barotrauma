@@ -32,7 +32,7 @@ namespace Barotrauma
 
         private float impactTolerance;
 
-        private bool canSpriteFlipX;
+        private bool canSpriteFlipX, canSpriteFlipY;
         
         private Dictionary<string, PriceInfo> prices;
 
@@ -124,6 +124,13 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(false, false)]
+        public bool WaterProof
+        {
+            get;
+            private set;
+        }
+
         [Serialize(0.0f, false)]
         public float ImpactTolerance
         {
@@ -132,7 +139,7 @@ namespace Barotrauma
         }
 
         [Serialize(0.0f, false)]
-        public float RadarSize
+        public float SonarSize
         {
             get;
             private set;
@@ -169,6 +176,11 @@ namespace Barotrauma
         public bool CanSpriteFlipX
         {
             get { return canSpriteFlipX; }
+        }
+
+        public bool CanSpriteFlipY
+        {
+            get { return canSpriteFlipY; }
         }
 
         public Vector2 Size
@@ -243,7 +255,7 @@ namespace Barotrauma
 
         }
 
-        public static void LoadAll(List<string> filePaths)
+        public static void LoadAll(IEnumerable<string> filePaths)
         {
             if (GameSettings.VerboseLogging)
             {
@@ -283,6 +295,7 @@ namespace Barotrauma
 
             name = element.GetAttributeString("name", "");
             if (name == "") DebugConsole.ThrowError("Unnamed item in " + filePath + "!");
+            identifier = element.GetAttributeString("identifier", "");
 
             DebugConsole.Log("    " + name);
 
@@ -325,6 +338,7 @@ namespace Barotrauma
                         }
 
                         canSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
+                        canSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
 
                         sprite = new Sprite(subElement, spriteFolder);
                         if (subElement.Attribute("sourcerect") == null)
@@ -339,6 +353,14 @@ namespace Barotrauma
                         prices[locationType.ToLowerInvariant()] = new PriceInfo(subElement);
                         break;
 #if CLIENT
+                    case "inventoryicon":
+                        string iconFolder = "";
+                        if (!subElement.GetAttributeString("texture", "").Contains("/"))
+                        {
+                            iconFolder = Path.GetDirectoryName(filePath);
+                        }
+                        InventoryIcon = new Sprite(subElement, iconFolder);
+                        break;
                     case "brokensprite":
                         string brokenSpriteFolder = "";
                         if (!subElement.GetAttributeString("texture", "").Contains("/"))
@@ -391,7 +413,21 @@ namespace Barotrauma
                         break;
                 }
             }
-
+            
+            if (!category.HasFlag(MapEntityCategory.Legacy) && string.IsNullOrEmpty(identifier))
+            {
+                DebugConsole.ThrowError(
+                    "Item prefab \"" + name + "\" has no identifier. All item prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
+            }
+            if (!string.IsNullOrEmpty(identifier))
+            {
+                MapEntityPrefab existingPrefab = List.Find(e => e.Identifier == identifier);
+                if (existingPrefab != null)
+                {
+                    DebugConsole.ThrowError(
+                        "Map entity prefabs \"" + name + "\" and \"" + existingPrefab.Name + "\" have the same identifier!");
+                }
+            }
             List.Add(this);
         }
 

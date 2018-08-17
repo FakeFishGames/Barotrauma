@@ -3,8 +3,10 @@ using System.Xml.Linq;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using System.Xml;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
+using Barotrauma.Tutorials;
 #endif
 using System;
 
@@ -15,24 +17,69 @@ namespace Barotrauma
         Windowed, Fullscreen, BorderlessWindowed
     }
 
+    public enum LosMode
+    {
+        None,
+        Transparent,
+        Opaque
+    }
+
     public partial class GameSettings
     {
+        const string FilePath = "config.xml";
+
         public int GraphicsWidth { get; set; }
         public int GraphicsHeight { get; set; }
 
         public bool VSyncEnabled { get; set; }
 
         public bool EnableSplashScreen { get; set; }
-
+        
         public int ParticleLimit { get; set; }
 
-        //public bool FullScreenEnabled { get; set; }
-        
+        public bool ChromaticAberrationEnabled { get; set; }
+
         private KeyOrMouse[] keyMapping;
 
         private WindowMode windowMode;
 
+        private LosMode losMode;
+
         public List<string> jobNamePreferences;
+
+        private bool useSteamMatchmaking;
+        private bool requireSteamAuthentication;
+
+#if DEBUG
+        //steam functionality can be enabled/disabled in debug builds
+        public bool UseSteam;
+        public bool RequireSteamAuthentication
+        {
+            get { return requireSteamAuthentication && UseSteam; }
+            set { requireSteamAuthentication = value; }
+        }
+        public bool UseSteamMatchmaking
+        {
+            get { return useSteamMatchmaking && UseSteam; }
+            set { useSteamMatchmaking = value; }
+        }
+#else
+        //steam functionality determined at compile time
+        public bool UseSteam
+        {
+            get { return Steam.SteamManager.USE_STEAM; }
+        }
+        public bool RequireSteamAuthentication
+        {
+            get { return requireSteamAuthentication && Steam.SteamManager.USE_STEAM; }
+            set { requireSteamAuthentication = value; }
+        }
+        public bool UseSteamMatchmaking
+        {
+            get { return useSteamMatchmaking && Steam.SteamManager.USE_STEAM; }
+            set { useSteamMatchmaking = value; }
+        }
+#endif
 
         public WindowMode WindowMode
         {
@@ -43,18 +90,34 @@ namespace Barotrauma
         public List<string> JobNamePreferences
         {
             get { return jobNamePreferences; }
+            set { jobNamePreferences = value; }
+        }
+
+        private int characterHeadIndex;
+        public int CharacterHeadIndex
+        {
+            get { return characterHeadIndex; }
             set
             {
-                // Begin saving coroutine. Remove any existing save coroutines if one is running.
-                if (CoroutineManager.IsCoroutineRunning("saveCoroutine")) { CoroutineManager.StopCoroutines("saveCoroutine"); }
-                CoroutineManager.StartCoroutine(ApplyUnsavedChanges(), "saveCoroutine");
+                if (value == characterHeadIndex) return;
+                characterHeadIndex = value;
+                Save();
+            }
+        }
 
-                jobNamePreferences = value;
+        private Gender characterGender;
+        public Gender CharacterGender
+        {
+            get { return characterGender; }
+            set
+            {
+                if (value == characterGender) return;
+                characterGender = value;
+                Save();
             }
         }
 
         private bool unsavedSettings;
-
         public bool UnsavedSettings
         {
             get
@@ -87,6 +150,7 @@ namespace Barotrauma
                 if (GameMain.SoundManager!=null)
                 {
                     GameMain.SoundManager.SetCategoryGainMultiplier("default",soundVolume);
+                    GameMain.SoundManager.SetCategoryGainMultiplier("ui",soundVolume);
                     GameMain.SoundManager.SetCategoryGainMultiplier("waterambience",soundVolume);
                 }
 #endif
@@ -105,7 +169,7 @@ namespace Barotrauma
             }
         }
 
-        public ContentPackage SelectedContentPackage { get; set; }
+        public HashSet<ContentPackage> SelectedContentPackages { get; set; }
 
         public string   MasterServerUrl { get; set; }
         public bool     AutoCheckUpdates { get; set; }
@@ -123,17 +187,40 @@ namespace Barotrauma
                 if (defaultPlayerName != value)
                 {
                     defaultPlayerName = value;
-                    Save("config.xml");
+                    Save();
                 }
             }
         }
 
+        public LosMode LosMode
+        {
+            get { return losMode; }
+            set { losMode = value; }
+        }
+
+        public List<string> CompletedTutorialNames { get; private set; }
+
         public static bool VerboseLogging { get; set; }
+        public static bool SaveDebugConsoleLogs { get; set; }
+
+        private static bool sendUserStatistics;
+        public static bool SendUserStatistics
+        {
+            get { return sendUserStatistics; }
+            set
+            {
+                sendUserStatistics = value;
+                GameMain.Config.Save();
+            }
+        }
+        public static bool ShowUserStatisticsPrompt { get; set; }
 
         public GameSettings(string filePath)
         {
-            ContentPackage.LoadAll(ContentPackage.Folder);
+            SelectedContentPackages = new HashSet<ContentPackage>();
 
+            ContentPackage.LoadAll(ContentPackage.Folder);
+            CompletedTutorialNames = new List<string>();
             Load(filePath);
         }
 
@@ -147,6 +234,19 @@ namespace Barotrauma
             WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", false);
 
             VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
+            SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
+            if (doc.Root.Attribute("senduserstatistics") == null)
+            {
+                ShowUserStatisticsPrompt = true;
+            }
+            else
+            {
+                sendUserStatistics = doc.Root.GetAttributeBool("senduserstatistics", true);
+            }
+
+#if DEBUG
+            UseSteam = doc.Root.GetAttributeBool("usesteam", true);
+#endif
 
             if (doc == null)
             {
@@ -155,12 +255,12 @@ namespace Barotrauma
 
                 MasterServerUrl = "";
 
-                SelectedContentPackage = ContentPackage.list.Any() ? ContentPackage.list[0] : new ContentPackage("");
+                SelectedContentPackages.Add(ContentPackage.List.Any() ? ContentPackage.List[0] : new ContentPackage(""));
 
-                JobNamePreferences = new List<string>();
+                jobNamePreferences = new List<string>();
                 foreach (JobPrefab job in JobPrefab.List)
                 {
-                    JobNamePreferences.Add(job.Name);
+                    jobNamePreferences.Add(job.Name);
                 }
                 return;
             }
@@ -172,6 +272,13 @@ namespace Barotrauma
 
             XElement graphicsSettings = doc.Root.Element("graphicssettings");
             ParticleLimit = graphicsSettings.GetAttributeInt("particlelimit", 1500);
+            ChromaticAberrationEnabled = graphicsSettings.GetAttributeBool("chromaticaberration", true);
+
+            var losModeStr = graphicsSettings.GetAttributeString("losmode", "Transparent");
+            if (!Enum.TryParse<LosMode>(losModeStr, out losMode))
+            {
+                losMode = LosMode.Transparent;
+            }
 
 #if CLIENT
             if (GraphicsWidth == 0 || GraphicsHeight == 0)
@@ -191,6 +298,14 @@ namespace Barotrauma
 
             SoundVolume = doc.Root.GetAttributeFloat("soundvolume", 1.0f);
             MusicVolume = doc.Root.GetAttributeFloat("musicvolume", 0.3f);
+
+#if DEBUG
+            useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true);
+            requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true);
+#else
+            useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true);
+            requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true);
+#endif
 
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", true);
 
@@ -217,18 +332,15 @@ namespace Barotrauma
                     case "keymapping":
                         foreach (XAttribute attribute in subElement.Attributes())
                         {
-                            InputType inputType;
-                            if (Enum.TryParse(attribute.Name.ToString(), true, out inputType))
+                            if (Enum.TryParse(attribute.Name.ToString(), true, out InputType inputType))
                             {
-                                int mouseButton;
-                                if (int.TryParse(attribute.Value.ToString(), out mouseButton))
+                                if (int.TryParse(attribute.Value.ToString(), out int mouseButton))
                                 {
                                     keyMapping[(int)inputType] = new KeyOrMouse(mouseButton);
                                 }
                                 else
                                 {
-                                    Keys key;
-                                    if (Enum.TryParse(attribute.Value.ToString(), true, out key))
+                                    if (Enum.TryParse(attribute.Value.ToString(), true, out Keys key))
                                     {
                                         keyMapping[(int)inputType] = new KeyOrMouse(key);
                                     }
@@ -237,14 +349,23 @@ namespace Barotrauma
                         }
                         break;
                     case "gameplay":
-                        JobNamePreferences = new List<string>();
+                        jobNamePreferences = new List<string>();
                         foreach (XElement ele in subElement.Element("jobpreferences").Elements("job"))
                         {
-                            JobNamePreferences.Add(ele.GetAttributeString("name", ""));
+                            jobNamePreferences.Add(ele.GetAttributeString("name", ""));
                         }
                         break;
                     case "player":
                         defaultPlayerName = subElement.GetAttributeString("name", "");
+                        characterHeadIndex = subElement.GetAttributeInt("headindex", Rand.Int(10));
+                        characterGender = subElement.GetAttributeString("gender", Rand.Range(0.0f, 1.0f) < 0.5f ? "male" : "female")
+                            .ToLowerInvariant() == "male" ? Gender.Male : Gender.Female;
+                        break;
+                    case "tutorials":
+                        foreach (XElement tutorialElement in subElement.Elements())
+                        {
+                            CompletedTutorialNames.Add(tutorialElement.GetAttributeString("name", ""));
+                        }
                         break;
                 }
             }
@@ -266,17 +387,21 @@ namespace Barotrauma
                 {
                     case "contentpackage":
                         string path = subElement.GetAttributeString("path", "");
-
-
-                        SelectedContentPackage = ContentPackage.list.Find(cp => cp.Path == path);
-
-                        if (SelectedContentPackage == null) SelectedContentPackage = new ContentPackage(path);
+                        var matchingContentPackage = ContentPackage.List.Find(cp => cp.Path == path);
+                        if (matchingContentPackage == null)
+                        {
+                            DebugConsole.ThrowError("Content package \"" + path + "\" not found!");
+                        }
+                        else
+                        {
+                            SelectedContentPackages.Add(matchingContentPackage);
+                        }
                         break;
                 }
             }
         }
         
-        public void Save(string filePath)
+        public void Save()
         {
             UnsavedSettings = false;
 
@@ -293,7 +418,15 @@ namespace Barotrauma
                 new XAttribute("musicvolume", musicVolume),
                 new XAttribute("soundvolume", soundVolume),
                 new XAttribute("verboselogging", VerboseLogging),
-                new XAttribute("enablesplashscreen", EnableSplashScreen));
+                new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
+                new XAttribute("enablesplashscreen", EnableSplashScreen),
+                new XAttribute("usesteammatchmaking", useSteamMatchmaking),
+                new XAttribute("requiresteamauthentication", requireSteamAuthentication));
+
+            if (!ShowUserStatisticsPrompt)
+            {
+                doc.Root.Add(new XAttribute("senduserstatistics", sendUserStatistics));
+            }
 
             if (WasGameUpdated)
             {
@@ -328,11 +461,13 @@ namespace Barotrauma
             }
 
             gSettings.ReplaceAttributes(new XAttribute("particlelimit", ParticleLimit));
+            gSettings.ReplaceAttributes(new XAttribute("chromaticaberration", ChromaticAberrationEnabled));
+            gSettings.ReplaceAttributes(new XAttribute("losmode", LosMode));
 
-            if (SelectedContentPackage != null)
+            foreach (ContentPackage contentPackage in SelectedContentPackages)
             {
                 doc.Root.Add(new XElement("contentpackage",
-                    new XAttribute("path", SelectedContentPackage.Path)));
+                    new XAttribute("path", contentPackage.Path)));
             }
 
             var keyMappingElement = new XElement("keymapping");
@@ -358,18 +493,52 @@ namespace Barotrauma
             gameplay.Add(jobPreferences);
             doc.Root.Add(gameplay);
 
-            var playerElement = new XElement("player");
-            playerElement.Add(new XAttribute("name", defaultPlayerName ?? ""));
+            var playerElement = new XElement("player",
+                new XAttribute("name", defaultPlayerName ?? ""),
+                new XAttribute("headindex", characterHeadIndex),
+                new XAttribute("gender", characterGender));
             doc.Root.Add(playerElement);
+            
+#if CLIENT
+            if (Tutorial.Tutorials != null)
+            {
+                foreach (Tutorial tutorial in Tutorial.Tutorials)
+                {
+                    if (tutorial.Completed && !CompletedTutorialNames.Contains(tutorial.Name))
+                    {
+                        CompletedTutorialNames.Add(tutorial.Name);
+                    }
+                }
+            }
+#endif
+            var tutorialElement = new XElement("tutorials");
+            foreach (string tutorialName in CompletedTutorialNames)
+            {
+                tutorialElement.Add(new XElement("Tutorial", new XAttribute("name", tutorialName)));
+            }
+            doc.Root.Add(tutorialElement);
+            
+            XmlWriterSettings settings = new XmlWriterSettings
+            {
+                Indent = true,
+                OmitXmlDeclaration = true,
+                NewLineOnAttributes = true
+            };
 
-            doc.Save(filePath);
-        }
-        
-        private IEnumerable<object> ApplyUnsavedChanges()
-        {
-            yield return new WaitForSeconds(10.0f);
-
-            Save("config.xml");
+            try
+            {
+                using (var writer = XmlWriter.Create(FilePath, settings))
+                {
+                    doc.WriteTo(writer);
+                    writer.Flush();
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Saving game settings failed.", e);
+                GameAnalyticsManager.AddErrorEventOnce("GameSettings.Save:SaveFailed", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "Saving game settings failed.\n" + e.Message + "\n" + e.StackTrace);
+            }
         }
     }
 }

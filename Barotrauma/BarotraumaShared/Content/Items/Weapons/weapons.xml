@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-
 <Items>
   <Item
     name="Spear"
+    identifier="spear"
     category="Equipment"
     interactthroughwalls="true"
     cargocontainername="Metal Crate">
@@ -20,16 +20,17 @@
     <Body width="64" height="5" density="20"/>
 
     <Pickable slots="Any"/>
-    <Projectile launchimpulse="20.0" sticktocharacters="true">
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
       <Attack structuredamage="50" stun="0.2" targetforce="50">
         <affliction name="Bleeding" strength="30"/>
-        <affliction name="Internal Damage" strength="10"/>
+        <affliction name="Internal Damage" strength="30"/>
       </Attack>
     </Projectile>
   </Item>
   
   <Item
     name="Harpoon Gun"
+    identifier="harpoongun"
     category="Equipment"
     cargocontainername="Metal Crate"
     tags="weapon">
@@ -51,8 +52,8 @@
               holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7"/>
     
     <RangedWeapon barrelpos="49,10" spread="1" unskilledspread="10">
-      <Sound file="harpoon1.ogg" type="OnUse"/>
-      <Sound file="harpoon2.ogg" type="OnUse"/>
+      <Sound file="Content/Items/Weapons/harpoon1.ogg" type="OnUse"/>
+      <Sound file="Content/Items/Weapons/harpoon2.ogg" type="OnUse"/>
       <StatusEffect type="OnUse">
         <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" flash="false" sparks="false" camerashake="5.0"/>
       </StatusEffect>
@@ -67,6 +68,7 @@
 
   <Item
     name="Syringe Gun"
+    identifier="syringegun"
     category="Equipment"
     cargocontainername="Metal Crate"
     tags="weapon">
@@ -89,7 +91,7 @@
               aimpos="90,10" handle1="-10,-7"/>
     
     <RangedWeapon barrelpos="30,20" spread="0" unskilledspread="10">
-      <Sound file="syringegun.ogg" type="OnUse"/>
+      <Sound file="Content/Items/Weapons/syringegun.ogg" type="OnUse"/>
       <RequiredItems name="Medical Syringe" type="Contained" msg="Please load a Syringe"/>
       <RequiredSkill name="Weapons" level="15"/>
       <RequiredSkill name="Medical" level="30"/>
@@ -102,6 +104,7 @@
 
   <Item
     name="Revolver Round"
+    identifier="revolverround"
     category="Equipment"
     interactthroughwalls="true"
     cargocontainername="Metal Crate"
@@ -116,16 +119,17 @@
     <Body width="8" height="3" density="40"/>
 
     <Pickable slots="Any"/>
-    <Projectile hitscan="true" removeonhit="true" >
+    <Projectile characterusable="false" hitscan="true" removeonhit="true" >
       <Attack structuredamage="100" stun="0.5" targetforce="50">
         <affliction name="Gunshot wound" strength="40"/>
-        <affliction name="Internal Damage" strength="10"/>
+        <affliction name="Internal Damage" strength="30"/>
       </Attack>
     </Projectile>
   </Item>
   
   <Item
     name="Revolver"
+    identifier="revolver"
     category="Equipment"
     cargocontainername="Metal Crate"
     tags="smallitem,weapon">
@@ -138,16 +142,16 @@
       <Item name="Aluminium"/>
       <Item name="Polycarbonate Bar"/>
     </Deconstruct>
-
+    
     <Sprite texture="weapons.png" sourcerect="26,97,25,19" depth="0.55"/>
 
     <Body width="25" height="15" density="50"/>
-
+ 
     <Holdable slots="Any,RightHand,LeftHand" controlpose="true"
-              aimpos="90,10" handle1="-11,-7"/>
-
+      aimpos="90,10" handle1="-11,-7"/> 
+    
     <RangedWeapon barrelpos="14,6" spread="0" unskilledspread="2">
-      <Sound file="revolver.ogg" type="OnUse" range="3000"/>
+      <Sound file="Content/Items/Weapons/revolver.ogg" type="OnUse" range="3000"/>
       <StatusEffect type="OnUse">
         <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" sparks="false" camerashake="5.0"/>
       </StatusEffect>
@@ -155,13 +159,14 @@
       <RequiredSkill name="Weapons" level="40"/>
     </RangedWeapon>
 
-    <ItemContainer capacity="4" hideitems="true">
+    <ItemContainer capacity="6" hideitems="true">
       <Containable name="Revolver Round"/>
     </ItemContainer>
   </Item>
 
   <Item
     name="Stun Grenade"
+    identifier="stungrenade"
     category="Equipment"
     cargocontainername="Explosive Crate"
     tags="smallitem,weapon,explosive">
@@ -202,6 +207,7 @@
 
   <Item
     name="Incendium Grenade"
+    identifier="incendiumgrenade"
     category="Equipment"    
     cargocontainername="Explosive Crate"
     tags="smallitem,weapon,explosive">
@@ -239,6 +245,7 @@
 
   <Item
     name="Stun Baton"
+    identifier="stunbaton"
     category="Equipment"
     Tags="smallitem,weapon"
     cargocontainername="Metal Crate"
@@ -281,52 +288,8 @@
   </Item>
 
   <Item
-    name="Battery Cell"
-    category="Equipment,Electrical"    
-    tags="smallitem,loadable"
-    cargocontainername="Metal Crate"
-    description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells.">
-
-    <Price locationtype="City" buyprice="50"/>
-    <Price locationtype="Outpost" buyprice="50"/>
-    <Price locationtype="Military" buyprice="50"/>
-    <Price locationtype="Research" buyprice="50"/>
-    
-    <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="Copper Bar" mincondition="0.5"/>
-      <Item name="Sulphuric Acid" mincondition="0.9"/>
-    </Deconstruct>
-    
-    <Sprite texture="weapons.png" sourcerect="0,0,20,9" depth="0.8"/>
-
-    <Body width="20" height="9" density="30"/>
-
-    <Pickable slots="Any,RightHand,LeftHand"/>
-  </Item>
-  
-  <Item
-    name="Fulgurium Battery Cell"
-    category="Equipment,Electrical"
-    tags="smallitem,loadable"
-    cargocontainername="Metal Crate"
-    description="A battery cell contructed of the rare and poorly understood compound Fulgurium.">
-
-    <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="Fulgurium Bar" mincondition="0.8"/>
-      <Item name="Sulphuric Acid" mincondition="0.9"/>
-    </Deconstruct>
-
-    <Sprite texture="weapons.png" sourcerect="0,0,20,9" depth="0.8"/>
-
-    <Body width="20" height="9" density="30"/>
-
-    <Pickable slots="Any,RightHand,LeftHand"/>
-  </Item>
-
-  <Item
     name="Bike Horn"
+    identifier="bikehorn"
     category="Equipment"
     tags="weapon,smallitem"
     cargocontainername="Metal Crate"
@@ -339,7 +302,7 @@
     <Holdable slots="Any,RightHand,LeftHand" aimpos="100,0" handle1="-5,0"/>
 
     <RangedWeapon reload="2">
-      <Sound file="honk.ogg" type="OnUse"/>
+      <Sound file="Content/Items/Weapons/honk.ogg" type="OnUse"/>
     </RangedWeapon>
   </Item>
 </Items>

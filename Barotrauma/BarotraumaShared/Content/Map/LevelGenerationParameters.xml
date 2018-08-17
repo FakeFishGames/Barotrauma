@@ -1,64 +1,199 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <LevelGenerationParameters>
-
   <Biomes>
-    <Biome
-      name = "Great Sea"
-      description= "asdgfdfg"
-      AllowedZones="1,2"/>
     
     <Biome
-      name = "Cold Caverns"
+      name="Cold Caverns"
+      description="asdgfdfg"
+      AllowedZones="1"/>
+        
+    <Biome
+      name="Europan Ridge"
+      description="asdgfdfg"
+      AllowedZones="2"/>
+    
+    <Biome
+      name="The Aphotic Plateau"
+      description="asdgfdfg"
+      AllowedZones="3"/>
+    
+    <Biome
+      name="The Great Void"
+      description="asdgfdfg"
+      AllowedZones="4"/>
+    
+    <Biome
+      name="Hydrothermal Wastes"
       description= "asdgfdfg"
-      AllowedZones="1,2,3,4,5"/>
+      AllowedZones="5,6"/>
 
-    <Biome
-      name = "Hydrothermal Wastes"
-      description= "asdgfdfg"
-      AllowedZones="4,5,6,7,8"/>
-    
-    <Biome
-      name = "Volcanic Ridge"
-      description= "asdgfdfg"
-      AllowedZones="8,9,10"/>	  
-    
+    <!-- TODO: "END ZONE" -->
   </Biomes>
   
-  <Default
+  <ColdCavernsBasic
     biomes="Cold Caverns"
     width="150000"
-    height="60000"    
+    height="60000"
     VoronoiSiteInterval="2000,2000"
     VoronoiSiteVariance="800,800"
     MainPathNodeIntervalRange="10000,30000"
-    BackgroundColor="14,18,25"
+    AmbientLightColor="27,30,36"
+    WallColor="148,159,164"
+    BackgroundColor="54,60,72"
     SmallTunnelCount="5"
     SmallTunnelLengthRange="10000,20000"
     RuinCount="1"
     BottomHoleProbability="0.4"
-    BackgroundSpriteAmount="1000"
+    levelobjectamount="1000"
     MountainCountMin="0"
     MountainCountMax="3"
     SeaFloorDepth="-300000.0"
     MountainHeightMin="10000"
-    MountainHeightMax="20000"    
-    />
+    MountainHeightMax="20000">
+    <Background texture="Content/Map/iceBackgroundFade.png"/>
+    <BackgroundTop texture="Content/Map/iceBackground.png"/>
+    <WaterParticles texture="Content/Map/dustparticles.png"/>
+    <Wall texture="Content/Map/iceBackground.png"/>
+    <WallEdge texture="Content/Map/iceWallEdge.png"/>
+  </ColdCavernsBasic>
 
-  <Open
-    biomes="Great Sea"
+  <ColdCavernsMaze
+    biomes="Cold Caverns"
+    width="100000"
+    height="70000"
+    VoronoiSiteInterval="1500,1500"
+    VoronoiSiteVariance="700,700"
+    MainPathNodeIntervalRange="20000,50000"
+    AmbientLightColor="27,30,36"
+    WallColor="148,159,164"
+    BackgroundColor="27,30,36"
+    SmallTunnelCount="10"
+    SmallTunnelLengthRange="5000,50000"
+    RuinCount="3"
+    BottomHoleProbability="0.5"
+    levelobjectamount="1000"
+    MountainCountMin="2"
+    MountainCountMax="3"
+    SeaFloorDepth="-300000.0"
+    SeaFloorVariance="20000"
+    MountainHeightMin="10000"
+    MountainHeightMax="20000">
+    <Background texture="Content/Map/iceBackgroundFade.png"/>
+    <BackgroundTop texture="Content/Map/iceBackground.png"/>
+    <WaterParticles texture="Content/Map/dustparticles.png"/>
+    <Wall texture="Content/Map/iceBackground.png"/>
+    <WallEdge texture="Content/Map/iceWallEdge.png"/>
+  </ColdCavernsMaze>
+  
+  <RidgeBasic
+    biomes="Europan Ridge"
+    width="100000"
+    height="50000"
+    VoronoiSiteInterval="1500,1500"
+    VoronoiSiteVariance="700,700"
+    MainPathNodeIntervalRange="6000,10000"
+    AmbientLightColor="20,22,27"
+    WallColor="114,130,141"
+    BackgroundColor="27,30,36"
+    SmallTunnelCount="10"
+    SmallTunnelLengthRange="5000,50000"
+    RuinCount="3"
+    FloatingIceChunkCount="3"
+    BottomHoleProbability="0.6"
+    levelobjectamount="1500"
+    MountainCountMin="1"
+    MountainCountMax="1"
+    SeaFloorDepth="-100000.0"
+    SeaFloorVariance="2000"
+    MountainHeightMin="80000"
+    MountainHeightMax="120000">
+    <Background texture="Content/Map/iceBackgroundFade.png"/>
+    <BackgroundTop texture="Content/Map/iceBackground.png"/>
+    <WaterParticles texture="Content/Map/BackgroundColorful.png"/>
+    <Wall texture="Content/Map/iceBackground.png"/>
+    <WallEdge texture="Content/Map/iceWallEdge.png"/>
+  </RidgeBasic>
+
+  <PlateauBasic
+    biomes="The Aphotic Plateau"
+    width="200000"
+    height="25000"
+    VoronoiSiteInterval="2000,2000"
+    VoronoiSiteVariance="800,800"
+    MainPathNodeIntervalRange="10000,20000"
+    AmbientLightColor="18,29,29"
+    WallColor="111,145,129"
+    BackgroundColor="18,29,29"
+    RuinCount="1"
+    BottomHoleProbability="0.9"
+    levelobjectamount="1000"
+    SeaFloorDepth="0.0"
+    SeaFloorVariance="500"
+    MountainCountMin="1"
+    MountainCountMax="2"
+    MountainHeightMin="1000"
+    MountainHeightMax="5000">
+    <Background texture="Content/Map/iceBackgroundFade.png"/>
+    <BackgroundTop texture="Content/Map/iceBackground.png"/>
+    <WaterParticles texture="Content/Map/dustparticles.png"/>
+    <Wall texture="Content/Map/iceBackground.png"/>
+    <WallEdge texture="Content/Map/iceWallEdge.png"/>
+  </PlateauBasic>
+
+  <VoidBasic
+    biomes="The Great Void"
     width="200000"
     height="50000"
     VoronoiSiteInterval="2000,2000"
     VoronoiSiteVariance="800,800"
     MainPathNodeIntervalRange="5000,10000"
-    BackgroundColor="27,30,36"
+    AmbientLightColor="27,30,36"
+    WallColor="148,163,162"
+    BackgroundColor="54,60,72"
     SmallTunnelCount="3"
     SmallTunnelLengthRange="10000,20000"
     RuinCount="1"
+    FloatingIceChunkCount="20"
     BottomHoleProbability="1"
-    BackgroundSpriteAmount="800" 
-    />
+    levelobjectamount="800">
+    <Background texture="Content/Map/iceBackgroundFade.png"/>
+    <BackgroundTop texture="Content/Map/iceBackground.png"/>
+    <WaterParticles texture="Content/Map/dustparticles.png"/>
+    <Wall texture="Content/Map/iceBackground.png"/>
+    <WallEdge texture="Content/Map/iceWallEdge.png"/>
+  </VoidBasic>
 
+  <WastesBasic
+    biomes="Hydrothermal Wastes"
+    width="100000"
+    height="50000"
+    VoronoiSiteInterval="1500,1500"
+    VoronoiSiteVariance="700,700"
+    MainPathNodeIntervalRange="6000,10000"
+    AmbientLightColor="40,30,36"
+    WallColor="31,26,38"
+    BackgroundColor="40,30,36"
+    SmallTunnelCount="1"
+    SmallTunnelLengthRange="5000,50000"
+    RuinCount="1"
+    BottomHoleProbability="0.8"
+    levelobjectamount="1000"
+    MountainCountMin="2"
+    MountainCountMax="3"
+    SeaFloorDepth="-50000.0"
+    SeaFloorVariance="2000"
+    MountainHeightMin="40000"
+    MountainHeightMax="50000"
+    WaterParticleScale="5">
+    <Background texture="Content/Map/iceBackgroundFade.png"/>
+    <BackgroundTop texture="Content/Map/iceBackground.png"/>
+    <WaterParticles texture="Content/Map/BackgroundSmoke.png"/>
+    <Wall texture="Content/Map/iceBackground.png"/>
+    <WallEdge texture="Content/Map/iceWallEdge.png"/>
+  </WastesBasic>
+
+  <!--
+  
   <Pillars
     biomes="Cold Caverns, Volcanic Ridge"
     width="100000"
@@ -71,15 +206,20 @@
     SmallTunnelLengthRange="10000,20000"
     RuinCount="1"
     BottomHoleProbability="0.5"
-    BackgroundSpriteAmount="1000"
+    levelobjectamount="1000"
     MountainCountMin="1"
     MountainCountMax="2"
     SeaFloorDepth="-150000.0"
     SeaFloorVariance="10000.0"
     MountainHeightMin="50000"
-    MountainHeightMax="100000"
-    />
-
+    MountainHeightMax="100000">
+    <Background texture="Content/Map/iceBackgroundFade.png"/>
+    <BackgroundTop texture="Content/Map/iceBackground.png"/>
+    <WaterParticles texture="Content/Map/dustparticles.png"/>
+    <Wall texture="Content/Map/iceBackground.png"/>
+    <WallEdge texture="Content/Map/iceWallEdge.png"/>
+  </Pillars>
+  
   <Slabs
     biomes="Cold Caverns"
     width="150000"
@@ -92,91 +232,14 @@
     SmallTunnelLengthRange="10000,20000"
     RuinCount="1"
     BottomHoleProbability="0.0"
-    BackgroundSpriteAmount="1000"
-    SeaFloorVariance="10000.0"
-    />
+    levelobjectamount="1000"
+    SeaFloorVariance="10000.0">
+    <Background texture="Content/Map/iceBackgroundFade.png"/>
+    <BackgroundTop texture="Content/Map/iceBackground.png"/>
+    <WaterParticles texture="Content/Map/dustparticles.png"/>
+    <Wall texture="Content/Map/iceBackground.png"/>
+    <WallEdge texture="Content/Map/iceWallEdge.png"/>
+  </Slabs>
 
-  <Maze
-    biomes="Cold Caverns"
-    width="100000"
-    height="70000"
-    VoronoiSiteInterval="1500,1500"
-    VoronoiSiteVariance="700,700"
-    MainPathNodeIntervalRange="20000,50000"
-    BackgroundColor="12,11,5"
-    SmallTunnelCount="10"
-    SmallTunnelLengthRange="5000,50000"
-    RuinCount="3"
-    BottomHoleProbability="0.5"
-    BackgroundSpriteAmount="1000"
-    MountainCountMin="2"
-    MountainCountMax="3"
-    SeaFloorDepth="-300000.0"
-    SeaFloorVariance="20000"
-    MountainHeightMin="10000"
-    MountainHeightMax="20000" 
-    />
-
-  <Wastes
-    biomes="Hydrothermal Wastes"
-    width="100000"
-    height="50000"
-    VoronoiSiteInterval="1500,1500"
-    VoronoiSiteVariance="700,700"
-    MainPathNodeIntervalRange="6000,10000"
-    WallColor="160,150,150"
-    BackgroundColor="10,7,8"
-    SmallTunnelCount="1"
-    SmallTunnelLengthRange="5000,50000"
-    RuinCount="1"
-    BottomHoleProbability="0.8"
-    BackgroundSpriteAmount="1000"
-    MountainCountMin="2"
-    MountainCountMax="3"
-    SeaFloorDepth="-50000.0"
-    SeaFloorVariance="2000"
-    MountainHeightMin="40000"
-    MountainHeightMax="50000" 
-    />
-
-  <Ridge
-    biomes="Volcanic Ridge"
-    width="100000"
-    height="50000"
-    VoronoiSiteInterval="1500,1500"
-    VoronoiSiteVariance="700,700"
-    MainPathNodeIntervalRange="6000,10000"
-    WallColor="200,150,150"
-    BackgroundColor="12,7,5"
-    SmallTunnelCount="10"
-    SmallTunnelLengthRange="5000,50000"
-    RuinCount="3"
-    BottomHoleProbability="0.6"
-    BackgroundSpriteAmount="1500"
-    MountainCountMin="1"
-    MountainCountMax="1"
-    SeaFloorDepth="-100000.0"
-    SeaFloorVariance="2000"
-    MountainHeightMin="80000"
-    MountainHeightMax="120000"
-    />
-
-  <Plateau
-    biomes="Cold Caverns"
-    width="200000"
-    height="25000"
-    VoronoiSiteInterval="2000,2000"
-    VoronoiSiteVariance="800,800"
-    MainPathNodeIntervalRange="10000,20000"
-    BackgroundColor="14,13,25"
-    RuinCount="1"
-    BottomHoleProbability="0.9"
-    BackgroundSpriteAmount="1000"
-    SeaFloorDepth="0.0"
-    SeaFloorVariance="500"
-    MountainCountMin="1"
-    MountainCountMax="2"
-    MountainHeightMin="1000"
-    MountainHeightMax="5000"
-    />
+  -->
 </LevelGenerationParameters>

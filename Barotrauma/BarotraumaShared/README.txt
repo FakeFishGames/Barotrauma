@@ -37,8 +37,8 @@ These are the values that you should use when forwarding a port to your
 Barotrauma server:
 
 Service/Application: barotrauma
-External Port: The port you have selected for your server (14242 by default)
-Internal Port: The port you have selected for your server (14242 by default)
+External Port: The port you have selected for your server (27015 by default)
+Internal Port: The port you have selected for your server (27015 by default)
 Protocol: UDP
 
 

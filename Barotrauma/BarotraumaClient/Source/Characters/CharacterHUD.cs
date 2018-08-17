@@ -4,39 +4,31 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma
 {
     class CharacterHUD
     {
-        private static GUIButton cprButton;        
-        private static GUIButton grabHoldButton;
-
+        private static Dictionary<Entity, int> orderIndicatorCount = new Dictionary<Entity, int>();
         const float ItemOverlayDelay = 1.0f;
         private static Item focusedItem;
         private static float focusedItemOverlayTimer;
-                
-        public static void TakeDamage(float amount)
-        {
-        }
+
+        private static List<Item> brokenItems = new List<Item>();
+        private static float brokenItemsCheckTimer;
 
         public static void AddToGUIUpdateList(Character character)
         {
             if (GUI.DisableHUD) return;
 
-            if (cprButton != null && cprButton.Visible) cprButton.AddToGUIUpdateList();
-            if (grabHoldButton != null && cprButton.Visible) grabHoldButton.AddToGUIUpdateList();
-            
-            if (!character.IsUnconscious && character.Stun <= 0.0f &&
-                (GameMain.GameSession?.CrewManager?.CrewCommander == null || !GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
+            if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
                 if (character.Inventory != null)
                 {
                     for (int i = 0; i < character.Inventory.Items.Length - 1; i++)
                     {
                         var item = character.Inventory.Items[i];
-                        if (item == null || CharacterInventory.SlotTypes[i] == InvSlotType.Any) continue;
+                        if (item == null || character.Inventory.SlotTypes[i] == InvSlotType.Any) continue;
 
                         foreach (ItemComponent ic in item.components)
                         {
@@ -53,15 +45,8 @@ namespace Barotrauma
         }
 
         public static void Update(float deltaTime, Character character)
-        {            
-            if (Inventory.SelectedSlot == null)
-            {
-                if (cprButton != null && cprButton.Visible) cprButton.Update(deltaTime);
-                if (grabHoldButton != null && grabHoldButton.Visible) grabHoldButton.Update(deltaTime);
-            }
-            
-            if (!character.IsUnconscious && character.Stun <= 0.0f &&
-                (GameMain.GameSession?.CrewManager?.CrewCommander == null || !GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
+        {
+            if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
                 if (character.Inventory != null)
                 {
@@ -73,18 +58,21 @@ namespace Barotrauma
                     for (int i = 0; i < character.Inventory.Items.Length - 1; i++)
                     {
                         var item = character.Inventory.Items[i];
-                        if (item == null || CharacterInventory.SlotTypes[i] == InvSlotType.Any) continue;
+                        if (item == null || character.Inventory.SlotTypes[i] == InvSlotType.Any) continue;
 
                         foreach (ItemComponent ic in item.components)
                         {
-                            if (ic.DrawHudWhenEquipped) ic.UpdateHUD(character);
+                            if (ic.DrawHudWhenEquipped) ic.UpdateHUD(character, deltaTime);
                         }
                     }
                 }
 
                 if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
-                    character.SelectedCharacter.Inventory.Update(deltaTime);
+                    if (character.SelectedCharacter.CanInventoryBeAccessed)
+                    {
+                        character.SelectedCharacter.Inventory.Update(deltaTime);
+                    }
                     character.SelectedCharacter.CharacterHealth.UpdateHUD(deltaTime);
                 }
 
@@ -103,10 +91,26 @@ namespace Barotrauma
                     if (focusedItemOverlayTimer <= 0.0f) focusedItem = null;
                 }
             }
+
+            if (brokenItemsCheckTimer > 0.0f)
+            {
+                brokenItemsCheckTimer -= deltaTime;
+            }
+            else
+            {
+                brokenItems.Clear();
+                brokenItemsCheckTimer = 1.0f;
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.Condition > 0.0f || item.FixRequirements.Count == 0 || item.CurrentHull == null) continue;
+                    if (item.CurrentHull == character.CurrentHull)
+                    {
+                        brokenItems.Add(item);
+                    }
+                }
+            }
         }
-
-        private static Dictionary<Entity, int> orderIndicatorCount = new Dictionary<Entity, int>();
-
+        
         public static void Draw(SpriteBatch spriteBatch, Character character, Camera cam)
         {
             if (GUI.DisableHUD) return;
@@ -124,50 +128,17 @@ namespace Barotrauma
                 if (character.CurrentOrder != null)
                 {
                     DrawOrderIndicator(spriteBatch, cam, character, character.CurrentOrder, 1.0f);                    
-                }
-
-                /*//recreate order list if it doesn't exist, is for some other character, 
-                //if there are new orders, or if the list contains orders that don't exist anymore
-                if (orderList == null || orderList.UserData != character ||
-                    currentOrders.Any(o => orderList.FindChild(o) == null) ||
-                    orderList.children.Any(c => !currentOrders.Contains(c.UserData as Order)))
-                {
-                    orderList = new GUIListBox(new Rectangle(GameMain.GraphicsWidth - 150, 50, 150, 500), Color.Transparent, null);
-                    orderList.UserData = character;
-
-                    foreach (Order order in currentOrders)
-                    {
-                        var orderFrame = new GUITextBlock(
-                            new Rectangle(0, 0, 0, 50), order.Name, "ListBoxElement", 
-                            Alignment.TopLeft, Alignment.TopRight, orderList, false, GUI.SmallFont);
-                        orderFrame.UserData = order;
-
-                        var dismissButton = new GUIButton(new Rectangle(0, 0, 80, 20), "Dismiss", Alignment.BottomRight, "", orderFrame);
-                        //dismissButton.Font = GUI.SmallFont;
-                        dismissButton.UserData = order;
-                        dismissButton.OnClicked += (btn, userdata) =>
-                        {
-                            Order dismissedOrder = userdata as Order;
-                            GameMain.GameSession.CrewManager.RemoveOrder(dismissedOrder);
-                            if (dismissedOrder == character.CurrentOrder)
-                            {
-                                character.SetOrder(null, "");
-                            }
-                            return true;
-                        };
-                    }
-                }
-
-                orderList.Draw(spriteBatch);*/
+                }                
             }
 
             foreach (Optimizable optimizable in Optimizable.CurrentlyOptimizable)
             {
                 if (optimizable.DegreeOfSuccess(character) < 0.5f) continue;
 
-                float dist = Vector2.Distance(character.WorldPosition, optimizable.Item.WorldPosition);
-                if (dist < 1000.0f)
+                float distSqr = Vector2.DistanceSquared(character.WorldPosition, optimizable.Item.WorldPosition);
+                if (distSqr < 1000.0f * 1000.0f)
                 {
+                    float dist = (float)Math.Sqrt(distSqr);
                     Vector2 drawPos = optimizable.Item.DrawPosition;
                     //TODO: proper icon
                     float alpha = (1000.0f - dist) / 1000.0f * 2.0f;
@@ -176,104 +147,18 @@ namespace Barotrauma
                 }
             }
 
-            if (character.Inventory != null)
+            foreach (Item brokenItem in brokenItems)
             {
-                for (int i = 0; i < character.Inventory.Items.Length - 1; i++)
-                {
-                    var item = character.Inventory.Items[i];
-                    if (item == null || CharacterInventory.SlotTypes[i] == InvSlotType.Any) continue;
-
-                    foreach (ItemComponent ic in item.components)
-                    {
-                        if (ic.DrawHudWhenEquipped) ic.DrawHUD(spriteBatch, character);
-                    }
-                }
-            }
-            
-            if (character.Inventory != null && !character.LockHands && character.Stun <= 0.1f && 
-                (GameMain.GameSession?.CrewManager?.CrewCommander == null || !GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
-            {
-                character.Inventory.DrawOwn(spriteBatch);
+                float dist = Vector2.Distance(character.WorldPosition, brokenItem.WorldPosition);
+                Vector2 drawPos = brokenItem.DrawPosition;
+                //TODO: proper icon
+                float alpha = Math.Min((1000.0f - dist) / 1000.0f * 2.0f, 1.0f);
+                if (alpha <= 0.0f) continue;
+                GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, GUI.SubmarineIcon, Color.OrangeRed * alpha);                
             }
 
             if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
-                if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
-                {
-                    if (cprButton == null)
-                    {
-                        cprButton = new GUIButton(
-                            new Rectangle(
-                                new Point((int)(GameMain.GraphicsWidth - 40 - 160 * GUI.Scale), (int)(GameMain.GraphicsHeight - 280 * GUI.Scale)), 
-                                new Point((int)(160 * GUI.Scale), (int)(30 * GUI.Scale))), 
-                            "Perform CPR", "");
-                        cprButton.Font = GUI.Scale < 0.8f ? GUI.SmallFont : GUI.Font;
-
-                        cprButton.OnClicked = (button, userData) =>
-                        {
-                            if (Character.Controlled == null || Character.Controlled.SelectedCharacter == null) return false;
-
-                            Character.Controlled.AnimController.Anim = (Character.Controlled.AnimController.Anim == AnimController.Animation.CPR) ?
-                                AnimController.Animation.None : AnimController.Animation.CPR;
-
-                            foreach (Limb limb in Character.Controlled.SelectedCharacter.AnimController.Limbs)
-                            {
-                                limb.pullJoint.Enabled = false;
-                            }
-                            
-                            if (GameMain.Client != null)
-                            {
-                                GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Repair });
-                            }
-                            
-                            return true;
-                        };
-                    }
-
-                    if (grabHoldButton == null)
-                    {
-                        grabHoldButton = new GUIButton(
-                            new Rectangle(
-                                new Point((int)(GameMain.GraphicsWidth - 40 - 340 * GUI.Scale), (int)(GameMain.GraphicsHeight - 280 * GUI.Scale)),
-                                new Point((int)(160 * GUI.Scale), (int)(30 * GUI.Scale))),
-                            TextManager.Get("Grabbing") + ": " + TextManager.Get(character.AnimController.GrabLimb == LimbType.None ? "Hands" : character.AnimController.GrabLimb.ToString()), "");
-                        grabHoldButton.Font = GUI.Scale < 0.8f ? GUI.SmallFont : GUI.Font;
-
-                        grabHoldButton.OnClicked = (button, userData) =>
-                        {
-                            if (Character.Controlled == null || Character.Controlled.SelectedCharacter == null) return false;
-
-                            Character.Controlled.AnimController.GrabLimb = Character.Controlled.AnimController.GrabLimb == LimbType.None ? LimbType.Torso : LimbType.None;
-
-                            foreach (Limb limb in Character.Controlled.SelectedCharacter.AnimController.Limbs)
-                            {
-                                limb.pullJoint.Enabled = false;
-                            }
-
-                            if (GameMain.Client != null)
-                            {
-                                GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Control });
-                            }
-
-                            grabHoldButton.Text = TextManager.Get("Grabbing") + ": " + TextManager.Get(character.AnimController.GrabLimb == LimbType.None ? "Hands" : character.AnimController.GrabLimb.ToString());
-                            return true;
-                        };
-                    }
-                    
-                    if (cprButton.Visible) cprButton.Draw(spriteBatch);
-                    if (grabHoldButton.Visible) grabHoldButton.Draw(spriteBatch);
-
-                    character.Inventory.Alignment = Alignment.Left;
-                    character.SelectedCharacter.Inventory.Alignment = Alignment.Right;
-                    character.SelectedCharacter.Inventory.DrawOwn(spriteBatch);
-                    character.SelectedCharacter.CharacterHealth.Alignment = Alignment.Right;
-                    character.SelectedCharacter.CharacterHealth.DrawStatusHUD(spriteBatch, new Vector2(320.0f + 120, 0.0f));
-                }
-                else
-                {
-                    character.Inventory.Alignment = Alignment.Center;
-                }
-                
                 if (character.FocusedCharacter != null && character.FocusedCharacter.CanBeSelected)
                 {
                     Vector2 startPos = character.DrawPosition + (character.FocusedCharacter.DrawPosition - character.DrawPosition) * 0.7f;
@@ -287,7 +172,19 @@ namespace Barotrauma
                     Vector2 textPos = startPos;
                     textPos -= new Vector2(GUI.Font.MeasureString(focusName).X / 2, 20);
 
-                    GUI.DrawString(spriteBatch, textPos, focusName, Color.White, Color.Black, 2);
+                    GUI.DrawString(spriteBatch, textPos, focusName, Color.White, Color.Black * 0.7f, 2);
+                    textPos.Y += 20;
+                    if (character.FocusedCharacter.CanInventoryBeAccessed)
+                    {
+                        GUI.DrawString(spriteBatch, textPos, TextManager.Get("GrabHint").Replace("[key]", GameMain.Config.KeyBind(InputType.Select).ToString()), 
+                            Color.LightGreen, Color.Black, 2, GUI.SmallFont);
+                        textPos.Y += 15;
+                    }
+                    if (character.FocusedCharacter.CharacterHealth.UseHealthWindow)
+                    {
+                        GUI.DrawString(spriteBatch, textPos, TextManager.Get("HealHint").Replace("[key]", GameMain.Config.KeyBind(InputType.Health).ToString()), Color.LightGreen, Color.Black, 2, GUI.SmallFont);
+                        textPos.Y += 15;
+                    }
                 }
                 else if (character.SelectedCharacter == null && character.FocusedItem != null && character.SelectedConstruction == null)
                 {
@@ -321,10 +218,61 @@ namespace Barotrauma
                         textPos.Y += 20;
                     }
                 }
-                
+
                 foreach (HUDProgressBar progressBar in character.HUDProgressBars.Values)
                 {
                     progressBar.Draw(spriteBatch, cam);
+                }
+            }
+
+            if (character.SelectedConstruction != null && 
+                (character.CanInteractWith(Character.Controlled.SelectedConstruction) || Screen.Selected == GameMain.SubEditorScreen))
+            {
+                character.SelectedConstruction.DrawHUD(spriteBatch, cam, Character.Controlled);
+            }
+
+            if (character.Inventory != null)
+            {
+                for (int i = 0; i < character.Inventory.Items.Length - 1; i++)
+                {
+                    var item = character.Inventory.Items[i];
+                    if (item == null || character.Inventory.SlotTypes[i] == InvSlotType.Any) continue;
+
+                    foreach (ItemComponent ic in item.components)
+                    {
+                        if (ic.DrawHudWhenEquipped) ic.DrawHUD(spriteBatch, character);
+                    }
+                }
+            }
+            
+            if (character.Inventory != null && !character.LockHands && character.Stun <= 0.1f)
+            {
+                character.Inventory.DrawOwn(spriteBatch);
+            }
+            
+            if (!character.IsUnconscious && character.Stun <= 0.0f)
+            {
+                if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
+                {
+                    if (character.SelectedCharacter.CanInventoryBeAccessed && CharacterHealth.OpenHealthWindow == null)
+                    {
+                        character.Inventory.Alignment = Alignment.Left;
+                        character.SelectedCharacter.Inventory.Alignment = Alignment.Right;
+                        character.SelectedCharacter.Inventory.DrawOwn(spriteBatch);
+                    }
+                    else
+                    {
+                        character.Inventory.Alignment = (CharacterHealth.OpenHealthWindow == null) ? Alignment.Center : Alignment.Left;
+                    }
+                    if (CharacterHealth.OpenHealthWindow == character.SelectedCharacter.CharacterHealth)
+                    {
+                        character.SelectedCharacter.CharacterHealth.Alignment = Alignment.Right;
+                        character.SelectedCharacter.CharacterHealth.DrawStatusHUD(spriteBatch);
+                    }
+                }
+                else if (character.Inventory != null)
+                {
+                    character.Inventory.Alignment = (CharacterHealth.OpenHealthWindow == null) ? Alignment.Center : Alignment.Left;
                 }
             }
         }

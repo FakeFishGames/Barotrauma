@@ -52,9 +52,16 @@ namespace Barotrauma.Items.Components
             }
 
             Vector2 drawOffset = Vector2.Zero;
-            if (item.Submarine != null)
+            Submarine sub = item.Submarine;
+            if (IsActive && sub == null) // currently being rewired, we need to get the sub from the connections in case the wire has been taken outside
             {
-                drawOffset = item.Submarine.DrawPosition + item.Submarine.HiddenSubPosition;
+                if (connections[0] != null && connections[0].Item.Submarine != null) sub = connections[0].Item.Submarine;
+                if (connections[1] != null && connections[1].Item.Submarine != null) sub = connections[1].Item.Submarine;
+            }
+
+            if (sub != null)
+            {
+                drawOffset = sub.DrawPosition + sub.HiddenSubPosition;
             }
 
             float depth = item.IsSelected ? 0.0f : wireSprite.Depth + ((item.ID % 100) * 0.00001f);
@@ -76,7 +83,7 @@ namespace Barotrauma.Items.Components
 
             foreach (WireSection section in sections)
             {
-                section.Draw(spriteBatch, item.Submarine == null ? Color.Green : item.Color, drawOffset, depth, 0.3f);
+                section.Draw(spriteBatch, item.Color, drawOffset, depth, 0.3f);
             }
 
             if (IsActive && nodes.Count > 0 && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)

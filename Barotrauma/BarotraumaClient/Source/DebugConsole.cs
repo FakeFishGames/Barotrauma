@@ -16,7 +16,7 @@ namespace Barotrauma
         private static Queue<ColoredText> queuedMessages = new Queue<ColoredText>();
 
         private static GUITextBlock activeQuestionText;
-
+        
         public static bool IsOpen
         {
             get
@@ -29,28 +29,29 @@ namespace Barotrauma
         static GUIListBox listBox;
         static GUITextBox textBox;
 
-        public static void Init(GameWindow window)
+        public static void Init()
         {
-            int x = 20, y = 20;
-            int width = 800, height = 500;
+            frame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.45f), GUI.Canvas) { MinSize = new Point(400, 300), AbsoluteOffset = new Point(10, 10) }, 
+                color: new Color(0.4f, 0.4f, 0.4f, 0.8f));
+            var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), frame.RectTransform, Anchor.Center), style: null);
 
-            frame = new GUIFrame(new Rectangle(x, y, width, height), new Color(0.4f, 0.4f, 0.4f, 0.8f));
-            frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+            listBox = new GUIListBox(new RectTransform(new Point(paddedFrame.Rect.Width, paddedFrame.Rect.Height - 30), paddedFrame.RectTransform)
+            {
+                IsFixedSize = false
+            }, color: Color.Black * 0.9f);
 
-            listBox = new GUIListBox(new Rectangle(0, 0, 0, frame.Rect.Height - 40), Color.Black, "", frame);
-            //listBox.Color = Color.Black * 0.7f;
-
-            textBox = new GUITextBox(new Rectangle(0, 0, 0, 20), Color.Black, Color.White, Alignment.BottomLeft, Alignment.Left, "", frame);
+            textBox = new GUITextBox(new RectTransform(new Point(paddedFrame.Rect.Width, 20), paddedFrame.RectTransform, Anchor.BottomLeft)
+            {
+                IsFixedSize = false
+            });
             textBox.OnTextChanged += (textBox, text) =>
-                {
-                    ResetAutoComplete();
-                    return true;
-                };
-
+            {
+                ResetAutoComplete();
+                return true;
+            };
 
             NewMessage("Press F3 to open/close the debug console", Color.Cyan);
             NewMessage("Enter \"help\" for a list of available console commands", Color.Cyan);
-
         }
 
         public static void AddToGUIUpdateList()
@@ -67,16 +68,22 @@ namespace Barotrauma
             {
                 while (queuedMessages.Count > 0)
                 {
-                    AddMessage(queuedMessages.Dequeue());
+                    var newMsg = queuedMessages.Dequeue();
+                    AddMessage(newMsg);
+
+                    if (GameSettings.SaveDebugConsoleLogs)
+                    {
+                        unsavedMessages.Add(newMsg);
+                        if (unsavedMessages.Count >= messagesPerFile)
+                        {
+                            SaveLogs();
+                            unsavedMessages.Clear();
+                        }
+                    }
                 }
             }
 
-            if (activeQuestionText != null &&
-                (listBox.children.Count == 0 || listBox.children[listBox.children.Count - 1] != activeQuestionText))
-            {
-                listBox.children.Remove(activeQuestionText);
-                listBox.children.Add(activeQuestionText);
-            }
+            activeQuestionText?.SetAsLastChild();
 
             if (PlayerInput.KeyHit(Keys.F3))
             {
@@ -88,14 +95,14 @@ namespace Barotrauma
                 }
                 else
                 {
-                    GUIComponent.ForceMouseOn(null);
+                    GUI.ForceMouseOn(null);
                     textBox.Deselect();
                 }
             }
 
             if (isOpen)
             {
-                frame.Update(deltaTime);
+                frame.UpdateManually(deltaTime);
 
                 Character.DisableControls = true;
 
@@ -124,7 +131,7 @@ namespace Barotrauma
         {
             if (!isOpen) return;
 
-            frame.Draw(spriteBatch);
+            frame.DrawManually(spriteBatch);
         }
 
         private static bool IsCommandPermitted(string command, GameClient client)
@@ -151,7 +158,10 @@ namespace Barotrauma
         {
             while (queuedMessages.Count > 0)
             {
-                AddMessage(queuedMessages.Dequeue());
+                var newMsg = queuedMessages.Dequeue();
+                AddMessage(newMsg);
+
+                if (GameSettings.SaveDebugConsoleLogs) unsavedMessages.Add(newMsg);
             }
         }
 
@@ -160,9 +170,9 @@ namespace Barotrauma
             //listbox not created yet, don't attempt to add
             if (listBox == null) return;
 
-            if (listBox.children.Count > MaxMessages)
+            if (listBox.Content.CountChildren > MaxMessages)
             {
-                listBox.children.RemoveRange(0, listBox.children.Count - MaxMessages);
+                listBox.RemoveChild(listBox.Content.Children.First());
             }
 
             Messages.Add(msg);
@@ -173,17 +183,48 @@ namespace Barotrauma
 
             try
             {
-                var textBlock = new GUITextBlock(new Rectangle(0, 0, listBox.Rect.Width, 0), msg.Text, "", Alignment.TopLeft, Alignment.Left, null, true, GUI.SmallFont);
-                textBlock.CanBeFocused = false;
-                textBlock.TextColor = msg.Color;
-
-                listBox.AddChild(textBlock);
+                var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform),
+                    msg.Text, font: GUI.SmallFont, wrap: true)
+                {
+                    CanBeFocused = false,
+                    TextColor = msg.Color
+                };
+                listBox.UpdateScrollBarSize();
                 listBox.BarScroll = 1.0f;
             }
             catch (Exception e)
             {
                 ThrowError("Failed to add a message to the debug console.", e);
             }
+
+            selectedIndex = Messages.Count;
+        }
+
+        private static void AddHelpMessage(Command command)
+        {
+            if (listBox.Content.CountChildren > MaxMessages)
+            {
+                listBox.RemoveChild(listBox.Content.Children.First());
+            }
+
+            var textContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform),
+                style: "InnerFrame", color: Color.White * 0.6f)
+            {
+                CanBeFocused = false
+            };
+            var textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width - 170, 0), textContainer.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(20, 0) },
+                command.help, textAlignment: Alignment.TopLeft, font: GUI.SmallFont, wrap: true)
+            {
+                CanBeFocused = false,
+                TextColor = Color.White
+            };
+            textContainer.RectTransform.NonScaledSize = new Point(textContainer.RectTransform.NonScaledSize.X, textBlock.RectTransform.NonScaledSize.Y + 5);
+            textBlock.SetTextPos();
+            var nameBlock = new GUITextBlock(new RectTransform(new Point(150, textContainer.Rect.Height), textContainer.RectTransform),
+                command.names[0], textAlignment: Alignment.TopLeft);
+            
+            listBox.UpdateScrollBarSize();
+            listBox.BarScroll = 1.0f;
 
             selectedIndex = Messages.Count;
         }
@@ -255,6 +296,11 @@ namespace Barotrauma
                 GameMain.ParticleEditorScreen.Select();
             }));
 
+            commands.Add(new Command("editanimations|animedit|animationeditor|animeditor|animationedit", "animationeditor: Edit animations.", (string[] args) =>
+            {
+                GameMain.AnimationEditorScreen.Select();
+            }));
+
 
             commands.Add(new Command("control|controlcharacter", "control [character name]: Start controlling the specified character.", (string[] args) =>
             {
@@ -273,7 +319,7 @@ namespace Barotrauma
                 {
                     Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
                 };
-            }));
+            }, isCheat: true));
 
             commands.Add(new Command("shake", "", (string[] args) =>
             {
@@ -284,17 +330,35 @@ namespace Barotrauma
             {
                 GameMain.LightManager.LosEnabled = !GameMain.LightManager.LosEnabled;
                 NewMessage("Line of sight effect " + (GameMain.LightManager.LosEnabled ? "enabled" : "disabled"), Color.White);
-            }));
+            }, isCheat: true));
 
             commands.Add(new Command("lighting|lights", "Toggle lighting on/off.", (string[] args) =>
             {
                 GameMain.LightManager.LightingEnabled = !GameMain.LightManager.LightingEnabled;
                 NewMessage("Lighting " + (GameMain.LightManager.LightingEnabled ? "enabled" : "disabled"), Color.White);
-            }));
+            }, isCheat: true));
+
+            commands.Add(new Command("multiplylights [color]", "Multiplies the colors of all the static lights in the sub with the given color value.", (string[] args) =>
+            {
+                if (Screen.Selected != GameMain.SubEditorScreen || args.Length < 1) return;
+
+                Color color = XMLExtensions.ParseColor(args[0]);
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.ParentInventory != null || item.body != null) continue;
+                    var lightComponent = item.GetComponent<LightComponent>();
+                    if (lightComponent != null) lightComponent.LightColor = 
+                        new Color(
+                            (lightComponent.LightColor.R / 255.0f) * (color.R / 255.0f), 
+                            (lightComponent.LightColor.G / 255.0f) * (color.G / 255.0f),
+                            (lightComponent.LightColor.B / 255.0f) * (color.B / 255.0f),
+                            (lightComponent.LightColor.A / 255.0f) * (color.A / 255.0f));
+                }
+            }, isCheat: false));
 
             commands.Add(new Command("tutorial", "", (string[] args) =>
             {
-                TutorialMode.StartTutorial(Tutorials.TutorialType.TutorialTypes[0]);
+                TutorialMode.StartTutorial(Tutorials.Tutorial.Tutorials[0]);
             }));
 
             commands.Add(new Command("lobby|lobbyscreen", "", (string[] args) =>
@@ -308,7 +372,7 @@ namespace Barotrauma
 
                 if (GameMain.SubEditorScreen.CharacterMode)
                 {
-                    GameMain.SubEditorScreen.ToggleCharacterMode();
+                    GameMain.SubEditorScreen.SetCharacterMode(false);
                 }
 
                 string fileName = string.Join(" ", args);
@@ -359,7 +423,7 @@ namespace Barotrauma
                         }
                     }
                 }
-            }));
+            }, isCheat: true));
 
             commands.Add(new Command("messagebox", "", (string[] args) =>
             {
@@ -370,6 +434,23 @@ namespace Barotrauma
             {
                 GameMain.DebugDraw = !GameMain.DebugDraw;
                 NewMessage("Debug draw mode " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.White);
+            }, isCheat: true));
+
+            commands.Add(new Command("fpscounter", "fpscounter: Toggle the FPS counter.", (string[] args) =>
+            {
+                GameMain.ShowFPS = !GameMain.ShowFPS;
+                NewMessage("FPS counter " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.White);
+            }));
+            commands.Add(new Command("showperf", "showperf: Toggle performance statistics on/off.", (string[] args) =>
+            {
+                GameMain.ShowPerf = !GameMain.ShowPerf;
+                NewMessage("Performance statistics " + (GameMain.ShowPerf ? "enabled" : "disabled"), Color.White);
+            }));
+
+            commands.Add(new Command("hudlayoutdebugdraw", "hudlayoutdebugdraw: Toggle the debug drawing mode of HUD layout areas on/off.", (string[] args) =>
+            {
+                HUDLayoutSettings.DebugDraw = !HUDLayoutSettings.DebugDraw;
+                NewMessage("HUD layout debug draw mode " + (HUDLayoutSettings.DebugDraw ? "enabled" : "disabled"), Color.White);
 
             }));
 
@@ -380,7 +461,7 @@ namespace Barotrauma
                 NewMessage(GUI.DisableHUD ? "Disabled HUD" : "Enabled HUD", Color.White);
             }));
 
-            commands.Add(new Command("followsub", "followsub: Toggle whether the ", (string[] args) =>
+            commands.Add(new Command("followsub", "followsub: Toggle whether the camera should follow the nearest submarine.", (string[] args) =>
             {
                 Camera.FollowSub = !Camera.FollowSub;
                 NewMessage(Camera.FollowSub ? "Set the camera to follow the closest submarine" : "Disabled submarine following.", Color.White);
@@ -390,7 +471,7 @@ namespace Barotrauma
             {
                 AITarget.ShowAITargets = !AITarget.ShowAITargets;
                 NewMessage(AITarget.ShowAITargets ? "Enabled AI target drawing" : "Disabled AI target drawing", Color.White);
-            }));
+            }, isCheat: true));
 #if DEBUG
             commands.Add(new Command("spamchatmessages", "", (string[] args) =>
             {
@@ -424,6 +505,8 @@ namespace Barotrauma
                 NewMessage("Resolution set to 0 x 0 (screen resolution will be used)", Color.Green);
                 NewMessage("Fullscreen enabled", Color.Green);
 
+                GameSettings.ShowUserStatisticsPrompt = true;
+
                 GameSettings.VerboseLogging = false;
 
                 if (GameMain.Config.MasterServerUrl != "http://www.undertowgames.com/baromaster")
@@ -431,7 +514,7 @@ namespace Barotrauma
                     ThrowError("MasterServerUrl \"" + GameMain.Config.MasterServerUrl + "\"!");
                 }
 
-                GameMain.Config.Save("config.xml");
+                GameMain.Config.Save();
 
                 var saveFiles = System.IO.Directory.GetFiles(SaveUtil.SaveFolder);
 

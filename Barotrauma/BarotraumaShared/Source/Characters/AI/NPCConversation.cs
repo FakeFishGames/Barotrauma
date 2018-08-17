@@ -1,21 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
 
 namespace Barotrauma
 {
     class NPCConversation
     {
-        private static List<NPCConversation> list;
+        const int MaxPreviousConversations = 20;
+
+        private static List<NPCConversation> list = new List<NPCConversation>();
         
         public readonly string Line;
 
         public readonly List<JobPrefab> AllowedJobs;
 
         public readonly List<ConversationFlag> Flags;
+
+        //The line can only be selected when eventmanager intensity is between these values
+        //null = no restriction
+        public float? maxIntensity, minIntensity;
 
         public enum ConversationFlag
         {
@@ -30,11 +34,16 @@ namespace Barotrauma
         public readonly List<NPCConversation> Responses;
         private readonly int speakerIndex;
         private readonly List<string> allowedSpeakerTags;
-        
+        public static void LoadAll(IEnumerable<string> filePaths)
+        {
+            foreach (string filePath in filePaths)
+            {
+                Load(filePath);
+            }
+        }
+
         public static void Load(string file)
         {
-            list = new List<NPCConversation>();
-
             XDocument doc = XMLExtensions.TryLoadXml(file);
             if (doc == null || doc.Root == null) return;
 
@@ -85,6 +94,9 @@ namespace Barotrauma
                 allowedSpeakerTags.Add(tag.Trim().ToLowerInvariant());                
             }
 
+            if (element.Attribute("minintensity") != null) minIntensity = element.GetAttributeFloat("minintensity", 0.0f);
+            if (element.Attribute("maxintensity") != null) maxIntensity = element.GetAttributeFloat("maxintensity", 1.0f);
+
             Responses = new List<NPCConversation>();
             foreach (XElement subElement in element.Elements())
             {
@@ -106,7 +118,8 @@ namespace Barotrauma
             return currentFlags;
         }
 
-
+        private static List<NPCConversation> previousConversations = new List<NPCConversation>();
+        
         public static List<Pair<Character, string>> CreateRandom(List<Character> availableSpeakers)
         {
             Dictionary<int, Character> assignedSpeakers = new Dictionary<int, Character>();
@@ -138,14 +151,24 @@ namespace Barotrauma
             else
             {
                 var allowedSpeakers = new List<Character>();
-                
-                //attempt to find speakers for the line, and if it fails, select the next conversation in the list
-                int i = 0;
-                while (allowedSpeakers.Count == 0 && i < conversations.Count)
-                {
-                    selectedConversation = conversations[(conversationIndex + i) % conversations.Count];
-                    if (string.IsNullOrEmpty(selectedConversation.Line)) return;
 
+                List<NPCConversation> potentialLines = new List<NPCConversation>(conversations);
+
+                //remove lines that are not appropriate for the intensity of the current situation
+                if (GameMain.GameSession?.EventManager != null)
+                {
+                    potentialLines.RemoveAll(l => 
+                        (l.minIntensity.HasValue && GameMain.GameSession.EventManager.CurrentIntensity < l.minIntensity) ||
+                        (l.maxIntensity.HasValue && GameMain.GameSession.EventManager.CurrentIntensity > l.maxIntensity));
+                }
+
+                while (potentialLines.Count > 0)
+                {
+                    //select a random line and attempt to find a speaker for it
+                    // and if no valid speaker is found, choose another random line
+                    selectedConversation = GetRandomConversation(potentialLines, baseConversation == null);
+                    if (selectedConversation == null || string.IsNullOrEmpty(selectedConversation.Line)) return;
+                    
                     //speaker already assigned for this line
                     if (assignedSpeakers.ContainsKey(selectedConversation.speakerIndex))
                     {
@@ -157,9 +180,11 @@ namespace Barotrauma
                     {
                         //check if the character has an appropriate job to say the line
                         if (selectedConversation.AllowedJobs.Count > 0 && !selectedConversation.AllowedJobs.Contains(potentialSpeaker.Info?.Job.Prefab)) continue;
+
                         //check if the character has all required flags to say the line
                         var characterFlags = GetCurrentFlags(potentialSpeaker);
                         if (!selectedConversation.Flags.All(flag => characterFlags.Contains(flag))) continue;
+
                         //check if the character has an appropriate personality
                         if (selectedConversation.allowedSpeakerTags.Count > 0)
                         {
@@ -177,7 +202,15 @@ namespace Barotrauma
 
                         allowedSpeakers.Add(potentialSpeaker);
                     }
-                    i++;
+
+                    if (allowedSpeakers.Count == 0)
+                    {
+                        potentialLines.Remove(selectedConversation);
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
 
                 if (allowedSpeakers.Count == 0) return;
@@ -186,9 +219,37 @@ namespace Barotrauma
                 assignedSpeakers.Add(selectedConversation.speakerIndex, speaker);
             }
 
-
+            if (baseConversation == null)
+            {
+                previousConversations.Insert(0, selectedConversation);
+                if (previousConversations.Count > MaxPreviousConversations) previousConversations.RemoveAt(MaxPreviousConversations);
+            }
             lineList.Add(new Pair<Character, string>(speaker, selectedConversation.Line));
-            CreateConversation(availableSpeakers,assignedSpeakers, selectedConversation, lineList);
+            CreateConversation(availableSpeakers, assignedSpeakers, selectedConversation, lineList);
+        }
+
+        private static NPCConversation GetRandomConversation(List<NPCConversation> conversations, bool avoidPreviouslyUsed)
+        {
+            if (!avoidPreviouslyUsed)
+            {
+                return conversations.Count == 0 ? null : conversations[Rand.Int(conversations.Count)];
+            }
+
+            List<float> probabilities = new List<float>();
+            foreach (NPCConversation conversation in conversations)
+            {
+                probabilities.Add(GetConversationProbability(conversation));
+            }
+            return ToolBox.SelectWeightedRandom(conversations, probabilities, Rand.RandSync.Unsynced);
+        }
+
+        private static float GetConversationProbability(NPCConversation conversation)
+        {
+            int index = previousConversations.IndexOf(conversation);
+            if (index < 0) return 10.0f;
+
+            return 1.0f - 1.0f / (index + 1);
         }
     }
+
 }

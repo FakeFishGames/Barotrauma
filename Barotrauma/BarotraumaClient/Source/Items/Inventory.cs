@@ -1,6 +1,9 @@
 ﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,6 +29,8 @@ namespace Barotrauma
         
         public Sprite SlotSprite;
 
+        public Keys QuickUseKey;
+        
         public bool IsHighlighted
         {
             get
@@ -102,13 +107,17 @@ namespace Barotrauma
     {
         public static float UIScale
         {
-            get { return (GameMain.GraphicsWidth / 1920.0f + GameMain.GraphicsHeight / 1080.0f) / 2.0f; }
+            get { return GameMain.GraphicsHeight / 1080.0f; }
         }
-
-        protected static Sprite slotSpriteSmall, slotSpriteHorizontal, slotSpriteVertical;
+                
+        protected static Sprite slotSpriteSmall, slotSpriteHorizontal, slotSpriteVertical, slotSpriteRound;
         public static Sprite EquipIndicator, EquipIndicatorOn;
 
+        protected Point screenResolution;
+
         public float HideTimer;
+
+        private bool isSubInventory;
 
         public class SlotReference
         {
@@ -147,18 +156,11 @@ namespace Barotrauma
         protected static SlotReference selectedSlot;
 
         public InventorySlot[] slots;
-
-        private Vector2 centerPos;
-
+        
         public Vector2 CenterPos
         {
-            get { return centerPos; }
-            set
-            {
-                centerPos = value;
-                centerPos.X *= GameMain.GraphicsWidth;
-                centerPos.Y *= GameMain.GraphicsHeight;
-            }
+            get;
+            set;
         }
         
         public static SlotReference SelectedSlot
@@ -176,8 +178,8 @@ namespace Barotrauma
             int rows = (int)Math.Ceiling((double)capacity / slotsPerRow);
             int columns = Math.Min(slotsPerRow, capacity);
 
-            int startX = (int)centerPos.X - (rectWidth * columns + spacing * (columns - 1)) / 2;
-            int startY = (int)centerPos.Y - (rows * (spacing + rectHeight)) / 2;
+            int startX = (int)(CenterPos.X * GameMain.GraphicsWidth) - (rectWidth * columns + spacing * (columns - 1)) / 2;
+            int startY = (int)(CenterPos.Y * GameMain.GraphicsHeight) - (rows * (spacing + rectHeight)) / 2;
 
             Rectangle slotRect = new Rectangle(startX, startY, rectWidth, rectHeight);
             for (int i = 0; i < capacity; i++)
@@ -192,6 +194,8 @@ namespace Barotrauma
             {
                 selectedSlot = new SlotReference(this, slots[selectedSlot.SlotIndex], selectedSlot.SlotIndex, selectedSlot.IsSubSlot);
             }
+
+            screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
 
         protected virtual bool HideSlot(int i)
@@ -282,64 +286,77 @@ namespace Barotrauma
 
         public void UpdateSubInventory(float deltaTime, int slotIndex)
         {
-            Inventory subInventory = GetSubInventory(slotIndex);
-            if (subInventory == null) return;
+            var item = Items[slotIndex];
+            if (item == null) return;
 
+            var container = item.GetComponent<ItemContainer>();
+            if (container == null || !container.DrawInventory) return;
+
+            var subInventory = container.Inventory;            
             if (subInventory.slots == null) subInventory.CreateSlots();
 
             int itemCapacity = subInventory.Items.Length;
             var slot = slots[slotIndex];
             int dir = Math.Sign(slot.Rect.Y - GameMain.GraphicsHeight / 2);
-
-            Rectangle subRect = slot.Rect;
-            subRect.Width = slots[slotIndex].SlotSprite == null ? (int)(60 * UIScale) : (int)(slots[slotIndex].SlotSprite.size.X * UIScale);
-            subRect.Height = (int)(60 * UIScale);
-
-            int spacing = (int)(10 * UIScale);
-
-            int columns = slot.Rect.Width / subRect.Width;
-            while (itemCapacity / columns * (subRect.Height + spacing) > GameMain.GraphicsHeight * 0.5f)
+            if (itemCapacity == 1)
             {
-                columns++;
+                Point slotSize = (slotSpriteRound.size * UIScale).ToPoint();
+                subInventory.slots[0].Rect = 
+                    new Rectangle(slot.Rect.Center.X - slotSize.X / 2, dir > 0 ? slot.Rect.Bottom + 5 : slot.EquipButtonRect.Bottom + 5, slotSize.X, slotSize.Y);
+
+                subInventory.slots[0].InteractRect = subInventory.slots[0].Rect;
+                subInventory.slots[0].DrawOffset = slot.DrawOffset;
             }
+            else
+            {
+                Rectangle subRect = slot.Rect;
+                subRect.Width = slots[slotIndex].SlotSprite == null ? (int)(60 * UIScale) : (int)(slots[slotIndex].SlotSprite.size.X * UIScale);
+                subRect.Height = (int)(60 * UIScale);
 
-            int startX = slot.Rect.Center.X - (int)(subRect.Width * (columns / 2.0f) + spacing * ((columns - 1) / 2.0f));
-            subRect.X = startX;
-            int startY = dir > 0 ? slot.Rect.Y - subRect.Height - (int)(10 * UIScale) : slot.Rect.Bottom + (int)(40 * UIScale);
-            subRect.Y = startY;
+                int spacing = (int)(10 * UIScale);
 
-            float totalHeight = itemCapacity / columns * (subRect.Height + spacing);
-
-            openState = Math.Min(openState + deltaTime, 1.0f);
-
-            for (int i = 0; i < itemCapacity; i++)
-            { 
-                subInventory.slots[i].Rect = subRect;
-                subInventory.slots[i].Rect.Location += new Point(0, (int)totalHeight * dir);
-
-                subInventory.slots[i].DrawOffset = Vector2.Lerp(subInventory.slots[i].DrawOffset, 
-                    subInventory.HideTimer >= 0.5f ? new Vector2(0, -totalHeight * dir) : new Vector2(0, 50 * dir), 
-                    deltaTime * 10.0f);
-
-                subInventory.slots[i].InteractRect = subInventory.slots[i].Rect;
-                subInventory.slots[i].InteractRect.Inflate((int)(5 * UIScale), (int)(5 * UIScale));
-
-                if ((i + 1) % columns == 0)
+                int columns = Math.Max(slot.Rect.Width / subRect.Width, 1);
+                while (itemCapacity / columns * (subRect.Height + spacing) > GameMain.GraphicsHeight * 0.5f)
                 {
-                    subRect.X = startX;
-                    subRect.Y -= subRect.Height * dir;
-                    subRect.Y -= spacing * dir;
+                    columns++;
                 }
-                else
-                {
-                    subRect.X = subInventory.slots[i].Rect.Right + spacing;
-                }
+
+                int startX = slot.Rect.Center.X - (int)(subRect.Width * (columns / 2.0f) + spacing * ((columns - 1) / 2.0f));
+                subRect.X = startX;
+                int startY = dir > 0 ? 
+                    slot.EquipButtonRect.Y - subRect.Height - (int)(20 * UIScale) : 
+                    slot.EquipButtonRect.Bottom + (int)(10 * UIScale);
+                subRect.Y = startY;
+
+                float totalHeight = itemCapacity / columns * (subRect.Height + spacing);
+                openState = Math.Min(openState + deltaTime, 1.0f);
+
+                for (int i = 0; i < itemCapacity; i++)
+                { 
+                    subInventory.slots[i].Rect = subRect;
+                    subInventory.slots[i].Rect.Location += new Point(0, (int)totalHeight * dir);
+
+                    subInventory.slots[i].DrawOffset = Vector2.Lerp(subInventory.slots[i].DrawOffset, 
+                        subInventory.HideTimer >= 0.5f ? new Vector2(0, -totalHeight * dir) : new Vector2(0, 50 * dir), 
+                        deltaTime * 10.0f);
+
+                    subInventory.slots[i].InteractRect = subInventory.slots[i].Rect;
+                    subInventory.slots[i].InteractRect.Inflate((int)(5 * UIScale), (int)(5 * UIScale));
+
+                    if ((i + 1) % columns == 0)
+                    {
+                        subRect.X = startX;
+                        subRect.Y -= subRect.Height * dir;
+                        subRect.Y -= spacing * dir;
+                    }
+                    else
+                    {
+                        subRect.X = subInventory.slots[i].Rect.Right + spacing;
+                    }
+                }        
+                slots[slotIndex].State = GUIComponent.ComponentState.Hover;
             }
-
-            subInventory.isSubInventory = true;
-            
-            slots[slotIndex].State = GUIComponent.ComponentState.Hover;
-
+            subInventory.isSubInventory = true;    
             subInventory.Update(deltaTime, true);
         }
 
@@ -355,7 +372,7 @@ namespace Barotrauma
                 //don't draw the item if it's being dragged out of the slot
                 bool drawItem = draggingItem == null || draggingItem != Items[i] || slots[i].IsHighlighted;
 
-                DrawSlot(spriteBatch, slots[i], Items[i], drawItem);
+                DrawSlot(spriteBatch, this, slots[i], Items[i], drawItem);
             }
         }
 
@@ -389,7 +406,7 @@ namespace Barotrauma
             if (item == null) return;
 
             var container = item.GetComponent<ItemContainer>();
-            if (container == null) return;
+            if (container == null || !container.DrawInventory) return;
 
             if (container.Inventory.slots == null || !container.Inventory.isSubInventory) return;
 
@@ -470,6 +487,13 @@ namespace Barotrauma
         {
             if (draggingItem != null && PlayerInput.LeftButtonReleased())
             {
+                if (CharacterHealth.OpenHealthWindow != null && 
+                    CharacterHealth.OpenHealthWindow.OnItemDropped(draggingItem))
+                {
+                    draggingItem = null;
+                    return;
+                }
+                
                 if (selectedSlot == null)
                 {
                     draggingItem.ParentInventory?.CreateNetworkEvent();
@@ -510,11 +534,9 @@ namespace Barotrauma
                 int slotIndex = Array.IndexOf(slot.ParentInventory.slots, slot.Slot);
                 if (slotIndex > 0 && slotIndex < slot.ParentInventory.slots.Length)
                 {
-                    slot.ParentInventory.DrawSubInventory(spriteBatch, slotIndex);                    
+                    slot.ParentInventory.DrawSubInventory(spriteBatch, slotIndex);
                 }
             }
-
-            
 
             if (draggingItem != null)
             {
@@ -525,7 +547,7 @@ namespace Barotrauma
                         (int)(PlayerInput.MousePosition.Y - 10 * UIScale),
                         (int)(80 * UIScale), (int)(80 * UIScale));
 
-                    DrawSlot(spriteBatch, new InventorySlot(dragRect), draggingItem);
+                    DrawSlot(spriteBatch, null, new InventorySlot(dragRect), draggingItem);
                 }
             }
 
@@ -571,11 +593,11 @@ namespace Barotrauma
 
         }
 
-        public static void DrawSlot(SpriteBatch spriteBatch, InventorySlot slot, Item item, bool drawItem = true)
+        public static void DrawSlot(SpriteBatch spriteBatch, Inventory inventory, InventorySlot slot, Item item, bool drawItem = true)
         {
             Rectangle rect = slot.Rect;
             rect.Location += slot.DrawOffset.ToPoint();
-
+            
             var itemContainer = item?.GetComponent<ItemContainer>();
             if (itemContainer != null && (itemContainer.InventoryTopSprite != null || itemContainer.InventoryBottomSprite != null))
             {
@@ -612,7 +634,7 @@ namespace Barotrauma
                     }
                 }
             }
-
+            
             if (GameMain.DebugDraw) GUI.DrawRectangle(spriteBatch, rect, Color.White, false, 0, 1);
 
             if (slot.BorderHighlightColor != Color.Transparent)
@@ -623,18 +645,118 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, highlightRect, slot.BorderHighlightColor, false, 0, 5);
             }
 
-            if (item == null || !drawItem) return;
-
-            float scale = Math.Min(Math.Min((rect.Width - 10) / item.Sprite.size.X, (rect.Height - 10) / item.Sprite.size.Y), 2.0f);
-            Vector2 itemPos = rect.Center.ToVector2();
-            if (itemPos.Y > GameMain.GraphicsHeight)
+            if (item != null && drawItem)
             {
-                itemPos.Y -= Math.Min(
-                    (itemPos.Y + item.Sprite.size.Y / 2 * scale) - GameMain.GraphicsHeight,
-                    (itemPos.Y - item.Sprite.size.Y / 2 * scale) - rect.Y);
+                Sprite sprite = item.Prefab.InventoryIcon ?? item.Sprite;
+                float scale = Math.Min(Math.Min((rect.Width - 10) / sprite.size.X, (rect.Height - 10) / sprite.size.Y), 2.0f);
+                Vector2 itemPos = rect.Center.ToVector2();
+                if (itemPos.Y > GameMain.GraphicsHeight)
+                {
+                    itemPos.Y -= Math.Min(
+                        (itemPos.Y + sprite.size.Y / 2 * scale) - GameMain.GraphicsHeight,
+                        (itemPos.Y - sprite.size.Y / 2 * scale) - rect.Y);
+                }
+
+                sprite.Draw(spriteBatch, itemPos, sprite == item.Sprite ? item.GetSpriteColor() : item.Prefab.InventoryIconColor, 0, scale);
+                
+                if (CharacterHealth.OpenHealthWindow != null)
+                {
+                    float treatmentSuitability = CharacterHealth.OpenHealthWindow.GetTreatmentSuitability(item);
+                    float skill = Character.Controlled.GetSkillLevel("Medical");
+                    if (skill > 50.0f)
+                    {
+                        Rectangle highlightRect = rect;
+                        highlightRect.Inflate(3, 3);
+
+                        Color color = treatmentSuitability < 0.0f ?
+                            Color.Lerp(Color.Transparent, Color.Red, -treatmentSuitability) :
+                            Color.Lerp(Color.Transparent, Color.Green, treatmentSuitability);
+                        GUI.DrawRectangle(spriteBatch, highlightRect, color * (((float)Math.Sin(Timing.TotalTime * 5.0f) + 1.0f) / 2.0f), false, 0, 5);
+                    }
+                }
             }
 
-            item.Sprite.Draw(spriteBatch, itemPos, item.GetSpriteColor(), 0, scale);
+            if (inventory != null && Character.Controlled?.Inventory == inventory && slot.QuickUseKey != Keys.None)
+            {
+                GUI.DrawString(spriteBatch, rect.Location.ToVector2(), 
+                    slot.QuickUseKey.ToString().Substring(1, 1), 
+                    item == null ? Color.Gray : Color.White, 
+                    Color.Black * 0.8f);
+            }
+        }
+
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        {
+            receivedItemIDs = new ushort[capacity];
+
+            for (int i = 0; i < capacity; i++)
+            {
+                receivedItemIDs[i] = msg.ReadUInt16();
+            }
+
+            //delay applying the new state if less than 1 second has passed since this client last sent a state to the server
+            //prevents the inventory from briefly reverting to an old state if items are moved around in quick succession
+
+            //also delay if we're still midround syncing, some of the items in the inventory may not exist yet
+            if (syncItemsDelay > 0.0f || GameMain.Client.MidRoundSyncing)
+            {
+                if (syncItemsCoroutine != null) CoroutineManager.StopCoroutines(syncItemsCoroutine);
+                syncItemsCoroutine = CoroutineManager.StartCoroutine(SyncItemsAfterDelay());
+            }
+            else
+            {
+                if (syncItemsCoroutine != null)
+                {
+                    CoroutineManager.StopCoroutines(syncItemsCoroutine);
+                    syncItemsCoroutine = null;
+                }
+                ApplyReceivedState();
+            }
+        }
+
+        private IEnumerable<object> SyncItemsAfterDelay()
+        {
+            while (syncItemsDelay > 0.0f || (GameMain.Client != null && GameMain.Client.MidRoundSyncing))
+            {
+                syncItemsDelay -= CoroutineManager.DeltaTime;
+                yield return CoroutineStatus.Running;
+            }
+
+            if (Owner.Removed || GameMain.Client == null)
+            {
+                yield return CoroutineStatus.Success;
+            }
+
+            ApplyReceivedState();
+
+            yield return CoroutineStatus.Success;
+        }
+
+        private void ApplyReceivedState()
+        {
+            if (receivedItemIDs == null) return;
+
+            for (int i = 0; i < capacity; i++)
+            {
+                if (receivedItemIDs[i] == 0 || (Entity.FindEntityByID(receivedItemIDs[i]) as Item != Items[i]))
+                {
+                    if (Items[i] != null) Items[i].Drop();
+                    System.Diagnostics.Debug.Assert(Items[i] == null);
+                }
+            }
+
+            for (int i = 0; i < capacity; i++)
+            {
+                if (receivedItemIDs[i] > 0)
+                {
+                    var item = Entity.FindEntityByID(receivedItemIDs[i]) as Item;
+                    if (item == null) continue;
+
+                    TryPutItem(item, i, true, true, null, false);
+                }
+            }
+
+            receivedItemIDs = null;
         }
     }
 }

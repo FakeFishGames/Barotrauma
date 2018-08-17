@@ -28,7 +28,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            return true; //We do the actual throwing in Aim because Use might be used by chems
+            return characterUsable || character == null; //We do the actual throwing in Aim because Use might be used by chems
         }
 
         public override bool SecondaryUse(float deltaTime, Character character = null)
@@ -94,8 +94,9 @@ namespace Barotrauma.Items.Components
 
                 if (throwPos < -0.0)
                 {
-                    Vector2 throwVector = picker.CursorWorldPosition - picker.WorldPosition;
-                    throwVector = Vector2.Normalize(throwVector);
+                    Vector2 throwVector = Vector2.Normalize(picker.CursorWorldPosition - picker.WorldPosition);
+                    //throw upwards if cursor is at the position of the character
+                    if (!MathUtils.IsValid(throwVector)) throwVector = Vector2.UnitY;
 
                     GameServer.Log(picker.LogName + " threw " + item.Name, ServerLog.MessageType.ItemInteraction);
 

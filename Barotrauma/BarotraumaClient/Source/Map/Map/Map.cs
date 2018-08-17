@@ -1,24 +1,311 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
     partial class Map
     {
-        private static Sprite iceTexture;
-        private static Texture2D iceCraters;
-        private static Texture2D iceCrack;
+        //how much larger the ice background is compared to the size of the map
+        private const float BackgroundScale = 1.5f;
+        
+        class MapAnim
+        {
+            public Location StartLocation;
+            public Location EndLocation;
+            public string StartMessage;
+            public string EndMessage;
 
-        private static Texture2D circleTexture;
+            public float? StartZoom;
+            public float? EndZoom;
+
+            private float startDelay;
+            public float StartDelay
+            {
+                get { return startDelay; }
+                set
+                {
+                    startDelay = value;
+                    Timer = -startDelay;
+                }
+            }
+
+            public Vector2? StartPos;
+
+            public float Duration;
+            public float Timer;
+
+            public bool Finished;
+        }
+
+        private Queue<MapAnim> mapAnimQueue = new Queue<MapAnim>();
         
         private Location highlightedLocation;
 
-        public void Update(float deltaTime, Rectangle rect, float scale = 1.0f)
+        private Vector2 drawOffset;
+        private Vector2 drawOffsetNoise;
+
+        private float subReticleAnimState;
+        private float targetReticleAnimState;
+        private Vector2 subReticlePosition;
+
+        private float zoom = 3.0f;
+
+        private Rectangle borders;
+        
+        private MapTile[,] mapTiles;
+        
+#if DEBUG
+        private GUIComponent editor;
+
+        private void CreateEditor()
         {
+            editor = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), GUI.Canvas, Anchor.TopRight, minSize: new Point(400, 0)));
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), editor.RectTransform, Anchor.Center))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f,
+                CanBeFocused = false
+            };
+
+            var listBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.95f), paddedFrame.RectTransform, Anchor.Center));
+            new SerializableEntityEditor(listBox.Content.RectTransform, generationParams, false, true);
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform), "Generate")
+            {
+                OnClicked =(btn, userData) =>
+                {
+                    Rand.SetSyncedSeed(ToolBox.StringToInt(this.seed));
+                    Generate();
+                    return true;
+                }
+            };
+        }
+#endif
+
+        struct MapTile
+        {
+            public readonly Sprite Sprite;
+            public SpriteEffects SpriteEffect;
+            public Vector2 Offset;
+
+            public MapTile(Sprite sprite, SpriteEffects spriteEffect)
+            {
+                Sprite = sprite;
+                SpriteEffect = spriteEffect;
+
+                Offset = Rand.Vector(Rand.Range(0.0f, 1.0f));
+            }
+        }
+        
+        partial void InitProjectSpecific()
+        {
+            OnLocationChanged += LocationChanged;
+
+            borders = new Rectangle(
+                (int)locations.Min(l => l.MapPosition.X),
+                (int)locations.Min(l => l.MapPosition.Y),
+                (int)locations.Max(l => l.MapPosition.X),
+                (int)locations.Max(l => l.MapPosition.Y));
+            borders.Width = borders.Width - borders.X;
+            borders.Height = borders.Height - borders.Y;
+
+            mapTiles = new MapTile[
+                (int)Math.Ceiling(size * BackgroundScale / generationParams.TileSpriteSpacing.X), 
+                (int)Math.Ceiling(size * BackgroundScale / generationParams.TileSpriteSpacing.Y)];
+
+            for (int x = 0; x < mapTiles.GetLength(0); x++)
+            {
+                for (int y = 0; y < mapTiles.GetLength(1); y++)
+                {
+                    mapTiles[x, y] = new MapTile(
+                        generationParams.BackgroundTileSprites[Rand.Int(generationParams.BackgroundTileSprites.Count)], Rand.Range(0.0f, 1.0f) < 0.5f ? 
+                        SpriteEffects.FlipHorizontally : SpriteEffects.None);
+                }
+            }
+
+            drawOffset = -currentLocation.MapPosition;
+        }
+        
+        private static Texture2D rawNoiseTexture;
+        private static Sprite rawNoiseSprite;
+        private static Texture2D noiseTexture;
+
+        partial void GenerateNoiseMapProjSpecific()
+        {
+            if (noiseTexture == null)
+            {
+                noiseTexture = new Texture2D(GameMain.Instance.GraphicsDevice, generationParams.NoiseResolution, generationParams.NoiseResolution);
+                rawNoiseTexture = new Texture2D(GameMain.Instance.GraphicsDevice, generationParams.NoiseResolution, generationParams.NoiseResolution);
+                rawNoiseSprite = new Sprite(rawNoiseTexture, null, null);
+            }
+
+            Color[] crackTextureData = new Color[generationParams.NoiseResolution * generationParams.NoiseResolution];
+            Color[] noiseTextureData = new Color[generationParams.NoiseResolution * generationParams.NoiseResolution];
+            Color[] rawNoiseTextureData = new Color[generationParams.NoiseResolution * generationParams.NoiseResolution];
+            for (int x = 0; x < generationParams.NoiseResolution; x++)
+            {
+                for (int y = 0; y < generationParams.NoiseResolution; y++)
+                {
+                    noiseTextureData[x + y * generationParams.NoiseResolution] = Color.Lerp(Color.Black, Color.Transparent, Noise[x, y]);
+                    rawNoiseTextureData[x + y * generationParams.NoiseResolution] = Color.Lerp(Color.Black, Color.White, Rand.Range(0.0f,1.0f));
+                }
+            }
+
+            float mapRadius = size / 2;
+            Vector2 mapCenter = Vector2.One * mapRadius;
+            foreach (LocationConnection connection in connections)
+            {
+                float centerDist = Vector2.Distance(connection.CenterPos, mapCenter);
+
+                Vector2 connectionStart = connection.Locations[0].MapPosition;
+                Vector2 connectionEnd = connection.Locations[1].MapPosition;
+                float connectionLength = Vector2.Distance(connectionStart, connectionEnd);
+                int iterations = (int)(Math.Sqrt(connectionLength * generationParams.ConnectionIndicatorIterationMultiplier));
+                connection.CrackSegments = MathUtils.GenerateJaggedLine(
+                    connectionStart, connectionEnd, 
+                    iterations, connectionLength * generationParams.ConnectionIndicatorDisplacementMultiplier);                
+
+                iterations = (int)(Math.Sqrt(connectionLength * generationParams.ConnectionIterationMultiplier));
+                var visualCrackSegments = MathUtils.GenerateJaggedLine(
+                    connectionStart, connectionEnd, 
+                    iterations, connectionLength * generationParams.ConnectionDisplacementMultiplier);
+
+                float totalLength = Vector2.Distance(visualCrackSegments[0][0], visualCrackSegments.Last()[1]);
+                for (int i = 0; i < visualCrackSegments.Count; i++)
+                {
+                    Vector2 start = visualCrackSegments[i][0] * (generationParams.NoiseResolution / (float)size);
+                    Vector2 end = visualCrackSegments[i][1] * (generationParams.NoiseResolution / (float)size);
+
+                    float length = Vector2.Distance(start, end);
+                    for (float x = 0; x < 1; x += 1.0f / length)
+                    {
+                        Vector2 pos = Vector2.Lerp(start, end, x);
+                        SetNoiseColorOnArea(pos, MathHelper.Clamp((int)(totalLength / 30), 2, 5) + Rand.Range(-1,1), Color.Transparent);
+                    }
+                }
+            }
+
+            void SetNoiseColorOnArea(Vector2 pos, int dist, Color color)
+            {
+                for (int x = -dist; x < dist; x++)
+                {
+                    for (int y = -dist; y < dist; y++)
+                    {
+                        float d = 1.0f - new Vector2(x, y).Length() / dist;
+                        if (d <= 0) continue;
+
+                        int xIndex = (int)pos.X + x;
+                        if (xIndex < 0 || xIndex >= generationParams.NoiseResolution) continue;
+                        int yIndex = (int)pos.Y + y;
+                        if (yIndex < 0 || yIndex >= generationParams.NoiseResolution) continue;
+
+                        float perlin = (float)PerlinNoise.Perlin(
+                            xIndex / (float)generationParams.NoiseResolution * 100.0f, 
+                            yIndex / (float)generationParams.NoiseResolution * 100.0f, 0);
+                        
+                        byte a = Math.Max(crackTextureData[xIndex + yIndex * generationParams.NoiseResolution].A, (byte)((d * perlin) * 255));
+
+                        crackTextureData[xIndex + yIndex * generationParams.NoiseResolution].A = a;
+                    }
+                }
+            }
+
+            for (int i = 0; i < noiseTextureData.Length; i++)
+            {
+                float darken = noiseTextureData[i].A / 255.0f;
+                Color pathColor = Color.Lerp(Color.White, Color.Transparent, noiseTextureData[i].A / 255.0f);
+                noiseTextureData[i] =
+                    Color.Lerp(noiseTextureData[i], pathColor, crackTextureData[i].A / 255.0f * 0.5f);
+            }
+
+            noiseTexture.SetData(noiseTextureData);
+            rawNoiseTexture.SetData(rawNoiseTextureData);
+        }
+
+        private void LocationChanged(Location prevLocation, Location newLocation)
+        {
+            if (prevLocation == newLocation) return;
+            //focus on starting location
+            mapAnimQueue.Enqueue(new MapAnim()
+            {
+                EndZoom = 2.0f,
+                EndLocation = prevLocation,
+                Duration = MathHelper.Clamp(Vector2.Distance(-drawOffset, prevLocation.MapPosition) / 1000.0f, 0.1f, 0.5f),
+            });
+            mapAnimQueue.Enqueue(new MapAnim()
+            {
+                EndZoom = 3.0f,
+                StartLocation = prevLocation,
+                EndLocation = newLocation,
+                Duration = 2.0f,
+                StartDelay = 0.5f
+            });
+        }
+
+        partial void ChangeLocationType(Location location, string prevName, LocationTypeChange change)
+        {            
+            //focus on the location
+            var mapAnim = new MapAnim()
+            {
+                EndZoom = zoom * 1.5f,
+                EndLocation = location,
+                Duration = currentLocation == location ? 1.0f : 2.0f,
+                StartDelay = 1.0f
+            };
+            if (change.Messages.Count > 0)
+            {
+                mapAnim.EndMessage = change.Messages[Rand.Range(0,change.Messages.Count)]
+                    .Replace("[prevname]", prevName)
+                    .Replace("[name]", location.Name);
+            }
+            mapAnimQueue.Enqueue(mapAnim);
+            
+            mapAnimQueue.Enqueue(new MapAnim()
+            {
+                EndZoom = zoom,
+                StartLocation = location,
+                EndLocation = currentLocation,
+                Duration = 1.0f,
+                StartDelay = 0.5f
+            });            
+        }
+
+        public void Update(float deltaTime, Rectangle rect)
+        {
+            subReticlePosition = Vector2.Lerp(subReticlePosition, currentLocation.MapPosition, deltaTime);
+            subReticleAnimState = 0.8f - Vector2.Distance(subReticlePosition, currentLocation.MapPosition) / 50.0f;
+            subReticleAnimState = MathHelper.Clamp(subReticleAnimState + (float)Math.Sin(Timing.TotalTime * 3.5f) * 0.2f, 0.0f, 1.0f);
+
+            targetReticleAnimState = selectedLocation == null ? 
+                Math.Max(targetReticleAnimState - deltaTime, 0.0f) : 
+                Math.Min(targetReticleAnimState + deltaTime, 0.6f + (float)Math.Sin(Timing.TotalTime * 2.5f) * 0.4f);
+#if DEBUG
+            if (GameMain.DebugDraw)
+            {
+                if (editor == null) CreateEditor();
+                editor.AddToGUIUpdateList(order: 1);
+            }
+#endif
+
+            if (mapAnimQueue.Count > 0)
+            {
+                hudOpenState = Math.Max(hudOpenState - deltaTime, 0.0f);
+                UpdateMapAnim(mapAnimQueue.Peek(), deltaTime);
+                if (mapAnimQueue.Peek().Finished)
+                {
+                    mapAnimQueue.Dequeue();
+                }
+                return;
+            }
+
+            hudOpenState = Math.Min(hudOpenState + deltaTime, 0.75f + (float)Math.Sin(Timing.TotalTime * 3.0f) * 0.25f);
+            
             Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y);
-            Vector2 offset = -currentLocation.MapPosition;
 
             float maxDist = 20.0f;
             float closestDist = 0.0f;
@@ -26,7 +313,7 @@ namespace Barotrauma
             for (int i = 0; i < locations.Count; i++)
             {
                 Location location = locations[i];
-                Vector2 pos = rectCenter + (location.MapPosition + offset) * scale;
+                Vector2 pos = rectCenter + (location.MapPosition + drawOffset) * zoom;
 
                 if (!rect.Contains(pos)) continue;
 
@@ -48,7 +335,8 @@ namespace Barotrauma
                     {
                         selectedConnection = connection;
                         selectedLocation = highlightedLocation;
-                        
+                        targetReticleAnimState = 0.0f;
+
                         //clients aren't allowed to select the location without a permission
                         if (GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign))
                         {
@@ -59,6 +347,13 @@ namespace Barotrauma
                 }
             }
 
+            zoom += PlayerInput.ScrollWheelSpeed / 1000.0f;
+            zoom = MathHelper.Clamp(zoom, 1.0f, 4.0f);
+
+            if (rect.Contains(PlayerInput.MousePosition) && PlayerInput.MidButtonHeld())
+            {
+                drawOffset += PlayerInput.MouseSpeed / zoom;
+            }
 #if DEBUG
             if (PlayerInput.DoubleClicked() && highlightedLocation != null)
             {
@@ -68,133 +363,183 @@ namespace Barotrauma
                     passedConnection.Passed = true;
                 }
 
+                Location prevLocation = currentLocation;
                 currentLocation = highlightedLocation;
                 CurrentLocation.Discovered = true;
-                OnLocationChanged?.Invoke(currentLocation);
+                OnLocationChanged?.Invoke(prevLocation, currentLocation);
                 ProgressWorld();
             }
 #endif
         }
-
-        public void Draw(SpriteBatch spriteBatch, Rectangle rect, float scale = 1.0f)
+        
+        public void Draw(SpriteBatch spriteBatch, Rectangle rect)
         {
+            Vector2 viewSize = new Vector2(rect.Width / zoom, rect.Height / zoom);
+            float edgeBuffer = size * (BackgroundScale - 1.0f) / 2;
+            drawOffset.X = MathHelper.Clamp(drawOffset.X, -size - edgeBuffer + viewSize.X / 2.0f, edgeBuffer -viewSize.X / 2.0f);
+            drawOffset.Y = MathHelper.Clamp(drawOffset.Y, -size - edgeBuffer + viewSize.Y / 2.0f, edgeBuffer -viewSize.Y / 2.0f);
+
+            drawOffsetNoise = new Vector2(
+                (float)PerlinNoise.Perlin(Timing.TotalTime * 0.1f % 255, Timing.TotalTime * 0.1f % 255, 0) - 0.5f, 
+                (float)PerlinNoise.Perlin(Timing.TotalTime * 0.2f % 255, Timing.TotalTime * 0.2f % 255, 0.5f) - 0.5f) * 10.0f;
+
+            Vector2 viewOffset = drawOffset + drawOffsetNoise;
+
             Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y);
-            Vector2 offset = -currentLocation.MapPosition;
 
             Rectangle prevScissorRect = GameMain.Instance.GraphicsDevice.ScissorRectangle;
             GameMain.Instance.GraphicsDevice.ScissorRectangle = rect;
-
-            iceTexture.DrawTiled(spriteBatch, new Vector2(rect.X, rect.Y), new Vector2(rect.Width, rect.Height), Vector2.Zero, Color.White * 0.8f);
-
-
-            for (int i = 0; i < locations.Count; i++)
+            
+            for (int x = 0; x < mapTiles.GetLength(0); x++)
             {
-                Location location = locations[i];
-
-                if (location.Type.HaloColor.A > 0)
+                for (int y = 0; y < mapTiles.GetLength(1); y++)
                 {
-                    Vector2 pos = rectCenter + (location.MapPosition + offset) * scale;
-
-                    spriteBatch.Draw(circleTexture, pos, null, location.Type.HaloColor * 0.1f, 0.0f,
-                        new Vector2(512, 512), scale * 0.1f, SpriteEffects.None, 0);
+                    Vector2 mapPos = new Vector2(
+                        x * generationParams.TileSpriteSpacing.X + ((y % 2 == 0) ? 0.0f : generationParams.TileSpriteSpacing.X * 0.5f), 
+                        y * generationParams.TileSpriteSpacing.Y);
+                    
+                    mapPos.X -= size / 2 * (BackgroundScale - 1.0f);
+                    mapPos.Y -= size / 2 * (BackgroundScale - 1.0f);
+                    
+                    Vector2 scale = new Vector2(
+                        generationParams.TileSpriteSize.X / mapTiles[x, y].Sprite.size.X, 
+                        generationParams.TileSpriteSize.Y / mapTiles[x, y].Sprite.size.Y);
+                    mapTiles[x, y].Sprite.Draw(spriteBatch, rectCenter + (mapPos + viewOffset) * zoom, Color.White,
+                        origin: new Vector2(256.0f, 256.0f), rotate: 0, scale: scale * zoom, spriteEffect: mapTiles[x, y].SpriteEffect);
                 }
             }
-
-            foreach (LocationConnection connection in connections)
+#if DEBUG
+            if (generationParams.ShowNoiseMap)
             {
-                Color crackColor = Color.White;
-                
-                if (selectedLocation != currentLocation &&
-                    (connection.Locations.Contains(selectedLocation) && connection.Locations.Contains(currentLocation)))
-                {
-                    crackColor = Color.Red;
-                }
-                else if (highlightedLocation != currentLocation &&
-                (connection.Locations.Contains(highlightedLocation) && connection.Locations.Contains(currentLocation)))
-                {
-                    crackColor = Color.Red * 0.5f;
-                }
-                else if (!connection.Passed)
-                {
-                    crackColor *= 0.5f;
-                }
+                GUI.DrawRectangle(spriteBatch, rectCenter + (borders.Location.ToVector2() + viewOffset) * zoom, borders.Size.ToVector2() * zoom, Color.White, true);
+            }
+#endif
+            Vector2 topLeft = rectCenter + viewOffset * zoom;
+            topLeft.X = (int)topLeft.X;
+            topLeft.Y = (int)topLeft.Y;
 
-                for (int i = 0; i < connection.CrackSegments.Count; i++)
+            Vector2 bottomRight = rectCenter + (viewOffset + new Vector2(size,size)) * zoom;
+            bottomRight.X = (int)bottomRight.X;
+            bottomRight.Y = (int)bottomRight.Y;
+
+            spriteBatch.Draw(noiseTexture,
+                destinationRectangle: new Rectangle((int)topLeft.X, (int)topLeft.Y, (int)(bottomRight.X- topLeft.X), (int)(bottomRight.Y - topLeft.Y)),
+                sourceRectangle: null,
+                color: Color.White);
+
+            if (topLeft.X > rect.X)
+                GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, rect.Y, (int)(topLeft.X- rect.X), rect.Height), Color.Black* 0.8f, true);
+            if (topLeft.Y > rect.Y)
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)topLeft.X, rect.Y, (int)(bottomRight.X - topLeft.X), (int)(topLeft.Y - rect.Y)), Color.Black * 0.8f, true);
+            if (bottomRight.X < rect.Right)
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)bottomRight.X, rect.Y, (int)(rect.Right - bottomRight.X), rect.Height), Color.Black * 0.8f, true);
+            if (bottomRight.Y < rect.Bottom)
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)topLeft.X, (int)bottomRight.Y, (int)(bottomRight.X - topLeft.X), (int)(rect.Bottom - bottomRight.Y)), Color.Black * 0.8f, true);
+            
+            var sourceRect = rect;
+            float rawNoiseScale = 1.0f + Noise[(int)(Timing.TotalTime * 100 % Noise.GetLength(0) - 1), (int)(Timing.TotalTime * 100 % Noise.GetLength(1) - 1)];
+            cameraNoiseStrength = Noise[(int)(Timing.TotalTime * 10 % Noise.GetLength(0) - 1), (int)(Timing.TotalTime * 10 % Noise.GetLength(1) - 1)];
+
+            rawNoiseSprite.DrawTiled(spriteBatch, rect.Location.ToVector2(), rect.Size.ToVector2(), 
+                startOffset: new Point(Rand.Range(0,rawNoiseSprite.SourceRect.Width), Rand.Range(0, rawNoiseSprite.SourceRect.Height)),
+                color : Color.White * cameraNoiseStrength * 0.5f,
+                textureScale: Vector2.One * rawNoiseScale);
+            
+            if (generationParams.ShowLocations)
+            {
+                foreach (LocationConnection connection in connections)
                 {
-                    var segment = connection.CrackSegments[i];
+                    Color crackColor = Color.White;
 
-                    Vector2 start = rectCenter + (segment[0] + offset) * scale;
-                    Vector2 end = rectCenter + (segment[1] + offset) * scale;
-
-                    if (!rect.Contains(start) && !rect.Contains(end))
+                    if (selectedLocation != currentLocation &&
+                        (connection.Locations.Contains(selectedLocation) && connection.Locations.Contains(currentLocation)))
                     {
-                        continue;
+                        crackColor = Color.Red;
                     }
-                    else
+                    else if (highlightedLocation != currentLocation &&
+                    (connection.Locations.Contains(highlightedLocation) && connection.Locations.Contains(currentLocation)))
                     {
-                        Vector2? intersection = MathUtils.GetLineRectangleIntersection(start, end, new Rectangle(rect.X, rect.Y + rect.Height, rect.Width, rect.Height));
-                        if (intersection != null)
+                        crackColor = Color.Red * 0.5f;
+                    }
+                    else if (!connection.Passed)
+                    {
+                        //crackColor *= 0.5f;
+                    }
+
+                    for (int i = 0; i < connection.CrackSegments.Count; i++)
+                    {
+                        var segment = connection.CrackSegments[i];
+
+                        Vector2 start = rectCenter + (segment[0] + viewOffset) * zoom;
+                        Vector2 end = rectCenter + (segment[1] + viewOffset) * zoom;
+
+                        if (!rect.Contains(start) && !rect.Contains(end))
                         {
-                            if (!rect.Contains(start))
+                            continue;
+                        }
+                        else
+                        {
+                            Vector2? intersection = MathUtils.GetLineRectangleIntersection(start, end, new Rectangle(rect.X, rect.Y + rect.Height, rect.Width, rect.Height));
+                            if (intersection != null)
                             {
-                                start = (Vector2)intersection;
-                            }
-                            else
-                            {
-                                end = (Vector2)intersection;
+                                if (!rect.Contains(start))
+                                {
+                                    start = (Vector2)intersection;
+                                }
+                                else
+                                {
+                                    end = (Vector2)intersection;
+                                }
                             }
                         }
+
+                        float distFromPlayer = Vector2.Distance(currentLocation.MapPosition, (segment[0] + segment[1]) / 2.0f);
+                        float dist = Vector2.Distance(start, end);
+
+                        int width = (int)(3 * zoom);
+
+                        float a = (200.0f - distFromPlayer) / 200.0f;
+                        spriteBatch.Draw(generationParams.ConnectionSprite.Texture,
+                            new Rectangle((int)start.X, (int)start.Y, (int)(dist - 1 * zoom), width),
+                            null, crackColor * MathHelper.Clamp(a, 0.1f, 0.5f), MathUtils.VectorToAngle(end - start),
+                            new Vector2(0, 16), SpriteEffects.None, 0.01f);
                     }
 
-                    float dist = Vector2.Distance(start, end);
-
-                    int width = (int)(MathHelper.Lerp(5.0f, 25f, connection.Difficulty / 100.0f) * scale);
-
-                    spriteBatch.Draw(iceCrack,
-                        new Rectangle((int)start.X, (int)start.Y, (int)dist + 2, width),
-                        new Rectangle(0, 0, iceCrack.Width, 60), crackColor, MathUtils.VectorToAngle(end - start),
-                        new Vector2(0, 30), SpriteEffects.None, 0.01f);
+                    if (GameMain.DebugDraw && zoom > 1.0f && generationParams.ShowLevelTypeNames)
+                    {
+                        Vector2 center = rectCenter + (connection.CenterPos + viewOffset) * zoom;
+                        if (rect.Contains(center))
+                        {
+                            GUI.DrawString(spriteBatch, center, connection.Biome.Name + " (" + connection.Difficulty + ")", Color.White);
+                        }
+                    }
                 }
-
-
-
-                if (GameMain.DebugDraw)
-                {
-                    Vector2 center = rectCenter + (connection.CenterPos + offset) * scale;
-                    GUI.DrawString(spriteBatch, center, connection.Biome.Name + " (" + connection.Difficulty + ")", Color.White);
-                }
-            }
-
-            for (int i = 0; i < DifficultyZones; i++)
-            {
-                float radius = size / 2 * ((i + 1.0f) / DifficultyZones);
-                float textureSize = (radius / (circleTexture.Width / 2) * scale);
-
-                spriteBatch.Draw(circleTexture, rectCenter + (offset + new Vector2(size / 2, size / 2)) * scale, null, Color.Black * 0.05f, 0.0f,
-                    new Vector2(512, 512), textureSize, SpriteEffects.None, 0);
-            }
-
-            rect.Inflate(8, 8);
-            GUI.DrawRectangle(spriteBatch, rect, Color.Black, false, 0.0f, 8);
-            GUI.DrawRectangle(spriteBatch, rect, Color.LightGray);
-
-            for (int i = 0; i < locations.Count; i++)
-            {
-                Location location = locations[i];
-                Vector2 pos = rectCenter + (location.MapPosition + offset) * scale;
-
-                Rectangle drawRect = location.Type.Sprite.SourceRect;
-                drawRect.X = (int)pos.X - drawRect.Width / 2;
-                drawRect.Y = (int)pos.Y - drawRect.Width / 2;
-
-                if (!rect.Intersects(drawRect)) continue;
-
-                Color color = location.Connections.Find(c => c.Locations.Contains(currentLocation)) == null ? Color.White : Color.Green;
-                color *= (location.Discovered) ? 0.8f : 0.5f;
-                if (location == currentLocation) color = Color.Orange;
                 
-                spriteBatch.Draw(location.Type.Sprite.Texture, pos, null, color, 0.0f, location.Type.Sprite.size / 2, 0.25f * scale, SpriteEffects.None, 0.0f);
+                rect.Inflate(8, 8);
+                GUI.DrawRectangle(spriteBatch, rect, Color.Black, false, 0.0f, 8);
+                GUI.DrawRectangle(spriteBatch, rect, Color.LightGray);
+
+                for (int i = 0; i < locations.Count; i++)
+                {
+                    Location location = locations[i];
+                    Vector2 pos = rectCenter + (location.MapPosition + viewOffset) * zoom;
+
+                    Rectangle drawRect = location.Type.Sprite.SourceRect;
+                    drawRect.X = (int)pos.X - drawRect.Width / 2;
+                    drawRect.Y = (int)pos.Y - drawRect.Width / 2;
+
+                    if (!rect.Intersects(drawRect)) continue;
+
+                    Color color = location.Connections.Find(c => c.Locations.Contains(currentLocation)) == null ? Color.Orange : Color.Green;
+                    //color *= (location.Discovered) ? 0.8f : 0.5f;
+                    if (location == currentLocation) color = Color.Red;
+
+                    spriteBatch.Draw(location.Type.Sprite.Texture, pos, null, color, 0.0f, location.Type.Sprite.size / 2, 0.2f * zoom, SpriteEffects.None, 0.0f);
+                }
+
             }
+            
+            DrawDecorativeHUD(spriteBatch, rect);
 
             for (int i = 0; i < 3; i++)
             {
@@ -203,14 +548,146 @@ namespace Barotrauma
 
                 if (location == null) continue;
 
-                Vector2 pos = rectCenter + (location.MapPosition + offset) * scale;
-                pos.X = (int)(pos.X + location.Type.Sprite.SourceRect.Width * 0.6f);
-                pos.Y = (int)(pos.Y - 10);
-                GUI.DrawString(spriteBatch, pos, location.Name, Color.White, Color.Black * 0.8f, 3);
-                GUI.DrawString(spriteBatch, pos + Vector2.UnitY * 25, location.Type.DisplayName, Color.White, Color.Black * 0.8f, 3);
+                Vector2 pos = rectCenter + (location.MapPosition + viewOffset) * zoom;
+                //pos.X = (int)(pos.X + location.Type.Sprite.SourceRect.Width * 0.6f);
+                pos.Y = (int)(pos.Y + 15 * zoom);
+                GUI.DrawString(spriteBatch, pos - GUI.Font.MeasureString(location.Name) * 0.5f, 
+                    location.Name, Color.White * hudOpenState, Color.Black * 0.8f * hudOpenState, 3);
+                GUI.DrawString(spriteBatch, pos + Vector2.UnitY * 25 - GUI.Font.MeasureString(location.Type.DisplayName) * 0.5f, 
+                    location.Type.DisplayName, Color.White * hudOpenState, Color.Black * 0.8f * hudOpenState, 3);
+            }
+                        
+            GameMain.Instance.GraphicsDevice.ScissorRectangle = prevScissorRect;
+        }
+
+        private float hudOpenState;
+        private float cameraNoiseStrength;
+
+        private void DrawDecorativeHUD(SpriteBatch spriteBatch, Rectangle rect)
+        {
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, null, null, GameMain.ScissorTestEnable);
+            
+            if (generationParams.ShowOverlay)
+            {
+                Vector2 mapCenter = rect.Center.ToVector2() + (new Vector2(size, size) / 2 + drawOffset + drawOffsetNoise) * zoom;
+                Vector2 centerDiff = CurrentLocation.MapPosition - new Vector2(size) / 2;
+                int currentZone = (int)Math.Floor((centerDiff.Length() / (size * 0.5f) * generationParams.DifficultyZones));
+                for (int i = 0; i < generationParams.DifficultyZones; i++)
+                {
+                    float radius = size / 2 * ((i + 1.0f) / generationParams.DifficultyZones);
+                    float textureSize = (radius / (generationParams.MapCircle.size.X / 2) * zoom);
+                    
+                    generationParams.MapCircle.Draw(spriteBatch,
+                        mapCenter, 
+                        i == currentZone || i == currentZone - 1  ? Color.White * 0.5f : Color.White * 0.2f, 
+                        i * 0.4f + (float)Timing.TotalTime * 0.01f, textureSize);
+                }
             }
 
-            GameMain.Instance.GraphicsDevice.ScissorRectangle = prevScissorRect;
+            float animPulsate = (float)Math.Sin(Timing.TotalTime * 2.0f) * 0.1f;
+
+            Vector2 frameSize = generationParams.DecorativeGraphSprite.FrameSize.ToVector2();
+            generationParams.DecorativeGraphSprite.Draw(spriteBatch, (int)((cameraNoiseStrength + animPulsate) * hudOpenState * generationParams.DecorativeGraphSprite.FrameCount),
+                new Vector2(rect.Right, rect.Bottom), Color.White, frameSize, 0,
+                Vector2.Divide(new Vector2(rect.Width / 4, rect.Height / 10), frameSize));
+
+            frameSize = generationParams.DecorativeMapSprite.FrameSize.ToVector2();
+            generationParams.DecorativeMapSprite.Draw(spriteBatch, (int)((cameraNoiseStrength + animPulsate) * hudOpenState * generationParams.DecorativeMapSprite.FrameCount),
+                new Vector2(rect.X, rect.Y), Color.White, new Vector2(0, frameSize.Y * 0.2f), 0,
+                Vector2.Divide(new Vector2(rect.Width / 3, rect.Height / 5), frameSize), spriteEffect: SpriteEffects.FlipVertically);
+
+            GUI.DrawString(spriteBatch,
+                new Vector2(rect.X + rect.Width / 15, rect.Y + rect.Height / 11),
+                "JOVIAN FLUX " + ((cameraNoiseStrength + Rand.Range(-0.02f, 0.02f)) * 500), Color.White * hudOpenState, font: GUI.SmallFont);
+            GUI.DrawString(spriteBatch,
+                new Vector2(rect.X + rect.Width * 0.27f, rect.Y + rect.Height * 0.93f),
+                "LAT " + (-drawOffset.Y / 100.0f) + "   LON " + (-drawOffset.X / 100.0f), Color.White * hudOpenState, font: GUI.SmallFont);
+
+            System.Text.StringBuilder sb = new System.Text.StringBuilder("GEST F ");
+            for (int i = 0; i < 20; i++)
+            {
+                sb.Append(Rand.Range(0.0f, 1.0f) < cameraNoiseStrength ? ToolBox.RandomSeed(1) : "0");
+            }
+            GUI.DrawString(spriteBatch,
+                new Vector2(rect.X + rect.Width * 0.8f, rect.Y + rect.Height * 0.96f),
+                sb.ToString(), Color.White * hudOpenState, font: GUI.SmallFont);
+
+            frameSize = generationParams.DecorativeLineTop.FrameSize.ToVector2();
+            generationParams.DecorativeLineTop.Draw(spriteBatch, (int)(hudOpenState * generationParams.DecorativeLineTop.FrameCount),
+                new Vector2(rect.Right, rect.Y), Color.White, new Vector2(frameSize.X, frameSize.Y * 0.2f), 0,
+                Vector2.Divide(new Vector2(rect.Width * 0.72f, rect.Height / 9), frameSize));
+            frameSize = generationParams.DecorativeLineBottom.FrameSize.ToVector2();
+            generationParams.DecorativeLineBottom.Draw(spriteBatch, (int)(hudOpenState * generationParams.DecorativeLineBottom.FrameCount),
+                new Vector2(rect.X, rect.Bottom), Color.White, new Vector2(0, frameSize.Y * 0.6f), 0,
+                Vector2.Divide(new Vector2(rect.Width * 0.72f, rect.Height / 9), frameSize));
+
+            frameSize = generationParams.DecorativeLineCorner.FrameSize.ToVector2();
+            generationParams.DecorativeLineCorner.Draw(spriteBatch, (int)((hudOpenState + animPulsate) * generationParams.DecorativeLineCorner.FrameCount),
+                new Vector2(rect.Right - rect.Width / 8, rect.Bottom), Color.White, frameSize * 0.8f, 0,
+                Vector2.Divide(new Vector2(rect.Width / 4, rect.Height / 4), frameSize), spriteEffect: SpriteEffects.FlipVertically);
+
+            generationParams.DecorativeLineCorner.Draw(spriteBatch, (int)((hudOpenState + animPulsate) * generationParams.DecorativeLineCorner.FrameCount),
+                new Vector2(rect.X + rect.Width / 8, rect.Y), Color.White, frameSize * 0.1f, 0,
+                Vector2.Divide(new Vector2(rect.Width / 4, rect.Height / 4), frameSize), spriteEffect: SpriteEffects.FlipHorizontally);
+
+            //reticles
+            generationParams.ReticleLarge.Draw(spriteBatch, (int)(subReticleAnimState * generationParams.ReticleLarge.FrameCount),
+                rect.Center.ToVector2() + (subReticlePosition + drawOffset - drawOffsetNoise * 2) * zoom, Color.White,
+                generationParams.ReticleLarge.Origin, 0, Vector2.One * (float)Math.Sqrt(zoom) * 0.4f);
+            generationParams.ReticleMedium.Draw(spriteBatch, (int)(subReticleAnimState * generationParams.ReticleMedium.FrameCount),
+                rect.Center.ToVector2() + (subReticlePosition + drawOffset - drawOffsetNoise) * zoom, Color.White,
+                generationParams.ReticleMedium.Origin, 0, new Vector2(1.0f, 0.7f) * (float)Math.Sqrt(zoom) * 0.4f);
+
+            if (selectedLocation != null)
+            {
+                generationParams.ReticleSmall.Draw(spriteBatch, (int)(targetReticleAnimState * generationParams.ReticleSmall.FrameCount),
+                    rect.Center.ToVector2() + (selectedLocation.MapPosition + drawOffset + drawOffsetNoise * 2) * zoom, Color.White,
+                    generationParams.ReticleSmall.Origin, 0, new Vector2(1.0f, 0.7f) * (float)Math.Sqrt(zoom) * 0.4f);
+            }
+
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
+        }
+
+        private void UpdateMapAnim(MapAnim anim, float deltaTime)
+        {
+            //pause animation while there are messageboxes on screen
+            if (GUIMessageBox.MessageBoxes.Count > 0) return;
+
+            if (!string.IsNullOrEmpty(anim.StartMessage))
+            {
+                new GUIMessageBox("", anim.StartMessage);
+                anim.StartMessage = null;
+                return;
+            }
+
+            if (anim.StartZoom == null) anim.StartZoom = zoom;
+            if (anim.EndZoom == null) anim.EndZoom = zoom;
+
+            anim.StartPos = (anim.StartLocation == null) ? -drawOffset : anim.StartLocation.MapPosition;
+
+
+
+            anim.Timer = Math.Min(anim.Timer + deltaTime, anim.Duration);
+            float t = anim.Duration <= 0.0f ? 1.0f : Math.Max(anim.Timer / anim.Duration, 0.0f);
+            drawOffset = -Vector2.SmoothStep(anim.StartPos.Value, anim.EndLocation.MapPosition, t);
+            drawOffset += new Vector2(
+                (float)PerlinNoise.Perlin(Timing.TotalTime * 0.3f % 255, Timing.TotalTime * 0.4f % 255, 0) - 0.5f,
+                (float)PerlinNoise.Perlin(Timing.TotalTime * 0.4f % 255, Timing.TotalTime * 0.3f % 255, 0.5f) - 0.5f) * 50.0f * (float)Math.Sin(t * MathHelper.Pi);
+
+            zoom = MathHelper.SmoothStep(anim.StartZoom.Value, anim.EndZoom.Value, t);
+
+            if (anim.Timer >= anim.Duration)
+            {
+                if (!string.IsNullOrEmpty(anim.EndMessage))
+                {
+                    new GUIMessageBox("", anim.EndMessage);
+                    anim.EndMessage = null;
+                    return;
+                }
+                anim.Finished = true;
+            }
         }
     }
 }

@@ -135,10 +135,14 @@ namespace Barotrauma.Networking
 
                 catch (Exception e)
                 {
+                    string entityName = bufferedEvent.TargetEntity == null ? "null" : bufferedEvent.TargetEntity.ToString();
                     if (GameSettings.VerboseLogging)
                     {
-                        DebugConsole.ThrowError("Failed to read event for entity \"" + bufferedEvent.TargetEntity.ToString() + "\"!", e);
+                        DebugConsole.ThrowError("Failed to read server event for entity \"" + entityName + "\"!", e);
                     }
+                    GameAnalyticsManager.AddErrorEventOnce("ServerEntityEventManager.Read:ReadFailed" + entityName,
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Failed to read server event for entity \"" + entityName + "\"!\n" + e.StackTrace);
                 }
 
                 bufferedEvent.IsProcessed = true;
@@ -323,7 +327,7 @@ namespace Barotrauma.Networking
                 UInt16 thisEventID = (UInt16)(firstEventID + (UInt16)i);
                 UInt16 entityID = msg.ReadUInt16();
 
-                if (entityID == 0)
+                if (entityID == Entity.NullEntityID)
                 {
                     msg.ReadPadBits();
                     if (thisEventID == (UInt16)(sender.LastSentEntityEventID + 1)) sender.LastSentEntityEventID++;

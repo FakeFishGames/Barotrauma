@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 #endif
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -46,7 +47,7 @@ namespace Barotrauma
                 subscribedToDeathEvent = true;
             }
 
-            UpdateMessages(prevStrength, characterHealth.Character);
+            if (characterHealth.Character == Character.Controlled) UpdateMessages(prevStrength, characterHealth.Character);
             if (Strength < Prefab.MaxStrength * 0.5f)
             {
                 UpdateDormantState(deltaTime, characterHealth.Character);
@@ -68,19 +69,20 @@ namespace Barotrauma
             {
                 if (prevStrength % 10.0f > 0.05f && Strength % 10.0f < 0.05f)
                 {
-                    GUI.AddMessage(TextManager.Get("HuskDormant"), Color.Red, 4.0f);
+                    GUI.AddMessage(TextManager.Get("HuskDormant"), Color.Red);
                 }
             }
             else if (Strength < Prefab.MaxStrength)
             {
                 if (state == InfectionState.Dormant && Character.Controlled == character)
                 {
-                    new GUIMessageBox("", TextManager.Get("HuskCantSpeak"));
+                    GUI.AddMessage(TextManager.Get("HuskCantSpeak"), Color.Red);
                 }
             }
             else if (state != InfectionState.Active && Character.Controlled == character)
             {
-                new GUIMessageBox("", TextManager.Get("HuskActivate"));
+                GUI.AddMessage(TextManager.Get("HuskActivate").Replace("[Attack]", GameMain.Config.KeyBind(InputType.Attack).ToString()), 
+                    Color.Red);
             }
 #endif
         }
@@ -115,6 +117,7 @@ namespace Barotrauma
 
             foreach (Limb limb in character.AnimController.Limbs)
             {
+                character.LastDamageSource = null;
                 character.DamageLimb(
                     limb.WorldPosition, limb,
                     new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(0.5f * deltaTime / character.AnimController.Limbs.Length) },
@@ -187,7 +190,7 @@ namespace Barotrauma
             subscribedToDeathEvent = false;
         }
 
-        private void CharacterDead(Character character, CauseOfDeathType causeOfDeath)
+        private void CharacterDead(Character character, CauseOfDeath causeOfDeath)
         {
             if (GameMain.Client != null) return;
 
@@ -209,8 +212,8 @@ namespace Barotrauma
             character.Enabled = false;
             Entity.Spawner.AddToRemoveQueue(character);
 
-            var characterFiles = GameMain.SelectedPackage.GetFilesOfType(ContentType.Character);
-            var configFile = characterFiles.Find(f => Path.GetFileNameWithoutExtension(f) == "humanhusk");
+            var characterFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
+            var configFile = characterFiles.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f) == "humanhusk");
 
             if (string.IsNullOrEmpty(configFile))
             {
@@ -218,7 +221,7 @@ namespace Barotrauma
                 yield return CoroutineStatus.Success;
             }
 
-            var husk = Character.Create(configFile, character.WorldPosition, character.Info, false, true);
+            var husk = Character.Create(configFile, character.WorldPosition, character.Info.Name, character.Info, false, true);
 
             foreach (Limb limb in husk.AnimController.Limbs)
             {

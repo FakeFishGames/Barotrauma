@@ -16,14 +16,15 @@ namespace Barotrauma.Items.Components
         private ushort[] itemIds;
 
         //how many items can be contained
+        private int capacity;
         [Serialize(5, false)]
         public int Capacity
         {
             get { return capacity; }
             set { capacity = Math.Max(value, 1); }
         }
-        private int capacity;
 
+        private bool hideItems;
         [Serialize(true, false)]
         public bool HideItems
         {
@@ -34,43 +35,42 @@ namespace Barotrauma.Items.Components
                 Drawable = !hideItems;
             }
         }
-        private bool hideItems;
-
-        [Serialize(false, false)]
+        
+        [Serialize(true, false)]
         public bool DrawInventory
         {
-            get { return drawInventory; }
-            set { drawInventory = value; }
+            get;
+            set;
         }
-        private bool drawInventory;
 
         //the position of the first item in the container
+        private Vector2 itemPos;
         [Serialize("0.0,0.0", false)]
         public Vector2 ItemPos
         {
             get { return itemPos; }
             set { itemPos = value; }
         }
-        private Vector2 itemPos;
 
         //item[i].Pos = itemPos + itemInterval*i 
+        private Vector2 itemInterval;
         [Serialize("0.0,0.0", false)]
         public Vector2 ItemInterval
         {
             get { return itemInterval; }
             set { itemInterval = value; }
         }
-        private Vector2 itemInterval;
 
+        private float itemRotation;
         [Serialize(0.0f, false)]
         public float ItemRotation
         {
             get { return MathHelper.ToDegrees(itemRotation); }
             set { itemRotation = MathHelper.ToRadians(value); }
         }
-        private float itemRotation;
 
 
+        private Vector2 hudPos;
         [Serialize("0.5,0.5", false)]
         public Vector2 HudPos
         {
@@ -80,15 +80,23 @@ namespace Barotrauma.Items.Components
                 hudPos = value;
             }
         }
-        private Vector2 hudPos;
 
+        private int slotsPerRow;
         [Serialize(5, false)]
         public int SlotsPerRow
         {
             get { return slotsPerRow; }
             set { slotsPerRow = value; }
         }
-        private int slotsPerRow;
+
+
+        private string uiLabel;
+        [Serialize(null, false)]
+        public string UILabel
+        {
+            get { return uiLabel; }
+            set { uiLabel = value; }
+        }
 
         public List<RelatedItem> ContainableItems
         {
@@ -107,28 +115,18 @@ namespace Barotrauma.Items.Components
                 {
                     case "containable":
                         RelatedItem containable = RelatedItem.Load(subElement);
-                        if (containable == null) continue;
-                        
+                        if (containable == null) continue;                        
                         containableItems.Add(containable);
-
                         break;
-
-#if CLIENT
-                    case "topsprite":
-                        inventoryTopSprite = new Sprite(subElement);
-                        break;
-                    case "backsprite":
-                        inventoryBackSprite = new Sprite(subElement);
-                        break;
-                    case "bottomsprite":
-                        inventoryBottomSprite = new Sprite(subElement);
-                        break;
-#endif
                 }
             }
 
+            InitProjSpecific(element);
+
             itemsWithStatusEffects = new List<Pair<Item, StatusEffect>>();
         }
+
+        partial void InitProjSpecific(XElement element);
 
         public void OnItemContained(Item containedItem)
         {
@@ -177,9 +175,9 @@ namespace Barotrauma.Items.Components
 
                 StatusEffect effect = itemAndEffect.Second;
 
-                if (effect.Targets.HasFlag(StatusEffect.TargetType.This))                 
+                if (effect.HasTargetType(StatusEffect.TargetType.This))                 
                     effect.Apply(ActionType.OnContaining, deltaTime, item, item.AllPropertyObjects);
-                if (effect.Targets.HasFlag(StatusEffect.TargetType.Contained)) 
+                if (effect.HasTargetType(StatusEffect.TargetType.Contained)) 
                     effect.Apply(ActionType.OnContaining, deltaTime, item, contained.AllPropertyObjects);
             }
         }
@@ -188,7 +186,6 @@ namespace Barotrauma.Items.Components
         {
             return (picker != null);
         }
-
 
         public override bool Combine(Item item)
         {
@@ -203,6 +200,33 @@ namespace Barotrauma.Items.Components
             }
 
             return false;
+        }
+
+        public void SetContainedItemPositions()
+        {
+            Vector2 simPos = item.SimPosition;
+            Vector2 displayPos = item.Position;
+
+            foreach (Item contained in Inventory.Items)
+            {
+                if (contained == null) continue;
+
+                if (contained.body != null)
+                {
+                    contained.body.FarseerBody.SetTransformIgnoreContacts(ref simPos, 0.0f);
+                }
+
+                contained.Rect =
+                    new Rectangle(
+                        (int)(displayPos.X - contained.Rect.Width / 2.0f),
+                        (int)(displayPos.Y + contained.Rect.Height / 2.0f),
+                        contained.Rect.Width, contained.Rect.Height);
+
+                contained.Submarine = item.Submarine;
+                contained.CurrentHull = item.CurrentHull;
+
+                contained.SetContainedItemPositions();
+            }
         }
 
         public override void OnMapLoaded()
@@ -229,7 +253,7 @@ namespace Barotrauma.Items.Components
             foreach (Item item in Inventory.Items)
             {
                 if (item == null) continue;
-                item.Remove();
+                item.Drop();
             }
 
 #if CLIENT

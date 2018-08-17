@@ -54,9 +54,9 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (string.IsNullOrWhiteSpace(expression) || regex==null) return;
+            if (string.IsNullOrWhiteSpace(expression) || regex == null) return;
 
-            if (receivedSignal != previousReceivedSignal)
+            if (receivedSignal != previousReceivedSignal && receivedSignal != null)
             {
                 try
                 {
@@ -77,7 +77,7 @@ namespace Barotrauma.Items.Components
             item.SendSignal(0, previousResult ? output : "0", "signal_out", null);
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
             switch (connection.Name)
             {

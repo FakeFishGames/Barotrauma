@@ -13,7 +13,7 @@ namespace Barotrauma
 {
     static partial class CaveGenerator
     {
-        public static List<VoronoiCell> CarveCave(List<VoronoiCell> cells, Vector2 startPoint, out List<VoronoiCell> newCells)
+        /*public static List<VoronoiCell> CarveCave(List<VoronoiCell> cells, Vector2 startPoint, out List<VoronoiCell> newCells)
         {
             Voronoi voronoi = new Voronoi(1.0);
 
@@ -23,10 +23,10 @@ namespace Barotrauma
             float siteVariance = siteInterval * 0.4f;
 
             Vector4 edges = new Vector4(
-                cells.Min(x => x.edges.Min(e => e.point1.X)),
-                cells.Min(x => x.edges.Min(e => e.point1.Y)),
-                cells.Max(x => x.edges.Max(e => e.point1.X)),
-                cells.Max(x => x.edges.Max(e => e.point1.Y)));
+                cells.Min(x => x.edges.Min(e => e.Point1.X)),
+                cells.Min(x => x.edges.Min(e => e.Point1.Y)),
+                cells.Max(x => x.edges.Max(e => e.Point1.X)),
+                cells.Max(x => x.edges.Max(e => e.Point1.Y)));
 
             edges.X -= siteInterval * 2;
             edges.Y -= siteInterval * 2;
@@ -54,8 +54,8 @@ namespace Barotrauma
             {
                 //if the cell is at the edge of the graph, remove it
                 if (cell.edges.Any(e => 
-                    e.point1.X == edges.X || e.point1.X == edges.Z ||
-                    e.point1.Y == edges.Z || e.point1.Y == edges.W))
+                    e.Point1.X == edges.X || e.Point1.X == edges.Z ||
+                    e.Point1.Y == edges.Z || e.Point1.Y == edges.W))
                 {
                     cell.CellType = CellType.Removed;
                     continue;
@@ -152,10 +152,10 @@ namespace Barotrauma
                 var cell = path[i];
                 foreach (GraphEdge edge in cell.edges)
                 {
-                    if (edge.point1 == edge.point2) continue;
-                    if (Vector2.Distance(edge.point1, edge.point2) > minPathWidth) continue;
+                    if (edge.Point1 == edge.Point2) continue;
+                    if (Vector2.Distance(edge.Point1, edge.Point2) > minPathWidth) continue;
                     
-                    GraphEdge adjacentEdge = cell.edges.Find(e => e != edge && (e.point1 == edge.point1 || e.point2 == edge.point1));
+                    GraphEdge adjacentEdge = cell.edges.Find(e => e != edge && (e.Point1 == edge.Point1 || e.Point2 == edge.Point1));
 
                     var adjacentCell = adjacentEdge.AdjacentCell(cell);
                     if (i>0 && (adjacentCell.CellType == CellType.Path || adjacentCell.CellType == CellType.Edge)) continue;
@@ -166,7 +166,7 @@ namespace Barotrauma
             }
 
             return path;
-        }
+        }*/
 
         public static List<VoronoiCell> GraphEdgesToCells(List<GraphEdge> graphEdges, Rectangle borders, float gridCellSize, out List<VoronoiCell>[,] cellGrid)
         {
@@ -183,11 +183,11 @@ namespace Barotrauma
 
             foreach (GraphEdge ge in graphEdges)
             {
-                if (ge.point1 == ge.point2) continue;
+                if (Vector2.DistanceSquared(ge.Point1, ge.Point2) < 0.001f) continue;
 
                 for (int i = 0; i < 2; i++)
                 {
-                    Site site = (i == 0) ? ge.site1 : ge.site2;
+                    Site site = (i == 0) ? ge.Site1 : ge.Site2;
 
                     int x = (int)(Math.Floor((site.coord.x-borders.X) / gridCellSize));
                     int y = (int)(Math.Floor((site.coord.y-borders.Y) / gridCellSize));
@@ -204,13 +204,13 @@ namespace Barotrauma
                         cells.Add(cell);
                     }
 
-                    if (ge.cell1 == null)
+                    if (ge.Cell1 == null)
                     {
-                        ge.cell1 = cell;
+                        ge.Cell1 = cell;
                     }
                     else
                     {
-                        ge.cell2 = cell;
+                        ge.Cell2 = cell;
                     }
                     cell.edges.Add(ge);
                 }
@@ -226,20 +226,19 @@ namespace Barotrauma
             if (cell == null) return Vector2.UnitX;
 
             CompareCCW compare = new CompareCCW(cell.Center);
-            if (compare.Compare(edge.point1, edge.point2) == -1)
+            if (compare.Compare(edge.Point1, edge.Point2) == -1)
             {
-                var temp = edge.point1;
-                edge.point1 = edge.point2;
-                edge.point2 = temp;
+                var temp = edge.Point1;
+                edge.Point1 = edge.Point2;
+                edge.Point2 = temp;
             }
 
             Vector2 normal = Vector2.Zero;
 
-            normal = Vector2.Normalize(edge.point2 - edge.point1);
-            Vector2 diffToCell = Vector2.Normalize(cell.Center - edge.point2);
+            normal = Vector2.Normalize(edge.Point2 - edge.Point1);
+            Vector2 diffToCell = Vector2.Normalize(cell.Center - edge.Point2);
 
             normal = new Vector2(-normal.Y, normal.X);
-
             if (Vector2.Dot(normal, diffToCell) < 0)
             {
                 normal = -normal;
@@ -315,7 +314,7 @@ namespace Barotrauma
                     for (int i = 0; i < currentCell.edges.Count; i++)
                     {
                         if (!MathUtils.LinesIntersect(currentCell.Center, targetCells[currentTargetIndex].Center,
-                            currentCell.edges[i].point1, currentCell.edges[i].point2)) continue;
+                            currentCell.edges[i].Point1, currentCell.edges[i].Point2)) continue;
                         edgeIndex = i;
                         break;
                     }
@@ -323,18 +322,9 @@ namespace Barotrauma
                 //choose random edge (ignoring ones where the adjacent cell is outside limits)
                 else
                 {
-
-
-                    //if (allowedEdges.Count==0)
-                    //{
-                    //    edgeIndex = Rand.Int(currentCell.edges.Count, false);
-                    //}
-                    //else
-                    //{
                     edgeIndex = Rand.Int(allowedEdges.Count, Rand.RandSync.Server);
                     if (mirror && edgeIndex > 0) edgeIndex = allowedEdges.Count - edgeIndex;
                     edgeIndex = currentCell.edges.IndexOf(allowedEdges[edgeIndex]);
-                    //}
                 }
 
                 currentCell = currentCell.edges[edgeIndex].AdjacentCell(currentCell);
@@ -358,13 +348,19 @@ namespace Barotrauma
             return pathCells;
         }
         
-        public static List<Body> GeneratePolygons(List<VoronoiCell> cells, out List<Vector2[]> renderTriangles, bool setSolid=true)
+        public static Body GeneratePolygons(List<VoronoiCell> cells, Level level, out List<Vector2[]> renderTriangles, bool setSolid = true)
         {
             renderTriangles = new List<Vector2[]>();
-            var bodies = new List<Body>();
 
             List<Vector2> tempVertices = new List<Vector2>();
             List<Vector2> bodyPoints = new List<Vector2>();
+
+            Body cellBody = new Body(GameMain.World)
+            {
+                SleepingAllowed = false,
+                BodyType = BodyType.Static,
+                CollisionCategories = Physics.CollisionLevel
+            };
 
             for (int n = cells.Count - 1; n >= 0; n-- )
             {
@@ -374,17 +370,17 @@ namespace Barotrauma
                 tempVertices.Clear();
                 foreach (GraphEdge ge in cell.edges)
                 {
-                    if (Math.Abs(Vector2.Distance(ge.point1, ge.point2))<0.1f) continue;
-                    if (!tempVertices.Contains(ge.point1)) tempVertices.Add(ge.point1);
-                    if (!tempVertices.Contains(ge.point2)) tempVertices.Add(ge.point2);
+                    if (Vector2.DistanceSquared(ge.Point1, ge.Point2) < 0.01f) continue;
+                    if (!tempVertices.Contains(ge.Point1)) tempVertices.Add(ge.Point1);
+                    if (!tempVertices.Contains(ge.Point2)) tempVertices.Add(ge.Point2);
 
                     VoronoiCell adjacentCell = ge.AdjacentCell(cell);
                     //if (adjacentCell!=null && cells.Contains(adjacentCell)) continue;
 
-                    if (setSolid) ge.isSolid = (adjacentCell == null || !cells.Contains(adjacentCell));
+                    if (setSolid) ge.IsSolid = (adjacentCell == null || !cells.Contains(adjacentCell));
 
-                    if (!bodyPoints.Contains(ge.point1)) bodyPoints.Add(ge.point1);
-                    if (!bodyPoints.Contains(ge.point2)) bodyPoints.Add(ge.point2);
+                    if (!bodyPoints.Contains(ge.Point1)) bodyPoints.Add(ge.Point1);
+                    if (!bodyPoints.Contains(ge.Point2)) bodyPoints.Add(ge.Point2);
                 }
 
                 if (tempVertices.Count < 3 || bodyPoints.Count < 2)
@@ -412,36 +408,55 @@ namespace Barotrauma
                     cell.bodyVertices.Add(bodyPoints[i]);
                     bodyPoints[i] = ConvertUnits.ToSimUnits(bodyPoints[i]);
                 }
-
-
+                
                 if (cell.CellType == CellType.Empty) continue;
 
+                cellBody.UserData = cell;
                 var triangles = MathUtils.TriangulateConvexHull(bodyPoints, ConvertUnits.ToSimUnits(cell.Center));
-
-                Body cellBody = new Body(GameMain.World);
-
+                
                 for (int i = 0; i < triangles.Count; i++)
                 {
                     //don't create a triangle if any of the vertices are too close to each other
                     //(apparently Farseer doesn't like polygons with a very small area, see Shape.ComputeProperties)
-                    if (Vector2.Distance(triangles[i][0], triangles[i][1]) < 0.05f ||
-                        Vector2.Distance(triangles[i][0], triangles[i][2]) < 0.05f ||
-                        Vector2.Distance(triangles[i][1], triangles[i][2]) < 0.05f) continue;
+                    if (Vector2.DistanceSquared(triangles[i][0], triangles[i][1]) < 0.006f ||
+                        Vector2.DistanceSquared(triangles[i][0], triangles[i][2]) < 0.006f ||
+                        Vector2.DistanceSquared(triangles[i][1], triangles[i][2]) < 0.006f) continue;
                     
                     Vertices bodyVertices = new Vertices(triangles[i]);
-                    FixtureFactory.AttachPolygon(bodyVertices, 5.0f, cellBody);
+                    var newFixture = FixtureFactory.AttachPolygon(bodyVertices, 5.0f, cellBody);
+                    newFixture.UserData = cell;
+
+                    if (newFixture.Shape.MassData.Area < FarseerPhysics.Settings.Epsilon)
+                    {
+                        DebugConsole.ThrowError("Invalid triangle created by CaveGenerator (" + triangles[i][0] + ", " + triangles[i][1] + ", " + triangles[i][2] + ")");
+                        GameAnalyticsManager.AddErrorEventOnce(
+                            "CaveGenerator.GeneratePolygons:InvalidTriangle",
+                            GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
+                            "Invalid triangle created by CaveGenerator (" + triangles[i][0] + ", " + triangles[i][1] + ", " + triangles[i][2] + "). Seed: " + level.Seed);
+                    }
                 }
                 
-                cellBody.UserData = cell;
-                cellBody.SleepingAllowed = false;
-                cellBody.BodyType = BodyType.Kinematic;
-                cellBody.CollisionCategories = Physics.CollisionLevel;
-
                 cell.body = cellBody;
-                bodies.Add(cellBody);
             }
 
-            return bodies;
+            return cellBody;
+        }
+        
+        public static List<Vector2> CreateRandomChunk(float radius, int vertexCount, float radiusVariance)
+        {
+            Debug.Assert(radiusVariance < radius);
+            Debug.Assert(vertexCount >= 3);
+
+            List<Vector2> verts = new List<Vector2>();
+            float angleStep = MathHelper.TwoPi / vertexCount;
+            float angle = 0.0f;
+            for (int i = 0; i < vertexCount; i++)
+            {
+                verts.Add(new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) *
+                    (radius + Rand.Range(-radiusVariance, radiusVariance, Rand.RandSync.Server)));
+                angle += angleStep;
+            }
+            return verts;
         }
 
         /// <summary>

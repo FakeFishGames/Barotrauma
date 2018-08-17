@@ -119,7 +119,7 @@ namespace Barotrauma.Particles
         public float CollisionRadius { get; private set; }
 
         [Editable(ToolTip = "Does the particle collide with the walls of the submarine and the level."), Serialize(false, false)]
-        public bool CollidesWithWalls { get; private set; }
+        public bool UseCollision { get; private set; }
 
         [Editable(ToolTip = "Does the particle disappear when it collides with something."), Serialize(false, false)]
         public bool DeleteOnCollision { get; private set; }

@@ -1,22 +1,23 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Items>
+<Items>	
 	<Item
 		name="Fabricator"
-		linkable="true"
-		
+    identifier="fabricator"
+		linkable="true"		
     category="Machine"
     description="A machine capable of manufacturing a wide range of items out of basic raw materials.">
-    
-    <Sprite texture="Content/Items/machines.png" depth="0.8" sourcerect="0,128,64,128"/>
+
+    <Sprite texture="Content/Items/Fabricators/FF_Fabricator.png" sourcerect="0,0,220,200" depth="0.5"/>
 
 		<Fabricator canbeselected = "true" powerconsumption="500.0">
 
       <GuiFrame rect="0,0,600,400" alignment="Center" style="ItemUI"/>
 
-      <sound file="fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
+      <sound file="Content/Items/Fabricators/fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
+      <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="600" loop="false"/>
 
       <fabricableitem name="Harpoon Gun" requireditems="Steel Bar, Polycarbonate Bar, Aluminium" requiredtime="20">
-        <RequiredSkill name="Mechanical Engineering" level="30"/>
+        <RequiredSkill name="Construction" level="30"/>
       </fabricableitem>
       <fabricableitem name="Spear" requireditems="Steel Bar" requiredtime="10"/>
       <fabricableitem name="Revolver Round" requireditems="Copper Bar" requiredtime="10">
@@ -24,29 +25,29 @@
       </fabricableitem>
 
       <fabricableitem name="Plasma Cutter" requireditems="Steel Bar, Polycarbonate Bar, Aluminium" requiredtime="20">
-        <RequiredSkill name="Mechanical Engineering" level="30"/>
+        <RequiredSkill name="Construction" level="30"/>
       </fabricableitem>
       <fabricableitem name="Welding Tool" requireditems="Steel Bar, Polycarbonate Bar, Aluminium" requiredtime="20">
-        <RequiredSkill name="Mechanical Engineering" level="30"/>
+        <RequiredSkill name="Construction" level="30"/>
       </fabricableitem>
 
       <fabricableitem name="Railgun Shell" requireditems="Steel Bar, Steel Bar, Polycarbonate Bar" requiredtime="20">
-        <RequiredSkill name="Mechanical Engineering" level="25"/>
+        <RequiredSkill name="Construction" level="25"/>
       </fabricableitem>
       <fabricableitem name="Nuclear Shell" requireditems="Steel Bar, Steel Bar, Uranium Bar, Polycarbonate Bar" requiredtime="30">
-        <RequiredSkill name="Mechanical Engineering" level="40"/>
+        <RequiredSkill name="Construction" level="40"/>
       </fabricableitem>
       <fabricableitem name="Depth Charge Shell" requireditems="Steel Bar, Steel Bar" requiredtime="20">
-        <RequiredSkill name="Mechanical Engineering" level="25"/>
+        <RequiredSkill name="Construction" level="25"/>
       </fabricableitem>
       <fabricableitem name="Nuclear Depth Charge" requireditems="Steel Bar, Steel Bar, Uranium Bar" requiredtime="30">
-        <RequiredSkill name="Mechanical Engineering" level="40"/>
+        <RequiredSkill name="Construction" level="40"/>
       </fabricableitem>
       <fabricableitem name="Diving Mask" requireditems="Polycarbonate Bar" requiredtime="20">
-        <RequiredSkill name="Mechanical Engineering" level="25"/>
+        <RequiredSkill name="Construction" level="25"/>
       </fabricableitem>
       <fabricableitem name="Diving Suit" requireditems="Steel Bar, Polycarbonate Bar, Polycarbonate Bar, Aluminium, Aluminium" requiredtime="30">
-        <RequiredSkill name="Mechanical Engineering" level="40"/>
+        <RequiredSkill name="Construction" level="40"/>
       </fabricableitem>
 
       <fabricableitem name="Fire Extinguisher" requireditems="Steel Bar, Polycarbonate Bar" requiredtime="10"/>
@@ -84,13 +85,13 @@
       </fabricableitem>
 
       <fabricableitem name ="Stun Grenade" requireditems="Steel Bar" requiredtime="20">
-        <RequiredSkill name="Mechanical Engineering" level="30"/>
+        <RequiredSkill name="Construction" level="30"/>
         <Item name="Flash Powder" mincondition="0.75"/>
         <Item name="Chloral Hydrate" mincondition="0.75"/>
       </fabricableitem>
 
       <fabricableitem name ="Incendium Grenade" requireditems="Steel Bar, Incendium Bar" requiredtime="20">
-        <RequiredSkill name="Mechanical Engineering" level="40"/>
+        <RequiredSkill name="Construction" level="40"/>
         <Item name="Flash Powder" mincondition="0.75"/>
       </fabricableitem>
 
@@ -108,38 +109,37 @@
         <Item name="Uranium Powder" count="3" mincondition="0.75"/>
       </fabricableitem>
 
-      <fabricableitem name="Oxygen Tank" requireditems="Steel Bar" outcondition="0.0"/>
-      <fabricableitem name="Welding Fuel Tank" requireditems="Steel Bar" outcondition="0.0"/>
+      <fabricableitem name="Oxygen Tank" displayname="Oxygen Tank (empty)" requireditems="Steel Bar" outcondition="0.0"/>
+      <fabricableitem name="Oxygenite Tank" requireditems="Steel Bar, Liquid Oxygenite, Liquid Oxygenite, Liquid Oxygenite" outcondition="100.0" requiredtime="5" />
+      <fabricableitem name="Welding Fuel Tank" requireditems="Steel Bar, Ethanol" requiredtime="10"/>
+      <fabricableitem name="Welding Fuel Tank" displayname="Welding Fuel Tank (empty)" requireditems="Steel Bar" outcondition="0.0"/>
     </Fabricator>
 		
 		<ConnectionPanel selectkey="Action" canbeselected="true" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
 			<requireditem name="Screwdriver" type="Equipped"/>
 			<output name="power_in"/>
 		</ConnectionPanel>
 
-		<ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.15, 0.5" slotsperrow="1"/>
-		<ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.85, 0.5" slotsperrow="1"/>
-
-    <Optimizable optimizationtype="electrical">
-      <requiredskill name="Electrical Engineering" level="50" optimizationduration="360.0"/>
-      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
-    </Optimizable>
+		<ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.15, 0.7" slotsperrow="1"/>
+		<ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.85, 0.7" slotsperrow="1"/>
 	</Item>
 
   <Item
     name="Medical Fabricator"
-    linkable="true"
-    
+    identifier="medicalfabricator"
+    linkable="true"    
     category="Machine"
     description="A machine that can be used to manufacture various medicines.">
 
-    <Sprite texture="Content/Items/machines.png" depth="0.8" sourcerect="128,0,64,128"/>
+    <Sprite texture="Content/Items/Fabricators/FF_medicalFabricator.png" depth="0.8" sourcerect="0,0,139,200"/>
     
     <Fabricator canbeselected = "true" powerconsumption="100.0">
 
       <GuiFrame rect="0,0,600,400" alignment="Center" style="ItemUI"/>
 
-      <sound file="fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
+      <sound file="Content/Items/Fabricators/fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
+      <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="600" loop="false"/>
 
       <fabricableitem name="Medical Syringe" requireditems="Steel Bar" requiredtime="10"/>
       <fabricableitem name="Chloral Hydrate" requireditems="Chlorine, Ethanol" requiredtime="20">
@@ -151,18 +151,19 @@
       <fabricableitem name="Volatile Compound N" requireditems="Compound N, Flash Powder" requiredtime="20">
         <RequiredSkill name="Medical" level="40"/>
       </fabricableitem>
-      
-      
-      <fabricableitem name="Corrigodone" requireditems="Stabilozine, Chloral Hydrate" requiredtime="20">
+            
+      <fabricableitem name="Morphine" requireditems="Stabilozine, Chloral Hydrate" requiredtime="10">
         <RequiredSkill name="Medical" level="50"/>
       </fabricableitem>
-
+      <fabricableitem name="Fentanyl" requireditems="Stabilozine, Morphine" requiredtime="20">
+        <RequiredSkill name="Medical" level="60"/>
+      </fabricableitem>
 
       <fabricableitem name="Erythrozine" requireditems="Stabilozine, Iron Powder" requiredtime="20">
         <RequiredSkill name="Medical" level="50"/>
       </fabricableitem>
 
-      <fabricableitem name="Fibrinozine" requireditems="Stabilozine, Phosphorus" requiredtime="20">
+      <fabricableitem name="Hemostop" requireditems="Stabilozine, Phosphorus" requiredtime="20">
         <RequiredSkill name="Medical" level="50"/>
       </fabricableitem>
 
@@ -174,7 +175,7 @@
         <RequiredSkill name="Medical" level="40"/>
       </fabricableitem>
 
-      <fabricableitem name="Auxiliorizine" requireditems="Corrigodone, Erythrozine, Flash Powder" requiredtime="25">
+      <fabricableitem name="Auxiliorizine" requireditems="Fentanyl, Erythrozine, Flash Powder" requiredtime="25">
         <RequiredSkill name="Medical" level="60"/>
       </fabricableitem>
 
@@ -192,7 +193,7 @@
         <Item name="Stabilozine" mincondition="0.25"/>
       </fabricableitem>
 
-      <fabricableitem name="Calyxanide" requireditems="Velonaceps Calyx Eggs, Corrigodone" requiredtime="30">
+      <fabricableitem name="Calyxanide" requireditems="Velonaceps Calyx Eggs, Morphine" requiredtime="30">
         <RequiredSkill name="Medical" level="60"/>
       </fabricableitem>
 
@@ -202,45 +203,38 @@
     </Fabricator>
 
     <ConnectionPanel selectkey="Action" canbeselected="true" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver" type="Equipped"/>
       <output name="power_in"/>
     </ConnectionPanel>
 
-    <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.15, 0.5" slotsperrow="1"/>
-    <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.85, 0.5" slotsperrow="1"/>
-
-    <Optimizable optimizationtype="electrical">
-      <requiredskill name="Mechanical Engineering" level="50" optimizationduration="360.0"/>
-      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
-    </Optimizable>
+    <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.15, 0.7" slotsperrow="1"/>
+    <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.85, 0.7" slotsperrow="1"/>
   </Item>
 
   <Item
     name="Deconstructor"
-    linkable="true"
-    
+    identifier="deconstructor"
+    linkable="true"    
     category="Machine"
     description="Disassembles and breaks down items to reusable components and material bars.">
 
-    <Sprite texture="Content/Items/machines.png" depth="0.8" sourcerect="64,128,64,128"/>
+    <Sprite texture="Content/Items/Fabricators/FF_deconstructor.png" depth="0.8" sourcerect="0,0,264,164"/>
 
     <Deconstructor canbeselected = "true" powerconsumption="500.0">
-      <sound file="deconstructor.ogg" type="OnActive" range="1000.0" loop="true"/>
-      
+      <sound file="Content/Items/Fabricators/deconstructor.ogg" type="OnActive" range="1000.0" loop="true"/>
+      <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="600" loop="false"/>
+
       <GuiFrame rect="0,0,300,200" alignment="Center" style="ItemUI"/>
     </Deconstructor>
 
     <ConnectionPanel selectkey="Action" canbeselected="true" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver" type="Equipped"/>
       <output name="power_in"/>
     </ConnectionPanel>
 
-    <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.5, 0.3" slotsperrow="5"/>
-    <ItemContainer capacity="10" canbeselected="true" hideitems="true" hudpos="0.5, 0.7" slotsperrow="5"/>
-    
-    <Optimizable optimizationtype="electrical">
-      <requiredskill name="Electrical Engineering" level="50" optimizationduration="360.0"/>
-      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
-    </Optimizable>
+    <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.5, 0.4" slotsperrow="5"/>
+    <ItemContainer capacity="10" canbeselected="true" hideitems="true" hudpos="0.5, 0.8" slotsperrow="5"/>
   </Item>
 </Items>

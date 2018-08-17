@@ -26,17 +26,31 @@
     <ChatMessage option="Shutdown" msg="[name], shut down the reactor!"/>
   </Order>
 
-  <Order name="Operate Railgun" aitag="operaterailgun" doingtext="Operating Railgun" 
-         targetitemname="Railgun" targetitemtype="Turret" 
+  <Order name="Operate Weapons" aitag="operateweapons" doingtext="Operating Weapons" 
+         targetitemname="turret,Railgun,Coilgun" targetitemtype="Turret" 
          usecontroller="true" options="Fire at will, Hold fire" color="0.12,0.3,0.5,1.0"
          appropriatejobs="Security Officer">
     <Sprite texture="Content/UI/uiIcons.png" sourcerect="0,64,64,64"/>
-    <ChatMessage msg="[name], operate the railgun!"/>
-    <ChatMessage msg="[name], man the railgun!"/>
+    <ChatMessage msg="[name], operate the weapons!"/>
+    <ChatMessage msg="[name], man the weapons!"/>
     <ChatMessage option="Fire at will" msg="[name], fire at will!"/>
     <ChatMessage option="Hold fire" msg="[name], hold fire!"/>
   </Order>
 
+  <Order name="Steer" aitag="steer" doingtext="Steering"
+         targetitemtype="Steering" options="Maintain position, Navigate back, Navigate to destination" color="0.0,0.0,1.0,1.0"
+         appropriatejobs="Captain">
+    <Sprite texture="Content/UI/uiIcons.png" sourcerect="128,128,64,64"/>
+    <ChatMessage msg="[name], man the helm!"/>
+    <ChatMessage msg="[name], steer the submarine!"/>
+    <ChatMessage option="Maintain position" msg="[name], maintain position!"/>
+    <ChatMessage option="Maintain position" msg="[name], hold our position!"/>
+    <ChatMessage option="Navigate back" msg="[name], set the course back!"/>
+    <ChatMessage option="Navigate to destination" msg="[name], set the course to our destination!"/>
+    <ChatMessage option="Navigate to destination" msg="[name], navigate onwards!"/>
+    <ChatMessage option="Navigate to destination" msg="[name], set the course  onwards!"/>
+  </Order>
+  
   <Order name="Fix Leaks" aitag="fixleaks" doingtext="Fixing Leaks" color="0.6,0.85,1.0,1.0"
          appropriatejobs="Mechanic">
     <Sprite texture="Content/UI/uiIcons.png" sourcerect="64,64,64,64"/>
