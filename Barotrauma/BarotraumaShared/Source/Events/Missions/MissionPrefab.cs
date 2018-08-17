@@ -15,6 +15,8 @@ namespace Barotrauma
 
         public readonly bool MultiplayerOnly, SingleplayerOnly;
 
+        public readonly string Identifier;
+
         public readonly string Name;
         public readonly string Description;
         public readonly string SuccessMessage;
@@ -56,20 +58,22 @@ namespace Barotrauma
         public MissionPrefab(XElement element)
         {
             ConfigElement = element;
-            
-            Name = element.GetAttributeString("name", "");
-            Description = element.GetAttributeString("description", "");
-            Reward = element.GetAttributeInt("reward", 1);
 
-            Commonness = element.GetAttributeInt("commonness", 1);
+            Identifier = element.GetAttributeString("identifier", "");
 
-            SuccessMessage = element.GetAttributeString("successmessage", "Mission completed successfully");
-            FailureMessage = element.GetAttributeString("failuremessage", "Mission failed");
+            Name        = TextManager.Get("MissionName." + Identifier, true) ?? element.GetAttributeString("name", "");
+            Description = TextManager.Get("MissionDescription." + Identifier, true) ?? element.GetAttributeString("description", "");
+            Reward      = element.GetAttributeInt("reward", 1);
 
-            MultiplayerOnly = element.GetAttributeBool("multiplayeronly", false);
-            SingleplayerOnly = element.GetAttributeBool("singleplayeronly", false);
+            Commonness  = element.GetAttributeInt("commonness", 1);
 
-            SonarLabel = element.GetAttributeString("sonarlabel", "");
+            SuccessMessage  = TextManager.Get("MissionSuccess." + Identifier, true) ?? element.GetAttributeString("successmessage", "Mission completed successfully");
+            FailureMessage  = TextManager.Get("MissionFailure." + Identifier, true) ?? element.GetAttributeString("failuremessage", "Mission failed");
+
+            SonarLabel      = TextManager.Get("MissionSonarLabel." + Identifier, true) ?? element.GetAttributeString("sonarlabel", "");
+
+            MultiplayerOnly     = element.GetAttributeBool("multiplayeronly", false);
+            SingleplayerOnly    = element.GetAttributeBool("singleplayeronly", false);
 
             AchievementIdentifier = element.GetAttributeString("achievementidentifier", "");
 
@@ -78,17 +82,18 @@ namespace Barotrauma
             AllowedLocationTypes = new List<Pair<string, string>>();
             foreach (XElement subElement in element.Elements())
             {
-                switch(subElement.Name.ToString().ToLowerInvariant())
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "message":
-                        Headers.Add(subElement.GetAttributeString("header", ""));
-                        Messages.Add(subElement.GetAttributeString("text", ""));
+                        int index = Messages.Count;
+
+                        Headers.Add(TextManager.Get("MissionHeader" + index + "." + Identifier, true) ?? subElement.GetAttributeString("header", ""));
+                        Messages.Add(TextManager.Get("MissionMessage" + index + "." + Identifier, true) ?? subElement.GetAttributeString("text", ""));
                         break;
                     case "locationtype":
                         AllowedLocationTypes.Add(new Pair<string, string>(
-                            subElement.GetAttributeString("from", ""), 
+                            subElement.GetAttributeString("from", ""),
                             subElement.GetAttributeString("to", "")));
-
                         break;
                 }                
             }
