@@ -27,6 +27,17 @@ namespace Barotrauma.Networking
             lastSendTime = DateTime.Now;
         }
 
+        public void RegisterQueue(VoipQueue queue)
+        {
+            if (queue == capture) return;
+            if (!queues.Contains(queue)) queues.Add(queue);
+        }
+
+        public void UnregisterQueue(VoipQueue queue)
+        {
+            if (queues.Contains(queue)) queues.Remove(queue);
+        }
+
         public void SendToServer()
         {
             if (DateTime.Now >= lastSendTime + VoipConfig.SEND_INTERVAL)
@@ -50,6 +61,11 @@ namespace Barotrauma.Networking
             if (queue!=null)
             {
                 queue.Read(msg);
+            }
+            else
+            {
+                DebugConsole.ThrowError("Couldn't find VoipQueue with id " + queueId.ToString()+"!");
+                return;
             }
         }
     }

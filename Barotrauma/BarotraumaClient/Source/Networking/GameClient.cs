@@ -30,7 +30,11 @@ namespace Barotrauma.Networking
 
         private List<Client> otherClients;
 
-        private VoipClient voipClient;
+        public VoipClient VoipClient
+        {
+            get;
+            private set;
+        }
 
         private string serverIP;
 
@@ -550,7 +554,7 @@ namespace Barotrauma.Networking
                 if (updateTimer > DateTime.Now) return;
                 SendLobbyUpdate();
             }
-            voipClient.SendToServer();
+            VoipClient.SendToServer();
 
             // Update current time
             updateTimer = DateTime.Now + updateInterval;  
@@ -611,7 +615,7 @@ namespace Barotrauma.Networking
                                 ReadIngameUpdate(inc);
                                 break;
                             case ServerPacketHeader.VOICE:
-                                voipClient.Read(inc);
+                                VoipClient.Read(inc);
                                 break;
                             case ServerPacketHeader.QUERY_STARTGAME:
                                 string subName = inc.ReadString();
@@ -992,7 +996,7 @@ namespace Barotrauma.Networking
         private void ReadInitialUpdate(NetIncomingMessage inc)
         {
             myID = inc.ReadByte();
-            voipClient = new VoipClient(this, client);
+            VoipClient = new VoipClient(this, client);
 
             UInt16 subListCount = inc.ReadUInt16();
             List<Submarine> submarines = new List<Submarine>();
@@ -1631,7 +1635,7 @@ namespace Barotrauma.Networking
             var votedClient = userdata is Client ? (Client)userdata : otherClients.Find(c => c.Character == userdata);
             if (votedClient == null) return false;
 
-            votedClient.AddKickVote(new Client(name, ID));
+            votedClient.AddKickVote(new Client(name, ID, false));
             Vote(VoteType.Kick, votedClient);
 
             button.Enabled = false;
