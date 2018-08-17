@@ -80,7 +80,7 @@ namespace Barotrauma
                 if (GameMain.GameSession.Mission.Completed && singleplayer)
                 {
                     var missionReward = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
-                        TextManager.Get("Reward") + ": " + GameMain.GameSession.Mission.Reward);
+                        TextManager.Get("MissionReward").Replace("[reward]", GameMain.GameSession.Mission.Reward.ToString()));
                 }  
             }
             else

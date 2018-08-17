@@ -702,6 +702,32 @@
   <HuskDormant>Lihakset ovat tuskallisia</HuskDormant>
   <HuskCantSpeak>Tunnet jotain liikkeestä kurkussa. Yrität huutaa, mutta mitään ääntä ei tule ulos.</HuskCantSpeak>
   <HuskActivate>Outoinen kitininen liite puhkeaa suustasi. Käytä sitä injektoimaan munat eläväksi elimistäksi painamalla [Attack] -painiketta.</HuskActivate>
+  
+  <!-- Missions -->
+  <MissionName.salvageskyholderartifactruins>Artefaktin etsintä</MissionName.salvageskyholderartifactruins>
+  <MissionDescription.salvageskyholderartifactruins>[location1]:n tutkijat ovat poimineet infraäänisignaalin, joka on hyvin samankaltainen kuin aiemmin havaitut vieraiden artefaktien lähettämät Euroopassa. Tutki signaali ja nouta potentiaalinen artefakti.</MissionDescription.salvageskyholderartifactruins>
+  <MissionSonarLabel.salvageskyholderartifactruins>Infraäänisignaali</MissionSonarLabel.salvageskyholderartifactruins>
+  <MissionFailure.salvageskyholderartifactruins>Artefaktin noutaminen epäonnistui.</MissionFailure.salvageskyholderartifactruins>
+  <MissionSuccess.salvageskyholderartifactruins>Artefaktin noutaminen onnistui.</MissionSuccess.salvageskyholderartifactruins>
+  <MissionHeader0.salvageskyholderartifactruins>Artefakti kerätty.</MissionHeader0.salvageskyholderartifactruins>
+  <MissionMessage0.salvageskyholderartifactruins>Esine on nyt aluksella. Selaa sukellusvenettä ulos luolasta saadaksesi palkkion.</MissionMessage0.salvageskyholderartifactruins>
+
+  <MissionName.salvagethermalartifactruins>Artefaktin etsintä</MissionName.salvagethermalartifactruins>
+  <MissionDescription.salvagethermalartifactruins>[location1]:n tutkijat ovat poimineet infraäänisignaalin, joka on hyvin samankaltainen kuin aiemmin havaitut vieraiden artefaktien lähettämät Euroopassa. Tutki signaali ja nouta potentiaalinen artefakti.</MissionDescription.salvagethermalartifactruins>
+  <MissionSonarLabel.salvagethermalartifactruins>Infraäänisignaali</MissionSonarLabel.salvagethermalartifactruins>
+  <MissionFailure.salvagethermalartifactruins>Artefaktin noutaminen epäonnistui.</MissionFailure.salvagethermalartifactruins>
+  <MissionSuccess.salvagethermalartifactruins>Artefaktin noutaminen onnistui.</MissionSuccess.salvagethermalartifactruins>
+  <MissionHeader0.salvagethermalartifactruins>Artefakti kerätty.</MissionHeader0.salvagethermalartifactruins>
+  <MissionMessage0.salvagethermalartifactruins>Esine on nyt aluksella. Selaa sukellusvenettä ulos luolasta saadaksesi palkkion.</MissionMessage0.salvagethermalartifactruins>
+
+  <MissionName.pvpmission>Etsi ja tuhoa</MissionName.pvpmission>
+  <MissionDescriptionNeutral.pvpmission>Koalitioalus on lähetetty [sijainti1]: n romuttamoaluksen tuhoamisesta [sijainti2]: n laitamilla.</MissionDescriptionNeutral.pvpmission>
+  <MissionDescription1.pvpmission>Jälleenmurtamaa alusta on havaittu [location2]: n laitamilla. Kauppaa Europa-koalitioa vastaan voidaan rangaista kuolemalla - eliminoida renegadit millä tahansa tarpeellisella tavalla.</MissionDescription1.pvpmission>
+  <MissionDescription2.pvpmission>Olet jäsen rikollisryhmässä, joka vastustaa Europa Coalitionia. Teidän informanttienne [location1] mukaan koalitioalus on juuri lähetetty tehtävään ottaa veneen alas. Hävitä heidän miehistönsä millä tahansa tarpeellisella tavalla.</MissionDescription2.pvpmission>
+  <MissionTeam1.pvpmission>Koalitio</MissionTeam1.pvpmission>
+  <MissionTeam2.pvpmission>Kapinalliset</MissionTeam2.pvpmission>
+  <MissionHeader0.pvpmission>Uhmaa miehistöä on voitettu!</MissionHeader0.pvpmission>
+  <MissionMessage0.pvpmission>Koalitio miehistöä on voitettu!</MissionMessage0.pvpmission>
 
   <!-- Gameplay tips -->
   <LoadingScreenTip>Et voi maksaa rahdin toimittamisesta, jos jokin rahdista puuttuu tai vahingoittaa kuljetuksen aikana.</LoadingScreenTip>
