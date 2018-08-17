@@ -39,9 +39,9 @@
       <StatusEffect type="OnBroken" target="This" FissionRate="0.0" disabledeltatime="true">
         <Sound file="Content/Items/Reactor/explosion.ogg" range="5000"/>
         <Explosion range ="800"  structuredamage="400" force="5.0">
-          <affliction name="Burn" strength="200"/>
-          <affliction name="Internal Damage" strength="200"/>
-          <affliction name="Stun" strength="5"/>
+          <Affliction identifier="burn" strength="200"/>
+          <Affliction identifier="internaldamage" strength="200"/>
+          <Affliction identifier="stun" strength="5"/>
         </Explosion>
       </StatusEffect>
     </Reactor>

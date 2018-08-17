@@ -120,6 +120,8 @@ namespace Barotrauma
         //(e.g. mental health problems on head, lack of oxygen on torso...)
         public readonly LimbType IndicatorLimb;
 
+        public readonly string Identifier;
+
         public readonly string Name, Description;
 
         public readonly string CauseOfDeathDescription, SelfCauseOfDeathDescription;
@@ -206,9 +208,11 @@ namespace Barotrauma
         {
             typeName = type == null ? element.Name.ToString() : type.Name;
 
-            AfflictionType  = element.GetAttributeString("type", "");
-            Name            = element.GetAttributeString("name", "");
-            Description     = element.GetAttributeString("description", "");
+            Identifier = element.GetAttributeString("identifier", "");
+
+            AfflictionType = element.GetAttributeString("type", "");
+            Name = TextManager.Get("AfflictionName." + Identifier, true) ?? element.GetAttributeString("name", "");
+            Description = TextManager.Get("AfflictionDescription." + Identifier, true) ?? element.GetAttributeString("description", "");
 
             LimbSpecific = element.GetAttributeBool("limbspecific", false);
             if (!LimbSpecific)
@@ -227,8 +231,8 @@ namespace Barotrauma
             DamageOverlayAlpha  = element.GetAttributeFloat("damageoverlayalpha", 0.0f);
             BurnOverlayAlpha    = element.GetAttributeFloat("burnoverlayalpha", 0.0f);
 
-            CauseOfDeathDescription     = element.GetAttributeString("causeofdeathdescription", "");
-            SelfCauseOfDeathDescription = element.GetAttributeString("selfcauseofdeathdescription", "");
+            CauseOfDeathDescription     = TextManager.Get("AfflictionCauseOfDeath." + Identifier, true) ?? element.GetAttributeString("causeofdeathdescription", "");
+            SelfCauseOfDeathDescription = TextManager.Get("AfflictionCauseOfDeathSelf." + Identifier, true) ?? element.GetAttributeString("selfcauseofdeathdescription", "");
 
             AchievementOnRemoved = element.GetAttributeString("achievementonremoved", "");
 

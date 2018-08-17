@@ -150,8 +150,8 @@
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
         <sound file="Content/Items/Reactor/explosion.ogg"/>
         <Explosion range="250.0" structuredamage="15" force="3.0">
-          <affliction name="Burn" strength="25"/>
-          <affliction name="Stun" strength="5"/>
+          <Affliction identifier="burn" strength="25"/>
+          <Affliction identifier="stun" strength="5"/>
         </Explosion>
       </StatusEffect>
     </Holdable>

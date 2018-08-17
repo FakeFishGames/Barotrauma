@@ -27,8 +27,8 @@
       <sparksound file="Content/Items/Electricity/zap4.ogg" range="500" loop="false"/>
       <propellersprite texture="Content/Items/Engine/propeller.png" sourcerect="0,0,512,256" columns="2" rows="1" animspeed="10" origin="0.5,0.5"/>
       <propellerdamage damagerange="150" targetforce="500" severlimbsprobability="1.0">
-        <affliction name="Internal Damage" strength="50"/>
-        <affliction name="Bleeding" strength="100"/>
+        <Affliction identifier="internaldamage" strength="50"/>
+        <Affliction identifier="bleeding" strength="100"/>
       </propellerdamage>
     </Engine>
     

@@ -25,8 +25,8 @@
         <Conditional Condition="gt 25"/>
         <sound file="Content/Items/Reactor/explosion.ogg"/>
         <Explosion range="250.0" structuredamage="10" force="3.0">
-          <affliction name="Internal Damage" strength="20"/>
-          <affliction name="Stun" strength="5"/>
+          <Affliction identifier="internaldamage" strength="20"/>
+          <Affliction identifier="stun" strength="5"/>
         </Explosion>
       </StatusEffect>
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true"/>

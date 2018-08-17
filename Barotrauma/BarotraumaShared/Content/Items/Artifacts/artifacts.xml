@@ -118,8 +118,8 @@
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true">
         <sound file="Content/Items/Reactor/explosion.ogg"/>
         <Explosion range="600.0" structuredamage="400" force="20.0">
-          <affliction name="Internal Damage" strength="300"/>
-          <affliction name="Stun" strength="5"/>
+          <Affliction identifier="internaldamage" strength="300"/>
+          <Affliction identifier="stun" strength="5"/>
         </Explosion>
       </StatusEffect>
 
@@ -207,8 +207,8 @@
       <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
         <sound file="Content/Items/Artifacts/alienweapon.ogg"/>
         <Explosion range="1000.0" structuredamage="5000" force="50.0">
-          <affliction name="Burn" strength="50"/>
-          <affliction name="Stun" strength="10"/>
+          <Affliction identifier="burn" strength="50"/>
+          <Affliction identifier="stun" strength="10"/>
         </Explosion>
       </StatusEffect>
 

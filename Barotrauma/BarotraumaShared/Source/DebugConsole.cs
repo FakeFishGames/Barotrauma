@@ -1453,7 +1453,9 @@ namespace Barotrauma
             {
                 if (args.Length < 2) return;
 
-                AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.Find(a => a.Name.ToLowerInvariant() == args[0].ToLowerInvariant());
+                AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.Find(a => 
+                    a.Name.ToLowerInvariant() == args[0].ToLowerInvariant() || 
+                    a.Identifier.ToLowerInvariant() == args[0].ToLowerInvariant());
                 if (afflictionPrefab == null)
                 {
                     ThrowError("Affliction \"" + args[0] + "\" not found.");

@@ -53,7 +53,7 @@
 
     <Projectile characterusable="false" launchimpulse="5.0">
       <Attack structuredamage="1" damagetype="Blunt">
-        <affliction name="Internal Damage" strength="10"/>
+        <Affliction identifier="internaldamage" strength="10"/>
       </Attack>
       <StatusEffect type="OnImpact" target="Contained">
         <Use/>
@@ -85,14 +85,14 @@
 
     <Projectile characterusable="false" launchimpulse="5.0">
       <Attack structuredamage="1" damagetype="Blunt">
-        <affliction name="Internal Damage" strength="10"/>
+        <Affliction identifier="internaldamage" strength="10"/>
       </Attack>
       <StatusEffect type="OnImpact" Condition="-100.0" stun="10.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/bigexplosion.ogg" range="10000"/>
         <Explosion range="1000.0" structuredamage="1000" force="50.0">
-          <affliction name="Burn" strength="500"/>
-          <affliction name="Internal Damage" strength="500"/>
-          <affliction name="Stun" strength="5"/>
+          <Affliction identifier="burn" strength="500"/>
+          <Affliction identifier="internaldamage" strength="500"/>
+          <Affliction identifier="stun" strength="5"/>
         </Explosion>
       </StatusEffect>
       <StatusEffect type="OnImpact" target="Contained">

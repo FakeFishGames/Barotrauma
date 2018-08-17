@@ -101,8 +101,8 @@
 
     <Projectile characterusable="false" launchimpulse="80.0">
       <Attack structuredamage="20" severlimbsprobability="0.5">
-        <affliction name="Internal Damage" strength="20"/>
-        <affliction name="Bleeding" strength="5"/>
+        <Affliction identifier="internaldamage" strength="20"/>
+        <Affliction identifier="bleeding" strength="5"/>
       </Attack>
       <StatusEffect type="OnActive" target="This">
         <ParticleEmitter particle="ammotrailwater" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1"/>

@@ -727,7 +727,7 @@
     <Trigger position="0,7000" radius="2000" height="10000" camerashake="1" triggeredby="Character"
              force="0,4" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="300">
       <Attack onlyhumans="true">
-        <affliction name="Burn" strength="1"/>
+        <Affliction identifier="burn" strength="1"/>
       </Attack>
     </Trigger>
     <ParticleEmitter
@@ -757,7 +757,7 @@
     <Trigger position="0,7000" radius="2000" height="10000" camerashake="1" triggeredby="Character"
              force="0,4" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="300">
       <Attack onlyhumans="true">
-        <affliction name="Burn" strength="1"/>
+        <Affliction identifier="burn" strength="1"/>
       </Attack>
     </Trigger>
     <ParticleEmitter
@@ -787,7 +787,7 @@
     <Trigger position="0,7000" radius="2000" height="10000" camerashake="1" triggeredby="Character" 
              force="0,4" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="300">
       <Attack onlyhumans="true">
-        <affliction name="Burn" strength="1"/>
+        <Affliction identifier="burn" strength="1"/>
       </Attack>
     </Trigger>
     <ParticleEmitter
@@ -816,7 +816,7 @@
       <Trigger position="0,1500" radius="500" height="1600" camerashake="3" triggeredby="Submarine, Character"
               force="0,5.0" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200">
         <Attack structuredamage="5" damagerange="500">
-          <affliction name="Burn" strength="20"/>
+          <Affliction identifier="burn" strength="20"/>
         </Attack>
       </Trigger>
       <Sound file ="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,700"/>

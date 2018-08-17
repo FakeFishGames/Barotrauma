@@ -22,8 +22,8 @@
     <Pickable slots="Any"/>
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
       <Attack structuredamage="50" stun="0.2" targetforce="50">
-        <affliction name="Bleeding" strength="30"/>
-        <affliction name="Internal Damage" strength="30"/>
+        <Affliction identifier="bleeding" strength="30"/>
+        <Affliction identifier="internaldamage" strength="30"/>
       </Attack>
     </Projectile>
   </Item>
@@ -121,8 +121,8 @@
     <Pickable slots="Any"/>
     <Projectile characterusable="false" hitscan="true" removeonhit="true" >
       <Attack structuredamage="100" stun="0.5" targetforce="50">
-        <affliction name="Gunshot wound" strength="40"/>
-        <affliction name="Internal Damage" strength="30"/>
+        <Affliction identifier="gunshotwound" strength="40"/>
+        <Affliction identifier="internaldamage" strength="30"/>
       </Attack>
     </Projectile>
   </Item>
@@ -190,7 +190,7 @@
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
         <sound file="Content/Items/Weapons/stungrenade.ogg"/>
         <Explosion range="500" stun="25" force="0.1" smoke="false">
-          <affliction name="Internal Damage" strength="5"/>
+          <Affliction identifier="internaldamage" strength="5"/>
         </Explosion>
       </StatusEffect>
     </ItemComponent>
@@ -199,7 +199,7 @@
       <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
         <sound file="Content/Items/Weapons/stungrenade.ogg"/>
         <Explosion range="500" damage="5" stun="25" force="0.1" smoke="false">
-          <affliction name="Internal Damage" strength="5"/>
+          <Affliction identifier="internaldamage" strength="5"/>
         </Explosion>
       </StatusEffect>
     </Throwable>
@@ -227,7 +227,7 @@
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
         <sound file="Content/Items/Weapons/stungrenade.ogg"/>
         <Explosion range="500" stun="25" force="0.1" smoke="false">
-          <affliction name="Internal Damage" strength="5"/>
+          <Affliction identifier="internaldamage" strength="5"/>
         </Explosion>
       </StatusEffect>
     </ItemComponent>
@@ -236,7 +236,7 @@
       <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
         <sound file="Content/Items/Weapons/stungrenade.ogg"/>
         <Explosion range="500" stun="1" force="0.1">
-          <affliction name="Internal Damage" strength="5"/>
+          <Affliction identifier="internaldamage" strength="5"/>
         </Explosion>
         <Fire size="300.0"/>
       </StatusEffect>
@@ -267,7 +267,7 @@
     <MeleeWeapon slots="Any,RightHand,LeftHand"
               aimpos="50,0" handle1="-5,0" holdangle="10" reload="1.0">
       <Attack stun="0.2" sound="Content/Items/Weapons/smack.ogg">
-        <affliction name="Internal Damage" strength="2"/>
+        <Affliction identifier="internaldamage" strength="2"/>
       </Attack>
       <StatusEffect type="OnUse" target="Contained,Character" Condition="-25.0" stun="15.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/stunbaton.ogg"/>
