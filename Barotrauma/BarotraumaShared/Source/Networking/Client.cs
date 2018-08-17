@@ -124,13 +124,14 @@ namespace Barotrauma.Networking
             get { return kickVoters.Count; }
         }
         
+        /*TODO: remove unused constructor?
         public Client(NetPeer server, string name, byte ID)
-            : this(name, ID)
+            : this(name, ID, false)
         {
             
-        }
+        }*/
 
-        public Client(string name, byte ID)
+        public Client(string name, byte ID, bool initVoip=true)
         {
             this.Name = name;
             this.ID = ID;
@@ -141,12 +142,19 @@ namespace Barotrauma.Networking
             votes = new object[Enum.GetNames(typeof(VoteType)).Length];
 
             JobPreferences = new List<JobPrefab>(JobPrefab.List.GetRange(0, Math.Min(JobPrefab.List.Count, 3)));
+        
+            if (initVoip) InitVoip();
+        }
 
-            VoipQueue = new VoipQueue(ID, true, GameMain.Server!=null);
+        partial void InitVoipProjSpecific();
+        private void InitVoip()
+        {
+            VoipQueue = new VoipQueue(ID, GameMain.Server != null, true);
             if (GameMain.Server != null)
             {
                 GameMain.Server.VoipServer.RegisterQueue(VoipQueue);
             }
+            InitVoipProjSpecific();
         }
 
         public static bool IsValidName(string name)
