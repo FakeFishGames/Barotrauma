@@ -42,3 +42,9 @@
 /processor:VideoProcessor
 /build:utg_4.mp4
 
+#begin Effects/postprocess_opengl.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/postprocess_opengl.fx
+
