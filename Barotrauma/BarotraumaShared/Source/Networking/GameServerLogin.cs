@@ -377,6 +377,8 @@ namespace Barotrauma.Networking
 
 #if CLIENT
             GameMain.NetLobbyScreen.AddPlayer(newClient.Name);
+#else
+            GameMain.NetLobbyScreen.LastUpdateID++;
 #endif
             GameMain.Server.SendChatMessage(clName + " has joined the server.", ChatMessageType.Server, null);
 
