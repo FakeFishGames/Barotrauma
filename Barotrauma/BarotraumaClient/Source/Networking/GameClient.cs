@@ -1592,9 +1592,10 @@ namespace Barotrauma.Networking
                 ServerLog?.Save();
             }
 
-            GameMain.NetworkMember = null;
             ConnectedClients.ForEach(c => c.Dispose());
             VoipClient.Dispose();
+
+            GameMain.NetworkMember = null;
         }
         
         public void WriteCharacterInfo(NetOutgoingMessage msg)
