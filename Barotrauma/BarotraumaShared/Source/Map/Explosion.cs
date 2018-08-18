@@ -4,6 +4,7 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -37,9 +38,9 @@ namespace Barotrauma
             flames = true;
         }
 
-        public Explosion(XElement element)
+        public Explosion(XElement element, string parentDebugName)
         {
-            attack = new Attack(element);
+            attack = new Attack(element, parentDebugName + ", Explosion");
 
             force = element.GetAttributeFloat("force", 0.0f);
 
@@ -98,7 +99,7 @@ namespace Barotrauma
                     //damage repairable power-consuming items
                     var powered = item.GetComponent<Powered>();
                     if (powered == null || !powered.VulnerableToEMP) continue;
-                    if (item.FixRequirements.Count > 0)
+                    if (item.Repairables.Any())
                     {
                         item.Condition -= 100 * empStrength * distFactor;
                     }
@@ -202,12 +203,15 @@ namespace Barotrauma
                     }
                     c.AddDamage(limb.WorldPosition, modifiedAfflictions, attack.Stun * distFactor, false, attacker: attacker);
 
-                    var statusEffectTargets = new List<ISerializableEntity>() { c, limb };
-                    foreach (StatusEffect statusEffect in attack.StatusEffects)
+                    if (attack.StatusEffects != null && attack.StatusEffects.Any())
                     {
-                        statusEffect.Apply(ActionType.OnUse, 1.0f, damageSource, statusEffectTargets);
-                        statusEffect.Apply(ActionType.Always, 1.0f, damageSource, statusEffectTargets);
-                        if (underWater) statusEffect.Apply(ActionType.InWater, 1.0f, damageSource, statusEffectTargets);
+                        var statusEffectTargets = new List<ISerializableEntity>() { c, limb };
+                        foreach (StatusEffect statusEffect in attack.StatusEffects)
+                        {
+                            statusEffect.Apply(ActionType.OnUse, 1.0f, damageSource, statusEffectTargets);
+                            statusEffect.Apply(ActionType.Always, 1.0f, damageSource, statusEffectTargets);
+                            if (underWater) statusEffect.Apply(ActionType.InWater, 1.0f, damageSource, statusEffectTargets);
+                        }
                     }
                     
                     if (limb.WorldPosition != worldPosition && force > 0.0f)

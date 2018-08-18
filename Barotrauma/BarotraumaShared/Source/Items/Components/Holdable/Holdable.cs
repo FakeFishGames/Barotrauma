@@ -419,7 +419,7 @@ namespace Barotrauma.Items.Components
 
             if (picker.HasSelectedItem(item))
             {
-                picker.AnimController.HoldItem(deltaTime, item, handlePos, holdPos + swing, aimPos + swing, picker.IsKeyDown(InputType.Aim), holdAngle);
+                picker.AnimController.HoldItem(deltaTime, item, handlePos, holdPos + swing, aimPos + swing, picker.IsKeyDown(InputType.Aim) && aimPos != Vector2.Zero, holdAngle);
             }
             else
             {

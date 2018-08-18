@@ -114,8 +114,12 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "containable":
-                        RelatedItem containable = RelatedItem.Load(subElement);
-                        if (containable == null) continue;                        
+                        RelatedItem containable = RelatedItem.Load(subElement, item.Name);
+                        if (containable == null)
+                        {
+                            DebugConsole.ThrowError("Error in item config \"" + item.ConfigFile + "\" - containable with no identifiers.");
+                            continue;
+                        }
                         containableItems.Add(containable);
                         break;
                 }
@@ -210,10 +214,19 @@ namespace Barotrauma.Items.Components
             foreach (Item contained in Inventory.Items)
             {
                 if (contained == null) continue;
-
                 if (contained.body != null)
                 {
-                    contained.body.FarseerBody.SetTransformIgnoreContacts(ref simPos, 0.0f);
+                    try
+                    {
+                        contained.body.FarseerBody.SetTransformIgnoreContacts(ref simPos, 0.0f);
+                    }
+                    catch (Exception e)
+                    {
+                        DebugConsole.Log("SetTransformIgnoreContacts threw an exception in SetContainedItemPositions ("+e.Message+")\n"+e.StackTrace);
+                        GameAnalyticsManager.AddErrorEventOnce("ItemContainer.SetContainedItemPositions.InvalidPosition:"+contained.Name,
+                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            "SetTransformIgnoreContacts threw an exception in SetContainedItemPositions (" + e.Message + ")\n" + e.StackTrace);
+                    }
                 }
 
                 contained.Rect =

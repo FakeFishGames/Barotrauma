@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Barotrauma.Extensions;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -321,6 +322,33 @@ namespace Barotrauma
             RecalculatePivotOffset();
             IsFixedSize = true;
             parent?.ChildrenChanged?.Invoke(this);
+        }
+
+        public static RectTransform Load(XElement element, RectTransform parent)
+        {
+            Enum.TryParse(element.GetAttributeString("anchor", "Center"), out Anchor anchor);
+            Enum.TryParse(element.GetAttributeString("pivot", anchor.ToString()), out Pivot pivot);
+
+            Point? minSize = null, maxSize = null;
+            if (element.Attribute("minsize") != null) minSize = element.GetAttributePoint("minsize", Point.Zero);
+            if (element.Attribute("maxsize") != null) maxSize = element.GetAttributePoint("maxsize", new Point(1000, 1000));
+
+            RectTransform rectTransform;
+            if (element.Attribute("relativesize") != null)
+            {
+                rectTransform = new RectTransform(element.GetAttributeVector2("relativesize", Vector2.One), parent, anchor, pivot, minSize, maxSize);
+            }
+            else
+            {
+                rectTransform = new RectTransform(element.GetAttributePoint("absolutesize", new Point(1000, 1000)), parent, anchor, pivot)
+                {
+                    minSize = minSize,
+                    maxSize = maxSize
+                };
+            }
+            rectTransform.RelativeOffset = element.GetAttributeVector2("relativeoffset", Vector2.Zero);
+            rectTransform.AbsoluteOffset = element.GetAttributePoint("absoluteoffset", Point.Zero);
+            return rectTransform;
         }
 
         private void Init(RectTransform parent = null, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)

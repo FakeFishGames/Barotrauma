@@ -8,7 +8,7 @@ namespace Barotrauma
         {
             if (GameMain.GameSession != null && GameMain.GameSession.CrewManager != null)
             {
-                CurrentOrder = Order.PrefabList.Find(o => o.Name.ToLowerInvariant() == "dismissed");
+                CurrentOrder = Order.PrefabList.Find(o => o.AITag == "dismissed");
                 objectiveManager.SetOrder(CurrentOrder, "", null);
                 GameMain.GameSession.CrewManager.SetCharacterOrder(Character, CurrentOrder, null, null);
             }

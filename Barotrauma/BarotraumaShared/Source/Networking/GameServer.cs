@@ -43,7 +43,7 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
-
+        
         private bool initiatedStartGame;
         private CoroutineHandle startGameCoroutine;
 
@@ -66,12 +66,7 @@ namespace Barotrauma.Networking
         {
             get { return entityEventManager; }
         }
-
-        public ServerLog ServerLog
-        {
-            get { return log; }
-        }
-
+        
         public TimeSpan UpdateInterval
         {
             get { return updateInterval; }
@@ -142,7 +137,7 @@ namespace Barotrauma.Networking
 
             config.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
 
-            log = new ServerLog(name);
+            ServerLog = new ServerLog(name);
 
             InitProjSpecific();
 
@@ -382,7 +377,6 @@ namespace Barotrauma.Networking
 #if CLIENT
             if (ShowNetStats) netStats.Update(deltaTime);
 #endif
-            
             if (!started) return;
             
             base.Update(deltaTime);
@@ -1074,8 +1068,9 @@ namespace Barotrauma.Networking
 
             WriteChatMessages(outmsg, c);
 
-            //write as many position updates as the message can fit
-            while (outmsg.LengthBytes < config.MaximumTransmissionUnit - 20 && 
+            //write as many position updates as the message can fit (only after midround syncing is done)
+            while (!c.NeedsMidRoundSync &&
+                outmsg.LengthBytes < config.MaximumTransmissionUnit - 20 && 
                 c.PendingPositionUpdates.Count > 0)
             {
                 var entity = c.PendingPositionUpdates.Dequeue();
@@ -1142,7 +1137,7 @@ namespace Barotrauma.Networking
 
                 outmsg.WriteRangedInteger(0, 2, (int)TraitorsEnabled);
 
-                outmsg.WriteRangedInteger(0, MissionPrefab.MissionTypes.Count - 1, (GameMain.NetLobbyScreen.MissionTypeIndex));
+                outmsg.WriteRangedInteger(0, Enum.GetValues(typeof(MissionType)).Length - 1, (GameMain.NetLobbyScreen.MissionTypeIndex));
 
                 outmsg.Write((byte)GameMain.NetLobbyScreen.SelectedModeIndex);
                 outmsg.Write(GameMain.NetLobbyScreen.LevelSeed);
@@ -1370,7 +1365,7 @@ namespace Barotrauma.Networking
             //don't instantiate a new gamesession if we're playing a campaign
             if (campaign == null || GameMain.GameSession == null)
             {
-                GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, MissionPrefab.MissionTypes[GameMain.NetLobbyScreen.MissionTypeIndex]);
+                GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, (MissionType)GameMain.NetLobbyScreen.MissionTypeIndex);
             }
 
             if (GameMain.GameSession.GameMode.Mission != null &&
@@ -1388,7 +1383,10 @@ namespace Barotrauma.Networking
 #if CLIENT
                 if (GameMain.GameSession?.CrewManager != null) GameMain.GameSession.CrewManager.Reset();
 #endif
-                GameMain.GameSession.StartRound(campaign.Map.SelectedConnection.Level, true, teamCount > 1);
+                GameMain.GameSession.StartRound(campaign.Map.SelectedConnection.Level, 
+                    reloadSub: true, 
+                    loadSecondSub: teamCount > 1,
+                    mirrorLevel: campaign.Map.CurrentLocation != campaign.Map.SelectedConnection.Locations[0]);
             }
             else
             {
@@ -1600,6 +1598,8 @@ namespace Barotrauma.Networking
             msg.Write(AllowRespawn && missionAllowRespawn);
             msg.Write(Submarine.MainSubs[1] != null); //loadSecondSub
 
+            msg.Write(AllowDisguises);
+
             Traitor traitor = null;
             if (TraitorManager != null && TraitorManager.TraitorList.Count > 0)
                 traitor = TraitorManager.TraitorList.Find(t => t.Character == client.Character);
@@ -1647,7 +1647,7 @@ namespace Barotrauma.Networking
                 GameMain.NetLobbyScreen.LastUpdateID++;
             }
 
-            if (SaveServerLogs) log.Save();
+            if (SaveServerLogs) ServerLog.Save();
             
             Character.Controlled = null;
             
@@ -2133,7 +2133,7 @@ namespace Barotrauma.Networking
             CompressOutgoingMessage(msg);
             server.SendMessage(msg, transfer.Connection, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
         }
-
+        
         public void UpdateVoteStatus()
         {
             if (server.Connections.Count == 0|| connectedClients.Count == 0) return;
@@ -2319,9 +2319,9 @@ namespace Barotrauma.Networking
             int count = message.ReadByte();
             for (int i = 0; i < Math.Min(count, 3); i++)
             {
-                string jobName = message.ReadString();
+                string jobIdentifier = message.ReadString();
 
-                JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
+                JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Identifier == jobIdentifier);
                 if (jobPrefab != null) jobPreferences.Add(jobPrefab);
             }
 
@@ -2550,7 +2550,16 @@ namespace Barotrauma.Networking
         {
             if (GameMain.Server == null || !GameMain.Server.SaveServerLogs) return;
 
-            GameMain.Server.log.WriteLine(line, messageType);
+            GameMain.Server.ServerLog.WriteLine(line, messageType);
+
+            foreach (Client client in GameMain.Server.ConnectedClients)
+            {
+                if (!client.HasPermission(ClientPermissions.ServerLog)) continue;
+                //use sendername as the message type
+                GameMain.Server.SendDirectChatMessage(
+                    ChatMessage.Create(messageType.ToString(), line, ChatMessageType.ServerLog, null), 
+                    client);
+            }
         }
 
         public override void Disconnect()
@@ -2574,7 +2583,7 @@ namespace Barotrauma.Networking
             if (SaveServerLogs)
             {
                 Log("Shutting down the server...", ServerLog.MessageType.ServerMessage);
-                log.Save();
+                ServerLog.Save();
             }
             
             GameAnalyticsManager.AddDesignEvent("GameServer:ShutDown");            

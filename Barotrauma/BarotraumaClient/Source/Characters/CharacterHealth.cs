@@ -31,6 +31,7 @@ namespace Barotrauma
         private GUIButton suicideButton;
 
         private GUIProgressBar healthBar;
+        private GUIProgressBar healthBarShadow;
 
         private float damageOverlayTimer;
 
@@ -43,6 +44,7 @@ namespace Barotrauma
         private GUIFrame healthWindow;
 
         private GUIProgressBar healthWindowHealthBar;
+        private GUIProgressBar healthWindowHealthBarShadow;
 
         private GUIComponent draggingMed;
 
@@ -55,6 +57,9 @@ namespace Barotrauma
 
         private float healthShadowSize;
         private float healthShadowDelay;
+
+        private float healthBarPulsateTimer;
+        private float healthBarPulsatePhase;
 
         public float DamageOverlayTimer
         {
@@ -98,11 +103,16 @@ namespace Barotrauma
         partial void InitProjSpecific(Character character)
         {
             character.OnAttacked += OnAttacked;
-
+            
             healthBar = new GUIProgressBar(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.HealthBarAreaLeft, GUI.Canvas),
                 barSize: 1.0f, color: Color.Green, style: "GUIProgressBarVertical")
             {
-                IsHorizontal = false
+                IsHorizontal = HUDLayoutSettings.HealthBarAreaLeft.Width > HUDLayoutSettings.HealthBarAreaLeft.Height
+            };
+            healthBarShadow = new GUIProgressBar(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.HealthBarAreaLeft, GUI.Canvas),
+                barSize: 1.0f, color: Color.Green, style: "GUIProgressBarVertical")
+            {
+                IsHorizontal = HUDLayoutSettings.HealthBarAreaLeft.Width > HUDLayoutSettings.HealthBarAreaLeft.Height
             };
             healthShadowSize = 1.0f;
 
@@ -128,6 +138,11 @@ namespace Barotrauma
             {
                 IsHorizontal = false
             };
+            healthWindowHealthBarShadow = new GUIProgressBar(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.HealthBarAreaLeft, GUI.Canvas),
+                barSize: 1.0f, color: Color.Green, style: "GUIProgressBarVertical")
+            {
+                IsHorizontal = false
+            };
             cprButton = new GUIButton(new RectTransform(new Point(80, 80), GUI.Canvas, pivot: Pivot.CenterLeft), text: "", style: "CPRButton");
             cprButton.OnClicked = (button, userData) =>
             {
@@ -144,7 +159,7 @@ namespace Barotrauma
 
                 if (GameMain.Client != null)
                 {
-                    GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Repair });
+                    GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.CPR });
                 }
 
                 return true;
@@ -188,18 +203,20 @@ namespace Barotrauma
         {
             damageOverlayTimer = MathHelper.Clamp(attackResult.Damage / MaxVitality, damageOverlayTimer, 1.0f);
             if (healthShadowDelay <= 0.0f) healthShadowDelay = 1.0f;
+
+            if (healthBarPulsateTimer <= 0.0f) healthBarPulsatePhase = 0.0f;
+            healthBarPulsateTimer = 1.0f;
         }
 
         private void UpdateAlignment()
         {
-            healthBar.RectTransform.RelativeOffset = Vector2.Zero;
-            healthWindowHealthBar.RectTransform.RelativeOffset = Vector2.Zero;
+            healthBar.RectTransform.RelativeOffset = healthBarShadow.RectTransform.RelativeOffset = Vector2.Zero;
+            healthWindowHealthBar.RectTransform.RelativeOffset = healthWindowHealthBarShadow.RectTransform.RelativeOffset = Vector2.Zero;
 
             if (alignment == Alignment.Left)
             {
-                healthBar.RectTransform.AbsoluteOffset = HUDLayoutSettings.HealthBarAreaLeft.Location;
-                healthBar.RectTransform.NonScaledSize = HUDLayoutSettings.HealthBarAreaLeft.Size;
-
+                healthBar.RectTransform.AbsoluteOffset = healthBarShadow.RectTransform.AbsoluteOffset = HUDLayoutSettings.HealthBarAreaLeft.Location;
+                healthBar.RectTransform.NonScaledSize = healthBarShadow.RectTransform.NonScaledSize = HUDLayoutSettings.HealthBarAreaLeft.Size;
                 healthWindow.RectTransform.AbsoluteOffset = HUDLayoutSettings.HealthWindowAreaLeft.Location;
                 healthWindow.RectTransform.NonScaledSize = new Point(HUDLayoutSettings.HealthWindowAreaLeft.Width / 2, HUDLayoutSettings.HealthWindowAreaLeft.Height);
                                 
@@ -214,13 +231,13 @@ namespace Barotrauma
                 /*healItemContainer.RectTransform.AbsoluteOffset = new Point(HUDLayoutSettings.HealthWindowAreaLeft.Center.X, HUDLayoutSettings.HealthWindowAreaLeft.Y);
                 healItemContainer.RectTransform.NonScaledSize = new Point(HUDLayoutSettings.HealthWindowAreaLeft.Width, (int)(140 * GUI.Scale));*/
                 
-                healthWindowHealthBar.RectTransform.NonScaledSize = new Point((int)(30 * GUI.Scale), healthWindow.Rect.Height);
-                healthWindowHealthBar.RectTransform.AbsoluteOffset = new Point(healthWindow.Rect.X - (int)(30 * GUI.Scale), healthWindow.Rect.Y);
+                healthWindowHealthBar.RectTransform.NonScaledSize = healthWindowHealthBarShadow.RectTransform.NonScaledSize = new Point((int)(30 * GUI.Scale), healthWindow.Rect.Height);
+                healthWindowHealthBar.RectTransform.AbsoluteOffset = healthWindowHealthBarShadow.RectTransform.AbsoluteOffset = new Point(healthWindow.Rect.X - (int)(30 * GUI.Scale), healthWindow.Rect.Y);
             }
             else
             {
-                healthBar.RectTransform.AbsoluteOffset = HUDLayoutSettings.HealthBarAreaRight.Location;
-                healthBar.RectTransform.NonScaledSize = HUDLayoutSettings.HealthBarAreaRight.Size;
+                healthBar.RectTransform.AbsoluteOffset = healthBarShadow.RectTransform.AbsoluteOffset = HUDLayoutSettings.HealthBarAreaRight.Location;
+                healthBar.RectTransform.NonScaledSize = healthBarShadow.RectTransform.NonScaledSize = HUDLayoutSettings.HealthBarAreaRight.Size;
                 healthWindow.RectTransform.AbsoluteOffset = new Point(HUDLayoutSettings.HealthWindowAreaRight.Center.X, HUDLayoutSettings.HealthWindowAreaRight.Location.Y);
                 healthWindow.RectTransform.NonScaledSize = new Point(HUDLayoutSettings.HealthWindowAreaRight.Width / 2, HUDLayoutSettings.HealthWindowAreaRight.Height);
                 
@@ -235,8 +252,8 @@ namespace Barotrauma
                 cprButton.RectTransform.AbsoluteOffset = new Point(afflictionContainer.Rect.X, afflictionContainer.Rect.Center.Y);
                 cprButton.RectTransform.NonScaledSize = new Point(cprButtonSize, cprButtonSize);
                                 
-                healthWindowHealthBar.RectTransform.NonScaledSize = new Point((int)(30 * GUI.Scale), healthWindow.Rect.Height);
-                healthWindowHealthBar.RectTransform.AbsoluteOffset = new Point(healthWindow.Rect.Right, healthWindow.Rect.Y);
+                healthWindowHealthBar.RectTransform.NonScaledSize = healthWindowHealthBarShadow.RectTransform.NonScaledSize = new Point((int)(30 * GUI.Scale), healthWindow.Rect.Height);
+                healthWindowHealthBar.RectTransform.AbsoluteOffset = healthWindowHealthBarShadow.RectTransform.AbsoluteOffset = new Point(healthWindow.Rect.Right, healthWindow.Rect.Y);
             }
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
@@ -365,6 +382,20 @@ namespace Barotrauma
                 healthBar.Color = healthWindowHealthBar.Color = HealthColorLerp(Color.Green, Color.Orange, Color.Red, vitality / MaxVitality);
                 healthBar.HoverColor = healthWindowHealthBar.HoverColor = healthBar.Color * 2.0f;
                 healthBar.BarSize = healthWindowHealthBar.BarSize = (vitality > 0.0f) ? vitality / MaxVitality : 1.0f - vitality / minVitality;
+
+                if (healthBarPulsateTimer > 0.0f)
+                {
+                    //0-1
+                    float pulsateAmount = (float)(Math.Sin(healthBarPulsatePhase) + 1.0f) / 2.0f;
+
+                    healthBar.RectTransform.LocalScale = healthBarShadow.RectTransform.LocalScale = new Vector2(1.0f + pulsateAmount * Math.Min(healthBarPulsateTimer, 0.5f), 1.0f);
+                    healthBarPulsatePhase += deltaTime * 5.0f;
+                    healthBarPulsateTimer -= deltaTime;
+                }
+                else
+                {
+                    healthBar.RectTransform.LocalScale = Vector2.One;
+                }
             }
             
             if (OpenHealthWindow == this)
@@ -426,12 +457,13 @@ namespace Barotrauma
             if (OpenHealthWindow == this)
             {
                 afflictionContainer.AddToGUIUpdateList();
-                //healItemContainer.AddToGUIUpdateList();
                 healthWindow.AddToGUIUpdateList();
+                healthWindowHealthBarShadow.AddToGUIUpdateList();
                 healthWindowHealthBar.AddToGUIUpdateList();
             }
             else
             {
+                healthBarShadow.AddToGUIUpdateList();
                 healthBar.AddToGUIUpdateList();
             }
             if (suicideButton.Visible && character == Character.Controlled) suicideButton.AddToGUIUpdateList();
@@ -515,8 +547,8 @@ namespace Barotrauma
                 {
                     float currHealth = healthBar.BarSize;
                     Color prevColor = healthBar.Color;
-                    healthBar.BarSize = healthShadowSize;
-                    healthBar.Color = Color.Red;
+                    healthBarShadow.BarSize = healthShadowSize;
+                    healthBarShadow.Color = Color.Red;
                     healthBar.BarSize = currHealth;
                     healthBar.Color = prevColor;
                 }
@@ -527,8 +559,8 @@ namespace Barotrauma
                 {
                     float currHealth = healthWindowHealthBar.BarSize;
                     Color prevColor = healthWindowHealthBar.Color;
-                    healthWindowHealthBar.BarSize = healthShadowSize;
-                    healthWindowHealthBar.Color = Color.Red;
+                    healthWindowHealthBarShadow.BarSize = healthShadowSize;
+                    healthWindowHealthBarShadow.Color = Color.Red;
                     healthWindowHealthBar.BarSize = currHealth;
                     healthWindowHealthBar.Color = prevColor;
                 }

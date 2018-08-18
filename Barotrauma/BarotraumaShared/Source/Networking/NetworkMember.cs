@@ -149,6 +149,12 @@ namespace Barotrauma.Networking
             get { return respawnManager; }
         }
 
+        public ServerLog ServerLog
+        {
+            get;
+            protected set;
+        }
+
         public NetworkMember()
         {
             InitProjSpecific();

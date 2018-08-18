@@ -614,10 +614,12 @@ namespace Barotrauma
                 w.IdCardTags = idCardTagString.Split(',');
             }
 
-            string jobName = element.GetAttributeString("job", "").ToLowerInvariant();
-            if (!string.IsNullOrWhiteSpace(jobName))
+            string jobIdentifier = element.GetAttributeString("job", "").ToLowerInvariant();
+            if (!string.IsNullOrWhiteSpace(jobIdentifier))
             {
-                w.assignedJob = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == jobName);
+                w.assignedJob = 
+                    JobPrefab.List.Find(jp => jp.Identifier.ToLowerInvariant() == jobIdentifier) ??
+                    JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == jobIdentifier);                
             }
 
             w.ladderId = (ushort)element.GetAttributeInt("ladders", 0);
@@ -649,9 +651,7 @@ namespace Barotrauma
                 element.Add(new XAttribute("idcardtags", string.Join(",", idCardTags)));
             }
 
-            if (assignedJob != null) element.Add(new XAttribute("job", assignedJob.Name));
-
-
+            if (assignedJob != null) element.Add(new XAttribute("job", assignedJob.Identifier));
             if (ConnectedGap != null) element.Add(new XAttribute("gap", ConnectedGap.ID));
             if (Ladders != null) element.Add(new XAttribute("ladders", Ladders.Item.ID));
 

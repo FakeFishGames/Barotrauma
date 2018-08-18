@@ -4,9 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Reflection;
 
 namespace Barotrauma
 {
@@ -62,7 +60,7 @@ namespace Barotrauma
         private GUIFrame playerFrame;
 
         private GUITickBox autoRestartBox;
-
+        
         private GUIDropDown shuttleList;
         private GUITickBox shuttleTickBox;
 
@@ -98,6 +96,12 @@ namespace Barotrauma
         {
             get { return serverMessage.Text; }
             set { serverMessage.Text = value; }
+        }
+
+        public GUIButton ShowLogButton
+        {
+            get;
+            private set;
         }
 
         public GUIListBox SubList
@@ -337,24 +341,24 @@ namespace Barotrauma
                 TextManager.Get("ServerSettingsButton"));
             clientHiddenElements.Add(settingsButton);
 
-            var showLogButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), topButtonContainer.RectTransform, Anchor.TopRight),
+            ShowLogButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), topButtonContainer.RectTransform, Anchor.TopRight),
                 TextManager.Get("ServerLog"))
             {
                 OnClicked = (GUIButton button, object userData) =>
                 {
-                    if (GameMain.Server.ServerLog.LogFrame == null)
+                    if (GameMain.NetworkMember.ServerLog.LogFrame == null)
                     {
-                        GameMain.Server.ServerLog.CreateLogFrame();
+                        GameMain.NetworkMember.ServerLog.CreateLogFrame();
                     }
                     else
                     {
-                        GameMain.Server.ServerLog.LogFrame = null;
+                        GameMain.NetworkMember.ServerLog.LogFrame = null;
                         GUI.KeyboardDispatcher.Subscriber = null;
                     }
                     return true;
                 }
             };
-            clientHiddenElements.Add(showLogButton);
+            clientHiddenElements.Add(ShowLogButton);
 
             //submarine list ------------------------------------------------------------------
             
@@ -566,6 +570,10 @@ namespace Barotrauma
             //disable/hide elements the clients are not supposed to use/see
             clientDisabledElements.ForEach(c => c.Enabled = GameMain.Server != null);
             clientHiddenElements.ForEach(c => c.Visible = GameMain.Server != null);
+            
+            ShowLogButton.Visible =
+                GameMain.Server != null ||
+                (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.ServerLog));
 
             spectateButton.Visible = GameMain.Client != null && GameMain.Client.GameStarted;            
             if (GameMain.NetworkMember.CharacterInfo != null)
@@ -718,9 +726,9 @@ namespace Barotrauma
             };
 
             int i = 1;
-            foreach (string jobName in GameMain.Config.JobNamePreferences)
+            foreach (string jobIdentifier in GameMain.Config.JobPreferences)
             {
-                JobPrefab job = JobPrefab.List.Find(x => x.Name == jobName);
+                JobPrefab job = JobPrefab.List.Find(j => j.Identifier == jobIdentifier);
                 if (job == null) continue;
 
                 var jobFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), jobList.Content.RectTransform), style: "ListBoxElement")
@@ -828,10 +836,11 @@ namespace Barotrauma
 
         public void SetMissionType(int missionTypeIndex)
         {
-            if (missionTypeIndex < 0 || missionTypeIndex >= MissionPrefab.MissionTypes.Count) return;
-
-            ((GUITextBlock)missionTypeContainer.GetChild(2)).Text = MissionPrefab.MissionTypes[missionTypeIndex];
-            missionTypeContainer.UserData = missionTypeIndex;
+            if (missionTypeIndex < 0 || missionTypeIndex >= Enum.GetValues(typeof(MissionType)).Length) return;
+            
+            //TODO: get mission type text from xml
+            ((GUITextBlock)missionTypeContainer.GetChild(2)).Text = ((MissionType)missionTypeIndex).ToString();
+            missionTypeContainer.UserData = ((MissionType)missionTypeIndex);
         }
 
         public bool ToggleMissionType(GUIButton button, object userData)
@@ -841,8 +850,8 @@ namespace Barotrauma
             int missionTypeIndex = (int)missionTypeContainer.UserData;
             missionTypeIndex += (int)userData;
 
-            if (missionTypeIndex < 0) missionTypeIndex = MissionPrefab.MissionTypes.Count - 1;
-            if (missionTypeIndex >= MissionPrefab.MissionTypes.Count) missionTypeIndex = 0;
+            if (missionTypeIndex < 0) missionTypeIndex = Enum.GetValues(typeof(MissionType)).Length - 1;
+            if (missionTypeIndex >= Enum.GetValues(typeof(MissionType)).Length) missionTypeIndex = 0;
 
             SetMissionType(missionTypeIndex);
 
@@ -1165,18 +1174,13 @@ namespace Barotrauma
                 {
                     UserData = selectedClient
                 };
-                
+
                 foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                 {
                     if (permission == ClientPermissions.None) continue;
 
-                    FieldInfo fi = typeof(ClientPermissions).GetField(permission.ToString());
-                    DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
-
-                    string permissionStr = attributes.Length > 0 ? attributes[0].Description : permission.ToString();
-
                     var permissionTick = new GUITickBox(new RectTransform(new Vector2(0.15f, 0.15f), permissionsBox.Content.RectTransform),
-                        permissionStr, font: GUI.SmallFont)
+                        TextManager.Get("ClientPermission." + permission), font: GUI.SmallFont)
                     {
                         UserData = permission,
                         Selected = selectedClient.HasPermission(permission),
@@ -1603,12 +1607,12 @@ namespace Barotrauma
 
                 (child.GetChild<GUITextBlock>()).Text = (i + 1) + ". " + (child.UserData as JobPrefab).Name;
 
-                jobNamePreferences.Add((child.UserData as JobPrefab).Name);
+                jobNamePreferences.Add((child.UserData as JobPrefab).Identifier);
             }
 
-            if (!GameMain.Config.JobNamePreferences.SequenceEqual(jobNamePreferences))
+            if (!GameMain.Config.JobPreferences.SequenceEqual(jobNamePreferences))
             {
-                GameMain.Config.JobNamePreferences = jobNamePreferences;
+                GameMain.Config.JobPreferences = jobNamePreferences;
                 GameMain.Config.Save();
             }
         }

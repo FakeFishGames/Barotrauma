@@ -59,9 +59,7 @@ namespace Barotrauma.Networking
         private int linesPerFile = 800;
 
         public const string SavePath = "ServerLogs";
-
-        private string serverName;
-
+        
         private readonly Queue<LogMessage> lines;
 
         private int unsavedLineCount;
@@ -75,10 +73,11 @@ namespace Barotrauma.Networking
             set { linesPerFile = Math.Max(value, 10); }
         }
 
+        public string ServerName;
+
         public ServerLog(string serverName)
         {
-            this.serverName = serverName;
-
+            ServerName = serverName;
             lines = new Queue<LogMessage>();
         }
 
@@ -139,7 +138,7 @@ namespace Barotrauma.Networking
                 }                
             }
 
-            string fileName = serverName + "_" + DateTime.Now.ToString("yyyy-MM-dd_HH:mm") + ".txt";
+            string fileName = ServerName + "_" + DateTime.Now.ToString("yyyy-MM-dd_HH:mm") + ".txt";
 
             var invalidChars = Path.GetInvalidFileNameChars();
             foreach (char invalidChar in invalidChars)
@@ -156,6 +155,7 @@ namespace Barotrauma.Networking
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Saving the server log to " + filePath + " failed", e);
+                return;
             }
         }
     }

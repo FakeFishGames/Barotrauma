@@ -81,7 +81,8 @@ namespace Barotrauma.Items.Components
             }
 
             currPowerConsumption = powerConsumption * Math.Abs(flowPercentage / 100.0f);
-            if (item.IsOptimized("electrical")) currPowerConsumption *= 0.5f;
+            //pumps consume more power when in a bad condition
+            currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / 100.0f);
 
             if (voltage < minVoltage) return;
 
@@ -96,7 +97,8 @@ namespace Barotrauma.Items.Components
             float powerFactor = currPowerConsumption <= 0.0f ? 1.0f : voltage;
 
             currFlow = flowPercentage / 100.0f * maxFlow * powerFactor;
-            if (item.IsOptimized("mechanical")) currFlow *= 2.0f;
+            //less effective when in a bad condition
+            currFlow *= MathHelper.Lerp(0.5f, 1.0f, item.Condition / 100.0f);
 
             hull1.WaterVolume += currFlow;
             if (hull1.WaterVolume > hull1.Volume) hull1.Pressure += 0.5f;
@@ -143,7 +145,7 @@ namespace Barotrauma.Items.Components
         {
             if (GameMain.Client != null) return false;
 
-            if (objective.Option.ToLowerInvariant() == "stop pumping")
+            if (objective.Option.ToLowerInvariant() == "stoppumping")
             {
                 if (FlowPercentage > 0.0f) item.CreateServerEvent(this);
                 FlowPercentage = 0.0f;

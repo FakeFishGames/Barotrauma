@@ -564,7 +564,7 @@ namespace Barotrauma
                     else
                     {
                         string description = item.Description;
-                        if (item.Prefab.NameMatches("ID Card"))
+                        if (item.Prefab.Identifier == "idcard")
                         {
                             string[] readTags = item.Tags.Split(',');
                             string idName = null;
@@ -662,7 +662,7 @@ namespace Barotrauma
                 if (CharacterHealth.OpenHealthWindow != null)
                 {
                     float treatmentSuitability = CharacterHealth.OpenHealthWindow.GetTreatmentSuitability(item);
-                    float skill = Character.Controlled.GetSkillLevel("Medical");
+                    float skill = Character.Controlled.GetSkillLevel("medical");
                     if (skill > 50.0f)
                     {
                         Rectangle highlightRect = rect;

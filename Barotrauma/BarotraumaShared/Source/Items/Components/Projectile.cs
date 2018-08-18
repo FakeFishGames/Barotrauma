@@ -89,7 +89,7 @@ namespace Barotrauma.Items.Components
             foreach (XElement subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "attack") continue;
-                attack = new Attack(subElement);
+                attack = new Attack(subElement, item.Name + ", Projectile");
             }
         }
 

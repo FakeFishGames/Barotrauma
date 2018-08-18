@@ -49,7 +49,6 @@ namespace Barotrauma
             public Entity Spawn()
             {                
                 Item spawnedItem = null;
-
                 if (Inventory != null)
                 {
                     spawnedItem = new Item(Prefab, Vector2.Zero, null);
@@ -59,8 +58,6 @@ namespace Barotrauma
                 {
                     spawnedItem = new Item(Prefab, Position, Submarine);
                 }
-                spawnedItem.Condition = Condition;
-
                 return spawnedItem;
             }
         }
@@ -159,6 +156,10 @@ namespace Barotrauma
                 if (spawnedEntity != null)
                 {
                     CreateNetworkEvent(spawnedEntity, false);
+                    if (spawnedEntity is Item)
+                    {
+                        ((Item)spawnedEntity).Condition = ((ItemSpawnInfo)entitySpawnInfo).Condition;
+                    }
                 }
             }
 

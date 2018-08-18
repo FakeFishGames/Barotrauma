@@ -146,7 +146,7 @@ namespace Barotrauma
             //-> take the suit off
             if (canTakeOffSuit && (Character.Oxygen < 50.0f || objectiveManager.CurrentObjective is AIObjectiveIdle))
             {
-                var divingSuit = Character.Inventory.FindItem("Diving Suit");
+                var divingSuit = Character.Inventory.FindItemByIdentifier("divingsuit") ?? Character.Inventory.FindItemByTag("divingsuit");
                 if (divingSuit != null) divingSuit.Drop(Character);
             }
 

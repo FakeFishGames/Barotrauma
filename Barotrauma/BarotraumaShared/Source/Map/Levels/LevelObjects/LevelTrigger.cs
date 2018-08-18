@@ -187,7 +187,7 @@ namespace Barotrauma
             set;
         }
                 
-        public LevelTrigger(XElement element, Vector2 position, float rotation, float scale = 1.0f)
+        public LevelTrigger(XElement element, Vector2 position, float rotation, float scale = 1.0f, string parentDebugName = "")
         {
             TriggererPosition = new Dictionary<Entity, Vector2>();
 
@@ -259,11 +259,11 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "statuseffect":
-                        statusEffects.Add(StatusEffect.Load(subElement));
+                        statusEffects.Add(StatusEffect.Load(subElement, string.IsNullOrEmpty(parentDebugName) ? "LevelTrigger" : "LevelTrigger in "+ parentDebugName));
                         break;
                     case "attack":
                     case "damage":
-                        var attack = new Attack(subElement);
+                        var attack = new Attack(subElement, string.IsNullOrEmpty(parentDebugName) ? "LevelTrigger" : "LevelTrigger in " + parentDebugName);
                         var multipliedAfflictions = attack.GetMultipliedAfflictions((float)Timing.Step);
                         attack.Afflictions.Clear();
                         foreach (Affliction affliction in multipliedAfflictions)

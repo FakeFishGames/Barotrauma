@@ -140,6 +140,10 @@ namespace Barotrauma
         {
             get
             {
+                if (GameMain.Server != null && !GameMain.Server.AllowDisguises) return Name;
+#if CLIENT
+                if (GameMain.Client != null && !GameMain.Client.AllowDisguises) return Name;
+#endif
                 return info != null && !string.IsNullOrWhiteSpace(info.Name) ? info.Name + (info.DisplayName != info.Name ? " (as " + info.DisplayName + ")" : "") : SpeciesName;
             }
         }
@@ -656,12 +660,30 @@ namespace Barotrauma
                         CharacterHealth = new CharacterHealth(subElement, this);
                         break;
                     case "statuseffect":
-                        statusEffects.Add(StatusEffect.Load(subElement));
+                        statusEffects.Add(StatusEffect.Load(subElement, Name));
                         break;
                 }
             }
             
-            if (CharacterHealth == null) CharacterHealth = new CharacterHealth(this);
+            List<XElement> healthElements = new List<XElement>();
+            List<float> healthCommonness = new List<float>();
+            foreach (XElement element in doc.Root.Elements())
+            {
+                if (element.Name.ToString().ToLowerInvariant() != "health") continue;
+                healthElements.Add(element);
+                healthCommonness.Add(element.GetAttributeFloat("commonness", 1.0f));
+            }
+
+            if (healthElements.Count == 0)
+            {
+                CharacterHealth = new CharacterHealth(this);
+            }
+            else
+            {
+                CharacterHealth = new CharacterHealth(
+                    healthElements.Count == 1 ? healthElements[0] : ToolBox.SelectWeightedRandom(healthElements, healthCommonness, random), 
+                    this);
+            }
 
             AnimController.SetPosition(ConvertUnits.ToSimUnits(position));
                         
@@ -819,9 +841,9 @@ namespace Barotrauma
             info.Job.GiveJobItems(this, spawnPoint);
         }
 
-        public float GetSkillLevel(string skillName)
+        public float GetSkillLevel(string skillIdentifier)
         {
-            return (Info == null || Info.Job == null) ? 0.0f : Info.Job.GetSkillLevel(skillName);
+            return (Info == null || Info.Job == null) ? 0.0f : Info.Job.GetSkillLevel(skillIdentifier);
         }
 
         float findFocusedTimer;
@@ -1104,15 +1126,14 @@ namespace Barotrauma
             return false;
         }
 
-        public bool HasEquippedItem(string itemName, bool allowBroken = true)
+        public bool HasEquippedItem(string itemIdentifier, bool allowBroken = true)
         {
             if (Inventory == null) return false;
             for (int i = 0; i < Inventory.Capacity; i++)
             {
                 if (Inventory.SlotTypes[i] == InvSlotType.Any || Inventory.Items[i] == null) continue;
                 if (!allowBroken && Inventory.Items[i].Condition <= 0.0f) continue;
-                if (Inventory.Items[i].Prefab.NameMatches(itemName) || Inventory.Items[i].HasTag(itemName)) return true;
-                if (!string.IsNullOrEmpty(Inventory.Items[i].Prefab.Identifier) && Inventory.Items[i].Prefab.Identifier == itemName) return true;
+                if (Inventory.Items[i].Prefab.Identifier == itemIdentifier || Inventory.Items[i].HasTag(itemIdentifier)) return true;
             }
 
             return false;
@@ -2114,7 +2135,7 @@ namespace Barotrauma
         }
         partial void KillProjSpecific();
 
-        public void Revive(bool isNetworkMessage)
+        public void Revive()
         {
             if (Removed)
             {
@@ -2142,6 +2163,7 @@ namespace Barotrauma
 
             foreach (Limb limb in AnimController.Limbs)
             {
+                limb.body.Enabled = true;
                 limb.IsSevered = false;
             }
 

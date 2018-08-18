@@ -21,11 +21,16 @@ namespace Barotrauma
             get
             {
                 string disguiseName = "?";
-                if (Character == null || !Character.HideFace)
+                if (Character == null || !Character.HideFace || (GameMain.Server != null && !GameMain.Server.AllowDisguises))
                 {
                     return Name;
                 }
-
+#if CLIENT
+                if (GameMain.Client != null && !GameMain.Client.AllowDisguises)
+                {
+                    return Name;
+                }
+#endif
                 if (Character.Inventory != null)
                 {
                     int cardSlotIndex = Character.Inventory.FindLimbSlot(InvSlotType.Card);
@@ -341,14 +346,14 @@ namespace Barotrauma
             return salary;
         }
 
-        public void IncreaseSkillLevel(string skillName, float increase, Vector2 worldPos)
+        public void IncreaseSkillLevel(string skillIdentifier, float increase, Vector2 worldPos)
         {
             if (Job == null) return;
 
-            float prevLevel = Job.GetSkillLevel(skillName);
-            Job.IncreaseSkillLevel(skillName, increase);
+            float prevLevel = Job.GetSkillLevel(skillIdentifier);
+            Job.IncreaseSkillLevel(skillIdentifier, increase);
 
-            float newLevel = Job.GetSkillLevel(skillName);
+            float newLevel = Job.GetSkillLevel(skillIdentifier);
 #if CLIENT
             if (newLevel - prevLevel > 0.1f)
             {
@@ -370,7 +375,10 @@ namespace Barotrauma
             if ((int)newLevel > (int)prevLevel)
             {
                 GUI.AddMessage(
-                    TextManager.Get("SkillIncreased").Replace("[name]", Name).Replace("[skillname]", skillName).Replace("[newlevel]", ((int)newLevel).ToString()), 
+                    TextManager.Get("SkillIncreased")
+                        .Replace("[name]", Name)
+                        .Replace("[skillname]", TextManager.Get("SkillName." + skillIdentifier))
+                        .Replace("[newlevel]", ((int)newLevel).ToString()), 
                     Color.Green);
             }
 #endif

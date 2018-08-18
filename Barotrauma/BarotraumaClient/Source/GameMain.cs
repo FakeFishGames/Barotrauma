@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using GameAnalyticsSDK.Net;
+using System.IO;
 
 namespace Barotrauma
 {
@@ -143,6 +144,8 @@ namespace Barotrauma
                 Config.WasGameUpdated = false;
                 Config.Save();
             }
+
+            TextManager.LoadTextPacks(Path.Combine("Content", "Texts"));
             
             ApplyGraphicsSettings();
 
@@ -290,7 +293,7 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume);
-            
+                        
             GUI.Init(Window, Config.SelectedContentPackages, GraphicsDevice);
             DebugConsole.Init();
 
@@ -333,7 +336,7 @@ namespace Barotrauma
             // Add any missing jobs from the prefab into Config.JobNamePreferences.
             foreach (JobPrefab job in JobPrefab.List)
             {
-                if (!Config.JobNamePreferences.Contains(job.Name)) { Config.JobNamePreferences.Add(job.Name); }
+                if (!Config.JobPreferences.Contains(job.Identifier)) { Config.JobPreferences.Add(job.Identifier); }
             }
 
             NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
