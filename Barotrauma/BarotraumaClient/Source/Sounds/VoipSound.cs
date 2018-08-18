@@ -18,7 +18,7 @@ namespace Barotrauma.Sounds
         private VoipQueue queue;
         public int bufferID = 0;
         
-        SoundChannel soundChannel;
+        private SoundChannel soundChannel;
 
         public VoipSound(SoundManager owner,VoipQueue q) : base(owner, "voip", true, true)
         {
@@ -34,6 +34,11 @@ namespace Barotrauma.Sounds
             soundChannel = chn;
 
             VoipConfig.SetupEncoding();
+        }
+
+        public void SetPosition(Vector3 pos)
+        {
+            soundChannel.Position = pos;
         }
 
         public override SoundChannel Play(float gain, float range, Vector2 position, bool muffle = false)

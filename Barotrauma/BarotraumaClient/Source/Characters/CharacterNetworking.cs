@@ -3,6 +3,7 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -176,7 +177,7 @@ namespace Barotrauma
                         case 1:
                             byte ownerID = msg.ReadByte();
                             ResetNetState();
-                            if (ownerID == GameMain.Client.ID)
+                            if (ownerID == GameMain.Client.Self.ID)
                             {
                                 if (controlled != null)
                                 {
@@ -281,7 +282,7 @@ namespace Barotrauma
                     }
                 }
 
-                character = Create(configPath, position, seed, ch, GameMain.Client.ID != ownerId, hasAi);
+                character = Create(configPath, position, seed, ch, GameMain.Client.Self.ID != ownerId, hasAi);
                 character.ID = id;
                 character.TeamID = teamID;
 
@@ -292,7 +293,7 @@ namespace Barotrauma
                     GameMain.GameSession.CrewManager.AddCharacter(character);
                 }
                 
-                if (GameMain.Client.ID == ownerId)
+                if (GameMain.Client.Self.ID == ownerId)
                 {
                     GameMain.Client.HasSpawned = true;
                     GameMain.Client.Character = character;
@@ -303,6 +304,22 @@ namespace Barotrauma
                     character.memInput.Clear();
                     character.memState.Clear();
                     character.memLocalState.Clear();
+                }
+                else
+                {
+                    //TODO: maybe have proper Client syncing rather than branching off of character spawns
+                    Client client;
+                    if (!GameMain.Client.ConnectedClients.Any(c => c.ID == ownerId))
+                    {
+                        client = new Client(newName, (byte)ownerId, true);
+                        GameMain.Client.ConnectedClients.Add(client);
+                        GameMain.NetLobbyScreen.UpdateClientPlayerList();
+                    }
+                    else
+                    {
+                        client = GameMain.Client.ConnectedClients.First(c => c.ID == ownerId);
+                    }
+                    client.Character = character;
                 }
             }
 

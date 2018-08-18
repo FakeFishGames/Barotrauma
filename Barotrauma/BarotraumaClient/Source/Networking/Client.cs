@@ -15,6 +15,14 @@ namespace Barotrauma.Networking
             private set;
         }
 
+        public void UpdateVoicePosition()
+        {
+            if (character != null)
+            {
+                VoipSound.SetPosition(new Microsoft.Xna.Framework.Vector3(character.Position.X, character.Position.Y, 0.0f));
+            }
+        }
+
         partial void InitVoipProjSpecific()
         {
             if (GameMain.Client != null)
