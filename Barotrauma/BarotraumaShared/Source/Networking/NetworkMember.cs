@@ -203,6 +203,10 @@ namespace Barotrauma.Networking
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
                 GameMain.GameSession.CrewManager.Update(deltaTime);
+
+#if CLIENT
+                ConnectedClients.ForEach(c => c.UpdateVoicePosition());
+#endif
             }
 
 #if CLIENT

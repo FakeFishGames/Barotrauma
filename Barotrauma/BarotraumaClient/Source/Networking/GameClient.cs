@@ -53,7 +53,7 @@ namespace Barotrauma.Networking
         //has the client been given a character to control this round
         public bool HasSpawned;
 
-        public byte ID { get; private set; }
+        public Client Self { get; private set; }
 
         public override List<Client> ConnectedClients
         {
@@ -1019,7 +1019,9 @@ namespace Barotrauma.Networking
 
         private void ReadInitialUpdate(NetIncomingMessage inc)
         {
-            ID = inc.ReadByte();
+            byte ID = inc.ReadByte();
+            Self = new Client(Name, ID, false);
+            ConnectedClients.Add(Self);
             VoipClient = new VoipClient(this, client);
 
             UInt16 subListCount = inc.ReadUInt16();
@@ -1147,11 +1149,8 @@ namespace Barotrauma.Networking
                                     if (!clientIDs.Any(n => n == c.ID) || !clientNames.Any(n => n == c.Name)) c.Dispose();
                                 });
                                 ConnectedClients.RemoveAll(c => !clientIDs.Any(n => n == c.ID) || !clientNames.Any(n => n == c.Name));
-                                GameMain.NetLobbyScreen.ClearPlayers();
                                 for (int i = 0; i < clientNames.Count; i++)
                                 {
-                                    GameMain.NetLobbyScreen.AddPlayer(clientNames[i]);
-                                    if (clientIDs[i] == ID) continue;
                                     if (ConnectedClients.Any(c => c.ID == clientIDs[i])) continue;
                                     var newClient = new Client(clientNames[i], clientIDs[i]);
                                     if (characterIDs[i] > 0)
@@ -1161,6 +1160,7 @@ namespace Barotrauma.Networking
 
                                     ConnectedClients.Add(newClient);
                                 }
+                                GameMain.NetLobbyScreen.UpdateClientPlayerList();
 
                                 Voting.AllowSubVoting = allowSubVoting;
                                 Voting.AllowModeVoting = allowModeVoting;
@@ -1593,6 +1593,8 @@ namespace Barotrauma.Networking
             }
 
             GameMain.NetworkMember = null;
+            ConnectedClients.ForEach(c => c.Dispose());
+            VoipClient.Dispose();
         }
         
         public void WriteCharacterInfo(NetOutgoingMessage msg)
@@ -1649,7 +1651,7 @@ namespace Barotrauma.Networking
                     };
                     if (GameMain.NetworkMember.ConnectedClients != null)
                     {
-                        kickVoteButton.Enabled = !client.HasKickVoteFromID(ID);
+                        kickVoteButton.Enabled = !client.HasKickVoteFromID(Self.ID);
                     }
                 }                
             }
@@ -1673,7 +1675,7 @@ namespace Barotrauma.Networking
             var votedClient = userdata is Client ? (Client)userdata : otherClients.Find(c => c.Character == userdata);
             if (votedClient == null) return false;
 
-            votedClient.AddKickVote(new Client(name, ID, false));
+            votedClient.AddKickVote(Self);
             Vote(VoteType.Kick, votedClient);
 
             button.Enabled = false;

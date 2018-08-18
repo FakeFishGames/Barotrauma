@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Barotrauma.Networking
 {
-    class VoipClient
+    class VoipClient : IDisposable
     {
         private GameClient gameClient;
         private NetClient netClient;
@@ -20,7 +20,7 @@ namespace Barotrauma.Networking
             gameClient = gClient;
             netClient = nClient;
 
-            capture = new VoipCapture(gClient.ID);
+            capture = new VoipCapture(gClient.Self.ID);
 
             queues = new List<VoipQueue>();
             
@@ -67,6 +67,11 @@ namespace Barotrauma.Networking
                 DebugConsole.ThrowError("Couldn't find VoipQueue with id " + queueId.ToString()+"!");
                 return;
             }
+        }
+
+        public void Dispose()
+        {
+            capture.Dispose();
         }
     }
 }

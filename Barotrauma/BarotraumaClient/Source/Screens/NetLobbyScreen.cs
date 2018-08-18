@@ -1070,6 +1070,15 @@ namespace Barotrauma
             return true;
         }
 
+        public void UpdateClientPlayerList()
+        {
+            ClearPlayers();
+            for (int i = 0; i < GameMain.Client.ConnectedClients.Count; i++)
+            {
+                GameMain.NetLobbyScreen.AddPlayer(GameMain.Client.ConnectedClients[i].Name);
+            }
+        }
+
         public void AddPlayer(string name)
         {
             GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), playerList.Content.RectTransform),
@@ -1095,7 +1104,7 @@ namespace Barotrauma
 
             if (GameMain.Client != null)
             {
-                if (selectedClient.ID == GameMain.Client.ID) return false;
+                if (selectedClient.ID == GameMain.Client.Self.ID) return false;
 
                 if (!GameMain.Client.HasPermission(ClientPermissions.Ban) &&
                     !GameMain.Client.HasPermission(ClientPermissions.Kick) &&
@@ -1272,7 +1281,7 @@ namespace Barotrauma
                 var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
                     TextManager.Get("VoteToKick"))
                 {
-                    Enabled = !selectedClient.HasKickVoteFromID(GameMain.Client.ID),
+                    Enabled = !selectedClient.HasKickVoteFromID(GameMain.Client.Self.ID),
                     OnClicked = GameMain.Client.VoteForKick,
                     UserData = selectedClient
                 };
