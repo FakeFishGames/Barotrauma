@@ -75,26 +75,22 @@ namespace Barotrauma
             set
             {
                 lastUpdateID++;
-                missionTypeIndex = Math.Max(0, Math.Min(MissionPrefab.MissionTypes.Count() - 1, value));
+                missionTypeIndex = MathHelper.Clamp(value, 0, Enum.GetValues(typeof(MissionType)).Length - 1);
             }
         }
 
         public string MissionTypeName
         {
-            get { return MissionPrefab.MissionTypes[MissionTypeIndex]; }
+            get { return ((MissionType)missionTypeIndex).ToString(); }
             set
             {
-                for (int i = 0; i < MissionPrefab.MissionTypes.Count(); i++)
+                if (Enum.TryParse(value, out MissionType missionType))
                 {
-                    if (MissionPrefab.MissionTypes[i].ToLower() == value.ToLower())
-                    {
-                        MissionTypeIndex = i;
-                        break;
-                    }
+                    missionTypeIndex = (int)missionType;
                 }
             }
         }
-        
+
         public void ChangeServerName(string n)
         {
             ServerName = n; lastUpdateID++;

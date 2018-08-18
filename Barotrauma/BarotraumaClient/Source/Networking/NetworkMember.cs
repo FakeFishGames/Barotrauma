@@ -24,9 +24,10 @@ namespace Barotrauma.Networking
 
         protected GUIFrame inGameHUD;
         protected ChatBox chatBox;
+        protected GUIButton showLogButton;
 
         private float myCharacterFrameOpenState;
-
+        
         public GUIFrame InGameHUD
         {
             get { return inGameHUD; }
@@ -180,6 +181,7 @@ namespace Barotrauma.Networking
                     }
                 }
             }
+            if (ServerLog.LogFrame != null) ServerLog.LogFrame.AddToGUIUpdateList();
         }
 
         public virtual void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
@@ -199,7 +201,6 @@ namespace Barotrauma.Networking
             if (respawnManager != null)
             {
                 string respawnInfo = "";
-
                 if (respawnManager.CurrentState == RespawnManager.State.Waiting &&
                     respawnManager.CountdownStarted)
                 {
@@ -213,7 +214,7 @@ namespace Barotrauma.Networking
                         TextManager.Get("RespawnShuttleLeavingIn").Replace("[time]", ToolBox.SecondsToReadableTime(respawnManager.TransportTimer));
                 }
 
-                if (!string.IsNullOrEmpty(respawnInfo))
+                if (respawnManager != null)
                 {
                     GUI.DrawString(spriteBatch,
                         new Vector2(120.0f, 10),

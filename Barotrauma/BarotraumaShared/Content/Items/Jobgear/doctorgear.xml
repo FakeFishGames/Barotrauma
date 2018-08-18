@@ -4,7 +4,7 @@
     identifier="healthscanner"
     category="Equipment"
     tags="smallitem"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="A heads-up display that displays information of the vital signs and status of nearby humans.">
 
     <Sprite texture ="doctorgear.png" sourcerect="0,120,20,8" depth="0.6"/>
@@ -22,7 +22,7 @@
     name="Doctor's Uniform"
     identifier="doctorsuniform"
     category="Equipment"  
-    cargocontainername="Metal Crate"  
+    cargocontaineridentifier="metalcrate"  
     tags="smallitem">
 
     <Sprite texture ="doctorgear.png" sourcerect="75,0,53,18" depth="0.6"/>
@@ -47,8 +47,7 @@
     </Wearable>
 
     <ItemContainer capacity="3">
-      <Containable name="chem"/>
-      <Containable name="medical"/>
+      <Containable identifiers="chem,medical"/>
     </ItemContainer>
   </Item>
 </Items>

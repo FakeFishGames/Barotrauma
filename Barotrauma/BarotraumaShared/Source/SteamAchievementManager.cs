@@ -154,17 +154,20 @@ namespace Barotrauma
 
             if (causeOfDeath.DamageSource is Item item)
             {
-                if (item.Prefab.NameMatches("weldingtool") || item.Prefab.NameMatches("plasmacutter") || item.Prefab.NameMatches("wrench"))
+                switch (item.Prefab.Identifier)
                 {
-                    UnlockAchievement(causeOfDeath.Killer, "killtool");
-                }
-                else if (item.Prefab.NameMatches("morbusine"))
-                {
-                    UnlockAchievement(causeOfDeath.Killer, "killpoison");
-                }
-                else if (item.Prefab.NameMatches("nuclearshell") || item.Prefab.NameMatches("nucleardepthcharge"))
-                {
-                    UnlockAchievement(causeOfDeath.Killer, "killnuke");
+                    case "weldingtool":
+                    case "plasmacutter":
+                    case "wrench":
+                        UnlockAchievement(causeOfDeath.Killer, "killtool");
+                        break;
+                    case "morbusine":
+                        UnlockAchievement(causeOfDeath.Killer, "killpoison");
+                        break;
+                    case "nuclearshell":
+                    case "nucleardepthcharge":
+                        UnlockAchievement(causeOfDeath.Killer, "killnuke");
+                        break;
                 }
             }
 

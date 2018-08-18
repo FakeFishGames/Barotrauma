@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -36,16 +37,54 @@ namespace Barotrauma
         private readonly List<string> allowedSpeakerTags;
         public static void LoadAll(IEnumerable<string> filePaths)
         {
+            //language, identifier, filepath
+            List<Tuple<string, string, string>> contentPackageFiles = new List<Tuple<string, string, string>>();
             foreach (string filePath in filePaths)
             {
-                Load(filePath);
+                XDocument doc = XMLExtensions.TryLoadXml(filePath);
+                if (doc == null || doc.Root == null) continue;
+                string language = doc.Root.GetAttributeString("Language", "English");
+                string identifier = doc.Root.GetAttributeString("Identifier", "unknown");
+                contentPackageFiles.Add(new Tuple<string, string, string>(language, identifier, filePath));
+            }
+
+            List<Tuple<string, string, string>> translationFiles = new List<Tuple<string, string, string>>();
+            foreach (string filePath in Directory.GetFiles(Path.Combine("Content", "NPCConversations")))
+            {
+                XDocument doc = XMLExtensions.TryLoadXml(filePath);
+                if (doc == null || doc.Root == null) continue;
+                string language = doc.Root.GetAttributeString("Language", "English");
+                string identifier = doc.Root.GetAttributeString("Identifier", "unknown");
+                translationFiles.Add(new Tuple<string, string, string>(language, identifier, filePath));
+            }
+
+
+            //get the languages and identifiers of the files
+            for (int i = 0; i < contentPackageFiles.Count; i++)
+            {
+                var contentPackageFile = contentPackageFiles[i];
+                //correct language, all good
+                if (contentPackageFile.Item1 == TextManager.Language) continue;
+
+                //attempt to find a translation file with the correct language and a matching identifier
+                //if it fails, we'll just use the original file with the incorrect language
+                var translation = translationFiles.Find(t => t.Item1 == TextManager.Language && t.Item2 == contentPackageFile.Item2);
+                if (translation != null) contentPackageFiles[i] = translation; //replace with the translation file                
+            }
+
+            foreach (var file in contentPackageFiles)
+            {
+                Load(file.Item3);
             }
         }
 
-        public static void Load(string file)
+        private static void Load(string file)
         {
             XDocument doc = XMLExtensions.TryLoadXml(file);
             if (doc == null || doc.Root == null) return;
+
+            string language = doc.Root.GetAttributeString("Language", "English");
+            if (language != TextManager.Language) return;
 
             foreach (XElement subElement in doc.Root.Elements())
             {
@@ -69,9 +108,9 @@ namespace Barotrauma
 
             AllowedJobs = new List<JobPrefab>();
             string allowedJobsStr = element.GetAttributeString("allowedjobs", "");
-            foreach (string allowedJobName in allowedJobsStr.Split(','))
+            foreach (string allowedJobIdentifier in allowedJobsStr.Split(','))
             {
-                var jobPrefab = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == allowedJobName.ToLowerInvariant());
+                var jobPrefab = JobPrefab.List.Find(jp => jp.Identifier.ToLowerInvariant() == allowedJobIdentifier.ToLowerInvariant());
                 if (jobPrefab != null) AllowedJobs.Add(jobPrefab);
             }
 

@@ -12,8 +12,8 @@
   <sound file="Content/Characters/Crawler/idle2.ogg" state="None" range="500"/>
 
   <Inventory slots="Any, Any" accessiblewhenalive="false">
-    <Item name="Crawler Shell"/>
-    <Item name="Swim Bladder"/>
+    <Item identifier="crawlershell"/>
+    <Item identifier="swimbladder"/>
   </Inventory>
 
   <ai
@@ -97,8 +97,8 @@
       <attack range="120" damagerange="60" duration="0.25" stun="0.3" structuredamage="5" itemdamage="10"
               structuresoundtype="StructureSlash" targetforce="-30" severlimbsprobability="0.5"
               force="15" applyforceonlimbs="0,1" torque="-20">
-        <affliction name="Bleeding" strength="30"/>
-        <affliction name="Internal Damage" strength="10"/>
+        <Affliction identifier="bleeding" strength="30"/>
+        <Affliction identifier="internaldamage" strength="10"/>
       </attack>
     </limb>
 

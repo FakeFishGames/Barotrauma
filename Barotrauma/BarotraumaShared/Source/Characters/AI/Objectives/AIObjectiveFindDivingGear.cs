@@ -7,19 +7,19 @@ namespace Barotrauma
     {
         private AIObjective subObjective;
 
-        private string gearName;
+        private string gearTag;
 
         public override bool IsCompleted()
         {
             for (int i = 0; i < character.Inventory.Items.Length; i++)
             {
                 if (character.Inventory.SlotTypes[i] == InvSlotType.Any || character.Inventory.Items[i] == null) continue;
-                if (character.Inventory.Items[i].Prefab.NameMatches(gearName) || character.Inventory.Items[i].HasTag(gearName))
+                if (character.Inventory.Items[i].HasTag(gearTag))
                 {
                     var containedItems = character.Inventory.Items[i].ContainedItems;
                     if (containedItems == null) continue;
 
-                    var oxygenTank = Array.Find(containedItems, it => (it.Prefab.NameMatches("Oxygen Tank") || it.HasTag("oxygensource")) && it.Condition > 0.0f);
+                    var oxygenTank = Array.Find(containedItems, it => (it.Prefab.Identifier == "oxygentank" || it.HasTag("oxygensource")) && it.Condition > 0.0f);
                     if (oxygenTank != null) return true;
                 }
             }
@@ -30,19 +30,19 @@ namespace Barotrauma
         public AIObjectiveFindDivingGear(Character character, bool needDivingSuit)
             : base(character, "")
         {
-            gearName = needDivingSuit ? "Diving Suit" : "diving";
+            gearTag = needDivingSuit ? "divingsuit" : "diving";
         }
 
         protected override void Act(float deltaTime)
         {
-            var item = character.Inventory.FindItem(gearName);
+            var item = character.Inventory.FindItemByTag(gearTag);
             if (item == null || !character.HasEquippedItem(item))
             {
                 //get a diving mask/suit first
                 if (!(subObjective is AIObjectiveGetItem))
                 {
                     character.Speak(TextManager.Get("DialogGetDivingGear"), null, 0.0f, "getdivinggear", 30.0f);
-                    subObjective = new AIObjectiveGetItem(character, gearName, true);
+                    subObjective = new AIObjectiveGetItem(character, gearTag, true);
                 }
             }
             else
@@ -58,7 +58,7 @@ namespace Barotrauma
                     {
                         containedItem.Drop();
                     }
-                    else if (containedItem.Prefab.NameMatches("Oxygen Tank") || containedItem.HasTag("oxygensource"))
+                    else if (containedItem.Prefab.Identifier == "oxygentank" || containedItem.HasTag("oxygensource"))
                     {
                         //we've got an oxygen source inside the mask/suit, all good
                         return;
@@ -68,7 +68,7 @@ namespace Barotrauma
                 if (!(subObjective is AIObjectiveContainItem) || subObjective.IsCompleted())
                 {
                     character.Speak(TextManager.Get("DialogGetOxygenTank"), null, 0, "getoxygentank", 30.0f);
-                    subObjective = new AIObjectiveContainItem(character, new string[] { "Oxygen Tank", "oxygensource" }, item.GetComponent<ItemContainer>());
+                    subObjective = new AIObjectiveContainItem(character, new string[] { "oxygentank", "oxygensource" }, item.GetComponent<ItemContainer>());
                 }
             }
 

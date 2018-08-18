@@ -10,9 +10,9 @@
 	  </Commonness>
 
 	  <!-- always spawn a couple of artifacts	 -->
-	  <ArtifactEvent itemname="Skyholder Artifact"/>
-	  <ArtifactEvent itemname="Thermal Artifact"/>
-	  <ArtifactEvent itemname="Faraday Artifact"/>
+	  <ArtifactEvent itemidentifier="skyholderartifact"/>
+	  <ArtifactEvent itemidentifier="thermalartifact"/>
+	  <ArtifactEvent itemidentifier="faradayartifact"/>
 
 	  <!-- chance of a couple of fractal guardians inside ruins -->
 	  <MonsterEvent
@@ -74,9 +74,9 @@
 	  </Commonness>
 
 	  <!-- always spawn a couple of artifacts	 -->
-	  <ArtifactEvent itemname="Skyholder Artifact"/>
-	  <ArtifactEvent itemname="Thermal Artifact"/>
-	  <ArtifactEvent itemname="Faraday Artifact"/>
+	  <ArtifactEvent itemidentifier="skyholderartifact"/>
+	  <ArtifactEvent itemidentifier="thermalartifact"/>
+	  <ArtifactEvent itemidentifier="faradayartifact"/>
 
 	  <!-- chance of a couple of fractal guardians inside ruins -->
 	  <MonsterEvent
@@ -141,9 +141,9 @@
 	  </Commonness>
 
 	  <!-- always spawn a couple of artifacts	 -->
-	  <ArtifactEvent itemname="Skyholder Artifact"/>
-	  <ArtifactEvent itemname="Thermal Artifact"/>
-	  <ArtifactEvent itemname="Faraday Artifact"/>
+	  <ArtifactEvent itemidentifier="skyholderartifact"/>
+	  <ArtifactEvent itemidentifier="thermalartifact"/>
+	  <ArtifactEvent itemidentifier="faradayartifact"/>
 
 	  <!-- chance of a couple of fractal guardians inside ruins -->
 	  <MonsterEvent
@@ -204,9 +204,9 @@
 	  </Commonness>
 
 	  <!-- always spawn a couple of artifacts	 -->
-	  <ArtifactEvent itemname="Skyholder Artifact"/>
-	  <ArtifactEvent itemname="Thermal Artifact"/>
-	  <ArtifactEvent itemname="Faraday Artifact"/>
+	  <ArtifactEvent itemidentifier="skyholderartifact"/>
+	  <ArtifactEvent itemidentifier="thermalartifact"/>
+	  <ArtifactEvent itemidentifier="faradayartifact"/>
 
 	  <!-- chance of a couple of fractal guardians inside ruins -->
 	  <MonsterEvent
@@ -268,9 +268,9 @@
     </Commonness>
 
     <!-- always spawn a couple of artifacts	 -->
-    <ArtifactEvent itemname="Skyholder Artifact"/>
-    <ArtifactEvent itemname="Thermal Artifact"/>
-    <ArtifactEvent itemname="Faraday Artifact"/>
+    <ArtifactEvent itemidentifier="skyholderartifact"/>
+    <ArtifactEvent itemidentifier="thermalartifact"/>
+    <ArtifactEvent itemidentifier="faradayartifact"/>
 
     <!-- chance of a couple of fractal guardians inside ruins -->
     <MonsterEvent
@@ -325,9 +325,9 @@
     </Commonness>
 
     <!-- always spawn a couple of artifacts	 -->
-    <ArtifactEvent itemname="Skyholder Artifact"/>
-    <ArtifactEvent itemname="Thermal Artifact"/>
-    <ArtifactEvent itemname="Faraday Artifact"/>
+    <ArtifactEvent itemidentifier="skyholderartifact"/>
+    <ArtifactEvent itemidentifier="thermalartifact"/>
+    <ArtifactEvent itemidentifier="faradayartifact"/>
 
     <!-- chance of a couple of fractal guardians inside ruins -->
     <MonsterEvent
@@ -379,9 +379,9 @@
     </Commonness>
 
     <!-- always spawn a couple of artifacts	 -->
-    <ArtifactEvent itemname="Skyholder Artifact"/>
-    <ArtifactEvent itemname="Thermal Artifact"/>
-    <ArtifactEvent itemname="Faraday Artifact"/>
+    <ArtifactEvent itemidentifier="skyholderartifact"/>
+    <ArtifactEvent itemidentifier="thermalartifact"/>
+    <ArtifactEvent itemidentifier="faradayartifact"/>
 
     <!-- chance of a couple of fractal guardians inside ruins -->
     <MonsterEvent
@@ -467,9 +467,9 @@
     </Commonness>
 
     <!-- always spawn a couple of artifacts	 -->
-    <ArtifactEvent itemname="Skyholder Artifact"/>
-    <ArtifactEvent itemname="Thermal Artifact"/>
-    <ArtifactEvent itemname="Faraday Artifact"/>
+    <ArtifactEvent itemidentifier="skyholderartifact"/>
+    <ArtifactEvent itemidentifier="thermalartifact"/>
+    <ArtifactEvent itemidentifier="faradayartifact"/>
 
     <!-- chance of a couple of fractal guardians inside ruins -->
     <MonsterEvent

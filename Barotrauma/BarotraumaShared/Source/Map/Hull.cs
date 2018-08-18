@@ -262,7 +262,7 @@ namespace Barotrauma
 
         public override MapEntity Clone()
         {
-            return new Hull(MapEntityPrefab.Find("Hull"), rect, Submarine);
+            return new Hull(MapEntityPrefab.Find(null, "hull"), rect, Submarine);
         }
         
         public static EntityGrid GenerateEntityGrid(Submarine submarine)
@@ -584,7 +584,19 @@ namespace Barotrauma
 
             foreach (Gap g in ConnectedGaps)
             {
-                if (g.Open <= 0.0f && (g.ConnectedDoor == null || !g.ConnectedDoor.IsOpen)) continue;
+                if (g.ConnectedDoor != null)
+                {
+                    //gap blocked if the door is not open or the predicted state is not open
+                    if (!g.ConnectedDoor.IsOpen || (g.ConnectedDoor.PredictedState.HasValue && !g.ConnectedDoor.PredictedState.Value))
+                    {
+                        if (g.ConnectedDoor.OpenState < 0.1f) continue;
+                    }
+                }
+                else if (g.Open <= 0.0f)
+                {
+                    continue;
+                }
+
                 for (int i = 0; i < 2 && i < g.linkedTo.Count; i++)
                 {
                     if (g.linkedTo[i] is Hull hull && !connectedHulls.Contains(hull))
@@ -852,10 +864,11 @@ namespace Barotrauma
                     int.Parse(element.Attribute("height").Value));
             }
 
-            Hull h = new Hull(MapEntityPrefab.Find("Hull"), rect, submarine);
-            h.waterVolume = element.GetAttributeFloat("pressure", 0.0f);
-            h.ID = (ushort)int.Parse(element.Attribute("ID").Value);
-            return h;
+            return new Hull(MapEntityPrefab.Find(null, "hull"), rect, submarine)
+            {
+                waterVolume = element.GetAttributeFloat("pressure", 0.0f),
+                ID = (ushort)int.Parse(element.Attribute("ID").Value)
+            };
         }
 
         public override XElement Save(XElement parentElement)

@@ -25,8 +25,8 @@
   </ai>
 
   <inventory slots="RightHand, LeftHand, Head, Any, Any, Any, Any, Any, Pack" accessiblewhenalive="false">
-    <Item name="Velonaceps Calyx Eggs"/>
-    <Item name="Velonaceps Calyx Eggs"/>
+    <Item identifier="huskeggs"/>
+    <Item identifier="huskeggs"/>
   </inventory>
   
   <ragdoll headposition="134" torsoposition="108" 
@@ -52,9 +52,9 @@
       <sprite texture="Content/Characters/Husk/DivingSuit.png" sourcerect="110,76,18,52" depth="0.052" origin="0.5,0.5"/>
       <attack range="70" damagerange="35" duration="0.2"  targetforce="10" structuresoundtype="StructureBlunt"
               force="5" applyforceonlimbs="1" torque="-10">
-        <affliction name="Bleeding" strength="10"/>
-        <affliction name="Husk infection" strength="5"/>
-        <affliction name="Stun" strength="0.5"/>        
+        <Affliction identifier="bleeding" strength="10"/>
+        <Affliction identifier="huskinfection" strength="5"/>
+        <Affliction identifier="stun" strength="0.5"/>        
       </attack>
     </limb>
 

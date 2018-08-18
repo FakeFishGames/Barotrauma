@@ -1,6 +1,7 @@
 ﻿using FarseerPhysics;
 using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -35,7 +36,7 @@ namespace Barotrauma.RuinGeneration
 
         public Alignment GetLineAlignment(Line line)
         {
-            if (line.A.Y == line.B.Y)
+            if (line.IsHorizontal)
             {
                 if (line.A.Y > rect.Center.Y && line.B.Y > rect.Center.Y)
                 {
@@ -70,7 +71,7 @@ namespace Barotrauma.RuinGeneration
 
             foreach (Line line in Walls)
             {
-                if (line.A.X == line.B.X) //vertical line
+                if (!line.IsHorizontal) //vertical line
                 {
                     //line doesn't intersect the rectangle
                     if (rectangle.X > line.A.X || rectangle.Right < line.A.X ||
@@ -100,7 +101,7 @@ namespace Barotrauma.RuinGeneration
                         newLines.Add(new Line(new Vector2(line.A.X, rectangle.Bottom), line.B, line.Type));
                     }
                 }
-                else if (line.A.Y == line.B.Y) //horizontal line
+                else
                 {
                     //line doesn't intersect the rectangle
                     if (rectangle.X > line.B.X || rectangle.Right < line.A.X ||
@@ -130,22 +131,39 @@ namespace Barotrauma.RuinGeneration
                         newLines.Add(new Line(new Vector2(rectangle.Right, line.A.Y), line.B, line.Type));
                     }
                 }
-                else
-                {
-                    DebugConsole.ThrowError("Error in StructureGenerator.SplitLines - lines must be axis aligned");
-                }
-
             }
 
             Walls = newLines;
         }
+
+        public void MirrorX(Vector2 mirrorOrigin)
+        {
+            rect.X = (int)(mirrorOrigin.X + (mirrorOrigin.X - rect.Right));
+            for (int i = 0; i < Walls.Count; i++)
+            {
+                Walls[i].A = new Vector2(mirrorOrigin.X + (mirrorOrigin.X - Walls[i].A.X), Walls[i].A.Y);
+                Walls[i].B = new Vector2(mirrorOrigin.X + (mirrorOrigin.X - Walls[i].B.X), Walls[i].B.Y);
+
+                if (Walls[i].B.X < Walls[i].A.X)
+                {
+                    var temp = Walls[i].A.X;
+                    Walls[i].A.X = Walls[i].B.X;
+                    Walls[i].B.X = temp;
+                }
+            }
+        }
     }
 
-    struct Line
+    class Line
     {
-        public readonly Vector2 A, B;
+        public Vector2 A, B;
 
         public readonly RuinStructureType Type;
+
+        public bool IsHorizontal
+        {
+            get { return Math.Abs(A.Y - B.Y) < Math.Abs(A.X - B.X); }
+        }
 
         public Line(Vector2 a, Vector2 b, RuinStructureType type)
         {
@@ -183,7 +201,7 @@ namespace Barotrauma.RuinGeneration
             private set;
         }
 
-        public Ruin(VoronoiCell closestPathCell, List<VoronoiCell> caveCells, Rectangle area)
+        public Ruin(VoronoiCell closestPathCell, List<VoronoiCell> caveCells, Rectangle area, bool mirror = false)
         {
             Area = area;
 
@@ -194,10 +212,10 @@ namespace Barotrauma.RuinGeneration
 
             allShapes = new List<RuinShape>();
 
-            Generate(closestPathCell, caveCells, area);
+            Generate(closestPathCell, caveCells, area, mirror);
         }
              
-        public void Generate(VoronoiCell closestPathCell, List<VoronoiCell> caveCells, Rectangle area)
+        public void Generate(VoronoiCell closestPathCell, List<VoronoiCell> caveCells, Rectangle area, bool mirror = false)
         {
             corridors.Clear();
             rooms.Clear();
@@ -243,7 +261,12 @@ namespace Barotrauma.RuinGeneration
             float shortestDistance = 0.0f;
             foreach (BTRoom leaf in rooms)
             {
-                float distance = Vector2.Distance(leaf.Rect.Center.ToVector2(), closestPathCell.Center);
+                Vector2 leafPos = leaf.Rect.Center.ToVector2();
+                if (mirror)
+                {
+                    leafPos.X = area.Center.X + (area.Center.X - leafPos.X);
+                }
+                float distance = Vector2.Distance(leafPos, closestPathCell.Center);
                 if (entranceRoom == null || distance < shortestDistance)
                 {
                     entranceRoom = leaf;
@@ -289,13 +312,21 @@ namespace Barotrauma.RuinGeneration
 
             BTRoom.CalculateDistancesFromEntrance(entranceRoom, corridors);
 
-            allShapes = GenerateStructures(caveCells);
+            allShapes = GenerateStructures(caveCells, area, mirror);
         }
 
-        private List<RuinShape> GenerateStructures(List<VoronoiCell> caveCells)
+        private List<RuinShape> GenerateStructures(List<VoronoiCell> caveCells, Rectangle ruinArea, bool mirror)
         {
             List<RuinShape> shapes = new List<RuinShape>(rooms);
             shapes.AddRange(corridors);
+
+            if (mirror)
+            {
+                foreach (RuinShape shape in shapes)
+                {
+                    shape.MirrorX(ruinArea.Center.ToVector2());
+                }
+            }
             
             foreach (RuinShape leaf in shapes)
             {
@@ -361,8 +392,8 @@ namespace Barotrauma.RuinGeneration
 
             //generate doors & sensors that close them -------------------------------------------------------------
 
-            var sensorPrefab = MapEntityPrefab.Find("Alien Motion Sensor") as ItemPrefab;
-            var wirePrefab = MapEntityPrefab.Find("Wire") as ItemPrefab;
+            var sensorPrefab = MapEntityPrefab.Find(null, "alienmotionsensor") as ItemPrefab;
+            var wirePrefab = MapEntityPrefab.Find(null, "wire") as ItemPrefab;
 
             foreach (Corridor corridor in corridors)
             {

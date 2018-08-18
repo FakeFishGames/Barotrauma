@@ -4,8 +4,8 @@
     name="Welding Tool"
     identifier="weldingtool"
     category="Equipment"
-    Tags="smallitem"
-    cargocontainername="Metal Crate"
+    Tags="smallitem,weldingtool"
+    cargocontaineridentifier="metalcrate"
     description="One of the most crucial tools on board the submarine. Also works underwater.">
 
     <Price locationtype="City" buyprice="100"/>
@@ -17,9 +17,9 @@
 
     <!-- the item takes 10 seconds to break down in a deconstructor and turns into a polycarbonate bar, steel bar and aluminium -->
     <Deconstruct time="10">
-      <Item name="Polycarbonate Bar"/>
-      <Item name="Steel Bar"/>
-      <Item name="Aluminium"/>
+      <Item identifier="polycarbonatebar"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="aluminium"/>
     </Deconstruct>
 
     <!-- physics body -->
@@ -31,7 +31,7 @@
 
     <RepairTool structurefixamount="5.0" limbfixamount="-0.5" range="100" barrelpos="19,8" particles="weld">
       <!-- the item must contain a welding fuel tank for it to work -->
-      <RequiredItems name="Welding Fuel Tank" type="Contained" msg="Welding fuel required"/>
+      <RequiredItems identifier="weldingfueltank" type="Contained" msg="Welding fuel required"/>
 
       <ParticleEmitter particle="weld" particlespersecond="50"/>
       <ParticleEmitterHitStructure particle="weldspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800"/>
@@ -43,19 +43,19 @@
       <sound file="Content/Items/Tools/weldingTool.ogg" type="OnUse" range="500.0" loop="true"/>
 
       <!-- when using, the contained welding fuel tank will detoriate (= lose fuel) -->
-      <StatusEffect type="OnUse" target="Contained" targetnames="Welding Fuel Tank" Condition="-1.0"/>
+      <StatusEffect type="OnUse" target="Contained" targetidentifiers="weldingfueltank" Condition="-1.0"/>
 
       <!-- welding a door, it will get stuck after a while -->
-      <StatusEffect type="OnUse" target="UseTarget" targetnames="Door,Windowed Door,Hatch,Duct Block" Stuck="20.0" Condition="3.0"/>
+      <StatusEffect type="OnUse" target="UseTarget" targetidentifiers="door,windoweddoor,hatch,ductblock" Stuck="20.0" Condition="3.0"/>
 
       <!-- the tool can fix structures, i.e. walls and windows -->
-      <Fixable name="structure"/>
+      <Fixable identifier="structure"/>
 
       <!-- mechanic skill 20 required to use the item -->
-      <RequiredSkill name="Mechanical Engineering" level="20"/>
+      <RequiredSkill identifier="mechanical" level="20"/>
 
       <!-- if the skill requirement isn't met the welding fuel will be used 3 times as fast -->
-      <StatusEffect type="OnFailure" target="Contained" targetnames="Welding Fuel Tank,Oxygen Tank" Condition="-3.0"/>
+      <StatusEffect type="OnFailure" target="Contained" targetidentifiers="weldingfueltank,oxygentank" Condition="-3.0"/>
 
       <LightComponent LightColor="1.0,0.9,0.7,1.0" Flicker="0.5">
         <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5"/>
@@ -64,9 +64,7 @@
 
     <!-- one welding fuel or oxygen tank can be contained inside the welding tool -->    
     <ItemContainer capacity="1" hideitems="false" itempos="-17,-21">
-      <Containable name="Welding Fuel Tank"/>
-      <Containable name="Oxygen Tank"/>
-      <Containable name="Oxygenite Tank"/>
+      <Containable identifiers="weldingfueltank,oxygentank,oxygenitetank"/>
     </ItemContainer>
   </Item>
 
@@ -75,7 +73,7 @@
     identifier="plasmacutter"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="Cuts through various materials using a jet of ionized oxygen.">
 
     <Price locationtype="City" buyprice="100"/>
@@ -84,9 +82,9 @@
     <Price locationtype="Outpost" buyprice="200"/>
     
     <Deconstruct time="10">
-      <Item name="Polycarbonate Bar"/>
-      <Item name="Steel Bar"/>
-      <Item name="Aluminium"/>
+      <Item identifier="polycarbonatebar"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="aluminium"/>
     </Deconstruct>
     
     <Sprite texture ="tools.png" sourcerect="0,0,41,16" depth="0.55"/>
@@ -97,10 +95,10 @@
               aimpos="50,0" handle1="-12,4"/>
 
     <RepairTool structurefixamount="-2.0" limbfixamount="-0.5" range="100" barrelpos="28,8">
-      <RequiredItems name="Oxygen Tank,Oxygenite Tank" type="Contained" msg="Oxygen tank required"/>
-      <StatusEffect type="OnUse" target="Contained" targetnames="Oxygen Tank" Condition="-1.0"/>
-      <StatusEffect type="OnUse" target="Contained" targetnames="Oxygenite Tank" Condition="-0.5"/>
-      <StatusEffect type="OnUse" target="UseTarget" targetnames="Door,Windowed Door,Hatch,Duct Block,Alien Door,Alien Hatch" Stuck="-20.0" Condition="-3.0"/>
+      <RequiredItems identifier="oxygentank,oxygenitetank" type="Contained" msg="Oxygen tank required"/>
+      <StatusEffect type="OnUse" target="Contained" targetidentifiers="oxygentank" Condition="-1.0"/>
+      <StatusEffect type="OnUse" target="Contained" targetidentifiers="oxygenitetank" Condition="-0.5"/>
+      <StatusEffect type="OnUse" target="UseTarget" targetidentifiers="door,windoweddoor,hatch,ductblock,aliendoor,alienhatch" Stuck="-20.0" Condition="-3.0"/>
 
       <ParticleEmitter particle="plasma" particlespersecond="50"/>
       <ParticleEmitterHitStructure particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800"/>
@@ -111,12 +109,12 @@
 
       <sound file="Content/Items/Tools/plasmaCutter.ogg" type="OnUse" range="500.0" loop="true"/>
 
-      <Fixable name="structure"/>
+      <Fixable identifier="structure"/>
 
-      <RequiredSkill name="Mechanical Engineering" level="30"/>
+      <RequiredSkill identifier="mechanical" level="30"/>
 
-      <StatusEffect type="OnFailure" target="Contained" targetnames="Welding Fuel Tank,Oxygen Tank" Condition="-3.0"/>
-      <StatusEffect type="OnFailure" target="Contained" targetnames="Oxygenite Tank" Condition="-1.5"/>
+      <StatusEffect type="OnFailure" target="Contained" targetidentifiers="weldingfueltank,oxygentank" Condition="-3.0"/>
+      <StatusEffect type="OnFailure" target="Contained" targetidentifiers="oxygenitetank" Condition="-1.5"/>
 
       <LightComponent LightColor="0.8,0.7,1.0,1.0" Flicker="0.5">
         <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5"/>
@@ -124,9 +122,7 @@
     </RepairTool>
 
     <ItemContainer capacity="1" hideitems="false" itempos="9,-15">
-      <Containable name="Welding Fuel Tank"/>
-      <Containable name="Oxygen Tank"/>
-      <Containable name="Oxygenite Tank"/>
+      <Containable identifiers="weldingfueltank,oxygentank,oxygenitetank"/>
     </ItemContainer>
   </Item>
 
@@ -134,8 +130,8 @@
     name="Welding Fuel Tank"
     identifier="weldingfueltank"
     category="Equipment"
-    Tags="smallitem"
-    cargocontainername="Metal Crate">
+    Tags="smallitem,weldingfueltank"
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="City" buyprice="50"/>
     <Price locationtype="Research" buyprice="50"/>
@@ -143,7 +139,7 @@
     <Price locationtype="Outpost" buyprice="100"/>
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
+      <Item identifier="steelbar"/>
     </Deconstruct>
 
     <Sprite texture ="tools.png" sourcerect="52,31,12,33" depth="0.55"/>
@@ -154,8 +150,8 @@
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
         <sound file="Content/Items/Reactor/explosion.ogg"/>
         <Explosion range="250.0" structuredamage="15" force="3.0">
-          <affliction name="Burn" strength="25"/>
-          <affliction name="Stun" strength="5"/>
+          <Affliction identifier="burn" strength="25"/>
+          <Affliction identifier="stun" strength="5"/>
         </Explosion>
       </StatusEffect>
     </Holdable>
@@ -165,8 +161,8 @@
     name="Fire Extinguisher"
     identifier="extinguisher"
     category="Equipment"
-    Tags="smallitem"
-    cargocontainername="Metal Crate"
+    Tags="smallitem,extinguisher"
+    cargocontaineridentifier="metalcrate"
     description="A handheld carbon dioxide extinguisher.">
 
     <Price locationtype="City" buyprice="100"/>
@@ -175,8 +171,8 @@
     <Price locationtype="Outpost" buyprice="200"/>
 
     <Deconstruct time="10">
-      <Item name="Polycarbonate Bar"/>
-      <Item name="Steel Bar"/>
+      <Item identifier="polycarbonatebar"/>
+      <Item identifier="steelbar"/>
     </Deconstruct>
 
     <Sprite texture ="extinguisher.png" depth="0.55" sourcerect="0,0,34,64" origin="0.4,0.5"/>
@@ -201,7 +197,7 @@
     identifier="screwdriver"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="City" buyprice="10"/>
     <Price locationtype="Research" buyprice="10"/>
@@ -209,7 +205,7 @@
     <Price locationtype="Outpost" buyprice="20"/>
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
+      <Item identifier="steelbar"/>
     </Deconstruct>
 
     <Sprite texture ="tools.png" sourcerect="0,58,31,6" depth="0.55"/>
@@ -225,7 +221,7 @@
     identifier="wrench"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="City" buyprice="10"/>
     <Price locationtype="Research" buyprice="10"/>
@@ -233,7 +229,7 @@
     <Price locationtype="Outpost" buyprice="20"/>
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
+      <Item identifier="steelbar"/>
     </Deconstruct>
 
     <Sprite texture ="tools.png" sourcerect="0,50,26,7" depth="0.55"/>
@@ -251,7 +247,7 @@
     identifier="crowbar"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="City" buyprice="15"/>
     <Price locationtype="Research" buyprice="15"/>
@@ -259,7 +255,7 @@
     <Price locationtype="Outpost" buyprice="20"/>
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
+      <Item identifier="steelbar"/>
     </Deconstruct>
 
     <Sprite texture ="tools.png" sourcerect="0,65,64,12" depth="0.55"/>
@@ -277,7 +273,7 @@
     identifier="handheldsonar"
     category="Equipment"
     Tags="smallitem,sonar"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="City" buyprice="50"/>
     <Price locationtype="Research" buyprice="50"/>
@@ -285,8 +281,8 @@
     <Price locationtype="Outpost" buyprice="100"/>
 
     <Deconstruct time="15">
-      <Item name="Copper Bar"/>
-      <Item name="Polycarbonate Bar"/>
+      <Item identifier="copperbar"/>
+      <Item identifier="polycarbonatebar"/>
     </Deconstruct>
 
     <Sprite texture ="tools.png" sourcerect="42,0,22,9" depth="0.55"/>
@@ -301,14 +297,14 @@
     <Sonar range="6000.0" powerconsumption="10" drawhudwhenequipped="true" detectsubmarinewalls="true" displaybordersize="0.2">
       <StatusEffect type="OnUse" target="Contained" Condition="-1.0" disabledeltatime="true"/>
       <sound file="Content/Items/Command/sonarPing.ogg" type="OnUse" range="1000.0"/>
-      <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI"/>
+      <GuiFrame relativesize="0.5,0.5" anchor="Center" style="ItemUI"/>
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5"/>
       <ScreenOverlay texture="Content/Items/Command/sonarOverlay.png" origin="0.5,0.5"/>
       <Blip texture="Content/Items/Command/sonarBlip.png" origin="0.5,0.5"/>
     </Sonar>
 
     <ItemContainer capacity="1" hideitems="true">
-      <Containable name="Battery Cell, Fulgurium Battery Cell">
+      <Containable identifiers="batterycell,fulguriumbatterycell">
         <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true"/>
       </Containable>
     </ItemContainer>
@@ -319,7 +315,7 @@
     identifier="sonarbeacon"
     category="Equipment"
     Tags="smallitem,sonar"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="City" buyprice="50"/>
     <Price locationtype="Research" buyprice="50"/>
@@ -327,8 +323,8 @@
     <Price locationtype="Outpost" buyprice="100"/>
 
     <Deconstruct time="15">
-      <Item name="Copper Bar"/>
-      <Item name="Polycarbonate Bar"/>
+      <Item identifier="copperbar"/>
+      <Item identifier="polycarbonatebar"/>
     </Deconstruct>
 
     <!-- TODO: sonar beacon sprite -->
@@ -344,7 +340,7 @@
     </LightComponent>
 
     <ItemContainer capacity="1" hideitems="true">
-      <Containable name="Battery Cell, Fulgurium Battery Cell">
+      <Containable identifiers="batterycell,fulguriumbatterycell">
         <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true"/>
       </Containable>
     </ItemContainer>
@@ -355,7 +351,7 @@
     identifier="flashlight"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="City" buyprice="20"/>
     <Price locationtype="Research" buyprice="20"/>
@@ -363,8 +359,8 @@
     <Price locationtype="Outpost" buyprice="40"/>
 
     <Deconstruct time="15">
-      <Item name="Copper Bar"/>
-      <Item name="Polycarbonate Bar"/>
+      <Item identifier="copperbar"/>
+      <Item identifier="polycarbonatebar"/>
     </Deconstruct>
 
     <Sprite texture ="tools.png" sourcerect="0,36,27,11" depth="0.55"/>
@@ -380,7 +376,7 @@
     </LightComponent>
     
     <ItemContainer capacity="1" hideitems="true">
-      <Containable name="Battery Cell, Fulgurium Battery Cell">
+      <Containable identifiers="batterycell,fulguriumbatterycell">
         <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true"/>
       </Containable>
     </ItemContainer>
@@ -390,7 +386,7 @@
     name="Flare"
     identifier="flare"
     category="Equipment"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     spritecolor="1.0,0.0,0.0,1.0"
     tags="smallitem">
 
@@ -400,10 +396,10 @@
     <Price locationtype="Outpost" buyprice="20"/>
 
     <Deconstruct time="10">
-      <Item name="Phosphorus" mincondition="0.9" outcondition="0.25"/>
-      <Item name="Aluminium" mincondition="0.9" outcondition="0.25"/>
-      <Item name="Phosphorus" mincondition="0.5" maxcondition="0.9" outcondition="0.1"/>
-      <Item name="Aluminium" mincondition="0.5" maxcondition="0.9" outcondition="0.1"/>
+      <Item identifier="phosphorus" mincondition="0.9" outcondition="0.25"/>
+      <Item identifier="aluminium" mincondition="0.9" outcondition="0.25"/>
+      <Item identifier="phosphorus" mincondition="0.5" maxcondition="0.9" outcondition="0.1"/>
+      <Item identifier="aluminium" mincondition="0.5" maxcondition="0.9" outcondition="0.1"/>
     </Deconstruct>
 
     <Sprite texture ="tools.png" sourcerect="0,38,21,7" depth="0.55"/>

@@ -45,7 +45,7 @@ namespace Barotrauma
 
         private LosMode losMode;
 
-        public List<string> jobNamePreferences;
+        public List<string> jobPreferences;
 
         private bool useSteamMatchmaking;
         private bool requireSteamAuthentication;
@@ -87,10 +87,10 @@ namespace Barotrauma
             set { windowMode = value; }
         }
 
-        public List<string> JobNamePreferences
+        public List<string> JobPreferences
         {
-            get { return jobNamePreferences; }
-            set { jobNamePreferences = value; }
+            get { return jobPreferences; }
+            set { jobPreferences = value; }
         }
 
         private int characterHeadIndex;
@@ -169,6 +169,12 @@ namespace Barotrauma
             }
         }
 
+        public string Language
+        {
+            get { return TextManager.Language; }
+            set { TextManager.Language = value; }
+        }
+
         public HashSet<ContentPackage> SelectedContentPackages { get; set; }
 
         public string   MasterServerUrl { get; set; }
@@ -228,6 +234,8 @@ namespace Barotrauma
         {
             XDocument doc = XMLExtensions.TryLoadXml(filePath);
             
+            Language = doc.Root.GetAttributeString("language", "English");
+
             MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
 
             AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", true);
@@ -257,10 +265,10 @@ namespace Barotrauma
 
                 SelectedContentPackages.Add(ContentPackage.List.Any() ? ContentPackage.List[0] : new ContentPackage(""));
 
-                jobNamePreferences = new List<string>();
+                jobPreferences = new List<string>();
                 foreach (JobPrefab job in JobPrefab.List)
                 {
-                    jobNamePreferences.Add(job.Name);
+                    jobPreferences.Add(job.Identifier);
                 }
                 return;
             }
@@ -349,10 +357,12 @@ namespace Barotrauma
                         }
                         break;
                     case "gameplay":
-                        jobNamePreferences = new List<string>();
+                        jobPreferences = new List<string>();
                         foreach (XElement ele in subElement.Element("jobpreferences").Elements("job"))
                         {
-                            jobNamePreferences.Add(ele.GetAttributeString("name", ""));
+                            string jobIdentifier = ele.GetAttributeString("identifier", "");
+                            if (string.IsNullOrEmpty(jobIdentifier)) continue;
+                            jobPreferences.Add(jobIdentifier);
                         }
                         break;
                     case "player":
@@ -413,6 +423,7 @@ namespace Barotrauma
             }
 
             doc.Root.Add(
+                new XAttribute("language", TextManager.Language),
                 new XAttribute("masterserverurl", MasterServerUrl),
                 new XAttribute("autocheckupdates", AutoCheckUpdates),
                 new XAttribute("musicvolume", musicVolume),
@@ -486,9 +497,9 @@ namespace Barotrauma
 
             var gameplay = new XElement("gameplay");
             var jobPreferences = new XElement("jobpreferences");
-            foreach (string jobName in JobNamePreferences)
+            foreach (string jobName in JobPreferences)
             {
-                jobPreferences.Add(new XElement("job", new XAttribute("name", jobName)));
+                jobPreferences.Add(new XElement("job", new XAttribute("identifier", jobName)));
             }
             gameplay.Add(jobPreferences);
             doc.Root.Add(gameplay);

@@ -91,7 +91,15 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "fixable":
-                        fixableEntities.Add(subElement.Attribute("name").Value);
+                        if (subElement.Attribute("name") != null)
+                        {
+                            DebugConsole.ThrowError("Error in RepairTool "+item.Name+" - use identifiers instead of names to configure fixable entities.");
+                            fixableEntities.Add(subElement.Attribute("name").Value);
+                        }
+                        else
+                        {
+                            fixableEntities.Add(subElement.GetAttributeString("identifier", ""));
+                        }
                         break;
 #if CLIENT
                     case "particleemitter":
@@ -216,7 +224,7 @@ namespace Barotrauma.Items.Components
             Item targetItem;
             if ((targetStructure = (targetBody.UserData as Structure)) != null)
             {
-                if (!fixableEntities.Contains("structure") && !fixableEntities.Contains(targetStructure.Name)) return;
+                if (!fixableEntities.Contains("structure") && !fixableEntities.Contains(targetStructure.Prefab.Identifier)) return;
                 if (targetStructure.IsPlatform) return;
 
                 int sectionIndex = targetStructure.FindSectionIndex(ConvertUnits.ToDisplayUnits(pickedPosition));

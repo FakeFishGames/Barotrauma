@@ -20,7 +20,7 @@ namespace Barotrauma
                         msg.WriteRangedInteger(0, 3, 0);
                         Inventory.ClientWrite(msg, extraData);
                         break;
-                    case NetEntityEvent.Type.Repair:
+                    case NetEntityEvent.Type.CPR:
                         msg.WriteRangedInteger(0, 3, 1);
                         msg.Write(AnimController.Anim == AnimController.Animation.CPR);
                         break;
@@ -241,35 +241,37 @@ namespace Barotrauma
                 bool hasAi          = inc.ReadBoolean();
                 bool isFemale       = inc.ReadBoolean();
                 int headSpriteID    = inc.ReadByte();
-                string jobName      = inc.ReadString();
+                string jobIdentifier      = inc.ReadString();
 
                 JobPrefab jobPrefab = null;
                 Dictionary<string, int> skillLevels = new Dictionary<string, int>();
-                if (!string.IsNullOrEmpty(jobName))
+                if (!string.IsNullOrEmpty(jobIdentifier))
                 {
-                    jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
+                    jobPrefab = JobPrefab.List.Find(jp => jp.Identifier == jobIdentifier);
                     int skillCount = inc.ReadByte();
                     for (int i = 0; i < skillCount; i++)
                     {
-                        string skillName = inc.ReadString();
+                        string skillIdentifier = inc.ReadString();
                         int skillLevel = inc.ReadRangedInteger(0, 100);
 
-                        skillLevels.Add(skillName, skillLevel);
+                        skillLevels.Add(skillIdentifier, skillLevel);
                     }
                 }
 
                 if (!spawn) return null;
-                
-                CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab);
-                ch.ID = infoID;
-                ch.HeadSpriteId = headSpriteID;
+
+                CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab)
+                {
+                    ID = infoID,
+                    HeadSpriteId = headSpriteID
+                };
 
                 System.Diagnostics.Debug.Assert(skillLevels.Count == ch.Job.Skills.Count);
                 if (ch.Job != null)
                 {
                     foreach (KeyValuePair<string, int> skill in skillLevels)
                     {
-                        Skill matchingSkill = ch.Job.Skills.Find(s => s.Name == skill.Key);
+                        Skill matchingSkill = ch.Job.Skills.Find(s => s.Identifier == skill.Key);
                         if (matchingSkill == null)
                         {
                             DebugConsole.ThrowError("Skill \"" + skill.Key + "\" not found in character \"" + newName + "\"");
@@ -343,8 +345,8 @@ namespace Barotrauma
             }
             else
             {
-                this.IsDead = false;
-
+                if (IsDead) Revive();
+                
                 CharacterHealth.ClientRead(msg);
                 
                 bool ragdolled = msg.ReadBoolean();

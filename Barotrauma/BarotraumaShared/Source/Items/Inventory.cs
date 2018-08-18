@@ -168,13 +168,19 @@ namespace Barotrauma
 #endif
         }
 
-        public Item FindItem(string itemName)
+        public Item FindItemByTag(string tag)
         {
-            if (itemName == null) return null;
-            return Items.FirstOrDefault(i => i != null && (i.Prefab.NameMatches(itemName) || i.HasTag(itemName)));
+            if (tag == null) return null;
+            return Items.FirstOrDefault(i => i != null && i.HasTag(tag));
         }
 
-        public Item FindItem(string[] itemNames)
+        public Item FindItemByIdentifier(string identifier)
+        {
+            if (identifier == null) return null;
+            return Items.FirstOrDefault(i => i != null && i.Prefab.Identifier == identifier);
+        }
+
+        /*public Item FindItem(string[] itemNames)
         {
             if (itemNames == null) return null;
 
@@ -184,7 +190,7 @@ namespace Barotrauma
                 if (item != null) return item;
             }
             return null;
-        }
+        }*/
 
         public virtual void RemoveItem(Item item)
         {

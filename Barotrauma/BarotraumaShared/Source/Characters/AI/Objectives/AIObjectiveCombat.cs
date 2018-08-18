@@ -42,7 +42,7 @@ namespace Barotrauma
         {
             coolDownTimer -= deltaTime;
 
-            var weapon = character.Inventory.FindItem("weapon");
+            var weapon = character.Inventory.FindItemByTag("weapon");
             if (weapon == null)
             {
                 Escape(deltaTime);
@@ -75,7 +75,7 @@ namespace Barotrauma
                         Item containedItem = Array.Find(containedItems, it => it != null && it.Condition > 0.0f && requiredItem.MatchesItem(it));
                         if (containedItem == null)
                         {
-                            var newReloadWeaponObjective = new AIObjectiveContainItem(character, requiredItem.Names, weapon.GetComponent<ItemContainer>());
+                            var newReloadWeaponObjective = new AIObjectiveContainItem(character, requiredItem.Identifiers, weapon.GetComponent<ItemContainer>());
                             if (!newReloadWeaponObjective.IsDuplicate(reloadWeaponObjective))
                             {
                                 reloadWeaponObjective = newReloadWeaponObjective;

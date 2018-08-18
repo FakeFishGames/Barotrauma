@@ -5,7 +5,9 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -493,6 +495,113 @@ namespace Barotrauma
                 }
             }));
 #endif
+
+            commands.Add(new Command("dumptexts", "dumptexts [filepath]: Extracts all the texts from the given text xml and writes them into a file (using the same filename, but with the .txt extension). If the filepath is omitted, the EnglishVanilla.xml file is used.", (string[] args) =>
+            {
+                string filePath = args.Length > 0 ? args[0] : "Content/Texts/EnglishVanilla.xml";
+                var doc = XMLExtensions.TryLoadXml(filePath);
+                if (doc?.Root == null) return;
+                List<string> lines = new List<string>();
+                foreach (XElement element in doc.Root.Elements())
+                {
+                    lines.Add(element.ElementInnerText());
+                }
+                File.WriteAllLines(Path.GetFileNameWithoutExtension(filePath) + ".txt", lines);
+            },
+            () =>
+            {
+                var files = TextManager.GetTextFiles().Select(f => f.Replace("\\", "/"));
+                return new string[][]
+                {
+                    TextManager.GetTextFiles().Where(f => Path.GetExtension(f)==".xml").ToArray()
+                };
+            }));
+
+            commands.Add(new Command("loadtexts", "loadtexts [sourcefile] [destinationfile]: Loads all lines of text from a given .txt file and inserts them sequientially into the elements of an xml file. If the file paths are omitted, EnglishVanilla.txt and EnglishVanilla.xml are used.", (string[] args) =>
+            {
+                string sourcePath = args.Length > 0 ? args[0] : "Content/Texts/EnglishVanilla.txt";
+                string destinationPath = args.Length > 1 ? args[1] : "Content/Texts/EnglishVanilla.xml";
+
+                string[] lines;
+                try
+                {
+                    lines = File.ReadAllLines(sourcePath);
+                }
+                catch (Exception e)
+                {
+                    ThrowError("Reading the file \"" + sourcePath + "\" failed.", e);
+                    return;
+                }
+                var doc = XMLExtensions.TryLoadXml(destinationPath);
+                int i = 0;
+                foreach (XElement element in doc.Root.Elements())
+                {
+                    if (i >= lines.Length)
+                    {
+                        ThrowError("Error while loading texts to the xml file. The xml has more elements than the number of lines in the text file.");
+                        return;
+                    }
+                    element.Value = lines[i];
+                    i++;
+                }
+                doc.Save(destinationPath);
+            },
+            () =>
+            {
+                var files = TextManager.GetTextFiles().Select(f => f.Replace("\\", "/"));
+                return new string[][]
+                {
+                    files.Where(f => Path.GetExtension(f)==".txt").ToArray(),
+                    files.Where(f => Path.GetExtension(f)==".xml").ToArray()
+                };
+            }));
+
+            commands.Add(new Command("updatetextfile", "updatetextfile [sourcefile] [destinationfile]: Inserts all the xml elements that are only present in the source file into the destination file. Can be used to update outdated translation files more easily.", (string[] args) =>
+            {
+                if (args.Length < 2) return;
+                string sourcePath = args[0];
+                string destinationPath = args[1];
+
+                var sourceDoc = XMLExtensions.TryLoadXml(sourcePath);
+                var destinationDoc = XMLExtensions.TryLoadXml(destinationPath);
+
+                XElement destinationElement = destinationDoc.Root.Elements().First();
+                foreach (XElement element in sourceDoc.Root.Elements())
+                {
+                    if (destinationDoc.Root.Element(element.Name) == null)
+                    {
+                        element.Value = "!!!!!!!!!!!!!" + element.Value;
+                        destinationElement.AddAfterSelf(element);
+                    }
+                    XNode nextNode = destinationElement.NextNode;
+                    while ((!(nextNode is XElement) || nextNode == element) && nextNode != null) nextNode = nextNode.NextNode;                    
+                    destinationElement = nextNode as XElement;
+                }
+                destinationDoc.Save(destinationPath);
+            },
+            () =>
+            {
+                var files = TextManager.GetTextFiles().Where(f => Path.GetExtension(f) == ".xml").Select(f => f.Replace("\\", "/")).ToArray();
+                return new string[][]
+                {
+                    files,
+                    files
+                };
+            }));
+
+            commands.Add(new Command("dumpentitytexts", "dumpentitytexts [filepath]: gets the names and descriptions of all entity prefabs and writes them into a file along with xml tags that can be used in translation files. If the filepath is omitted, the file is written to Content/Texts/EntityTexts.txt", (string[] args) =>
+            {
+                string filePath = args.Length > 0 ? args[0] : "Content/Texts/EntityTexts.txt";
+                List<string> lines = new List<string>();
+                foreach (MapEntityPrefab me in MapEntityPrefab.List)
+                {
+                    lines.Add("<EntityName." + me.Identifier + ">" + me.Name + "</" + me.Identifier + ".Name>");
+                    lines.Add("<EntityDescription." + me.Identifier + ">" + me.Description + "</" + me.Identifier + ".Description>");
+                }
+                File.WriteAllLines(filePath, lines);
+            }));
+
+
             commands.Add(new Command("cleanbuild", "", (string[] args) =>
             {
                 GameMain.Config.MusicVolume = 0.5f;

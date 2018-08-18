@@ -177,7 +177,6 @@ namespace Barotrauma.Items.Components
             }
 
             currPowerConsumption = powerConsumption;
-            if (item.IsOptimized("electrical")) currPowerConsumption *= 0.5f;
 
             if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
 
@@ -191,7 +190,7 @@ namespace Barotrauma.Items.Components
             {
                 if (user != null && user.Info != null && user.SelectedConstruction == item)
                 {
-                    user.Info.IncreaseSkillLevel("Helm", 0.005f * deltaTime, user.WorldPosition + Vector2.UnitY * 150.0f);
+                    user.Info.IncreaseSkillLevel("helm", 0.005f * deltaTime, user.WorldPosition + Vector2.UnitY * 150.0f);
                 }
 
                 Vector2 velocityDiff = steeringInput - targetVelocity;
@@ -408,7 +407,7 @@ namespace Barotrauma.Items.Components
         {
             switch (objective.Option.ToLowerInvariant())
             {
-                case "maintain position":
+                case "maintainposition":
                     if (!posToMaintain.HasValue)
                     {
                         unsentChanges = true;
@@ -420,14 +419,14 @@ namespace Barotrauma.Items.Components
                     AutoPilot = true;
                     MaintainPos = true;
                     break;
-                case "navigate back":
+                case "navigateback":
                     if (!AutoPilot || MaintainPos || LevelEndSelected || !LevelStartSelected)
                     {
                         unsentChanges = true;
                     }
                     SetDestinationLevelStart();
                     break;
-                case "navigate to destination":
+                case "navigatetodestination":
                     if (!AutoPilot || MaintainPos || !LevelEndSelected || LevelStartSelected)
                     {
                         unsentChanges = true;
@@ -487,7 +486,7 @@ namespace Barotrauma.Items.Components
             if (!AutoPilot)
             {
                 steeringInput = newSteeringInput;
-                steeringAdjustSpeed = MathHelper.Lerp(0.2f, 1.0f, c.Character.GetSkillLevel("Helm") / 100.0f);
+                steeringAdjustSpeed = MathHelper.Lerp(0.2f, 1.0f, c.Character.GetSkillLevel("helm") / 100.0f);
             }
             else
             {

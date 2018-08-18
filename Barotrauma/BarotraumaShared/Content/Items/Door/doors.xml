@@ -8,7 +8,7 @@
     <Sprite texture="door.png" sourcerect="1,0,48,208" depth="0.01" origin="0.5,0.5"/>
 
     <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="Force Open [Crowbar]" PickingTime="10.0">
-      <requireditem name="Crowbar" type="Equipped"/>
+      <RequiredItem identifier="crowbar" type="Equipped"/>
       <Sprite texture ="door.png" sourcerect="80,0,19,208" depth="0.05" origin="0.5,0.0"/>
       <WeldedSprite texture ="door.png" sourcerect="99,0,32,188" depth="0.0" origin="0.5,0.5"/>
       <BrokenSprite texture ="door.png" sourcerect="133,0,58,208" depth="0.051" origin="0.5,0.0" scale="true"/>
@@ -21,14 +21,15 @@
 
     <AiTarget sightrange="1500.0"/>
 
-    <fixrequirement name="Mechanical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
-      <skill name="Mechanical Engineering" level="40"/>
-      <item name="Welding Tool"/>
-    </fixrequirement>
+    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="Repair [Welding Tool]" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="40"/>
+      <RequiredItem identifier="weldingtool" type="equipped"/>
+    </Repairable>
   
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
       <output name="state_out"/>
@@ -44,7 +45,7 @@
     <Sprite texture="door.png" sourcerect="1,0,48,208" depth="0.01" origin="0.5,0.5"/>
 
     <Door window="0,-32,10,75" canbepicked="true" canbeselected="true" pickkey="Action" msg="Force Open [Crowbar]" PickingTime="10.0">
-      <requireditem name="Crowbar" type="Equipped"/>
+      <RequiredItem identifier="crowbar" type="Equipped"/>
       <Sprite texture="door.png" sourcerect="56,0,19,208" depth="0.05" origin="0.5,0.0"/>
       <WeldedSprite texture="door.png" sourcerect="9,0,32,188" depth="0.0" origin="0.5,0.5"/>
       <BrokenSprite texture="door.png" sourcerect="192,0,40,208" depth="0.051" origin="0.5,0.0" scale="true"/>
@@ -57,14 +58,15 @@
 
     <AiTarget sightrange="1500.0"/>
 
-    <fixrequirement name="Mechanical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
-      <skill name="Mechanical Engineering" level="40"/>
-      <item name="Welding Tool"/>
-    </fixrequirement>
+    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="Repair [Welding Tool]" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="40"/>
+      <RequiredItem identifier="weldingtool" type="equipped"/>
+    </Repairable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
       <output name="state_out"/>
@@ -80,7 +82,7 @@
     <Sprite texture="hatch.png" sourcerect="0,0,128,46" depth="0.01" origin="0.5,0.5"/>
 
     <Door canbeselected="true" canbepicked="true" horizontal="true" pickkey="Action" msg="Force Open [Crowbar]" PickingTime="10.0">
-      <requireditem name="Crowbar" type="Equipped"/>
+      <RequiredItem identifier="crowbar" type="Equipped"/>
       <Sprite texture="hatch.png" sourcerect="128,0,128,19" depth="0.05" origin="0.0,0.5"/>
       <WeldedSprite texture="hatch.png" sourcerect="0,56,108,33" depth="0.0" origin="0.5,0.5"/>
       <BrokenSprite texture="hatch.png" sourcerect="128,21,128,58" depth="0.051" origin="0.0,0.5" scale="true"/>
@@ -93,14 +95,15 @@
 
     <AiTarget sightrange="500.0"/>
 
-    <fixrequirement name="Mechanical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
-      <skill name="Mechanical Engineering" level="40"/>
-      <item name="Welding Tool"/>
-    </fixrequirement>
+    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="Repair [Welding Tool]" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="40"/>
+      <RequiredItem identifier="weldingtool" type="equipped"/>
+    </Repairable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
       <output name="state_out"/>
@@ -122,24 +125,19 @@
         <sound file="Content/Items/Door/doorBreak2.ogg" range="3000"/>
       </StatusEffect>
     </DockingPort>
-    
-    <fixrequirement name="Electrical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
-      <skill name="Electrical Engineering" level="40"/>
-      <item name="Wire"/>
-      <item name="Screwdriver"/>
-    </fixrequirement>
-    
-    <PowerTransfer/>
+
+    <PowerTransfer CanBeOverloaded="false" FireProbability="0.0"/>
     <Wire/>
-    
-    <fixrequirement name="Mechanical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
-      <skill name="Construction" level="50"/>
-      <item name="Welding Tool"/>
-    </fixrequirement>
+
+    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="Repair [Welding Tool]" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="40"/>
+      <RequiredItem identifier="weldingtool" type="equipped"/>
+    </Repairable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
       <input name="power"/>
@@ -164,23 +162,18 @@
       </StatusEffect>
     </DockingPort>
 
-    <fixrequirement name="Electrical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
-      <skill name="Electrical Engineering" level="40"/>
-      <item name="Wire"/>
-      <item name="Screwdriver"/>
-    </fixrequirement>
-
-    <PowerTransfer/>
+    <PowerTransfer CanBeOverloaded="false" FireProbability="0.0"/>
     <Wire/>
 
-    <fixrequirement name="Mechanical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
-      <skill name="Construction" level="50"/>
-      <item name="Welding Tool"/>
-    </fixrequirement>
+    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="Repair [Welding Tool]" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="40"/>
+      <RequiredItem identifier="weldingtool" type="equipped"/>
+    </Repairable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
       <input name="power"/>
@@ -197,7 +190,7 @@
     <Sprite texture ="duct.png" sourcerect="0,0,33,33" depth="0.01" origin="0.5,0.5"/>
 
     <Door canbeselected="true" horizontal="true" canbepicked="true" pickkey="Action" msg="Force Open [Crowbar]" PickingTime="3.0" autoorientgap="true">
-      <requireditem name="Crowbar" type="Equipped"/>
+      <RequiredItem identifier="crowbar" type="Equipped"/>
       <Sprite texture ="duct.png" sourcerect="66,0,19,19" depth="0.05" origin="-0.4,0.5"/>
       <WeldedSprite texture ="duct.png" sourcerect="33,0,33,33" depth="0.0" origin="0.5,0.5"/>
       <BrokenSprite texture="duct.png" sourcerect="0,34,52,52" depth="0.051" origin="0.2,0.5" scale="true"/>
@@ -210,14 +203,15 @@
 
     <AiTarget sightrange="500.0"/>
 
-    <fixrequirement name="Mechanical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
-      <skill name="Mechanical Engineering" level="30"/>
-      <item name="Welding Tool"/>
-    </fixrequirement>
+    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="Repair [Welding Tool]" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="40"/>
+      <RequiredItem identifier="weldingtool" type="equipped"/>
+    </Repairable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
       <output name="state_out"/>

@@ -5,7 +5,7 @@
     identifier="c4block"
     category="Equipment"
     Tags="smallitem,explosive"
-    cargocontainername="Explosive Crate">
+    cargocontaineridentifier="explosivecrate">
     
     <Price locationtype="Military" buyprice="100"/>
     <Price locationtype="City" buyprice="200"/>
@@ -29,7 +29,7 @@
     identifier="compoundn"
     category="Equipment"
     Tags="smallitem,explosive"
-    cargocontainername="Explosive Crate"
+    cargocontaineridentifier="explosivecrate"
     spritecolor="1.0,0.5,1.0,1.0">
 
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
@@ -47,11 +47,11 @@
 
   <Item
     name="Volatile Compound N"
-    identifier="volcompoundn"
+    identifier="volatilecompoundn"
     category="Equipment"
     Tags="smallitem,explosive"
     spritecolor="1.0,0.5,1.0,1.0"    
-    cargocontainername="Explosive Crate">
+    cargocontaineridentifier="explosivecrate">
 
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
     <Body width="24" height="8"/>
@@ -78,7 +78,7 @@
     description="A compound made of C-4 and incendium."
     category="Equipment"
     Tags="smallitem,explosive"
-    cargocontainername="Explosive Crate"
+    cargocontaineridentifier="explosivecrate"
     spritecolor="1.0,0.0,0.0,1.0">
 
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
@@ -101,7 +101,7 @@
     description="A device that detonates any contained explosive when receiving a signal."
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Explosive Crate">
+    cargocontaineridentifier="explosivecrate">
     
     <Price locationtype="Military" buyprice="50"/>
     <Price locationtype="City" buyprice="100"/>
@@ -113,16 +113,16 @@
     <Body width="14" height="12"/>
 
     <Holdable selectkey="Action" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ItemContainer canbeselected="true" capacity="1" itempos="0,0" hideitems="false">
-      <Containable name="explosive"/>
+      <Containable identifiers="explosive"/>
     </ItemContainer>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.16" minsize="400,175" maxsize="480,210" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="activate">
         <StatusEffect type="OnUse" target="Contained">
           <Use/>

@@ -329,7 +329,7 @@ namespace Barotrauma.Networking
                 DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (not in whitelist)", Color.Red);
                 return;
             }
-            if (!Client.IsValidName(clName))
+            if (!Client.IsValidName(clName, this))
             {
                 DisconnectUnauthClient(inc, unauthClient, DisconnectReason.InvalidName, "");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (invalid name)", ServerLog.MessageType.Error);

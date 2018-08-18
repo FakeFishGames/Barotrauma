@@ -984,7 +984,7 @@ namespace Barotrauma
                 target.Oxygen += deltaTime * 0.5f; //Stabilize them                
             }
            
-            int skill = (int)character.GetSkillLevel("Medical");
+            int skill = (int)character.GetSkillLevel("medical");
             //pump for 15 seconds (cprAnimTimer 0-15), then do mouth-to-mouth for 2 seconds (cprAnimTimer 15-17)
             if (cprAnimTimer > 15.0f && targetHead != null && head != null)
             {
@@ -1059,7 +1059,7 @@ namespace Barotrauma
                 target.CharacterHealth.CalculateVitality();
                 if (wasCritical && target.Vitality > 0.0f && Timing.TotalTime > lastReviveTime + 10.0f)
                 {
-                    character.Info.IncreaseSkillLevel("Medical", 0.5f, character.WorldPosition + Vector2.UnitY * 150.0f);
+                    character.Info.IncreaseSkillLevel("medical", 0.5f, character.WorldPosition + Vector2.UnitY * 150.0f);
                     SteamAchievementManager.OnCharacterRevived(target, character);
                     lastReviveTime = (float)Timing.TotalTime;
                     //reset attacker, we don't want the character to start attacking us
@@ -1250,25 +1250,29 @@ namespace Barotrauma
 
             if (itemPos == Vector2.Zero || Anim == Animation.Climbing || usingController)
             {
-                if (character.SelectedItems[1] == item)
-                {
-                    transformedHoldPos = leftHand.pullJoint.WorldAnchorA - transformedHandlePos[1];
-                    itemAngle = (leftHand.Rotation + (holdAngle - MathHelper.PiOver2) * Dir);
-                }
                 if (character.SelectedItems[0] == item)
                 {
+                    if (rightHand.IsSevered) return;
                     transformedHoldPos = rightHand.pullJoint.WorldAnchorA - transformedHandlePos[0];
                     itemAngle = (rightHand.Rotation + (holdAngle - MathHelper.PiOver2) * Dir);
+                }
+                if (character.SelectedItems[1] == item)
+                {
+                    if (leftHand.IsSevered) return;
+                    transformedHoldPos = leftHand.pullJoint.WorldAnchorA - transformedHandlePos[1];
+                    itemAngle = (leftHand.Rotation + (holdAngle - MathHelper.PiOver2) * Dir);
                 }
             }
             else
             {
                 if (character.SelectedItems[0] == item)
                 {
+                    if (rightHand.IsSevered) return;
                     rightHand.Disabled = true;
                 }
                 if (character.SelectedItems[1] == item)
                 {
+                    if (leftHand.IsSevered) return;
                     leftHand.Disabled = true;
                 }
 
@@ -1281,7 +1285,24 @@ namespace Barotrauma
             Vector2 currItemPos = (character.SelectedItems[0] == item) ?
                 rightHand.pullJoint.WorldAnchorA - transformedHandlePos[0] :
                 leftHand.pullJoint.WorldAnchorA - transformedHandlePos[1];
-            
+
+            if (!MathUtils.IsValid(currItemPos))
+            {
+                string errorMsg = "Attempted to move the item \"" + item + "\" to an invalid position in HumanidAnimController.HoldItem: " +
+                    currItemPos + ", rightHandPos: " + rightHand.pullJoint.WorldAnchorA + ", leftHandPos: " + leftHand.pullJoint.WorldAnchorA +
+                    ", handlePos[0]: " + handlePos[0] + ", handlePos[1]: " + handlePos[1] +
+                    ", transformedHandlePos[0]: " + transformedHandlePos[0] + ", transformedHandlePos[1]:" + transformedHandlePos[1] +
+                    ", item pos: " + item.SimPosition + ", itemAngle: " + itemAngle +
+                    ", collider pos: " + character.SimPosition;
+                DebugConsole.Log(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "HumanoidAnimController.HoldItem:InvalidPos:" + character.Name + item.Name,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error, 
+                    errorMsg);
+
+                return;
+            }
+
             if (holdable.Pusher != null)
             {
                 if (!holdable.Pusher.Enabled)
@@ -1289,7 +1310,7 @@ namespace Barotrauma
                     holdable.Pusher.Enabled = true;
                     holdable.Pusher.ResetDynamics();
                     holdable.Pusher.SetTransform(currItemPos, itemAngle);
-                    foreach (Character character in  Character.CharacterList)
+                    foreach (Character character in Character.CharacterList)
                     {
                         holdable.Pusher.FarseerBody.RestoreCollisionWith(character.AnimController.Collider.FarseerBody);
                     }
@@ -1306,9 +1327,8 @@ namespace Barotrauma
                     itemAngle = holdable.Pusher.Rotation;
                 }
             }
-            item.SetTransform(currItemPos, itemAngle);
 
-            //item.SetTransform(MathUtils.SmoothStep(item.body.SimPosition, transformedHoldPos + bodyVelocity, 0.5f), itemAngle);
+            item.SetTransform(currItemPos, itemAngle);
 
             if (Anim == Animation.Climbing) return;
 
