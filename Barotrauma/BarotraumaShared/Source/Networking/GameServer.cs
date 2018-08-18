@@ -2588,6 +2588,8 @@ namespace Barotrauma.Networking
             
             GameAnalyticsManager.AddDesignEvent("GameServer:ShutDown");            
             server.Shutdown("The server has been shut down");
+
+            ConnectedClients.ForEach(c => c.Dispose());
         }
     }
 }
