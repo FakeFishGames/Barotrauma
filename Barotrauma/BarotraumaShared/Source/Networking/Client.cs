@@ -10,24 +10,7 @@ namespace Barotrauma.Networking
         public string Name;
         public byte ID;
         public ulong SteamID;
-
-        private float karma = 1.0f;
-        public float Karma
-        {
-            get
-            {
-                if (GameMain.Server == null) return 1.0f;
-                if (!GameMain.Server.KarmaEnabled) return 1.0f;
-                return karma;
-            }
-            set
-            {
-                if (GameMain.Server == null) return;
-                if (!GameMain.Server.KarmaEnabled) return;
-                karma = Math.Min(Math.Max(value,0.0f),1.0f);
-            }
-        }
-
+        
         public byte TeamID = 0;
 
         private Character character;
@@ -135,19 +118,6 @@ namespace Barotrauma.Networking
             votes = new object[Enum.GetNames(typeof(VoteType)).Length];
 
             JobPreferences = new List<JobPrefab>(JobPrefab.List.GetRange(0, Math.Min(JobPrefab.List.Count, 3)));
-        }
-
-        public static bool IsValidName(string name, GameServer server)
-        {
-            char[] disallowedChars = new char[] { ';', ',', '<', '>', '/', '\\', '[', ']', '"', '?' };
-            if (name.Any(c => disallowedChars.Contains(c))) return false;
-
-            foreach (char character in name)
-            {
-                if (!server.AllowedClientNameChars.Any(charRange => (int)character >= charRange.First && (int)character <= charRange.Second)) return false;
-            }
-
-            return true;
         }
 
         public static string SanitizeName(string name)

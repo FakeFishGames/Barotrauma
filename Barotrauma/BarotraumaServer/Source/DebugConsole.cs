@@ -8,6 +8,42 @@ namespace Barotrauma
 {
     static partial class DebugConsole
     {
+        public partial class Command
+        {
+            /// <summary>
+            /// Executed server-side when a client attempts to use the command.
+            /// </summary>
+            public Action<Client, Vector2, string[]> OnClientRequestExecute;
+
+            public void ServerExecuteOnClientRequest(Client client, Vector2 cursorWorldPos, string[] args)
+            {
+                if (!CheatsEnabled && IsCheat)
+                {
+                    NewMessage("Client \"" + client.Name + "\" attempted to use the command \"" + names[0] + "\". Cheats must be enabled using \"enablecheats\" before the command can be used.", Color.Red);
+                    GameMain.Server.SendConsoleMessage("You need to enable cheats using the command \"enablecheats\" before you can use the command \"" + names[0] + "\".", client);
+
+                    if (GameMain.Config.UseSteam)
+                    {
+                        NewMessage("Enabling cheats will disable Steam achievements during this play session.", Color.Red);
+                        GameMain.Server.SendConsoleMessage("Enabling cheats will disable Steam achievements during this play session.", client);
+                        return;
+                    }
+
+                    return;
+                }
+
+                if (OnClientRequestExecute == null)
+                {
+                    if (onExecute == null) return;
+                    onExecute(args);
+                }
+                else
+                {
+                    OnClientRequestExecute(client, cursorWorldPos, args);
+                }
+            }
+        }
+
         public static List<string> QueuedCommands = new List<string>();
 
         public static void Update()
@@ -22,8 +58,92 @@ namespace Barotrauma
             }
         }
 
+        private static void AddOnClientRequestExecute(string names, Action<Client, Vector2, string[]> onClientRequestExecute)
+        {
+            commands.First(c => c.names.Intersect(names.Split('|')).Count() > 0).OnClientRequestExecute = onClientRequestExecute;
+        }
+
         private static void InitProjectSpecific()
         {
+            commands.Add(new Command("clientlist", "clientlist: List all the clients connected to the server.", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                NewMessage("***************", Color.Cyan);
+                foreach (Client c in GameMain.Server.ConnectedClients)
+                {
+                    NewMessage("- " + c.ID.ToString() + ": " + c.Name + (c.Character != null ? " playing " + c.Character.LogName : "") + ", " + c.Connection.RemoteEndPoint.Address.ToString(), Color.Cyan);
+                }
+                NewMessage("***************", Color.Cyan);
+            }));
+            AddOnClientRequestExecute("clientlist", (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                GameMain.Server.SendConsoleMessage("***************", client);
+                foreach (Client c in GameMain.Server.ConnectedClients)
+                {
+                    GameMain.Server.SendConsoleMessage("- " + c.ID.ToString() + ": " + c.Name + ", " + c.Connection.RemoteEndPoint.Address.ToString(), client);
+                }
+                GameMain.Server.SendConsoleMessage("***************", client);
+            });
+
+            commands.Add(new Command("enablecheats", "enablecheats: Enables cheat commands and disables Steam achievements during this play session.", (string[] args) =>
+            {
+                CheatsEnabled = true;
+                SteamAchievementManager.CheatsEnabled = true;
+                NewMessage("Enabled cheat commands.", Color.Red);
+                if (GameMain.Config.UseSteam)
+                {
+                    NewMessage("Steam achievements have been disabled during this play session.", Color.Red);
+                    GameMain.Server?.SendChatMessage("Cheat commands have been enabled by the server. You cannot unlock Steam achievements until you restart the game.", ChatMessageType.MessageBox);
+                }
+                else
+                {
+                    GameMain.Server?.SendChatMessage("Cheat commands have been enabled by the server.", ChatMessageType.MessageBox);
+                }
+            }));
+            AddOnClientRequestExecute("enablecheats", (client, cursorPos, args) =>
+            {
+                CheatsEnabled = true;
+                SteamAchievementManager.CheatsEnabled = true;
+                NewMessage("Cheat commands have been enabled by \"" + client.Name + "\".", Color.Red);
+                if (GameMain.Config.UseSteam)
+                {
+                    NewMessage("Steam achievements have been disabled during this play session.", Color.Red);
+                    GameMain.Server.SendChatMessage("Cheat commands have been enabled by the server. You cannot unlock Steam achievements until you restart the game.", ChatMessageType.MessageBox);
+                }
+                else
+                {
+                    GameMain.Server.SendChatMessage("Cheat commands have been enabled by the server.", ChatMessageType.MessageBox);
+                }
+            });
+
+            commands.Add(new Command("traitorlist", "traitorlist: List all the traitors and their targets.", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                TraitorManager traitorManager = GameMain.Server.TraitorManager;
+                if (traitorManager == null) return;
+                foreach (Traitor t in traitorManager.TraitorList)
+                {
+                    NewMessage("- Traitor " + t.Character.Name + "'s target is " + t.TargetCharacter.Name + ".", Color.Cyan);
+                }
+                NewMessage("The code words are: " + traitorManager.codeWords + ", response: " + traitorManager.codeResponse + ".", Color.Cyan);
+            }));
+            AddOnClientRequestExecute("traitorlist", (Client client, Vector2 cursorPos, string[] args) =>
+            {
+                TraitorManager traitorManager = GameMain.Server.TraitorManager;
+                if (traitorManager == null) return;
+                foreach (Traitor t in traitorManager.TraitorList)
+                {
+                    GameMain.Server.SendConsoleMessage("- Traitor " + t.Character.Name + "'s target is " + t.TargetCharacter.Name + ".", client);
+                }
+                GameMain.Server.SendConsoleMessage("The code words are: " + traitorManager.codeWords + ", response: " + traitorManager.codeResponse + ".", client);
+            });
+
+            commands.Add(new Command("setpassword|setserverpassword", "setpassword [password]: Changes the password of the server that's being hosted.", (string[] args) =>
+            {
+                if (GameMain.Server == null || args.Length == 0) return;
+                GameMain.Server.SetPassword(args[0]);
+            }));
+
             commands.Add(new Command("restart|reset", "restart/reset: Close and restart the server.", (string[] args) =>
             {
                 NewMessage("*****************", Color.Lime);

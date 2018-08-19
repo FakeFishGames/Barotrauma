@@ -224,12 +224,9 @@
     <Compile Include="Source\Networking\EntitySpawner.cs" />
     <Compile Include="Source\Networking\FileTransfer\FileReceiver.cs" />
     <Compile Include="Source\Networking\GameClient.cs" />
-    <Compile Include="Source\Networking\GameServer.cs" />
-    <Compile Include="Source\Networking\GameServerSettings.cs" />
     <Compile Include="Source\Networking\NetEntityEvent\ClientEntityEventManager.cs" />
     <Compile Include="Source\Networking\NetEntityEvent\NetEntityEvent.cs" />
     <Compile Include="Source\Networking\NetStats.cs" />
-    <Compile Include="Source\Networking\NetworkMember.cs" />
     <Compile Include="Source\Networking\OrderChatMessage.cs" />
     <Compile Include="Source\Networking\ServerInfo.cs" />
     <Compile Include="Source\Networking\ServerLog.cs" />

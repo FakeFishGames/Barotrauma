@@ -1,4 +1,5 @@
-﻿using Barotrauma.Steam;
+﻿using Barotrauma.Items.Components;
+using Barotrauma.Steam;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
@@ -241,7 +242,7 @@ namespace Barotrauma.Networking
             Disconnect();
 
             Submarine.Unload();
-            GameMain.NetworkMember = null;
+            GameMain.Client = null;
             GameMain.GameSession = null;
             GameMain.ServerListScreen.Select();
 
@@ -1505,72 +1506,7 @@ namespace Barotrauma.Networking
             command = command.ToLowerInvariant();
             return permittedConsoleCommands.Any(c => c.ToLowerInvariant() == command);
         }
-
-        public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
-        {
-            base.Draw(spriteBatch);
-            
-            if (fileReceiver != null && fileReceiver.ActiveTransfers.Count > 0)
-            {
-                Vector2 pos = new Vector2(GameMain.NetLobbyScreen.InfoFrame.Rect.X, GameMain.GraphicsHeight - 35);
-
-                GUI.DrawRectangle(spriteBatch, new Rectangle(
-                    (int)pos.X,
-                    (int)pos.Y, 
-                    fileReceiver.ActiveTransfers.Count * 210 + 10, 
-                    32), 
-                    Color.Black * 0.8f, true);
-                
-                for (int i = 0; i < fileReceiver.ActiveTransfers.Count; i++)
-                {
-                    var transfer = fileReceiver.ActiveTransfers[i];
-                    
-                    GUI.DrawString(spriteBatch,
-                        pos,
-                        ToolBox.LimitString(TextManager.Get("DownloadingFile").Replace("[filename]", transfer.FileName), GUI.SmallFont, 200),
-                        Color.White, null, 0, GUI.SmallFont);
-                    GUI.DrawProgressBar(spriteBatch, new Vector2(pos.X, -pos.Y - 15), new Vector2(135, 15), transfer.Progress, Color.Green);
-                    GUI.DrawString(spriteBatch, pos + new Vector2(5, 15),
-                        MathUtils.GetBytesReadable((long)transfer.Received) + " / " + MathUtils.GetBytesReadable((long)transfer.FileSize),
-                        Color.White, null, 0, GUI.SmallFont);
-
-                    if (GUI.DrawButton(spriteBatch, new Rectangle((int)pos.X + 140, (int)pos.Y + 18, 60, 15), TextManager.Get("Cancel"), new Color(0.47f, 0.13f, 0.15f, 0.08f)))
-                    {
-                        CancelFileTransfer(transfer);
-                        fileReceiver.StopTransfer(transfer);
-                    }
-
-                    pos.X += 210;
-                }
-            }
-
-            if (!GameMain.DebugDraw) return;
-
-            int width = 200, height = 300;
-            int x = GameMain.GraphicsWidth - width, y = (int)(GameMain.GraphicsHeight * 0.3f);
-
-            GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black * 0.7f, true);
-            GUI.Font.DrawString(spriteBatch, "Network statistics:", new Vector2(x + 10, y + 10), Color.White);
-
-            if (client.ServerConnection != null)
-            {
-                GUI.Font.DrawString(spriteBatch, "Ping: " + (int)(client.ServerConnection.AverageRoundtripTime * 1000.0f) + " ms", new Vector2(x + 10, y + 25), Color.White);
-
-                y += 15;
-
-                GUI.SmallFont.DrawString(spriteBatch, "Received bytes: " + client.Statistics.ReceivedBytes, new Vector2(x + 10, y + 45), Color.White);
-                GUI.SmallFont.DrawString(spriteBatch, "Received packets: " + client.Statistics.ReceivedPackets, new Vector2(x + 10, y + 60), Color.White);
-
-                GUI.SmallFont.DrawString(spriteBatch, "Sent bytes: " + client.Statistics.SentBytes, new Vector2(x + 10, y + 75), Color.White);
-                GUI.SmallFont.DrawString(spriteBatch, "Sent packets: " + client.Statistics.SentPackets, new Vector2(x + 10, y + 90), Color.White);
-            }
-            else
-            {
-                GUI.Font.DrawString(spriteBatch, "Disconnected", new Vector2(x + 10, y + 25), Color.White);
-            }
-        }
-
-
+        
         public override void Disconnect()
         {
             client.Shutdown("");
@@ -1581,7 +1517,7 @@ namespace Barotrauma.Networking
                 ServerLog?.Save();
             }
 
-            GameMain.NetworkMember = null;
+            GameMain.Client = null;
         }
         
         public void WriteCharacterInfo(NetOutgoingMessage msg)
@@ -1600,52 +1536,7 @@ namespace Barotrauma.Networking
                 msg.Write(jobPreferences[i].Identifier);
             }
         }
-
-        public override bool SelectCrewCharacter(Character character, GUIComponent characterFrame)
-        {
-            if (character == null) return false;
-
-            if (character != myCharacter)
-            {
-                var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.Character == character);
-                if (client == null) return false;
-
-                if (HasPermission(ClientPermissions.Ban))
-                {
-                    var banButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.15f), characterFrame.RectTransform, Anchor.BottomRight),
-                        TextManager.Get("Ban"))
-                    {
-                        UserData = character.Name,
-                        OnClicked = GameMain.NetLobbyScreen.BanPlayer
-                    };
-                }
-                if (HasPermission(ClientPermissions.Kick))
-                {
-                    var kickButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.15f), characterFrame.RectTransform, Anchor.BottomLeft),
-                        TextManager.Get("Kick"))
-                    {
-                        UserData = character.Name,
-                        OnClicked = GameMain.NetLobbyScreen.KickPlayer
-                    };
-                }
-                else if (Voting.AllowVoteKick)
-                {
-                    var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.15f), characterFrame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.0f, 0.16f) },
-                        TextManager.Get("VoteToKick"))
-                    {
-                        UserData = character,
-                        OnClicked = VoteForKick
-                    };
-                    if (GameMain.NetworkMember.ConnectedClients != null)
-                    {
-                        kickVoteButton.Enabled = !client.HasKickVoteFromID(myID);
-                    }
-                }                
-            }
-
-            return true;
-        }
-
+        
         public void Vote(VoteType voteType, object data)
         {
             NetOutgoingMessage msg = client.CreateMessage();
@@ -1668,6 +1559,14 @@ namespace Barotrauma.Networking
             button.Enabled = false;
 
             return true;
+        }
+
+        public override void AddChatMessage(ChatMessage message)
+        {
+            base.AddChatMessage(message);
+
+            GameMain.NetLobbyScreen.NewChatMessage(message);
+            chatBox.AddMessage(message);
         }
 
         public override void KickPlayer(string kickedName, string reason)
@@ -1815,6 +1714,392 @@ namespace Barotrauma.Networking
 
             Vote(VoteType.EndRound, tickBox.Selected);
             return false;
+        }
+        protected CharacterInfo characterInfo;
+        protected Character myCharacter;
+
+        public CharacterInfo CharacterInfo
+        {
+            get { return characterInfo; }
+            set { characterInfo = value; }
+        }
+
+        public Character Character
+        {
+            get { return myCharacter; }
+            set { myCharacter = value; }
+        }
+
+        protected GUIFrame inGameHUD;
+        protected ChatBox chatBox;
+        protected GUIButton showLogButton;
+
+        private float myCharacterFrameOpenState;
+
+        public GUIFrame InGameHUD
+        {
+            get { return inGameHUD; }
+        }
+
+        private void InitProjSpecific()
+        {
+            inGameHUD = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
+            {
+                CanBeFocused = false
+            };
+
+            chatBox = new ChatBox(inGameHUD, false);
+            chatBox.OnEnterMessage += EnterChatMessage;
+            chatBox.OnTextChanged += TypingChatMessage;
+        }
+
+        protected void SetRadioButtonColor()
+        {
+            if (Character.Controlled == null || !Character.Controlled.CanSpeak)
+            {
+                chatBox.RadioButton.GetChild<GUIImage>().Color = new Color(60, 60, 60, 255);
+            }
+            else
+            {
+                var radioItem = Character.Controlled?.Inventory?.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
+                chatBox.RadioButton.GetChild<GUIImage>().Color =
+                    (radioItem != null && Character.Controlled.HasEquippedItem(radioItem) && radioItem.GetComponent<WifiComponent>().CanTransmit()) ?
+                    Color.White : new Color(60, 60, 60, 255);
+            }
+        }
+
+        public bool TypingChatMessage(GUITextBox textBox, string text)
+        {
+            string command = ChatMessage.GetChatMessageCommand(text, out _);
+            switch (command)
+            {
+                case "r":
+                case "radio":
+                    textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Radio];
+                    break;
+                case "d":
+                case "dead":
+                    textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Dead];
+                    break;
+                default:
+                    if (Character.Controlled != null && (Character.Controlled.IsDead || !Character.Controlled.CanSpeak))
+                    {
+                        textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Dead];
+                    }
+                    else if (command != "") //PMing
+                    {
+                        textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Private];
+                    }
+                    else
+                    {
+                        textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
+                    }
+                    break;
+            }
+
+            return true;
+        }
+
+        public bool EnterChatMessage(GUITextBox textBox, string message)
+        {
+            textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
+
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                if (textBox == chatBox.InputBox) textBox.Deselect();
+                return false;
+            }
+
+            SendChatMessage(message);
+
+            if (textBox == chatBox.InputBox) textBox.Deselect();
+
+            return true;
+        }
+
+        public virtual void AddToGUIUpdateList()
+        {
+            if (gameStarted &&
+                Screen.Selected == GameMain.GameScreen)
+            {
+                inGameHUD.AddToGUIUpdateList();
+
+                if (Character.Controlled == null)
+                {
+                    GameMain.NetLobbyScreen.MyCharacterFrame.AddToGUIUpdateList();
+                }
+            }
+        }
+
+        public void UpdateHUD(float deltaTime)
+        {
+            GUITextBox msgBox = (Screen.Selected == GameMain.GameScreen ? chatBox.InputBox : GameMain.NetLobbyScreen.TextBox);
+            if (gameStarted && Screen.Selected == GameMain.GameScreen)
+            {
+                if (!GUI.DisableHUD)
+                {
+                    inGameHUD.UpdateManually(deltaTime);
+                    chatBox.Update(deltaTime);
+
+                    if (Character.Controlled == null)
+                    {
+                        myCharacterFrameOpenState = GameMain.NetLobbyScreen.MyCharacterFrameOpen ? myCharacterFrameOpenState + deltaTime * 5 : myCharacterFrameOpenState - deltaTime * 5;
+                        myCharacterFrameOpenState = MathHelper.Clamp(myCharacterFrameOpenState, 0.0f, 1.0f);
+
+                        var myCharFrame = GameMain.NetLobbyScreen.MyCharacterFrame;
+                        int padding = GameMain.GraphicsWidth - myCharFrame.Parent.Rect.Right;
+
+                        myCharFrame.RectTransform.AbsoluteOffset =
+                            Vector2.SmoothStep(new Vector2(-myCharFrame.Rect.Width - padding, 0.0f), new Vector2(-padding, 0), myCharacterFrameOpenState).ToPoint();
+                    }
+                }
+                if (Character.Controlled == null || Character.Controlled.IsDead)
+                {
+                    GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
+                    GameMain.LightManager.LosEnabled = false;
+                }
+            }
+
+
+            //tab doesn't autoselect the chatbox when debug console is open, 
+            //because tab is used for autocompleting console commands
+            if ((PlayerInput.KeyHit(InputType.Chat) || PlayerInput.KeyHit(InputType.RadioChat)) &&
+                !DebugConsole.IsOpen && (Screen.Selected != GameMain.GameScreen || msgBox.Visible))
+            {
+                if (msgBox.Selected)
+                {
+                    if (msgBox == chatBox.InputBox) chatBox.HideTimer = 0.0f;
+                    msgBox.Text = "";
+                    msgBox.Deselect();
+                }
+                else
+                {
+                    msgBox.Select();
+                    if (Screen.Selected == GameMain.GameScreen && PlayerInput.KeyHit(InputType.RadioChat))
+                    {
+                        msgBox.Text = "r; ";
+                        msgBox.OnTextChanged?.Invoke(msgBox, msgBox.Text);
+                    }
+                }
+            }
+            if (ServerLog.LogFrame != null) ServerLog.LogFrame.AddToGUIUpdateList();
+        }
+
+        public virtual void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
+        {
+            if (!gameStarted || Screen.Selected != GameMain.GameScreen || GUI.DisableHUD) return;
+
+            inGameHUD.DrawManually(spriteBatch);
+
+            if (EndVoteCount > 0)
+            {
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 180.0f, 40),
+                    TextManager.Get("EndRoundVotes").Replace("[y]", EndVoteCount.ToString()).Replace("[n]", (EndVoteMax - EndVoteCount).ToString()),
+                    Color.White,
+                    font: GUI.SmallFont);
+            }
+
+            if (respawnManager != null)
+            {
+                string respawnInfo = "";
+                if (respawnManager.CurrentState == RespawnManager.State.Waiting &&
+                    respawnManager.CountdownStarted)
+                {
+                    respawnInfo = TextManager.Get(respawnManager.UsingShuttle ? "RespawnShuttleDispatching" : "RespawningIn");
+                    respawnInfo = respawnInfo.Replace("[time]", ToolBox.SecondsToReadableTime(respawnManager.RespawnTimer));
+                }
+                else if (respawnManager.CurrentState == RespawnManager.State.Transporting)
+                {
+                    respawnInfo = respawnManager.TransportTimer <= 0.0f ?
+                        "" :
+                        TextManager.Get("RespawnShuttleLeavingIn").Replace("[time]", ToolBox.SecondsToReadableTime(respawnManager.TransportTimer));
+                }
+
+                if (respawnManager != null)
+                {
+                    GUI.DrawString(spriteBatch,
+                        new Vector2(120.0f, 10),
+                        respawnInfo, Color.White, null, 0, GUI.SmallFont);
+                }
+            }
+
+            if (fileReceiver != null && fileReceiver.ActiveTransfers.Count > 0)
+            {
+                Vector2 pos = new Vector2(GameMain.NetLobbyScreen.InfoFrame.Rect.X, GameMain.GraphicsHeight - 35);
+
+                GUI.DrawRectangle(spriteBatch, new Rectangle(
+                    (int)pos.X,
+                    (int)pos.Y, 
+                    fileReceiver.ActiveTransfers.Count * 210 + 10, 
+                    32), 
+                    Color.Black * 0.8f, true);
+                
+                for (int i = 0; i < fileReceiver.ActiveTransfers.Count; i++)
+                {
+                    var transfer = fileReceiver.ActiveTransfers[i];
+                    
+                    GUI.DrawString(spriteBatch,
+                        pos,
+                        ToolBox.LimitString(TextManager.Get("DownloadingFile").Replace("[filename]", transfer.FileName), GUI.SmallFont, 200),
+                        Color.White, null, 0, GUI.SmallFont);
+                    GUI.DrawProgressBar(spriteBatch, new Vector2(pos.X, -pos.Y - 15), new Vector2(135, 15), transfer.Progress, Color.Green);
+                    GUI.DrawString(spriteBatch, pos + new Vector2(5, 15),
+                        MathUtils.GetBytesReadable((long)transfer.Received) + " / " + MathUtils.GetBytesReadable((long)transfer.FileSize),
+                        Color.White, null, 0, GUI.SmallFont);
+
+                    if (GUI.DrawButton(spriteBatch, new Rectangle((int)pos.X + 140, (int)pos.Y + 18, 60, 15), TextManager.Get("Cancel"), new Color(0.47f, 0.13f, 0.15f, 0.08f)))
+                    {
+                        CancelFileTransfer(transfer);
+                        fileReceiver.StopTransfer(transfer);
+                    }
+
+                    pos.X += 210;
+                }
+            }
+
+            if (!GameMain.DebugDraw) return;
+
+            int width = 200, height = 300;
+            int x = GameMain.GraphicsWidth - width, y = (int)(GameMain.GraphicsHeight * 0.3f);
+
+            GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black * 0.7f, true);
+            GUI.Font.DrawString(spriteBatch, "Network statistics:", new Vector2(x + 10, y + 10), Color.White);
+
+            if (client.ServerConnection != null)
+            {
+                GUI.Font.DrawString(spriteBatch, "Ping: " + (int)(client.ServerConnection.AverageRoundtripTime * 1000.0f) + " ms", new Vector2(x + 10, y + 25), Color.White);
+
+                y += 15;
+
+                GUI.SmallFont.DrawString(spriteBatch, "Received bytes: " + client.Statistics.ReceivedBytes, new Vector2(x + 10, y + 45), Color.White);
+                GUI.SmallFont.DrawString(spriteBatch, "Received packets: " + client.Statistics.ReceivedPackets, new Vector2(x + 10, y + 60), Color.White);
+
+                GUI.SmallFont.DrawString(spriteBatch, "Sent bytes: " + client.Statistics.SentBytes, new Vector2(x + 10, y + 75), Color.White);
+                GUI.SmallFont.DrawString(spriteBatch, "Sent packets: " + client.Statistics.SentPackets, new Vector2(x + 10, y + 90), Color.White);
+            }
+            else
+            {
+                GUI.Font.DrawString(spriteBatch, "Disconnected", new Vector2(x + 10, y + 25), Color.White);
+            }
+        }
+
+        public virtual bool SelectCrewCharacter(Character character, GUIComponent characterFrame)
+        {
+            if (character == null) return false;
+
+            if (character != myCharacter)
+            {
+                var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.Character == character);
+                if (client == null) return false;
+
+                if (HasPermission(ClientPermissions.Ban))
+                {
+                    var banButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.15f), characterFrame.RectTransform, Anchor.BottomRight),
+                        TextManager.Get("Ban"))
+                    {
+                        UserData = character.Name,
+                        OnClicked = GameMain.NetLobbyScreen.BanPlayer
+                    };
+                }
+                if (HasPermission(ClientPermissions.Kick))
+                {
+                    var kickButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.15f), characterFrame.RectTransform, Anchor.BottomLeft),
+                        TextManager.Get("Kick"))
+                    {
+                        UserData = character.Name,
+                        OnClicked = GameMain.NetLobbyScreen.KickPlayer
+                    };
+                }
+                else if (Voting.AllowVoteKick)
+                {
+                    var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.15f), characterFrame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.0f, 0.16f) },
+                        TextManager.Get("VoteToKick"))
+                    {
+                        UserData = character,
+                        OnClicked = VoteForKick
+                    };
+                    if (GameMain.NetworkMember.ConnectedClients != null)
+                    {
+                        kickVoteButton.Enabled = !client.HasKickVoteFromID(myID);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        public void CreateKickReasonPrompt(string clientName, bool ban, bool rangeBan = false)
+        {
+            var banReasonPrompt = new GUIMessageBox(
+                TextManager.Get(ban ? "BanReasonPrompt" : "KickReasonPrompt"),
+                "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") }, 400, 300);
+
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.6f), banReasonPrompt.InnerFrame.RectTransform, Anchor.Center));
+            var banReasonBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.3f), content.RectTransform))
+            {
+                Wrap = true,
+                MaxTextLength = 100
+            };
+
+            GUINumberInput durationInputDays = null, durationInputHours = null;
+            GUITickBox permaBanTickBox = null;
+
+            if (ban)
+            {
+                new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.15f), content.RectTransform), TextManager.Get("BanDuration"));
+                permaBanTickBox = new GUITickBox(new RectTransform(new Vector2(0.8f, 0.15f), content.RectTransform) { RelativeOffset = new Vector2(0.05f, 0.0f) },
+                    TextManager.Get("BanPermanent"))
+                {
+                    Selected = true
+                };
+
+                var durationContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.15f), content.RectTransform), isHorizontal: true)
+                {
+                    Visible = false
+                };
+
+                permaBanTickBox.OnSelected += (tickBox) =>
+                {
+                    durationContainer.Visible = !tickBox.Selected;
+                    return true;
+                };
+
+                durationInputDays = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1.0f), durationContainer.RectTransform), GUINumberInput.NumberType.Int)
+                {
+                    MinValueInt = 0,
+                    MaxValueFloat = 1000
+                };
+                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), durationContainer.RectTransform), TextManager.Get("Days"));
+                durationInputHours = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1.0f), durationContainer.RectTransform), GUINumberInput.NumberType.Int)
+                {
+                    MinValueInt = 0,
+                    MaxValueFloat = 24
+                };
+                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), durationContainer.RectTransform), TextManager.Get("Hours"));
+            }
+
+            banReasonPrompt.Buttons[0].OnClicked += (btn, userData) =>
+            {
+                if (ban)
+                {
+                    if (!permaBanTickBox.Selected)
+                    {
+                        TimeSpan banDuration = new TimeSpan(durationInputDays.IntValue, durationInputHours.IntValue, 0, 0);
+                        BanPlayer(clientName, banReasonBox.Text, ban, banDuration);
+                    }
+                    else
+                    {
+                        BanPlayer(clientName, banReasonBox.Text, ban);
+                    }
+                }
+                else
+                {
+                    KickPlayer(clientName, banReasonBox.Text);
+                }
+                return true;
+            };
+            banReasonPrompt.Buttons[0].OnClicked += banReasonPrompt.Close;
+            banReasonPrompt.Buttons[1].OnClicked += banReasonPrompt.Close;
         }
     }
 }

@@ -28,7 +28,7 @@ namespace Barotrauma
 
                 var greetingMsgBox = ChatMessage.Create(null, greetingMessage, ChatMessageType.MessageBox, null);
                 var moreAgentsMsgBox = ChatMessage.Create(null, moreAgentsMessage, ChatMessageType.MessageBox, null);
-                
+
                 Client client = server.ConnectedClients.Find(c => c.Character == Character);
                 GameMain.Server.SendDirectChatMessage(greetingChatMsg, client);
                 GameMain.Server.SendDirectChatMessage(moreAgentsChatMsg, client);
@@ -36,7 +36,9 @@ namespace Barotrauma
                 GameMain.Server.SendDirectChatMessage(moreAgentsMsgBox, client);
             }
 
+
 #if CLIENT
+            //TODO: reimplement
             if (server.Character == null)
             {
                 new GUIMessageBox(

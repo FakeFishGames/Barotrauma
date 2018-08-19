@@ -13,6 +13,41 @@ namespace Barotrauma
 {
     static partial class DebugConsole
     {
+        public partial class Command
+        {
+            /// <summary>
+            /// Executed when a client uses the command. If not set, the command is relayed to the server as-is.
+            /// </summary>
+            public Action<string[]> OnClientExecute;
+
+            public bool RelayToServer
+            {
+                get { return OnClientExecute == null; }
+            }
+
+            public void ClientExecute(string[] args)
+            {
+                if (!CheatsEnabled && IsCheat)
+                {
+                    NewMessage("You need to enable cheats using the command \"enablecheats\" before you can use the command \"" + names[0] + "\".", Color.Red);
+                    if (GameMain.Config.UseSteam)
+                    {
+                        NewMessage("Enabling cheats will disable Steam achievements during this play session.", Color.Red);
+                    }
+                    return;
+                }
+
+                if (OnClientExecute != null)
+                {
+                    OnClientExecute(args);
+                }
+                else
+                {
+                    onExecute(args);
+                }
+            }
+        }
+
         static bool isOpen;
 
         private static Queue<ColoredText> queuedMessages = new Queue<ColoredText>();
@@ -256,7 +291,7 @@ namespace Barotrauma
 
                 if (GameMain.Client == null)
                 {
-                    GameMain.NetworkMember = new GameClient("Name");
+                    GameMain.Client = new GameClient("Name");
                     GameMain.Client.ConnectToServer(args[0]);
                 }
             }));
@@ -669,7 +704,7 @@ namespace Barotrauma
                     NewMessage("Deleted TutorialSub from the submarine folder", Color.Green);
                 }
 
-                if (System.IO.File.Exists(GameServer.SettingsFile))
+                /*if (System.IO.File.Exists(GameServer.SettingsFile))
                 {
                     System.IO.File.Delete(GameServer.SettingsFile);
                     NewMessage("Deleted server settings", Color.Green);
@@ -679,7 +714,7 @@ namespace Barotrauma
                 {
                     System.IO.File.Delete(GameServer.ClientPermissionsFile);
                     NewMessage("Deleted client permission file", Color.Green);
-                }
+                }*/
 
                 if (System.IO.File.Exists("crashreport.log"))
                 {

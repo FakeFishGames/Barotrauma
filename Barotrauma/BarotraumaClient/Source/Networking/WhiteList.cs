@@ -41,6 +41,7 @@ namespace Barotrauma.Networking
 
                     if (Enabled)
                     {
+                        /*TODO: fix
                         foreach (Client c in GameMain.Server.ConnectedClients)
                         {
                             if (!IsWhiteListed(c.Name, c.Connection.RemoteEndPoint.Address.ToString()))
@@ -48,7 +49,7 @@ namespace Barotrauma.Networking
                                 whitelistedPlayers.Add(new WhiteListedPlayer(c.Name, c.Connection.RemoteEndPoint.Address.ToString()));
                                 if (whitelistFrame != null) CreateWhiteListFrame(whitelistFrame.Parent);
                             }
-                        }
+                        }*/
                     }
 
                     Save();

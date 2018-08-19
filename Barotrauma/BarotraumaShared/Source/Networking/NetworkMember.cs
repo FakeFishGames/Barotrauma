@@ -151,6 +151,7 @@ namespace Barotrauma.Networking
             protected set;
         }
 
+        partial void InitProjSpecific();
         public NetworkMember()
         {
             InitProjSpecific();
@@ -175,19 +176,12 @@ namespace Barotrauma.Networking
             AddChatMessage(ChatMessage.Create(senderName, message, type, senderCharacter));
         }
 
-        public void AddChatMessage(ChatMessage message)
+        public virtual void AddChatMessage(ChatMessage message)
         {
-            GameServer.Log(message.TextWithSender, ServerLog.MessageType.Chat);
-            
             if (message.Sender != null && !message.Sender.IsDead)
             {
                 message.Sender.ShowSpeechBubble(2.0f, ChatMessage.MessageColor[(int)message.Type]);
             }
-
-#if CLIENT
-            GameMain.NetLobbyScreen.NewChatMessage(message);
-            chatBox.AddMessage(message);
-#endif
         }
 
         public virtual void KickPlayer(string kickedName, string reason) { }
