@@ -251,8 +251,9 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             isActiveTickBox.Selected = IsActive;
 #endif
-
+#if SERVER
             item.CreateServerEvent(this);
+#endif
         }
 
         public void ServerWrite(Lidgren.Network.NetBuffer msg, Client c, object[] extraData = null)

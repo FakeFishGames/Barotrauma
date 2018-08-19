@@ -57,15 +57,19 @@ namespace Barotrauma.Items.Components
             {
                 OnSelected = (GUITickBox box) =>
                 {
+#if SERVER
                     if (GameMain.Server != null)
                     {
                         item.CreateServerEvent(this);
                     }
-                    else if (GameMain.Client != null)
+#endif
+#if CLIENT
+                    if (GameMain.Client != null)
                     {
                         item.CreateClientEvent(this);
                         correctionTimer = CorrectionDelay;
                     }
+#endif
                     IsActive = box.Selected;
 
                     return true;

@@ -214,11 +214,13 @@ namespace Barotrauma
                     Character.Speak(
                         newOrder.GetChatMessage("", Character.CurrentHull?.RoomName), ChatMessageType.Order);
 
+#if SERVER
                     if (GameMain.Server != null)
                     {
                         OrderChatMessage msg = new OrderChatMessage(newOrder, "", Character.CurrentHull, null, Character);
                         GameMain.Server.SendOrderChatMessage(msg);
                     }
+#endif
                 }
             }
         }

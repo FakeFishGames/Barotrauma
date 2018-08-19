@@ -136,10 +136,12 @@ namespace Barotrauma
 
                     item.ApplyStatusEffects(ActionType.OnFire, 1.0f);
 
+#if SERVER
                     if (item.Condition <= 0.0f && GameMain.Server != null)
                     {
                         GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFire });
                     }
+#endif
                 }
             }
 

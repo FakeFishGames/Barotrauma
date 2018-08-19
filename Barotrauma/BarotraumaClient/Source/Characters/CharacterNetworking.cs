@@ -10,8 +10,6 @@ namespace Barotrauma
     {
         public virtual void ClientWrite(NetBuffer msg, object[] extraData = null)
         {
-            if (GameMain.Server != null) return;
-
             if (extraData != null)
             {
                 switch ((NetEntityEvent.Type)extraData[0])
@@ -61,8 +59,6 @@ namespace Barotrauma
 
         public virtual void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
-            if (GameMain.Server != null) return;
-
             switch (type)
             {
                 case ServerNetObject.ENTITY_POSITION:
@@ -147,7 +143,7 @@ namespace Barotrauma
                     msg.ReadPadBits();
 
                     int index = 0;
-                    if (GameMain.NetworkMember.Character == this && AllowInput)
+                    if (GameMain.Client.Character == this && AllowInput)
                     {
                         var posInfo = new CharacterStateInfo(pos, rotation, networkUpdateID, facingRight ? Direction.Right : Direction.Left, selectedEntity, animation);
                         while (index < memState.Count && NetIdUtils.IdMoreRecent(posInfo.ID, memState[index].ID))
@@ -207,9 +203,7 @@ namespace Barotrauma
         public static Character ReadSpawnData(NetBuffer inc, bool spawn = true)
         {
             DebugConsole.NewMessage("READING CHARACTER SPAWN DATA", Color.Cyan);
-
-            if (GameMain.Server != null) return null;
-
+            
             bool noInfo         = inc.ReadBoolean();
             ushort id           = inc.ReadUInt16();
             string configPath   = inc.ReadString();

@@ -58,7 +58,9 @@ namespace Barotrauma.Items.Components
 
                 if (Math.Abs(charge - lastSentCharge) / capacity > 1.0f)
                 {
+#if SERVER
                     if (GameMain.Server != null) item.CreateServerEvent(this);
+#endif
                     lastSentCharge = charge;
                 }
             }
@@ -173,7 +175,9 @@ namespace Barotrauma.Items.Components
             {
                 if (Math.Abs(rechargeSpeed - maxRechargeSpeed * 0.5f) > 0.05f)
                 {
+#if SERVER
                     item.CreateServerEvent(this);
+#endif
                     RechargeSpeed = maxRechargeSpeed * 0.5f;
                     character.Speak(TextManager.Get("DialogChargeBatteries")
                         .Replace("[itemname]", item.Name)
@@ -184,7 +188,9 @@ namespace Barotrauma.Items.Components
             {
                 if (rechargeSpeed > 0.0f)
                 {
+#if SERVER
                     item.CreateServerEvent(this);
+#endif
                     RechargeSpeed = 0.0f;
                     character.Speak(TextManager.Get("DialogStopChargingBatteries")
                         .Replace("[itemname]", item.Name)
@@ -207,27 +213,6 @@ namespace Barotrauma.Items.Components
             {
                 outputVoltage = power;
             }
-        }
-                
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
-        {
-            float newRechargeSpeed = msg.ReadRangedInteger(0, 10) / 10.0f * maxRechargeSpeed;
-
-            if (item.CanClientAccess(c))
-            {
-                RechargeSpeed = newRechargeSpeed;
-                GameServer.Log(c.Character.LogName + " set the recharge speed of " + item.Name + " to " + (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", ServerLog.MessageType.ItemInteraction);
-            }
-
-            item.CreateServerEvent(this);
-        }
-
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
-        {
-            msg.WriteRangedInteger(0, 10, (int)(rechargeSpeed / MaxRechargeSpeed * 10));
-
-            float chargeRatio = MathHelper.Clamp(charge / capacity, 0.0f, 1.0f);
-            msg.WriteRangedSingle(chargeRatio, 0.0f, 1.0f, 8);
         }
     }
 }

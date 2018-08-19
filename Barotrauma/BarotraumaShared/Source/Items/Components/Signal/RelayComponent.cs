@@ -83,10 +83,12 @@ namespace Barotrauma.Items.Components
         {
             if (GameMain.Client != null && !isNetworkMessage) return;
 
+#if SERVER
             if (on != IsOn && GameMain.Server != null)
             {
                 item.CreateServerEvent(this);
             }
+#endif
 
             IsOn = on;
         }

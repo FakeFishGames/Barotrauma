@@ -101,12 +101,14 @@ namespace Barotrauma
                 return;
             }
 
+#if SERVER
             if (GameMain.Server != null)
             {
                 GameMain.Server.CreateEntityEvent(Owner as IServerSerializable, new object[] { NetEntityEvent.Type.InventoryState, componentIndex });
             }
+#endif
 #if CLIENT
-            else if (GameMain.Client != null)
+            if (GameMain.Client != null)
             {
                 GameMain.Client.CreateEntityEvent(Owner as IClientSerializable, new object[] { NetEntityEvent.Type.InventoryState, componentIndex });
             }

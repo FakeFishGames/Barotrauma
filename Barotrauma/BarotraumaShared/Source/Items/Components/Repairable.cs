@@ -151,11 +151,13 @@ namespace Barotrauma.Items.Components
                 item.Condition = 100.0f;
             }
 
+#if SERVER
             if (GameMain.Server != null && Math.Abs(RepairProgress - lastSentProgress) > 0.01f)
             {
                 lastSentProgress = RepairProgress;
                 item.CreateServerEvent(this);
             }
+#endif
 
             if (Fixed)
             {

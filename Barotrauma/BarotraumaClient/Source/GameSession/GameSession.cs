@@ -59,6 +59,7 @@ namespace Barotrauma
                 OnClicked = SelectInfoFrameTab
             };
 
+            /*TODO: fix
             if (GameMain.Server != null)
             {
                 var manageButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform), TextManager.Get("ManagePlayers"))
@@ -66,7 +67,7 @@ namespace Barotrauma
                     UserData = InfoFrameTab.ManagePlayers,
                     OnClicked = SelectInfoFrameTab
                 };
-            }
+            }*/
 
             var closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.08f), paddedFrame.RectTransform, Anchor.BottomRight), TextManager.Get("Close"))
             {
@@ -90,7 +91,8 @@ namespace Barotrauma
                     CreateMissionInfo(infoFrameContent);
                     break;
                 case InfoFrameTab.ManagePlayers:
-                    GameMain.Server.ManagePlayersFrame(infoFrameContent);
+                    //TODO: fix
+                    //GameMain.Server.ManagePlayersFrame(infoFrameContent);
                     break;
             }
 

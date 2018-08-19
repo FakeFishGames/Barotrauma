@@ -73,7 +73,9 @@ namespace Barotrauma.Items.Components
                 }
 
                 container.Inventory.RemoveItem(targetItem);
+#if SERVER
                 Entity.Spawner.AddToRemoveQueue(targetItem);
+#endif
 
                 if (container.Inventory.Items.Any(i => i != null))
                 {
@@ -98,10 +100,12 @@ namespace Barotrauma.Items.Components
 
             IsActive = active;
 
+#if SERVER
             if (user != null)
             {
                 GameServer.Log(user.LogName + (IsActive ? " activated " : " deactivated ") + item.Name, ServerLog.MessageType.ItemInteraction);
             }
+#endif
 
 #if CLIENT
             if (!IsActive)
@@ -119,23 +123,6 @@ namespace Barotrauma.Items.Components
 #endif
 
             container.Inventory.Locked = IsActive;            
-        }
-        
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
-        {
-            bool active = msg.ReadBoolean();
-
-            item.CreateServerEvent(this);
-
-            if (item.CanClientAccess(c))
-            {
-                SetActive(active, c.Character);
-            }
-        }
-
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
-        {
-            msg.Write(IsActive);
         }
     }
 }

@@ -196,10 +196,12 @@ namespace Barotrauma.Items.Components
         {
             if (selectedItem == null) return;
 
+#if SERVER
             if (user != null)
             {
                 GameServer.Log(user.LogName + " started fabricating " + selectedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
             }
+#endif
 
 #if CLIENT
             itemList.Enabled = false;
@@ -222,10 +224,12 @@ namespace Barotrauma.Items.Components
 
         private void CancelFabricating(Character user = null)
         {
+#if SERVER
             if (fabricatedItem != null && user != null)
             {
                 GameServer.Log(user.LogName + " cancelled the fabrication of " + fabricatedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
             }
+#endif
 
             IsActive = false;
             fabricatedItem = null;
@@ -338,37 +342,5 @@ namespace Barotrauma.Items.Components
 
             return true;
         }
-
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
-        {
-            int itemIndex = msg.ReadRangedInteger(-1, fabricableItems.Count - 1);
-
-            item.CreateServerEvent(this);
-
-            if (!item.CanClientAccess(c)) return;
-
-            if (itemIndex == -1)
-            {
-                CancelFabricating(c.Character);
-            }
-            else
-            {
-                //if already fabricating the selected item, return
-                if (fabricatedItem != null && fabricableItems.IndexOf(fabricatedItem) == itemIndex) return;
-                if (itemIndex < 0 || itemIndex >= fabricableItems.Count) return;
-
-#if CLIENT
-                SelectItem(null, fabricableItems[itemIndex]);
-#endif
-                StartFabricating(fabricableItems[itemIndex], c.Character);
-            }
-        }
-
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
-        {
-            int itemIndex = fabricatedItem == null ? -1 : fabricableItems.IndexOf(fabricatedItem);
-            msg.WriteRangedInteger(-1, fabricableItems.Count - 1, itemIndex);
-        }
-
     }
 }

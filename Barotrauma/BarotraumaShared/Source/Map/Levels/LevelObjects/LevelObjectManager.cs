@@ -330,6 +330,7 @@ namespace Barotrauma
         {
             foreach (LevelObject obj in objects)
             {
+#if SERVER
                 if (GameMain.Server != null)
                 {
                     if (obj.NeedsNetworkSyncing)
@@ -338,6 +339,7 @@ namespace Barotrauma
                         obj.NeedsNetworkSyncing = false;
                     }
                 }
+#endif
 
                 obj.ActivePrefab = obj.Prefab;
                 for (int i = 0; i < obj.Triggers.Count; i++)

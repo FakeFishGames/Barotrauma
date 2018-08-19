@@ -557,7 +557,7 @@ namespace Barotrauma.Networking
 #endif
 
 
-                if (gameStarted && Screen.Selected == GameMain.GameScreen)
+            if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
                 endVoteTickBox.Visible = Voting.AllowEndVoting && HasSpawned;
 

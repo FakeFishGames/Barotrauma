@@ -1144,6 +1144,7 @@ namespace Barotrauma
                 wall.Update(deltaTime);
             }
 
+#if SERVER
             if (GameMain.Server != null)
             {
                 networkUpdateTimer += deltaTime;
@@ -1156,6 +1157,7 @@ namespace Barotrauma
                     networkUpdateTimer = 0.0f;
                 }
             }
+#endif
 
 #if CLIENT
             backgroundCreatureManager.Update(deltaTime, cam);

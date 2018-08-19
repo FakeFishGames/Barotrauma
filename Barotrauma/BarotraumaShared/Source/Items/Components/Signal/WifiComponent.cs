@@ -135,12 +135,13 @@ namespace Barotrauma.Items.Components
                         if (chatMsg.Length > ChatMessage.MaxLength) chatMsg = chatMsg.Substring(0, ChatMessage.MaxLength);
                         if (string.IsNullOrEmpty(chatMsg)) continue;
 
+#if SERVER
                         if (wifiComp.item.ParentInventory.Owner == Character.Controlled)
                         {
                             if (GameMain.Client == null)
                                 GameMain.NetworkMember.AddChatMessage(signal, ChatMessageType.Radio, source == null ? "" : source.Name);
                         }
-                        else if (GameMain.Server != null)
+                        if (GameMain.Server != null)
                         {
                             Client recipientClient = GameMain.Server.ConnectedClients.Find(c => c.Character == wifiComp.item.ParentInventory.Owner);
                             if (recipientClient != null)
@@ -149,6 +150,7 @@ namespace Barotrauma.Items.Components
                                     ChatMessage.Create(source == null ? "" : source.Name, chatMsg, ChatMessageType.Radio, null), recipientClient);
                             }
                         }
+#endif
                         chatMsgSent = true;
                     }
                 }

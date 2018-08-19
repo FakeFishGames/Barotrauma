@@ -13,14 +13,26 @@ namespace Barotrauma
         private UInt16 lastUpdateID;
         public UInt16 LastUpdateID
         {
-            get { if (GameMain.Server != null && lastUpdateID < 1) lastUpdateID++; return lastUpdateID; }
+            get
+            {
+#if SERVER
+                if (GameMain.Server != null && lastUpdateID < 1) lastUpdateID++;
+#endif
+                return lastUpdateID;
+            }
             set { lastUpdateID = value; }
         }
 
         private UInt16 lastSaveID;
         public UInt16 LastSaveID
         {
-            get { if (GameMain.Server != null && lastSaveID < 1) lastSaveID++; return lastSaveID; }
+            get
+            {
+#if SERVER
+                if (GameMain.Server != null && lastSaveID < 1) lastSaveID++;
+#endif
+                return lastSaveID;
+            }
             set { lastSaveID = value; }
         }
         
@@ -46,11 +58,13 @@ namespace Barotrauma
         
         private void SetDelegates()
         {
+#if SERVER
             if (GameMain.Server != null)
             {
                 CargoManager.OnItemsChanged += () => { LastUpdateID++; };
                 Map.OnLocationSelected += (loc, connection) => { LastUpdateID++; };
             }
+#endif
         }
 
         public override void Start()
@@ -72,7 +86,8 @@ namespace Barotrauma
 #endif
                 return;                
             }
-            
+
+#if SERVER
             lastUpdateID++;
 
             bool success = 
@@ -138,6 +153,7 @@ namespace Barotrauma
 
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
+#endif
         }
 
         public static MultiPlayerCampaign LoadNew(XElement element)

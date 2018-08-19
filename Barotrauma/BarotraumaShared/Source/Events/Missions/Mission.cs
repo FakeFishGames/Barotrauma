@@ -98,10 +98,12 @@ namespace Barotrauma
             if (missionType == MissionType.Random)
             {
                 allowedMissions.AddRange(MissionPrefab.List);
+#if SERVER
                 if (GameMain.Server != null)
                 {
                     allowedMissions.RemoveAll(mission => !GameMain.Server.AllowedRandomMissionTypes.Contains(mission.type));
                 }
+#endif
             }
             else if (missionType == MissionType.None)
             {

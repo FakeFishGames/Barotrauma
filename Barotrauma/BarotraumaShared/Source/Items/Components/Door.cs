@@ -473,11 +473,13 @@ namespace Barotrauma.Items.Components
                 SetState(signal != "0", false, true);
             }
 
+#if SERVER
             bool newState = predictedState == null ? isOpen : predictedState.Value;
             if (sender != null && wasOpen != newState)
             {
                 GameServer.Log(sender.LogName + (newState ? " opened " : " closed ") + item.Name, ServerLog.MessageType.ItemInteraction);
             }
+#endif
         }
 
         public void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage = false)
@@ -509,10 +511,12 @@ namespace Barotrauma.Items.Components
             //opening a partially stuck door makes it less stuck
             if (isOpen) stuck = MathHelper.Clamp(stuck - 30.0f, 0.0f, 100.0f);
 
+#if SERVER
             if (sendNetworkMessage)
             {
                 item.CreateServerEvent(this);
             }
+#endif
         }
 
         public override void ServerWrite(Lidgren.Network.NetBuffer msg, Client c, object[] extraData = null)

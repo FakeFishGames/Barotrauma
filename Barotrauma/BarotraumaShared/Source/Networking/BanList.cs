@@ -158,7 +158,9 @@ namespace Barotrauma.Networking
         private void RemoveBan(BannedPlayer banned)
         {
             DebugConsole.Log("Removing ban from " + banned.Name);
+#if SERVER
             GameServer.Log("Removing ban from " + banned.Name, ServerLog.MessageType.ServerMessage);
+#endif
 
             bannedPlayers.Remove(banned);
 
@@ -196,7 +198,9 @@ namespace Barotrauma.Networking
 
         public void Save()
         {
+#if SERVER
             GameServer.Log("Saving banlist", ServerLog.MessageType.ServerMessage);
+#endif
 
             bannedPlayers.RemoveAll(bp => bp.ExpirationTime.HasValue && DateTime.Now > bp.ExpirationTime.Value);
 

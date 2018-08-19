@@ -602,7 +602,11 @@ namespace Barotrauma
             float impact = Vector2.Dot(velocity, -normal);
             if (f1.Body == Collider.FarseerBody)
             {
-                if (!character.IsRemotePlayer || GameMain.Server != null)
+                bool isNotRemote = true;
+#if CLIENT
+                isNotRemote = !character.IsRemotePlayer;
+#endif
+                if (isNotRemote)
                 {
                     if (impact > ImpactTolerance)
                     {
@@ -660,11 +664,12 @@ namespace Barotrauma
                 }
             }
 #endif
-
+#if SERVER
             if (GameMain.Server != null)
             {
                 GameMain.Server.CreateEntityEvent(character, new object[] { NetEntityEvent.Type.Status });
             }
+#endif
         }
 
         private void GetConnectedLimbs(List<Limb> connectedLimbs, List<LimbJoint> checkedJoints, Limb limb)
@@ -1402,9 +1407,8 @@ namespace Barotrauma
                 }
             }
 
-            if (GameMain.Server != null) return; //the server should not be trying to correct any positions, it's authoritative
-            
-            if (character != GameMain.NetworkMember.Character || !character.AllowInput)
+#if CLIENT
+            if (character != GameMain.Client.Character || !character.AllowInput)
             {
                 //remove states without a timestamp (there may still be ID-based states 
                 //in the list when the controlled character switches to timestamp-based interpolation)
@@ -1597,6 +1601,7 @@ namespace Barotrauma
                 if (character.MemLocalState.Count > 120) character.MemLocalState.RemoveRange(0, character.MemLocalState.Count - 120);
                 character.MemState.Clear();
             }
+#endif
         }
         
         private Vector2 GetFlowForce()
