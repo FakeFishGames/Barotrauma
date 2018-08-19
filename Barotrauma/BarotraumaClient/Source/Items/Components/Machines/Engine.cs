@@ -51,20 +51,12 @@ namespace Barotrauma.Items.Components
                     if (Math.Abs(newTargetForce - targetForce) < 0.01) return false;
 
                     targetForce = newTargetForce;
-#if SERVER
-                    if (GameMain.Server != null)
-                    {
-                        item.CreateServerEvent(this);
-                        GameServer.Log(Character.Controlled.LogName + " set the force speed of " + item.Name + " to " + (int)(targetForce) + " %", ServerLog.MessageType.ItemInteraction);
-                    }
-#endif
-#if CLIENT
+
                     if (GameMain.Client != null)
                     {
                         correctionTimer = CorrectionDelay;
                         item.CreateClientEvent(this);
                     }
-#endif
                     return true;
                 }
             };

@@ -186,40 +186,21 @@ namespace Barotrauma.Networking
 
             for (int i = 0; i < characterInfos.Count; i++)
             {
-                bool myCharacter = false;
-#if CLIENT
-                myCharacter = i >= clients.Count + botsToSpawn.Count;
-#endif
-                bool bot = i >= clients.Count && !myCharacter;
+                bool bot = i >= clients.Count;
 
-                var character = Character.Create(characterInfos[i], shuttleSpawnPoints[i].WorldPosition, characterInfos[i].Name, !myCharacter && !bot, bot);
+                var character = Character.Create(characterInfos[i], shuttleSpawnPoints[i].WorldPosition, characterInfos[i].Name, !bot, bot);
                 character.TeamID = 1;
-
-#if CLIENT
-                GameMain.GameSession.CrewManager.AddCharacter(character);
-
-                if (myCharacter)
+                
+                if (bot)
                 {
-                    server.Character = character;
-                    Character.Controlled = character;
-
-                    GameMain.LightManager.LosEnabled = true;
-                    GameServer.Log(string.Format("Respawning {0} (host) as {1}", character.Name, characterInfos[i].Job.Name), ServerLog.MessageType.Spawning);
+                    GameServer.Log(string.Format("Respawning bot {0} as {1}", character.Info.Name, characterInfos[i].Job.Name), ServerLog.MessageType.Spawning);
                 }
-#endif
-                if (!myCharacter)
+                else
                 {
-                    if (bot)
-                    {
-                        GameServer.Log(string.Format("Respawning bot {0} as {1}", character.Info.Name, characterInfos[i].Job.Name), ServerLog.MessageType.Spawning);
-                    }
-                    else
-                    {
-                        clients[i].Character = character;
-                        character.OwnerClientIP = clients[i].Connection.RemoteEndPoint.Address.ToString();
-                        character.OwnerClientName = clients[i].Name;
-                        GameServer.Log(string.Format("Respawning {0} ({1}) as {2}", clients[i].Name, clients[i].Connection?.RemoteEndPoint?.Address, characterInfos[i].Job.Name), ServerLog.MessageType.Spawning);
-                    }
+                    clients[i].Character = character;
+                    character.OwnerClientIP = clients[i].Connection.RemoteEndPoint.Address.ToString();
+                    character.OwnerClientName = clients[i].Name;
+                    GameServer.Log(string.Format("Respawning {0} ({1}) as {2}", clients[i].Name, clients[i].Connection?.RemoteEndPoint?.Address, characterInfos[i].Job.Name), ServerLog.MessageType.Spawning);
                 }
 
                 if (divingSuitPrefab != null && oxyPrefab != null && respawnShuttle != null)

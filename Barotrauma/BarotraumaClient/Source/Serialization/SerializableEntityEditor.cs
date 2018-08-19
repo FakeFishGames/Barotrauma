@@ -510,16 +510,6 @@ namespace Barotrauma
                 entity = e.Item;
             }
 
-#if SERVER
-            if (GameMain.Server != null)
-            {
-                if (entity is IServerSerializable serverSerializable)
-                {
-                    GameMain.Server.CreateEntityEvent(serverSerializable, new object[] { NetEntityEvent.Type.ChangeProperty, property });
-                }
-            }
-#endif
-#if CLIENT
             if (GameMain.Client != null)
             {
                 if (entity is IClientSerializable clientSerializable)
@@ -527,7 +517,6 @@ namespace Barotrauma
                     GameMain.Client.CreateEntityEvent(clientSerializable, new object[] { NetEntityEvent.Type.ChangeProperty, property });
                 }
             }
-#endif
         }
     }
 

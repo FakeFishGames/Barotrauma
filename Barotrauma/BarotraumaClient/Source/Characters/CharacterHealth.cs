@@ -664,19 +664,11 @@ namespace Barotrauma
             if (highlightedLimbIndex < 0 || item == null) return true;
 
             Limb targetLimb = character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex);
-#if CLIENT
             if (GameMain.Client != null)
             {
                 GameMain.Client.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, character.ID, targetLimb });
                 return true;
             }
-#endif
-#if SERVER
-            if (GameMain.Server != null)
-            {
-                GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, character.ID, targetLimb });
-            }
-#endif
 
             item.ApplyStatusEffects(ActionType.OnUse, 1.0f, character, targetLimb);
             return true;
@@ -826,19 +818,11 @@ namespace Barotrauma
             if (item == null || selectedLimbIndex < 0) return false;
 
             Limb targetLimb = character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex);
-#if CLIENT
             if (GameMain.Client != null)
             {
                 GameMain.Client.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, character.ID, targetLimb });
                 return true;
             }
-#endif
-#if SERVER
-            if (GameMain.Server != null)
-            {
-                GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, character.ID, targetLimb });
-            }
-#endif
 
             item.ApplyStatusEffects(ActionType.OnUse, 1.0f, character, targetLimb);
             return true;

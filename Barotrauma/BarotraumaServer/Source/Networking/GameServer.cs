@@ -96,11 +96,7 @@ namespace Barotrauma.Networking
             }
 
             config = new NetPeerConfiguration("barotrauma");
-
-#if CLIENT
-            netStats = new NetStats();
-#endif
-
+            
 #if DEBUG
             config.SimulatedLoss = 0.05f;
             config.SimulatedRandomLatency = 0.05f;
@@ -170,30 +166,16 @@ namespace Barotrauma.Networking
                 Log("Error while starting the server (" + e.Message + ")", ServerLog.MessageType.Error);
 
                 System.Net.Sockets.SocketException socketException = e as System.Net.Sockets.SocketException;
-
-#if CLIENT
-                if (socketException != null && socketException.SocketErrorCode == System.Net.Sockets.SocketError.AddressAlreadyInUse)
-                {
-                    new GUIMessageBox(TextManager.Get("ServerInitFailed"), TextManager.Get("ServerInitFailedAddressAlreadyInUse").Replace("[errormsg]", e.Message));
-                }
-                else
-                {
-                    new GUIMessageBox(TextManager.Get("ServerInitFailed"), e.Message);
-                }
-#endif
-
+                
                 error = true;
             }
 
             if (error)
             {
                 if (server != null) server.Shutdown("Error while starting the server");
-
-#if CLIENT
-                GameMain.NetworkMember = null;
-#elif SERVER
+                
                 Environment.Exit(-1);
-#endif
+
                 yield return CoroutineStatus.Success;
             }
 
@@ -364,9 +346,6 @@ namespace Barotrauma.Networking
 
         public override void Update(float deltaTime)
         {
-#if CLIENT
-            if (ShowNetStats) netStats.Update(deltaTime);
-#endif
             if (!started) return;
 
             base.Update(deltaTime);
@@ -386,9 +365,6 @@ namespace Barotrauma.Networking
 
             if (gameStarted)
             {
-#if CLIENT
-                SetRadioButtonColor();
-#endif
                 if (respawnManager != null) respawnManager.Update(deltaTime);
 
                 entityEventManager.Update(connectedClients);
@@ -1226,17 +1202,11 @@ namespace Barotrauma.Networking
 
             if (selectedSub == null)
             {
-#if CLIENT
-                GameMain.NetLobbyScreen.SubList.Flash();
-#endif
                 return false;
             }
 
             if (selectedShuttle == null)
             {
-#if CLIENT
-                GameMain.NetLobbyScreen.ShuttleList.Flash();
-#endif
                 return false;
             }
 
@@ -1245,9 +1215,6 @@ namespace Barotrauma.Networking
 
             if (selectedMode == null)
             {
-#if CLIENT
-                GameMain.NetLobbyScreen.ModeList.Flash();
-#endif
                 return false;
             }
 
@@ -1289,24 +1256,11 @@ namespace Barotrauma.Networking
 
                 if (fileSender.ActiveTransfers.Count > 0)
                 {
-#if CLIENT
-                    var msgBox = new GUIMessageBox("", TextManager.Get("WaitForFileTransfers"), new string[] { TextManager.Get("StartNow") });
-                    msgBox.Buttons[0].OnClicked += msgBox.Close;
-#endif
-
                     float waitForTransfersTimer = 20.0f;
                     while (fileSender.ActiveTransfers.Count > 0 && waitForTransfersTimer > 0.0f)
                     {
                         waitForTransfersTimer -= CoroutineManager.UnscaledDeltaTime;
-
-#if CLIENT
-                        //message box close, break and start the round immediately
-                        if (!GUIMessageBox.MessageBoxes.Contains(msgBox))
-                        {
-                            break;
-                        }
-#endif
-
+                        
                         yield return CoroutineStatus.Running;
                     }
                 }
@@ -1322,11 +1276,7 @@ namespace Barotrauma.Networking
             entityEventManager.Clear();
 
             GameMain.NetLobbyScreen.StartButtonEnabled = false;
-
-#if CLIENT
-            GUIMessageBox.CloseAll();
-#endif
-
+            
             roundStartSeed = DateTime.Now.Millisecond;
             Rand.SetSyncedSeed(roundStartSeed);
 
@@ -1354,9 +1304,6 @@ namespace Barotrauma.Networking
 
             if (campaign != null)
             {
-#if CLIENT
-                if (GameMain.GameSession?.CrewManager != null) GameMain.GameSession.CrewManager.Reset();
-#endif
                 GameMain.GameSession.StartRound(campaign.Map.SelectedConnection.Level,
                     reloadSub: true,
                     loadSecondSub: teamCount > 1,
@@ -1432,10 +1379,6 @@ namespace Barotrauma.Networking
                     teamClients[i].Character = spawnedCharacter;
                     spawnedCharacter.OwnerClientIP = teamClients[i].Connection.RemoteEndPoint.Address.ToString();
                     spawnedCharacter.OwnerClientName = teamClients[i].Name;
-
-#if CLIENT
-                    GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);
-#endif
                 }
 
                 for (int i = teamClients.Count; i < teamClients.Count + bots.Count; i++)
@@ -1443,21 +1386,7 @@ namespace Barotrauma.Networking
                     Character spawnedCharacter = Character.Create(characterInfos[i], assignedWayPoints[i].WorldPosition, characterInfos[i].Name, false, true);
                     spawnedCharacter.GiveJobItems(assignedWayPoints[i]);
                     spawnedCharacter.TeamID = (byte)teamID;
-#if CLIENT
-                    GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);
-#endif
                 }
-
-#if CLIENT
-                if (characterInfo != null && hostTeam == teamID)
-                {
-                    myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1].WorldPosition, characterInfo.Name, false, false);
-                    myCharacter.TeamID = (byte)teamID;    
-                    myCharacter.GiveJobItems(assignedWayPoints.Last());
-                    GameMain.GameSession.CrewManager.AddCharacter(myCharacter);
-                    Character.Controlled = myCharacter;
-                }
-#endif
             }
 
             foreach (Submarine sub in Submarine.MainSubs)
@@ -1609,10 +1538,6 @@ namespace Barotrauma.Networking
             if (SaveServerLogs) ServerLog.Save();
             
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
-#if CLIENT
-            myCharacter = null;
-            GameMain.LightManager.LosEnabled = false;
-#endif
 
             entityEventManager.Clear();
             foreach (Client c in connectedClients)
@@ -1771,12 +1696,6 @@ namespace Barotrauma.Networking
 
             client.Connection.Disconnect(targetmsg);
             connectedClients.Remove(client);
-
-#if CLIENT
-            GameMain.NetLobbyScreen.RemovePlayer(client.Name);
-            Voting.UpdateVoteTexts(connectedClients, VoteType.Sub);
-            Voting.UpdateVoteTexts(connectedClients, VoteType.Mode);
-#endif
 
             UpdateVoteStatus();
 
@@ -2064,9 +1983,6 @@ namespace Barotrauma.Networking
         private void FileTransferChanged(FileSender.FileTransferOut transfer)
         {
             Client recipient = connectedClients.Find(c => c.Connection == transfer.Connection);
-#if CLIENT
-            UpdateFileTransferIndicator(recipient);
-#endif
         }
 
         public void SendCancelTransferMsg(FileSender.FileTransferOut transfer)
