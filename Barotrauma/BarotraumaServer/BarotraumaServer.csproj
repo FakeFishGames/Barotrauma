@@ -128,6 +128,7 @@
     <Compile Include="Source\Networking\GameServerSettings.cs" />
     <Compile Include="Source\Networking\NetEntityEvent\ServerEntityEventManager.cs" />
     <Compile Include="Source\Networking\NetworkMember.cs" />
+    <Compile Include="Source\Networking\SteamManager.cs" />
     <Compile Include="Source\Networking\Voting.cs" />
     <Compile Include="Source\PlayerInput.cs" />
     <Compile Include="Source\Program.cs" />

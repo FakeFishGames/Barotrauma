@@ -215,6 +215,7 @@ namespace Barotrauma
                     }
                 }
 
+#if SERVER
                 if (GameMain.Server != null && lastSentCondition != condition)
                 {
                     if (Math.Abs(lastSentCondition - condition) > 1.0f || condition == 0.0f || condition == prefab.Health)
@@ -223,6 +224,7 @@ namespace Barotrauma
                         lastSentCondition = condition;
                     }
                 }
+#endif
             }
         }
 

@@ -671,10 +671,12 @@ namespace Barotrauma
                 return true;
             }
 #endif
+#if SERVER
             if (GameMain.Server != null)
             {
                 GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, character.ID, targetLimb });
             }
+#endif
 
             item.ApplyStatusEffects(ActionType.OnUse, 1.0f, character, targetLimb);
             return true;
@@ -831,10 +833,12 @@ namespace Barotrauma
                 return true;
             }
 #endif
+#if SERVER
             if (GameMain.Server != null)
             {
                 GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, character.ID, targetLimb });
             }
+#endif
 
             item.ApplyStatusEffects(ActionType.OnUse, 1.0f, character, targetLimb);
             return true;
