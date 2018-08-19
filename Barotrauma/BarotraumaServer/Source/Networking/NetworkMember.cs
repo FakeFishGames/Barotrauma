@@ -15,10 +15,5 @@
         {
             get { return null; }
         }
-
-        private void InitProjSpecific()
-        {
-            //do nothing
-        }
     }
 }

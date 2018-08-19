@@ -187,17 +187,13 @@ namespace Barotrauma.Networking
         public virtual void KickPlayer(string kickedName, string reason) { }
 
         public virtual void BanPlayer(string kickedName, string reason, bool range = false, TimeSpan? duration = null) { }
-
+        
         public virtual void Update(float deltaTime) 
         {
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
                 GameMain.GameSession.CrewManager.Update(deltaTime);
             }
-
-#if CLIENT
-            UpdateHUD(deltaTime);            
-#endif
         }
 
         public virtual void Disconnect() { }

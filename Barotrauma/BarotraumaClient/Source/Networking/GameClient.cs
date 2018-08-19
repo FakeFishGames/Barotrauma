@@ -530,6 +530,8 @@ namespace Barotrauma.Networking
 #endif
             if (gameStarted) SetRadioButtonColor();
 
+            UpdateHUD(deltaTime);
+
             base.Update(deltaTime);
 
             if (!connected) return;

@@ -235,7 +235,7 @@ namespace Barotrauma
                 GameMain.GameSession.CrewManager.RemoveCharacter(this);
             }
             
-            if (GameMain.NetworkMember?.Character == this) GameMain.NetworkMember.Character = null;
+            if (GameMain.Client?.Character == this) GameMain.Client.Character = null;
 
             if (Lights.LightManager.ViewTarget == this) Lights.LightManager.ViewTarget = null;
         }
