@@ -87,28 +87,36 @@ namespace Barotrauma
 
         public void AddToSpawnQueue(ItemPrefab itemPrefab, Vector2 worldPosition, float? condition = null)
         {
+#if CLIENT
             if (GameMain.Client != null) return;
-            
+#endif
+
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, worldPosition, condition));
         }
 
         public void AddToSpawnQueue(ItemPrefab itemPrefab, Vector2 position, Submarine sub, float? condition = null)
         {
+#if CLIENT
             if (GameMain.Client != null) return;
+#endif
 
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, position, sub, condition));
         }
 
         public void AddToSpawnQueue(ItemPrefab itemPrefab, Inventory inventory, float? condition = null)
         {
+#if CLIENT
             if (GameMain.Client != null) return;
+#endif
 
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, inventory, condition));
         }
 
         public void AddToRemoveQueue(Entity entity)
         {
+#if CLIENT
             if (GameMain.Client != null) return;
+#endif
             if (removeQueue.Contains(entity) || entity.Removed) return;
             if (entity is Character)
             {
@@ -127,7 +135,9 @@ namespace Barotrauma
 
         public void AddToRemoveQueue(Item item)
         {
+#if CLIENT
             if (GameMain.Client != null) return;
+#endif
             if (removeQueue.Contains(item) || item.Removed) return;
 
             removeQueue.Enqueue(item);
@@ -140,7 +150,9 @@ namespace Barotrauma
 
         public void Update()
         {
+#if CLIENT
             if (GameMain.Client != null) return;
+#endif
 
             while (spawnQueue.Count > 0)
             {

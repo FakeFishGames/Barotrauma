@@ -416,8 +416,7 @@ namespace Barotrauma.Networking
                 }
 
                 bool isCrewDead =
-                    connectedClients.All(c => c.Character == null || c.Character.IsDead || c.Character.IsUnconscious) &&
-                    (myCharacter == null || myCharacter.IsDead || myCharacter.IsUnconscious);
+                    connectedClients.All(c => c.Character == null || c.Character.IsDead || c.Character.IsUnconscious);
 
                 //restart if all characters are dead or submarine is at the end of the level
                 if ((autoRestart && isCrewDead)
@@ -1411,15 +1410,7 @@ namespace Barotrauma.Networking
                     characterInfos.Add(client.CharacterInfo);
                     client.CharacterInfo.Job = new Job(client.AssignedJob);
                 }
-
-                //host's character
-                if (characterInfo != null && hostTeam == teamID)
-                {
-                    characterInfo.Job = new Job(GameMain.NetLobbyScreen.JobPreferences[0]);
-                    characterInfos.Add(characterInfo);
-                    characterInfo.TeamID = hostTeam;
-                }
-
+                
                 List<CharacterInfo> bots = new List<CharacterInfo>();
                 int botsToSpawn = BotSpawnMode == BotSpawnMode.Fill ? BotCount - characterInfos.Count : BotCount;
                 for (int i = 0; i < botsToSpawn; i++)
@@ -1429,13 +1420,7 @@ namespace Barotrauma.Networking
                     bots.Add(botInfo);
                 }
                 AssignBotJobs(bots, teamID);
-
-                if (characterInfo != null && hostTeam == teamID)
-                {
-                    characterInfos.Remove(characterInfo);
-                    characterInfos.Add(characterInfo);
-                }
-
+                
                 WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSubs[teamID - 1]);
                 for (int i = 0; i < teamClients.Count; i++)
                 {
@@ -1497,8 +1482,7 @@ namespace Barotrauma.Networking
                 {
                     if (client.Character != null) characters.Add(client.Character);
                 }
-                if (Character != null) characters.Add(Character);
-
+                
                 int max = Math.Max(TraitorUseRatio ? (int)Math.Round(characters.Count * TraitorRatio, 1) : 1, 1);
                 int traitorCount = Rand.Int(max + 1);
                 TraitorManager = new TraitorManager(this, traitorCount);
@@ -1623,9 +1607,7 @@ namespace Barotrauma.Networking
             }
 
             if (SaveServerLogs) ServerLog.Save();
-
-            Character.Controlled = null;
-
+            
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 #if CLIENT
             myCharacter = null;
@@ -1913,16 +1895,7 @@ namespace Barotrauma.Networking
                     //msg sent by the server
                     if (senderCharacter == null)
                     {
-                        if (Character.Controlled != null && Character.Controlled.CanSpeak)
-                        {
-                            senderCharacter = Character.Controlled;
-                            senderName = Character.Controlled == null ? name : Character.Controlled.Name;
-                        }
-                        else
-                        {
-                            senderCharacter = myCharacter;
-                            senderName = myCharacter == null ? name : myCharacter.Name;
-                        }
+                        throw new InvalidOperationException();
                     }
                     else //msg sent by an AI character
                     {
@@ -2045,11 +2018,7 @@ namespace Barotrauma.Networking
             if (type.Value != ChatMessageType.MessageBox)
             {
                 string myReceivedMessage = message;
-                if (gameStarted && myCharacter != null && senderCharacter != null)
-                {
-                    myReceivedMessage = ChatMessage.ApplyDistanceEffect(message, (ChatMessageType)type, senderCharacter, myCharacter);
-                }
-
+                
                 if (!string.IsNullOrWhiteSpace(myReceivedMessage) &&
                     (targetClient == null || senderClient == null))
                 {
@@ -2085,11 +2054,7 @@ namespace Barotrauma.Networking
             }
 
             string myReceivedMessage = message.Text;
-            if (gameStarted && myCharacter != null)
-            {
-                myReceivedMessage = ChatMessage.ApplyDistanceEffect(message.Text, messageType, message.Sender, myCharacter);
-            }
-
+            
             if (!string.IsNullOrWhiteSpace(myReceivedMessage))
             {
                 AddChatMessage(myReceivedMessage, ChatMessageType.Order, message.SenderName, message.Sender);
@@ -2331,23 +2296,7 @@ namespace Barotrauma.Networking
 
             int teamID = 0;
             if (unassigned.Count > 0) teamID = unassigned[0].TeamID;
-
-            if (assignHost)
-            {
-                if (characterInfo != null)
-                {
-                    assignedClientCount[GameMain.NetLobbyScreen.JobPreferences[0]] = 1;
-                }
-                else if (myCharacter?.Info?.Job != null && !myCharacter.IsDead)
-                {
-                    assignedClientCount[myCharacter.Info.Job.Prefab] = 1;
-                }
-            }
-            else if (myCharacter?.Info?.Job != null && !myCharacter.IsDead && myCharacter.TeamID == teamID)
-            {
-                assignedClientCount[myCharacter.Info.Job.Prefab]++;
-            }
-
+            
             //count the clients who already have characters with an assigned job
             foreach (Client c in connectedClients)
             {
@@ -2444,16 +2393,7 @@ namespace Barotrauma.Networking
             {
                 assignedPlayerCount.Add(jp, 0);
             }
-
-            if (myCharacter?.Info?.Job != null && !myCharacter.IsDead && myCharacter.TeamID == teamID)
-            {
-                assignedPlayerCount[myCharacter.Info.Job.Prefab]++;
-            }
-            else if (characterInfo?.Job != null && characterInfo.TeamID == teamID)
-            {
-                assignedPlayerCount[characterInfo?.Job.Prefab]++;
-            }
-
+            
             //count the clients who already have characters with an assigned job
             foreach (Client c in connectedClients)
             {

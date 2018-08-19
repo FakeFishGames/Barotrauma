@@ -72,7 +72,9 @@ namespace Barotrauma
             hull = Hull.FindHull(worldPosition, spawningHull);
             if (hull == null) return;
 
+#if CLIENT
             if (!isNetworkMessage && GameMain.Client != null) return;
+#endif
             
             hull.AddFireSource(this);
 
@@ -165,7 +167,9 @@ namespace Barotrauma
 
             UpdateProjSpecific(growModifier);
 
+#if CLIENT
             if (GameMain.Client != null) return;
+#endif
 
             if (size.X < 1.0f) Remove();
         }
@@ -221,7 +225,10 @@ namespace Barotrauma
 
         private void DamageItems(float deltaTime)
         {
-            if (size.X <= 0.0f || GameMain.Client != null) return;
+            if (size.X <= 0.0f) return;
+#if CLIENT
+            if (GameMain.Client != null) return;
+#endif
 
             foreach (Item item in Item.ItemList)
             {
@@ -282,7 +289,9 @@ namespace Barotrauma
             //evaporate some of the water
             hull.WaterVolume -= extinguishAmount;
 
+#if CLIENT
             if (GameMain.Client != null) return;
+#endif
 
             if (size.X < 1.0f) Remove();
         }
@@ -313,7 +322,9 @@ namespace Barotrauma
 
             hull.WaterVolume -= extinguishAmount;
 
+#if CLIENT
             if (GameMain.Client != null) return;
+#endif
 
             if (size.X < 1.0f) Remove();
         }

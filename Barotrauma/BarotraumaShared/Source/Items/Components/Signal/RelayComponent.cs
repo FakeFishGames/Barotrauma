@@ -81,7 +81,9 @@ namespace Barotrauma.Items.Components
 
         public void SetState(bool on, bool isNetworkMessage)
         {
+#if CLIENT
             if (GameMain.Client != null && !isNetworkMessage) return;
+#endif
 
 #if SERVER
             if (on != IsOn && GameMain.Server != null)

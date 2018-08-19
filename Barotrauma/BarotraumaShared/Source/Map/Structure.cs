@@ -650,7 +650,14 @@ namespace Barotrauma
             }
 #endif
 
-            if (GameMain.Client == null) SetDamage(sectionIndex, section.damage + damage, attacker);
+#if CLIENT
+            if (GameMain.Client == null)
+            {
+#endif
+                SetDamage(sectionIndex, section.damage + damage, attacker);
+#if CLIENT
+            }
+#endif
         }
 
         public int FindSectionIndex(Vector2 displayPos)
@@ -882,12 +889,19 @@ namespace Barotrauma
             if (attacker != null && damageDiff != 0.0f)
             {
                 AdjustKarma(attacker, damageDiff);
-                if (damageDiff < 0.0f && GameMain.Client == null)
+#if CLIENT
+                if (GameMain.Client == null)
                 {
-                    attacker.Info.IncreaseSkillLevel("mechanical", 
-                        -damageDiff * SkillIncreaseMultiplier / Math.Max(attacker.GetSkillLevel("mechanical"), 1.0f),
-                        SectionPosition(sectionIndex, true));                                    
+#endif
+                    if (damageDiff < 0.0f)
+                    {
+                        attacker.Info.IncreaseSkillLevel("mechanical", 
+                            -damageDiff * SkillIncreaseMultiplier / Math.Max(attacker.GetSkillLevel("mechanical"), 1.0f),
+                            SectionPosition(sectionIndex, true));                                    
+                    }
+#if CLIENT
                 }
+#endif
             }
 
             bool hasHole = SectionBodyDisabled(sectionIndex);

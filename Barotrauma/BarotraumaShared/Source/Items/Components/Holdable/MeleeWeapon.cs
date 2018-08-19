@@ -261,8 +261,10 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
             }
-            
+
+#if CLIENT
             if (GameMain.Client != null) return true;
+#endif
 
 #if SERVER
             if (GameMain.Server != null && targetCharacter != null) //TODO: Log structure hits

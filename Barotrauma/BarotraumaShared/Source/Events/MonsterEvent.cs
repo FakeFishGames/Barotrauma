@@ -220,16 +220,23 @@ namespace Barotrauma
 
                 for (int i = 0; i < amount; i++)
                 {
+                    bool isClient = false;
+#if CLIENT
+                    isClient = GameMain.Client != null;
+#endif
+
                     monsters[i] = Character.Create(
                         characterFile, spawnPos + Rand.Vector(100.0f, Rand.RandSync.Server), 
-                        i.ToString(), null, GameMain.Client != null, true, true);
+                        i.ToString(), null, isClient, true, true);
                 }
 
                 spawnPending = false;
             }
 
-            Entity targetEntity = Character.Controlled != null ? 
-                (Entity)Character.Controlled : Submarine.FindClosest(GameMain.GameScreen.Cam.WorldViewCenter);
+            Entity targetEntity = Submarine.FindClosest(GameMain.GameScreen.Cam.WorldViewCenter);
+#if CLIENT
+            if (Character.Controlled != null) targetEntity=(Entity)Character.Controlled;
+#endif
             
             bool monstersDead = true;
             foreach (Character monster in monsters)

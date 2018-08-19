@@ -379,7 +379,10 @@ namespace Barotrauma.Items.Components
 
         private void MeltDown()
         {
-            if (item.Condition <= 0.0f || GameMain.Client != null) return;
+            if (item.Condition <= 0.0f) return;
+#if CLIENT
+            if (GameMain.Client != null) return;
+#endif
 
 #if SERVER
             GameServer.Log("Reactor meltdown!", ServerLog.MessageType.ItemInteraction);
@@ -414,7 +417,9 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
+#if CLIENT
             if (GameMain.Client != null) return false;
+#endif
 
             float degreeOfSuccess = DegreeOfSuccess(character);
 

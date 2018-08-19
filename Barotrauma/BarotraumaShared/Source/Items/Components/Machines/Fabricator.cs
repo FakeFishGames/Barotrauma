@@ -314,7 +314,12 @@ namespace Barotrauma.Items.Components
                 Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, containers[1].Inventory, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition);
             }
 
-            if (GameMain.Client == null && user != null)
+            bool isNotClient = true;
+#if CLIENT
+            isNotClient = GameMain.Client == null;
+#endif
+
+            if (isNotClient && user != null)
             {
                 foreach (Skill skill in fabricatedItem.RequiredSkills)
                 {

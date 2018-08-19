@@ -200,7 +200,9 @@ namespace Barotrauma
             get { return condition; }
             set 
             {
+#if CLIENT
                 if (GameMain.Client != null) return;
+#endif
                 if (!MathUtils.IsValid(value)) return;
                 if (prefab.Indestructible) return;
 
@@ -971,7 +973,9 @@ namespace Barotrauma
 
         private bool OnCollision(Fixture f1, Fixture f2, Contact contact)
         {
+#if CLIENT
             if (GameMain.Client != null) return true;
+#endif
 
             Vector2 normal = contact.Manifold.LocalNormal;
             
@@ -1220,7 +1224,10 @@ namespace Barotrauma
 
                 if (tempRequiredSkill != null) requiredSkill = tempRequiredSkill;
 
-                bool showUiMsg = picker == Character.Controlled && Screen.Selected != GameMain.SubEditorScreen;
+                bool showUiMsg = false;
+#if CLIENT
+                showUiMsg = picker == Character.Controlled && Screen.Selected != GameMain.SubEditorScreen;
+#endif
                 if (!ignoreRequiredItems && !ic.HasRequiredItems(picker, showUiMsg)) continue;
                 if ((ic.CanBePicked && pickHit && ic.Pick(picker)) ||
                     (ic.CanBeSelected && selectHit && ic.Select(picker)))
@@ -1273,7 +1280,11 @@ namespace Barotrauma
 
             foreach (ItemComponent ic in components)
             {
-                if (!ic.HasRequiredContainedItems(character == Character.Controlled)) continue;
+                bool isControlled = false;
+#if CLIENT
+                isControlled = character == Character.Controlled;
+#endif
+                if (!ic.HasRequiredContainedItems(isControlled)) continue;
                 if (ic.Use(deltaTime, character))
                 {
                     ic.WasUsed = true;
@@ -1302,7 +1313,11 @@ namespace Barotrauma
 
             foreach (ItemComponent ic in components)
             {
-                if (!ic.HasRequiredContainedItems(character == Character.Controlled)) continue;
+                bool isControlled = false;
+#if CLIENT
+                isControlled = character == Character.Controlled;
+#endif
+                if (!ic.HasRequiredContainedItems(isControlled)) continue;
                 if (ic.SecondaryUse(deltaTime, character))
                 {
                     ic.WasUsed = true;

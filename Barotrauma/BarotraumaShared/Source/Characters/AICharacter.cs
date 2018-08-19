@@ -56,7 +56,7 @@ namespace Barotrauma
                     //get the distance from the closest player to this character
                     foreach (Character c in CharacterList)
                     {
-                        if (c != this && (c.IsRemotePlayer || c == GameMain.Server.Character))
+                        if (c != this && c.IsRemotePlayer)
                         {
                             float dist = Vector2.DistanceSquared(c.WorldPosition, WorldPosition);
                             if (dist < characterDist)
@@ -80,8 +80,11 @@ namespace Barotrauma
             }
 
             if (IsDead || Vitality <= 0.0f || IsUnconscious || Stun > 0.0f) return;
-            if (Controlled == this || !aiController.Enabled) return;
-            
+            if (!aiController.Enabled) return;
+#if CLIENT
+            if (Controlled == this) return;
+#endif
+
             SoundUpdate(deltaTime);
 
             if (!IsRemotePlayer)

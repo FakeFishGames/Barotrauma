@@ -218,6 +218,7 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
+#if CLIENT
             if (GameMain.Client != null)
             {
                 if (memPos.Count == 0) return;
@@ -270,6 +271,7 @@ namespace Barotrauma
 
                 return;
             }
+#endif
             
             //if outside left or right edge of the level
             if (Position.X < 0 || Position.X > Level.Loaded.Size.X)

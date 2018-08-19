@@ -235,7 +235,9 @@ namespace Barotrauma.Items.Components
 
         public void Lock(bool isNetworkMessage)
         {
+#if CLIENT
             if (GameMain.Client != null && !isNetworkMessage) return;
+#endif
 
             if (dockingTarget == null)
             {
@@ -714,7 +716,9 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
+#if CLIENT
             if (GameMain.Client != null) return;
+#endif
 
             bool wasDocked = docked;
             DockingPort prevDockingTarget = dockingTarget;

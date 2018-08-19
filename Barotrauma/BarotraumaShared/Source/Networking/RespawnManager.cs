@@ -344,8 +344,10 @@ namespace Barotrauma.Networking
             foreach (Character c in Character.CharacterList)
             {
                 if (c.Submarine != respawnShuttle) continue;
-                
+
+#if CLIENT
                 if (Character.Controlled == c) Character.Controlled = null;
+#endif
                 c.Kill(CauseOfDeathType.Unknown, null, true);
                 c.Enabled = false;
                     

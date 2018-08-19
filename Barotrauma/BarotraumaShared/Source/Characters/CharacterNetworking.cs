@@ -112,9 +112,9 @@ namespace Barotrauma
         
         private void UpdateNetInput()
         {
+#if CLIENT
             if (this != Controlled)
             {
-#if CLIENT
                 if (GameMain.Client != null)
                 {
                     //freeze AI characters if more than 1 seconds have passed since last update from the server
@@ -132,7 +132,7 @@ namespace Barotrauma
                 }
 #endif
 #if SERVER
-                if (GameMain.Server != null && (!(this is AICharacter) || IsRemotePlayer))
+            if (GameMain.Server != null && (!(this is AICharacter) || IsRemotePlayer))
                 {
                     if (!AllowInput)
                     {
@@ -202,8 +202,8 @@ namespace Barotrauma
                     }
                 }
 #endif
-            }
 #if CLIENT
+            }
             else if (GameMain.Client != null)
             {
                 var posInfo = new CharacterStateInfo(
@@ -278,11 +278,14 @@ namespace Barotrauma
         
         private void WriteStatus(NetBuffer msg)
         {
+#if CLIENT
+            //TODO: move to BarotraumaServer
             if (GameMain.Client != null)
             {
                 DebugConsole.ThrowError("Client attempted to write character status to a networked message");
                 return;
             }
+#endif
             
             msg.Write(IsDead);
             if (IsDead)

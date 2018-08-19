@@ -569,7 +569,12 @@ namespace Barotrauma
                 fire.Size = new Vector2(FireSize, fire.Size.Y);
             }
 
-            if (GameMain.Client == null && entity != null) //clients are not allowed to spawn items
+            bool isNotClient = true;
+#if CLIENT
+            isNotClient = GameMain.Client == null;
+#endif
+
+            if (isNotClient && entity != null) //clients are not allowed to spawn items
             {
                 foreach (ItemSpawnInfo itemSpawnInfo in spawnItems)
                 {

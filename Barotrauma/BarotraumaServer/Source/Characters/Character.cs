@@ -5,17 +5,7 @@ namespace Barotrauma
 {
     partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable
     {
-        //the Character that the player is currently controlling
-        private const Character controlled = null;
-
-        public static Character Controlled
-        {
-            get { return controlled; }
-            set
-            {
-                //do nothing
-            }
-        }
+        public static Character Controlled = null; //TODO: remove
 
         partial void InitProjSpecific(XDocument doc)
         {
@@ -30,7 +20,7 @@ namespace Barotrauma
             if (attackerClient == null) return;
 
             Client targetClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this);
-            if (targetClient != null || this == Controlled)
+            if (targetClient != null)
             {
                 if (attacker.TeamID == TeamID)
                 {

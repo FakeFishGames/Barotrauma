@@ -21,7 +21,6 @@ namespace Barotrauma
         public static GameSettings Config;
 
         public static GameServer Server;
-        public const GameClient Client = null;
         public static NetworkMember NetworkMember
         {
             get { return Server as NetworkMember; }
