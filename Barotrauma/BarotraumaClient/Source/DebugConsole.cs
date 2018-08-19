@@ -43,7 +43,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    onExecute(args);
+                    OnExecute(args);
                 }
             }
         }
@@ -53,7 +53,7 @@ namespace Barotrauma
         private static Queue<ColoredText> queuedMessages = new Queue<ColoredText>();
 
         private static GUITextBlock activeQuestionText;
-        
+
         public static bool IsOpen
         {
             get
@@ -68,7 +68,7 @@ namespace Barotrauma
 
         public static void Init()
         {
-            frame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.45f), GUI.Canvas) { MinSize = new Point(400, 300), AbsoluteOffset = new Point(10, 10) }, 
+            frame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.45f), GUI.Canvas) { MinSize = new Point(400, 300), AbsoluteOffset = new Point(10, 10) },
                 color: new Color(0.4f, 0.4f, 0.4f, 0.8f));
             var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), frame.RectTransform, Anchor.Center), style: null);
 
@@ -259,11 +259,16 @@ namespace Barotrauma
             textBlock.SetTextPos();
             var nameBlock = new GUITextBlock(new RectTransform(new Point(150, textContainer.Rect.Height), textContainer.RectTransform),
                 command.names[0], textAlignment: Alignment.TopLeft);
-            
+
             listBox.UpdateScrollBarSize();
             listBox.BarScroll = 1.0f;
 
             selectedIndex = Messages.Count;
+        }
+
+        private static void AssignOnClientExecute(string names, Action<string[]> onClientExecute)
+        {
+            commands.First(c => c.names.Intersect(names.Split('|')).Count() > 0).OnClientExecute = onClientExecute;
         }
 
         private static void InitProjectSpecific()
@@ -275,7 +280,8 @@ namespace Barotrauma
                 if (MapEntity.mapEntityList.Any(e => e is Hull || e is Gap))
                 {
                     ShowQuestionPrompt("This submarine already has hulls and/or gaps. This command will delete them. Do you want to continue? Y/N",
-                        (option) => {
+                        (option) =>
+                        {
                             if (option.ToLower() == "y") GameMain.SubEditorScreen.AutoHull();
                         });
                 }
@@ -384,9 +390,9 @@ namespace Barotrauma
                 {
                     if (item.ParentInventory != null || item.body != null) continue;
                     var lightComponent = item.GetComponent<LightComponent>();
-                    if (lightComponent != null) lightComponent.LightColor = 
+                    if (lightComponent != null) lightComponent.LightColor =
                         new Color(
-                            (lightComponent.LightColor.R / 255.0f) * (color.R / 255.0f), 
+                            (lightComponent.LightColor.R / 255.0f) * (color.R / 255.0f),
                             (lightComponent.LightColor.G / 255.0f) * (color.G / 255.0f),
                             (lightComponent.LightColor.B / 255.0f) * (color.B / 255.0f),
                             (lightComponent.LightColor.A / 255.0f) * (color.A / 255.0f));
@@ -609,7 +615,7 @@ namespace Barotrauma
                         destinationElement.AddAfterSelf(element);
                     }
                     XNode nextNode = destinationElement.NextNode;
-                    while ((!(nextNode is XElement) || nextNode == element) && nextNode != null) nextNode = nextNode.NextNode;                    
+                    while ((!(nextNode is XElement) || nextNode == element) && nextNode != null) nextNode = nextNode.NextNode;
                     destinationElement = nextNode as XElement;
                 }
                 destinationDoc.Save(destinationPath);
@@ -728,6 +734,210 @@ namespace Barotrauma
                 }
             }));
 
+            AssignOnClientExecute(
+                "giveperm",
+                (string[] args) =>
+                {
+                    if (args.Length < 1) return;
+
+                    if (!int.TryParse(args[0], out int id))
+                    {
+                        ThrowError("\"" + id + "\" is not a valid client ID.");
+                        return;
+                    }
+
+                    NewMessage("Valid permissions are:", Color.White);
+                    NewMessage(" - all", Color.White);
+                    foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                    {
+                        NewMessage(" - " + permission.ToString(), Color.White);
+                    }
+                    ShowQuestionPrompt("Permission to grant to client #" + id + "?", (perm) =>
+                    {
+                        GameMain.Client.SendConsoleCommand("giveperm " + id + " " + perm);
+                    });
+                }
+            );
+
+            AssignOnClientExecute(
+                "revokeperm",
+                (string[] args) =>
+                {
+                    if (args.Length < 1) return;
+
+                    if (!int.TryParse(args[0], out int id))
+                    {
+                        ThrowError("\"" + id + "\" is not a valid client ID.");
+                        return;
+                    }
+
+                    NewMessage("Valid permissions are:", Color.White);
+                    NewMessage(" - all", Color.White);
+                    foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                    {
+                        NewMessage(" - " + permission.ToString(), Color.White);
+                    }
+
+                    ShowQuestionPrompt("Permission to revoke from client #" + id + "?", (perm) =>
+                    {
+                        GameMain.Client.SendConsoleCommand("revokeperm " + id + " " + perm);
+                    });
+                }
+            );
+
+            AssignOnClientExecute(
+                "giverank",
+                (string[] args) =>
+                {
+                    if (args.Length < 1) return;
+
+                    if (!int.TryParse(args[0], out int id))
+                    {
+                        ThrowError("\"" + id + "\" is not a valid client ID.");
+                        return;
+                    }
+
+                    NewMessage("Valid ranks are:", Color.White);
+                    foreach (PermissionPreset permissionPreset in PermissionPreset.List)
+                    {
+                        NewMessage(" - " + permissionPreset.Name, Color.White);
+                    }
+                    ShowQuestionPrompt("Rank to grant to client #" + id + "?", (rank) =>
+                    {
+                        GameMain.Client.SendConsoleCommand("giverank " + id + " " + rank);
+                    });
+                }
+            );
+
+            AssignOnClientExecute(
+                "givecommandperm",
+                (string[] args) =>
+                {
+                    if (args.Length < 1) return;
+
+                    if (!int.TryParse(args[0], out int id))
+                    {
+                        ThrowError("\"" + id + "\" is not a valid client ID.");
+                        return;
+                    }
+
+                    ShowQuestionPrompt("Console command permissions to grant to client #" + id + "? You may enter multiple commands separated with a space.", (commandNames) =>
+                    {
+                        GameMain.Client.SendConsoleCommand("givecommandperm " + id + " " + commandNames);
+                    });
+                }
+            );
+
+            AssignOnClientExecute(
+                "revokecommandperm",
+                (string[] args) =>
+                {
+                    //TODO: revoke lol
+                    if (args.Length < 1) return;
+
+                    if (!int.TryParse(args[0], out int id))
+                    {
+                        ThrowError("\"" + id + "\" is not a valid client ID.");
+                        return;
+                    }
+
+                    ShowQuestionPrompt("Console command permissions to grant to client #" + id + "? You may enter multiple commands separated with a space.", (commandNames) =>
+                    {
+                        GameMain.Client.SendConsoleCommand("givecommandperm " + id + " " + commandNames);
+                    });
+                }
+            );
+
+            AssignOnClientExecute(
+                "showperm",
+                (string[] args) =>
+                {
+                    if (args.Length < 1) return;
+
+                    if (!int.TryParse(args[0], out int id))
+                    {
+                        ThrowError("\"" + id + "\" is not a valid client ID.");
+                        return;
+                    }
+
+                    GameMain.Client.SendConsoleCommand("showperm " + id);
+                }
+            );
+
+            AssignOnClientExecute(
+                "banip",
+                (string[] args) =>
+                {
+                    if (GameMain.Client == null || args.Length == 0) return;
+                    ShowQuestionPrompt("Reason for banning the ip \"" + args[0] + "\"?", (reason) =>
+                    {
+                        ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\")", (duration) =>
+                        {
+                            TimeSpan? banDuration = null;
+                            if (!string.IsNullOrWhiteSpace(duration))
+                            {
+                                if (!TryParseTimeSpan(duration, out TimeSpan parsedBanDuration))
+                                {
+                                    ThrowError("\"" + duration + "\" is not a valid ban duration. Use the format \"[days] d [hours] h\", \"[days] d\" or \"[hours] h\".");
+                                    return;
+                                }
+                                banDuration = parsedBanDuration;
+                            }
+
+                            GameMain.Client.SendConsoleCommand(
+                                "banip " +
+                                args[0] + " " +
+                                (banDuration.HasValue ? banDuration.Value.TotalSeconds.ToString() : "0") + " " +
+                                reason);
+                        });
+                    });
+                }
+            );
+
+            AssignOnClientExecute(
+                "campaigndestination|setcampaigndestination",
+                (string[] args) =>
+                {
+                    var campaign = GameMain.GameSession?.GameMode as CampaignMode;
+                    if (campaign == null)
+                    {
+                        ThrowError("No campaign active!");
+                        return;
+                    }
+
+                    if (args.Length == 0)
+                    {
+                        int i = 0;
+                        foreach (LocationConnection connection in campaign.Map.CurrentLocation.Connections)
+                        {
+                            NewMessage("     " + i + ". " + connection.OtherLocation(campaign.Map.CurrentLocation).Name, Color.White);
+                            i++;
+                        }
+                        ShowQuestionPrompt("Select a destination (0 - " + (campaign.Map.CurrentLocation.Connections.Count - 1) + "):", (string selectedDestination) =>
+                        {
+                            int destinationIndex = -1;
+                            if (!int.TryParse(selectedDestination, out destinationIndex)) return;
+                            if (destinationIndex < 0 || destinationIndex >= campaign.Map.CurrentLocation.Connections.Count)
+                            {
+                                NewMessage("Index out of bounds!", Color.Red);
+                                return;
+                            }
+                            GameMain.Client.SendConsoleCommand("campaigndestination " + destinationIndex);
+                        });
+                    }
+                    else
+                    {
+                        int destinationIndex = -1;
+                        if (!int.TryParse(args[0], out destinationIndex)) return;
+                        if (destinationIndex < 0 || destinationIndex >= campaign.Map.CurrentLocation.Connections.Count)
+                        {
+                            NewMessage("Index out of bounds!", Color.Red);
+                            return;
+                        }
+                        GameMain.Client.SendConsoleCommand("campaigndestination " + destinationIndex);
+                    }
+                }
+            );
         }
     }
 }
