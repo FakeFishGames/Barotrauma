@@ -50,8 +50,6 @@ namespace Barotrauma
 
         public static GameSession GameSession;
 
-        public static NetworkMember NetworkMember;
-
         public static ParticleManager ParticleManager;
         public static DecalManager DecalManager;
 
@@ -107,15 +105,11 @@ namespace Barotrauma
         {
             get { return Instance == null || Instance.IsActive; }
         }
-
-        public static GameServer Server
+        
+        public static GameClient Client;
+        public static NetworkMember NetworkMember
         {
-            get { return NetworkMember as GameServer; }
-        }
-
-        public static GameClient Client
-        {
-            get { return NetworkMember as GameClient; }
+            get { return Client; }
         }
 
         public static RasterizerState ScissorTestEnable
@@ -504,9 +498,9 @@ namespace Barotrauma
 
                     Screen.Selected.AddToGUIUpdateList();
 
-                    if (NetworkMember != null)
+                    if (Client != null)
                     {
-                        NetworkMember.AddToGUIUpdateList();
+                        Client.AddToGUIUpdateList();
                     }
 
                     DebugConsole.AddToGUIUpdateList();
