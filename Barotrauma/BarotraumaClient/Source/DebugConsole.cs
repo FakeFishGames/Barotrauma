@@ -525,19 +525,23 @@ namespace Barotrauma
 
                 for (int i = 0; i < msgCount; i++)
                 {
+#if SERVER
                     if (GameMain.Server != null)
                     {
                         GameMain.Server.SendChatMessage(ToolBox.RandomSeed(msgLength), ChatMessageType.Default);
                     }
-                    else if (GameMain.Client != null)
+#endif
+#if CLIENT
+                    if (GameMain.Client != null)
                     {
                         GameMain.Client.SendChatMessage(ToolBox.RandomSeed(msgLength));
                     }
+#endif
                 }
             }));
 #endif
 
-            commands.Add(new Command("dumptexts", "dumptexts [filepath]: Extracts all the texts from the given text xml and writes them into a file (using the same filename, but with the .txt extension). If the filepath is omitted, the EnglishVanilla.xml file is used.", (string[] args) =>
+                    commands.Add(new Command("dumptexts", "dumptexts [filepath]: Extracts all the texts from the given text xml and writes them into a file (using the same filename, but with the .txt extension). If the filepath is omitted, the EnglishVanilla.xml file is used.", (string[] args) =>
             {
                 string filePath = args.Length > 0 ? args[0] : "Content/Texts/EnglishVanilla.xml";
                 var doc = XMLExtensions.TryLoadXml(filePath);

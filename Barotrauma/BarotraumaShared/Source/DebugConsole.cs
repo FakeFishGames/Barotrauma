@@ -801,39 +801,6 @@ namespace Barotrauma
                 SteamManager.GetWorkshopItems(itemsReceived);
             }));
 
-            commands.Add(new Command("spamevents", "A debug command that immediately creates entity events for all items, characters and structures.", (string[] args) =>
-            {
-                foreach (Item item in Item.ItemList)
-                {
-                    for (int i = 0; i < item.components.Count; i++)
-                    {
-                        if (item.components[i] is IServerSerializable)
-                        {
-                            GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, i });
-                        }
-                        var itemContainer = item.GetComponent<ItemContainer>();
-                        if (itemContainer != null)
-                        {
-                            GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.InventoryState, 0 });
-                        }
-
-                        GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.Status });
-
-                        item.NeedsPositionUpdate = true;
-                    }
-                }
-
-                foreach (Character c in Character.CharacterList)
-                {
-                    GameMain.Server.CreateEntityEvent(c, new object[] { NetEntityEvent.Type.Status });
-                }
-
-                foreach (Structure wall in Structure.WallList)
-                {
-                    GameMain.Server.CreateEntityEvent(wall);
-                }
-            }));
-
             commands.Add(new Command("flipx", "flipx: mirror the main submarine horizontally", (string[] args) =>
             {
                 Submarine.MainSub?.FlipX();
