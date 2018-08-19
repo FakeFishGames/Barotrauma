@@ -2318,6 +2318,7 @@ namespace Barotrauma.Networking
             }
         }
 
+        //TODO: remove second parameter
         public void AssignJobs(List<Client> unassigned, bool assignHost)
         {
             unassigned = new List<Client>(unassigned);

@@ -716,26 +716,7 @@ namespace Barotrauma
 
         }
 
-        private void AdjustKarma(IDamageable attacker, float amount)
-        {
-            if (GameMain.Server != null)
-            {
-                if (Submarine == null) return;
-                if (attacker == null) return;
-                if (attacker is Character)
-                {
-                    Character attackerCharacter = attacker as Character;
-                    Barotrauma.Networking.Client attackerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == attackerCharacter);
-                    if (attackerClient != null)
-                    {
-                        if (attackerCharacter.TeamID == Submarine.TeamID)
-                        {
-                            attackerClient.Karma -= amount * 0.001f;
-                        }
-                    }
-                }
-            }
-        }
+        partial void AdjustKarma(IDamageable attacker, float amount);
 
         public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
@@ -778,10 +759,12 @@ namespace Barotrauma
 
             damage = MathHelper.Clamp(damage, 0.0f, prefab.Health);
 
+#if SERVER
             if (GameMain.Server != null && createNetworkEvent && damage != sections[sectionIndex].damage)
             {
                 GameMain.Server.CreateEntityEvent(this);
             }
+#endif
 
             bool noGaps = true;
             for (int i = 0; i < sections.Length; i++)
@@ -797,11 +780,13 @@ namespace Barotrauma
             {
                 if (sections[sectionIndex].gap != null)
                 {
+#if SERVER
                     //the structure doesn't have any other gap, log the structure being fixed
                     if (noGaps && attacker != null)
                     {
                         GameServer.Log((sections[sectionIndex].gap.IsRoomToRoom ? "Inner" : "Outer") + " wall repaired by " + attacker.Name, ServerLog.MessageType.ItemInteraction);
                     }
+#endif
 
                     DebugConsole.Log("Removing gap (ID " + sections[sectionIndex].gap.ID + ", section: " + sectionIndex + ") from wall " + ID);
 
@@ -873,11 +858,13 @@ namespace Barotrauma
                     DebugConsole.Log("Created gap (ID " + sections[sectionIndex].gap.ID + ", section: " + sectionIndex + ") on wall " + ID);
                     //AdjustKarma(attacker, 300);
 
+#if SERVER
                     //the structure didn't have any other gaps yet, log the breach
                     if (noGaps && attacker != null)
                     {
                         GameServer.Log((sections[sectionIndex].gap.IsRoomToRoom ? "Inner" : "Outer") + " wall breached by " + attacker.Name, ServerLog.MessageType.ItemInteraction);
                     }
+#endif
 #if CLIENT
                     if (CastShadow) GenerateConvexHull();
 #endif

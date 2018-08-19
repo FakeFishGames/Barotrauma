@@ -227,7 +227,9 @@ namespace Barotrauma
             }
 
             aiming = false;
-            if (character.IsRemotePlayer && GameMain.Server == null) Collider.LinearVelocity = Vector2.Zero;
+#if CLIENT
+            if (character.IsRemotePlayer) Collider.LinearVelocity = Vector2.Zero;
+#endif
         }
 
 
@@ -323,7 +325,11 @@ namespace Barotrauma
                 }
             }
 
-            if (onGround && (!character.IsRemotePlayer || GameMain.Server != null))
+            bool isNotRemote = true;
+#if CLIENT
+            isNotRemote = !character.IsRemotePlayer;
+#endif
+            if (onGround && isNotRemote)
             {
                 //move slower if collider isn't upright
                 float rotationFactor = (float)Math.Abs(Math.Cos(Collider.Rotation));
@@ -687,7 +693,11 @@ namespace Barotrauma
                 movement.Y = movement.Y - (surfaceLimiter - 1.0f) * 0.01f;
             }
 
-            if (!character.IsRemotePlayer || GameMain.Server != null)
+            bool isNotRemote = true;
+#if CLIENT
+            isNotRemote = !character.IsRemotePlayer;
+#endif
+            if (isNotRemote)
             {
                 Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement * swimSpeed, movementLerp);
             }
@@ -891,7 +901,11 @@ namespace Barotrauma
             trigger = character.SelectedConstruction.TransformTrigger(trigger);
 
             bool notClimbing = false;
-            if (character.IsRemotePlayer && GameMain.Server == null)
+            bool isNotRemote = true;
+#if CLIENT
+            isNotRemote = !character.IsRemotePlayer;
+#endif
+            if (isNotRemote)
             {
                 notClimbing = character.IsKeyDown(InputType.Left) || character.IsKeyDown(InputType.Right);
             }

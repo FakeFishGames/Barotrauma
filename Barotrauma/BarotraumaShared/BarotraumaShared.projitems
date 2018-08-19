@@ -1889,6 +1889,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\GameServerSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\OrderChatMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\DamageModifier.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\RespawnManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\SteamManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\ProcGen\PerlinNoise.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerInfo.cs" />
@@ -2024,10 +2025,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetEntityEvent\NetEntityEventManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetIdUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetworkMember.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\RespawnManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerLog.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Voting.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\WhiteList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Physics\Physics.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Physics\PhysicsBody.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\PlayerInput.cs" />

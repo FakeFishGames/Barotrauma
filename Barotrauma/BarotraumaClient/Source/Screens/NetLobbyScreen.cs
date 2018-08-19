@@ -82,7 +82,7 @@ namespace Barotrauma
         {
             get
             {
-                return GameMain.Server != null || GameMain.NetworkMember.Voting.AllowSubVoting ||
+                return GameMain.NetworkMember.Voting.AllowSubVoting ||
                     (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.SelectSub));
             }
         }
@@ -221,11 +221,12 @@ namespace Barotrauma
 
         public string AutoRestartText()
         {
+            /*TODO: fix?
             if (GameMain.Server != null)
             {
                 if (!GameMain.Server.AutoRestart || GameMain.Server.ConnectedClients.Count == 0) return "";
                 return TextManager.Get("RestartingIn") + " " + ToolBox.SecondsToReadableTime(Math.Max(GameMain.Server.AutoRestartTimer, 0));
-            }
+            }*/
 
             if (autoRestartTimer == 0.0f) return "";
             return TextManager.Get("RestartingIn") + " " + ToolBox.SecondsToReadableTime(Math.Max(autoRestartTimer, 0));
@@ -325,7 +326,7 @@ namespace Barotrauma
             var serverName = new GUITextBox(new RectTransform(new Vector2(0.3f, 0.05f), defaultModeContainer.RectTransform))
             {
                 TextGetter = GetServerName,
-                Enabled = GameMain.Server != null,
+                Enabled = false,//GameMain.Server != null,
                 OnTextChanged = ChangeServerName
             };
             clientDisabledElements.Add(serverName);
@@ -383,7 +384,7 @@ namespace Barotrauma
                 OnSelected = (GUITickBox box) =>
                 {
                     shuttleList.Enabled = box.Selected;
-                    if (GameMain.Server != null) lastUpdateID++;
+                    //if (GameMain.Server != null) lastUpdateID++;
                     return true;
                 }
             };
@@ -552,36 +553,36 @@ namespace Barotrauma
             GameMain.LightManager.LosEnabled = false;
 
             textBox.Select();
-            textBox.OnEnterPressed = GameMain.NetworkMember.EnterChatMessage;
-            textBox.OnTextChanged = GameMain.NetworkMember.TypingChatMessage;
+            textBox.OnEnterPressed = GameMain.Client.EnterChatMessage;
+            textBox.OnTextChanged = GameMain.Client.TypingChatMessage;
 
             myCharacterFrame.RectTransform.AbsoluteOffset = new Point(0, 0);
             myCharacterFrame.GetChild<GUIButton>().Visible = false;
-            
-            subList.Enabled = AllowSubSelection || GameMain.Server != null;
-            shuttleList.Enabled = AllowSubSelection || GameMain.Server != null;
+
+            subList.Enabled = AllowSubSelection;// || GameMain.Server != null;
+            shuttleList.Enabled = AllowSubSelection;// || GameMain.Server != null;
 
             modeList.Enabled = 
-                GameMain.Server != null || GameMain.NetworkMember.Voting.AllowModeVoting || 
+                GameMain.NetworkMember.Voting.AllowModeVoting || 
                 (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.SelectMode));
-            
-            ServerName = (GameMain.Server == null) ? ServerName : GameMain.Server.Name;
-            
+
+            //ServerName = (GameMain.Server == null) ? ServerName : GameMain.Server.Name;
+
             //disable/hide elements the clients are not supposed to use/see
-            clientDisabledElements.ForEach(c => c.Enabled = GameMain.Server != null);
-            clientHiddenElements.ForEach(c => c.Visible = GameMain.Server != null);
+            //TODO: is this even applicable anymore?
+            clientDisabledElements.ForEach(c => c.Enabled = false);//GameMain.Server != null);
+            clientHiddenElements.ForEach(c => c.Visible = false);//GameMain.Server != null);
             
             ShowLogButton.Visible =
-                GameMain.Server != null ||
                 (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.ServerLog));
 
             spectateButton.Visible = GameMain.Client != null && GameMain.Client.GameStarted;            
-            if (GameMain.NetworkMember.CharacterInfo != null)
+            if (GameMain.Client.CharacterInfo != null)
             {
                 TogglePlayYourself(playYourself);
-            }            
+            }
 
-            if (IsServer && GameMain.Server != null)
+            /*if (IsServer && GameMain.Server != null)
             {
                 List<Submarine> subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus)).ToList();
 
@@ -629,7 +630,8 @@ namespace Barotrauma
                 if (GameModePreset.list.Count > 0 && modeList.Selected == null) modeList.Select(0);
                 GameMain.Server.Voting.ResetVotes(GameMain.Server.ConnectedClients);
             }
-            else if (GameMain.Client != null)
+            else */
+            if (GameMain.Client != null)
             {
                 GameMain.Client.Voting.ResetVotes(GameMain.Client.ConnectedClients);
                 if (!playYourself.Selected)
@@ -646,6 +648,7 @@ namespace Barotrauma
             base.Select();
         }
 
+        /*TODO: remove?
         public void RandomizeSettings()
         {
             if (GameMain.Server == null) return;
@@ -661,7 +664,7 @@ namespace Barotrauma
                 var allowedGameModes = GameModePreset.list.FindAll(m => !m.IsSinglePlayer && m.Name != "Campaign");
                 modeList.Select(allowedGameModes[Rand.Range(0, allowedGameModes.Count)]);
             }
-        }
+        }*/
         
         public void ShowSpectateButton()
         {
@@ -779,18 +782,18 @@ namespace Barotrauma
         {
             if (tickBox.Selected)
             {
-                GameMain.NetworkMember.CharacterInfo = 
+                GameMain.Client.CharacterInfo = 
                     new CharacterInfo(Character.HumanConfigFile, GameMain.NetworkMember.Name, GameMain.Config.CharacterGender, null);
-                GameMain.NetworkMember.CharacterInfo.HeadSpriteId = GameMain.Config.CharacterHeadIndex; 
+                GameMain.Client.CharacterInfo.HeadSpriteId = GameMain.Config.CharacterHeadIndex; 
 
-                UpdatePlayerFrame(GameMain.NetworkMember.CharacterInfo);
+                UpdatePlayerFrame(GameMain.Client.CharacterInfo);
             }
             else
             {
                 playerInfoContainer.ClearChildren();
                 
-                GameMain.NetworkMember.CharacterInfo = null;
-                GameMain.NetworkMember.Character = null;
+                GameMain.Client.CharacterInfo = null;
+                GameMain.Client.Character = null;
 
                 new GUITextBlock(new RectTransform(Vector2.One, playerInfoContainer.RectTransform, Anchor.Center), 
                     TextManager.Get("PlayingAsSpectator"),
@@ -825,13 +828,14 @@ namespace Barotrauma
 
         private bool ToggleAutoRestart(GUITickBox tickBox)
         {
-            if (GameMain.Server == null) return false;
+            return false;
+            /*if (GameMain.Server == null) return false;
 
             GameMain.Server.AutoRestart = tickBox.Selected;
 
             lastUpdateID++;
 
-            return true;
+            return true;*/
         }
 
         public void SetMissionType(int missionTypeIndex)
@@ -845,7 +849,8 @@ namespace Barotrauma
 
         public bool ToggleMissionType(GUIButton button, object userData)
         {
-            if (GameMain.Server == null) return false;
+            return false;
+            /*if (GameMain.Server == null) return false;
 
             int missionTypeIndex = (int)missionTypeContainer.UserData;
             missionTypeIndex += (int)userData;
@@ -857,7 +862,7 @@ namespace Barotrauma
 
             lastUpdateID++;
 
-            return true;
+            return true;*/
         }
         
         public bool ToggleTraitorsEnabled(GUIButton button, object userData)
@@ -868,21 +873,24 @@ namespace Barotrauma
 
         public bool ChangeBotCount(GUIButton button, object userData)
         {
-            if (GameMain.Server == null) return false;
+            return false;
+            /*if (GameMain.Server == null) return false;
             SetBotCount(GameMain.Server.BotCount + (int)userData);
-            return true;
+            return true;*/
         }
 
         public bool ChangeBotSpawnMode(GUIButton button, object userData)
         {
-            if (GameMain.Server == null) return false;
+            return false;
+            /*if (GameMain.Server == null) return false;
             SetBotSpawnMode(GameMain.Server.BotSpawnMode == BotSpawnMode.Fill ? BotSpawnMode.Normal : BotSpawnMode.Fill);
-            return true;
+            return true;*/
         }
 
         private bool SelectSub(GUIComponent component, object obj)
         {
-            if (GameMain.Server == null) return false;
+            return false;
+            /*if (GameMain.Server == null) return false;
 
             lastUpdateID++;
 
@@ -914,17 +922,17 @@ namespace Barotrauma
 
             StartButton.Enabled = true;
 
-            return true;
+            return true;*/
         }
 
         public void UpdateSubList(GUIComponent subList, List<Submarine> submarines)
         {
             if (subList == null) return;
             
-            if (submarines.Count == 0 && GameMain.Server != null)
+            /*if (submarines.Count == 0 && GameMain.Server != null)
             {
                 DebugConsole.ThrowError("No submarines found!");
-            }
+            }*/
              
             foreach (Submarine sub in submarines)
             {
@@ -1054,20 +1062,22 @@ namespace Barotrauma
 
         public bool ChangeServerName(GUITextBox textBox, string text)
         {
-            if (GameMain.Server == null) return false;
+            return false;
+            /*if (GameMain.Server == null) return false;
             ServerName = text;
             lastUpdateID++;
 
-            return true;
+            return true;*/
         }
 
         public bool UpdateServerMessage(GUITextBox textBox, string text)
         {
-            if (GameMain.Server == null) return false;
+            return false;
+            /*if (GameMain.Server == null) return false;
 
             lastUpdateID++;
 
-            return true;
+            return true;*/
         }
 
         public void AddPlayer(string name)
@@ -1078,14 +1088,14 @@ namespace Barotrauma
                 UserData = name
             };
 
-            if (GameMain.Server != null) lastUpdateID++;
+            //if (GameMain.Server != null) lastUpdateID++;
         }
 
         public void RemovePlayer(string name)
         {
             GUIComponent child = playerList.Content.GetChildByUserData(name);
             if (child != null) playerList.RemoveChild(child);
-            if (GameMain.Server != null) lastUpdateID++;
+            //if (GameMain.Server != null) lastUpdateID++;
         }
 
         private bool SelectPlayer(GUIComponent component, object obj)
@@ -1106,7 +1116,7 @@ namespace Barotrauma
             }
 
             playerFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.6f);
-            var playerFrameInner = new GUIFrame(new RectTransform(GameMain.Server != null ? new Point(450, 370) : new Point(450, 150), playerFrame.RectTransform, Anchor.Center));
+            var playerFrameInner = new GUIFrame(new RectTransform(/*GameMain.Server != null ? new Point(450, 370) : */new Point(450, 150), playerFrame.RectTransform, Anchor.Center));
             var paddedPlayerFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), playerFrameInner.RectTransform, Anchor.Center))
             {
                 Stretch = true,
@@ -1116,7 +1126,7 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), 
                 text: obj.ToString(), font: GUI.LargeFont);
 
-            if (GameMain.Server != null)
+            /*if (GameMain.Server != null)
             {
                 playerFrame.UserData = selectedClient;
 
@@ -1242,12 +1252,12 @@ namespace Barotrauma
                         return true;
                     };
                 }
-            }
+            } TODO: this is a lot*/
 
             var buttonAreaUpper = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true);
             var buttonAreaLower = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true);
             
-            if (GameMain.Server != null || GameMain.Client.HasPermission(ClientPermissions.Ban))
+            if (GameMain.Client.HasPermission(ClientPermissions.Ban))
             {
                 var banButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform),
                     TextManager.Get("Ban"))
@@ -1278,7 +1288,7 @@ namespace Barotrauma
                 };
             }
 
-            if (GameMain.Server != null || GameMain.Client.HasPermission(ClientPermissions.Kick))
+            if (GameMain.Client.HasPermission(ClientPermissions.Kick))
             {
                 var kickButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
                     TextManager.Get("Kick"))
@@ -1309,21 +1319,21 @@ namespace Barotrauma
         public bool KickPlayer(GUIButton button, object userData)
         {
             if (userData == null || GameMain.NetworkMember == null) return false;
-            GameMain.NetworkMember.CreateKickReasonPrompt(userData.ToString(), false);            
+            GameMain.Client.CreateKickReasonPrompt(userData.ToString(), false);            
             return false;
         }
 
         public bool BanPlayer(GUIButton button, object userData)
         {
             if (userData == null || GameMain.NetworkMember == null) return false;
-            GameMain.NetworkMember.CreateKickReasonPrompt(userData.ToString(), true);
+            GameMain.Client.CreateKickReasonPrompt(userData.ToString(), true);
             return false;
         }
 
         public bool BanPlayerRange(GUIButton button, object userData)
         {
             if (userData == null || GameMain.NetworkMember == null) return false;
-            GameMain.NetworkMember.CreateKickReasonPrompt(userData.ToString(), true, true);
+            GameMain.Client.CreateKickReasonPrompt(userData.ToString(), true, true);
             return false;
         }
 
@@ -1331,7 +1341,7 @@ namespace Barotrauma
         {
             playerList.ClearChildren();
 
-            if (GameMain.Server != null) lastUpdateID++;
+            //if (GameMain.Server != null) lastUpdateID++;
         }
 
         public override void AddToGUIUpdateList()
@@ -1410,21 +1420,21 @@ namespace Barotrauma
 
         private bool ToggleHead(GUIButton button, object userData)
         {
-            if (GameMain.NetworkMember.CharacterInfo == null) return true;
+            if (GameMain.Client.CharacterInfo == null) return true;
 
             int dir = (int)userData;
-            GameMain.NetworkMember.CharacterInfo.HeadSpriteId += dir;
-            GameMain.Config.CharacterHeadIndex = GameMain.NetworkMember.CharacterInfo.HeadSpriteId;
-            UpdatePlayerHead(GameMain.NetworkMember.CharacterInfo);
+            GameMain.Client.CharacterInfo.HeadSpriteId += dir;
+            GameMain.Config.CharacterHeadIndex = GameMain.Client.CharacterInfo.HeadSpriteId;
+            UpdatePlayerHead(GameMain.Client.CharacterInfo);
             return true;
         }
 
         private bool SwitchGender(GUIButton button, object obj)
         {
             Gender gender = (Gender)obj;
-            GameMain.NetworkMember.CharacterInfo.Gender = gender;
-            GameMain.Config.CharacterGender = GameMain.NetworkMember.CharacterInfo.Gender;
-            UpdatePlayerHead(GameMain.NetworkMember.CharacterInfo);
+            GameMain.Client.CharacterInfo.Gender = gender;
+            GameMain.Config.CharacterGender = GameMain.Client.CharacterInfo.Gender;
+            UpdatePlayerHead(GameMain.Client.CharacterInfo);
             return true;
         }
 
@@ -1434,11 +1444,11 @@ namespace Barotrauma
 
             if (((GameModePreset)modeList.Content.GetChild(modeIndex).UserData).Name == "Campaign")
             {
-                if (GameMain.Server != null)
+                /*if (GameMain.Server != null)
                 {
                     campaignSetupUI = MultiPlayerCampaign.StartCampaignSetup();
                     return;
-                }
+                }*/
             }
             else
             {
@@ -1462,11 +1472,11 @@ namespace Barotrauma
             {
                 //campaign selected and the campaign view has not been set up yet
                 // -> don't select the mode yet and start campaign setup
-                if (GameMain.Server != null && !campaignContainer.Visible)
+                /*if (GameMain.Server != null && !campaignContainer.Visible)
                 {
                     campaignSetupUI = MultiPlayerCampaign.StartCampaignSetup();
                     return false;
-                }
+                }*/
             }
             else
             {
@@ -1489,10 +1499,10 @@ namespace Barotrauma
 
             subList.Enabled = !enabled && AllowSubSelection;
             shuttleList.Enabled = !enabled && AllowSubSelection;
-            seedBox.Enabled = !enabled && GameMain.Server != null;
+            seedBox.Enabled = false;//!enabled && GameMain.Server != null;
 
             if (campaignViewButton != null) campaignViewButton.Visible = enabled;
-            if (StartButton != null) StartButton.Visible = !enabled && GameMain.Server != null;            
+            if (StartButton != null) StartButton.Visible = false;//!enabled && GameMain.Server != null;            
 
             if (enabled)
             {
@@ -1502,7 +1512,7 @@ namespace Barotrauma
 
                     campaignUI = new CampaignUI(GameMain.GameSession.GameMode as CampaignMode, campaignContainer)
                     {
-                        StartRound = () => { GameMain.Server.StartGame(); }
+                        StartRound = null//TODO: shdkjshdf //() => { GameMain.Server.StartGame(); }
                     };
 
                     var backButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.1f), campaignContainer.RectTransform),
@@ -1542,15 +1552,16 @@ namespace Barotrauma
                 modeList.Select(2, true);
             }
 
-            if (GameMain.Server != null)
+            /*if (GameMain.Server != null)
             {
                 lastUpdateID++;
-            }
+            }*/
         }
 
         private bool SelectSeed(GUITextBox textBox, string seed)
         {
-            if (GameMain.Server == null) return false;
+            return false;
+            //if (GameMain.Server == null) return false;
             if (string.IsNullOrWhiteSpace(seed)) return false;
             LevelSeed = seed;
             return true;

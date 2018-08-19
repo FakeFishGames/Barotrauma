@@ -113,11 +113,13 @@ namespace Barotrauma
             if (entity is Character)
             {
                 Character character = entity as Character;
+#if SERVER
                 if (GameMain.Server != null)
                 {
                     Client client = GameMain.Server.ConnectedClients.Find(c => c.Character == character);
                     if (client != null) GameMain.Server.SetClientCharacter(client, null);
                 }
+#endif
             }            
 
             removeQueue.Enqueue(entity);
@@ -136,14 +138,6 @@ namespace Barotrauma
             }
         }
 
-        public void CreateNetworkEvent(Entity entity, bool remove)
-        {
-            if (GameMain.Server != null && entity != null)
-            {
-                GameMain.Server.CreateEntityEvent(this, new object[] { new SpawnOrRemove(entity, remove) });
-            }
-        }
-
         public void Update()
         {
             if (GameMain.Client != null) return;
@@ -155,7 +149,9 @@ namespace Barotrauma
                 var spawnedEntity = entitySpawnInfo.Spawn();
                 if (spawnedEntity != null)
                 {
+#if SERVER
                     CreateNetworkEvent(spawnedEntity, false);
+#endif
                     if (spawnedEntity is Item)
                     {
                         ((Item)spawnedEntity).Condition = ((ItemSpawnInfo)entitySpawnInfo).Condition;
@@ -167,40 +163,14 @@ namespace Barotrauma
             {
                 var removedEntity = removeQueue.Dequeue();
 
+#if SERVER
                 if (GameMain.Server != null)
                 {
                     CreateNetworkEvent(removedEntity, true);
                 }
+#endif
 
                 removedEntity.Remove();
-            }
-        }
-
-        public void ServerWrite(Lidgren.Network.NetBuffer message, Client client, object[] extraData = null)
-        {
-            if (GameMain.Server == null) return;
-
-            SpawnOrRemove entities = (SpawnOrRemove)extraData[0];
-            
-            message.Write(entities.Remove);
-
-            if (entities.Remove)
-            {
-                message.Write(entities.Entity.ID);
-            }
-            else
-            {
-                if (entities.Entity is Item)
-                {
-                    message.Write((byte)SpawnableType.Item);
-                    ((Item)entities.Entity).WriteSpawnData(message);
-                }
-                else if (entities.Entity is Character)
-                {
-                    message.Write((byte)SpawnableType.Character);
-                    DebugConsole.NewMessage("WRITING CHARACTER DATA: " + (entities.Entity).ToString() + " (ID: " + entities.Entity.ID + ")", Color.Cyan);
-                    ((Character)entities.Entity).WriteSpawnData(message);
-                }
             }
         }
     }

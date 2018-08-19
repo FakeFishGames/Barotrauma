@@ -50,6 +50,7 @@ namespace Barotrauma
             if (!IsRemotePlayer)
             {
                 float characterDist = Vector2.DistanceSquared(cam.WorldViewCenter, WorldPosition);
+#if SERVER
                 if (GameMain.Server != null)
                 {
                     //get the distance from the closest player to this character
@@ -66,6 +67,7 @@ namespace Barotrauma
                         }
                     }
                 }
+#endif
 
                 if (characterDist > EnableSimplePhysicsDistSqr)
                 {

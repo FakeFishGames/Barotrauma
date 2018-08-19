@@ -561,7 +561,7 @@ namespace Barotrauma
         {
             try
             {
-                GameMain.NetworkMember = new GameClient(clientNameBox.Text);
+                GameMain.Client = new GameClient(clientNameBox.Text);
                 GameMain.Client.ConnectToServer(ip);             
             }
 

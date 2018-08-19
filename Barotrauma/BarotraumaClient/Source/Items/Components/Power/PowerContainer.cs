@@ -44,16 +44,20 @@ namespace Barotrauma.Items.Components
                     if (Math.Abs(newRechargeSpeed - rechargeSpeed) < 0.1f) return false;
 
                     RechargeSpeed = newRechargeSpeed;
+#if SERVER
                     if (GameMain.Server != null)
                     {
                         item.CreateServerEvent(this);
                         GameServer.Log(Character.Controlled.LogName + " set the recharge speed of " + item.Name + " to " + (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", ServerLog.MessageType.ItemInteraction);
                     }
-                    else if (GameMain.Client != null)
+#endif
+#if CLIENT
+                    if (GameMain.Client != null)
                     {
                         item.CreateClientEvent(this);
                         correctionTimer = CorrectionDelay;
                     }
+#endif
                     return true;
                 }
             };

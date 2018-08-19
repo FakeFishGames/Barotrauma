@@ -232,7 +232,7 @@ namespace Barotrauma
             if (GameMode != null)
             {
                 GameMode.MsgBox();
-                /*TODO: idk what this does
+                /*TODO: fix
                 if (GameMode is MultiPlayerCampaign mpCampaign && GameMain.Server != null)
                 {
                     mpCampaign.CargoManager.CreateItems();

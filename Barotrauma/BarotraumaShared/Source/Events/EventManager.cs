@@ -213,12 +213,14 @@ namespace Barotrauma
             foreach (Character character in Character.CharacterList)
             {
                 if (character.IsDead) continue;
+#if CLIENT
                 if ((character.AIController is HumanAIController || character.IsRemotePlayer ||  character == Character.Controlled) &&
-                    (GameMain.NetworkMember?.Character == null || GameMain.NetworkMember.Character.TeamID == character.TeamID))
+                    (GameMain.Client?.Character == null || GameMain.Client.Character.TeamID == character.TeamID))
                 {
                     avgCrewHealth += character.Vitality / character.MaxVitality * (character.IsUnconscious ? 0.5f : 1.0f);
                     characterCount++;
                 }
+#endif
             }
             if (characterCount > 0)
             {

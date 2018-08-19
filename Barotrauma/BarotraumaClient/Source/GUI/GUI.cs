@@ -309,7 +309,7 @@ namespace Barotrauma
 
             if (HUDLayoutSettings.DebugDraw) HUDLayoutSettings.Draw(spriteBatch);
 
-            if (GameMain.NetworkMember != null) GameMain.NetworkMember.Draw(spriteBatch);
+            if (GameMain.Client != null) GameMain.Client.Draw(spriteBatch);
 
             if (Character.Controlled?.Inventory != null)
             {
@@ -1138,10 +1138,10 @@ namespace Barotrauma
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
 
-            if (GameMain.NetworkMember != null)
+            if (GameMain.Client != null)
             {
-                GameMain.NetworkMember.Disconnect();
-                GameMain.NetworkMember = null;
+                GameMain.Client.Disconnect();
+                GameMain.Client = null;
             }
 
             CoroutineManager.StopCoroutines("EndCinematic");

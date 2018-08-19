@@ -241,10 +241,12 @@ namespace Barotrauma
                 if (item.Position.Y < position.Y - size.Y || item.Position.Y > hull.Rect.Y) continue;
 
                 item.ApplyStatusEffects(ActionType.OnFire, deltaTime);
+#if SERVER
                 if (item.Condition <= 0.0f && GameMain.Server != null)
                 {
                     GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFire });
                 }
+#endif
             }
         }
 

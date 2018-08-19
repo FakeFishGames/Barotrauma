@@ -171,6 +171,7 @@ namespace Barotrauma.Items.Components
                 
         public override void Update(float deltaTime, Camera cam)
         {
+#if SERVER
             if (GameMain.Server != null && nextServerLogWriteTime != null)
             {
                 if (Timing.TotalTime >= (float)nextServerLogWriteTime)
@@ -186,6 +187,7 @@ namespace Barotrauma.Items.Components
                     lastServerLogWriteTime = (float)Timing.TotalTime;
                 }
             }
+#endif
 
             prevAvailableFuel = AvailableFuel;
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
@@ -289,12 +291,14 @@ namespace Barotrauma.Items.Components
 
             if (unsentChanges && sendUpdateTimer <= 0.0f)
             {
+#if SERVER
                 if (GameMain.Server != null)
                 {
                     item.CreateServerEvent(this);
                 }
+#endif
 #if CLIENT
-                else if (GameMain.Client != null)
+                if (GameMain.Client != null)
                 {
                     item.CreateClientEvent(this);
                 }
@@ -377,7 +381,9 @@ namespace Barotrauma.Items.Components
         {
             if (item.Condition <= 0.0f || GameMain.Client != null) return;
 
+#if SERVER
             GameServer.Log("Reactor meltdown!", ServerLog.MessageType.ItemInteraction);
+#endif
 
             item.Condition = 0.0f;
             fireTimer = 0.0f;
@@ -392,11 +398,13 @@ namespace Barotrauma.Items.Components
                     containedItem.Condition = 0.0f;
                 }
             }
-            
+
+#if SERVER
             if (GameMain.Server != null && GameMain.Server.ConnectedClients.Contains(BlameOnBroken))
             {
                 BlameOnBroken.Karma = 0.0f;
-            }            
+            }
+#endif
         }
 
         public override bool Pick(Character picker)

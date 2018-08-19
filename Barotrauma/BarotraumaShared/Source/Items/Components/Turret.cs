@@ -240,14 +240,17 @@ namespace Barotrauma.Items.Components
 
                 battery.Charge -= takePower / 3600.0f;
 
+#if SERVER
                 if (GameMain.Server != null)
                 {
                     battery.Item.CreateServerEvent(battery);
                 }
+#endif
             }
          
             Launch(projectiles[0].Item, character);
 
+#if SERVER
             if (character != null)
             {
                 string msg = character.LogName + " launched " + item.Name + " (projectile: " + projectiles[0].Item.Name;
@@ -261,6 +264,7 @@ namespace Barotrauma.Items.Components
                 }
                 GameServer.Log(msg, ServerLog.MessageType.ItemInteraction);
             }
+#endif
 
             return true;
         }
@@ -287,10 +291,12 @@ namespace Barotrauma.Items.Components
 
             if (projectile.Container != null) projectile.Container.RemoveContained(projectile);
 
+#if SERVER
             if (GameMain.Server != null)
             {
                 GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.components.IndexOf(this), projectile });
             }
+#endif
 
             LaunchProjSpecific();
         }

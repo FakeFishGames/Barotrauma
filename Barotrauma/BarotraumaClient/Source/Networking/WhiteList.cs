@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿#if FALSE
+//TODO: fix
+using Microsoft.Xna.Framework;
 using System.Linq;
 
 namespace Barotrauma.Networking
@@ -147,3 +149,4 @@ namespace Barotrauma.Networking
         }
     }
 }
+#endif

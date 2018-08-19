@@ -98,7 +98,9 @@ namespace Barotrauma.Items.Components
                     //throw upwards if cursor is at the position of the character
                     if (!MathUtils.IsValid(throwVector)) throwVector = Vector2.UnitY;
 
+#if SERVER
                     GameServer.Log(picker.LogName + " threw " + item.Name, ServerLog.MessageType.ItemInteraction);
+#endif
 
                     item.Drop();
                     item.body.ApplyLinearImpulse(throwVector * throwForce * item.body.Mass * 3.0f);

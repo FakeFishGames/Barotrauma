@@ -165,10 +165,10 @@ namespace Barotrauma
         {
             base.Select();
 
-            if (GameMain.NetworkMember != null)
+            if (GameMain.Client != null)
             {
-                GameMain.NetworkMember.Disconnect();
-                GameMain.NetworkMember = null;
+                GameMain.Client.Disconnect();
+                GameMain.Client = null;
             }
 
             Submarine.Unload();
@@ -332,15 +332,16 @@ namespace Barotrauma
             GameMain.NetLobbyScreen = new NetLobbyScreen();
             try
             {
-                GameMain.NetworkMember = new GameServer(name, port, queryPort, isPublicBox.Selected, passwordBox.Text, useUpnpBox.Selected, int.Parse(maxPlayersBox.Text));
+                throw new NotImplementedException();
+                //TODO: fix
+                //GameMain.NetworkMember = new GameServer(name, port, queryPort, isPublicBox.Selected, passwordBox.Text, useUpnpBox.Selected, int.Parse(maxPlayersBox.Text));
             }
-
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Failed to start server", e);
             }
 
-            GameMain.NetLobbyScreen.IsServer = true;
+            //GameMain.NetLobbyScreen.IsServer = true;
             return true;
         }
 

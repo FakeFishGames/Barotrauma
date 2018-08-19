@@ -21,10 +21,16 @@ namespace Barotrauma
             get
             {
                 string disguiseName = "?";
-                if (Character == null || !Character.HideFace || (GameMain.Server != null && !GameMain.Server.AllowDisguises))
+                if (Character == null || !Character.HideFace)
                 {
                     return Name;
                 }
+#if SERVER
+                else if ((GameMain.Server != null && !GameMain.Server.AllowDisguises))
+                {
+                    return Name;
+                }
+#endif
 #if CLIENT
                 if (GameMain.Client != null && !GameMain.Client.AllowDisguises)
                 {

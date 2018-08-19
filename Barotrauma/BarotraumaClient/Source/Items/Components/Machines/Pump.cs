@@ -34,16 +34,20 @@ namespace Barotrauma.Items.Components
                 IsActive = active;
                 if (!IsActive) currPowerConsumption = 0.0f;
 
+#if SERVER
                 if (GameMain.Server != null)
                 {
                     item.CreateServerEvent(this);
                     GameServer.Log(Character.Controlled.LogName + (IsActive ? " turned on " : " turned off ") + item.Name, ServerLog.MessageType.ItemInteraction);
                 }
-                else if (GameMain.Client != null)
+#endif
+#if CLIENT
+                if (GameMain.Client != null)
                 {
                     correctionTimer = CorrectionDelay;
                     item.CreateClientEvent(this);
                 }
+#endif
 
                 return true;
             };
@@ -77,16 +81,20 @@ namespace Barotrauma.Items.Components
                     if (Math.Abs(newValue - FlowPercentage) < 0.1f) return false;
 
                     FlowPercentage = newValue;
+#if SERVER
                     if (GameMain.Server != null)
                     {
                         item.CreateServerEvent(this);
                         GameServer.Log(Character.Controlled.LogName + " set the pumping speed of " + item.Name + " to " + (int)(flowPercentage) + " %", ServerLog.MessageType.ItemInteraction);
                     }
-                    else if (GameMain.Client != null)
+#endif
+#if CLIENT
+                    if (GameMain.Client != null)
                     {
                         correctionTimer = CorrectionDelay;
                         item.CreateClientEvent(this);
                     }
+#endif
                     return true;
                 }
             };
