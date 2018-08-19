@@ -13,7 +13,7 @@ namespace Barotrauma
     {
         private GUIFrame settingsFrame;
         private GUIButton applyButton;
-        
+
         public GUIFrame SettingsFrame
         {
             get
@@ -27,7 +27,7 @@ namespace Barotrauma
         {
             return keyMapping[(int)inputType];
         }
-        
+
         private bool ChangeParticleLimit(GUIScrollBar scrollBar, float barScroll)
         {
             UnsavedSettings = true;
@@ -93,12 +93,16 @@ namespace Barotrauma
             {
                 resolutionDD.SelectItem(GraphicsAdapter.DefaultAdapter.SupportedDisplayModes.Last());
             }
-                        
+
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("DisplayMode"));
             var displayModeDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform));
+#if (!OSX)
             displayModeDD.AddItem(TextManager.Get("Fullscreen"), WindowMode.Fullscreen);
-            displayModeDD.AddItem(TextManager.Get("Windowed"), WindowMode.Windowed);
             displayModeDD.AddItem(TextManager.Get("BorderlessWindowed"), WindowMode.BorderlessWindowed);
+#else
+            displayModeDD.AddItem(TextManager.Get("Fullscreen"), WindowMode.BorderlessWindowed);
+#endif
+            displayModeDD.AddItem(TextManager.Get("Windowed"), WindowMode.Windowed);
             displayModeDD.SelectItem(GameMain.Config.WindowMode);
             displayModeDD.OnSelected = (guiComponent, obj) => 
             {
