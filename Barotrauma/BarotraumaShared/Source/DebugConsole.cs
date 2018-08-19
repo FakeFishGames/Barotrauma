@@ -37,7 +37,7 @@ namespace Barotrauma
             public readonly string[] names;
             public readonly string help;
             
-            private Action<string[]> onExecute;
+            public Action<string[]> OnExecute;
 
             public Func<string[][]> GetValidArgs;
 
@@ -54,7 +54,7 @@ namespace Barotrauma
                 names = name.Split('|');
                 this.help = help;
 
-                this.onExecute = onExecute;
+                this.OnExecute = onExecute;
                 
                 this.GetValidArgs = getValidArgs;
                 this.IsCheat = isCheat;
@@ -62,7 +62,7 @@ namespace Barotrauma
 
             public void Execute(string[] args)
             {
-                if (onExecute == null) return;
+                if (OnExecute == null) return;
                 if (!CheatsEnabled && IsCheat)
                 {
                     NewMessage("You need to enable cheats using the command \"enablecheats\" before you can use the command \"" + names[0] + "\".", Color.Red);
@@ -73,7 +73,7 @@ namespace Barotrauma
                     return;
                 }
 
-                onExecute(args);
+                OnExecute(args);
             }
         }
 
@@ -101,7 +101,12 @@ namespace Barotrauma
         private static List<ColoredText> unsavedMessages = new List<ColoredText>();
         private static int messagesPerFile = 800;
         public const string SavePath = "ConsoleLogs";
-        
+
+        private static void AssignOnExecute(string names, Action<string[]> onExecute)
+        {
+            commands.First(c => c.names.Intersect(names.Split('|')).Count() > 0).OnExecute = onExecute;
+        }
+
         static DebugConsole()
         {
 #if DEBUG
@@ -232,376 +237,29 @@ namespace Barotrauma
                 NewMessage("Crew AI enabled", Color.White);
             }, isCheat: true));
 
-            commands.Add(new Command("botcount", "botcount [x]: Set the number of bots in the crew in multiplayer.", (string[] args) =>
-            {
-                if (args.Length < 1 || GameMain.Server == null) return;
-                int botCount = GameMain.Server.BotCount;
-                int.TryParse(args[0], out botCount);
-                GameMain.NetLobbyScreen.SetBotCount(botCount);
-                NewMessage("Set the number of bots to " + botCount, Color.White);
-            }));
+            commands.Add(new Command("botcount", "botcount [x]: Set the number of bots in the crew in multiplayer.", null));
 
-            commands.Add(new Command("botspawnmode", "botspawnmode [fill/normal]: Set how bots are spawned in the multiplayer.", (string[] args) =>
-            {
-                if (args.Length < 1 || GameMain.Server == null) return;
-                if (Enum.TryParse(args[0], true, out BotSpawnMode spawnMode))
-                {
-                    GameMain.NetLobbyScreen.SetBotSpawnMode(spawnMode);
-                    NewMessage("Set bot spawn mode to " + spawnMode, Color.White);
-                }
-                else
-                {
-                    NewMessage("\"" + args[0] + "\" is not a valid bot spawn mode. (Valid modes are Fill and Normal)", Color.White);
-                }
-            }));
+            commands.Add(new Command("botspawnmode", "botspawnmode [fill/normal]: Set how bots are spawned in the multiplayer.", null));
 
-            commands.Add(new Command("autorestart", "autorestart [true/false]: Enable or disable round auto-restart.", (string[] args) =>
-            {
-                if (GameMain.Server == null) return;
-                bool enabled = GameMain.Server.AutoRestart;
-                if (args.Length > 0)
-                {
-                    bool.TryParse(args[0], out enabled);
-                }
-                else
-                {
-                    enabled = !enabled;
-                }
-                if (enabled != GameMain.Server.AutoRestart)
-                {
-                    if (GameMain.Server.AutoRestartInterval <= 0) GameMain.Server.AutoRestartInterval = 10;
-                    GameMain.Server.AutoRestartTimer = GameMain.Server.AutoRestartInterval;
-                    GameMain.Server.AutoRestart = enabled;
-#if CLIENT
-                    GameMain.NetLobbyScreen.SetAutoRestart(enabled, GameMain.Server.AutoRestartTimer);
-#endif
-                    GameMain.NetLobbyScreen.LastUpdateID++;
-                }
-                NewMessage(GameMain.Server.AutoRestart ? "Automatic restart enabled." : "Automatic restart disabled.", Color.White);
-            }, null, null));
+            commands.Add(new Command("autorestart", "autorestart [true/false]: Enable or disable round auto-restart.", null));
 
-            commands.Add(new Command("autorestartinterval", "autorestartinterval [seconds]: Set how long the server waits between rounds before automatically starting a new one. If set to 0, autorestart is disabled.", (string[] args) =>
-            {
-                if (GameMain.Server == null) return;
-                if (args.Length > 0)
-                {
-                    if (int.TryParse(args[0], out int parsedInt))
-                    {
-                        if (parsedInt >= 0)
-                        {
-                            GameMain.Server.AutoRestart = true;
-                            GameMain.Server.AutoRestartInterval = parsedInt;
-                            if (GameMain.Server.AutoRestartTimer >= GameMain.Server.AutoRestartInterval) GameMain.Server.AutoRestartTimer = GameMain.Server.AutoRestartInterval;
-                            NewMessage("Autorestart interval set to " + GameMain.Server.AutoRestartInterval + " seconds.", Color.White);
-                        }
-                        else
-                        {
-                            GameMain.Server.AutoRestart = false;
-                            NewMessage("Autorestart disabled.", Color.White);
-                        }
-#if CLIENT
-                        GameMain.NetLobbyScreen.SetAutoRestart(GameMain.Server.AutoRestart, GameMain.Server.AutoRestartTimer);
-#endif
-                        GameMain.NetLobbyScreen.LastUpdateID++;
-                    }
-                }
-            }, null, null));
+            commands.Add(new Command("autorestartinterval", "autorestartinterval [seconds]: Set how long the server waits between rounds before automatically starting a new one. If set to 0, autorestart is disabled.", null));
 
-            commands.Add(new Command("autorestarttimer", "autorestarttimer [seconds]: Set the current autorestart countdown to the specified value.", (string[] args) =>
-            {
-                if (GameMain.Server == null) return;
-                if (args.Length > 0)
-                {
-                    if (int.TryParse(args[0], out int parsedInt))
-                    {
-                        if (parsedInt >= 0)
-                        {
-                            GameMain.Server.AutoRestart = true;
-                            GameMain.Server.AutoRestartTimer = parsedInt;
-                            if (GameMain.Server.AutoRestartInterval <= GameMain.Server.AutoRestartTimer) GameMain.Server.AutoRestartInterval = GameMain.Server.AutoRestartTimer;
-                            GameMain.NetLobbyScreen.LastUpdateID++;
-                            NewMessage("Autorestart timer set to " + GameMain.Server.AutoRestartTimer + " seconds.", Color.White);
-                        }
-                        else
-                        {
-                            GameMain.Server.AutoRestart = false;
-                            NewMessage("Autorestart disabled.", Color.White);
-                        }
-#if CLIENT
-                        GameMain.NetLobbyScreen.SetAutoRestart(GameMain.Server.AutoRestart, GameMain.Server.AutoRestartTimer);
-#endif
-                        GameMain.NetLobbyScreen.LastUpdateID++;
-                    }
-                }
-            }, null, null));
+            commands.Add(new Command("autorestarttimer", "autorestarttimer [seconds]: Set the current autorestart countdown to the specified value.", null));
 
-            commands.Add(new Command("giveperm", "giveperm [id]: Grants administrative permissions to the player with the specified client ID.", (string[] args) =>
-            {
-                if (GameMain.Server == null) return;
-                if (args.Length < 1)
-                {
-                    NewMessage("giveperm [id]: Grants administrative permissions to the player with the specified client ID.", Color.Cyan);
-                    return;
-                }
+            commands.Add(new Command("giveperm", "giveperm [id]: Grants administrative permissions to the player with the specified client ID.", null));
 
-                int.TryParse(args[0], out int id);
-                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
-                if (client == null)
-                {
-                    ThrowError("Client id \"" + id + "\" not found.");
-                    return;
-                }
+            commands.Add(new Command("revokeperm", "revokeperm [id]: Revokes administrative permissions to the player with the specified client ID.", null));
+            
+            commands.Add(new Command("giverank", "giverank [id]: Assigns a specific rank (= a set of administrative permissions) to the player with the specified client ID.", null));
 
-                NewMessage("Valid permissions are:", Color.White);
-                NewMessage(" - all", Color.White);
-                foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
-                {
-                    NewMessage(" - " + permission.ToString(), Color.White);
-                }
-                ShowQuestionPrompt("Permission to grant to \"" + client.Name + "\"?", (perm) =>
-                {
-                    ClientPermissions permission = ClientPermissions.None;
-                    if (perm.ToLower() == "all")
-                    {
-                        permission = ClientPermissions.EndRound | ClientPermissions.Kick | ClientPermissions.Ban |
-                            ClientPermissions.SelectSub | ClientPermissions.SelectMode | ClientPermissions.ManageCampaign | ClientPermissions.ConsoleCommands;
-                    }
-                    else
-                    {
-                        if (!Enum.TryParse(perm, true, out permission))
-                        {
-                            NewMessage(perm + " is not a valid permission!", Color.Red);
-                            return;
-                        }
-                    }
-                    client.GivePermission(permission);
-                    GameMain.Server.UpdateClientPermissions(client);
-                    NewMessage("Granted " + perm + " permissions to " + client.Name + ".", Color.White);
-                });
-            }));
+            commands.Add(new Command("givecommandperm", "givecommandperm [id]: Gives the player with the specified client ID the permission to use the specified console commands.", null));
 
-            commands.Add(new Command("revokeperm", "revokeperm [id]: Revokes administrative permissions to the player with the specified client ID.", (string[] args) =>
-            {
-                if (GameMain.Server == null) return;
-                if (args.Length < 1)
-                {
-                    NewMessage("revokeperm [id]: Revokes administrative permissions to the player with the specified client ID.", Color.Cyan);
-                    return;
-                }
+            commands.Add(new Command("revokecommandperm", "revokecommandperm [id]: Revokes permission to use the specified console commands from the player with the specified client ID.", null));
+            
+            commands.Add(new Command("showperm", "showperm [id]: Shows the current administrative permissions of the client with the specified client ID.", null));
 
-                int.TryParse(args[0], out int id);
-                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
-                if (client == null)
-                {
-                    ThrowError("Client id \"" + id + "\" not found.");
-                    return;
-                }
-
-                NewMessage("Valid permissions are:", Color.White);
-                NewMessage(" - all", Color.White);
-                foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
-                {
-                    NewMessage(" - " + permission.ToString(), Color.White);
-                }
-                ShowQuestionPrompt("Permission to revoke from \"" + client.Name + "\"?", (perm) =>
-                {
-                    ClientPermissions permission = ClientPermissions.None;
-                    if (perm.ToLower() == "all")
-                    {
-                        permission = ClientPermissions.EndRound | ClientPermissions.Kick | ClientPermissions.Ban |
-                            ClientPermissions.SelectSub | ClientPermissions.SelectMode | ClientPermissions.ManageCampaign | ClientPermissions.ConsoleCommands;
-                    }
-                    else
-                    {
-                        if (!Enum.TryParse(perm, true, out permission))
-                        {
-                            NewMessage(perm + " is not a valid permission!", Color.Red);
-                            return;
-                        }
-                    }
-                    client.RemovePermission(permission);
-                    GameMain.Server.UpdateClientPermissions(client);
-                    NewMessage("Revoked " + perm + " permissions from " + client.Name + ".", Color.White);
-                });
-            }));
-
-
-            commands.Add(new Command("giverank", "giverank [id]: Assigns a specific rank (= a set of administrative permissions) to the player with the specified client ID.", (string[] args) =>
-            {
-                if (GameMain.Server == null) return;
-                if (args.Length < 1)
-                {
-                    NewMessage("giverank [id]: Assigns a specific rank(= a set of administrative permissions) to the player with the specified client ID.", Color.Cyan);
-                    return;
-                }
-
-                int.TryParse(args[0], out int id);
-                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
-                if (client == null)
-                {
-                    ThrowError("Client id \"" + id + "\" not found.");
-                    return;
-                }
-
-                NewMessage("Valid ranks are:", Color.White);
-                foreach (PermissionPreset permissionPreset in PermissionPreset.List)
-                {
-                    NewMessage(" - " + permissionPreset.Name, Color.White);
-                }
-
-                ShowQuestionPrompt("Rank to grant to \"" + client.Name + "\"?", (rank) =>
-                {
-                    PermissionPreset preset = PermissionPreset.List.Find(p => p.Name.ToLowerInvariant() == rank.ToLowerInvariant());
-                    if (preset == null)
-                    {
-                        ThrowError("Rank \"" + rank + "\" not found.");
-                        return;
-                    }
-
-                    client.SetPermissions(preset.Permissions, preset.PermittedCommands);
-                    GameMain.Server.UpdateClientPermissions(client);
-                    NewMessage("Assigned the rank \"" + preset.Name + "\" to " + client.Name + ".", Color.White);
-                });
-            }));
-
-            commands.Add(new Command("givecommandperm", "givecommandperm [id]: Gives the player with the specified client ID the permission to use the specified console commands.", (string[] args) =>
-            {
-                if (GameMain.Server == null) return;
-                if (args.Length < 1)
-                {
-                    NewMessage("givecommandperm [id]: Gives the player with the specified client ID the permission to use the specified console commands.", Color.Cyan);
-                    return;
-                }
-
-                int.TryParse(args[0], out int id);
-                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
-                if (client == null)
-                {
-                    ThrowError("Client id \"" + id + "\" not found.");
-                    return;
-                }
-
-                ShowQuestionPrompt("Console command permissions to grant to \"" + client.Name + "\"? You may enter multiple commands separated with a space.", (commandsStr) =>
-                {
-                    string[] splitCommands = commandsStr.Split(' ');
-                    List<Command> grantedCommands = new List<Command>();
-                    for (int i = 0; i < splitCommands.Length; i++)
-                    {
-                        splitCommands[i] = splitCommands[i].Trim().ToLowerInvariant();
-                        Command matchingCommand = commands.Find(c => c.names.Contains(splitCommands[i]));
-                        if (matchingCommand == null)
-                        {
-                            ThrowError("Could not find the command \"" + splitCommands[i] + "\"!");
-                        }
-                        else
-                        {
-                            grantedCommands.Add(matchingCommand);
-                        }
-                    }
-
-                    client.GivePermission(ClientPermissions.ConsoleCommands);
-                    client.SetPermissions(client.Permissions, client.PermittedConsoleCommands.Union(grantedCommands).Distinct().ToList());
-                    GameMain.Server.UpdateClientPermissions(client);
-                    NewMessage("Gave the client \"" + client.Name + "\" the permission to use console commands " + string.Join(", ", grantedCommands.Select(c => c.names[0])) + ".", Color.White);
-                });
-            }));
-
-            commands.Add(new Command("revokecommandperm", "revokecommandperm [id]: Revokes permission to use the specified console commands from the player with the specified client ID.", (string[] args) =>
-            {
-                if (GameMain.Server == null) return;
-                if (args.Length < 1)
-                {
-                    NewMessage("revokecommandperm [id]: Revokes permission to use the specified console commands from the player with the specified client ID.", Color.Cyan);
-                    return;
-                }
-
-                int.TryParse(args[0], out int id);
-                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
-                if (client == null)
-                {
-                    ThrowError("Client id \"" + id + "\" not found.");
-                    return;
-                }
-
-                ShowQuestionPrompt("Console command permissions to revoke from \"" + client.Name + "\"? You may enter multiple commands separated with a space.", (commandsStr) =>
-                {
-                    string[] splitCommands = commandsStr.Split(' ');
-                    List<Command> revokedCommands = new List<Command>();
-                    for (int i = 0; i < splitCommands.Length; i++)
-                    {
-                        splitCommands[i] = splitCommands[i].Trim().ToLowerInvariant();
-                        Command matchingCommand = commands.Find(c => c.names.Contains(splitCommands[i]));
-                        if (matchingCommand == null)
-                        {
-                            ThrowError("Could not find the command \"" + splitCommands[i] + "\"!");
-                        }
-                        else
-                        {
-                            revokedCommands.Add(matchingCommand);
-                        }
-                    }
-
-                    client.SetPermissions(client.Permissions, client.PermittedConsoleCommands.Except(revokedCommands).ToList());
-                    GameMain.Server.UpdateClientPermissions(client);
-                    NewMessage("Revoked \"" + client.Name + "\"'s permission to use the console commands " + string.Join(", ", revokedCommands.Select(c => c.names[0])) + ".", Color.White);
-                });
-            }));
-
-
-            commands.Add(new Command("showperm", "showperm [id]: Shows the current administrative permissions of the client with the specified client ID.", (string[] args) =>
-            {
-                if (GameMain.Server == null) return;
-                if (args.Length < 1)
-                {
-                    NewMessage("showperm [id]: Shows the current administrative permissions of the client with the specified client ID.", Color.Cyan);
-                    return;
-                }
-
-                int.TryParse(args[0], out int id);
-                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
-                if (client == null)
-                {
-                    ThrowError("Client id \"" + id + "\" not found.");
-                    return;
-                }
-
-                if (client.Permissions == ClientPermissions.None)
-                {
-                    NewMessage(client.Name + " has no special permissions.", Color.White);
-                    return;
-                }
-
-                NewMessage(client.Name + " has the following permissions:", Color.White);
-                foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
-                {
-                    if (permission == ClientPermissions.None || !client.HasPermission(permission)) continue;
-                    System.Reflection.FieldInfo fi = typeof(ClientPermissions).GetField(permission.ToString());
-                    DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
-                    NewMessage("   - " + attributes[0].Description, Color.White);
-                }
-                if (client.HasPermission(ClientPermissions.ConsoleCommands))
-                {
-                    if (client.PermittedConsoleCommands.Count == 0)
-                    {
-                        NewMessage("No permitted console commands:", Color.White);
-                    }
-                    else
-                    {
-                        NewMessage("Permitted console commands:", Color.White);
-                        foreach (Command permittedCommand in client.PermittedConsoleCommands)
-                        {
-                            NewMessage("   - " + permittedCommand.names[0], Color.White);
-                        }
-                    }
-                }
-            }));
-
-            commands.Add(new Command("togglekarma", "togglekarma: Toggles the karma system.", (string[] args) =>
-            {
-                throw new NotImplementedException();
-                if (GameMain.Server == null) return;
-                GameMain.Server.KarmaEnabled = !GameMain.Server.KarmaEnabled;
-            }));
+            commands.Add(new Command("togglekarma", "togglekarma: Toggles the karma system.", null));
 
             commands.Add(new Command("kick", "kick [name]: Kick a player out of the server.", (string[] args) =>
             {
@@ -620,7 +278,7 @@ namespace Barotrauma
 
                 return new string[][]
                 {
-        GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray()
+                    GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray()
                 };
             }));
 
@@ -672,7 +330,7 @@ namespace Barotrauma
 
                 return new string[][]
                 {
-        GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray()
+                    GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray()
                 };
             }));
 
@@ -709,41 +367,7 @@ namespace Barotrauma
             }));
 
 
-            commands.Add(new Command("banip", "banip [ip]: Ban the IP address from the server.", (string[] args) =>
-            {
-                if (GameMain.Server == null || args.Length == 0) return;
-
-                ShowQuestionPrompt("Reason for banning the ip \"" + args[0] + "\"?", (reason) =>
-                {
-                    ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\")", (duration) =>
-                    {
-                        TimeSpan? banDuration = null;
-                        if (!string.IsNullOrWhiteSpace(duration))
-                        {
-                            if (!TryParseTimeSpan(duration, out TimeSpan parsedBanDuration))
-                            {
-                                ThrowError("\"" + duration + "\" is not a valid ban duration. Use the format \"[days] d [hours] h\", \"[days] d\" or \"[hours] h\".");
-                                return;
-                            }
-                            banDuration = parsedBanDuration;
-                        }
-
-                        var clients = GameMain.Server.ConnectedClients.FindAll(c => c.Connection.RemoteEndPoint.Address.ToString() == args[0]);
-                        if (clients.Count == 0)
-                        {
-                            GameMain.Server.BanList.BanPlayer("Unnamed", args[0], reason, banDuration);
-                        }
-                        else
-                        {
-                            foreach (Client cl in clients)
-                            {
-                                GameMain.Server.BanClient(cl, reason, false, banDuration);
-                            }
-                        }
-                    });
-                });
-            }
-            ));
+            commands.Add(new Command("banip", "banip [ip]: Ban the IP address from the server.", null));
 
             commands.Add(new Command("teleportcharacter|teleport", "teleport [character name]: Teleport the specified character to the position of the cursor. If the name parameter is omitted, the controlled character will be teleported.", (string[] args) =>
             {
@@ -760,7 +384,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-        Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
                 };
             }, isCheat: true));
 
@@ -777,19 +401,19 @@ namespace Barotrauma
                 Submarine.LockX = !Submarine.LockX;
                 Submarine.LockY = Submarine.LockX;
                 NewMessage((Submarine.LockX ? "Submarine movement locked." : "Submarine movement unlocked."), Color.White);
-            }, null, null, isCheat: true));
+            }, null, true));
 
             commands.Add(new Command("lockx", "lockx: Lock horizontal movement of the main submarine.", (string[] args) =>
             {
                 Submarine.LockX = !Submarine.LockX;
                 NewMessage((Submarine.LockX ? "Horizontal submarine movement locked." : "Horizontal submarine movement unlocked."), Color.White);
-            }, null, null, isCheat: true));
+            }, null, true));
 
             commands.Add(new Command("locky", "locky: Lock vertical movement of the main submarine.", (string[] args) =>
             {
                 Submarine.LockY = !Submarine.LockY;
                 NewMessage((Submarine.LockY ? "Vertical submarine movement locked." : "Vertical submarine movement unlocked."), Color.White);
-            }, null, null, isCheat: true));
+            }, null, true));
 
             commands.Add(new Command("dumpids", "", (string[] args) =>
             {
@@ -867,9 +491,9 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-        AfflictionPrefab.List.Select(a => a.Name).ToArray(),
-        new string[] { "1" },
-        Character.CharacterList.Select(c => c.Name).ToArray()
+                    AfflictionPrefab.List.Select(a => a.Name).ToArray(),
+                    new string[] { "1" },
+                    Character.CharacterList.Select(c => c.Name).ToArray()
                 };
             }, isCheat: true));
 
@@ -888,7 +512,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-        Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
                 };
             }, isCheat: true));
 
@@ -898,6 +522,7 @@ namespace Barotrauma
                 if (revivedCharacter == null) return;
 
                 revivedCharacter.Revive();
+#if SERVER
                 if (GameMain.Server != null)
                 {
                     foreach (Client c in GameMain.Server.ConnectedClients)
@@ -909,6 +534,7 @@ namespace Barotrauma
                         break;
                     }
                 }
+#endif
             },
             () =>
             {
@@ -985,17 +611,17 @@ namespace Barotrauma
             }, isCheat: true));
 
 #if DEBUG
-commands.Add(new Command("waterparams", "waterparams [stiffness] [spread] [damping]: defaults 0.02, 0.05, 0.05", (string[] args) =>
-{
-    Vector2 explosionPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
-    float stiffness = 0.02f, spread = 0.05f, damp = 0.01f;
-    if (args.Length > 0) float.TryParse(args[0], out stiffness);
-    if (args.Length > 1) float.TryParse(args[1], out spread);
-    if (args.Length > 2) float.TryParse(args[2], out damp);
-    Hull.WaveStiffness = stiffness;
-    Hull.WaveSpread = spread;
-    Hull.WaveDampening = damp;
-}, null));
+            commands.Add(new Command("waterparams", "waterparams [stiffness] [spread] [damping]: defaults 0.02, 0.05, 0.05", (string[] args) =>
+            {
+                Vector2 explosionPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+                float stiffness = 0.02f, spread = 0.05f, damp = 0.01f;
+                if (args.Length > 0) float.TryParse(args[0], out stiffness);
+                if (args.Length > 1) float.TryParse(args[1], out spread);
+                if (args.Length > 2) float.TryParse(args[2], out damp);
+                Hull.WaveStiffness = stiffness;
+                Hull.WaveSpread = spread;
+                Hull.WaveDampening = damp;
+            }, null));
 #endif
 
             commands.Add(new Command("fixitems", "fixitems: Repairs all items and restores them to full condition.", (string[] args) =>
@@ -1004,7 +630,7 @@ commands.Add(new Command("waterparams", "waterparams [stiffness] [spread] [dampi
                 {
                     it.Condition = it.Prefab.Health;
                 }
-            }, null, null, isCheat: true));
+            }, null, true));
 
             commands.Add(new Command("fixhulls|fixwalls", "fixwalls/fixhulls: Fixes all walls.", (string[] args) =>
             {
@@ -1015,7 +641,7 @@ commands.Add(new Command("waterparams", "waterparams [stiffness] [spread] [dampi
                         w.AddDamage(i, -100000.0f);
                     }
                 }
-            }, null, null, isCheat: true));
+            }, null, true));
 
             commands.Add(new Command("power", "power [temperature]: Immediately sets the temperature of the nuclear reactor to the specified value.", (string[] args) =>
             {
@@ -1030,11 +656,13 @@ commands.Add(new Command("waterparams", "waterparams [stiffness] [spread] [dampi
                 reactor.FissionRate = power / reactor.MaxPowerOutput * 100.0f;
                 reactor.AutoTemp = true;
 
+#if SERVER
                 if (GameMain.Server != null)
                 {
                     reactorItem.CreateServerEvent(reactor);
                 }
-            }, null, null, isCheat: true));
+#endif
+            }, null, true));
 
             commands.Add(new Command("oxygen|air", "oxygen/air: Replenishes the oxygen levels in every room to 100%.", (string[] args) =>
             {
@@ -1042,7 +670,7 @@ commands.Add(new Command("waterparams", "waterparams [stiffness] [spread] [dampi
                 {
                     hull.OxygenPercentage = 100.0f;
                 }
-            }, null, null, isCheat: true));
+            }, null, true));
 
             commands.Add(new Command("kill", "kill [character]: Immediately kills the specified character.", (string[] args) =>
             {
@@ -1053,7 +681,7 @@ commands.Add(new Command("waterparams", "waterparams [stiffness] [spread] [dampi
             {
                 return new string[][]
                 {
-        Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
                 };
             }));
 
@@ -1064,38 +692,11 @@ commands.Add(new Command("waterparams", "waterparams [stiffness] [spread] [dampi
                     if (!(c.AIController is EnemyAIController)) continue;
                     c.SetAllDamage(c.MaxVitality, 0.0f, 0.0f);
                 }
-            }, null, null, isCheat: true));
+            }, null, true));
 
-            commands.Add(new Command("netstats", "netstats: Toggles the visibility of the network statistics UI.", (string[] args) =>
-            {
-                if (GameMain.Server == null) return;
-                GameMain.Server.ShowNetStats = !GameMain.Server.ShowNetStats;
-            }));
+            commands.Add(new Command("netstats", "netstats: Toggles the visibility of the network statistics UI.", null));
 
-            commands.Add(new Command("setclientcharacter", "setclientcharacter [client name] ; [character name]: Gives the client control of the specified character.", (string[] args) =>
-            {
-                if (GameMain.Server == null) return;
-
-                int separatorIndex = Array.IndexOf(args, ";");
-                if (separatorIndex == -1 || args.Length < 3)
-                {
-                    ThrowError("Invalid parameters. The command should be formatted as \"setclientcharacter [client] ; [character]\"");
-                    return;
-                }
-
-                string[] argsLeft = args.Take(separatorIndex).ToArray();
-                string[] argsRight = args.Skip(separatorIndex + 1).ToArray();
-                string clientName = string.Join(" ", argsLeft);
-
-                var client = GameMain.Server.ConnectedClients.Find(c => c.Name == clientName);
-                if (client == null)
-                {
-                    ThrowError("Client \"" + clientName + "\" not found.");
-                }
-
-                var character = FindMatchingCharacter(argsRight, false);
-                GameMain.Server.SetClientCharacter(client, character);
-            },
+            commands.Add(new Command("setclientcharacter", "setclientcharacter [client name] ; [character name]: Gives the client control of the specified character.", null,
             () =>
             {
                 if (GameMain.NetworkMember == null) return null;
@@ -1165,83 +766,70 @@ commands.Add(new Command("waterparams", "waterparams [stiffness] [spread] [dampi
                 }
             }));
 
-            commands.Add(new Command("difficulty|leveldifficulty", "difficulty [0-100]: Change the level difficulty setting in the server lobby.", (string[] args) =>
-            {
-                if (GameMain.Server == null || args.Length < 1) return;
+            commands.Add(new Command("difficulty|leveldifficulty", "difficulty [0-100]: Change the level difficulty setting in the server lobby.", null));
 
-                if (float.TryParse(args[0], out float difficulty))
+#if DEBUG
+            commands.Add(new Command("savesubtoworkshop", "", (string[] args) =>
+            {
+                if (Submarine.MainSub == null) return;
+                SteamManager.SaveToWorkshop(Submarine.MainSub);
+            }));
+
+            commands.Add(new Command("requestworkshopsubscriptions", "", (string[] args) =>
+            {
+                void itemsReceived(IList<Facepunch.Steamworks.Workshop.Item> items)
                 {
-                    NewMessage("Set level difficulty setting to " + MathHelper.Clamp(difficulty, 0.0f, 100.0f), Color.White);
-                    GameMain.NetLobbyScreen.SetLevelDifficulty(difficulty);
+                    foreach (var item in items)
+                    {
+                        Log("*********************************");
+                        Log(item.Title);
+                        Log(item.Description);
+                        Log("Size: " + item.Size / 1024 +" kB");
+                        Log("Directory: " + item.Directory);
+                        Log("Installed: " + item.Installed);
+                    }
                 }
-                else
+
+                SteamManager.GetWorkshopItems(itemsReceived);
+            }));
+
+            commands.Add(new Command("spamevents", "A debug command that immediately creates entity events for all items, characters and structures.", (string[] args) =>
+            {
+                foreach (Item item in Item.ItemList)
                 {
-                    NewMessage(args[0] + " is not a valid difficulty setting (enter a value between 0-100)", Color.Red);
+                    for (int i = 0; i < item.components.Count; i++)
+                    {
+                        if (item.components[i] is IServerSerializable)
+                        {
+                            GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, i });
+                        }
+                        var itemContainer = item.GetComponent<ItemContainer>();
+                        if (itemContainer != null)
+                        {
+                            GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.InventoryState, 0 });
+                        }
+
+                        GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.Status });
+
+                        item.NeedsPositionUpdate = true;
+                    }
+                }
+
+                foreach (Character c in Character.CharacterList)
+                {
+                    GameMain.Server.CreateEntityEvent(c, new object[] { NetEntityEvent.Type.Status });
+                }
+
+                foreach (Structure wall in Structure.WallList)
+                {
+                    GameMain.Server.CreateEntityEvent(wall);
                 }
             }));
 
-#if DEBUG
-commands.Add(new Command("savesubtoworkshop", "", (string[] args) =>
-{
-    if (Submarine.MainSub == null) return;
-    SteamManager.SaveToWorkshop(Submarine.MainSub);
-}));
-
-commands.Add(new Command("requestworkshopsubscriptions", "", (string[] args) =>
-{
-    void itemsReceived(IList<Facepunch.Steamworks.Workshop.Item> items)
-    {
-        foreach (var item in items)
-        {
-            Log("*********************************");
-            Log(item.Title);
-            Log(item.Description);
-            Log("Size: " + item.Size / 1024 +" kB");
-            Log("Directory: " + item.Directory);
-            Log("Installed: " + item.Installed);
-        }
-    }
-
-    SteamManager.GetWorkshopItems(itemsReceived);
-}));
-
-commands.Add(new Command("spamevents", "A debug command that immediately creates entity events for all items, characters and structures.", (string[] args) =>
-{
-    foreach (Item item in Item.ItemList)
-    {
-        for (int i = 0; i < item.components.Count; i++)
-        {
-            if (item.components[i] is IServerSerializable)
+            commands.Add(new Command("flipx", "flipx: mirror the main submarine horizontally", (string[] args) =>
             {
-                GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, i });
-            }
-            var itemContainer = item.GetComponent<ItemContainer>();
-            if (itemContainer != null)
-            {
-                GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.InventoryState, 0 });
-            }
-
-            GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.Status });
-
-            item.NeedsPositionUpdate = true;
-        }
-    }
-
-    foreach (Character c in Character.CharacterList)
-    {
-        GameMain.Server.CreateEntityEvent(c, new object[] { NetEntityEvent.Type.Status });
-    }
-
-    foreach (Structure wall in Structure.WallList)
-    {
-        GameMain.Server.CreateEntityEvent(wall);
-    }
-}));
-
-commands.Add(new Command("flipx", "flipx: mirror the main submarine horizontally", (string[] args) =>
-{
-    Submarine.MainSub?.FlipX();
-}));
+                Submarine.MainSub?.FlipX();
+            }));
 #endif
 
             InitProjectSpecific();
@@ -1464,51 +1052,7 @@ commands.Add(new Command("flipx", "flipx: mirror the main submarine horizontally
                 ThrowError("Command \"" + splitCommand[0] + "\" not found.");
             }
         }
-
-        public static void ExecuteClientCommand(Client client, Vector2 cursorWorldPos, string command)
-        {
-            if (GameMain.Server == null) return;
-            if (string.IsNullOrWhiteSpace(command)) return;
-            if (!client.HasPermission(ClientPermissions.ConsoleCommands))
-            {
-                GameMain.Server.SendConsoleMessage("You are not permitted to use console commands!", client);
-                GameServer.Log(client.Name + " attempted to execute the console command \"" + command + "\" without a permission to use console commands.", ServerLog.MessageType.ConsoleUsage);
-                return;
-            }
-
-            string[] splitCommand = SplitCommand(command);
-            Command matchingCommand = commands.Find(c => c.names.Contains(splitCommand[0].ToLowerInvariant()));
-            if (matchingCommand != null && !client.PermittedConsoleCommands.Contains(matchingCommand))
-            {
-                GameMain.Server.SendConsoleMessage("You are not permitted to use the command\"" + matchingCommand.names[0] + "\"!", client);
-                GameServer.Log(client.Name + " attempted to execute the console command \"" + command + "\" without a permission to use the command.", ServerLog.MessageType.ConsoleUsage);
-                return;
-            }
-            else if (matchingCommand == null)
-            {
-                GameMain.Server.SendConsoleMessage("Command \"" + splitCommand[0] + "\" not found.", client);
-                return;
-            }
-
-            if (!MathUtils.IsValid(cursorWorldPos))
-            {
-                GameMain.Server.SendConsoleMessage("Could not execute command \"" + command + "\" - invalid cursor position.", client);
-                NewMessage(client.Name + " attempted to execute the console command \"" + command + "\" with invalid cursor position.", Color.White);
-                return;
-            }
-
-            try
-            {
-                matchingCommand.ServerExecuteOnClientRequest(client, cursorWorldPos, splitCommand.Skip(1).ToArray());
-                GameServer.Log("Console command \"" + command + "\" executed by " + client.Name + ".", ServerLog.MessageType.ConsoleUsage);
-            }
-            catch (Exception e)
-            {
-                ThrowError("Executing the command \"" + matchingCommand.names[0] + "\" by request from \"" + client.Name + "\" failed.", e);
-            }
-        }
-
-
+        
         private static Character FindMatchingCharacter(string[] args, bool ignoreRemotePlayers = false)
         {
             if (args.Length == 0) return null;
@@ -1686,6 +1230,7 @@ commands.Add(new Command("flipx", "flipx: mirror the main submarine horizontally
             ItemPrefab itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
             if (itemPrefab == null && extraParams == 0)
             {
+#if SERVER
                 if (GameMain.Server != null)
                 {
                     var client = GameMain.Server.ConnectedClients.Find(c => c.Name.ToLower() == args.Last().ToLower());
@@ -1697,6 +1242,7 @@ commands.Add(new Command("flipx", "flipx: mirror the main submarine horizontally
                         itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
                     }
                 }
+#endif
             }
             //Check again if the item can be found again after having checked for a character
             if (itemPrefab == null)
