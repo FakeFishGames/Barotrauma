@@ -35,11 +35,7 @@ namespace Barotrauma
             }
             else if (body.UserData is Limb || body == Collider.FarseerBody)
             {
-                bool isNotRemote = true;
-#if CLIENT
-                isNotRemote = !character.IsRemotePlayer;
-#endif
-                if (isNotRemote)
+                if (!character.IsRemotePlayer)
                 {
                     if (impact > ImpactTolerance)
                     {

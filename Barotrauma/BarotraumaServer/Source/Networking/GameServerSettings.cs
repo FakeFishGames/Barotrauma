@@ -356,16 +356,10 @@ namespace Barotrauma.Networking
             doc.Root.SetAttributeValue("AllowedRandomMissionTypes", string.Join(",", AllowedRandomMissionTypes));
 
             doc.Root.SetAttributeValue("AllowedClientNameChars", string.Join(",", AllowedClientNameChars.Select(c => c.First + "-" + c.Second)));
-
-#if SERVER
+            
             doc.Root.SetAttributeValue("password", password);
-#endif
 
-            if (GameMain.NetLobbyScreen != null
-#if CLIENT
-                && GameMain.NetLobbyScreen.ServerMessage != null
-#endif
-                )
+            if (GameMain.NetLobbyScreen != null)
             {
                 doc.Root.SetAttributeValue("ServerMessage", GameMain.NetLobbyScreen.ServerMessageText);
             }
@@ -396,12 +390,6 @@ namespace Barotrauma.Networking
             SerializableProperties = SerializableProperty.DeserializeProperties(this, doc.Root);
 
             AutoRestart = doc.Root.GetAttributeBool("autorestart", false);
-#if CLIENT
-            if (autoRestart)
-            {
-                GameMain.NetLobbyScreen.SetAutoRestart(autoRestart, AutoRestartInterval);
-            }
-#endif
 
             subSelectionMode = SelectionMode.Manual;
             Enum.TryParse(doc.Root.GetAttributeString("SubSelection", "Manual"), out subSelectionMode);
@@ -465,27 +453,17 @@ namespace Barotrauma.Networking
                 }
             }
 
-            if (GameMain.NetLobbyScreen != null
-#if CLIENT
-                && GameMain.NetLobbyScreen.ServerMessage != null
-#endif
-                )
+            if (GameMain.NetLobbyScreen != null)
             {
-#if SERVER
                 GameMain.NetLobbyScreen.ServerName = doc.Root.GetAttributeString("name", "");
                 GameMain.NetLobbyScreen.SelectedModeName = GameMode;
                 GameMain.NetLobbyScreen.MissionTypeName = MissionType;
-#endif
                 GameMain.NetLobbyScreen.ServerMessageText = doc.Root.GetAttributeString("ServerMessage", "");
             }
 
             GameMain.NetLobbyScreen.SetBotSpawnMode(BotSpawnMode);
             GameMain.NetLobbyScreen.SetBotCount(BotCount);
-
-#if CLIENT
-            showLogButton.Visible = SaveServerLogs;
-#endif
-
+            
             List<string> monsterNames = GameMain.Instance.GetFilesOfType(ContentType.Character).ToList();
             for (int i = 0; i < monsterNames.Count; i++)
             {

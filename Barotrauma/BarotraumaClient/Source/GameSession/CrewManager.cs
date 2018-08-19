@@ -555,18 +555,10 @@ namespace Barotrauma
                 else
                 {
                     OrderChatMessage msg = new OrderChatMessage(order, "", orderGiver.CurrentHull, null, orderGiver);
-#if CLIENT
                     if (GameMain.Client != null)
                     {
                         GameMain.Client.SendChatMessage(msg);
                     }
-#endif
-#if SERVER
-                    if (GameMain.Server != null)
-                    {
-                        GameMain.Server.SendOrderChatMessage(msg);
-                    }
-#endif
                 }
                 return;
             }
@@ -580,18 +572,10 @@ namespace Barotrauma
             else if (orderGiver != null)
             {
                 OrderChatMessage msg = new OrderChatMessage(order, option, order.TargetItemComponent?.Item, character, orderGiver);
-#if CLIENT
                 if (GameMain.Client != null)
                 {
                     GameMain.Client.SendChatMessage(msg);
                 }
-#endif
-#if SERVER
-                if (GameMain.Server != null)
-                {
-                    GameMain.Server.SendOrderChatMessage(msg);
-                }
-#endif
             }
             DisplayCharacterOrder(character, order);
         }
