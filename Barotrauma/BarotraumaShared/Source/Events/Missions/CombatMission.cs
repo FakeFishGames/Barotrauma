@@ -200,11 +200,13 @@ namespace Barotrauma
                     }
                 }
 
+#if CLIENT
                 if (GameMain.Client != null)
                 {
                     //no characters in one of the teams, the client may not have received all spawn messages yet
                     if (crews[0].Count == 0 || crews[1].Count == 0) return;
                 }
+#endif
 
                 initialized = true;
             }

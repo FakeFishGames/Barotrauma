@@ -269,14 +269,21 @@ namespace Barotrauma.Items.Components
 
                         user.AnimController.Collider.ApplyForce(pullBackDir * user.Mass * 50.0f);
                         user.AnimController.UpdateUseItem(true, user.SimPosition + pullBackDir * 2.0f);
-                        if (currLength > MaxLength * 1.5f && GameMain.Client == null)
+#if CLIENT
+                        if (GameMain.Client == null)
                         {
-                            ClearConnections();
-#if SERVER
-                            CreateNetworkEvent();
 #endif
-                            return;
+                            if (currLength > MaxLength * 1.5f)
+                            {
+                                ClearConnections();
+#if SERVER
+                                CreateNetworkEvent();
+#endif
+                                return;
+                            }
+#if CLIENT
                         }
+#endif
                     }
                 }
             }
@@ -290,7 +297,9 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null) return false;
+#if CLIENT
             if (character == Character.Controlled && character.SelectedConstruction != null) return false;
+#endif
 
             if (newNodePos != Vector2.Zero && canPlaceNode && nodes.Count > 0 && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
             {

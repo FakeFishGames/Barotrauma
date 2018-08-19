@@ -124,7 +124,9 @@ namespace Barotrauma.Items.Components
 
             UpdateFixAnimation(CurrentFixer);
 
+#if CLIENT
             if (GameMain.Client != null) return;
+#endif
 
             float successFactor = requiredSkills.Count == 0 ? 1.0f : 0.0f;
             foreach (Skill skill in requiredSkills)

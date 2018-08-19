@@ -486,6 +486,7 @@ namespace Barotrauma.Items.Components
         {
             if (isStuck || (predictedState == null && isOpen == open) || (predictedState != null && isOpen == predictedState.Value)) return;
 
+#if CLIENT
             if (GameMain.Client != null && !isNetworkMessage)
             {
                 bool stateChanged = open != predictedState;
@@ -495,18 +496,17 @@ namespace Barotrauma.Items.Components
                 //sent by the server, or reverting it back to its old state if no msg from server was received
                 predictedState = open;
                 resetPredictionTimer = CorrectionDelay;
-#if CLIENT
                 if (stateChanged) PlaySound(ActionType.OnUse, item.WorldPosition);
-#endif
-
             }
             else
             {
+#endif
                 isOpen = open;
 #if CLIENT
                 if (!isNetworkMessage || open != predictedState) PlaySound(ActionType.OnUse, item.WorldPosition);
-#endif
             }
+#endif
+
 
             //opening a partially stuck door makes it less stuck
             if (isOpen) stuck = MathHelper.Clamp(stuck - 30.0f, 0.0f, 100.0f);

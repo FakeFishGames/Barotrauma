@@ -324,7 +324,9 @@ namespace Barotrauma
             get { return IsRagdolled ? 1.0f : CharacterHealth.StunTimer; }
             set
             {
+#if CLIENT
                 if (GameMain.Client != null) return;
+#endif
 
                 SetStun(value, true);
             }
@@ -745,7 +747,7 @@ namespace Barotrauma
         public bool IsKeyHit(InputType inputType)
         {
 #if SERVER
-            if (GameMain.Server != null && Controlled != this)
+            if (GameMain.Server != null)
             {
                 switch (inputType)
                 {
@@ -781,7 +783,7 @@ namespace Barotrauma
         public bool IsKeyDown(InputType inputType)
         {
 #if SERVER
-            if (GameMain.Server != null && Character.Controlled != this)
+            if (GameMain.Server != null)
             {
                 switch (inputType)
                 {
@@ -923,7 +925,7 @@ namespace Barotrauma
             ViewTarget = null;
             if (!AllowInput) return;
 
-            if (!(this is AICharacter) || controlled == this || IsRemotePlayer)
+            if (!(this is AICharacter) || IsRemotePlayer)
             {
                 Vector2 targetMovement = GetTargetMovement();
 
@@ -954,7 +956,7 @@ namespace Barotrauma
             }
 
 #if SERVER
-            if (GameMain.Server != null && Character.Controlled != this)
+            if (GameMain.Server != null)
             {
                 if (dequeuedInput.HasFlag(InputNetFlags.FacingLeft))
                 {
@@ -1455,7 +1457,10 @@ namespace Barotrauma
 
         public void DoInteractionUpdate(float deltaTime, Vector2 mouseSimPos)
         {
-            bool isLocalPlayer = (controlled == this);
+            bool isLocalPlayer = false;
+#if CLIENT
+            isLocalPlayer = (controlled == this);
+#endif
             if (!isLocalPlayer && (this is AICharacter && !IsRemotePlayer))
             {
                 return;
@@ -1503,9 +1508,13 @@ namespace Barotrauma
             if (SelectedConstruction == null && !AnimController.InWater)
             {
                 bool climbInput = IsKeyDown(InputType.Up) || IsKeyDown(InputType.Down);
-                
+                bool isControlled = false;
+#if CLIENT
+                isControlled = Controlled == this;
+#endif
+
                 Ladder nearbyLadder = null;
-                if (Controlled == this || climbInput)
+                if (isControlled || climbInput)
                 {
                     float minDist = float.PositiveInfinity;
                     foreach (Ladder ladder in Ladder.List)
@@ -1515,7 +1524,7 @@ namespace Barotrauma
                         {
                             minDist = dist;
                             nearbyLadder = ladder;
-                            if (Controlled == this) ladder.Item.IsHighlighted = true;
+                            if (isControlled) ladder.Item.IsHighlighted = true;
                             break;
                         }
                     }
@@ -1544,16 +1553,16 @@ namespace Barotrauma
             }
             else if (focusedItem != null)
             {
+#if CLIENT
                 if (Controlled == this)
                 {
                     focusedItem.IsHighlighted = true;
                 }
                 if (focusedItem.TryInteract(this))
                 {
-#if CLIENT
                     if (Controlled == this) CharacterHealth.OpenHealthWindow = null;
-#endif
                 }
+#endif
             }
             else if (IsKeyHit(InputType.Select) && SelectedConstruction != null)
             {
@@ -1600,11 +1609,10 @@ namespace Barotrauma
                 {
                     //disable AI characters that are far away from all clients and the host's character and not controlled by anyone
                     c.Enabled =
-                        c == controlled ||
                         c.IsRemotePlayer ||
                         CharacterList.Any(c2 =>
                             c != c2 &&
-                            (c2.IsRemotePlayer || c2 == GameMain.Server.Character) &&
+                            (c2.IsRemotePlayer) &&
                             Vector2.DistanceSquared(c2.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr);
                 }
             }
@@ -1620,7 +1628,9 @@ namespace Barotrauma
         {
             UpdateProjSpecific(deltaTime, cam);
 
+#if CLIENT
             if (GameMain.Client != null && this == Controlled && !isSynced) return;
+#endif
 
             if (!Enabled) return;
 
@@ -1679,12 +1689,16 @@ namespace Barotrauma
 
                     if (PressureTimer >= 100.0f)
                     {
+#if CLIENT
                         if (controlled == this) cam.Zoom = 5.0f;
                         if (GameMain.Client == null)
                         {
+#endif
                             Implode();
                             return;
+#if CLIENT
                         }
+#endif
                     }
                 }
                 else
@@ -1738,7 +1752,13 @@ namespace Barotrauma
             //AI and control stuff
 
             Control(deltaTime, cam);
-            if (controlled != this && (!(this is AICharacter) || IsRemotePlayer))
+
+            bool isNotControlled = true;
+#if CLIENT
+            isNotControlled = controlled != this;
+#endif
+
+            if (isNotControlled && (!(this is AICharacter) || IsRemotePlayer))
             {
                 Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
                 DoInteractionUpdate(deltaTime, mouseSimPos);
@@ -1821,7 +1841,9 @@ namespace Barotrauma
 
         public void Speak(string message, ChatMessageType? messageType, float delay = 0.0f, string identifier = "", float minDurationBetweenSimilar = 0.0f)
         {
+#if CLIENT
             if (GameMain.Client != null) return;
+#endif
 
             //already sent a similar message a moment ago
             if (!string.IsNullOrEmpty(identifier) && minDurationBetweenSimilar > 0.0f &&
@@ -1836,7 +1858,9 @@ namespace Barotrauma
 
         private void UpdateAIChatMessages(float deltaTime)
         {
+#if CLIENT
             if (GameMain.Client != null) return;
+#endif
 
             List<AIChatMessage> sentMessages = new List<AIChatMessage>();
             foreach (AIChatMessage message in aiChatMessageQueue)
@@ -1932,7 +1956,12 @@ namespace Barotrauma
             }
 #endif
 
-            if (GameMain.Client == null &&
+            bool isNotClient = true;
+#if CLIENT
+            isNotClient = GameMain.Client == null;
+#endif
+
+            if (isNotClient &&
                 IsDead && Rand.Range(0.0f, 1.0f) < attack.SeverLimbsProbability)
             {
                 foreach (LimbJoint joint in AnimController.LimbJoints)
@@ -2016,7 +2045,9 @@ namespace Barotrauma
 
         public void SetStun(float newStun, bool allowStunDecrease = false, bool isNetworkMessage = false)
         {
+#if CLIENT
             if (GameMain.Client != null && !isNetworkMessage) return;
+#endif
             
             if ((newStun <= Stun && !allowStunDecrease) || !MathUtils.IsValid(newStun)) return;
             
@@ -2040,10 +2071,12 @@ namespace Barotrauma
 
         private void Implode(bool isNetworkMessage = false)
         {
+#if CLIENT
             if (!isNetworkMessage)
             {
                 if (GameMain.Client != null) return; 
             }
+#endif
 
             Kill(CauseOfDeathType.Pressure, null, isNetworkMessage);
             CharacterHealth.PressureAffliction.Strength = CharacterHealth.PressureAffliction.Prefab.MaxStrength;
@@ -2078,11 +2111,13 @@ namespace Barotrauma
         {
             if (IsDead) return;
 
+#if CLIENT
             //clients aren't allowed to kill characters unless they receive a network message
             if (!isNetworkMessage && GameMain.Client != null)
             {
                 return;
             }
+#endif
 
             ApplyStatusEffects(ActionType.OnDeath, 1.0f);
 
@@ -2102,9 +2137,13 @@ namespace Barotrauma
             if (GameSettings.SendUserStatistics)
             {
                 string characterType = "Unknown";
+#if CLIENT
                 if (this == controlled)
                     characterType = "Player";
                 else if (IsRemotePlayer)
+#elif SERVER
+                if (IsRemotePlayer)
+#endif
                     characterType = "RemotePlayer";
                 else if (AIController is EnemyAIController)
                     characterType = "Enemy";

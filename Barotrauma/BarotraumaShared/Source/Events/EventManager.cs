@@ -57,7 +57,9 @@ namespace Barotrauma
 
         public void StartRound(Level level)
         {
+#if CLIENT
             if (GameMain.Client != null) return;
+#endif
 
             var suitableSettings = EventManagerSettings.List.FindAll(s =>
                 level.Difficulty >= s.MinLevelDifficulty &&
@@ -173,8 +175,10 @@ namespace Barotrauma
             //clients only calculate the intensity but don't create any events
             //(the intensity is used for controlling the background music)
             CalculateCurrentIntensity(deltaTime);
-            
+
+#if CLIENT
             if (GameMain.Client != null) return;
+#endif
 
             roundDuration += deltaTime;
 

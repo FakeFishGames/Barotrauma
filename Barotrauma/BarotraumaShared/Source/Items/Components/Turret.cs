@@ -212,7 +212,9 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
+#if CLIENT
             if (GameMain.Client != null) return false;
+#endif
 
             if (reload > 0.0f) return false;
             

@@ -2,6 +2,9 @@
 {
     abstract partial class NetworkMember
     {
-        //TODO: REMOVE
+        public Character Character
+        {
+            get { return null; }
+        }
     }
 }

@@ -47,7 +47,10 @@ namespace Barotrauma
 
         public static void Update(float deltaTime)
         {
-            if (GameMain.GameSession == null || GameMain.Client != null) return;
+            if (GameMain.GameSession == null) return;
+#if CLIENT
+            if (GameMain.Client != null) return;
+#endif
 
             updateTimer -= deltaTime;
             if (updateTimer > 0.0f) return;
@@ -114,7 +117,10 @@ namespace Barotrauma
 
         public static void OnItemRepaired(Item item, Character fixer)
         {
-            if (GameMain.Client != null || fixer == null) return;
+#if CLIENT
+            if (GameMain.Client != null) return;
+#endif
+            if (fixer == null) return;
             
             UnlockAchievement(fixer, "repairdevice");
             UnlockAchievement(fixer, "repair" + item.Prefab.Identifier);
@@ -124,19 +130,26 @@ namespace Barotrauma
         {
             if (string.IsNullOrEmpty(affliction.Prefab.AchievementOnRemoved)) return;
 
-            if (GameMain.Client != null) return;            
+#if CLIENT
+            if (GameMain.Client != null) return;
+#endif
             UnlockAchievement(character, affliction.Prefab.AchievementOnRemoved);
         }
 
         public static void OnCharacterRevived(Character character, Character reviver)
         {
-            if (reviver == null || GameMain.Client != null) return;
+#if CLIENT
+            if (GameMain.Client != null) return;
+#endif
+            if (reviver == null) return;
             UnlockAchievement(reviver, "healcrit");
         }
 
         public static void OnCharacterKilled(Character character, CauseOfDeath causeOfDeath)
         {
+#if CLIENT
             if (GameMain.Client != null) return;
+#endif
 
             roundData.Casualties.Add(character);
 
@@ -193,15 +206,19 @@ namespace Barotrauma
 
         public static void OnRoundEnded(GameSession gameSession)
         {
+#if CLIENT
             if (GameMain.Client != null) return;
+#endif
 
             if (gameSession.Mission != null)
             {
                 if (gameSession.Mission is CombatMission combatMission)
                 {
+#if CLIENT
                     //all characters that are alive and in the winning team get an achievement
                     UnlockAchievement(gameSession.Mission.Prefab.AchievementIdentifier + Character.Controlled.TeamID, true, 
                         c => c != null && !c.IsDead && !c.IsUnconscious && combatMission.IsInWinningTeam(c));
+#endif
                 }
                 else
                 {
@@ -247,15 +264,14 @@ namespace Barotrauma
         {
             if (CheatsEnabled) return;
             if (recipient == null) return;
+#if CLIENT
             if (recipient == Character.Controlled)
             {
                 UnlockAchievement(identifier);
             }
+#endif
 #if SERVER
-            else
-            {
-                GameMain.Server?.GiveAchievement(recipient, identifier);
-            }
+            GameMain.Server?.GiveAchievement(recipient, identifier);
 #endif
         }
         
@@ -278,7 +294,9 @@ namespace Barotrauma
             if (unlockedAchievements.Contains(identifier)) return;
             unlockedAchievements.Add(identifier);
 
+#if CLIENT
             if (conditions != null && !conditions(Character.Controlled)) return;
+#endif
 
             SteamManager.UnlockAchievement(identifier);
 

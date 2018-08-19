@@ -992,11 +992,15 @@ namespace Barotrauma
             Vector2 colliderPos = GetColliderBottom();
 
             bool wasCritical = target.Vitality < 0.0f;
-            
+
+#if CLIENT
             if (GameMain.Client == null) //Serverside code
             {
-                target.Oxygen += deltaTime * 0.5f; //Stabilize them                
+#endif
+                target.Oxygen += deltaTime * 0.5f; //Stabilize them        
+#if CLIENT
             }
+#endif
            
             int skill = (int)character.GetSkillLevel("medical");
             //pump for 15 seconds (cprAnimTimer 0-15), then do mouth-to-mouth for 2 seconds (cprAnimTimer 15-17)
@@ -1009,16 +1013,23 @@ namespace Barotrauma
                 torso.pullJoint.Enabled = true;
 
                 //Serverside code
-                if (GameMain.Client == null && target.Oxygen < -10.0f)
+#if CLIENT
+                if (GameMain.Client == null)
                 {
-                    //stabilize the oxygen level but don't allow it to go positive and revive the character yet
-                    float stabilizationAmount = skill * CPRSettings.StabilizationPerSkill;
-                    stabilizationAmount = MathHelper.Clamp(stabilizationAmount, CPRSettings.StabilizationMin, CPRSettings.StabilizationMax);
-                    character.Oxygen -= (1.0f / stabilizationAmount) * deltaTime; //Worse skill = more oxygen required
-                    if (character.Oxygen > 0.0f) target.Oxygen += stabilizationAmount * deltaTime; //we didn't suffocate yet did we    
+#endif
+                    if (target.Oxygen < -10.0f)
+                    {
+                        //stabilize the oxygen level but don't allow it to go positive and revive the character yet
+                        float stabilizationAmount = skill * CPRSettings.StabilizationPerSkill;
+                        stabilizationAmount = MathHelper.Clamp(stabilizationAmount, CPRSettings.StabilizationMin, CPRSettings.StabilizationMax);
+                        character.Oxygen -= (1.0f / stabilizationAmount) * deltaTime; //Worse skill = more oxygen required
+                        if (character.Oxygen > 0.0f) target.Oxygen += stabilizationAmount * deltaTime; //we didn't suffocate yet did we    
 
-                    //DebugConsole.NewMessage("CPR Us: " + character.Oxygen + " Them: " + target.Oxygen + " How good we are: restore " + cpr + " use " + (30.0f - cpr), Color.Aqua);
+                        //DebugConsole.NewMessage("CPR Us: " + character.Oxygen + " Them: " + target.Oxygen + " How good we are: restore " + cpr + " use " + (30.0f - cpr), Color.Aqua);
+                    }
+#if CLIENT
                 }
+#endif
             }
             else
             {
@@ -1046,8 +1057,10 @@ namespace Barotrauma
                             },
                             0.0f, true, 0.0f, character);
                     }
+#if CLIENT
                     if (GameMain.Client == null) //Serverside code
                     {
+#endif
                         float reviveChance = skill * CPRSettings.ReviveChancePerSkill;
                         reviveChance = (float)Math.Pow(reviveChance, CPRSettings.ReviveChanceExponent);
                         reviveChance = MathHelper.Clamp(reviveChance, CPRSettings.ReviveChanceMin, CPRSettings.ReviveChanceMax);
@@ -1057,8 +1070,10 @@ namespace Barotrauma
                             //increase oxygen and clamp it above zero 
                             // -> the character should be revived if there are no major afflictions in addition to lack of oxygen
                             target.Oxygen = Math.Max(target.Oxygen + 10.0f, 10.0f);
-                        }                        
+                        }
+#if CLIENT
                     }
+#endif
                 }
                 cprPump += deltaTime;
             }

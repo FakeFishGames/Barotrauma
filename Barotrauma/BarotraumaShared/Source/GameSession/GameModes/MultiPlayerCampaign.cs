@@ -78,21 +78,24 @@ namespace Barotrauma
         {
             isRunning = false;
 
+#if CLIENT
             if (GameMain.Client != null)
             {
                 GameMain.GameSession.EndRound("");
-#if CLIENT
                 GameMain.GameSession.CrewManager.EndRound();
-#endif
                 return;                
             }
+#endif
 
 #if SERVER
             lastUpdateID++;
 
-            bool success = 
-                GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead) ||
-                (GameMain.Server.Character != null && !GameMain.Server.Character.IsDead);
+            bool success =
+                GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead);
+
+#if CLIENT
+            success = success || (GameMain.Server.Character != null && !GameMain.Server.Character.IsDead);
+#endif
 
             /*if (success)
             {

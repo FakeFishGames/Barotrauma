@@ -192,7 +192,9 @@ namespace Barotrauma
 
         private void CharacterDead(Character character, CauseOfDeath causeOfDeath)
         {
+#if CLIENT
             if (GameMain.Client != null) return;
+#endif
 
             //don't turn the character into a husk if any of its limbs are severed
             if (character.AnimController?.LimbJoints != null)

@@ -67,8 +67,10 @@ namespace Barotrauma
             
             InitProjSpecific(element);
 
+#if CLIENT
             //clients don't create items until the server says so
             if (GameMain.Client != null) return;
+#endif
 
             foreach (XElement subElement in element.Elements())
             {
