@@ -409,7 +409,7 @@ namespace Barotrauma
                 if (mode.IsSinglePlayer) continue;
 
                 GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), modeList.Content.RectTransform),
-                    mode.Name, style: "ListBoxElement", textAlignment: Alignment.CenterLeft)
+                    TextManager.Get("GameMode." + mode.Name), style: "ListBoxElement", textAlignment: Alignment.CenterLeft)
                 {
                     ToolTip = mode.Description,
                     UserData = mode
