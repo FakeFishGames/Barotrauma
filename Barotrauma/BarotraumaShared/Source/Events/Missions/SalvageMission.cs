@@ -50,7 +50,6 @@ namespace Barotrauma
             Vector2 position = Level.Loaded.GetRandomItemPos(spawnPositionType, 100.0f, minDistance, 30.0f);
             
             item = new Item(itemPrefab, position, null);
-            item.MoveWithLevel = true;
             item.body.FarseerBody.IsKinematic = true;
 
             if (item.HasTag("alien"))

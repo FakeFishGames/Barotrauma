@@ -20,16 +20,7 @@ namespace Barotrauma
 
         //observable collection because some entities may need to be notified when the collection is modified
         public ObservableCollection<MapEntity> linkedTo;
-
-        //protected float soundRange;
-        //protected float sightRange;
-
-        public bool MoveWithLevel
-        {
-            get;
-            set;
-        }
-
+        
         public bool ShouldBeSaved = true;
         
         //the position and dimensions of the entity
