@@ -89,6 +89,18 @@ namespace Barotrauma.Networking
 
     abstract partial class NetworkMember
     {
+        public virtual bool IsServer
+        {
+            get { return false; }
+        }
+
+        public virtual bool IsClient
+        {
+            get { return false; }
+        }
+
+        public abstract void CreateEntityEvent(INetSerializable entity, object[] extraData = null);
+
 #if DEBUG
         public Dictionary<string, long> messageCount = new Dictionary<string, long>();
 #endif

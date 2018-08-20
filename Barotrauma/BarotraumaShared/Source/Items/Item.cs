@@ -216,17 +216,15 @@ namespace Barotrauma
                         repairable.RepairProgress = 0.0f;
                     }
                 }
-
-#if SERVER
-                if (GameMain.Server != null && lastSentCondition != condition)
+                
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && lastSentCondition != condition)
                 {
                     if (Math.Abs(lastSentCondition - condition) > 1.0f || condition == 0.0f || condition == prefab.Health)
                     {
-                        GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                        GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
                         lastSentCondition = condition;
                     }
                 }
-#endif
             }
         }
 
@@ -1568,13 +1566,11 @@ namespace Barotrauma
             {
                 return;
             }
-
-#if SERVER
-            if (GameMain.Server != null)
+            
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
-                GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ChangeProperty, property });
+                GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ChangeProperty, property });
             }
-#endif
         }
 
         partial void UpdateNetPosition();

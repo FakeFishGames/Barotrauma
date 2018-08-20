@@ -81,9 +81,8 @@ namespace Barotrauma
 
             if (IsDead || Vitality <= 0.0f || IsUnconscious || Stun > 0.0f) return;
             if (!aiController.Enabled) return;
-#if CLIENT
+            if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsServer) return;
             if (Controlled == this) return;
-#endif
 
             SoundUpdate(deltaTime);
 

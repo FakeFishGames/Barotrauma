@@ -227,9 +227,8 @@ namespace Barotrauma
             }
 
             aiming = false;
-#if CLIENT
+            if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsServer) return;
             if (character.IsRemotePlayer) Collider.LinearVelocity = Vector2.Zero;
-#endif
         }
 
 
@@ -326,9 +325,8 @@ namespace Barotrauma
             }
 
             bool isNotRemote = true;
-#if CLIENT
-            isNotRemote = !character.IsRemotePlayer;
-#endif
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) isNotRemote = !character.IsRemotePlayer;
+
             if (onGround && isNotRemote)
             {
                 //move slower if collider isn't upright
@@ -694,9 +692,8 @@ namespace Barotrauma
             }
 
             bool isNotRemote = true;
-#if CLIENT
-            isNotRemote = !character.IsRemotePlayer;
-#endif
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) isNotRemote = !character.IsRemotePlayer;
+
             if (isNotRemote)
             {
                 Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement * swimSpeed, movementLerp);
@@ -901,10 +898,10 @@ namespace Barotrauma
             trigger = character.SelectedConstruction.TransformTrigger(trigger);
 
             bool notClimbing = false;
+
             bool isNotRemote = true;
-#if CLIENT
-            isNotRemote = !character.IsRemotePlayer;
-#endif
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) isNotRemote = !character.IsRemotePlayer;
+
             if (isNotRemote)
             {
                 notClimbing = character.IsKeyDown(InputType.Left) || character.IsKeyDown(InputType.Right);
@@ -992,15 +989,11 @@ namespace Barotrauma
             Vector2 colliderPos = GetColliderBottom();
 
             bool wasCritical = target.Vitality < 0.0f;
-
-#if CLIENT
-            if (GameMain.Client == null) //Serverside code
+            
+            if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) //Serverside code
             {
-#endif
                 target.Oxygen += deltaTime * 0.5f; //Stabilize them        
-#if CLIENT
             }
-#endif
            
             int skill = (int)character.GetSkillLevel("medical");
             //pump for 15 seconds (cprAnimTimer 0-15), then do mouth-to-mouth for 2 seconds (cprAnimTimer 15-17)
@@ -1013,10 +1006,8 @@ namespace Barotrauma
                 torso.pullJoint.Enabled = true;
 
                 //Serverside code
-#if CLIENT
-                if (GameMain.Client == null)
+                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                 {
-#endif
                     if (target.Oxygen < -10.0f)
                     {
                         //stabilize the oxygen level but don't allow it to go positive and revive the character yet
@@ -1027,9 +1018,7 @@ namespace Barotrauma
 
                         //DebugConsole.NewMessage("CPR Us: " + character.Oxygen + " Them: " + target.Oxygen + " How good we are: restore " + cpr + " use " + (30.0f - cpr), Color.Aqua);
                     }
-#if CLIENT
                 }
-#endif
             }
             else
             {
@@ -1057,10 +1046,8 @@ namespace Barotrauma
                             },
                             0.0f, true, 0.0f, character);
                     }
-#if CLIENT
-                    if (GameMain.Client == null) //Serverside code
+                    if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) //Serverside code
                     {
-#endif
                         float reviveChance = skill * CPRSettings.ReviveChancePerSkill;
                         reviveChance = (float)Math.Pow(reviveChance, CPRSettings.ReviveChanceExponent);
                         reviveChance = MathHelper.Clamp(reviveChance, CPRSettings.ReviveChanceMin, CPRSettings.ReviveChanceMax);
@@ -1071,9 +1058,7 @@ namespace Barotrauma
                             // -> the character should be revived if there are no major afflictions in addition to lack of oxygen
                             target.Oxygen = Math.Max(target.Oxygen + 10.0f, 10.0f);
                         }
-#if CLIENT
                     }
-#endif
                 }
                 cprPump += deltaTime;
             }

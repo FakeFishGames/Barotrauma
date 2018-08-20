@@ -218,59 +218,5 @@ namespace Barotrauma
 
             lastSaveID++;
         }
-
-        public void ServerWrite(NetBuffer msg, Client c)
-        {
-            System.Diagnostics.Debug.Assert(map.Locations.Count < UInt16.MaxValue);
-
-            msg.Write(CampaignID);
-            msg.Write(lastUpdateID);
-            msg.Write(lastSaveID);
-            msg.Write(map.Seed);
-            msg.Write(map.CurrentLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.CurrentLocationIndex);
-            msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
-
-            msg.Write(Money);
-
-            msg.Write((UInt16)CargoManager.PurchasedItems.Count);
-            foreach (PurchasedItem pi in CargoManager.PurchasedItems)
-            {
-                msg.Write((UInt16)MapEntityPrefab.List.IndexOf(pi.ItemPrefab));
-                msg.Write((UInt16)pi.Quantity);
-            }
-        }
-        
-        public void ServerRead(NetBuffer msg, Client sender)
-        {
-            UInt16 selectedLocIndex = msg.ReadUInt16();
-            UInt16 purchasedItemCount = msg.ReadUInt16();
-
-            List<PurchasedItem> purchasedItems = new List<PurchasedItem>();
-            for (int i = 0; i < purchasedItemCount; i++)
-            {
-                UInt16 itemPrefabIndex = msg.ReadUInt16();
-                UInt16 itemQuantity = msg.ReadUInt16();
-                purchasedItems.Add(new PurchasedItem(MapEntityPrefab.List[itemPrefabIndex] as ItemPrefab, itemQuantity));
-            }
-
-            if (!sender.HasPermission(ClientPermissions.ManageCampaign))
-            {
-                DebugConsole.ThrowError("Client \""+sender.Name+"\" does not have a permission to manage the campaign");
-                return;
-            }
-
-            Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
-
-            List<PurchasedItem> currentItems = new List<PurchasedItem>(CargoManager.PurchasedItems);
-            foreach (PurchasedItem pi in currentItems)
-            {
-                CargoManager.SellItem(pi.ItemPrefab, pi.Quantity);
-            }
-
-            foreach (PurchasedItem pi in purchasedItems)
-            {
-                CargoManager.PurchaseItem(pi.ItemPrefab, pi.Quantity);
-            }
-        }
     }
 }
