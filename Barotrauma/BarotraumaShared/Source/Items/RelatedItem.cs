@@ -19,6 +19,8 @@ namespace Barotrauma
 
         private string[] identifiers;
 
+        private string[] excludedIdentifiers;
+
         private RelationType type;
 
         public List<StatusEffect> statusEffects;
@@ -28,12 +30,6 @@ namespace Barotrauma
         public RelationType Type
         {
             get { return type; }
-        }
-
-        public bool MatchesItem(Item item)
-        {
-            if (item == null) return false;
-            return identifiers.Any(name => item.Prefab.Identifier == name || item.HasTag(name));
         }
 
         public string JoinedIdentifiers
@@ -56,13 +52,42 @@ namespace Barotrauma
             get { return identifiers; }
         }
 
-        public RelatedItem(string[] identifiers)
+        public string JoinedExcludedIdentifiers
+        {
+            get { return string.Join(",", excludedIdentifiers); }
+            set
+            {
+                if (value == null) return;
+
+                excludedIdentifiers = value.Split(',');
+                for (int i = 0; i < excludedIdentifiers.Length; i++)
+                {
+                    excludedIdentifiers[i] = excludedIdentifiers[i].Trim();
+                }
+            }
+        }
+
+        public bool MatchesItem(Item item)
+        {
+            if (item == null) return false;
+            if (excludedIdentifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id))) return false;
+            return identifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id));
+        }
+
+        public RelatedItem(string[] identifiers, string[] excludedIdentifiers)
         {
             for (int i = 0; i < identifiers.Length; i++)
             {
                 identifiers[i] = identifiers[i].Trim();
             }
             this.identifiers = identifiers;
+
+            for (int i = 0; i < excludedIdentifiers.Length; i++)
+            {
+                excludedIdentifiers[i] = excludedIdentifiers[i].Trim();
+            }
+            this.excludedIdentifiers = excludedIdentifiers;
+
             statusEffects = new List<StatusEffect>();
         }
 
@@ -116,6 +141,11 @@ namespace Barotrauma
                 new XAttribute("identifiers", JoinedIdentifiers),
                 new XAttribute("type", type.ToString()));
 
+            if (excludedIdentifiers.Length > 0)
+            {
+                element.Add(new XAttribute("excludedidentifiers", JoinedExcludedIdentifiers));
+            }
+
             if (!string.IsNullOrWhiteSpace("msg")) element.Add(new XAttribute("msg", Msg));
         }
 
@@ -148,10 +178,13 @@ namespace Barotrauma
                 identifiers = element.GetAttributeStringArray("identifiers", new string[0]);
                 if (identifiers.Length == 0) identifiers = element.GetAttributeStringArray("identifier", new string[0]);
             }
-            
-            if (identifiers.Length == 0) return null;
 
-            RelatedItem ri = new RelatedItem(identifiers);
+            string[] excludedIdentifiers = element.GetAttributeStringArray("excludedidentifiers", new string[0]);
+            if (excludedIdentifiers.Length == 0) excludedIdentifiers = element.GetAttributeStringArray("excludedidentifier", new string[0]);
+
+            if (identifiers.Length == 0 && excludedIdentifiers.Length == 0) return null;
+
+            RelatedItem ri = new RelatedItem(identifiers, excludedIdentifiers);
             try
             {
                 ri.type = (RelationType)Enum.Parse(typeof(RelationType), element.GetAttributeString("type", "None"));
