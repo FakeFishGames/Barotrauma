@@ -377,10 +377,8 @@ namespace Barotrauma
         public void AddFireSource(FireSource fireSource)
         {
             fireSources.Add(fireSource);
-
-#if SERVER
-            if (GameMain.Server != null) GameMain.Server.CreateEntityEvent(this);
-#endif
+            
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer) GameMain.NetworkMember.CreateEntityEvent(this);
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -399,19 +397,17 @@ namespace Barotrauma
             if (Math.Abs(lastSentVolume - waterVolume) > Volume * 0.1f ||
                 Math.Abs(lastSentOxygen - OxygenPercentage) > 5f)
             {
-#if SERVER
-                if (GameMain.Server != null && !IdFreed)
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && !IdFreed)
                 {
                     sendUpdateTimer -= deltaTime;
                     if (sendUpdateTimer < 0.0f)
                     {
-                        GameMain.Server.CreateEntityEvent(this);
+                        GameMain.NetworkMember.CreateEntityEvent(this);
                         lastSentVolume = waterVolume;
                         lastSentOxygen = OxygenPercentage;
                         sendUpdateTimer = NetworkUpdateInterval;
                     }
                 }
-#endif
             }
 
             if (!update)
@@ -541,10 +537,8 @@ namespace Barotrauma
         public void RemoveFire(FireSource fire)
         {
             fireSources.Remove(fire);
-
-#if SERVER
-            if (GameMain.Server != null) GameMain.Server.CreateEntityEvent(this);
-#endif
+            
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer) GameMain.NetworkMember.CreateEntityEvent(this);
         }
 
         public IEnumerable<Hull> GetConnectedHulls(int? searchDepth)

@@ -330,16 +330,14 @@ namespace Barotrauma
         {
             foreach (LevelObject obj in objects)
             {
-#if SERVER
-                if (GameMain.Server != null)
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
                     if (obj.NeedsNetworkSyncing)
                     {
-                        GameMain.Server.CreateEntityEvent(this, new object[] { obj });
+                        GameMain.NetworkMember.CreateEntityEvent(this, new object[] { obj });
                         obj.NeedsNetworkSyncing = false;
                     }
                 }
-#endif
 
                 obj.ActivePrefab = obj.Prefab;
                 for (int i = 0; i < obj.Triggers.Count; i++)

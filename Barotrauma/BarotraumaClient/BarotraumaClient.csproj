@@ -98,6 +98,7 @@
     <Compile Include="Source\Characters\AI\AITarget.cs" />
     <Compile Include="Source\Characters\AI\EnemyAIController.cs" />
     <Compile Include="Source\Characters\AI\HumanAIController.cs" />
+    <Compile Include="Source\Characters\Animation\HumanoidAnimParams.cs" />
     <Compile Include="Source\Characters\Animation\Ragdoll.cs" />
     <Compile Include="Source\Characters\Attack.cs" />
     <Compile Include="Source\Events\EventManager.cs" />

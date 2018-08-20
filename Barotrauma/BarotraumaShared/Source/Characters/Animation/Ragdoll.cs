@@ -603,9 +603,8 @@ namespace Barotrauma
             if (f1.Body == Collider.FarseerBody)
             {
                 bool isNotRemote = true;
-#if CLIENT
-                isNotRemote = !character.IsRemotePlayer;
-#endif
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) isNotRemote = !character.IsRemotePlayer;
+
                 if (isNotRemote)
                 {
                     if (impact > ImpactTolerance)
@@ -624,6 +623,8 @@ namespace Barotrauma
 
             ImpactProjSpecific(impact, f1.Body);
         }
+
+        partial void SeverLimbJointParticles(LimbJoint limbJoint);
 
         public void SeverLimbJoint(LimbJoint limbJoint)
         {
@@ -646,30 +647,11 @@ namespace Barotrauma
                 limb.IsSevered = true;                           
             }
 
-#if CLIENT
-            if (character.UseBloodParticles)
+            SeverLimbJointParticles(limbJoint);
+            if (GameMain.NetworkMember!=null && GameMain.NetworkMember.IsServer)
             {
-                foreach (Limb limb in new Limb[] { limbJoint.LimbA, limbJoint.LimbB })
-                {
-                    for (int i = 0; i < MathHelper.Clamp(limb.Mass * 2.0f, 1.0f, 50.0f); i++)
-                    {
-                        GameMain.ParticleManager.CreateParticle("gib", limb.WorldPosition, Rand.Range(0.0f, MathHelper.TwoPi), Rand.Range(200.0f, 700.0f), character.CurrentHull);
-                    }
-                    
-                    for (int i = 0; i < MathHelper.Clamp(limb.Mass * 2.0f, 1.0f, 10.0f); i++)
-                    {
-                        GameMain.ParticleManager.CreateParticle("heavygib", limb.WorldPosition, Rand.Range(0.0f, MathHelper.TwoPi), Rand.Range(50.0f, 250.0f), character.CurrentHull);
-                    }
-                    character.CurrentHull?.AddDecal("blood", limb.WorldPosition, MathHelper.Clamp(limb.Mass, 0.5f, 2.0f));
-                }
+                GameMain.NetworkMember.CreateEntityEvent(character, new object[] { NetEntityEvent.Type.Status });
             }
-#endif
-#if SERVER
-            if (GameMain.Server != null)
-            {
-                GameMain.Server.CreateEntityEvent(character, new object[] { NetEntityEvent.Type.Status });
-            }
-#endif
         }
 
         private void GetConnectedLimbs(List<Limb> connectedLimbs, List<LimbJoint> checkedJoints, Limb limb)

@@ -13,6 +13,11 @@ namespace Barotrauma.Networking
 {
     class GameClient : NetworkMember
     {
+        public override bool IsClient
+        {
+            get { return true; }
+        }
+
         private NetClient client;
 
         private GUIMessageBox reconnectBox, waitInServerQueueBox;
@@ -1491,9 +1496,10 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void CreateEntityEvent(IClientSerializable entity, object[] extraData)
+        public override void CreateEntityEvent(INetSerializable entity, object[] extraData)
         {
-            entityEventManager.CreateEvent(entity, extraData);
+            if (!(entity is IClientSerializable)) throw new InvalidCastException("entity is not IClientSerializable");
+            entityEventManager.CreateEvent(entity as IClientSerializable, extraData);
         }
         
         public bool HasPermission(ClientPermissions permission)

@@ -156,18 +156,10 @@ namespace Barotrauma
 
         protected virtual void CreateNetworkEvent()
         {
-#if SERVER
-            if (GameMain.Server != null)
+            if (GameMain.NetworkMember != null)
             {
-                GameMain.Server.CreateEntityEvent(Owner as IServerSerializable, new object[] { NetEntityEvent.Type.InventoryState });
+                GameMain.NetworkMember.CreateEntityEvent(Owner as INetSerializable, new object[] { NetEntityEvent.Type.InventoryState });
             }
-#endif
-#if CLIENT
-            if (GameMain.Client != null)
-            {
-                GameMain.Client.CreateEntityEvent(Owner as IClientSerializable, new object[] { NetEntityEvent.Type.InventoryState });
-            }
-#endif
         }
 
         public Item FindItemByTag(string tag)

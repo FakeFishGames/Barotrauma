@@ -36,8 +36,6 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        public bool SpectateOnly;
-                
         private object[] votes;
 
         public int KickVoteCount
@@ -63,42 +61,6 @@ namespace Barotrauma.Networking
             votes = new object[Enum.GetNames(typeof(VoteType)).Length];
 
             InitProjSpecific();
-        }
-
-        public static string SanitizeName(string name)
-        {
-            name = name.Trim();
-            if (name.Length > 20)
-            {
-                name = name.Substring(0, 20);
-            }
-            string rName = "";
-            for (int i = 0; i < name.Length; i++)
-            {
-                rName += name[i] < 32 ? '?' : name[i];
-            }
-            return rName;
-        }
-
-        public void SetPermissions(ClientPermissions permissions, List<DebugConsole.Command> permittedConsoleCommands)
-        {
-            this.Permissions = permissions;
-            this.PermittedConsoleCommands = new List<DebugConsole.Command>(permittedConsoleCommands);
-        }
-
-        public void GivePermission(ClientPermissions permission)
-        {
-            if (!this.Permissions.HasFlag(permission)) this.Permissions |= permission;
-        }
-
-        public void RemovePermission(ClientPermissions permission)
-        {
-            if (this.Permissions.HasFlag(permission)) this.Permissions &= ~permission;
-        }
-
-        public bool HasPermission(ClientPermissions permission)
-        {
-            return this.Permissions.HasFlag(permission);
         }
 
         public T GetVote<T>(VoteType voteType)

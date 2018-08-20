@@ -93,20 +93,12 @@ namespace Barotrauma
         private bool UseItemOnSelf(int slotIndex)
         {
             if (Items[slotIndex] == null) return false;
-
-#if CLIENT
-            if (GameMain.Client != null)
+            
+            if (GameMain.NetworkMember != null)
             {
-                GameMain.Client.CreateEntityEvent(Items[slotIndex], new object[] { NetEntityEvent.Type.ApplyStatusEffect });
-                return true;
+                GameMain.NetworkMember.CreateEntityEvent(Items[slotIndex], new object[] { NetEntityEvent.Type.ApplyStatusEffect });
+                if (GameMain.NetworkMember.IsClient) return true;
             }
-#endif
-#if SERVER
-            if (GameMain.Server != null)
-            {
-                GameMain.Server.CreateEntityEvent(Items[slotIndex], new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, character.ID });
-            }
-#endif
 
             Items[slotIndex].ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
 

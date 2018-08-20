@@ -116,11 +116,9 @@ namespace Barotrauma
             if (force == 0.0f && attack.Stun == 0.0f && attack.GetTotalDamage(false) == 0.0f) return;
 
             DamageCharacters(worldPosition, attack, force, damageSource);
-
-#if CLIENT
-            if (GameMain.Client == null)
+            
+            if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
             {
-#endif
                 if (flames)
                 {
                     foreach (Item item in Item.ItemList)
@@ -139,18 +137,14 @@ namespace Barotrauma
                         if (Vector2.Distance(item.WorldPosition, worldPosition) > attack.Range * 0.1f) continue;
 
                         item.ApplyStatusEffects(ActionType.OnFire, 1.0f);
-
-#if SERVER
-                        if (item.Condition <= 0.0f && GameMain.Server != null)
+                        
+                        if (item.Condition <= 0.0f && GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                         {
-                            GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFire });
+                            GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFire });
                         }
-#endif
                     }
                 }
-#if CLIENT
             }
-#endif
         }
 
         partial void ExplodeProjSpecific(Vector2 worldPosition, Hull hull);

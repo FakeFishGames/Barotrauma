@@ -292,13 +292,11 @@ namespace Barotrauma.Items.Components
             }
 
             if (projectile.Container != null) projectile.Container.RemoveContained(projectile);
-
-#if SERVER
-            if (GameMain.Server != null)
+            
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
-                GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.components.IndexOf(this), projectile });
+                GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.components.IndexOf(this), projectile });
             }
-#endif
 
             LaunchProjSpecific();
         }

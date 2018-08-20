@@ -15,6 +15,11 @@ namespace Barotrauma.Networking
 {
     partial class GameServer : NetworkMember
     {
+        public override bool IsServer
+        {
+            get { return true; }
+        }
+        
         private List<Client> connectedClients = new List<Client>();
 
         //for keeping track of disconnected clients in case the reconnect shortly after
@@ -623,9 +628,10 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void CreateEntityEvent(IServerSerializable entity, object[] extraData = null)
+        public override void CreateEntityEvent(INetSerializable entity, object[] extraData = null)
         {
-            entityEventManager.CreateEvent(entity, extraData);
+            if (!(entity is IServerSerializable)) throw new InvalidCastException("entity is not IServerSerializable");
+            entityEventManager.CreateEvent(entity as IServerSerializable, extraData);
         }
 
         private byte GetNewClientID()
