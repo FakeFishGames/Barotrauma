@@ -14,7 +14,14 @@ namespace Barotrauma.Items.Components
 
         public List<Connection> Connections;
 
-        Character user;
+        private Character user;
+
+        [Serialize(false, true), Editable(ToolTip = "Locked connection panels cannot be rewired in-game.")]
+        public bool Locked
+        {
+            get;
+            set;
+        }
 
         public ConnectionPanel(Item item, XElement element)
             : base(item, element)
@@ -180,6 +187,9 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
+            
+            //don't allow rewiring locked panels
+            if (Locked) return;
 
             item.CreateServerEvent(this);
 
