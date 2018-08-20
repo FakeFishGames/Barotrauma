@@ -7,6 +7,10 @@
     cargocontaineridentifier="metalcrate"
     description="While the body armor won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.">
 
+    <Price locationtype="Military" buyprice="150"/>
+    <Price locationtype="City" buyprice="200"/>
+    <Price locationtype="Outpost" buyprice="300"/>
+    
     <Deconstruct time="40">
       <Item identifier="polycarbonatebar"/>
       <Item identifier="polycarbonatebar"/>
@@ -34,6 +38,10 @@
     cargocontaineridentifier="metalcrate"
     description="While the helmet won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.">
 
+    <Price locationtype="Military" buyprice="80"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="150"/>
+
     <Deconstruct time="10">
       <Item identifier="polycarbonatebar"/>
       <Item identifier="polycarbonatebar"/>
@@ -57,6 +65,10 @@
     cargocontaineridentifier="metalcrate"    
     tags="smallitem" >
 
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="100"/>
+    
     <Sprite texture = "securitygear.png" sourcerect="0,63,32,14" depth="0.6"/>
 
     <Body width="30" height="12" density="30"/>
@@ -75,6 +87,10 @@
     category="Equipment"
     tags="weapon">
 
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="100"/>
+    
     <Sprite texture="riotgear.png" sourcerect="31,56,26,145" origin="0.5,0.5" depth="0.55"/>
 
     <Body width="40" height="145" density="30"/>
