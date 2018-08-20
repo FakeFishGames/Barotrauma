@@ -326,7 +326,7 @@
           <Item identifier="compoundn"/>
         </Item>
         <Item identifier="detonator">
-          <Item identifier="colatilecompoundn"/>
+          <Item identifier="volatilecompoundn"/>
         </Item>
       </Item>
     </Items>
