@@ -50,7 +50,7 @@ namespace Barotrauma
             {
                 if (character.Inventory != null)
                 {
-                    if (!character.LockHands && character.Stun < 0.1f)
+                    if (!character.LockHands && character.Stun < 0.1f && CharacterHealth.OpenHealthWindow == null)
                     {
                         character.Inventory.Update(deltaTime);
                     }
@@ -245,7 +245,7 @@ namespace Barotrauma
                 }
             }
             
-            if (character.Inventory != null && !character.LockHands && character.Stun <= 0.1f)
+            if (character.Inventory != null && !character.LockHands && character.Stun <= 0.1f && CharacterHealth.OpenHealthWindow == null)
             {
                 character.Inventory.DrawOwn(spriteBatch);
                 character.Inventory.CurrentLayout = CharacterInventory.Layout.Default;
