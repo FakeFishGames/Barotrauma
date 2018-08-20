@@ -112,10 +112,82 @@ namespace Barotrauma
         
         private void UpdateNetInput()
         {
-#if CLIENT
-            if (this != Controlled)
+#if SERVER
+            if (!(this is AICharacter) || IsRemotePlayer)
             {
-                if (GameMain.Client != null)
+                if (!AllowInput)
+                {
+                    AnimController.Frozen = false;
+                    if (memInput.Count > 0)
+                    {
+                        prevDequeuedInput = dequeuedInput;
+                        dequeuedInput = memInput[memInput.Count - 1].states;
+                        memInput.RemoveAt(memInput.Count - 1);
+                    }
+                }
+                else if (memInput.Count == 0)
+                {
+                    AnimController.Frozen = true;
+                }
+                else
+                {
+                    AnimController.Frozen = false;
+                    prevDequeuedInput = dequeuedInput;
+
+                    LastProcessedID = memInput[memInput.Count - 1].networkUpdateID;
+                    dequeuedInput = memInput[memInput.Count - 1].states;
+
+                    double aimAngle = ((double)memInput[memInput.Count - 1].intAim / 65535.0) * 2.0 * Math.PI;
+                    cursorPosition = (ViewTarget == null ? AnimController.AimSourcePos : ViewTarget.Position)
+                        + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 60.0f;
+
+                    //reset focus when attempting to use/select something
+                    if (memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Use) ||
+                        memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Select))
+                    {
+                        focusedItem = null;
+                        focusedCharacter = null;
+                    }
+                    var closestEntity = FindEntityByID(memInput[memInput.Count - 1].interact);
+                    if (closestEntity is Item)
+                    {
+                        if (CanInteractWith((Item)closestEntity))
+                        {
+                            focusedItem = (Item)closestEntity;
+                            focusedCharacter = null;
+                        }
+                    }
+                    else if (closestEntity is Character)
+                    {
+                        if (CanInteractWith((Character)closestEntity))
+                        {
+                            focusedCharacter = (Character)closestEntity;
+                            focusedItem = null;
+                        }
+                    }
+
+                    memInput.RemoveAt(memInput.Count - 1);
+
+                    TransformCursorPos();
+
+                    if ((dequeuedInput == InputNetFlags.None || dequeuedInput == InputNetFlags.FacingLeft) && Math.Abs(AnimController.Collider.LinearVelocity.X) < 0.005f && Math.Abs(AnimController.Collider.LinearVelocity.Y) < 0.2f)
+                    {
+                        while (memInput.Count > 5 && memInput[memInput.Count - 1].states == dequeuedInput)
+                        {
+                            //remove inputs where the player is not moving at all
+                            //helps the server catch up, shouldn't affect final position
+                            LastProcessedID = memInput[memInput.Count - 1].networkUpdateID;
+                            memInput.RemoveAt(memInput.Count - 1);
+                        }
+                    }
+                }
+            }
+            AnimController.Frozen = false;
+#endif
+#if CLIENT
+            if (GameMain.Client != null)
+            {
+                if (this != Controlled)
                 {
                     //freeze AI characters if more than 1 seconds have passed since last update from the server
                     if (lastRecvPositionUpdateTime < NetTime.Now - 1.0f)
@@ -130,138 +202,62 @@ namespace Barotrauma
                         }
                     }
                 }
-#endif
-#if SERVER
-            if (GameMain.Server != null && (!(this is AICharacter) || IsRemotePlayer))
+                else
                 {
-                    if (!AllowInput)
-                    {
-                        AnimController.Frozen = false;
-                        if (memInput.Count > 0)
-                        {
-                            prevDequeuedInput = dequeuedInput;
-                            dequeuedInput = memInput[memInput.Count - 1].states;
-                            memInput.RemoveAt(memInput.Count - 1);
-                        }
-                    }
-                    else if (memInput.Count == 0)
-                    {
-                        AnimController.Frozen = true;
-                    }
-                    else
-                    {
-                        AnimController.Frozen = false;
-                        prevDequeuedInput = dequeuedInput;
-
-                        LastProcessedID = memInput[memInput.Count - 1].networkUpdateID;
-                        dequeuedInput = memInput[memInput.Count - 1].states;
-
-                        double aimAngle = ((double)memInput[memInput.Count - 1].intAim / 65535.0) * 2.0 * Math.PI;
-                        cursorPosition = (ViewTarget == null ? AnimController.AimSourcePos : ViewTarget.Position)
-                            + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 60.0f;
-
-                        //reset focus when attempting to use/select something
-                        if (memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Use) ||
-                            memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Select))
-                        {
-                            focusedItem = null;
-                            focusedCharacter = null;
-                        }
-                        var closestEntity = FindEntityByID(memInput[memInput.Count - 1].interact);
-                        if (closestEntity is Item)
-                        {
-                            if (CanInteractWith((Item)closestEntity))
-                            {
-                                focusedItem = (Item)closestEntity;
-                                focusedCharacter = null;
-                            }
-                        }
-                        else if (closestEntity is Character)
-                        {
-                            if (CanInteractWith((Character)closestEntity))
-                            {
-                                focusedCharacter = (Character)closestEntity;
-                                focusedItem = null;
-                            }
-                        }
-
-                        memInput.RemoveAt(memInput.Count - 1);
-
-                        TransformCursorPos();
-
-                        if ((dequeuedInput == InputNetFlags.None || dequeuedInput == InputNetFlags.FacingLeft) && Math.Abs(AnimController.Collider.LinearVelocity.X) < 0.005f && Math.Abs(AnimController.Collider.LinearVelocity.Y) < 0.2f)
-                        {
-                            while (memInput.Count > 5 && memInput[memInput.Count - 1].states == dequeuedInput)
-                            {
-                                //remove inputs where the player is not moving at all
-                                //helps the server catch up, shouldn't affect final position
-                                LastProcessedID = memInput[memInput.Count - 1].networkUpdateID;
-                                memInput.RemoveAt(memInput.Count - 1);
-                            }
-                        }
-                    }
-                }
-#endif
-#if CLIENT
-            }
-            else if (GameMain.Client != null)
-            {
-                var posInfo = new CharacterStateInfo(
+                    var posInfo = new CharacterStateInfo(
                     SimPosition,
                     AnimController.Collider.Rotation,
-                    LastNetworkUpdateID, 
-                    AnimController.TargetDir, 
+                    LastNetworkUpdateID,
+                    AnimController.TargetDir,
                     SelectedCharacter == null ? (Entity)SelectedConstruction : (Entity)SelectedCharacter,
                     AnimController.Anim);
 
-                memLocalState.Add(posInfo);
+                    memLocalState.Add(posInfo);
 
-                InputNetFlags newInput = InputNetFlags.None;
-                if (IsKeyDown(InputType.Left))      newInput |= InputNetFlags.Left;
-                if (IsKeyDown(InputType.Right))     newInput |= InputNetFlags.Right;
-                if (IsKeyDown(InputType.Up))        newInput |= InputNetFlags.Up;
-                if (IsKeyDown(InputType.Down))      newInput |= InputNetFlags.Down;
-                if (IsKeyDown(InputType.Run))       newInput |= InputNetFlags.Run;
-                if (IsKeyDown(InputType.Crouch))    newInput |= InputNetFlags.Crouch;
-                if (IsKeyHit(InputType.Select))     newInput |= InputNetFlags.Select; //TODO: clean up the way this input is registered
-                if (IsKeyHit(InputType.Health))     newInput |= InputNetFlags.Health;
-                if (IsKeyDown(InputType.Use))       newInput |= InputNetFlags.Use;
-                if (IsKeyDown(InputType.Aim))       newInput |= InputNetFlags.Aim;
-                if (IsKeyDown(InputType.Attack))    newInput |= InputNetFlags.Attack;
-                if (IsKeyDown(InputType.Ragdoll))   newInput |= InputNetFlags.Ragdoll;
+                    InputNetFlags newInput = InputNetFlags.None;
+                    if (IsKeyDown(InputType.Left)) newInput |= InputNetFlags.Left;
+                    if (IsKeyDown(InputType.Right)) newInput |= InputNetFlags.Right;
+                    if (IsKeyDown(InputType.Up)) newInput |= InputNetFlags.Up;
+                    if (IsKeyDown(InputType.Down)) newInput |= InputNetFlags.Down;
+                    if (IsKeyDown(InputType.Run)) newInput |= InputNetFlags.Run;
+                    if (IsKeyDown(InputType.Crouch)) newInput |= InputNetFlags.Crouch;
+                    if (IsKeyHit(InputType.Select)) newInput |= InputNetFlags.Select; //TODO: clean up the way this input is registered
+                    if (IsKeyHit(InputType.Health)) newInput |= InputNetFlags.Health;
+                    if (IsKeyDown(InputType.Use)) newInput |= InputNetFlags.Use;
+                    if (IsKeyDown(InputType.Aim)) newInput |= InputNetFlags.Aim;
+                    if (IsKeyDown(InputType.Attack)) newInput |= InputNetFlags.Attack;
+                    if (IsKeyDown(InputType.Ragdoll)) newInput |= InputNetFlags.Ragdoll;
 
-                if (AnimController.TargetDir == Direction.Left) newInput |= InputNetFlags.FacingLeft;
+                    if (AnimController.TargetDir == Direction.Left) newInput |= InputNetFlags.FacingLeft;
 
-                Vector2 relativeCursorPos = cursorPosition - (ViewTarget == null ? AnimController.AimSourcePos : ViewTarget.Position);
-                relativeCursorPos.Normalize();
-                UInt16 intAngle = (UInt16)(65535.0 * Math.Atan2(relativeCursorPos.Y, relativeCursorPos.X) / (2.0 * Math.PI));
+                    Vector2 relativeCursorPos = cursorPosition - (ViewTarget == null ? AnimController.AimSourcePos : ViewTarget.Position);
+                    relativeCursorPos.Normalize();
+                    UInt16 intAngle = (UInt16)(65535.0 * Math.Atan2(relativeCursorPos.Y, relativeCursorPos.X) / (2.0 * Math.PI));
 
-                NetInputMem newMem = new NetInputMem();
-                newMem.states = newInput;
-                newMem.intAim = intAngle;
-                if (focusedItem != null)
-                {
-                    newMem.interact = focusedItem.ID;
-                }
-                else if (focusedCharacter != null)
-                {
-                    newMem.interact = focusedCharacter.ID;
-                }
+                    NetInputMem newMem = new NetInputMem();
+                    newMem.states = newInput;
+                    newMem.intAim = intAngle;
+                    if (focusedItem != null)
+                    {
+                        newMem.interact = focusedItem.ID;
+                    }
+                    else if (focusedCharacter != null)
+                    {
+                        newMem.interact = focusedCharacter.ID;
+                    }
 
-                memInput.Insert(0, newMem);
-                LastNetworkUpdateID++;
-                if (memInput.Count > 60)
-                {
-                    memInput.RemoveRange(60, memInput.Count - 60);
+                    memInput.Insert(0, newMem);
+                    LastNetworkUpdateID++;
+                    if (memInput.Count > 60)
+                    {
+                        memInput.RemoveRange(60, memInput.Count - 60);
+                    }
                 }
             }
             else //this == Character.Controlled && GameMain.Client == null
             {                
                 AnimController.Frozen = false;
             }
-#endif
-#if SERVER
-            AnimController.Frozen = false;
 #endif
 
             if (networkUpdateSent)
@@ -273,55 +269,6 @@ namespace Barotrauma
                 }
 
                 networkUpdateSent = false;
-            }
-        }
-        
-        private void WriteStatus(NetBuffer msg)
-        {
-#if CLIENT
-            //TODO: move to BarotraumaServer
-            if (GameMain.Client != null)
-            {
-                DebugConsole.ThrowError("Client attempted to write character status to a networked message");
-                return;
-            }
-#endif
-            
-            msg.Write(IsDead);
-            if (IsDead)
-            {
-                msg.WriteRangedInteger(0, Enum.GetValues(typeof(CauseOfDeathType)).Length - 1, (int)CauseOfDeath.Type);
-                if (CauseOfDeath.Type == CauseOfDeathType.Affliction)
-                {
-                    msg.WriteRangedInteger(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(CauseOfDeath.Affliction));
-                }
-
-                if (AnimController?.LimbJoints == null)
-                {
-                    //0 limbs severed
-                    msg.Write((byte)0);
-                }
-                else
-                {
-                    List<int> severedJointIndices = new List<int>();
-                    for (int i = 0; i < AnimController.LimbJoints.Length; i++)
-                    {
-                        if (AnimController.LimbJoints[i] != null && AnimController.LimbJoints[i].IsSevered)
-                        {
-                            severedJointIndices.Add(i);
-                        }
-                    }
-                    msg.Write((byte)severedJointIndices.Count);
-                    foreach (int jointIndex in severedJointIndices)
-                    {
-                        msg.Write((byte)jointIndex);
-                    }
-                }
-            }
-            else
-            {
-                CharacterHealth.ServerWrite(msg);                
-                msg.Write(IsRagdolled);
             }
         }
     }

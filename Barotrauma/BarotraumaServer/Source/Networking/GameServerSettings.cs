@@ -205,7 +205,7 @@ namespace Barotrauma.Networking
         }
 
         [Serialize(true, true)]
-        public bool AllowDisguises
+        public override bool AllowDisguises
         {
             get;
             set;

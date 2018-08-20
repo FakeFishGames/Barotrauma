@@ -9,6 +9,47 @@ namespace Barotrauma
 {
     partial class Character
     {
+
+        private void WriteStatus(NetBuffer msg)
+        {
+            msg.Write(IsDead);
+            if (IsDead)
+            {
+                msg.WriteRangedInteger(0, Enum.GetValues(typeof(CauseOfDeathType)).Length - 1, (int)CauseOfDeath.Type);
+                if (CauseOfDeath.Type == CauseOfDeathType.Affliction)
+                {
+                    msg.WriteRangedInteger(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(CauseOfDeath.Affliction));
+                }
+
+                if (AnimController?.LimbJoints == null)
+                {
+                    //0 limbs severed
+                    msg.Write((byte)0);
+                }
+                else
+                {
+                    List<int> severedJointIndices = new List<int>();
+                    for (int i = 0; i < AnimController.LimbJoints.Length; i++)
+                    {
+                        if (AnimController.LimbJoints[i] != null && AnimController.LimbJoints[i].IsSevered)
+                        {
+                            severedJointIndices.Add(i);
+                        }
+                    }
+                    msg.Write((byte)severedJointIndices.Count);
+                    foreach (int jointIndex in severedJointIndices)
+                    {
+                        msg.Write((byte)jointIndex);
+                    }
+                }
+            }
+            else
+            {
+                CharacterHealth.ServerWrite(msg);
+                msg.Write(IsRagdolled);
+            }
+        }
+
         public virtual void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
             if (GameMain.Server == null) return;

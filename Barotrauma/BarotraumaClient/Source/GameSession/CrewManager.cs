@@ -473,6 +473,7 @@ namespace Barotrauma
                 List<Character> availableSpeakers = GameMain.GameSession.CrewManager.GetCharacters();
                 availableSpeakers.RemoveAll(c => !(c.AIController is HumanAIController) || c.IsDead || !c.CanSpeak);
 #if SERVER
+                //TODO: fix?
                 if (GameMain.Server != null)
                 {
                     foreach (Client client in GameMain.Server.ConnectedClients)

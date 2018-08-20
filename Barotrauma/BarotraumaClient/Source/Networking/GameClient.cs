@@ -73,10 +73,10 @@ namespace Barotrauma.Networking
             get { return entityEventManager.MidRoundSyncing; }
         }
 
-        public bool AllowDisguises
+        public override bool AllowDisguises
         {
             get;
-            private set;
+            set;
         }
         
         public GameClient(string newName)
