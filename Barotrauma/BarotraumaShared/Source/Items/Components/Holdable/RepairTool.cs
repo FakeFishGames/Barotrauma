@@ -93,7 +93,7 @@ namespace Barotrauma.Items.Components
                     case "fixable":
                         if (subElement.Attribute("name") != null)
                         {
-                            DebugConsole.ThrowError("Error in RepairTool "+item.Name+" - use identifiers instead of names to configure fixable entities.");
+                            DebugConsole.ThrowError("Error in RepairTool " + item.Name + " - use identifiers instead of names to configure fixable entities.");
                             fixableEntities.Add(subElement.Attribute("name").Value);
                         }
                         else
