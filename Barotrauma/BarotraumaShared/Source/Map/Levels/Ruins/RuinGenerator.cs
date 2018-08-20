@@ -348,15 +348,15 @@ namespace Barotrauma.RuinGeneration
                     var structurePrefab = RuinStructure.GetRandom(wallType, leaf.GetLineAlignment(wall));
                     if (structurePrefab == null) continue;
 
-                    float radius = (wall.A.X == wall.B.X) ? 
-                        (structurePrefab.Prefab as StructurePrefab).Size.X * 0.5f : 
+                    float radius = (wall.A.X == wall.B.X) ?
+                        (structurePrefab.Prefab as StructurePrefab).Size.X * 0.5f :
                         (structurePrefab.Prefab as StructurePrefab).Size.Y * 0.5f;
 
                     Rectangle rect = new Rectangle(
-                        (int)(wall.A.X - radius), 
-                        (int)(wall.B.Y + radius), 
-                        (int)((wall.B.X - wall.A.X) + radius*2.0f), 
-                        (int)((wall.B.Y - wall.A.Y) + radius*2.0f));
+                        (int)(wall.A.X - radius),
+                        (int)(wall.B.Y + radius),
+                        (int)((wall.B.X - wall.A.X) + radius * 2.0f),
+                        (int)((wall.B.Y - wall.A.Y) + radius * 2.0f));
 
                     //cut a section off from both ends of a horizontal wall to get nicer looking corners 
                     if (wall.A.Y == wall.B.Y)
@@ -365,8 +365,10 @@ namespace Barotrauma.RuinGeneration
                         if (rect.Width < Submarine.GridSize.X) continue;
                     }
 
-                    var structure = new Structure(rect, structurePrefab.Prefab as StructurePrefab, null);
-                    structure.MoveWithLevel = true;
+                    var structure = new Structure(rect, structurePrefab.Prefab as StructurePrefab, null)
+                    {
+                        ShouldBeSaved = false
+                    };
                     structure.SetCollisionCategory(Physics.CollisionLevel);
                 }
 
@@ -376,11 +378,14 @@ namespace Barotrauma.RuinGeneration
 
                 Rectangle backgroundRect = new Rectangle(leaf.Rect.X, leaf.Rect.Y + leaf.Rect.Height, leaf.Rect.Width, leaf.Rect.Height);
 
-                new Structure(backgroundRect, (background.Prefab as StructurePrefab), null).MoveWithLevel = true;
+                new Structure(backgroundRect, (background.Prefab as StructurePrefab), null)
+                {
+                    ShouldBeSaved = false
+                };
 
-                var submarineBlocker = BodyFactory.CreateRectangle(GameMain.World, 
+                var submarineBlocker = BodyFactory.CreateRectangle(GameMain.World,
                     ConvertUnits.ToSimUnits(leaf.Rect.Width),
-                    ConvertUnits.ToSimUnits(leaf.Rect.Height), 
+                    ConvertUnits.ToSimUnits(leaf.Rect.Height),
                     1, ConvertUnits.ToSimUnits(leaf.Center));
 
                 submarineBlocker.IsStatic = true;
@@ -420,8 +425,10 @@ namespace Barotrauma.RuinGeneration
                     doorPos.Y = (wall.A.Y + wall.B.Y) / 2.0f;
                 }
 
-                var door = new Item(doorPrefab.Prefab as ItemPrefab, doorPos, null);
-                door.MoveWithLevel = true;
+                var door = new Item(doorPrefab.Prefab as ItemPrefab, doorPos, null)
+                {
+                    ShouldBeSaved = false
+                };
 
                 door.GetComponent<Items.Components.Door>().IsOpen = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < 0.8f;
 
@@ -432,11 +439,13 @@ namespace Barotrauma.RuinGeneration
 
                 var sensor = new Item(sensorPrefab, new Vector2(
                     Rand.Range(sensorRoom.Rect.X, sensorRoom.Rect.Right, Rand.RandSync.Server),
-                    Rand.Range(sensorRoom.Rect.Y, sensorRoom.Rect.Bottom, Rand.RandSync.Server)), null);
-                sensor.MoveWithLevel = true;
+                    Rand.Range(sensorRoom.Rect.Y, sensorRoom.Rect.Bottom, Rand.RandSync.Server)), null)
+                {
+                    ShouldBeSaved = false
+                };
 
                 var wire = new Item(wirePrefab, sensorRoom.Center, null).GetComponent<Items.Components.Wire>();
-                wire.Item.MoveWithLevel = false;
+                wire.Item.ShouldBeSaved = false;
 
                 var conn1 = door.Connections.Find(c => c.Name == "set_state");
                 conn1.AddLink(0, wire);
@@ -483,15 +492,17 @@ namespace Barotrauma.RuinGeneration
 
                 if (prop.Prefab is ItemPrefab)
                 {
-                    var item = new Item((ItemPrefab)prop.Prefab, position, null);
-                    item.MoveWithLevel = true;
+                    new Item((ItemPrefab)prop.Prefab, position, null);
                 }
                 else
                 {
                     new Structure(new Rectangle(
-                        (int)(position.X - size.X/2.0f), (int)(position.Y + size.Y/2.0f),
+                        (int)(position.X - size.X / 2.0f), (int)(position.Y + size.Y / 2.0f),
                         (int)size.X, (int)size.Y),
-                        prop.Prefab as StructurePrefab, null).MoveWithLevel = true;
+                        prop.Prefab as StructurePrefab, null)
+                    {
+                        ShouldBeSaved = false
+                    };
                 }
             }
 
