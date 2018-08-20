@@ -85,6 +85,7 @@ namespace Barotrauma
                 }  
             }
 #if SERVER
+            //TODO: fix?
             else
             {
                 GameMain.Server?.ConnectedClients.ForEach(c => c.Karma += 0.1f);

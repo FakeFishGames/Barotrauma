@@ -97,6 +97,7 @@ namespace Barotrauma
                         newOrder.GetChatMessage("", Character.CurrentHull?.RoomName), ChatMessageType.Order);
 
 #if SERVER
+                    //TODO: fix?
                     if (GameMain.Server != null)
                     {
                         OrderChatMessage msg = new OrderChatMessage(newOrder, "", Character.CurrentHull, null, Character);

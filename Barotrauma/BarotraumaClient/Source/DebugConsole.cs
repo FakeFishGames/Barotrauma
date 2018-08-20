@@ -525,18 +525,10 @@ namespace Barotrauma
 
                 for (int i = 0; i < msgCount; i++)
                 {
-#if SERVER
-                    if (GameMain.Server != null)
-                    {
-                        GameMain.Server.SendChatMessage(ToolBox.RandomSeed(msgLength), ChatMessageType.Default);
-                    }
-#endif
-#if CLIENT
                     if (GameMain.Client != null)
                     {
                         GameMain.Client.SendChatMessage(ToolBox.RandomSeed(msgLength));
                     }
-#endif
                 }
             }));
 #endif

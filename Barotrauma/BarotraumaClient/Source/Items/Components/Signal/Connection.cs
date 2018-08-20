@@ -166,6 +166,7 @@ namespace Barotrauma.Items.Components
                         {
                             var otherConnection = draggingConnected.OtherConnection(this);
 #if SERVER
+                            //TODO: ffs
                             if (otherConnection == null)
                             {
                                 GameServer.Log(Character.Controlled.LogName + " connected a wire to " +

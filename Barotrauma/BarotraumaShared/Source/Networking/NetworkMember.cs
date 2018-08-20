@@ -150,6 +150,12 @@ namespace Barotrauma.Networking
             get;
             protected set;
         }
+        
+        public virtual bool AllowDisguises
+        {
+            get;
+            set;
+        }
 
         partial void InitProjSpecific();
         public NetworkMember()
