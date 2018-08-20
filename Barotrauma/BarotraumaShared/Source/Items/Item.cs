@@ -1236,6 +1236,7 @@ namespace Barotrauma
             {
                 if (string.IsNullOrEmpty(ic.Msg)) continue;
                 if (!ic.CanBePicked && !ic.CanBeSelected) continue;
+                if (ic is Holdable holdable && !holdable.CanBeDeattached()) continue;
                
                 Color color = Color.Red;
                 if (ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false)) color = Color.Orange;
