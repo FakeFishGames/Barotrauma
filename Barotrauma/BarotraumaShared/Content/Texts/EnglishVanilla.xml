@@ -443,6 +443,11 @@
   <ClientPermission.ConsoleCommands>Console commands</ClientPermission.ConsoleCommands>
   <ClientPermission.ServerLog>Server log</ClientPermission.ServerLog>
 
+  <!-- Game modes -->
+  <GameMode.Sandbox>Sandbox</GameMode.Sandbox>
+  <GameMode.Mission>Mission</GameMode.Mission>
+  <GameMode.Campaign>Mission</GameMode.Campaign>
+  
   <!-- Mission types -->
   <MissionType.None>None</MissionType.None>
   <MissionType.Random>Random</MissionType.Random>
