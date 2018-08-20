@@ -433,7 +433,7 @@ namespace Barotrauma
                 UserData = -1
             };
             new GUITextBlock(new RectTransform(new Vector2(0.4f, 1.0f), missionTypeContainer.RectTransform),
-                TextManager.Get("Random"), textAlignment: Alignment.Center)
+                TextManager.Get("MissionType.Random"), textAlignment: Alignment.Center)
             {
                 UserData = 0
             };
@@ -838,8 +838,7 @@ namespace Barotrauma
         {
             if (missionTypeIndex < 0 || missionTypeIndex >= Enum.GetValues(typeof(MissionType)).Length) return;
             
-            //TODO: get mission type text from xml
-            ((GUITextBlock)missionTypeContainer.GetChild(2)).Text = ((MissionType)missionTypeIndex).ToString();
+            ((GUITextBlock)missionTypeContainer.GetChild(2)).Text = TextManager.Get("MissionType." + ((MissionType)missionTypeIndex).ToString());
             missionTypeContainer.UserData = ((MissionType)missionTypeIndex);
         }
 

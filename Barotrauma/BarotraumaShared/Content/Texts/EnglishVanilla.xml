@@ -442,6 +442,14 @@
   <ClientPermission.ManageCampaign>Manage campaign</ClientPermission.ManageCampaign>
   <ClientPermission.ConsoleCommands>Console commands</ClientPermission.ConsoleCommands>
   <ClientPermission.ServerLog>Server log</ClientPermission.ServerLog>
+
+  <!-- Mission types -->
+  <MissionType.None>None</MissionType.None>
+  <MissionType.Random>Random</MissionType.Random>
+  <MissionType.Salvage>Salvage</MissionType.Salvage>
+  <MissionType.Monster>Monster</MissionType.Monster>
+  <MissionType.Cargo>Cargo</MissionType.Cargo>
+  <MissionType.Combat>Combat</MissionType.Combat>
   
   <!-- Ingame UI -->
   <EndRoundVotes>Votes to end the round (y/n) [y]/[n]</EndRoundVotes>
