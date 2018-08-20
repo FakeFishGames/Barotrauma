@@ -9,7 +9,6 @@ namespace Barotrauma.Networking
     {
         public string Name;
         public byte ID;
-        public ulong SteamID;
         
         public byte TeamID = 0;
 
@@ -23,52 +22,10 @@ namespace Barotrauma.Networking
                 if (character != null) HasSpawned = true;
             }
         }
-        public CharacterInfo CharacterInfo;
-        public NetConnection Connection { get; set; }
         public bool InGame;        
         public bool HasSpawned; //has the client spawned as a character during the current round
         
-        public UInt16 LastRecvGeneralUpdate = 0;
-        
-        public UInt16 LastSentChatMsgID = 0; //last msg this client said
-        public UInt16 LastRecvChatMsgID = 0; //last msg this client knows about
-
-        public UInt16 LastSentEntityEventID = 0;
-        public UInt16 LastRecvEntityEventID = 0;
-
-        public UInt16 LastRecvCampaignUpdate = 0;
-        public UInt16 LastRecvCampaignSave = 0;
-        
-        public readonly List<ChatMessage> ChatMsgQueue = new List<ChatMessage>();
-        public UInt16 LastChatMsgQueueID;
-
-        //latest chat messages sent by this client
-        public readonly List<string> LastSentChatMessages = new List<string>(); 
-        public float ChatSpamSpeed;
-        public float ChatSpamTimer;
-        public int ChatSpamCount;
-        
-        public double MidRoundSyncTimeOut;
-
-        public bool NeedsMidRoundSync;
-        //how many unique events the client missed before joining the server
-        public UInt16 UnreceivedEntityEventCount;
-        public UInt16 FirstNewEventID;
-
         private List<Client> kickVoters;
-
-        //when was a specific entity event last sent to the client
-        //  key = event id, value = NetTime.Now when sending
-        public readonly Dictionary<UInt16, float> EntityEventLastSent = new Dictionary<UInt16, float>();
-
-        public readonly Queue<Entity> PendingPositionUpdates = new Queue<Entity>();
-        
-        public bool ReadyToStart;
-
-        public List<JobPrefab> JobPreferences;
-        public JobPrefab AssignedJob;
-        
-        public float DeleteDisconnectedTimer;
 
         public HashSet<string> GivenAchievements = new HashSet<string>();
 
@@ -83,19 +40,6 @@ namespace Barotrauma.Networking
                 
         private object[] votes;
 
-        public void InitClientSync()
-        {
-            LastSentChatMsgID = 0;
-            LastRecvChatMsgID = ChatMessage.LastID;
-
-            LastRecvGeneralUpdate = 0;
-            
-            LastRecvEntityEventID = 0;
-
-            UnreceivedEntityEventCount = 0;
-            NeedsMidRoundSync = false;
-        }
-
         public int KickVoteCount
         {
             get { return kickVoters.Count; }
@@ -107,6 +51,7 @@ namespace Barotrauma.Networking
             
         }
 
+        partial void InitProjSpecific();
         public Client(string name, byte ID)
         {
             this.Name = name;
@@ -117,7 +62,7 @@ namespace Barotrauma.Networking
 
             votes = new object[Enum.GetNames(typeof(VoteType)).Length];
 
-            JobPreferences = new List<JobPrefab>(JobPrefab.List.GetRange(0, Math.Min(JobPrefab.List.Count, 3)));
+            InitProjSpecific();
         }
 
         public static string SanitizeName(string name)
