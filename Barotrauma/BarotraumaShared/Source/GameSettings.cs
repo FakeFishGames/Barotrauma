@@ -308,17 +308,17 @@ namespace Barotrauma
             MusicVolume = doc.Root.GetAttributeFloat("musicvolume", 0.3f);
 
 #if DEBUG
-            useSteamMatchmaking = false;//doc.Root.GetAttributeBool("usesteammatchmaking", true);
-            requireSteamAuthentication = false;// doc.Root.GetAttributeBool("requiresteamauthentication", true);
+            useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true);
+            requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true);
 #else
             useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true);
             requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true);
 #endif
 
 #if DEBUG
-            EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", true);
-#else
             EnableSplashScreen = false;
+#else
+            EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", true);
 #endif
 
             keyMapping = new KeyOrMouse[Enum.GetNames(typeof(InputType)).Length];
