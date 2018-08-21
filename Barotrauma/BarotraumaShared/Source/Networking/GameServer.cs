@@ -1362,6 +1362,8 @@ namespace Barotrauma.Networking
                     reloadSub: true, 
                     loadSecondSub: teamCount > 1,
                     mirrorLevel: campaign.Map.CurrentLocation != campaign.Map.SelectedConnection.Locations[0]);
+
+                campaign.AssignClientCharacterInfos(connectedClients);
             }
             else
             {
@@ -2339,6 +2341,20 @@ namespace Barotrauma.Networking
             else if (myCharacter?.Info?.Job != null && !myCharacter.IsDead && myCharacter.TeamID == teamID)
             {
                 assignedClientCount[myCharacter.Info.Job.Prefab]++;
+            }
+
+            //if we're playing a multiplayer campaign, check which clients already have a character and a job
+            //(characters are persistent in campaigns)
+            if (GameMain.GameSession.GameMode is MultiPlayerCampaign multiplayerCampaign)
+            {
+                var campaignAssigned = multiplayerCampaign.GetAssignedJobs(connectedClients);
+                //remove already assigned clients from unassigned
+                unassigned.RemoveAll(u => campaignAssigned.ContainsKey(u));
+                //add up to assigned client count
+                foreach (Job job in campaignAssigned.Values)
+                {
+                    assignedClientCount[job.Prefab]++;
+                }
             }
 
             //count the clients who already have characters with an assigned job
