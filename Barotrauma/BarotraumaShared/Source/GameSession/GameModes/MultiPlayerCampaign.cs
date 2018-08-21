@@ -32,6 +32,8 @@ namespace Barotrauma
 
         private static byte currentCampaignID;
 
+        private List<CharacterCampaignData> characterData = new List<CharacterCampaignData>();
+
         public byte CampaignID
         {
             get; private set;
@@ -53,12 +55,31 @@ namespace Barotrauma
             }
         }
 
+        public void AssignClientCharacterInfos(IEnumerable<Client> connectedClients)
+        {
+            foreach (Client client in connectedClients)
+            {
+                var matchingData = characterData.Find(cd => cd.MatchesClient(client));
+                if (matchingData != null) client.CharacterInfo = matchingData.CharacterInfo;
+            }
+        }
+
+        public Dictionary<Client, Job> GetAssignedJobs(IEnumerable<Client> connectedClients)
+        {
+            var assignedJobs = new Dictionary<Client, Job>();
+            foreach (Client client in connectedClients)
+            {
+                var matchingData = characterData.Find(cd => cd.MatchesClient(client));
+                if (matchingData != null) assignedJobs.Add(client, matchingData.CharacterInfo.Job);
+            }
+            return assignedJobs;
+        }
+
         public override void Start()
         {
             base.Start();            
             lastUpdateID++;
         }
-
 
         public override void End(string endMessage = "")
         {
@@ -92,8 +113,20 @@ namespace Barotrauma
             }*/
 
             GameMain.GameSession.EndRound("");
-
-            //TODO: save player inventories between mp campaign rounds
+            
+            foreach (Client c in GameMain.Server.ConnectedClients)
+            {
+                if (c.HasSpawned)
+                {
+                    //client has spawned this round -> remove old data (and replace with new one if the client still has an alive character)
+                    characterData.RemoveAll(cd => cd.MatchesClient(c));
+                }
+                
+                if (c.Character?.Info != null && !c.Character.IsDead)
+                {
+                    characterData.Add(new CharacterCampaignData(c));
+                }
+            }
 
             //remove all items that are in someone's inventory
             foreach (Character c in Character.CharacterList)
@@ -167,6 +200,7 @@ namespace Barotrauma
                 }
             }
 
+            characterData.Clear();
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -185,6 +219,12 @@ namespace Barotrauma
                             map.Load(subElement, LastSaveID > 0);
                         }
                         break;
+                    case "characterdata":
+                        foreach (XElement characterDataElement in subElement.Elements())
+                        {
+                            characterData.Add(new CharacterCampaignData(characterDataElement));
+                        }
+                        break;
                 }
             }
         }
@@ -196,6 +236,13 @@ namespace Barotrauma
                 new XAttribute("cheatsenabled", CheatsEnabled));
             Map.Save(modeElement);
             element.Add(modeElement);
+
+            XElement characterDataElement = new XElement("CharacterData");
+            foreach (CharacterCampaignData cd in characterData)
+            {
+                characterDataElement.Add(cd.Save());
+            }
+            modeElement.Add(characterDataElement);
 
             lastSaveID++;
         }
