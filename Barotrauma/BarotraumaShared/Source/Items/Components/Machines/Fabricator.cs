@@ -10,12 +10,27 @@ namespace Barotrauma.Items.Components
 {
     class FabricableItem
     {
+        public class RequiredItem
+        {
+            public readonly ItemPrefab ItemPrefab;
+            public int Amount;
+            public readonly float MinCondition;
+            public readonly bool UseCondition;
+
+            public RequiredItem(ItemPrefab itemPrefab, int amount, float minCondition, bool useCondition)
+            {
+                ItemPrefab = itemPrefab;
+                Amount = amount;
+                MinCondition = minCondition;
+                UseCondition = useCondition;
+            }
+        }
+
         public readonly ItemPrefab TargetItem;
         
         public readonly string DisplayName;
         
-        //TODO: refactor this (maybe make it a struct)
-        public readonly List<Tuple<ItemPrefab, int, float, bool>> RequiredItems;
+        public readonly List<RequiredItem> RequiredItems;
 
         public readonly float RequiredTime;
 
@@ -53,7 +68,7 @@ namespace Barotrauma.Items.Components
             RequiredSkills = new List<Skill>();
             RequiredTime = element.GetAttributeFloat("requiredtime", 1.0f);
             OutCondition = element.GetAttributeFloat("outcondition", 1.0f);
-            RequiredItems = new List<Tuple<ItemPrefab, int, float, bool>>();
+            RequiredItems = new List<RequiredItem>();
 
             foreach (XElement subElement in element.Elements())
             {
@@ -92,15 +107,16 @@ namespace Barotrauma.Items.Components
                             continue;
                         }
 
-                        var existing = RequiredItems.Find(r => r.Item1 == requiredItem);
+                        var existing = RequiredItems.Find(r => r.ItemPrefab == requiredItem);
                         if (existing == null)
                         {
-                            RequiredItems.Add(new Tuple<ItemPrefab, int, float, bool>(requiredItem, count, minCondition, useCondition));
+                            RequiredItems.Add(new RequiredItem(requiredItem, count, minCondition, useCondition));
                         }
                         else
                         {
+
                             RequiredItems.Remove(existing);
-                            RequiredItems.Add(new Tuple<ItemPrefab, int, float, bool>(requiredItem, existing.Item2 + count, minCondition, useCondition));
+                            RequiredItems.Add(new RequiredItem(requiredItem, existing.Amount + count, minCondition, useCondition));
                         }
 
                         break;
@@ -283,17 +299,17 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            foreach (Tuple<ItemPrefab, int, float, bool> ip in fabricatedItem.RequiredItems)
+            foreach (FabricableItem.RequiredItem ingredient in fabricatedItem.RequiredItems)
             {
-                for (int i = 0; i < ip.Item2; i++)
+                for (int i = 0; i < ingredient.Amount; i++)
                 {
-                    var requiredItem = containers[0].Inventory.Items.FirstOrDefault(it => it != null && it.Prefab == ip.Item1 && it.Condition >= ip.Item1.Health * ip.Item3);
+                    var requiredItem = containers[0].Inventory.Items.FirstOrDefault(it => it != null && it.Prefab == ingredient.ItemPrefab && it.Condition >= ingredient.ItemPrefab.Health * ingredient.MinCondition);
                     if (requiredItem == null) continue;
                     
                     //Item4 = use condition bool
-                    if (ip.Item4 && requiredItem.Condition - ip.Item1.Health * ip.Item3 > 0.0f) //Leave it behind with reduced condition if it has enough to stay above 0
+                    if (ingredient.UseCondition && requiredItem.Condition - ingredient.ItemPrefab.Health * ingredient.MinCondition > 0.0f) //Leave it behind with reduced condition if it has enough to stay above 0
                     {
-                        requiredItem.Condition -= ip.Item1.Health * ip.Item3;
+                        requiredItem.Condition -= ingredient.ItemPrefab.Health * ingredient.MinCondition;
                         continue;
                     }
                     Entity.Spawner.AddToRemoveQueue(requiredItem);
@@ -331,9 +347,9 @@ namespace Barotrauma.Items.Components
                 return false;
             }
             ItemContainer container = item.GetComponent<ItemContainer>();
-            foreach (Tuple<ItemPrefab, int, float, bool> ip in fabricableItem.RequiredItems)
+            foreach (FabricableItem.RequiredItem ip in fabricableItem.RequiredItems)
             {
-                if (Array.FindAll(container.Inventory.Items, it => it != null && it.Prefab == ip.Item1 && it.Condition >= ip.Item1.Health * ip.Item3).Length < ip.Item2) return false;
+                if (Array.FindAll(container.Inventory.Items, it => it != null && it.Prefab == ip.ItemPrefab && it.Condition >= ip.ItemPrefab.Health * ip.MinCondition).Length < ip.Amount) return false;
             }
 
             return true;
