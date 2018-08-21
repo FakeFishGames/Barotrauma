@@ -8,6 +8,83 @@ namespace Barotrauma
 {
     partial class Character
     {
+        partial void UpdateNetInput()
+        {
+            if (GameMain.Client != null)
+            {
+                if (this != Controlled)
+                {
+                    //freeze AI characters if more than 1 seconds have passed since last update from the server
+                    if (lastRecvPositionUpdateTime < NetTime.Now - 1.0f)
+                    {
+                        AnimController.Frozen = true;
+                        memState.Clear();
+                        //hide after 2 seconds
+                        if (lastRecvPositionUpdateTime < NetTime.Now - 2.0f)
+                        {
+                            Enabled = false;
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    var posInfo = new CharacterStateInfo(
+                    SimPosition,
+                    AnimController.Collider.Rotation,
+                    LastNetworkUpdateID,
+                    AnimController.TargetDir,
+                    SelectedCharacter == null ? (Entity)SelectedConstruction : (Entity)SelectedCharacter,
+                    AnimController.Anim);
+
+                    memLocalState.Add(posInfo);
+
+                    InputNetFlags newInput = InputNetFlags.None;
+                    if (IsKeyDown(InputType.Left)) newInput |= InputNetFlags.Left;
+                    if (IsKeyDown(InputType.Right)) newInput |= InputNetFlags.Right;
+                    if (IsKeyDown(InputType.Up)) newInput |= InputNetFlags.Up;
+                    if (IsKeyDown(InputType.Down)) newInput |= InputNetFlags.Down;
+                    if (IsKeyDown(InputType.Run)) newInput |= InputNetFlags.Run;
+                    if (IsKeyDown(InputType.Crouch)) newInput |= InputNetFlags.Crouch;
+                    if (IsKeyHit(InputType.Select)) newInput |= InputNetFlags.Select; //TODO: clean up the way this input is registered
+                    if (IsKeyHit(InputType.Health)) newInput |= InputNetFlags.Health;
+                    if (IsKeyDown(InputType.Use)) newInput |= InputNetFlags.Use;
+                    if (IsKeyDown(InputType.Aim)) newInput |= InputNetFlags.Aim;
+                    if (IsKeyDown(InputType.Attack)) newInput |= InputNetFlags.Attack;
+                    if (IsKeyDown(InputType.Ragdoll)) newInput |= InputNetFlags.Ragdoll;
+
+                    if (AnimController.TargetDir == Direction.Left) newInput |= InputNetFlags.FacingLeft;
+
+                    Vector2 relativeCursorPos = cursorPosition - (ViewTarget == null ? AnimController.AimSourcePos : ViewTarget.Position);
+                    relativeCursorPos.Normalize();
+                    UInt16 intAngle = (UInt16)(65535.0 * Math.Atan2(relativeCursorPos.Y, relativeCursorPos.X) / (2.0 * Math.PI));
+
+                    NetInputMem newMem = new NetInputMem();
+                    newMem.states = newInput;
+                    newMem.intAim = intAngle;
+                    if (focusedItem != null)
+                    {
+                        newMem.interact = focusedItem.ID;
+                    }
+                    else if (focusedCharacter != null)
+                    {
+                        newMem.interact = focusedCharacter.ID;
+                    }
+
+                    memInput.Insert(0, newMem);
+                    LastNetworkUpdateID++;
+                    if (memInput.Count > 60)
+                    {
+                        memInput.RemoveRange(60, memInput.Count - 60);
+                    }
+                }
+            }
+            else //this == Character.Controlled && GameMain.Client == null
+            {
+                AnimController.Frozen = false;
+            }
+        }
+
         public virtual void ClientWrite(NetBuffer msg, object[] extraData = null)
         {
             if (extraData != null)

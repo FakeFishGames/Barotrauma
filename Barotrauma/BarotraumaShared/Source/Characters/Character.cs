@@ -15,6 +15,8 @@ namespace Barotrauma
     {
         public static List<Character> CharacterList = new List<Character>();
 
+        partial void UpdateLimbLightSource(Limb limb);
+
         private bool enabled = true;
         public bool Enabled
         {
@@ -40,12 +42,7 @@ namespace Barotrauma
                     {
                         limb.body.Enabled = enabled;
                     }
-#if CLIENT
-                    if (limb.LightSource != null)
-                    {
-                        limb.LightSource.Enabled = enabled;
-                    }
-#endif
+                    UpdateLimbLightSource(limb);
                 }
                 AnimController.Collider.Enabled = value;
             }
@@ -319,9 +316,7 @@ namespace Barotrauma
             get { return IsRagdolled ? 1.0f : CharacterHealth.StunTimer; }
             set
             {
-#if CLIENT
-                if (GameMain.Client != null) return;
-#endif
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) return;
 
                 SetStun(value, true);
             }
@@ -949,29 +944,28 @@ namespace Barotrauma
                     AnimController.TargetDir = Direction.Right;
                 }
             }
-
-#if SERVER
-            if (GameMain.Server != null)
+            
+            if (GameMain.NetworkMember != null)
             {
-                if (dequeuedInput.HasFlag(InputNetFlags.FacingLeft))
+                if (GameMain.NetworkMember.IsServer)
                 {
-                    AnimController.TargetDir = Direction.Left;
+                    if (dequeuedInput.HasFlag(InputNetFlags.FacingLeft))
+                    {
+                        AnimController.TargetDir = Direction.Left;
+                    }
+                    else
+                    {
+                        AnimController.TargetDir = Direction.Right;
+                    }
                 }
-                else
+                else if (GameMain.NetworkMember.IsClient && Controlled != this)
                 {
-                    AnimController.TargetDir = Direction.Right;
+                    if (memState.Count > 0)
+                    {
+                        AnimController.TargetDir = memState[0].Direction;
+                    }
                 }
             }
-#endif
-#if CLIENT
-            if (GameMain.Client != null && Character.controlled != this)
-            {
-                if (memState.Count > 0)
-                {
-                    AnimController.TargetDir = memState[0].Direction;
-                }
-            }
-#endif
 
             if (attackCoolDown >0.0f)
             {
@@ -1452,10 +1446,8 @@ namespace Barotrauma
 
         public void DoInteractionUpdate(float deltaTime, Vector2 mouseSimPos)
         {
-            bool isLocalPlayer = false;
-#if CLIENT
-            isLocalPlayer = (controlled == this);
-#endif
+            bool isLocalPlayer = Controlled == this;
+
             if (!isLocalPlayer && (this is AICharacter && !IsRemotePlayer))
             {
                 return;
@@ -1503,10 +1495,7 @@ namespace Barotrauma
             if (SelectedConstruction == null && !AnimController.InWater)
             {
                 bool climbInput = IsKeyDown(InputType.Up) || IsKeyDown(InputType.Down);
-                bool isControlled = false;
-#if CLIENT
-                isControlled = Controlled == this;
-#endif
+                bool isControlled = Controlled == this;
 
                 Ladder nearbyLadder = null;
                 if (isControlled || climbInput)
@@ -1552,10 +1541,10 @@ namespace Barotrauma
                 if (Controlled == this)
                 {
                     focusedItem.IsHighlighted = true;
-                }
-                if (focusedItem.TryInteract(this))
-                {
-                    if (Controlled == this) CharacterHealth.OpenHealthWindow = null;
+                    if (focusedItem.TryInteract(this))
+                    {
+                        CharacterHealth.OpenHealthWindow = null;
+                    }
                 }
 #endif
             }
@@ -1580,38 +1569,31 @@ namespace Barotrauma
 
         public static void UpdateAll(float deltaTime, Camera cam)
         {
-#if CLIENT
-            if (GameMain.Client == null)
+            if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
             {
                 foreach (Character c in CharacterList)
                 {
                     if (!(c is AICharacter) && !c.IsRemotePlayer) continue;
-                    
-                    if (Submarine.MainSub != null)
+
+                    if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                    {
+                        //disable AI characters that are far away from all clients and the host's character and not controlled by anyone
+                        c.Enabled =
+                            c.IsRemotePlayer ||
+                            CharacterList.Any(c2 =>
+                                c != c2 &&
+                                (c2.IsRemotePlayer) &&
+                                Vector2.DistanceSquared(c2.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr);
+                    }
+                    else if (Submarine.MainSub != null)
                     {
                         //disable AI characters that are far away from the sub and the controlled character
                         c.Enabled = Vector2.DistanceSquared(Submarine.MainSub.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr ||
-                            (controlled != null && Vector2.DistanceSquared(controlled.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr);
+                            (Controlled != null && Vector2.DistanceSquared(Controlled.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr);
                     }
-                }
-            }
-#elif SERVER
-            foreach (Character c in CharacterList)
-            {
-                if (!(c is AICharacter) && !c.IsRemotePlayer) continue;
 
-                if (GameMain.Server != null)
-                {
-                    //disable AI characters that are far away from all clients and the host's character and not controlled by anyone
-                    c.Enabled =
-                        c.IsRemotePlayer ||
-                        CharacterList.Any(c2 =>
-                            c != c2 &&
-                            (c2.IsRemotePlayer) &&
-                            Vector2.DistanceSquared(c2.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr);
                 }
             }
-#endif
 
             for (int i = 0; i < CharacterList.Count; i++)
             {
@@ -1622,10 +1604,8 @@ namespace Barotrauma
         public virtual void Update(float deltaTime, Camera cam)
         {
             UpdateProjSpecific(deltaTime, cam);
-
-#if CLIENT
-            if (GameMain.Client != null && this == Controlled && !isSynced) return;
-#endif
+            
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && this == Controlled && !isSynced) return;
 
             if (!Enabled) return;
 
@@ -1684,16 +1664,12 @@ namespace Barotrauma
 
                     if (PressureTimer >= 100.0f)
                     {
-#if CLIENT
-                        if (controlled == this) cam.Zoom = 5.0f;
-                        if (GameMain.Client == null)
+                        if (Controlled == this) cam.Zoom = 5.0f;
+                        if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                         {
-#endif
                             Implode();
                             return;
-#if CLIENT
                         }
-#endif
                     }
                 }
                 else
@@ -1748,10 +1724,7 @@ namespace Barotrauma
 
             Control(deltaTime, cam);
 
-            bool isNotControlled = true;
-#if CLIENT
-            isNotControlled = controlled != this;
-#endif
+            bool isNotControlled = Controlled != this;
 
             if (isNotControlled && (!(this is AICharacter) || IsRemotePlayer))
             {
@@ -1836,9 +1809,7 @@ namespace Barotrauma
 
         public void Speak(string message, ChatMessageType? messageType, float delay = 0.0f, string identifier = "", float minDurationBetweenSimilar = 0.0f)
         {
-#if CLIENT
-            if (GameMain.Client != null) return;
-#endif
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) return;
 
             //already sent a similar message a moment ago
             if (!string.IsNullOrEmpty(identifier) && minDurationBetweenSimilar > 0.0f &&
@@ -1853,9 +1824,7 @@ namespace Barotrauma
 
         private void UpdateAIChatMessages(float deltaTime)
         {
-#if CLIENT
-            if (GameMain.Client != null) return;
-#endif
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) return;
 
             List<AIChatMessage> sentMessages = new List<AIChatMessage>();
             foreach (AIChatMessage message in aiChatMessageQueue)
@@ -1951,10 +1920,7 @@ namespace Barotrauma
             }
 #endif
 
-            bool isNotClient = true;
-#if CLIENT
-            isNotClient = GameMain.Client == null;
-#endif
+            bool isNotClient = GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient;
 
             if (isNotClient &&
                 IsDead && Rand.Range(0.0f, 1.0f) < attack.SeverLimbsProbability)
@@ -2040,9 +2006,7 @@ namespace Barotrauma
 
         public void SetStun(float newStun, bool allowStunDecrease = false, bool isNetworkMessage = false)
         {
-#if CLIENT
-            if (GameMain.Client != null && !isNetworkMessage) return;
-#endif
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && !isNetworkMessage) return;
             
             if ((newStun <= Stun && !allowStunDecrease) || !MathUtils.IsValid(newStun)) return;
             
@@ -2066,12 +2030,10 @@ namespace Barotrauma
 
         private void Implode(bool isNetworkMessage = false)
         {
-#if CLIENT
             if (!isNetworkMessage)
             {
-                if (GameMain.Client != null) return; 
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) return; 
             }
-#endif
 
             Kill(CauseOfDeathType.Pressure, null, isNetworkMessage);
             CharacterHealth.PressureAffliction.Strength = CharacterHealth.PressureAffliction.Prefab.MaxStrength;
@@ -2105,14 +2067,12 @@ namespace Barotrauma
         public void Kill(CauseOfDeathType causeOfDeath, AfflictionPrefab causeOfDeathAffliction, bool isNetworkMessage = false)
         {
             if (IsDead) return;
-
-#if CLIENT
+            
             //clients aren't allowed to kill characters unless they receive a network message
-            if (!isNetworkMessage && GameMain.Client != null)
+            if (!isNetworkMessage && GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
             {
                 return;
             }
-#endif
 
             ApplyStatusEffects(ActionType.OnDeath, 1.0f);
 
@@ -2132,13 +2092,10 @@ namespace Barotrauma
             if (GameSettings.SendUserStatistics)
             {
                 string characterType = "Unknown";
-#if CLIENT
-                if (this == controlled)
+
+                if (this == Controlled)
                     characterType = "Player";
                 else if (IsRemotePlayer)
-#elif SERVER
-                if (IsRemotePlayer)
-#endif
                     characterType = "RemotePlayer";
                 else if (AIController is EnemyAIController)
                     characterType = "Enemy";

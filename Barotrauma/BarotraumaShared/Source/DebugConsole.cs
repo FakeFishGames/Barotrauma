@@ -77,6 +77,8 @@ namespace Barotrauma
             }
         }
 
+        static partial void AddHelpMessage(Command command);
+
         const int MaxMessages = 200;
 
         public static List<ColoredText> Messages = new List<ColoredText>();
@@ -136,11 +138,7 @@ namespace Barotrauma
                     }
                     else
                     {
-#if CLIENT
                         AddHelpMessage(matchingCommand);
-#else
-                        NewMessage(matchingCommand.help, Color.Cyan);
-#endif
                     }
                 }
             }, 
@@ -428,20 +426,6 @@ namespace Barotrauma
                 }
             }));
 
-#if CLIENT && WINDOWS
-            commands.Add(new Command("copyitemnames", "", (string[] args) =>
-            {
-                StringBuilder sb = new StringBuilder();
-                foreach (MapEntityPrefab mp in MapEntityPrefab.List)
-                {
-                    if (!(mp is ItemPrefab)) continue;
-                    sb.AppendLine(mp.Name);
-                }
-                System.Windows.Clipboard.SetText(sb.ToString());
-            }));
-#endif
-
-
             commands.Add(new Command("findentityids", "findentityids [entityname]", (string[] args) =>
             {
                 if (args.Length == 0) return;
@@ -582,28 +566,20 @@ namespace Barotrauma
 
             commands.Add(new Command("water|editwater", "water/editwater: Toggle water editing. Allows adding water into rooms by holding the left mouse button and removing it by holding the right mouse button.", (string[] args) =>
             {
-#if CLIENT
-                if (GameMain.Client == null)
+                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                 {
-#endif
                     Hull.EditWater = !Hull.EditWater;
                     NewMessage(Hull.EditWater ? "Water editing on" : "Water editing off", Color.White);
-#if CLIENT
                 }
-#endif
             }, isCheat: true));
 
             commands.Add(new Command("fire|editfire", "fire/editfire: Allows putting up fires by left clicking.", (string[] args) =>
             {
-#if CLIENT
-                if (GameMain.Client == null)
+                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                 {
-#endif
                     Hull.EditFire = !Hull.EditFire;
                     NewMessage(Hull.EditFire ? "Fire spawning on" : "Fire spawning off", Color.White);
-#if CLIENT
                 }
-#endif
             }, isCheat: true));
 
             commands.Add(new Command("explosion", "explosion [range] [force] [damage] [structuredamage] [emp strength]: Creates an explosion at the position of the cursor.", (string[] args) =>

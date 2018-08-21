@@ -478,16 +478,16 @@ namespace Barotrauma
             {
                 if (AttackTimer >= attack.Duration && damageTarget != null)
                 {
+                    bool playSound = false;
 #if CLIENT
-                    bool playSound = LastAttackSoundTime < Timing.TotalTime - SoundInterval;
-                    attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound);
+                    playSound = LastAttackSoundTime < Timing.TotalTime - SoundInterval;
                     if (playSound)
                     {
                         LastAttackSoundTime = (float)SoundInterval;
                     }
-#else
-                    attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, false);
 #endif
+                    attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound);
+
                 }
             }
 
@@ -514,7 +514,8 @@ namespace Barotrauma
             }
 
         }
-        
+
+        partial void RemoveProjSpecific();
         public void Remove()
         {
             if (sprite != null)
@@ -534,13 +535,8 @@ namespace Barotrauma
                 body.Remove();
                 body = null;
             }
-
-#if CLIENT
-            if (LightSource != null)
-            {
-                LightSource.Remove();
-            }
-#endif
+            
+            RemoveProjSpecific();
         }
     }
 }
