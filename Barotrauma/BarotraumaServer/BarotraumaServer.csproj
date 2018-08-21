@@ -116,8 +116,9 @@
     <Compile Include="Source\Characters\CharacterNetworking.cs" />
     <Compile Include="Source\DebugConsole.cs" />
     <Compile Include="Source\GameMain.cs" />
+    <Compile Include="Source\GameSession\GameModes\CharacterCampaignData.cs" />
     <Compile Include="Source\GameSession\GameModes\TraitorManager.cs" />
-    <Compile Include="Source\GameSession\MultiPlayerCampaign.cs" />
+    <Compile Include="Source\GameSession\MultiplayerCampaign.cs" />
     <Compile Include="Source\Items\Components\ItemComponent.cs" />
     <Compile Include="Source\Items\Components\ItemLabel.cs" />
     <Compile Include="Source\Items\Components\Machines\Deconstructor.cs" />

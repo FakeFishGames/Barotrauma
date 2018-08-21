@@ -59,6 +59,31 @@ namespace Barotrauma
             });
         }
 
+        public CharacterCampaignData GetClientCharacterData(Client client)
+        {
+            return characterData.Find(cd => cd.MatchesClient(client));
+        }
+
+        public Dictionary<Client, Job> GetAssignedJobs(IEnumerable<Client> connectedClients)
+        {
+            var assignedJobs = new Dictionary<Client, Job>();
+            foreach (Client client in connectedClients)
+            {
+                var matchingData = GetClientCharacterData(client);
+                if (matchingData != null) assignedJobs.Add(client, matchingData.CharacterInfo.Job);
+            }
+            return assignedJobs;
+        }
+
+        public void AssignClientCharacterInfos(IEnumerable<Client> connectedClients)
+        {
+            foreach (Client client in connectedClients)
+            {
+                var matchingData = GetClientCharacterData(client);
+                if (matchingData != null) client.CharacterInfo = matchingData.CharacterInfo;
+            }
+        }
+
         public void ServerWrite(NetBuffer msg, Client c)
         {
             System.Diagnostics.Debug.Assert(map.Locations.Count < UInt16.MaxValue);

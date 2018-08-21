@@ -1314,6 +1314,8 @@ namespace Barotrauma.Networking
                     reloadSub: true,
                     loadSecondSub: teamCount > 1,
                     mirrorLevel: campaign.Map.CurrentLocation != campaign.Map.SelectedConnection.Locations[0]);
+
+                campaign.AssignClientCharacterInfos(connectedClients);
             }
             else
             {
@@ -1380,7 +1382,15 @@ namespace Barotrauma.Networking
                     Character spawnedCharacter = Character.Create(teamClients[i].CharacterInfo, assignedWayPoints[i].WorldPosition, teamClients[i].CharacterInfo.Name, true, false);
                     spawnedCharacter.AnimController.Frozen = true;
                     spawnedCharacter.TeamID = (byte)teamID;
-                    spawnedCharacter.GiveJobItems(assignedWayPoints[i]);
+                    var characterData = campaign?.GetClientCharacterData(teamClients[i]);
+                    if (characterData == null)
+                    {
+                        spawnedCharacter.GiveJobItems(assignedWayPoints[i]);
+                    }
+                    else
+                    {
+                        characterData.SpawnInventoryItems(spawnedCharacter.Inventory);
+                    }
 
                     teamClients[i].Character = spawnedCharacter;
                     spawnedCharacter.OwnerClientIP = teamClients[i].Connection.RemoteEndPoint.Address.ToString();
@@ -1390,8 +1400,8 @@ namespace Barotrauma.Networking
                 for (int i = teamClients.Count; i < teamClients.Count + bots.Count; i++)
                 {
                     Character spawnedCharacter = Character.Create(characterInfos[i], assignedWayPoints[i].WorldPosition, characterInfos[i].Name, false, true);
-                    spawnedCharacter.GiveJobItems(assignedWayPoints[i]);
                     spawnedCharacter.TeamID = (byte)teamID;
+                    spawnedCharacter.GiveJobItems(assignedWayPoints[i]);
                 }
             }
 
@@ -2218,7 +2228,21 @@ namespace Barotrauma.Networking
 
             int teamID = 0;
             if (unassigned.Count > 0) teamID = unassigned[0].TeamID;
-            
+
+            //if we're playing a multiplayer campaign, check which clients already have a character and a job
+            //(characters are persistent in campaigns)
+            if (GameMain.GameSession.GameMode is MultiPlayerCampaign multiplayerCampaign)
+            {
+                var campaignAssigned = multiplayerCampaign.GetAssignedJobs(connectedClients);
+                //remove already assigned clients from unassigned
+                unassigned.RemoveAll(u => campaignAssigned.ContainsKey(u));
+                //add up to assigned client count
+                foreach (Job job in campaignAssigned.Values)
+                {
+                    assignedClientCount[job.Prefab]++;
+                }
+            }
+
             //count the clients who already have characters with an assigned job
             foreach (Client c in connectedClients)
             {

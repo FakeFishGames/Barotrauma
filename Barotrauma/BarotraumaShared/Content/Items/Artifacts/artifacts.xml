@@ -177,7 +177,7 @@
 
     <RepairTool structurefixamount="-3.0" limbfixamount="-1.0" range="600" barrelpos="30,15">
       <RequiredItems identifier="sulphuriteshard,oxygeniteshard" type="Contained"/>
-      <Fixable name="structure"/>
+      <Fixable identifier="structure"/>
 
       <ParticleEmitter particle="largeplasma" particlespersecond="50"/>
       <ParticleEmitterHitStructure particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800"/>

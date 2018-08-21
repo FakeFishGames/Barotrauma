@@ -7,6 +7,11 @@
     cargocontaineridentifier="metalcrate"
     description="A heads-up display that displays information of the vital signs and status of nearby humans.">
 
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="100"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="100"/>
+    
     <Sprite texture ="doctorgear.png" sourcerect="0,120,20,8" depth="0.6"/>
 
     <Body width="18" height="6" density="30"/>
@@ -25,6 +30,11 @@
     cargocontaineridentifier="metalcrate"  
     tags="smallitem">
 
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="100"/>
+    
     <Sprite texture ="doctorgear.png" sourcerect="75,0,53,18" depth="0.6"/>
 
     <Body width="52" height="17" density="30"/>
