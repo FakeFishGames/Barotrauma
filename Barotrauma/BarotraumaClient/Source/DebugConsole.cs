@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -237,7 +238,7 @@ namespace Barotrauma
             selectedIndex = Messages.Count;
         }
 
-        private static void AddHelpMessage(Command command)
+        static partial void AddHelpMessage(Command command)
         {
             if (listBox.Content.CountChildren > MaxMessages)
             {
@@ -273,6 +274,19 @@ namespace Barotrauma
 
         private static void InitProjectSpecific()
         {
+#if WINDOWS
+            commands.Add(new Command("copyitemnames", "", (string[] args) =>
+            {
+                StringBuilder sb = new StringBuilder();
+                foreach (MapEntityPrefab mp in MapEntityPrefab.List)
+                {
+                    if (!(mp is ItemPrefab)) continue;
+                    sb.AppendLine(mp.Name);
+                }
+                System.Windows.Clipboard.SetText(sb.ToString());
+            }));
+#endif
+
             commands.Add(new Command("autohull", "", (string[] args) =>
             {
                 if (Screen.Selected != GameMain.SubEditorScreen) return;

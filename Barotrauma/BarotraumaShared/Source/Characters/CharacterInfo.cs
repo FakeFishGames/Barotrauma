@@ -25,18 +25,11 @@ namespace Barotrauma
                 {
                     return Name;
                 }
-#if SERVER
-                else if ((GameMain.Server != null && !GameMain.Server.AllowDisguises))
+                else if ((GameMain.NetworkMember != null && !GameMain.NetworkMember.AllowDisguises))
                 {
                     return Name;
                 }
-#endif
-#if CLIENT
-                if (GameMain.Client != null && !GameMain.Client.AllowDisguises)
-                {
-                    return Name;
-                }
-#endif
+
                 if (Character.Inventory != null)
                 {
                     int cardSlotIndex = Character.Inventory.FindLimbSlot(InvSlotType.Card);

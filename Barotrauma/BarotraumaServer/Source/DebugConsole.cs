@@ -1433,5 +1433,10 @@ namespace Barotrauma
                 ThrowError("Executing the command \"" + matchingCommand.names[0] + "\" by request from \"" + client.Name + "\" failed.", e);
             }
         }
+
+        static partial void AddHelpMessage(Command command)
+        {
+            NewMessage(command.help, Color.Cyan);
+        }
     }
 }

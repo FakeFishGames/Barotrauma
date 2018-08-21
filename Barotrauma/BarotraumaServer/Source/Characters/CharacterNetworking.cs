@@ -9,6 +9,90 @@ namespace Barotrauma
 {
     partial class Character
     {
+        partial void UpdateNetInput()
+        {
+            if (!(this is AICharacter) || IsRemotePlayer)
+            {
+                if (!AllowInput)
+                {
+                    AnimController.Frozen = false;
+                    if (memInput.Count > 0)
+                    {
+                        prevDequeuedInput = dequeuedInput;
+                        dequeuedInput = memInput[memInput.Count - 1].states;
+                        memInput.RemoveAt(memInput.Count - 1);
+                    }
+                }
+                else if (memInput.Count == 0)
+                {
+                    AnimController.Frozen = true;
+                }
+                else
+                {
+                    AnimController.Frozen = false;
+                    prevDequeuedInput = dequeuedInput;
+
+                    LastProcessedID = memInput[memInput.Count - 1].networkUpdateID;
+                    dequeuedInput = memInput[memInput.Count - 1].states;
+
+                    double aimAngle = ((double)memInput[memInput.Count - 1].intAim / 65535.0) * 2.0 * Math.PI;
+                    cursorPosition = (ViewTarget == null ? AnimController.AimSourcePos : ViewTarget.Position)
+                        + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 60.0f;
+
+                    //reset focus when attempting to use/select something
+                    if (memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Use) ||
+                        memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Select))
+                    {
+                        focusedItem = null;
+                        focusedCharacter = null;
+                    }
+                    var closestEntity = FindEntityByID(memInput[memInput.Count - 1].interact);
+                    if (closestEntity is Item)
+                    {
+                        if (CanInteractWith((Item)closestEntity))
+                        {
+                            focusedItem = (Item)closestEntity;
+                            focusedCharacter = null;
+                        }
+                    }
+                    else if (closestEntity is Character)
+                    {
+                        if (CanInteractWith((Character)closestEntity))
+                        {
+                            focusedCharacter = (Character)closestEntity;
+                            focusedItem = null;
+                        }
+                    }
+
+                    memInput.RemoveAt(memInput.Count - 1);
+
+                    TransformCursorPos();
+
+                    if ((dequeuedInput == InputNetFlags.None || dequeuedInput == InputNetFlags.FacingLeft) && Math.Abs(AnimController.Collider.LinearVelocity.X) < 0.005f && Math.Abs(AnimController.Collider.LinearVelocity.Y) < 0.2f)
+                    {
+                        while (memInput.Count > 5 && memInput[memInput.Count - 1].states == dequeuedInput)
+                        {
+                            //remove inputs where the player is not moving at all
+                            //helps the server catch up, shouldn't affect final position
+                            LastProcessedID = memInput[memInput.Count - 1].networkUpdateID;
+                            memInput.RemoveAt(memInput.Count - 1);
+                        }
+                    }
+                }
+            }
+            AnimController.Frozen = false;
+
+            if (networkUpdateSent)
+            {
+                foreach (Key key in keys)
+                {
+                    key.DequeueHit();
+                    key.DequeueHeld();
+                }
+
+                networkUpdateSent = false;
+            }
+        }
 
         private void WriteStatus(NetBuffer msg)
         {

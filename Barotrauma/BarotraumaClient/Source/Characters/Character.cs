@@ -100,6 +100,13 @@ namespace Barotrauma
             hudProgressBars = new Dictionary<object, HUDProgressBar>();
         }
 
+        partial void UpdateLimbLightSource(Limb limb)
+        {
+            if (limb.LightSource != null)
+            {
+                limb.LightSource.Enabled = enabled;
+            }
+        }
 
         /// <summary>
         /// Control the Character according to player input

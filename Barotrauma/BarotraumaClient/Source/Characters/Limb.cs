@@ -231,5 +231,13 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.Red, true);
             }
         }
+
+        partial void RemoveProjSpecific()
+        {
+            if (LightSource != null)
+            {
+                LightSource.Remove();
+            }
+        }
     }
 }

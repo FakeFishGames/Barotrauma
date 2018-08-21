@@ -3,7 +3,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class DamageModifier
+    partial class DamageModifier
     {
         [Serialize(1.0f, false)]
         public float DamageMultiplier
@@ -44,18 +44,7 @@ namespace Barotrauma
             get;
             private set;
         }
-
-
-
-#if CLIENT
-        [Serialize("", false)]
-        public string DamageSound
-        {
-            get;
-            private set;
-        }
-#endif
-
+        
         public DamageModifier(XElement element, string parentDebugName)
         {
             SerializableProperty.DeserializeProperties(this, element);
