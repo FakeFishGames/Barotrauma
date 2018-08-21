@@ -410,7 +410,7 @@ namespace Barotrauma
                 if (mode.IsSinglePlayer) continue;
 
                 GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), modeList.Content.RectTransform),
-                    mode.Name, style: "ListBoxElement", textAlignment: Alignment.CenterLeft)
+                    TextManager.Get("GameMode." + mode.Name), style: "ListBoxElement", textAlignment: Alignment.CenterLeft)
                 {
                     ToolTip = mode.Description,
                     UserData = mode
@@ -434,7 +434,7 @@ namespace Barotrauma
                 UserData = -1
             };
             new GUITextBlock(new RectTransform(new Vector2(0.4f, 1.0f), missionTypeContainer.RectTransform),
-                TextManager.Get("Random"), textAlignment: Alignment.Center)
+                TextManager.Get("MissionType.Random"), textAlignment: Alignment.Center)
             {
                 UserData = 0
             };
@@ -842,8 +842,7 @@ namespace Barotrauma
         {
             if (missionTypeIndex < 0 || missionTypeIndex >= Enum.GetValues(typeof(MissionType)).Length) return;
             
-            //TODO: get mission type text from xml
-            ((GUITextBlock)missionTypeContainer.GetChild(2)).Text = ((MissionType)missionTypeIndex).ToString();
+            ((GUITextBlock)missionTypeContainer.GetChild(2)).Text = TextManager.Get("MissionType." + ((MissionType)missionTypeIndex).ToString());
             missionTypeContainer.UserData = ((MissionType)missionTypeIndex);
         }
 
