@@ -1444,7 +1444,15 @@ namespace Barotrauma.Networking
                     Character spawnedCharacter = Character.Create(teamClients[i].CharacterInfo, assignedWayPoints[i].WorldPosition, teamClients[i].CharacterInfo.Name, true, false);
                     spawnedCharacter.AnimController.Frozen = true;
                     spawnedCharacter.TeamID = (byte)teamID;
-                    spawnedCharacter.GiveJobItems(assignedWayPoints[i]);
+                    var characterData = campaign?.GetClientCharacterData(teamClients[i]);
+                    if (characterData == null)
+                    {
+                        spawnedCharacter.GiveJobItems(assignedWayPoints[i]);
+                    }
+                    else
+                    {
+                        characterData.SpawnInventoryItems(spawnedCharacter.Inventory);
+                    }
 
                     teamClients[i].Character = spawnedCharacter;
                     spawnedCharacter.OwnerClientIP = teamClients[i].Connection.RemoteEndPoint.Address.ToString();
@@ -1458,8 +1466,8 @@ namespace Barotrauma.Networking
                 for (int i = teamClients.Count; i < teamClients.Count + bots.Count; i++)
                 {
                     Character spawnedCharacter = Character.Create(characterInfos[i], assignedWayPoints[i].WorldPosition, characterInfos[i].Name, false, true);
-                    spawnedCharacter.GiveJobItems(assignedWayPoints[i]);
                     spawnedCharacter.TeamID = (byte)teamID;
+                    spawnedCharacter.GiveJobItems(assignedWayPoints[i]);
 #if CLIENT
                     GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);
 #endif

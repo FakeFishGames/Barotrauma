@@ -55,11 +55,16 @@ namespace Barotrauma
             }
         }
 
+        public CharacterCampaignData GetClientCharacterData(Client client)
+        {
+            return characterData.Find(cd => cd.MatchesClient(client));
+        }
+
         public void AssignClientCharacterInfos(IEnumerable<Client> connectedClients)
         {
             foreach (Client client in connectedClients)
             {
-                var matchingData = characterData.Find(cd => cd.MatchesClient(client));
+                var matchingData = GetClientCharacterData(client);
                 if (matchingData != null) client.CharacterInfo = matchingData.CharacterInfo;
             }
         }
@@ -69,7 +74,7 @@ namespace Barotrauma
             var assignedJobs = new Dictionary<Client, Job>();
             foreach (Client client in connectedClients)
             {
-                var matchingData = characterData.Find(cd => cd.MatchesClient(client));
+                var matchingData = GetClientCharacterData(client);
                 if (matchingData != null) assignedJobs.Add(client, matchingData.CharacterInfo.Job);
             }
             return assignedJobs;

@@ -2,6 +2,7 @@
 using Barotrauma.Networking;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 
@@ -34,14 +35,14 @@ namespace Barotrauma
 
         private void SaveInventory(Inventory inventory, XElement parentElement)
         {
-            for (int i = 0; i < inventory.Items.Length; i++)
+            var items = Array.FindAll(inventory.Items, i => i != null).Distinct();
+            foreach (Item item in items)
             {
-                if (inventory.Items[i] == null) continue;
-                inventory.Items[i].Submarine = inventory.Owner.Submarine;
-                var itemElement = inventory.Items[i].Save(parentElement);
-                itemElement.Add(new XAttribute("i", i));
+                item.Submarine = inventory.Owner.Submarine;
+                var itemElement = item.Save(parentElement);
+                itemElement.Add(new XAttribute("i",  Array.IndexOf(inventory.Items, item)));
 
-                foreach (ItemContainer container in inventory.Items[i].GetComponents<ItemContainer>())
+                foreach (ItemContainer container in item.GetComponents<ItemContainer>())
                 {
                     XElement childInvElement = new XElement("inventory");
                     itemElement.Add(childInvElement);
