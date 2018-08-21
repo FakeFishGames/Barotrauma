@@ -86,6 +86,15 @@ namespace Barotrauma.Networking
         
         public GameClient(string newName)
         {
+            inGameHUD = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
+            {
+                CanBeFocused = false
+            };
+
+            chatBox = new ChatBox(inGameHUD, false);
+            chatBox.OnEnterMessage += EnterChatMessage;
+            chatBox.OnTextChanged += TypingChatMessage;
+
             var buttonContainer = new GUILayoutGroup(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ButtonAreaTop, inGameHUD.RectTransform),
                 isHorizontal: true, childAnchor: Anchor.CenterRight)
             {
@@ -1748,19 +1757,7 @@ namespace Barotrauma.Networking
         {
             get { return inGameHUD; }
         }
-
-        private void InitProjSpecific()
-        {
-            inGameHUD = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
-            {
-                CanBeFocused = false
-            };
-
-            chatBox = new ChatBox(inGameHUD, false);
-            chatBox.OnEnterMessage += EnterChatMessage;
-            chatBox.OnTextChanged += TypingChatMessage;
-        }
-
+        
         protected void SetRadioButtonColor()
         {
             if (Character.Controlled == null || !Character.Controlled.CanSpeak)

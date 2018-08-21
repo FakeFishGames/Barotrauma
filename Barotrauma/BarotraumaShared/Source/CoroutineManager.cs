@@ -81,8 +81,10 @@ namespace Barotrauma
         }
         private static bool IsDone(CoroutineHandle handle)
         {
+#if !DEBUG
             try
             {
+#endif
                 if (handle.Coroutine.Current != null)
                 {
                     WaitForSeconds wfs = handle.Coroutine.Current as WaitForSeconds;
@@ -106,6 +108,7 @@ namespace Barotrauma
 
                 handle.Coroutine.MoveNext();
                 return false;
+#if !DEBUG
             }
             catch (Exception e)
             {
@@ -113,6 +116,7 @@ namespace Barotrauma
                 handle.Exception = e;
                 return true;
             }
+#endif
         }
         // Updating just means stepping through all the coroutines
         public static void Update(float unscaledDeltaTime, float deltaTime)
