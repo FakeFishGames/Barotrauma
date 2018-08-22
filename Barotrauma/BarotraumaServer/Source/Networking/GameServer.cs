@@ -15,6 +15,8 @@ namespace Barotrauma.Networking
 {
     partial class GameServer : NetworkMember
     {
+        private NetConnection ownerConnection;
+
         public override bool IsServer
         {
             get { return true; }
@@ -86,7 +88,7 @@ namespace Barotrauma.Networking
             get { return whitelist; }
         }
 
-        public GameServer(string name, int port, int queryPort = 0, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
+        public GameServer(string name, int port, int queryPort = 0, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10, int ownerKey = 0)
         {
             name = name.Replace(":", "");
             name = name.Replace(";", "");
@@ -99,6 +101,8 @@ namespace Barotrauma.Networking
             {
                 SetPassword(password);
             }
+            
+            this.ownerKey = ownerKey;
 
             config = new NetPeerConfiguration("barotrauma");
             
@@ -353,8 +357,14 @@ namespace Barotrauma.Networking
         {
             if (!started) return;
 
-            base.Update(deltaTime);
+            if (ownerConnection != null && ownerConnection.Status != NetConnectionStatus.Connected)
+            {
+                GameMain.ShouldRun = false;
+                return;
+            }
 
+            base.Update(deltaTime);
+            
             foreach (UnauthenticatedClient unauthClient in unauthenticatedClients)
             {
                 unauthClient.AuthTimer -= deltaTime;
@@ -504,10 +514,12 @@ namespace Barotrauma.Networking
                                 {
                                     inc.SenderConnection.Approve();
                                     HandleClientAuthRequest(inc.SenderConnection);
+                                    HandleOwnership(inc.SenderConnection.RemoteHailMessage);
                                 }
                                 else if (packetHeader == ClientPacketHeader.REQUEST_STEAMAUTH)
                                 {
                                     ReadClientSteamAuthRequest(inc, out ulong clientSteamID);
+                                    HandleOwnership(inc.SenderConnection.RemoteHailMessage);
                                     if (banList.IsBanned("", clientSteamID))
                                     {
                                         inc.SenderConnection.Deny(DisconnectReason.Banned.ToString());
@@ -587,9 +599,11 @@ namespace Barotrauma.Networking
             {
                 case ClientPacketHeader.REQUEST_AUTH:
                     HandleClientAuthRequest(inc.SenderConnection);
+                    HandleOwnership(inc);
                     break;
                 case ClientPacketHeader.REQUEST_STEAMAUTH:
                     ReadClientSteamAuthRequest(inc, out _);
+                    HandleOwnership(inc);
                     break;
                 case ClientPacketHeader.REQUEST_INIT:
                     ClientInitRequest(inc);

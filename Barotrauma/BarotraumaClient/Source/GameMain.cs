@@ -112,6 +112,8 @@ namespace Barotrauma
             get { return Client; }
         }
 
+        public static Process ServerChildProcess;
+
         public static RasterizerState ScissorTestEnable
         {
             get;

@@ -31,21 +31,23 @@ namespace Barotrauma.Networking
     
     partial class GameServer : NetworkMember, ISerializableEntity
     {
+        private Int32 ownerKey = 0;
+
         List<UnauthenticatedClient> unauthenticatedClients = new List<UnauthenticatedClient>();
 
         private void ReadClientSteamAuthRequest(NetIncomingMessage inc, out ulong clientSteamID)
         {
             clientSteamID = 0;
+            clientSteamID = inc.ReadUInt64();
+            int authTicketLength = inc.ReadInt32();
+            inc.ReadBytes(authTicketLength, out byte[] authTicketData);
+
             if (!Steam.SteamManager.USE_STEAM)
             {
                 //not using steam, handle auth normally
                 HandleClientAuthRequest(inc.SenderConnection, 0);
                 return;
             }
-
-            clientSteamID = inc.ReadUInt64();
-            int authTicketLength = inc.ReadInt32();
-            inc.ReadBytes(authTicketLength, out byte[] authTicketData);
 
             DebugConsole.Log("Received a Steam auth request");
             DebugConsole.Log("  Steam ID: "+ clientSteamID);
@@ -120,6 +122,34 @@ namespace Barotrauma.Networking
                 {
                     KickClient(connectedClient, TextManager.Get("DisconnectMessage.SteamAuthNoLongerValid").Replace("[status]", status.ToString()));
                 }
+            }
+        }
+
+        private bool IsServerOwner(NetIncomingMessage msg)
+        {
+            if (ownerKey == 0)
+            {
+                return false; //ownership key has been destroyed or has never existed
+            }
+            if (msg.SenderConnection.RemoteEndPoint.Address.ToString() != "127.0.0.1")
+            {
+                return false; //not localhost
+            }
+            int incKey = msg.ReadInt32();
+            if (incKey != ownerKey)
+            {
+                return false; //incorrect owner key, how did this even happen
+            }
+            ownerKey = 0; //destroy owner key so nobody else can take ownership of the server
+            return true;
+        }
+        
+        private void HandleOwnership(NetIncomingMessage inc)
+        {
+            if (IsServerOwner(inc))
+            {
+                ownerConnection = inc.SenderConnection;
+                DebugConsole.NewMessage("Successfully set up server owner", Color.Lime);
             }
         }
 
@@ -336,7 +366,7 @@ namespace Barotrauma.Networking
                 DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (invalid name)", Color.Red);
                 return;
             }
-            if (Homoglyphs.Compare(clName.ToLower(),Name.ToLower()))
+            if (inc.SenderConnection != ownerConnection && Homoglyphs.Compare(clName.ToLower(),Name.ToLower()))
             {
                 DisconnectUnauthClient(inc, unauthClient, DisconnectReason.NameTaken, "");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name taken by the server)", ServerLog.MessageType.Error);

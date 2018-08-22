@@ -8,6 +8,8 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
+using System.Diagnostics;
+using Lidgren.Network;
 
 namespace Barotrauma
 {
@@ -332,16 +334,31 @@ namespace Barotrauma
             GameMain.NetLobbyScreen = new NetLobbyScreen();
             try
             {
-                throw new NotImplementedException();
-                //TODO: fix
-                //GameMain.NetworkMember = new GameServer(name, port, queryPort, isPublicBox.Selected, passwordBox.Text, useUpnpBox.Selected, int.Parse(maxPlayersBox.Text));
+                int ownerKey = Math.Max(CryptoRandom.Instance.Next(),1);
+
+                string arguments = "-name \"" + name.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
+                                   " -port " + port.ToString() +
+                                   " -queryport " + queryPort.ToString() +
+                                   " -password \"" + passwordBox.Text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
+                                   " -upnp " + useUpnpBox.Selected +
+                                   " -playercount " + maxPlayersBox.Text +
+                                    " -ownerkey " + ownerKey.ToString();
+
+                var processInfo = new ProcessStartInfo
+                {
+                    FileName = "DedicatedServer.exe",
+                    Arguments = arguments
+                };
+                GameMain.ServerChildProcess = Process.Start(processInfo);
+                
+                GameMain.Client = new GameClient(name,ownerKey);
+                GameMain.Client.ConnectToServer("127.0.0.1:"+port.ToString());
             }
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Failed to start server", e);
             }
 
-            //GameMain.NetLobbyScreen.IsServer = true;
             return true;
         }
 
