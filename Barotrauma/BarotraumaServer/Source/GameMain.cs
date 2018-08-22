@@ -50,10 +50,14 @@ namespace Barotrauma
             get { return Config.SelectedContentPackages; }
         }
 
-        public GameMain()
+        public readonly string[] CommandLineArgs;
+
+        public GameMain(string[] args)
         {
             Instance = this;
-            
+
+            CommandLineArgs = args;
+
             World = new World(new Vector2(0, -9.82f));
             FarseerPhysics.Settings.AllowSleep = true;
             FarseerPhysics.Settings.ContinuousPhysics = false;
@@ -119,14 +123,85 @@ namespace Barotrauma
                 return;
             }
 
+            string name = doc.Root.GetAttributeString("name", "Server");
+            int port = doc.Root.GetAttributeInt("port", NetConfig.DefaultPort);
+            int queryPort = doc.Root.GetAttributeInt("queryport", NetConfig.DefaultQueryPort);
+            bool publiclyVisible = doc.Root.GetAttributeBool("public", false);
+            string password = doc.Root.GetAttributeString("password", "");
+            bool enableUpnp = doc.Root.GetAttributeBool("enableupnp", false);
+            int maxPlayers = doc.Root.GetAttributeInt("maxplayers", 10);
+            int ownerKey = 0;
+            
+            int tempInt;
+            bool tempBool;
+
+            for (int i=0;i<CommandLineArgs.Length;i++)
+            {
+                switch (CommandLineArgs[i].Trim())
+                {
+                    case "-name":
+                        name = CommandLineArgs[i + 1];
+                        i++;
+                        break;
+                    case "-port":
+                        if (int.TryParse(CommandLineArgs[i + 1], out tempInt))
+                        {
+                            port = tempInt;
+                        }
+                        i++;
+                        break;
+                    case "-queryport":
+                        if (int.TryParse(CommandLineArgs[i + 1], out tempInt))
+                        {
+                            queryPort = tempInt;
+                        }
+                        i++;
+                        break;
+                    case "-public":
+                        if (bool.TryParse(CommandLineArgs[i + 1], out tempBool))
+                        {
+                            publiclyVisible = tempBool;
+                        }
+                        i++;
+                        break;
+                    case "-password":
+                        password = CommandLineArgs[i + 1];
+                        i++;
+                        break;
+                    case "-upnp":
+                    case "-enableupnp":
+                        if (bool.TryParse(CommandLineArgs[i + 1], out tempBool))
+                        {
+                            enableUpnp = tempBool;
+                        }
+                        i++;
+                        break;
+                    case "-maxplayers":
+                        if (int.TryParse(CommandLineArgs[i + 1], out tempInt))
+                        {
+                            maxPlayers = tempInt;
+                        }
+                        i++;
+                        break;
+                    case "-ownerkey":
+                        if (int.TryParse(CommandLineArgs[i + 1], out tempInt))
+                        {
+                            ownerKey = tempInt;
+                        }
+                        i++;
+                        break;
+                }
+            }
+
             Server = new GameServer(
-                doc.Root.GetAttributeString("name", "Server"),
-                doc.Root.GetAttributeInt("port", NetConfig.DefaultPort),
-                doc.Root.GetAttributeInt("queryport", NetConfig.DefaultQueryPort),
-                doc.Root.GetAttributeBool("public", false),
-                doc.Root.GetAttributeString("password", ""),
-                doc.Root.GetAttributeBool("enableupnp", false),
-                doc.Root.GetAttributeInt("maxplayers", 10));
+                name,
+                port,
+                queryPort,
+                publiclyVisible,
+                password,
+                enableUpnp,
+                maxPlayers,
+                ownerKey);
         }
 
         public void CloseServer()
@@ -181,13 +256,52 @@ namespace Barotrauma
         
         public void ProcessInput()
         {
-            while (true)
+            try
             {
-                string input = Console.ReadLine();
-                lock (DebugConsole.QueuedCommands)
+                string input = "";
+                while (true)
                 {
-                    DebugConsole.QueuedCommands.Add(input);
+                    //using this instead of Console.ReadLine to prevent blocking
+                    if (Console.KeyAvailable)
+                    {
+                        ConsoleKeyInfo key = Console.ReadKey(true);
+                        switch (key.Key)
+                        {
+                            case ConsoleKey.Enter:
+                                lock (DebugConsole.QueuedCommands)
+                                {
+                                    DebugConsole.QueuedCommands.Add(input);
+                                }
+                                input = "";
+                                break;
+                            case ConsoleKey.Backspace:
+                                if (input.Length > 0) input = input.Substring(0, input.Length - 1);
+                                break;
+                            default:
+                                if (key.KeyChar != 0)
+                                {
+                                    input += key.KeyChar;
+                                }
+                                break;
+                        }
+
+                        //rewrite the input so it's not mangled about by new console messages
+                        int cursorTop = Console.CursorTop;
+                        Console.CursorLeft = 0;
+                        string ln = input;
+                        while (ln.Length==0 || ln.Length%Console.WindowWidth>0)
+                        {
+                            ln += " ";
+                        }
+                        Console.WriteLine(ln);
+                        Console.CursorTop = cursorTop;
+                        Console.CursorLeft = input.Length;
+                    }
                 }
+            }
+            catch (ThreadAbortException e)
+            {
+                //don't have anything to do here yet
             }
         }
 

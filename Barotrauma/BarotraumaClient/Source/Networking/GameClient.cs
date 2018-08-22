@@ -83,9 +83,13 @@ namespace Barotrauma.Networking
             get;
             set;
         }
-        
-        public GameClient(string newName)
+
+        private int ownerKey;
+
+        public GameClient(string newName, int ownerKey=0)
         {
+            this.ownerKey = ownerKey;
+
             inGameHUD = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
             {
                 CanBeFocused = false
@@ -535,6 +539,7 @@ namespace Barotrauma.Networking
             {
                 outmsg.Write((byte)ClientPacketHeader.REQUEST_AUTH);
             }
+            outmsg.Write(ownerKey);
         }
 
         public override void Update(float deltaTime)
@@ -1528,10 +1533,16 @@ namespace Barotrauma.Networking
         {
             client.Shutdown("");
             steamAuthTicket?.Cancel();
-
+            
             if (HasPermission(ClientPermissions.ServerLog))
             {
                 ServerLog?.Save();
+            }
+
+            if (GameMain.ServerChildProcess != null)
+            {
+                while (!GameMain.ServerChildProcess.HasExited) { }
+                GameMain.ServerChildProcess = null;
             }
 
             GameMain.Client = null;

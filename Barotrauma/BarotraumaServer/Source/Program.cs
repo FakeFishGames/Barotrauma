@@ -21,14 +21,14 @@ namespace Barotrauma
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
             GameMain game = null;
             Thread inputThread = null;
             
             try
             {
-                game = new GameMain();
+                game = new GameMain(args);
                 inputThread = new Thread(new ThreadStart(game.ProcessInput));
                 inputThread.Start();
                 game.Run();
