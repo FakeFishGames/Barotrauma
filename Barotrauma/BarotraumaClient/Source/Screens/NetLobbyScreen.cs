@@ -76,6 +76,11 @@ namespace Barotrauma
         //persistent characterinfo provided by the server
         //(character settings cannot be edited when this is set)
         private CharacterInfo campaignCharacterInfo;
+        public bool CampaignCharacterDiscarded
+        {
+            get;
+            private set;
+        }
 
         //elements that can only be used by the host
         private List<GUIComponent> clientDisabledElements = new List<GUIComponent>();
@@ -547,6 +552,7 @@ namespace Barotrauma
         {
             textBox.Deselect();
             myCharacterFrame.GetChild<GUIButton>().Visible = true;
+            CampaignCharacterDiscarded = false;
         }
 
         public override void Select()
@@ -554,6 +560,8 @@ namespace Barotrauma
             if (GameMain.NetworkMember == null) return;
             Character.Controlled = null;
             GameMain.LightManager.LosEnabled = false;
+
+            CampaignCharacterDiscarded = false;
 
             textBox.Select();
             textBox.OnEnterPressed = GameMain.NetworkMember.EnterChatMessage;
@@ -675,6 +683,8 @@ namespace Barotrauma
 
         public void SetCampaignCharacterInfo(CharacterInfo characterInfo)
         {
+            if (CampaignCharacterDiscarded) return;
+
             campaignCharacterInfo = characterInfo;
             if (campaignCharacterInfo != null)
             {
@@ -809,6 +819,26 @@ namespace Barotrauma
                 //TODO: show skills
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), infoContainer.RectTransform), characterInfo.Name, font: GUI.LargeFont, wrap: true);
                 new GUITextBlock(new RectTransform(new Vector2(1.0f,0.15f), infoContainer.RectTransform), characterInfo.Job.Name, wrap: true);
+
+                new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), infoContainer.RectTransform, Anchor.BottomCenter), "Create new")
+                {
+                    IgnoreLayoutGroups = true,
+                    OnClicked = (btn, userdata) =>
+                    {
+                        var confirmation = new GUIMessageBox(TextManager.Get("NewCampaignCharacterHeader"), TextManager.Get("NewCampaignCharacterText"),
+                            new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                        confirmation.Buttons[0].OnClicked += confirmation.Close;
+                        confirmation.Buttons[0].OnClicked += (btn2, userdata2) =>
+                        {
+                            CampaignCharacterDiscarded = true;
+                            campaignCharacterInfo = null;
+                            UpdatePlayerFrame(null, true);
+                            return true;
+                        };
+                        confirmation.Buttons[1].OnClicked += confirmation.Close;
+                        return true;
+                    }
+                };
             }
 
             UpdatePlayerHead(characterInfo);            
@@ -1524,6 +1554,7 @@ namespace Barotrauma
             if (!enabled)
             {
                 campaignCharacterInfo = null;
+                CampaignCharacterDiscarded = false;
                 UpdatePlayerFrame(null);
             }
 

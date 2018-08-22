@@ -56,6 +56,11 @@ namespace Barotrauma
             }
         }
 
+        public void DiscardClientCharacterData(Client client)
+        {
+            characterData.RemoveAll(cd => cd.MatchesClient(client));
+        }
+
         public CharacterCampaignData GetClientCharacterData(Client client)
         {
             return characterData.Find(cd => cd.MatchesClient(client));
@@ -317,7 +322,7 @@ namespace Barotrauma
 
             if (!sender.HasPermission(ClientPermissions.ManageCampaign))
             {
-                DebugConsole.ThrowError("Client \""+sender.Name+"\" does not have a permission to manage the campaign");
+                DebugConsole.ThrowError("Client \"" + sender.Name + "\" does not have a permission to manage the campaign");
                 return;
             }
 
