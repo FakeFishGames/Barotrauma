@@ -914,8 +914,8 @@ namespace Barotrauma
         {
             ViewTarget = null;
             if (!AllowInput) return;
-
-            if (!(this is AICharacter) || IsRemotePlayer)
+            
+            if (!(this is AICharacter) || Controlled == this || IsRemotePlayer)
             {
                 Vector2 targetMovement = GetTargetMovement();
 
@@ -1701,7 +1701,7 @@ namespace Barotrauma
 #endif
             if (IsForceRagdolled)
                 IsRagdolled = IsForceRagdolled;
-            else if (allowRagdoll && (!IsRagdolled || AnimController.Collider.LinearVelocity.Length() < 1f)) //Keep us ragdolled if we were forced or we're too speedy to unragdoll
+            else if (allowRagdoll && (!IsRagdolled || AnimController.Collider.LinearVelocity.LengthSquared() < 1f)) //Keep us ragdolled if we were forced or we're too speedy to unragdoll
                 IsRagdolled = IsKeyDown(InputType.Ragdoll); //Handle this here instead of Control because we can stop being ragdolled ourselves
             
             UpdateSightRange();

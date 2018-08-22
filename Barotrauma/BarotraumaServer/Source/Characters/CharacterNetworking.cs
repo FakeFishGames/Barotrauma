@@ -34,7 +34,7 @@ namespace Barotrauma
 
                     LastProcessedID = memInput[memInput.Count - 1].networkUpdateID;
                     dequeuedInput = memInput[memInput.Count - 1].states;
-
+                    
                     double aimAngle = ((double)memInput[memInput.Count - 1].intAim / 65535.0) * 2.0 * Math.PI;
                     cursorPosition = (ViewTarget == null ? AnimController.AimSourcePos : ViewTarget.Position)
                         + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 60.0f;

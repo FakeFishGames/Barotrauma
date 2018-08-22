@@ -22,7 +22,7 @@ namespace Barotrauma.Networking
                 if (character != null) HasSpawned = true;
             }
         }
-        public bool InGame;        
+        public bool InGame;
         public bool HasSpawned; //has the client spawned as a character during the current round
         
         private List<Client> kickVoters;
