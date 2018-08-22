@@ -1202,9 +1202,9 @@ namespace Barotrauma
                         pickHit = picker.IsKeyHit(ic.PickKey);
                         selectHit = picker.IsKeyHit(ic.SelectKey);
 
+#if CLIENT
                         //if the cursor is on a UI component, disable interaction with the left mouse button
                         //to prevent accidentally selecting items when clicking UI elements
-#if CLIENT
                         if (picker == Character.Controlled && GUI.MouseOn != null)
                         {
                             if (GameMain.Config.KeyBind(ic.PickKey).MouseButton == 0) pickHit = false;
