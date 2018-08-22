@@ -1368,13 +1368,20 @@ namespace Barotrauma.Networking
                     loadSecondSub: teamCount > 1,
                     mirrorLevel: campaign.Map.CurrentLocation != campaign.Map.SelectedConnection.Locations[0]);
 
-                campaign.AssignClientCharacterInfos(connectedClients);
+                campaign.AssignPlayerCharacterInfos(connectedClients, CharacterInfo != null);
+                //give the host their preferred job if case the campaign didn't assign a job (no character created yet?)
+                if (characterInfo != null && characterInfo.Job == null)
+                {
+                    characterInfo.Job = new Job(GameMain.NetLobbyScreen.JobPreferences[0]);
+                }
             }
             else
             {
                 GameMain.GameSession.StartRound(GameMain.NetLobbyScreen.LevelSeed, selectedLevelDifficulty, teamCount > 1);
+                //always give the host their #1 preferred job when not playing campaign mode
+                if (characterInfo != null) characterInfo.Job = new Job(GameMain.NetLobbyScreen.JobPreferences[0]);
             }
-
+            
             Log("Starting a new round...", ServerLog.MessageType.ServerMessage);
             Log("Submarine: " + selectedSub.Name, ServerLog.MessageType.ServerMessage);
             Log("Game mode: " + selectedMode.Name, ServerLog.MessageType.ServerMessage);
@@ -1396,7 +1403,7 @@ namespace Barotrauma.Networking
                     teamClients.RemoveAll(c => c.SpectateOnly);
                 }
 
-                if (!teamClients.Any() && teamID > 1) continue;
+                if (!teamClients.Any() && teamID > 1) continue;                
 
                 AssignJobs(teamClients, teamID == hostTeam);
 
@@ -1425,7 +1432,6 @@ namespace Barotrauma.Networking
                 //host's character
                 if (characterInfo != null && hostTeam == teamID)
                 {
-                    characterInfo.Job = new Job(GameMain.NetLobbyScreen.JobPreferences[0]);
                     characterInfos.Add(characterInfo);
                     characterInfo.TeamID = hostTeam;
                 }
@@ -1486,7 +1492,17 @@ namespace Barotrauma.Networking
                 {
                     myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1].WorldPosition, characterInfo.Name, false, false);
                     myCharacter.TeamID = (byte)teamID;    
-                    myCharacter.GiveJobItems(assignedWayPoints.Last());
+
+                    var characterData = campaign?.GetHostCharacterData();
+                    if (characterData == null)
+                    {
+                        myCharacter.GiveJobItems(assignedWayPoints.Last());
+                    }
+                    else
+                    {
+                        characterData.SpawnInventoryItems(myCharacter.Inventory);
+                    }
+
                     GameMain.GameSession.CrewManager.AddCharacter(myCharacter);
                     Character.Controlled = myCharacter;
                 }
@@ -2347,13 +2363,14 @@ namespace Barotrauma.Networking
             {
                 if (characterInfo != null)
                 {
-                    assignedClientCount[GameMain.NetLobbyScreen.JobPreferences[0]] = 1;                
+                    assignedClientCount[characterInfo.Job.Prefab] = 1;                
                 }
                 else if (myCharacter?.Info?.Job != null && !myCharacter.IsDead)
                 {
                     assignedClientCount[myCharacter.Info.Job.Prefab] = 1;  
                 }
             }
+            //not reassigning server host, but add to the job count if the host already has a character
             else if (myCharacter?.Info?.Job != null && !myCharacter.IsDead && myCharacter.TeamID == teamID)
             {
                 assignedClientCount[myCharacter.Info.Job.Prefab]++;
