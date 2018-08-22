@@ -184,9 +184,14 @@ namespace Barotrauma
             return campaign;
         }
 
+        public static string GetCharacterDataSavePath(string savePath)
+        {
+            return Path.Combine(SaveUtil.MultiplayerSaveFolder, Path.GetFileNameWithoutExtension(savePath) + "_CharacterData.xml");
+        }
+
         public string GetCharacterDataSavePath()
         {
-            return Path.Combine(SaveUtil.MultiplayerSaveFolder, Path.GetFileNameWithoutExtension(GameMain.GameSession.SavePath) + "_CharacterData.xml");
+            return GetCharacterDataSavePath(GameMain.GameSession.SavePath);
         }
 
         public void Load(XElement element)
@@ -283,6 +288,17 @@ namespace Barotrauma
             {
                 msg.Write((UInt16)MapEntityPrefab.List.IndexOf(pi.ItemPrefab));
                 msg.Write((UInt16)pi.Quantity);
+            }
+
+            var characterData = GetClientCharacterData(c);
+            if (characterData?.CharacterInfo == null)
+            {
+                msg.Write(false);
+            }
+            else
+            {
+                msg.Write(true);
+                characterData.CharacterInfo.ServerWrite(msg);
             }
         }
         
