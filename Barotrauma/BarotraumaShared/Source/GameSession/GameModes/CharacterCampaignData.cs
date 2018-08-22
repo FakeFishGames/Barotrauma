@@ -63,11 +63,15 @@ namespace Barotrauma
 
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() == "characterinfo")
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    CharacterInfo = new CharacterInfo(subElement);
-                    CharacterInfo.PickedItemIDs.Clear();
-                    break;
+                    case "characterinfo":
+                        CharacterInfo = new CharacterInfo(subElement);
+                        CharacterInfo.PickedItemIDs.Clear();
+                        break;
+                    case "inventory":
+                        itemData = subElement;
+                        break;
                 }
             }
         }
@@ -93,6 +97,11 @@ namespace Barotrauma
 
             CharacterInfo?.Save(element);
 
+            if (itemData != null)
+            {
+                element.Add(itemData);
+            }
+
             return element;
         }
 
@@ -111,7 +120,7 @@ namespace Barotrauma
                 var itemContainers = newItem.GetComponents<ItemContainer>();
                 foreach (XElement childInvElement in itemElement.Elements())
                 {
-                    if (childInvElement.ToString().ToLowerInvariant() != "inventory") continue;
+                    if (childInvElement.Name.ToString().ToLowerInvariant() != "inventory") continue;
                     if (itemContainerIndex >= itemContainers.Count) break;
                     SpawnInventoryItems(itemContainers[itemContainerIndex].Inventory);
                     itemContainerIndex++;
