@@ -5,7 +5,7 @@ namespace Barotrauma
 {
     partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable
     {
-        public static Character Controlled = null; //TODO: remove
+        public static Character Controlled = null;
 
         partial void InitProjSpecific(XDocument doc)
         {
