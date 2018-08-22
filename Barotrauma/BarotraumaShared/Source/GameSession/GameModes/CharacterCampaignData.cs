@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
+using Lidgren.Network;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -76,11 +77,16 @@ namespace Barotrauma
 
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() == "characterinfo")
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    CharacterInfo = new CharacterInfo(subElement);
-                    CharacterInfo.PickedItemIDs.Clear();
-                    break;
+                    case "character":
+                    case "characterinfo":
+                        CharacterInfo = new CharacterInfo(subElement);
+                        CharacterInfo.PickedItemIDs.Clear();
+                        break;
+                    case "inventory":
+                        itemData = subElement;
+                        break;
                 }
             }
         }
@@ -93,6 +99,11 @@ namespace Barotrauma
                 new XAttribute("steamid", SteamID));
 
             CharacterInfo?.Save(element);
+
+            if (itemData != null)
+            {
+                element.Add(itemData);
+            }
 
             return element;
         }

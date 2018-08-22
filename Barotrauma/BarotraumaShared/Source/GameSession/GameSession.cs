@@ -338,9 +338,9 @@ namespace Barotrauma
             {
                 doc.Save(filePath);
             }
-            catch
+            catch (Exception e)
             {
-                DebugConsole.ThrowError("Saving gamesession to \"" + filePath + "\" failed!");
+                DebugConsole.ThrowError("Saving gamesession to \"" + filePath + "\" failed!", e);
             }
         }
 
