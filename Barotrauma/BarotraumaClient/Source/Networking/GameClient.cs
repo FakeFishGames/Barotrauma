@@ -8,6 +8,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace Barotrauma.Networking
 {
@@ -1542,7 +1543,15 @@ namespace Barotrauma.Networking
 
             if (GameMain.ServerChildProcess != null)
             {
-                while (!GameMain.ServerChildProcess.HasExited) { }
+                int checks = 0;
+                while (!GameMain.ServerChildProcess.HasExited) {
+                    Thread.Sleep(500);
+                    checks++;
+                    if (checks>10)
+                    {
+                        GameMain.ServerChildProcess.Kill();
+                    }
+                }
                 GameMain.ServerChildProcess = null;
             }
 

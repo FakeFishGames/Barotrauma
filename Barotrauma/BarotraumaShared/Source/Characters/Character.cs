@@ -1465,9 +1465,8 @@ namespace Barotrauma
                 }
             }
             bool canFocus = (isLocalPlayer && (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.SubEditorScreen));
-#if SERVER
-            canFocus = canFocus||(!isLocalPlayer && IsKeyHit(InputType.Select) && GameMain.Server == null);
-#endif
+            canFocus = canFocus||(!isLocalPlayer && IsKeyHit(InputType.Select) && (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsServer));
+
             if (canFocus)
             {
                 focusedCharacter = FindCharacterAtPosition(mouseSimPos);
@@ -1537,11 +1536,12 @@ namespace Barotrauma
             }
             else if (focusedItem != null)
             {
+                bool canInteract = focusedItem.TryInteract(this);
 #if CLIENT
                 if (Controlled == this)
                 {
                     focusedItem.IsHighlighted = true;
-                    if (focusedItem.TryInteract(this))
+                    if (canInteract)
                     {
                         CharacterHealth.OpenHealthWindow = null;
                     }

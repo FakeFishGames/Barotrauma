@@ -297,6 +297,7 @@ namespace Barotrauma
                         Console.CursorTop = cursorTop;
                         Console.CursorLeft = input.Length;
                     }
+                    Thread.Yield();
                 }
             }
             catch (ThreadAbortException e)
