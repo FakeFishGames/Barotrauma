@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
+using Lidgren.Network;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -65,6 +66,7 @@ namespace Barotrauma
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
+                    case "character":
                     case "characterinfo":
                         CharacterInfo = new CharacterInfo(subElement);
                         CharacterInfo.PickedItemIDs.Clear();
@@ -107,7 +109,12 @@ namespace Barotrauma
 
         public void SpawnInventoryItems(Inventory inventory)
         {
-            foreach (XElement itemElement in itemData.Elements())
+            SpawnInventoryItems(inventory, itemData);
+        }
+
+        private void SpawnInventoryItems(Inventory inventory, XElement element)
+        {
+            foreach (XElement itemElement in element.Elements())
             {
                 var newItem = Item.Load(itemElement, inventory.Owner.Submarine);
                 int slotIndex = itemElement.GetAttributeInt("i", 0);
@@ -120,12 +127,12 @@ namespace Barotrauma
                 var itemContainers = newItem.GetComponents<ItemContainer>();
                 foreach (XElement childInvElement in itemElement.Elements())
                 {
-                    if (childInvElement.Name.ToString().ToLowerInvariant() != "inventory") continue;
                     if (itemContainerIndex >= itemContainers.Count) break;
-                    SpawnInventoryItems(itemContainers[itemContainerIndex].Inventory);
+                    if (childInvElement.Name.ToString().ToLowerInvariant() != "inventory") continue;
+                    SpawnInventoryItems(itemContainers[itemContainerIndex].Inventory, childInvElement);
                     itemContainerIndex++;
                 }
             }
-        }
+        }        
     }
 }

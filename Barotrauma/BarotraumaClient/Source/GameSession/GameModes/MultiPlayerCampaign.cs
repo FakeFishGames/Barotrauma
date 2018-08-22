@@ -140,6 +140,13 @@ namespace Barotrauma
                 purchasedItems.Add(new PurchasedItem(MapEntityPrefab.List[itemPrefabIndex] as ItemPrefab, itemQuantity));
             }
 
+            bool hasCharacterData = msg.ReadBoolean();
+            CharacterInfo myCharacterInfo = null;
+            if (hasCharacterData)
+            {
+                myCharacterInfo = CharacterInfo.ClientRead(Character.HumanConfigFile, msg);
+            }
+            
             MultiPlayerCampaign campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
             if (campaign == null || campaignID != campaign.CampaignID)
             {
@@ -178,6 +185,16 @@ namespace Barotrauma
 
                 campaign.Money = money;
                 campaign.CargoManager.SetPurchasedItems(purchasedItems);
+
+                if (myCharacterInfo != null)
+                {
+                    GameMain.NetworkMember.CharacterInfo = myCharacterInfo;
+                    GameMain.NetLobbyScreen.SetCampaignCharacterInfo(myCharacterInfo);
+                }
+                else
+                {
+                    GameMain.NetLobbyScreen.SetCampaignCharacterInfo(null);
+                }
 
                 campaign.lastUpdateID = updateID;
             }

@@ -555,9 +555,7 @@ namespace Barotrauma
 
             //character with no characterinfo (e.g. some monster)
             if (Info == null) return;
-
-            msg.Write(info.ID);
-
+            
             Client ownerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this);
             if (ownerClient != null)
             {
@@ -574,27 +572,9 @@ namespace Barotrauma
                 msg.Write(false);
             }
 
-            msg.Write(Info.Name);
             msg.Write(TeamID);
-
             msg.Write(this is AICharacter);
-            msg.Write(Info.Gender == Gender.Female);
-            msg.Write((byte)Info.HeadSpriteId);
-            if (info.Job != null)
-            {
-                msg.Write(Info.Job.Prefab.Identifier);
-                msg.Write((byte)info.Job.Skills.Count);
-                foreach (Skill skill in info.Job.Skills)
-                {
-                    msg.Write(skill.Identifier);
-                    msg.WriteRangedInteger(0, 100, (int)MathHelper.Clamp(skill.Level, 0, 100));
-                }
-            }
-            else
-            {
-                msg.Write("");
-            }
-        }
-        
+            info.ServerWrite(msg);
+        }        
     }
 }

@@ -602,6 +602,7 @@ namespace Barotrauma
                     characterFrame.RemoveChild(currentOrderIcon);
                 }
 
+                if (order == null) continue;
                 int iconSize = (int)(characterFrame.Rect.Height * 0.8f);
                 var img = new GUIImage(new RectTransform(new Point(iconSize, iconSize), characterFrame.RectTransform, Anchor.CenterRight, Pivot.CenterLeft) { AbsoluteOffset = new Point((int)(iconSize * 0.2f), 0) },
                     order.SymbolSprite, scaleToFit: true)
