@@ -5,6 +5,7 @@ using System.Linq;
 using System.Xml.Linq;
 using Lidgren.Network;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Barotrauma
 {
@@ -58,17 +59,6 @@ namespace Barotrauma
             CampaignID = currentCampaignID;
         }
         
-        private void SetDelegates()
-        {
-#if SERVER
-            if (GameMain.Server != null)
-            {
-                CargoManager.OnItemsChanged += () => { LastUpdateID++; };
-                Map.OnLocationSelected += (loc, connection) => { LastUpdateID++; };
-            }
-#endif
-        }
-
         public override void Start()
         {
             base.Start();            
@@ -129,11 +119,7 @@ namespace Barotrauma
             //remove all items that are in someone's inventory
             foreach (Character c in Character.CharacterList)
             {
-                if (c.Inventory == null) continue;
-                foreach (Item item in c.Inventory.Items)
-                {
-                    if (item != null) item.Remove();
-                }
+                c.Inventory?.DeleteAllItems();
             }
 
 #if CLIENT
@@ -172,13 +158,25 @@ namespace Barotrauma
 #endif
         }
 
+        partial void SetDelegates();
+
         public static MultiPlayerCampaign LoadNew(XElement element)
         {
             MultiPlayerCampaign campaign = new MultiPlayerCampaign(GameModePreset.list.Find(gm => gm.Name == "Campaign"), null);
-            campaign.Load(element);            
+            campaign.Load(element);
             campaign.SetDelegates();
             
             return campaign;
+        }
+
+        public static string GetCharacterDataSavePath(string savePath)
+        {
+            return Path.Combine(SaveUtil.MultiplayerSaveFolder, Path.GetFileNameWithoutExtension(savePath) + "_CharacterData.xml");
+        }
+
+        public string GetCharacterDataSavePath()
+        {
+            return GetCharacterDataSavePath(GameMain.GameSession.SavePath);
         }
 
         public void Load(XElement element)
@@ -199,7 +197,6 @@ namespace Barotrauma
                 }
             }
 
-            characterData.Clear();
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -218,13 +215,16 @@ namespace Barotrauma
                             map.Load(subElement, LastSaveID > 0);
                         }
                         break;
-                    case "characterdata":
-                        foreach (XElement characterDataElement in subElement.Elements())
-                        {
-                            characterData.Add(new CharacterCampaignData(characterDataElement));
-                        }
-                        break;
                 }
+            }
+
+            characterData.Clear();
+            string characterDataPath = GetCharacterDataSavePath();
+            var characterDataDoc = XMLExtensions.TryLoadXml(characterDataPath);
+            if (characterDataDoc?.Root == null) return;
+            foreach (XElement subElement in characterDataDoc.Root.Elements())
+            {
+                characterData.Add(new CharacterCampaignData(subElement));
             }
         }
 
@@ -236,12 +236,21 @@ namespace Barotrauma
             Map.Save(modeElement);
             element.Add(modeElement);
 
-            XElement characterDataElement = new XElement("CharacterData");
+            //save character data to a separate file
+            string characterDataPath = GetCharacterDataSavePath();
+            XDocument characterDataDoc = new XDocument(new XElement("CharacterData"));
             foreach (CharacterCampaignData cd in characterData)
             {
-                characterDataElement.Add(cd.Save());
+                characterDataDoc.Root.Add(cd.Save());
             }
-            modeElement.Add(characterDataElement);
+            try
+            {
+                characterDataDoc.Save(characterDataPath);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Saving multiplayer campaign characters to \"" + characterDataPath + "\" failed!", e);
+            }
 
             lastSaveID++;
         }

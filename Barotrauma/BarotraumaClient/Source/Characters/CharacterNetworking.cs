@@ -302,63 +302,22 @@ namespace Barotrauma
             }
             else
             {
-                ushort infoID       = inc.ReadUInt16();
                 bool hasOwner       = inc.ReadBoolean();
-                int ownerId         = hasOwner ? inc.ReadByte() : -1;
-                
-                string newName      = inc.ReadString();
+                int ownerId         = hasOwner ? inc.ReadByte() : -1;                
                 byte teamID         = inc.ReadByte();
-
                 bool hasAi          = inc.ReadBoolean();
-                bool isFemale       = inc.ReadBoolean();
-                int headSpriteID    = inc.ReadByte();
-                string jobIdentifier      = inc.ReadString();
-
-                JobPrefab jobPrefab = null;
-                Dictionary<string, int> skillLevels = new Dictionary<string, int>();
-                if (!string.IsNullOrEmpty(jobIdentifier))
-                {
-                    jobPrefab = JobPrefab.List.Find(jp => jp.Identifier == jobIdentifier);
-                    int skillCount = inc.ReadByte();
-                    for (int i = 0; i < skillCount; i++)
-                    {
-                        string skillIdentifier = inc.ReadString();
-                        int skillLevel = inc.ReadRangedInteger(0, 100);
-
-                        skillLevels.Add(skillIdentifier, skillLevel);
-                    }
-                }
-
+                
                 if (!spawn) return null;
 
-                CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab)
-                {
-                    ID = infoID,
-                    HeadSpriteId = headSpriteID
-                };
+                CharacterInfo info = CharacterInfo.ClientRead(configPath, inc);
 
-                System.Diagnostics.Debug.Assert(skillLevels.Count == ch.Job.Skills.Count);
-                if (ch.Job != null)
-                {
-                    foreach (KeyValuePair<string, int> skill in skillLevels)
-                    {
-                        Skill matchingSkill = ch.Job.Skills.Find(s => s.Identifier == skill.Key);
-                        if (matchingSkill == null)
-                        {
-                            DebugConsole.ThrowError("Skill \"" + skill.Key + "\" not found in character \"" + newName + "\"");
-                            continue;
-                        }
-                        matchingSkill.Level = skill.Value;
-                    }
-                }
-
-                character = Create(configPath, position, seed, ch, GameMain.Client.ID != ownerId, hasAi);
+                character = Create(configPath, position, seed, info, GameMain.Client.ID != ownerId, hasAi);
                 character.ID = id;
                 character.TeamID = teamID;
 
                 if (configPath == HumanConfigFile)
                 {
-                    CharacterInfo duplicateCharacterInfo = GameMain.GameSession.CrewManager.GetCharacterInfos().Find(c => c.ID == infoID);
+                    CharacterInfo duplicateCharacterInfo = GameMain.GameSession.CrewManager.GetCharacterInfos().Find(c => c.ID == info.ID);
                     GameMain.GameSession.CrewManager.RemoveCharacterInfo(duplicateCharacterInfo);
                     GameMain.GameSession.CrewManager.AddCharacter(character);
                 }

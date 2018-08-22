@@ -59,9 +59,33 @@ namespace Barotrauma
             });
         }
 
+
+        partial void SetDelegates()
+        {
+            if (GameMain.Server != null)
+            {
+                CargoManager.OnItemsChanged += () => { LastUpdateID++; };
+                Map.OnLocationSelected += (loc, connection) => { LastUpdateID++; };
+            }
+        }
+
+        public void DiscardClientCharacterData(Client client)
+        {
+            characterData.RemoveAll(cd => cd.MatchesClient(client));
+        }
+
         public CharacterCampaignData GetClientCharacterData(Client client)
         {
             return characterData.Find(cd => cd.MatchesClient(client));
+        }
+
+        public void AssignClientCharacterInfos(IEnumerable<Client> connectedClients)
+        {
+            foreach (Client client in connectedClients)
+            {
+                var matchingData = GetClientCharacterData(client);
+                if (matchingData != null) client.CharacterInfo = matchingData.CharacterInfo;
+            }
         }
 
         public Dictionary<Client, Job> GetAssignedJobs(IEnumerable<Client> connectedClients)
@@ -75,14 +99,6 @@ namespace Barotrauma
             return assignedJobs;
         }
 
-        public void AssignClientCharacterInfos(IEnumerable<Client> connectedClients)
-        {
-            foreach (Client client in connectedClients)
-            {
-                var matchingData = GetClientCharacterData(client);
-                if (matchingData != null) client.CharacterInfo = matchingData.CharacterInfo;
-            }
-        }
 
         public void ServerWrite(NetBuffer msg, Client c)
         {
@@ -102,6 +118,17 @@ namespace Barotrauma
             {
                 msg.Write((UInt16)MapEntityPrefab.List.IndexOf(pi.ItemPrefab));
                 msg.Write((UInt16)pi.Quantity);
+            }
+
+            var characterData = GetClientCharacterData(c);
+            if (characterData?.CharacterInfo == null)
+            {
+                msg.Write(false);
+            }
+            else
+            {
+                msg.Write(true);
+                characterData.CharacterInfo.ServerWrite(msg);
             }
         }
 

@@ -207,7 +207,23 @@ namespace Barotrauma
                 msg.Write((ushort)(Items[i] == null ? 0 : Items[i].ID));
             }
         }
-
+        
+        /// <summary>
+        /// Deletes all items inside the inventory (and also recursively all items inside the items)
+        /// </summary>
+        public void DeleteAllItems()
+        {
+            for (int i = 0; i < capacity; i++)
+            {
+                if (Items[i] == null) continue;
+                foreach (ItemContainer itemContainer in Items[i].GetComponents<ItemContainer>())
+                {
+                    itemContainer.Inventory.DeleteAllItems();
+                }
+                Items[i].Remove();
+            }
+        }
+        
         public void ClientWrite(NetBuffer msg, object[] extraData = null)
         {
             SharedWrite(msg, extraData);

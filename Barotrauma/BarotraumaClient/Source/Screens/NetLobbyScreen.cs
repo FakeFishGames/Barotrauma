@@ -53,7 +53,7 @@ namespace Barotrauma
         private GUIButton campaignViewButton, spectateButton, settingsButton;
 
         private GUITickBox playYourself;
-
+        
         private GUIFrame playerInfoContainer;
         private GUIImage playerHeadSprite;
         private GUIFrame jobInfoFrame;
@@ -72,6 +72,15 @@ namespace Barotrauma
         private GUITextBox serverMessage;
 
         private float autoRestartTimer;
+
+        //persistent characterinfo provided by the server
+        //(character settings cannot be edited when this is set)
+        private CharacterInfo campaignCharacterInfo;
+        public bool CampaignCharacterDiscarded
+        {
+            get;
+            private set;
+        }
 
         //elements that can only be used by the host
         private List<GUIComponent> clientDisabledElements = new List<GUIComponent>();
@@ -544,6 +553,7 @@ namespace Barotrauma
         {
             textBox.Deselect();
             myCharacterFrame.GetChild<GUIButton>().Visible = true;
+            CampaignCharacterDiscarded = false;
         }
 
         public override void Select()
@@ -551,6 +561,8 @@ namespace Barotrauma
             if (GameMain.NetworkMember == null) return;
             Character.Controlled = null;
             GameMain.LightManager.LosEnabled = false;
+
+            CampaignCharacterDiscarded = false;
 
             textBox.Select();
             textBox.OnEnterPressed = GameMain.Client.EnterChatMessage;
@@ -672,121 +684,187 @@ namespace Barotrauma
             spectateButton.Visible = true;
         }
 
-        private void UpdatePlayerFrame(CharacterInfo characterInfo)
+        public void SetCampaignCharacterInfo(CharacterInfo characterInfo)
         {
-            playerInfoContainer.ClearChildren();
+            if (CampaignCharacterDiscarded) return;
 
-            GUIComponent infoContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.85f), playerInfoContainer.RectTransform, Anchor.BottomCenter), childAnchor: Anchor.TopCenter);                
+            campaignCharacterInfo = characterInfo;
+            if (campaignCharacterInfo != null)
+            {
+                UpdatePlayerFrame(campaignCharacterInfo, false);
+            }
+            else
+            {
+                UpdatePlayerFrame(null, true);
+            }
+        }
+
+        private void UpdatePlayerFrame(CharacterInfo characterInfo, bool allowEditing = true)
+        {
+            if (characterInfo == null)
+            {
+                characterInfo =
+                    new CharacterInfo(Character.HumanConfigFile, GameMain.NetworkMember.Name, GameMain.Config.CharacterGender, null)
+                    {
+                        HeadSpriteId = GameMain.Config.CharacterHeadIndex
+                    };
+                GameMain.Client.CharacterInfo = characterInfo;
+            }
+
+            playerInfoContainer.ClearChildren();
+            
+            GUIComponent infoContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), playerInfoContainer.RectTransform, Anchor.BottomCenter), childAnchor: Anchor.TopCenter)
+                { Stretch = true };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform), characterInfo.Name, font: GUI.LargeFont, textAlignment: Alignment.Center, wrap: true);
+
             GUIComponent headContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 0.2f), infoContainer.RectTransform, Anchor.TopCenter), isHorizontal: true)
             {
                 Stretch = true
             };
 
-            GUIButton toggleHead = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), headContainer.RectTransform), "", style: "GUIButtonHorizontalArrow")
+            if (allowEditing)
             {
-                UserData = -1,
-                OnClicked = ToggleHead
-            };
-            toggleHead.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipHorizontally);
+                new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), headContainer.RectTransform), "", style: "GUIButtonHorizontalArrow")
+                {
+                    UserData = -1,
+                    OnClicked = ToggleHead
+                }.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipHorizontally);
+            }
+
             playerHeadSprite = new GUIImage(new RectTransform(new Vector2(0.3f, 1.0f), headContainer.RectTransform), sprite: null, scaleToFit: true)
             {
                 UserData = "playerhead"
             };
-            toggleHead = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), headContainer.RectTransform), style: "GUIButtonHorizontalArrow")
+
+            if (allowEditing)
             {
-                UserData = 1,
-                OnClicked = ToggleHead
-            };
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), infoContainer.RectTransform),
-                TextManager.Get("Gender"), textAlignment: Alignment.Center);
-            GUIComponent genderContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.06f), infoContainer.RectTransform), isHorizontal: true)
-            {
-                Stretch = true,
-                RelativeSpacing = 0.05f
-            };
-
-            GUIButton maleButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), genderContainer.RectTransform),
-                TextManager.Get("Male"))
-            {
-                UserData = Gender.Male,
-                OnClicked = SwitchGender
-            };
-
-            GUIButton femaleButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), genderContainer.RectTransform),
-                TextManager.Get("Female"))
-            {
-                UserData = Gender.Female,
-                OnClicked = SwitchGender
-            };
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform), 
-                TextManager.Get("JobPreferences"));
-
-            jobList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), infoContainer.RectTransform))
-            {
-                Enabled = false
-            };
-
-            int i = 1;
-            foreach (string jobIdentifier in GameMain.Config.JobPreferences)
-            {
-                JobPrefab job = JobPrefab.List.Find(j => j.Identifier == jobIdentifier);
-                if (job == null) continue;
-
-                var jobFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), jobList.Content.RectTransform), style: "ListBoxElement")
-                {
-                    UserData = job
-                };
-                GUITextBlock jobText = new GUITextBlock(new RectTransform(new Vector2(0.66f, 1.0f), jobFrame.RectTransform, Anchor.CenterRight),
-                    i + ". " + job.Name + "    ", textAlignment: Alignment.CenterLeft);
-
-                var jobButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.8f), jobFrame.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.02f, 0.0f) },
-                    isHorizontal: true, childAnchor: Anchor.CenterLeft)
-                {
-                    RelativeSpacing = 0.03f
-                };
-
-                int buttonSize = jobButtonContainer.Rect.Height;
-                GUIButton infoButton = new GUIButton(new RectTransform(new Point(buttonSize, buttonSize), jobButtonContainer.RectTransform), "?")
-                {
-                    UserData = job,
-                    OnClicked = ViewJobInfo
-                };
-
-                GUIButton upButton = new GUIButton(new RectTransform(new Point(buttonSize, buttonSize), jobButtonContainer.RectTransform), "")
-                {
-                    UserData = -1,
-                    OnClicked = ChangeJobPreference
-                };
-                new GUIImage(new RectTransform(new Vector2(0.8f, 0.8f), upButton.RectTransform, Anchor.Center), GUI.Arrow, scaleToFit: true);
-
-                GUIButton downButton = new GUIButton(new RectTransform(new Point(buttonSize, buttonSize), jobButtonContainer.RectTransform), "")
+                new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), headContainer.RectTransform), style: "GUIButtonHorizontalArrow")
                 {
                     UserData = 1,
-                    OnClicked = ChangeJobPreference
+                    OnClicked = ToggleHead
                 };
-                new GUIImage(new RectTransform(new Vector2(0.8f, 0.8f), downButton.RectTransform, Anchor.Center), GUI.Arrow, scaleToFit: true)
+
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), infoContainer.RectTransform),
+                    TextManager.Get("Gender"), textAlignment: Alignment.Center);
+                GUIComponent genderContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.06f), infoContainer.RectTransform), isHorizontal: true)
                 {
-                    Rotation = MathHelper.Pi
+                    Stretch = true,
+                    RelativeSpacing = 0.05f
+                };
+
+                GUIButton maleButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), genderContainer.RectTransform),
+                    TextManager.Get("Male"))
+                {
+                    UserData = Gender.Male,
+                    OnClicked = SwitchGender
+                };
+
+                GUIButton femaleButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), genderContainer.RectTransform),
+                    TextManager.Get("Female"))
+                {
+                    UserData = Gender.Female,
+                    OnClicked = SwitchGender
+                };
+
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform), 
+                    TextManager.Get("JobPreferences"));
+
+                jobList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), infoContainer.RectTransform))
+                {
+                    Enabled = false
+                };
+
+                int i = 1;
+                foreach (string jobIdentifier in GameMain.Config.JobPreferences)
+                {
+                    JobPrefab job = JobPrefab.List.Find(j => j.Identifier == jobIdentifier);
+                    if (job == null) continue;
+
+                    var jobFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), jobList.Content.RectTransform), style: "ListBoxElement")
+                    {
+                        UserData = job
+                    };
+                    GUITextBlock jobText = new GUITextBlock(new RectTransform(new Vector2(0.66f, 1.0f), jobFrame.RectTransform, Anchor.CenterRight),
+                        i + ". " + job.Name + "    ", textAlignment: Alignment.CenterLeft);
+
+                    var jobButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.8f), jobFrame.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.02f, 0.0f) },
+                        isHorizontal: true, childAnchor: Anchor.CenterLeft)
+                    {
+                        RelativeSpacing = 0.03f
+                    };
+
+                    int buttonSize = jobButtonContainer.Rect.Height;
+                    GUIButton infoButton = new GUIButton(new RectTransform(new Point(buttonSize, buttonSize), jobButtonContainer.RectTransform), "?")
+                    {
+                        UserData = job,
+                        OnClicked = ViewJobInfo
+                    };
+
+                    GUIButton upButton = new GUIButton(new RectTransform(new Point(buttonSize, buttonSize), jobButtonContainer.RectTransform), "")
+                    {
+                        UserData = -1,
+                        OnClicked = ChangeJobPreference
+                    };
+                    new GUIImage(new RectTransform(new Vector2(0.8f, 0.8f), upButton.RectTransform, Anchor.Center), GUI.Arrow, scaleToFit: true);
+
+                    GUIButton downButton = new GUIButton(new RectTransform(new Point(buttonSize, buttonSize), jobButtonContainer.RectTransform), "")
+                    {
+                        UserData = 1,
+                        OnClicked = ChangeJobPreference
+                    };
+                    new GUIImage(new RectTransform(new Vector2(0.8f, 0.8f), downButton.RectTransform, Anchor.Center), GUI.Arrow, scaleToFit: true)
+                    {
+                        Rotation = MathHelper.Pi
+                    };
+                }
+
+                UpdateJobPreferences(jobList);
+            }
+            else
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), infoContainer.RectTransform), characterInfo.Job.Name, textAlignment: Alignment.Center, wrap: true);
+
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform), TextManager.Get("Skills"));
+                foreach (Skill skill in characterInfo.Job.Skills)
+                {
+                    Color textColor = Color.White * (0.5f + skill.Level / 200.0f);
+                    var skillText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform),
+                        "  - " + TextManager.Get("SkillName." + skill.Identifier) + ": " + (int)skill.Level, textColor);
+                }
+
+                //spacing
+                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.15f), infoContainer.RectTransform), style: null);
+
+                new GUIButton(new RectTransform(new Vector2(0.8f, 0.1f), infoContainer.RectTransform, Anchor.BottomCenter), "Create new")
+                {
+                    IgnoreLayoutGroups = true,
+                    OnClicked = (btn, userdata) =>
+                    {
+                        var confirmation = new GUIMessageBox(TextManager.Get("NewCampaignCharacterHeader"), TextManager.Get("NewCampaignCharacterText"),
+                            new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                        confirmation.Buttons[0].OnClicked += confirmation.Close;
+                        confirmation.Buttons[0].OnClicked += (btn2, userdata2) =>
+                        {
+                            CampaignCharacterDiscarded = true;
+                            campaignCharacterInfo = null;
+                            UpdatePlayerFrame(null, true);
+                            return true;
+                        };
+                        confirmation.Buttons[1].OnClicked += confirmation.Close;
+                        return true;
+                    }
                 };
             }
 
-            UpdateJobPreferences(jobList);
-
-            UpdatePlayerHead(characterInfo);
-            
+            UpdatePlayerHead(characterInfo);            
         }
         
         public bool TogglePlayYourself(GUITickBox tickBox)
         {
             if (tickBox.Selected)
             {
-                GameMain.Client.CharacterInfo = 
-                    new CharacterInfo(Character.HumanConfigFile, GameMain.NetworkMember.Name, GameMain.Config.CharacterGender, null);
-                GameMain.Client.CharacterInfo.HeadSpriteId = GameMain.Config.CharacterHeadIndex; 
-
-                UpdatePlayerFrame(GameMain.Client.CharacterInfo);
+                UpdatePlayerFrame(campaignCharacterInfo, allowEditing: campaignCharacterInfo == null);
             }
             else
             {
@@ -1495,6 +1573,13 @@ namespace Barotrauma
         public void ToggleCampaignMode(bool enabled)
         {
             ToggleCampaignView(enabled);
+
+            if (!enabled)
+            {
+                campaignCharacterInfo = null;
+                CampaignCharacterDiscarded = false;
+                UpdatePlayerFrame(null);
+            }
 
             subList.Enabled = !enabled && AllowSubSelection;
             shuttleList.Enabled = !enabled && AllowSubSelection;

@@ -682,12 +682,18 @@ namespace Barotrauma.Networking
                         {
                             byte campaignID = inc.ReadByte();
                             c.LastRecvCampaignUpdate = inc.ReadUInt16();
+                            bool characterDiscarded = inc.ReadBoolean();
 
-                            if (GameMain.GameSession?.GameMode is MultiPlayerCampaign)
+                            if (GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign)
                             {
+                                if (characterDiscarded)
+                                {
+                                    campaign.DiscardClientCharacterData(c);
+                                }
+
                                 //the client has a campaign save for another campaign 
                                 //(the server started a new campaign and the client isn't aware of it yet?)
-                                if (((MultiPlayerCampaign)GameMain.GameSession.GameMode).CampaignID != campaignID)
+                                if (campaign.CampaignID != campaignID)
                                 {
                                     c.LastRecvCampaignSave = 0;
                                     c.LastRecvCampaignUpdate = 0;
@@ -1377,7 +1383,10 @@ namespace Barotrauma.Networking
                         client.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, client.Name);
                     }
                     characterInfos.Add(client.CharacterInfo);
-                    client.CharacterInfo.Job = new Job(client.AssignedJob);
+                    if (client.CharacterInfo.Job == null || client.CharacterInfo.Job.Prefab != client.AssignedJob)
+                    {
+                        client.CharacterInfo.Job = new Job(client.AssignedJob);
+                    }
                 }
                 
                 List<CharacterInfo> bots = new List<CharacterInfo>();
@@ -2251,9 +2260,10 @@ namespace Barotrauma.Networking
                 //remove already assigned clients from unassigned
                 unassigned.RemoveAll(u => campaignAssigned.ContainsKey(u));
                 //add up to assigned client count
-                foreach (Job job in campaignAssigned.Values)
+                foreach (KeyValuePair<Client, Job> clientJob in campaignAssigned)
                 {
-                    assignedClientCount[job.Prefab]++;
+                    assignedClientCount[clientJob.Value.Prefab]++;
+                    clientJob.Key.AssignedJob = clientJob.Value.Prefab;
                 }
             }
 
