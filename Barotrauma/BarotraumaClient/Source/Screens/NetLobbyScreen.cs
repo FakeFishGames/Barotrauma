@@ -710,7 +710,11 @@ namespace Barotrauma
 
             playerInfoContainer.ClearChildren();
             
-            GUIComponent infoContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.85f), playerInfoContainer.RectTransform, Anchor.BottomCenter), childAnchor: Anchor.TopCenter);                
+            GUIComponent infoContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), playerInfoContainer.RectTransform, Anchor.BottomCenter), childAnchor: Anchor.TopCenter)
+                { Stretch = true };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform), characterInfo.Name, font: GUI.LargeFont, textAlignment: Alignment.Center, wrap: true);
+
             GUIComponent headContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 0.2f), infoContainer.RectTransform, Anchor.TopCenter), isHorizontal: true)
             {
                 Stretch = true
@@ -816,11 +820,20 @@ namespace Barotrauma
             }
             else
             {
-                //TODO: show skills
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), infoContainer.RectTransform), characterInfo.Name, font: GUI.LargeFont, wrap: true);
-                new GUITextBlock(new RectTransform(new Vector2(1.0f,0.15f), infoContainer.RectTransform), characterInfo.Job.Name, wrap: true);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), infoContainer.RectTransform), characterInfo.Job.Name, textAlignment: Alignment.Center, wrap: true);
 
-                new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), infoContainer.RectTransform, Anchor.BottomCenter), "Create new")
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform), TextManager.Get("Skills"));
+                foreach (Skill skill in characterInfo.Job.Skills)
+                {
+                    Color textColor = Color.White * (0.5f + skill.Level / 200.0f);
+                    var skillText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform),
+                        "  - " + TextManager.Get("SkillName." + skill.Identifier) + ": " + (int)skill.Level, textColor);
+                }
+
+                //spacing
+                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.15f), infoContainer.RectTransform), style: null);
+
+                new GUIButton(new RectTransform(new Vector2(0.8f, 0.1f), infoContainer.RectTransform, Anchor.BottomCenter), "Create new")
                 {
                     IgnoreLayoutGroups = true,
                     OnClicked = (btn, userdata) =>
