@@ -431,6 +431,8 @@
   <ServerDownloadFinished>Download finished</ServerDownloadFinished>
   <DownloadingFile>Downloading [filename]</DownloadingFile>
   <FileDownloadedNotification>File "[filename]" was downloaded successfully.</FileDownloadedNotification>
+  <NewCampaignCharacterHeader>Are you sure?</NewCampaignCharacterHeader>
+  <NewCampaignCharacterText>Creating a new character will discard your previous character, and you will lose all your skill progress and all the items in your possession. Do you wish to create a new character?</NewCampaignCharacterText>
 
   <!-- Client permissions -->
   <ClientPermission.None>None</ClientPermission.None>

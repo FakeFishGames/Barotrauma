@@ -687,12 +687,17 @@ namespace Barotrauma.Networking
                         {
                             byte campaignID             = inc.ReadByte();
                             c.LastRecvCampaignUpdate    = inc.ReadUInt16();
+                            bool characterDiscarded     = inc.ReadBoolean();
 
-                            if (GameMain.GameSession?.GameMode is MultiPlayerCampaign)
+                            if (GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign)
                             {
+                                if (characterDiscarded)
+                                {
+                                    campaign.DiscardClientCharacterData(c);
+                                }
                                 //the client has a campaign save for another campaign 
                                 //(the server started a new campaign and the client isn't aware of it yet?)
-                                if (((MultiPlayerCampaign)GameMain.GameSession.GameMode).CampaignID != campaignID)
+                                if (campaign.CampaignID != campaignID)
                                 {
                                     c.LastRecvCampaignSave = 0;
                                     c.LastRecvCampaignUpdate = 0;

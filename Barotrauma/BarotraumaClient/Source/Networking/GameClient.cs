@@ -1295,6 +1295,7 @@ namespace Barotrauma.Networking
                 outmsg.Write(campaign.LastSaveID);
                 outmsg.Write(campaign.CampaignID);
                 outmsg.Write(campaign.LastUpdateID);
+                outmsg.Write(GameMain.NetLobbyScreen.CampaignCharacterDiscarded);
             }
 
             chatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, lastSentChatMsgID));
