@@ -66,12 +66,27 @@ namespace Barotrauma
             return characterData.Find(cd => cd.MatchesClient(client));
         }
 
-        public void AssignClientCharacterInfos(IEnumerable<Client> connectedClients)
+        public CharacterCampaignData GetHostCharacterData()
+        {
+            return characterData.Find(cd => cd.IsHostCharacter);
+        }
+
+        public void AssignPlayerCharacterInfos(IEnumerable<Client> connectedClients, bool assignHost)
         {
             foreach (Client client in connectedClients)
             {
+                if (client.SpectateOnly && GameMain.Server.AllowSpectating) continue;
                 var matchingData = GetClientCharacterData(client);
                 if (matchingData != null) client.CharacterInfo = matchingData.CharacterInfo;
+            }
+
+            if (assignHost)
+            {
+                var hostCharacterData = GetHostCharacterData();
+                if (hostCharacterData?.CharacterInfo != null)
+                {
+                    GameMain.Server.CharacterInfo = hostCharacterData.CharacterInfo;
+                }
             }
         }
 
@@ -136,6 +151,23 @@ namespace Barotrauma
                 if (c.Character?.Info != null && !c.Character.IsDead)
                 {
                     characterData.Add(new CharacterCampaignData(c));
+                }
+            }
+
+#if CLIENT
+            GameMain.NetLobbyScreen.SetCampaignCharacterInfo(null);
+#endif
+
+            if (GameMain.Server.Character != null)
+            {
+                characterData.RemoveAll(cd => cd.IsHostCharacter);
+                if (!GameMain.Server.Character.IsDead)
+                {
+                    var hostCharacterData = new CharacterCampaignData(GameMain.Server);
+                    characterData.Add(hostCharacterData);
+#if CLIENT
+                    GameMain.NetLobbyScreen.SetCampaignCharacterInfo(hostCharacterData.CharacterInfo);
+#endif
                 }
             }
 
@@ -238,13 +270,23 @@ namespace Barotrauma
                 }
             }
 
-            characterData.Clear();
-            string characterDataPath = GetCharacterDataSavePath();
-            var characterDataDoc = XMLExtensions.TryLoadXml(characterDataPath);
-            if (characterDataDoc?.Root == null) return;
-            foreach (XElement subElement in characterDataDoc.Root.Elements())
+            if (GameMain.Server != null)
             {
-                characterData.Add(new CharacterCampaignData(subElement));
+                characterData.Clear();
+                string characterDataPath = GetCharacterDataSavePath();
+                var characterDataDoc = XMLExtensions.TryLoadXml(characterDataPath);
+                if (characterDataDoc?.Root == null) return;
+                foreach (XElement subElement in characterDataDoc.Root.Elements())
+                {
+                    characterData.Add(new CharacterCampaignData(subElement));
+                }
+#if CLIENT
+                var hostCharacterData = GetHostCharacterData();
+                if (hostCharacterData?.CharacterInfo != null)
+                {
+                    GameMain.NetLobbyScreen.SetCampaignCharacterInfo(hostCharacterData.CharacterInfo);
+                }
+#endif
             }
         }
 

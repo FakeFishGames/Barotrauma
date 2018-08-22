@@ -280,7 +280,7 @@ namespace Barotrauma
             playYourself = new GUITickBox(new RectTransform(new Vector2(0.06f, 0.06f), myCharacterFrame.RectTransform) { RelativeOffset = new Vector2(0.05f,0.05f) },
                 TextManager.Get("PlayYourself"))
             {
-                OnSelected = TogglePlayYourself,
+                OnSelected = (tickBox) => { SetPlayYourself(tickBox.Selected); return true; },
                 UserData = "playyourself"
             };
 
@@ -588,10 +588,7 @@ namespace Barotrauma
                 (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.ServerLog));
 
             spectateButton.Visible = GameMain.Client != null && GameMain.Client.GameStarted;            
-            if (GameMain.NetworkMember.CharacterInfo != null)
-            {
-                TogglePlayYourself(playYourself);
-            }            
+            SetPlayYourself(playYourself.Selected);            
 
             if (IsServer && GameMain.Server != null)
             {
@@ -644,11 +641,7 @@ namespace Barotrauma
             else if (GameMain.Client != null)
             {
                 GameMain.Client.Voting.ResetVotes(GameMain.Client.ConnectedClients);
-                if (!playYourself.Selected)
-                {
-                    playYourself.Selected = true;
-                    TogglePlayYourself(playYourself);
-                }
+                SetPlayYourself(true);                
                 spectateButton.OnClicked = GameMain.Client.SpectateClicked;
             }
 
@@ -698,6 +691,7 @@ namespace Barotrauma
 
         private void UpdatePlayerFrame(CharacterInfo characterInfo, bool allowEditing = true)
         {
+            if (!playYourself.Selected) return;
             if (characterInfo == null)
             {
                 characterInfo =
@@ -857,9 +851,10 @@ namespace Barotrauma
             UpdatePlayerHead(characterInfo);            
         }
         
-        public bool TogglePlayYourself(GUITickBox tickBox)
+        public void SetPlayYourself(bool playYourself)
         {
-            if (tickBox.Selected)
+            this.playYourself.Selected = playYourself;
+            if (playYourself)
             {
                 UpdatePlayerFrame(campaignCharacterInfo, allowEditing: campaignCharacterInfo == null);
             }
@@ -874,16 +869,14 @@ namespace Barotrauma
                     TextManager.Get("PlayingAsSpectator"),
                     textAlignment: Alignment.Center);
             }
-            return false;
         }
 
         public void SetAllowSpectating(bool allowSpectating)
         {
             //show the player config menu if spectating is not allowed
-            if (!playYourself.Selected && !allowSpectating)
+            if (!allowSpectating)
             {
-                playYourself.Selected = !playYourself.Selected;
-                TogglePlayYourself(playYourself);
+                SetPlayYourself(true);
             }
             //hide "play yourself" tickbox if spectating is not allowed
             playYourself.Visible = allowSpectating;            
