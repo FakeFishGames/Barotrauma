@@ -575,14 +575,26 @@ namespace Barotrauma.Items.Components
         
         public virtual void Load(XElement componentElement)
         {
-            if (componentElement == null) return;            
+            if (componentElement == null) return;
 
             foreach (XAttribute attribute in componentElement.Attributes())
             {
                 if (!properties.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out SerializableProperty property)) continue;
                 property.TrySetValue(attribute.Value);
             }
+#if CLIENT 
+            string msg = TextManager.Get(Msg, true);
+            if (msg != null)
+            {
 
+                foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
+                {
+                    msg = msg.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBind(inputType).ToString());
+                }
+                ri.Msg = msg;
+
+            }
+#endif
             List<RelatedItem> prevRequiredItems = new List<RelatedItem>(requiredItems);
             bool overrideRequiredItems = false;
 

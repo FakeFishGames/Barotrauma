@@ -112,7 +112,7 @@
 
     <Body width="14" height="12"/>
 
-    <Holdable selectkey="Action" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
+    <Holdable selectkey="Action" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
@@ -120,7 +120,7 @@
       <Containable identifiers="explosive"/>
     </ItemContainer>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,175" maxsize="480,210" anchor="Center" style="ConnectionPanel"/>
       <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="activate">

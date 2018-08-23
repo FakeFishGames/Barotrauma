@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ItemAssembly name="Door" description="A pre-wired door with two buttons.">
   <Item name="Door" ID="4" rect="0,112,48,208" description="" spritecolor="1,1,1,1" tags="door">
-    <Door isopen="False" pickingtime="10" canbepicked="True" msg="Force Open [Crowbar]">
+    <Door isopen="False" pickingtime="10" canbepicked="True" msg="ItemMsgForceOpenCrowbar">
       <requireditem identifier="crowbar" type="Equipped" msg="" />
     </Door>
-    <ConnectionPanel pickingtime="0" canbepicked="False" msg="Rewire [Screwdriver]">
+    <ConnectionPanel pickingtime="0" canbepicked="False" msg="ItemMsgRewireScrewdriver">
       <requireditem identifier="screwdriver" type="Equipped" msg="" />
       <input name="toggle">
         <link w="9" />
@@ -15,30 +15,30 @@
     </ConnectionPanel>
   </Item>
   <Item name="Button" ID="8" rect="-24,15,24,27" description="" spritecolor="1,1,1,1" tags="smallitem">
-    <Controller pickingtime="0" canbepicked="True" msg="Press [E]">
-      <requireditem identifier="idcard" type="Picked" msg="UNAUTHORIZED ACCESS" />
+    <Controller pickingtime="0" canbepicked="True" msg="ItemMsgPressSelect">
+      <requireditem identifier="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess" />
     </Controller>
-    <ConnectionPanel pickingtime="0" canbepicked="False" msg="Rewire [Screwdriver]">
+    <ConnectionPanel pickingtime="0" canbepicked="False" msg="ItemMsgRewireScrewdriver">
       <requireditem identifier="screwdriver" type="Equipped" msg="" />
       <output name="signal_out">
         <link w="10" />
       </output>
     </ConnectionPanel>
-    <Holdable attached="True" pickingtime="10" canbepicked="True" msg="Detach [Wrench]">
+    <Holdable attached="True" pickingtime="10" canbepicked="True" msg="ItemMsgDetachWrench">
       <requireditem identifier="wrench" type="Equipped" msg="" />
     </Holdable>
   </Item>
   <Item name="Button" ID="5" rect="47,15,24,27" description="" spritecolor="1,1,1,1" tags="smallitem">
-    <Controller pickingtime="0" canbepicked="True" msg="Press [E]">
-      <requireditem identifier="idcard" type="Picked" msg="UNAUTHORIZED ACCESS" />
+    <Controller pickingtime="0" canbepicked="True" msg="ItemMsgPressSelect">
+      <requireditem identifier="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess" />
     </Controller>
-    <ConnectionPanel pickingtime="0" canbepicked="False" msg="Rewire [Screwdriver]">
+    <ConnectionPanel pickingtime="0" canbepicked="False" msg="ItemMsgRewireScrewdriver">
       <requireditem identifier="screwdriver" type="Equipped" msg="" />
       <output name="signal_out">
         <link w="9" />
       </output>
     </ConnectionPanel>
-    <Holdable attached="True" pickingtime="10" canbepicked="True" msg="Detach [Wrench]">
+    <Holdable attached="True" pickingtime="10" canbepicked="True" msg="ItemMsgDetachWrench">
       <requireditem identifier="wrench" type="Equipped" msg="" />
     </Holdable>
   </Item>

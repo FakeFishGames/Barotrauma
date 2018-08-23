@@ -21,7 +21,7 @@
     <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,148,160"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
-      <RequiredItem identifiers="idcard" type="Picked" msg="UNAUTHORIZED ACCESS"/>
+      <RequiredItem identifiers="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess"/>
       <Containable identifiers="smallitem"/>
     </ItemContainer>
   </Item>
@@ -120,7 +120,7 @@
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
-      <RequiredItem identifiers="idcard" type="Picked" msg="UNAUTHORIZED ACCESS"/>
+      <RequiredItem identifiers="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess"/>
       <Containable identifiers="smallitem,spear"/>
     </ItemContainer>
   </Item>
