@@ -471,8 +471,10 @@ namespace Barotrauma.Items.Components
 
         public void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage = false)
         {
-            if (isStuck || (predictedState == null && isOpen == open) || (predictedState != null && isOpen == predictedState.Value)) return;
-
+            if (isStuck || 
+                (predictedState == null && isOpen == open) || 
+                (predictedState != null && isOpen == predictedState.Value && isOpen == open)) return;
+            
             if (GameMain.Client != null && !isNetworkMessage)
             {
                 //clients can "predict" that the door opens/closes when a signal is received
