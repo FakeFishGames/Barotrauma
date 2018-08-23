@@ -7,14 +7,13 @@ namespace Barotrauma
 {
     class RelatedItem
     {
-        [Flags]
         public enum RelationType
         {
-            None = 0,
-            Contained = 1,
-            Equipped = 2,
-            Picked = 4,
-            Container = 8
+            None,
+            Contained,
+            Equipped,
+            Picked,
+            Container
         }
 
         private string[] identifiers;
@@ -185,13 +184,16 @@ namespace Barotrauma
             if (identifiers.Length == 0 && excludedIdentifiers.Length == 0) return null;
 
             RelatedItem ri = new RelatedItem(identifiers, excludedIdentifiers);
-            try
+            
+            string typeStr = element.GetAttributeString("type", "");
+            if (string.IsNullOrEmpty(typeStr))
             {
-                ri.type = (RelationType)Enum.Parse(typeof(RelationType), element.GetAttributeString("type", "None"));
+                if (element.Name.ToString().ToLowerInvariant() == "containable") typeStr = "Contained";
             }
-            catch
+            if (!Enum.TryParse(typeStr, true, out ri.type))
             {
-                ri.type = RelationType.None;
+                DebugConsole.ThrowError("Error in RelatedItem config ("+parentDebugName+") - \""+ typeStr +"\" is not a valid relation type.");
+                return null;
             }
 
             string msgTag = element.GetAttributeString("msg", "");

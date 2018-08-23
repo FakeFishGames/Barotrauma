@@ -14,7 +14,7 @@ namespace Barotrauma.Items.Components
 
         private InputType prevPickKey;
         private string prevMsg;
-        private List<RelatedItem> prevRequiredItems;
+        private Dictionary<RelatedItem.RelationType, List<RelatedItem>> prevRequiredItems;
 
         //the distance from the holding characters elbow to center of the physics body of the item
         protected Vector2 holdPos;
@@ -142,7 +142,7 @@ namespace Barotrauma.Items.Components
             {
                 prevMsg = Msg;
                 prevPickKey = PickKey;
-                prevRequiredItems = new List<RelatedItem>(requiredItems);
+                prevRequiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(requiredItems);
                                 
                 if (item.Submarine != null)
                 {
@@ -175,7 +175,7 @@ namespace Barotrauma.Items.Components
             {
                 prevMsg = Msg;
                 prevPickKey = PickKey;
-                prevRequiredItems = new List<RelatedItem>(requiredItems);
+                prevRequiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(requiredItems);
             }
         }
 
@@ -344,7 +344,7 @@ namespace Barotrauma.Items.Components
             
             Msg = prevMsg;
             PickKey = prevPickKey;
-            requiredItems = new List<RelatedItem>(prevRequiredItems);
+            requiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(prevRequiredItems);
 
             attached = true;
         }
