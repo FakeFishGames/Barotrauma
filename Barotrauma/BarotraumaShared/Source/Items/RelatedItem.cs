@@ -194,7 +194,22 @@ namespace Barotrauma
                 ri.type = RelationType.None;
             }
 
-            ri.Msg = element.GetAttributeString("msg", "");
+            string msgTag = element.GetAttributeString("msg", "");
+            string msg = TextManager.Get(msgTag, true);
+            if (msg == null)
+            {
+                ri.Msg = msgTag;
+            }
+            else
+            {
+#if CLIENT
+                foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
+                {
+                    msg = msg.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBind(inputType).ToString());
+                }
+                ri.Msg = msg;
+#endif
+            }
 
             foreach (XElement subElement in element.Elements())
             {
