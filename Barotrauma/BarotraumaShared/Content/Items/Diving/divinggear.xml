@@ -216,7 +216,7 @@
     <Holdable slots="Any,RightHand+LeftHand" aimpos="100,0" handle1="4,10" handle2="6,10"/>
 
     <Propulsion force="80" usablein="water" particles="bubbles">
-      <RequiredItems identifier="batterycell,fulguriumbatterycell" type="Contained" msg="Battery Cell required"/>
+      <RequiredItems identifier="batterycell,fulguriumbatterycell" type="Contained" msg="ItemMsgBatteryCellRequired"/>
       <StatusEffect type="OnUse" target="Contained" Condition="-1.0"/>
       <sound file="Content/Items/Diving/scooter.ogg" type="OnUse" range="500.0" loop="true"/>
       <LightComponent LightColor="1.0,1.0,1.0,0.8" range="800">

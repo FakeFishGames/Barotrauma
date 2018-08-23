@@ -12,7 +12,7 @@
       <sound file="Content/Items/Pump/pump.ogg" type="OnActive" range="800.0" volume="CurrFlow" volumemultiplier="0.01" loop="true"/>
     </Pump>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="power_in"/>
@@ -36,7 +36,7 @@
       <sound file="Content/Items/Pump/pump.ogg" type="OnActive" range="500.0" volume="CurrFlow" volumemultiplier="0.01" loop="true"/>
     </Pump>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="power_in"/>

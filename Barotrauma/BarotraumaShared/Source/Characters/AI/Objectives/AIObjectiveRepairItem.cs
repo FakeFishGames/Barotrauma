@@ -55,12 +55,15 @@ namespace Barotrauma
                 if (fixRequirement.Fixed) continue;
                 
                 //make sure we have all the items required to fix the target item
-                foreach (RelatedItem requiredItem in fixRequirement.requiredItems)
+                foreach (var kvp in fixRequirement.requiredItems)
                 {
-                    if (!character.Inventory.Items.Any(it => it != null && requiredItem.MatchesItem(it)))
+                    foreach (RelatedItem requiredItem in kvp.Value)
                     {
-                        AddSubObjective(new AIObjectiveGetItem(character, requiredItem.Identifiers));
-                        return;
+                        if (!character.Inventory.Items.Any(it => it != null && requiredItem.MatchesItem(it)))
+                        {
+                            AddSubObjective(new AIObjectiveGetItem(character, requiredItem.Identifiers));
+                            return;
+                        }
                     }
                 }
             }

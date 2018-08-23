@@ -40,7 +40,7 @@ namespace Barotrauma.Items.Components
 
         public readonly Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
                 
-        public List<RelatedItem> requiredItems;
+        public Dictionary<RelatedItem.RelationType, List<RelatedItem>> requiredItems;
 
         public List<Skill> requiredSkills;
 
@@ -200,7 +200,7 @@ namespace Barotrauma.Items.Components
             this.item = item;
             name = element.Name.ToString();
             properties = SerializableProperty.GetProperties(this);            
-            requiredItems = new List<RelatedItem>();
+            requiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>();
             requiredSkills = new List<Skill>();
 
 #if CLIENT
@@ -244,7 +244,11 @@ namespace Barotrauma.Items.Components
                         RelatedItem ri = RelatedItem.Load(subElement, item.Name);
                         if (ri != null)
                         {
-                            requiredItems.Add(ri);
+                            if (!requiredItems.ContainsKey(ri.Type))
+                            {
+                                requiredItems.Add(ri.Type, new List<RelatedItem>());
+                            }
+                            requiredItems[ri.Type].Add(ri);
                         }
                         else
                         {
@@ -506,17 +510,12 @@ namespace Barotrauma.Items.Components
 
         public bool HasRequiredContainedItems(bool addMessage)
         {
-            List<RelatedItem> requiredContained = requiredItems.FindAll(ri=> ri.Type == RelatedItem.RelationType.Contained);
-
-            if (!requiredContained.Any()) return true;
-
-            Item[] containedItems = item.ContainedItems;
-            if (containedItems == null || !containedItems.Any()) return false;
-
-            foreach (RelatedItem ri in requiredContained)
+            if (!requiredItems.ContainsKey(RelatedItem.RelationType.Contained)) return true;
+            if (item.OwnInventory == null) return false;
+            
+            foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Contained])
             {
-                Item containedItem = Array.Find(containedItems, x => x != null && x.Condition > 0.0f && ri.MatchesItem(x));
-                if (containedItem == null)
+                if (!item.OwnInventory.Items.Any(it => it != null && it.Condition > 0.0f && ri.MatchesItem(it)))
                 {
 #if CLIENT
                     if (addMessage && !string.IsNullOrEmpty(ri.Msg)) GUI.AddMessage(ri.Msg, Color.Red);
@@ -533,28 +532,33 @@ namespace Barotrauma.Items.Components
             if (!requiredItems.Any()) return true;
             if (character.Inventory == null) return false;
                        
-            foreach (RelatedItem ri in requiredItems)
+            if (requiredItems.ContainsKey(RelatedItem.RelationType.Equipped))
             {
-                if (!ri.Type.HasFlag(RelatedItem.RelationType.Equipped) && !ri.Type.HasFlag(RelatedItem.RelationType.Picked)) continue;
-
-                bool hasItem = false;
-                if (ri.Type.HasFlag(RelatedItem.RelationType.Equipped))
+                foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Equipped])
                 {
-                    if (character.SelectedItems.FirstOrDefault(it => it != null && it.Condition > 0.0f && ri.MatchesItem(it)) != null) hasItem = true;
-                }
-                if (!hasItem && ri.Type.HasFlag(RelatedItem.RelationType.Picked))
-                {
-                    if (character.Inventory.Items.FirstOrDefault(x => x != null && x.Condition > 0.0f && ri.MatchesItem(x)) != null) hasItem = true;
-                }
-                if (!hasItem)
-                {
+                    if (character.SelectedItems.FirstOrDefault(it => it != null && it.Condition > 0.0f && ri.MatchesItem(it)) == null)
+                    {
 #if CLIENT
                     if (addMessage && !string.IsNullOrEmpty(ri.Msg)) GUI.AddMessage(ri.Msg, Color.Red);
 #endif
-                    return false;
+                        return false;
+                    }
                 }
             }
-
+            if (requiredItems.ContainsKey(RelatedItem.RelationType.Picked))
+            {
+                foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Picked])
+                {
+                    if (character.Inventory.Items.FirstOrDefault(it => it != null && it.Condition > 0.0f && ri.MatchesItem(it)) == null)
+                    {
+#if CLIENT
+                    if (addMessage && !string.IsNullOrEmpty(ri.Msg)) GUI.AddMessage(ri.Msg, Color.Red);
+#endif
+                        return false;
+                    }
+                }
+            }
+            
             return true;
         }
         
@@ -575,15 +579,25 @@ namespace Barotrauma.Items.Components
         
         public virtual void Load(XElement componentElement)
         {
-            if (componentElement == null) return;            
+            if (componentElement == null) return;
 
             foreach (XAttribute attribute in componentElement.Attributes())
             {
                 if (!properties.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out SerializableProperty property)) continue;
                 property.TrySetValue(attribute.Value);
             }
-
-            List<RelatedItem> prevRequiredItems = new List<RelatedItem>(requiredItems);
+#if CLIENT 
+            string msg = TextManager.Get(Msg, true);
+            if (msg != null)
+            {
+                foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
+                {
+                    msg = msg.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBind(inputType).ToString());
+                }
+                Msg = msg;
+            }
+#endif
+            var prevRequiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(requiredItems);
             bool overrideRequiredItems = false;
 
             foreach (XElement subElement in componentElement.Elements())
@@ -594,18 +608,22 @@ namespace Barotrauma.Items.Components
                         if (!overrideRequiredItems) requiredItems.Clear();
                         overrideRequiredItems = true;
 
-                        RelatedItem newRequiredItem = RelatedItem.Load(subElement, item.Name);
-                        
+                        RelatedItem newRequiredItem = RelatedItem.Load(subElement, item.Name);                        
                         if (newRequiredItem == null) continue;
 
-                        var prevRequiredItem = prevRequiredItems.Find(ri => ri.JoinedIdentifiers == newRequiredItem.JoinedIdentifiers);
+                        var prevRequiredItem = prevRequiredItems.ContainsKey(newRequiredItem.Type) ?
+                            prevRequiredItems[newRequiredItem.Type].Find(ri => ri.JoinedIdentifiers == newRequiredItem.JoinedIdentifiers) : null;
                         if (prevRequiredItem != null)
                         {
                             newRequiredItem.statusEffects = prevRequiredItem.statusEffects;
                             newRequiredItem.Msg = prevRequiredItem.Msg;
                         }
 
-                        requiredItems.Add(newRequiredItem);
+                        if (!requiredItems.ContainsKey(newRequiredItem.Type))
+                        {
+                            requiredItems[newRequiredItem.Type] = new List<RelatedItem>();
+                        }
+                        requiredItems[newRequiredItem.Type].Add(newRequiredItem);
                         break;
                 }
             }
@@ -680,12 +698,16 @@ namespace Barotrauma.Items.Components
         {
             XElement componentElement = new XElement(name);
 
-            foreach (RelatedItem ri in requiredItems)
+            foreach (var kvp in requiredItems)
             {
-                XElement newElement = new XElement("requireditem");
-                ri.Save(newElement);
-                componentElement.Add(newElement);
+                foreach (RelatedItem ri in kvp.Value)
+                {
+                    XElement newElement = new XElement("requireditem");
+                    ri.Save(newElement);
+                    componentElement.Add(newElement);
+                }
             }
+
 
             SerializableProperty.SerializeProperties(this, componentElement);
 

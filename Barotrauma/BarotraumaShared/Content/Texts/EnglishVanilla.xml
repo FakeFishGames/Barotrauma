@@ -318,6 +318,7 @@
   <ServerListModeSelection>Game mode selection</ServerListModeSelection>
   <ServerListAllowSpectating>Allow spectating</ServerListAllowSpectating>
   <ServerListCompatible>Compatible</ServerListCompatible>
+  <ServerListPing>Ping</ServerListPing>
   <ServerListRoundStarted>Round started</ServerListRoundStarted>
   <ServerListInfo>Info</ServerListInfo>
   <ServerListRefresh>Refresh</ServerListRefresh>
@@ -873,6 +874,22 @@
 
   <OxygenTankEmpty>Oxygen Tank (empty)</OxygenTankEmpty>
   <WeldingFuelTankEmpty>Welding Fuel Tank (empty)</WeldingFuelTankEmpty>
+
+  <!-- Item messages -->
+  <ItemMsgPressSelect>Press [select]</ItemMsgPressSelect>
+  <ItemMsgUnauthorizedAccess>UNAUTHORIZED ACCESS</ItemMsgUnauthorizedAccess>
+  <ItemMsgRewireScrewdriver>Rewire [Screwdriver]</ItemMsgRewireScrewdriver>
+  <ItemMsgDetachWrench>Detach [Wrench]</ItemMsgDetachWrench>
+  <ItemMsgForceOpenCrowbar>Force open [Crowbar]</ItemMsgForceOpenCrowbar>
+  <ItemMsgRepairScrewdriver>Repair [Screwdriver]</ItemMsgRepairScrewdriver>
+  <ItemMsgRepairWeldingTool>Repair [Welding Tool]</ItemMsgRepairWeldingTool>
+  <ItemMsgRepairWrench>Repair [Wrench]</ItemMsgRepairWrench>
+  <ItemMsgBatteryCellRequired>Battery cell required</ItemMsgBatteryCellRequired>
+  <ItemMsgWeldingFuelRequired>Welding fuel required</ItemMsgWeldingFuelRequired>
+  <ItemMsgOxygenTankRequired>Oxygen tank required</ItemMsgOxygenTankRequired>
+  <ItemMsgSpearRequired>Out of spears</ItemMsgSpearRequired>
+  <ItemMsgAmmoRequired>Out of ammo</ItemMsgAmmoRequired>
+  <ItemMsgSyringeRequired>Out of syringes</ItemMsgSyringeRequired>
 
   <!-- the names and descriptions of items and structures can be translated by including them in a text file, for example:  
   <weldingtool.Name>Eldingway Ooltay</weldingtool.Name>

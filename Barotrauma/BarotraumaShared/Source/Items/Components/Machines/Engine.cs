@@ -47,7 +47,7 @@ namespace Barotrauma.Items.Components
 
         public float CurrentVolume
         {
-            get { return Math.Abs((force / 100.0f) * Math.Min(voltage / minVoltage, 1.0f)); }
+            get { return Math.Abs((force / 100.0f) * (minVoltage <= 0.0f ? 1.0f : Math.Min(voltage / minVoltage, 1.0f))); }
         }
 
         public Engine(Item item, XElement element)
