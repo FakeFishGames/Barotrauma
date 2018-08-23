@@ -3,6 +3,7 @@ using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -23,6 +24,8 @@ namespace Barotrauma.Items.Components
         private float reload;
 
         private float reloadTimer;
+
+        private HashSet<Entity> hitTargets = new HashSet<Entity>();
 
         public Character User
         {
@@ -51,7 +54,7 @@ namespace Barotrauma.Items.Components
             foreach (XElement subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "attack") continue;
-                attack = new Attack(subElement);
+                attack = new Attack(subElement, item.Name + ", MeleeWeapon");
             }
         }
 
@@ -99,6 +102,7 @@ namespace Barotrauma.Items.Components
             }
             
             hitting = true;
+            hitTargets.Clear();
 
             IsActive = true;
             return false;
@@ -136,8 +140,7 @@ namespace Barotrauma.Items.Components
             {
                 if (picker.IsKeyDown(InputType.Aim))
                 {
-                    hitPos = Math.Min(hitPos+deltaTime*5.0f, MathHelper.Pi*0.7f);
-
+                    hitPos = Math.Min(hitPos + deltaTime * 5.0f, MathHelper.Pi * 0.7f);
                     ac.HoldItem(deltaTime, item, handlePos, new Vector2(0.6f, -0.1f), new Vector2(-0.3f, 0.2f), false, hitPos);
                 }
                 else
@@ -147,28 +150,13 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                //Vector2 diff = Vector2.Normalize(picker.CursorPosition - ac.RefLimb.Position);
-                //diff.X = diff.X * ac.Dir;
-
-                hitPos -= deltaTime*15.0f;
-
-                //angl = -hitPos * 2.0f;
-                //    System.Diagnostics.Debug.WriteLine("<1.0f "+hitPos);
-
-
-
+                hitPos -= deltaTime * 15.0f;
                 ac.HoldItem(deltaTime, item, handlePos, new Vector2(0.6f, -0.1f), new Vector2(-0.3f, 0.2f), false, hitPos);
-                //}
-                //else
-                //{
-                //    System.Diagnostics.Debug.WriteLine(">1.0f " + hitPos);
-                //    ac.HoldItem(deltaTime, item, handlePos, new Vector2(0.5f, 0.2f), new Vector2(1.0f, 0.2f), false, 0.0f);
-                //}
-
-                if (hitPos < -MathHelper.PiOver4*1.2f)
+                if (hitPos < -MathHelper.PiOver4 * 1.2f)
                 {
                     RestoreCollision();
                     hitting = false;
+                    hitTargets.Clear();
                 }
             }
         }
@@ -207,11 +195,6 @@ namespace Barotrauma.Items.Components
 
             item.body.CollisionCategories = Physics.CollisionItem;
             item.body.CollidesWith = Physics.CollisionWall;
-
-            //foreach (Limb l in picker.AnimController.Limbs)
-            //{
-            //    item.body.FarseerBody.RestoreCollisionWith(l.body.FarseerBody);
-            //}
         }
 
 
@@ -233,15 +216,22 @@ namespace Barotrauma.Items.Components
                 targetLimb = (Limb)f2.Body.UserData;
                 if (targetLimb.IsSevered || targetLimb.character == null) return false;
                 targetCharacter = targetLimb.character;
+
+                if (hitTargets.Contains(targetCharacter)) return false;
+                hitTargets.Add(targetCharacter);
             }
             else if (f2.Body.UserData is Character)
             {
                 targetCharacter = (Character)f2.Body.UserData;
                 targetLimb = targetCharacter.AnimController.GetLimb(LimbType.Torso); //Otherwise armor can be bypassed in strange ways
+                if (hitTargets.Contains(targetCharacter)) return false;
+                hitTargets.Add(targetCharacter);
             }
             else if (f2.Body.UserData is Structure)
             {
                 targetStructure = (Structure)f2.Body.UserData;
+                if (hitTargets.Contains(targetStructure)) return false;
+                hitTargets.Add(targetStructure);
             }
             else
             {
@@ -271,10 +261,7 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
             }
-
-            RestoreCollision();
-            hitting = false;
-
+            
             if (GameMain.Client != null) return true;
 
             if (GameMain.Server != null && targetCharacter != null) //TODO: Log structure hits

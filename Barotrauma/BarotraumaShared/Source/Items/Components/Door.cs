@@ -78,6 +78,11 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public bool? PredictedState
+        {
+            get { return predictedState; }
+        }
+
         public Gap LinkedGap
         {
             get
@@ -481,26 +486,24 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.Client != null && !isNetworkMessage)
             {
-                //clients can "predict" that the door opens/closes when a signal is received
+                bool stateChanged = open != predictedState;
 
+                //clients can "predict" that the door opens/closes when a signal is received
                 //the prediction will be reset after 1 second, setting the door to a state
                 //sent by the server, or reverting it back to its old state if no msg from server was received
-
-#if CLIENT
-                if (open != predictedState) PlaySound(ActionType.OnUse, item.WorldPosition);
-#endif
-
                 predictedState = open;
                 resetPredictionTimer = CorrectionDelay;
-                
+#if CLIENT
+                if (stateChanged) PlaySound(ActionType.OnUse, item.WorldPosition);
+#endif
+
             }
             else
             {
+                isOpen = open;
 #if CLIENT
                 if (!isNetworkMessage || open != predictedState) PlaySound(ActionType.OnUse, item.WorldPosition);
 #endif
-
-                isOpen = open;
             }
 
             //opening a partially stuck door makes it less stuck

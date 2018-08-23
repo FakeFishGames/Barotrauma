@@ -19,6 +19,6 @@
     <targetpriority tag="room" state="Attack" priority="100"/>
     <targetpriority tag="stronger" state="Escape" priority="30"/>
   </ai>
- 
+
 </Character>
 

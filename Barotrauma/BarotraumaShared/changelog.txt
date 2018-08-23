@@ -1,4 +1,73 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.1.12
+---------------------------------------------------------------------------------------------------------
+
+- Fixed connectionpanel syncing (wires dropping client-side during rewiring).
+- Characters stay alive for 30 seconds after a client disconnects, and if the client rejoins during that 
+time they regain control of the character. 
+- Changing the sprite color of an item also affects the color when the item is being worn.
+- Cloned items keep the value of the "required items" field of the original item.
+- Fixed crashes caused by gaps that are not connected to anything.
+- Removed the unused and non-functional monitor item.
+- Made medical and toxic cabinets waterproof (= potassium and other water-sensitive items inside them 
+are not affected by water).
+- Fixed docking ports causing flooding in some custom subs.
+- Fixed medical items with an immediate effect (such as calyxanide) not working when a player uses them
+on themselves in multiplayer.
+- Made calyxanide more effective and usable without a medical syringe.
+- Fixed engines trying to apply infinite force to the submarine if MinVoltage is set to zero.
+- Fixed levels resetting their mission to the previous one if the game is exited after completing a mission
+without selecting the level first.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.11
+---------------------------------------------------------------------------------------------------------
+
+Networking fixes:
+	- More error logging to diagnose "unknown object header" errors.
+	- Fixed output inventory of fabricators and deconstructors not being synced between clients.
+	- Fixed servers failing to write network events for wires with an excessive number of nodes, causing
+	clients to get kicked due to desync.
+	- Fixed client-side error messages when respawning without a respawn shuttle.
+	- Fixed some issues in inventory and connection panel syncing when joining mid-round.
+	- Fixed fabricated items always appearing to be in full condition client-side (e.g. oxygen tanks which 
+	should be empty after being fabricated).
+	- Fixed attachable items dropping on the ground client-side when deattaching them (but still staying 
+	in the inventory of the character detaching them).
+	- Fixed items occasionally dropping instead of being moved to another inventory client-side.
+	- The "traitorlist" command is usable by clients who have the permission to use it.
+
+Misc bugfixes:
+	- Fixed characters occasionally going inside/through obstacle when leaving a submarine that's right 
+	next to another submarine or a level wall.
+	- More physics error checks and logging.
+	- Railgun controllers can be used over wifi components.
+	- Characters attach items to the walls at the position of their hand, not at the center of the body.
+	- Wifi components can't communicate with the enemy sub in combat missions.
+	- Fixed the previously selected location staying selected but start button staying disabled when 
+	returning to the lobby screen in the single player campaign. Made it impossible to progress without 
+	restarting if there were no other selectable locations.
+	- Fixed holdable components reverting their RequiredItems back to the prefab values during loading.
+	- Fixed wall-attached sections of a wire not rendering when the item is being rewired outside the sub.
+    - Fixed artifacts occasionally spawning under the sea floor.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.10
+---------------------------------------------------------------------------------------------------------
+
+- Fixed bugs in wall hole creation logic and docking port syncing which caused entity ID mismatches and 
+"unknown object header" errors.
+- Fixed errors when attempting to buy too many items of a given type to fit in one container.
+- Fixed crashing when attempting to buy items that don't spawn in a container.
+- Fixed crashing when attempting to generate hulls with the "autohull" command when there are no walls 
+or doors in the sub.
+- Fixed docking ports creating duplicate hulls and gaps during loading.
+- Fixed missions resetting to the initial ones when loading a campaign.
+- Increased revolver ammo capacity.
+- Fires can break oxygen generators.
+- Oxygenite tanks can be contained in plasma cutters and oxygen generators.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.1.9
 ---------------------------------------------------------------------------------------------------------
 

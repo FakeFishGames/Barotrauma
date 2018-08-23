@@ -36,7 +36,7 @@ namespace Barotrauma
                 var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
 
                 //path doesn't exist (= hasn't been searched for yet), assume for now that the target is reachable
-                if (pathSteering.CurrentPath == null) return true;
+                if (pathSteering?.CurrentPath == null) return true;
 
                 return (!pathSteering.CurrentPath.Unreachable);
             }
@@ -96,7 +96,7 @@ namespace Barotrauma
             {
                 currTargetPos = target.SimPosition;
                 
-                //if character is outside the sub and target isn't, transform the position
+                //if character is inside the sub and target isn't, transform the position
                 if (character.Submarine != null && target.Submarine == null)
                 {
                     currTargetPos -= character.Submarine.SimPosition;
@@ -111,16 +111,20 @@ namespace Barotrauma
             else
             {
                 character.AIController.SteeringManager.SteeringSeek(currTargetPos);
-
-                var indoorsSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
-
-                if (indoorsSteering.CurrentPath == null || indoorsSteering.CurrentPath.Unreachable)
-                {
-                    indoorsSteering.SteeringWander();
-                }
-                else if (getDivingGearIfNeeded && indoorsSteering.CurrentPath != null && indoorsSteering.CurrentPath.HasOutdoorsNodes)
+                if (getDivingGearIfNeeded && target?.Submarine == null)
                 {
                     AddSubObjective(new AIObjectiveFindDivingGear(character, true));
+                }
+                else if (character.AIController.SteeringManager is IndoorsSteeringManager indoorsSteering)
+                {
+                    if (indoorsSteering.CurrentPath == null || indoorsSteering.CurrentPath.Unreachable)
+                    {
+                        indoorsSteering.SteeringWander();
+                    }
+                    else if (getDivingGearIfNeeded && indoorsSteering.CurrentPath != null && indoorsSteering.CurrentPath.HasOutdoorsNodes)
+                    {
+                        AddSubObjective(new AIObjectiveFindDivingGear(character, true));
+                    }
                 }
             }
         }

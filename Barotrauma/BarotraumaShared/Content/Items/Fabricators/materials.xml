@@ -6,7 +6,7 @@
     category="Material"
     Tags="smallitem"   
     canbepicked="true"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="Military" buyprice="50"/>
@@ -14,8 +14,8 @@
     <Price locationtype="Outpost" buyprice="100"/>
     
     <Deconstruct time="5">
-      <Item name="Iron Powder"/>
-      <Item name="Iron Powder"/>     
+      <Item identifier="ironpowder"/>
+      <Item identifier="ironpowder"/>     
     </Deconstruct>
 
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
@@ -32,15 +32,15 @@
     Tags="smallitem"
     spritecolor="0.2,0.35,0.06,1.0"
     canbepicked="true"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="Research" buyprice="100"/>
     <Price locationtype="Military" buyprice="100"/>
     <Price locationtype="City" buyprice="500"/>
 
     <Deconstruct time="5">
-      <Item name="Uranium Powder"/>
-      <Item name="Uranium Powder"/>
+      <Item identifier="uraniumpowder"/>
+      <Item identifier="uraniumpowder"/>
     </Deconstruct>
 
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
@@ -57,7 +57,7 @@
     Tags="smallitem"
     spritecolor="0.78,0.55,0.2,1.0"
     canbepicked="true"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="Military" buyprice="50"/>
@@ -78,7 +78,7 @@
     Tags="smallitem"   
     spritecolor="0.9,0.9,1.0,0.9"
     canbepicked="true"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="Military" buyprice="50"/>
@@ -98,7 +98,7 @@
     category="Material"
     Tags="smallitem"
     spritecolor="0.5,0.0,0.0,1.0"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     canbepicked="true">
 
     <Price locationtype="Research" buyprice="200"/>
@@ -111,8 +111,8 @@
       <StatusEffect type="OnBroken" target="This" Condition="-100.0">
         <sound file="Content/Items/Reactor/explosion.ogg"/>
         <Explosion range="500.0" structuredamage="2" force="20.0">
-          <affliction name="Burn" strength="50"/>
-          <affliction name="Stun" strength="3"/>
+          <Affliction identifier="burn" strength="50"/>
+          <Affliction identifier="stun" strength="3"/>
         </Explosion>
         <Fire size="100.0"/>
       </StatusEffect>
@@ -125,7 +125,7 @@
     category="Material"
     Tags="smallitem"
     spritecolor="1.0,0.7,0.05,1.0"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     canbepicked="true">
 
     <Price locationtype="Research" buyprice="200"/>

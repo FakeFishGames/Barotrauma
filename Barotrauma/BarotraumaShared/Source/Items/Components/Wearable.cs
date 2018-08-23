@@ -91,7 +91,7 @@ namespace Barotrauma.Items.Components
                         i++;
                         break;
                     case "damagemodifier":
-                        damageModifiers.Add(new DamageModifier(subElement));
+                        damageModifiers.Add(new DamageModifier(subElement, item.Name + ", Wearable"));
                         break;
                 }
             }

@@ -1,4 +1,6 @@
 ﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -562,7 +564,7 @@ namespace Barotrauma
                     else
                     {
                         string description = item.Description;
-                        if (item.Prefab.NameMatches("ID Card"))
+                        if (item.Prefab.Identifier == "idcard")
                         {
                             string[] readTags = item.Tags.Split(',');
                             string idName = null;
@@ -660,7 +662,7 @@ namespace Barotrauma
                 if (CharacterHealth.OpenHealthWindow != null)
                 {
                     float treatmentSuitability = CharacterHealth.OpenHealthWindow.GetTreatmentSuitability(item);
-                    float skill = Character.Controlled.GetSkillLevel("Medical");
+                    float skill = Character.Controlled.GetSkillLevel("medical");
                     if (skill > 50.0f)
                     {
                         Rectangle highlightRect = rect;
@@ -681,6 +683,80 @@ namespace Barotrauma
                     item == null ? Color.Gray : Color.White, 
                     Color.Black * 0.8f);
             }
+        }
+
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        {
+            receivedItemIDs = new ushort[capacity];
+
+            for (int i = 0; i < capacity; i++)
+            {
+                receivedItemIDs[i] = msg.ReadUInt16();
+            }
+
+            //delay applying the new state if less than 1 second has passed since this client last sent a state to the server
+            //prevents the inventory from briefly reverting to an old state if items are moved around in quick succession
+
+            //also delay if we're still midround syncing, some of the items in the inventory may not exist yet
+            if (syncItemsDelay > 0.0f || GameMain.Client.MidRoundSyncing)
+            {
+                if (syncItemsCoroutine != null) CoroutineManager.StopCoroutines(syncItemsCoroutine);
+                syncItemsCoroutine = CoroutineManager.StartCoroutine(SyncItemsAfterDelay());
+            }
+            else
+            {
+                if (syncItemsCoroutine != null)
+                {
+                    CoroutineManager.StopCoroutines(syncItemsCoroutine);
+                    syncItemsCoroutine = null;
+                }
+                ApplyReceivedState();
+            }
+        }
+
+        private IEnumerable<object> SyncItemsAfterDelay()
+        {
+            while (syncItemsDelay > 0.0f || (GameMain.Client != null && GameMain.Client.MidRoundSyncing))
+            {
+                syncItemsDelay -= CoroutineManager.DeltaTime;
+                yield return CoroutineStatus.Running;
+            }
+
+            if (Owner.Removed || GameMain.Client == null)
+            {
+                yield return CoroutineStatus.Success;
+            }
+
+            ApplyReceivedState();
+
+            yield return CoroutineStatus.Success;
+        }
+
+        private void ApplyReceivedState()
+        {
+            if (receivedItemIDs == null) return;
+
+            for (int i = 0; i < capacity; i++)
+            {
+                if (receivedItemIDs[i] == 0 || (Entity.FindEntityByID(receivedItemIDs[i]) as Item != Items[i]))
+                {
+                    if (Items[i] != null) Items[i].Drop();
+                    System.Diagnostics.Debug.Assert(Items[i] == null);
+                }
+            }
+
+            for (int i = 0; i < capacity; i++)
+            {
+                if (receivedItemIDs[i] > 0)
+                {
+                    var item = Entity.FindEntityByID(receivedItemIDs[i]) as Item;
+                    if (item == null) continue;
+
+                    TryPutItem(item, i, true, true, null, false);
+                }
+            }
+
+            receivedItemIDs = null;
         }
     }
 }

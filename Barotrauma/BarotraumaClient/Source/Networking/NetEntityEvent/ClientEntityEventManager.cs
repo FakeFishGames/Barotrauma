@@ -23,6 +23,11 @@ namespace Barotrauma.Networking
 
         private UInt16 lastReceivedID;
 
+        public bool MidRoundSyncing
+        {
+            get { return firstNewID.HasValue; }
+        }
+
         public ClientEntityEventManager(GameClient client) 
         {
             events = new List<ClientEntityEvent>();
@@ -159,23 +164,24 @@ namespace Barotrauma.Networking
                 //skip the event if we've already received it or if the entity isn't found
                 if (thisEventID != (UInt16)(lastReceivedID + 1) || entity == null)
                 {
-                    if (GameSettings.VerboseLogging)
+                    if (thisEventID != (UInt16) (lastReceivedID + 1))
                     {
-                        if (thisEventID != (UInt16) (lastReceivedID + 1))
+                        if (GameSettings.VerboseLogging)
                         {
                             DebugConsole.NewMessage(
-                                "received msg " + thisEventID + " (waiting for " + (lastReceivedID + 1) + ")",
+                                "Received msg " + thisEventID + " (waiting for " + (lastReceivedID + 1) + ")",
                                 thisEventID < lastReceivedID + 1
                                     ? Microsoft.Xna.Framework.Color.Yellow
                                     : Microsoft.Xna.Framework.Color.Red);
                         }
-                        else if (entity == null)
-                        {
-                            DebugConsole.NewMessage(
-                                "received msg " + thisEventID + ", entity " + entityID + " not found",
-                                Microsoft.Xna.Framework.Color.Red);
-                        }
                     }
+                    else if (entity == null)
+                    {
+                        DebugConsole.NewMessage(
+                            "Received msg " + thisEventID + ", entity " + entityID + " not found",
+                            Microsoft.Xna.Framework.Color.Red);
+                    }
+                    
                     msg.Position += msgLength * 8;
                 }
                 else
@@ -194,13 +200,19 @@ namespace Barotrauma.Networking
 
                     catch (Exception e)
                     {
+                        string errorMsg = "Failed to read event for entity \"" + entity.ToString() + "\" (" + e.Message + ")! (MidRoundSyncing: " + thisClient.MidRoundSyncing + ")\n" + e.StackTrace;
+                        errorMsg += "\nPrevious entities:";
+                        for (int j = entities.Count - 2; j >= 0; j--)
+                        {
+                            errorMsg += "\n" + (entities[j] == null ? "NULL" : entities[j].ToString());
+                        }
+
                         if (GameSettings.VerboseLogging)
                         {
                             DebugConsole.ThrowError("Failed to read event for entity \"" + entity.ToString() + "\"!", e);
                         }
                         GameAnalyticsManager.AddErrorEventOnce("ClientEntityEventManager.Read:ReadFailed" + entity.ToString(),
-                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                            "Failed to read event for entity \"" + entity.ToString() + "\"!\n" + e.StackTrace);
+                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                         msg.Position = msgPosition + msgLength * 8;
                     }
                 }

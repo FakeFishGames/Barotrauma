@@ -137,6 +137,11 @@ namespace Barotrauma
             }
         }
 
+        public StructurePrefab Prefab
+        {
+            get { return prefab; }
+        }
+
         public HashSet<string> Tags
         {
             get { return prefab.Tags; }
@@ -249,8 +254,18 @@ namespace Barotrauma
             prefab = sp;
 
             spriteColor = prefab.SpriteColor;
-
-            isHorizontal = (rect.Width > rect.Height);
+            if (ResizeHorizontal && !ResizeVertical)
+            {
+                isHorizontal = true;
+            }
+            else if (ResizeVertical && !ResizeHorizontal)
+            {
+                isHorizontal = false;
+            }
+            else
+            {
+                isHorizontal = (rect.Width > rect.Height);
+            }
 
             StairDirection = prefab.StairDirection;
 
@@ -882,8 +897,8 @@ namespace Barotrauma
                 AdjustKarma(attacker, damageDiff);
                 if (damageDiff < 0.0f && GameMain.Client == null)
                 {
-                    attacker.Info.IncreaseSkillLevel("Mechanical Engineering", 
-                        -damageDiff * SkillIncreaseMultiplier / Math.Max(attacker.GetSkillLevel("Mechanical Engineering"), 1.0f),
+                    attacker.Info.IncreaseSkillLevel("mechanical", 
+                        -damageDiff * SkillIncreaseMultiplier / Math.Max(attacker.GetSkillLevel("mechanical"), 1.0f),
                         SectionPosition(sectionIndex, true));                                    
                 }
             }

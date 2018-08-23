@@ -16,13 +16,13 @@
             : base(preset, param)
         {
             Location[] locations = { GameMain.GameSession.StartLocation, GameMain.GameSession.EndLocation };
-            if (param is string)
+            if (param is MissionType missionType)
             {
-                mission = Mission.LoadRandom(locations, GameMain.NetLobbyScreen.LevelSeed, false, (string)param);
+                mission = Mission.LoadRandom(locations, GameMain.NetLobbyScreen.LevelSeed, false, missionType);
             }
-            else if (param is MissionPrefab)
+            else if (param is MissionPrefab missionPrefab)
             {
-                mission = ((MissionPrefab)param).Instantiate(locations);
+                mission = missionPrefab.Instantiate(locations);
             }
             else if (param is Mission)
             {

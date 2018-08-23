@@ -11,19 +11,22 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Optimizable : ItemComponent
+    partial class Repairable : ItemComponent
     {
         private GUIButton optimizeButton;
         private GUIProgressBar progressBar;
-
-
+        
         [Serialize("", false)]
         public string Description
         {
             get;
             set;
         }
-
+        
+        public override bool ShouldDrawHUD(Character character)
+        {
+            return item.Condition < ShowRepairUIThreshold && HasRequiredItems(character, false);
+        }
 
         partial void InitProjSpecific(XElement element)
         {
@@ -34,17 +37,17 @@ namespace Barotrauma.Items.Components
             };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform),
-                TextManager.Get("OptimizableLabel"), textAlignment: Alignment.TopCenter, font: GUI.LargeFont);
+                header, textAlignment: Alignment.TopCenter, font: GUI.LargeFont);
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
                 Description, font: GUI.SmallFont, wrap: true);
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform),
-                TextManager.Get("OptimizableRequiredSkills"));
+                TextManager.Get("RequiredRepairSkills"));
             for (int i = 0; i < requiredSkills.Count; i++)
             {
                 var skillText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform),
-                    "   - " + requiredSkills[i].Name + ": " + ((int)requiredSkills[i].Level), font: GUI.SmallFont)
+                    "   - " + TextManager.Get("SkillName." + requiredSkills[i].Identifier) + ": " + ((int)requiredSkills[i].Level), font: GUI.SmallFont)
                 {
                     UserData = requiredSkills[i]
                 };
@@ -54,34 +57,30 @@ namespace Barotrauma.Items.Components
                 color: Color.Green, barSize: 0.0f);
 
             optimizeButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.TopCenter),
-                TextManager.Get("OptimizableOptimize"))
+                TextManager.Get("RepairButton"))
             {
                 OnClicked = (btn, obj) =>
                 {
-                    currentOptimizer = Character.Controlled;
+                    currentFixer = Character.Controlled;
                     item.CreateClientEvent(this);
                     return true;
                 }
             };
         }
-
+        
         public override void AddToGUIUpdateList()
         {
-            if (!currentlyOptimizable.Contains(this) || Character.Controlled == null || DegreeOfSuccess(Character.Controlled) < 0.5f) return;
             GuiFrame.AddToGUIUpdateList();
-        }
-
-        public override void UpdateHUD(Character character, float deltaTime)
-        {
-            if (!currentlyOptimizable.Contains(this) || character == null || DegreeOfSuccess(character) < 0.5f) return;
         }
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            if (!currentlyOptimizable.Contains(this) || character == null || DegreeOfSuccess(character) < 0.5f) return;
             IsActive = true;
 
-            progressBar.BarSize = optimizationProgress;
+            progressBar.BarSize = repairProgress;
+            progressBar.Color = repairProgress < 0.5f ?
+                Color.Lerp(Color.Red, Color.Orange, repairProgress * 2.0f) :
+                Color.Lerp(Color.Orange, Color.Green, (repairProgress - 0.5f) * 2.0f);
 
             optimizeButton.Enabled = true;
             foreach (GUIComponent c in GuiFrame.Children)
@@ -90,7 +89,7 @@ namespace Barotrauma.Items.Components
                 if (skill == null) continue;
 
                 GUITextBlock textBlock = (GUITextBlock)c;
-                if (character.GetSkillLevel(skill.Name) < skill.Level)
+                if (character.GetSkillLevel(skill.Identifier) < skill.Level)
                 {
                     textBlock.TextColor = Color.Red;
                     optimizeButton.Enabled = false;
@@ -98,39 +97,6 @@ namespace Barotrauma.Items.Components
                 else
                 {
                     textBlock.TextColor = Color.White;
-                }
-            }
-        }
-
-        public void ClientWrite(NetBuffer msg, object[] extraData = null)
-        {
-            msg.Write(
-                currentOptimizer == Character.Controlled && 
-                Character.Controlled != null &&
-                Character.Controlled.SelectedConstruction == item);
-        }
-
-
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
-        {
-            isOptimized = msg.ReadBoolean();
-            if (isOptimized)
-            {
-                optimizedTimer = msg.ReadRangedSingle(0.0f, OptimizationDuration, 16);
-                currentlyOptimizable.Remove(this);
-            }
-            else
-            {
-                bool isCurrentlyOptimizable = msg.ReadBoolean();
-                if (isCurrentlyOptimizable)
-                {
-                    currentlyOptimizable.Add(this);
-                    optimizableTimer = msg.ReadRangedSingle(0.0f, OptimizableDuration, 16);
-                    optimizationProgress = msg.ReadRangedSingle(0.0f, 1.0f, 8);
-                }
-                else
-                {
-                    currentlyOptimizable.Remove(this);
                 }
             }
         }

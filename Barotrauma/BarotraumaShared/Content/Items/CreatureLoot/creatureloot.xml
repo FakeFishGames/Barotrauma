@@ -9,9 +9,9 @@
     <Sprite texture="CreatureLoot.png" depth="0.7" sourcerect="1,44,50,30"/>
 
     <Deconstruct time="30">
-      <Item name="Phosphorus"/>
-      <Item name="Phosphorus"/>
-      <Item name="Phosphorus"/>
+      <Item identifier="phosphorus"/>
+      <Item identifier="phosphorus"/>
+      <Item identifier="phosphorus"/>
     </Deconstruct>
 
     <Body width="15" radius="15"/>
@@ -28,9 +28,9 @@
     <Sprite texture="CreatureLoot.png" depth="0.7" sourcerect="0,76,53,46"/>
 
     <Deconstruct time="30">
-      <Item name="Potassium"/>
-      <Item name="Potassium"/>
-      <Item name="Potassium"/>
+      <Item identifier="potassium"/>
+      <Item identifier="potassium"/>
+      <Item identifier="potassium"/>
     </Deconstruct>
 
     <Body width="10" radius="20"/>
@@ -47,11 +47,11 @@
     <Sprite texture="CreatureLoot.png" depth="0.7" sourcerect="0,3,39,34"/>
 
     <Deconstruct time="10">
-      <Item name="Ethanol"/>
-      <Item name="Ethanol"/>
-      <Item name="Ethanol"/>
-      <Item name="Stabilozine"/>
-      <Item name="Stabilozine"/>
+      <Item identifier="ethanol"/>
+      <Item identifier="ethanol"/>
+      <Item identifier="ethanol"/>
+      <Item identifier="stabilozine"/>
+      <Item identifier="stabilozine"/>
     </Deconstruct>
 
     <Body radius="16"/>

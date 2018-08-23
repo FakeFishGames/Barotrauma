@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
@@ -60,7 +61,7 @@ namespace Barotrauma.Items.Components
             }
 
             currPowerConsumption = powerConsumption;
-            if (item.IsOptimized("electrical")) currPowerConsumption *= 0.5f;
+            currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / 100.0f);
 
             hasPower = voltage > minVoltage;
             if (hasPower)

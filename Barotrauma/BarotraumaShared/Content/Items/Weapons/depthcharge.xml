@@ -15,8 +15,8 @@
             powerconsumption="0.0"/>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="trigger_in"/>
     </ConnectionPanel>
   </Item>
@@ -30,8 +30,7 @@
     <Sprite texture="railgunetc.png" depth="0.8" sourcerect="0,160,61,96"/>
 
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" itempos="30,-55" iteminterval="26,0" itemrotation="-90" canbeselected = "true">
-      <Containable name="Depth Charge Shell"/>
-      <Containable name="Nuclear Depth Charge"/>      
+      <Containable identifiers="depthchargeshell,nucleardepthcharge"/>      
     </ItemContainer>
   </Item>
 
@@ -42,8 +41,8 @@
     sonarsize="5">
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="Steel Bar"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="steelbar"/>
     </Deconstruct>
 
     <Sprite texture="railgunetc.png" sourcerect="114,210,68,47" depth ="0.55"/>
@@ -54,7 +53,7 @@
 
     <Projectile characterusable="false" launchimpulse="5.0">
       <Attack structuredamage="1" damagetype="Blunt">
-        <affliction name="Internal Damage" strength="10"/>
+        <Affliction identifier="internaldamage" strength="10"/>
       </Attack>
       <StatusEffect type="OnImpact" target="Contained">
         <Use/>
@@ -62,8 +61,7 @@
     </Projectile>
 
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
-      <Containable name="smallitem"/>
-      <Containable name="explosive"/>
+      <Containable identifiers="smallitem,explosive"/>
     </ItemContainer>
   </Item>
 
@@ -74,9 +72,9 @@
     sonarsize="5">
 
     <Deconstruct time="20">
-      <Item name="Steel Bar"/>
-      <Item name="Steel Bar"/>
-      <Item name="Uranium Bar"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="uraniumbar"/>
     </Deconstruct>
 
     <Sprite texture="railgunetc.png" sourcerect="187,210,68,47" depth="0.55"/>
@@ -87,14 +85,14 @@
 
     <Projectile characterusable="false" launchimpulse="5.0">
       <Attack structuredamage="1" damagetype="Blunt">
-        <affliction name="Internal Damage" strength="10"/>
+        <Affliction identifier="internaldamage" strength="10"/>
       </Attack>
       <StatusEffect type="OnImpact" Condition="-100.0" stun="10.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/bigexplosion.ogg" range="10000"/>
         <Explosion range="1000.0" structuredamage="1000" force="50.0">
-          <affliction name="Burn" strength="500"/>
-          <affliction name="Internal Damage" strength="500"/>
-          <affliction name="Stun" strength="5"/>
+          <Affliction identifier="burn" strength="500"/>
+          <Affliction identifier="internaldamage" strength="500"/>
+          <Affliction identifier="stun" strength="5"/>
         </Explosion>
       </StatusEffect>
       <StatusEffect type="OnImpact" target="Contained">
@@ -103,8 +101,7 @@
     </Projectile>
 
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
-      <Containable name="smallitem"/>
-      <Containable name="explosive"/>
+      <Containable identifiers="smallitem,explosive"/>
     </ItemContainer>
   </Item>
   

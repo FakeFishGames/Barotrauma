@@ -349,7 +349,10 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\legs.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\NpcConversations.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\NpcConversationsFinnish.xml">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\NpcConversations.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\torso.png">
@@ -752,7 +755,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Particles\ParticleAtlas.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Texts.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\EnglishVanilla.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Artifacts\alientools.png">
@@ -840,12 +843,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Electricity\lightsprite.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Electricity\monitor.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Electricity\monitors.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Electricity\poweritems.xml">
@@ -1162,6 +1159,9 @@
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Sounds\sounds.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\FinnishVanilla.xml">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\Tutorials.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -2075,8 +2075,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\RectangleExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\VectorExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\CrewManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\CharacterCampaignData.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\SonarTransducer.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Optimizable.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Repairable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\ItemAssemblyPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\LevelObjects\LevelObject.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\LocationConnection.cs" />
@@ -2172,7 +2173,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\StatusHUD.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Turret.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Wearable.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\FixRequirement.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Inventory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Item.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\ItemInventory.cs" />
@@ -2243,6 +2243,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Serialization\XMLExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\Sprite.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\SpriteSheet.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\TextPack.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Timing.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\Homoglyphs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\MathUtils.cs" />

@@ -154,7 +154,7 @@ namespace Barotrauma
             }
         }
 
-        private void CreateNetworkEvent()
+        protected virtual void CreateNetworkEvent()
         {
             if (GameMain.Server != null)
             {
@@ -168,13 +168,19 @@ namespace Barotrauma
 #endif
         }
 
-        public Item FindItem(string itemName)
+        public Item FindItemByTag(string tag)
         {
-            if (itemName == null) return null;
-            return Items.FirstOrDefault(i => i != null && (i.Prefab.NameMatches(itemName) || i.HasTag(itemName)));
+            if (tag == null) return null;
+            return Items.FirstOrDefault(i => i != null && i.HasTag(tag));
         }
 
-        public Item FindItem(string[] itemNames)
+        public Item FindItemByIdentifier(string identifier)
+        {
+            if (identifier == null) return null;
+            return Items.FirstOrDefault(i => i != null && i.Prefab.Identifier == identifier);
+        }
+
+        /*public Item FindItem(string[] itemNames)
         {
             if (itemNames == null) return null;
 
@@ -184,7 +190,7 @@ namespace Barotrauma
                 if (item != null) return item;
             }
             return null;
-        }
+        }*/
 
         public virtual void RemoveItem(Item item)
         {
@@ -197,6 +203,22 @@ namespace Barotrauma
                 
                 Items[n] = null;
                 item.ParentInventory = null;                
+            }
+        }
+
+        /// <summary>
+        /// Deletes all items inside the inventory (and also recursively all items inside the items)
+        /// </summary>
+        public void DeleteAllItems()
+        {
+            for (int i = 0; i < capacity; i++)
+            {
+                if (Items[i] == null) continue;
+                foreach (ItemContainer itemContainer in Items[i].GetComponents<ItemContainer>())
+                {
+                    itemContainer.Inventory.DeleteAllItems();
+                }
+                Items[i].Remove();
             }
         }
             
@@ -253,7 +275,7 @@ namespace Barotrauma
                 }
             }
 
-            GameMain.Server.CreateEntityEvent(Owner as IServerSerializable, new object[] { NetEntityEvent.Type.InventoryState });
+            CreateNetworkEvent();
 
             foreach (Item item in Items.Distinct())
             {
@@ -293,68 +315,6 @@ namespace Barotrauma
             {
                 msg.Write((ushort)(Items[i] == null ? 0 : Items[i].ID));
             }
-        }
-
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
-        {
-            receivedItemIDs = new ushort[capacity];
-
-            for (int i = 0; i < capacity; i++)
-            {
-                receivedItemIDs[i] = msg.ReadUInt16();
-            }
-
-            if (syncItemsDelay > 0.0f)
-            {
-                //delay applying the new state if less than 1 second has passed since this client last sent a state to the server
-                //prevents the inventory from briefly reverting to an old state if items are moved around in quick succession
-                if (syncItemsCoroutine != null) CoroutineManager.StopCoroutines(syncItemsCoroutine);
-
-                syncItemsCoroutine = CoroutineManager.StartCoroutine(SyncItemsAfterDelay());
-            }
-            else
-            {
-                ApplyReceivedState();
-            }
-        }
-
-        private IEnumerable<object> SyncItemsAfterDelay()
-        {
-            while (syncItemsDelay > 0.0f)
-            {
-                syncItemsDelay -= CoroutineManager.DeltaTime;
-                yield return CoroutineStatus.Running;
-            }
-
-            ApplyReceivedState();
-
-            yield return CoroutineStatus.Success;
-        }
-
-        private void ApplyReceivedState()
-        {
-            if (receivedItemIDs == null) return;
-
-            for (int i = 0; i < capacity; i++)
-            {
-                if (receivedItemIDs[i] == 0 || (Entity.FindEntityByID(receivedItemIDs[i]) as Item != Items[i]))
-                {
-                    if (Items[i] != null) Items[i].Drop();
-                }
-            }
-
-            for (int i = 0; i < capacity; i++)
-            {
-                if (receivedItemIDs[i] > 0)
-                {
-                    var item = Entity.FindEntityByID(receivedItemIDs[i]) as Item;
-                    if (item == null) continue;
-
-                    TryPutItem(item, i, true, true, null, false);
-                }
-            }
-
-            receivedItemIDs = null;
         }
     }
 }

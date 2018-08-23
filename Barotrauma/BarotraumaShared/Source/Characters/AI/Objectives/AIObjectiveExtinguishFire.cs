@@ -45,13 +45,13 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            var extinguisherItem = character.Inventory.FindItem(new string[] { "Fire Extinguisher", "extinguisher" });
+            var extinguisherItem = character.Inventory.FindItemByIdentifier("extinguisher") ?? character.Inventory.FindItemByTag("extinguisher");
             if (extinguisherItem == null || extinguisherItem.Condition <= 0.0f || !character.HasEquippedItem(extinguisherItem))
             {
                 if (getExtinguisherObjective == null)
                 {
                     character.Speak(TextManager.Get("DialogFindExtinguisher"), null, 2.0f, "findextinguisher", 30.0f);
-                    getExtinguisherObjective = new AIObjectiveGetItem(character, new string[] { "Fire Extinguisher", "extinguisher" }, true);
+                    getExtinguisherObjective = new AIObjectiveGetItem(character, "extinguisher", true);
                 }
                 else
                 {

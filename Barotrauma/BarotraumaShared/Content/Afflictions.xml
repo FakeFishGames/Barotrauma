@@ -56,6 +56,7 @@
   
   <InternalDamage
     name="Internal Damage"
+    identifier="internaldamage"
     description="Asdsdl kfsldk flsdkf sdasd lasdfk asdlfk give morphine or fentanyl"
     type="damage"
     causeofdeathdescription="Died of internal injuries"
@@ -63,10 +64,10 @@
     limbspecific="true"
     maxstrength="100"
     damageoverlayalpha="1">
-    <SuitableTreatment name="Morphine" suitability="100"/>
-    <SuitableTreatment name="Fentanyl" suitability="80"/>
-    <SuitableTreatment name="Auxiliorizine" suitability="50"/>
-    <SuitableTreatment name="Morbusine" suitability="-100"/>
+    <SuitableTreatment identifier="antidama1" suitability="100"/>
+    <SuitableTreatment identifier="antidama2" suitability="80"/>
+    <SuitableTreatment identifier="auxiliorizine" suitability="50"/>
+    <SuitableTreatment identifier="morbusine" suitability="-100"/>
     <Effect minstrength="0" maxstrength="100" multiplybymaxvitality="true"            
       minvitalitydecrease="0"
       maxvitalitydecrease="1"/>
@@ -75,6 +76,7 @@
 
   <Bleeding
     name="Bleeding"
+    identifier="bleeding"
     description="Causes bloodloss, which may eventually lead to death. Treat with bandages or hemostatic agents."
     type="bleeding"
     causeofdeathdescription="Bled to death"
@@ -82,9 +84,9 @@
     limbspecific="true"
     maxstrength="100"
     damageoverlayalpha="1">
-    <SuitableTreatment name="Bandage" suitability="100"/>
-    <SuitableTreatment name="Hemostop" suitability="80"/>
-    <SuitableTreatment name="Morbusine" suitability="-100"/>
+    <SuitableTreatment identifier="bandage" suitability="100"/>
+    <SuitableTreatment identifier="antibleeding1" suitability="80"/>
+    <SuitableTreatment identifier="morbusine" suitability="-100"/>
     <Effect minstrength="0" maxstrength="100"
       minvitalitydecrease="0"
       maxvitalitydecrease="10"
@@ -94,6 +96,7 @@
 
   <Burn
     name="Burn"
+    identifier="burn"
     description="Thermal, chemical, electrical or radiological damage."
     type="burn"
     causeofdeathdescription="Burned to death"
@@ -101,9 +104,9 @@
     limbspecific="true"
     maxstrength="100"
     burnoverlayalpha="1">
-    <SuitableTreatment name="Fentanyl" suitability="100"/>
-    <SuitableTreatment name="Bandage" suitability="100"/>
-    <SuitableTreatment name="Morbusine" suitability="-100"/>
+    <SuitableTreatment identifier="antidama2" suitability="100"/>
+    <SuitableTreatment identifier="bandage" suitability="100"/>
+    <SuitableTreatment identifier="morbusine" suitability="-100"/>
     <Effect minstrength="0" maxstrength="100" multiplybymaxvitality="true"
       minvitalitydecrease="0"
       maxvitalitydecrease="1"/>
@@ -112,6 +115,7 @@
 
   <OxygenLow
     name="Oxygen low"
+    identifier="oxygenlow"
     description="Deprivation of oxygen to the brain and other organs. Initially results in unconciousness and then death if the blood supply cannot be reoxygenated by CPR or other means."
     type="oxygenlow"
     causeofdeathdescription="Suffocated"
@@ -120,12 +124,12 @@
     indicatorlimb="Torso"
     activationthreshold="1"
     maxstrength="200">
-    <SuitableTreatment name="Erythrozine" suitability="100"/>
-    <SuitableTreatment name="Auxiliorizine" suitability="50"/>
-    <SuitableTreatment name="Liquid Oxygenite" suitability="50"/>
-    <SuitableTreatment name="Fentanyl" suitability="-100"/>
-    <SuitableTreatment name="Morphine" suitability="-100"/>
-    <SuitableTreatment name="Morbusine" suitability="-100"/>
+    <SuitableTreatment identifier="erythrozine" suitability="100"/>
+    <SuitableTreatment identifier="auxiliorizine" suitability="50"/>
+    <SuitableTreatment identifier="Liquid Oxygenite" suitability="50"/>
+    <SuitableTreatment identifier="antidama2" suitability="-100"/>
+    <SuitableTreatment identifier="antidama1" suitability="-100"/>
+    <SuitableTreatment identifier="morbusine" suitability="-100"/>
     <Effect minstrength="50" maxstrength="200" multiplybymaxvitality="true"
       minvitalitydecrease="0"
       maxvitalitydecrease="2"/>
@@ -134,6 +138,7 @@
 
   <Bloodloss
     name="Bloodloss"
+    identifier="bloodloss"
     description="Uncontrolled loss of blood may eventually lead to a drop in blood pressure and oxygen starvation to the brain and other organs."
     type="bloodloss"
     causeofdeathdescription="Bled to death"
@@ -142,10 +147,10 @@
     indicatorlimb="Torso"
     activationthreshold="5"
     maxstrength="100">
-    <SuitableTreatment name="Plasma" suitability="100"/>
-    <SuitableTreatment name="Hemostop" suitability="10"/>
-    <SuitableTreatment name="Auxiliorizine" suitability="20"/>
-    <SuitableTreatment name="Morbusine" suitability="-100"/>
+    <SuitableTreatment identifier="antibloodloss1" suitability="100"/>
+    <SuitableTreatment identifier="antibleeding1" suitability="10"/>
+    <SuitableTreatment identifier="auxiliorizine" suitability="20"/>
+    <SuitableTreatment identifier="morbusine" suitability="-100"/>
     <Effect minstrength="5" maxstrength="100" multiplybymaxvitality="true"
       minvitalitydecrease="0"
       maxvitalitydecrease="2"
@@ -155,6 +160,7 @@
 
   <Stun
     name="Stun"
+    identifier="stun"
     description="Lorem ipsum dolor sin amet. Aösld sdfl asmd dfg wqer gsdfg. Asdfel ösdfke!"
     type="stun"
     limbspecific="false"
@@ -171,6 +177,7 @@
 
   <Pressure
     name="Barotrauma"
+    identifier="pressure"
     description="Massive organ damage caused by hydrostatic pressure."
     type="pressure"
     causeofdeathdescription="Crushed by water pressure"
@@ -187,6 +194,7 @@
 
   <AfflictionHusk
     name="Husk infection"
+    identifier="huskinfection"
     description="Lorem ipsum dolor sin amet. Aösld sdfl asmd dfg wqer gsdfg. Asdfel ösdfke!"
     type="huskinfection"
     causeofdeathdescription="Taken over by a husk parasite"
@@ -197,8 +205,8 @@
     showiconthreshold="100"
     maxstrength="100"
     achievementonremoved="healhusk">
-    <SuitableTreatment name="Calyxanide" suitability="100"/>
-    <SuitableTreatment name="Morbusine" suitability="-100"/>
+    <SuitableTreatment identifier="calyxanide" suitability="100"/>
+    <SuitableTreatment identifier="morbusine" suitability="-100"/>
     <Effect minstrength="0" maxstrength="100"
       maxvitalitydecrease="0"
       strengthchange="0.3"/>
@@ -209,6 +217,7 @@
 
   <Affliction
     name="Drunk"
+    identifier="drunk"
     description="Ethanol intoxication leads to a loss of coordination, memory loss, euphoria, loss of conciousness and in extreme cases, death."
     type="poison"
     causeofdeathdescription="Alcohol poisoning"
@@ -261,6 +270,7 @@
 
   <Affliction
     name="Opiate withdrawal"
+    identifier="opiatewithdrawal"
     description="While suffering from an opiate addiction, withdrawal symptoms are possible if opiate use is stopped."
     type="poison"
     causeofdeathdescription="Died of opiate withdrawal"
@@ -269,9 +279,9 @@
     indicatorlimb="Head"
     showiconthreshold="20"
     maxstrength="100">
-    <SuitableTreatment name="Morphine" suitability="50"/>
-    <SuitableTreatment name="Fentanyl" suitability="50"/>    
-    <SuitableTreatment name="Naloxone" suitability="100"/>
+    <SuitableTreatment identifier="antidama1" suitability="50"/>
+    <SuitableTreatment identifier="antidama2" suitability="50"/>    
+    <SuitableTreatment identifier="antinarc" suitability="100"/>
     <!-- Slow down the character and slightly decrease vitality -->
     <Effect minstrength="20" maxstrength="40"
       minvitalitydecrease="0"
@@ -312,6 +322,7 @@
 
   <Affliction
     name="Opiate overdose"
+    identifier="opiateoverdose"
     description="Opiate overdose may lead to respiratory failure and death."
     type="poison"
     causeofdeathdescription="Died of opiate overdose"
@@ -320,9 +331,9 @@
     indicatorlimb="Head"
     showiconthreshold="50"
     maxstrength="100">
-    <SuitableTreatment name="Morphine" suitability="-100"/>
-    <SuitableTreatment name="Fentanyl" suitability="-100"/>
-    <SuitableTreatment name="Naloxone" suitability="100"/>
+    <SuitableTreatment identifier="antidama1" suitability="-100"/>
+    <SuitableTreatment identifier="antidama2" suitability="-100"/>
+    <SuitableTreatment identifier="antinarc" suitability="100"/>
     <!-- No effects except slight distortion at this level -->
     <Effect minstrength="0" maxstrength="50"
       strengthchange="-1"
@@ -350,6 +361,7 @@
   <!-- Gradually applies the "opiate withdrawal" affliction to the character -->
   <Affliction
     name="Opiate addiction"
+    identifier="opiateaddiction"
     description="The regular use of opiate based substances such as morphine will eventually lead to a state of addiction."
     type="poison"
     limbspecific="false"
@@ -357,18 +369,18 @@
     showiconthreshold="20"
     maxstrength="100"
     achievementonremoved="healopiateaddiction">
-    <SuitableTreatment name="Naloxone" suitability="100"/>
+    <SuitableTreatment identifier="antinarc" suitability="100"/>
     <Effect minstrength="0" maxstrength="20" strengthchange="-0.05"/>
     
     <Effect minstrength="20" maxstrength="40" strengthchange="-0.05">
       <StatusEffect target="Character">
-        <Affliction name="Opiate withdrawal" strength="0.1"/>
+        <Affliction identifier="opiatewithdrawal" strength="0.1"/>
       </StatusEffect>
     </Effect>
     
     <Effect minstrength="40" maxstrength="80" strengthchange="-0.1">
       <StatusEffect target="Character">
-        <Affliction name="Opiate withdrawal" strength="0.25"/>
+        <Affliction identifier="opiatewithdrawal" strength="0.25"/>
       </StatusEffect>
     </Effect>
 
@@ -376,7 +388,7 @@
       minvitalitydecrease="0"
       maxvitalitydecrease="20">
       <StatusEffect target="Character">
-        <Affliction name="Opiate withdrawal" strength="0.5"/>
+        <Affliction identifier="opiatewithdrawal" strength="0.5"/>
       </StatusEffect>
     </Effect>
     
@@ -385,6 +397,7 @@
 
   <AfflictionBleeding
     name="Gunshot wound"
+    identifier="gunshotwound"
     description="A penetrating wound caused by the passage of a projectile through the body. The most obvious and immedate effect will be a loss of blood."
     type="bleeding"
     causeofdeathdescription="Shot to death"
@@ -393,9 +406,9 @@
     maxstrength="100"
     damageoverlayalpha="1"
     strengthchange="-0.1">
-    <SuitableTreatment name="Bandage" suitability="100"/>
-    <SuitableTreatment name="Hemostop" suitability="80"/>
-    <SuitableTreatment name="Morbusine" suitability="-100"/>
+    <SuitableTreatment identifier="bandage" suitability="100"/>
+    <SuitableTreatment identifier="antibleeding1" suitability="80"/>
+    <SuitableTreatment identifier="morbusine" suitability="-100"/>
     <Effect minstrength="0" maxstrength="100"
       minvitalitydecrease="0"
       maxvitalitydecrease="10"/>
@@ -403,7 +416,8 @@
   </AfflictionBleeding>
 
   <Affliction
-    name="Morbusine poisoning"
+    name="morbusine poisoning"
+    identifier="morbusinepoisoning"
     description="Acute morbusine poisoning quickly leads to respiratory failure if left untreated."
     type="poison"
     causeofdeathdescription="Died of morbusine poisoning."
@@ -412,8 +426,8 @@
     indicatorlimb="Torso"
     showiconthreshold="5"
     maxstrength="100">
-    <SuitableTreatment name="Morbusanide" suitability="100"/>
-    <SuitableTreatment name="Morbusine" suitability="-100"/>
+    <SuitableTreatment identifier="morbusanide" suitability="100"/>
+    <SuitableTreatment identifier="morbusine" suitability="-100"/>
     <!-- Slow down the character and decrease vitality -->
     <!-- Becomes lethal in ~50 seconds -->
     <Effect minstrength="0" maxstrength="100"

@@ -5,7 +5,7 @@
     category="Electrical"
     linkable="true"
     tags="smallitem"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
     
     <Price locationtype="Research" buyprice="10"/>
     <Price locationtype="City" buyprice="20"/>
@@ -15,26 +15,26 @@
     <Sprite texture ="button.png" sourcerect="0,0,24,27" depth="0.8"/>
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Body width="32" height="32" density="40"/>
 
     <Controller direction ="None" canbepicked = "true" msg="Press [E]">
-      <RequiredItem name="ID Card" type="Picked" msg="UNAUTHORIZED ACCESS"/>
+      <RequiredItem identifier="idcard" type="Picked" msg="UNAUTHORIZED ACCESS"/>
       <sound file="Content/Items/Button/beep.ogg" type="OnUse" range="500.0"/>
     </Controller>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <RequiredItem name="Screwdriver" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <output name="signal_out"/>
     </ConnectionPanel>
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="10.0"
               aimpos="35,-10" handle1="0,0" attachable="true" attachedbydefault="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <requireditem identifier="wrench" type="Equipped"/>
     </Holdable>
   </Item>
 
@@ -44,7 +44,7 @@
     category="Electrical"
     linkable="true"
     tags="smallitem"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="Research" buyprice="10"/>
     <Price locationtype="City" buyprice="20"/>
@@ -54,8 +54,8 @@
     <Sprite texture ="button.png" sourcerect="24,0,12,16" depth="0.79"/>
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Body width="12" height="16" density="20"/>
@@ -65,14 +65,14 @@
     </Controller>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <RequiredItem name="Screwdriver" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <output name="signal_out"/>
     </ConnectionPanel>
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="10.0"
               aimpos="35,-10" handle1="0,0" attachable="true" attachedbydefault="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <requireditem identifier="wrench" type="Equipped"/>
     </Holdable>
   </Item>
 </Items>

@@ -60,9 +60,9 @@ namespace Barotrauma.Items.Components
                 Enabled = false,
                 OnSelected = ToggleMaintainPosition
             };
-
+            
             levelStartTickBox = new GUITickBox(new RectTransform(new Point(20, 20), tickBoxContainer.RectTransform),
-                GameMain.GameSession == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.Name, 20),
+                GameMain.GameSession?.StartLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.Name, 20),
                 font: GUI.SmallFont)
             {
                 Enabled = false,
@@ -70,7 +70,7 @@ namespace Barotrauma.Items.Components
             };
 
             levelEndTickBox = new GUITickBox(new RectTransform(new Point(20, 20), tickBoxContainer.RectTransform),
-                GameMain.GameSession == null ? "" : ToolBox.LimitString(GameMain.GameSession.EndLocation.Name, 20),
+                GameMain.GameSession?.EndLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.EndLocation.Name, 20),
                 font: GUI.SmallFont)
             {
                 Enabled = false,
@@ -216,7 +216,7 @@ namespace Barotrauma.Items.Components
                         SteeringInput = PlayerInput.MousePosition - steerArea.Rect.Center.ToVector2();
                         steeringInput.Y = -steeringInput.Y;
                         steeringAdjustSpeed = character == null ? 
-                            0.2f : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("Helm") / 100.0f);
+                            0.2f : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("helm") / 100.0f);
                     }
                     unsentChanges = true;
                 }

@@ -22,5 +22,5 @@
     <targetpriority tag="nasonov" state="Escape" priority="45"/>
     <targetpriority tag="dead" state="Eat" priority="40"/>    
   </ai>
- 
+  
 </Character>

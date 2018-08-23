@@ -13,10 +13,12 @@ namespace Barotrauma.Items.Components
         private float range;
 
         private int channel;
-
+        
         private float chatMsgCooldown;
 
         private string prevSignal;
+
+        public byte TeamID;
 
         [Serialize(20000.0f, false)]
         public float Range
@@ -81,7 +83,7 @@ namespace Barotrauma.Items.Components
         {
             if (!HasRequiredContainedItems(false)) return false;
 
-            if (sender == null || sender.channel != channel) return false;
+            if (sender == null || sender.channel != channel || sender.TeamID != TeamID) return false;
 
             return Vector2.DistanceSquared(item.WorldPosition, sender.item.WorldPosition) <= sender.range * sender.range;
         }
@@ -105,6 +107,17 @@ namespace Barotrauma.Items.Components
                 float sentSignalStrength = signalStrength *
                     MathHelper.Clamp(1.0f - (Vector2.Distance(item.WorldPosition, wifiComp.item.WorldPosition) / wifiComp.range), 0.0f, 1.0f);
                 wifiComp.item.SendSignal(stepsTaken, signal, "signal_out", sender, 0, source, sentSignalStrength);
+                
+                if (source != null)
+                {
+                    foreach (Item receiverItem in wifiComp.item.LastSentSignalRecipients)
+                    {
+                        if (!source.LastSentSignalRecipients.Contains(receiverItem))
+                        {
+                            source.LastSentSignalRecipients.Add(receiverItem);
+                        }
+                    }
+                }                
 
                 if (DiscardDuplicateChatMessages && signal == prevSignal) continue;
 
@@ -144,8 +157,7 @@ namespace Barotrauma.Items.Components
 
             prevSignal = signal;
         }
-
-
+                
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
             if (connection == null || connection.Name != "signal_in") return;

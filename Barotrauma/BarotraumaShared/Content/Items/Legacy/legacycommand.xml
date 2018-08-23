@@ -7,28 +7,28 @@
 
     <Sprite texture="machines.png" depth="0.8" sourcerect="0,0,64,128"/>
 
-    <fixrequirement name="Electrical repairs">
-      <skill name="Electrical Engineering" level="40"/>
-      <item name="Wire"/>
-      <item name="Screwdriver"/>
-    </fixrequirement>
+    <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="10" fixDurationLowSkill="20" msg="Repair [Screwdriver]" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="electrical" level="40"/>
+      <RequiredItem identifier="screwdriver" type="equipped"/>
+    </Repairable>
 
     <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10">
+      <GuiFrame relativesize="0.5,0.7" anchor="Center" style="ItemUI"/>
       <StatusEffect type="InWater" target="This" condition="-1.0"/>
-      <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI"/>
     </Steering>
 
     <Sonar canbeselected = "true" powerconsumption="100" displaybordersize="0.2">
+      <GuiFrame relativesize="0.5,0.7" anchor="Center" style="ItemUI" color="0,0,0,0"/>
       <sound file="Content/Items/Command/sonarPing.ogg" type="OnUse" range="4000.0"/>
-      <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI" color="0.0,0.0,0.0,0.0"/>
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5"/>
       <ScreenOverlay texture="Content/Items/Command/sonarOverlay.png" origin="0.5,0.5"/>
       <Blip texture="Content/Items/Command/sonarBlip.png" origin="0.5,0.5"/>
     </Sonar>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="power_in"/>
       <input name="velocity_in"/>
       <output name="velocity_x_out"/>
@@ -43,23 +43,23 @@
 
     <Sprite texture="machines.png" depth="0.8" sourcerect="64,0,64,128"/>
 
-    <fixrequirement name="Electrical repairs">
-      <skill name="Electrical Engineering" level="40"/>
-      <item name="Wire"/>
-      <item name="Screwdriver"/>
-    </fixrequirement>
+    <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="10" fixDurationLowSkill="20" msg="Repair [Screwdriver]" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="electrical" level="40"/>
+      <RequiredItem identifier="screwdriver" type="equipped"/>
+    </Repairable>
 
     <Sonar canbeselected = "true" powerconsumption="100" displaybordersize="0.2">
+      <GuiFrame relativesize="0.5,0.7" anchor="Center" style="ItemUI" color="0,0,0,0"/>
       <StatusEffect type="InWater" target="This" condition="-1.0"/>
-      <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI"/>
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5"/>
       <ScreenOverlay texture="Content/Items/Command/sonarOverlay.png" origin="0.5,0.5"/>
       <Blip texture="Content/Items/Command/sonarBlip.png" origin="0.5,0.5"/>
     </Sonar>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="power_in"/>
     </ConnectionPanel>
   </Item>
@@ -73,12 +73,12 @@
     <Sprite texture="machines.png" sourcerect="64,0,64,128" depth="0.8"/>
 
     <MiniMap MinVoltage="0.5" PowerConsumption="100" canbeselected = "true">
-      <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI"/>
+      <GuiFrame relativesize="0.5,0.5" anchor="Center" style="ItemUI"/>
     </MiniMap>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="power_in"/>
       <input name="water_data_in"/>
       <input name="oxygen_data_in"/>

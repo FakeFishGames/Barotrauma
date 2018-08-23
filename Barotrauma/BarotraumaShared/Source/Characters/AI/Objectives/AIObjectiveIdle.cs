@@ -35,14 +35,9 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-
             var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
-
-            if (pathSteering == null)
-            {
-                return;
-            }
-
+            if (pathSteering == null) return;
+            
             if (character.AnimController.InWater)
             {
                 //attempt to find a safer place if in water
@@ -94,7 +89,7 @@ namespace Barotrauma
                 }
 
                 //steer away from edges of the hull
-                if (character.AnimController.CurrentHull!=null)
+                if (character.AnimController.CurrentHull != null)
                 {
                     float leftDist = character.Position.X - character.AnimController.CurrentHull.Rect.X;
                     float rightDist = character.AnimController.CurrentHull.Rect.Right - character.Position.X;
@@ -131,22 +126,28 @@ namespace Barotrauma
 
                 return;                
             }
- 
-            if (currentTarget == null) return;
+             
+            if (currentTarget?.Entity == null) return;
+            if (currentTarget.Entity.Removed)
+            {
+                currentTarget = null;
+                return;
+            }
             character.AIController.SteeringManager.SteeringSeek(currentTarget.SimPosition, 2.0f);
         }
 
         private AITarget FindRandomTarget()
         {
-            if (Rand.Int(5)==1)
+            //random chance of navigating back to the room where the character spawned
+            if (Rand.Int(5) == 1)
             {
-                var idCard = character.Inventory.FindItem("ID Card");
-                if (idCard==null) return null;
+                var idCard = character.Inventory.FindItemByIdentifier("idcard");
+                if (idCard == null) return null;
 
                 foreach (WayPoint wp in WayPoint.WayPointList)
                 {
-                    if (wp.SpawnType != SpawnType.Human || wp.CurrentHull==null) continue;
-                 
+                    if (wp.SpawnType != SpawnType.Human || wp.CurrentHull == null) continue;
+
                     foreach (string tag in wp.IdCardTags)
                     {
                         if (idCard.HasTag(tag)) return wp.CurrentHull.AiTarget;

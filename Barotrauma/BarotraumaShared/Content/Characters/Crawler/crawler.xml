@@ -15,8 +15,8 @@
   <sound file="Content/Characters/Crawler/idle2.ogg" state="None" range="500"/>
 
   <Inventory slots="Any, Any" accessiblewhenalive="false">
-    <Item name="Crawler Shell"/>
-    <Item name="Swim Bladder"/>
+    <Item identifier="crawlershell"/>
+    <Item identifier="swimbladder"/>
   </Inventory>
 
   <ai

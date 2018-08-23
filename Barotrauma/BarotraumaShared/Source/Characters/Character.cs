@@ -142,6 +142,10 @@ namespace Barotrauma
         {
             get
             {
+                if (GameMain.Server != null && !GameMain.Server.AllowDisguises) return Name;
+#if CLIENT
+                if (GameMain.Client != null && !GameMain.Client.AllowDisguises) return Name;
+#endif
                 return info != null && !string.IsNullOrWhiteSpace(info.Name) ? info.Name + (info.DisplayName != info.Name ? " (as " + info.DisplayName + ")" : "") : SpeciesName;
             }
         }
@@ -662,12 +666,30 @@ namespace Barotrauma
                         CharacterHealth = new CharacterHealth(subElement, this);
                         break;
                     case "statuseffect":
-                        statusEffects.Add(StatusEffect.Load(subElement));
+                        statusEffects.Add(StatusEffect.Load(subElement, Name));
                         break;
                 }
             }
             
-            if (CharacterHealth == null) CharacterHealth = new CharacterHealth(this);
+            List<XElement> healthElements = new List<XElement>();
+            List<float> healthCommonness = new List<float>();
+            foreach (XElement element in doc.Root.Elements())
+            {
+                if (element.Name.ToString().ToLowerInvariant() != "health") continue;
+                healthElements.Add(element);
+                healthCommonness.Add(element.GetAttributeFloat("commonness", 1.0f));
+            }
+
+            if (healthElements.Count == 0)
+            {
+                CharacterHealth = new CharacterHealth(this);
+            }
+            else
+            {
+                CharacterHealth = new CharacterHealth(
+                    healthElements.Count == 1 ? healthElements[0] : ToolBox.SelectWeightedRandom(healthElements, healthCommonness, random), 
+                    this);
+            }
 
             AnimController.SetPosition(ConvertUnits.ToSimUnits(position));
                         
@@ -842,9 +864,9 @@ namespace Barotrauma
             info.Job.GiveJobItems(this, spawnPoint);
         }
 
-        public float GetSkillLevel(string skillName)
+        public float GetSkillLevel(string skillIdentifier)
         {
-            return (Info == null || Info.Job == null) ? 0.0f : Info.Job.GetSkillLevel(skillName);
+            return (Info == null || Info.Job == null) ? 0.0f : Info.Job.GetSkillLevel(skillIdentifier);
         }
 
         float findFocusedTimer;
@@ -1145,15 +1167,14 @@ namespace Barotrauma
             return false;
         }
 
-        public bool HasEquippedItem(string itemName, bool allowBroken = true)
+        public bool HasEquippedItem(string itemIdentifier, bool allowBroken = true)
         {
             if (Inventory == null) return false;
             for (int i = 0; i < Inventory.Capacity; i++)
             {
                 if (Inventory.SlotTypes[i] == InvSlotType.Any || Inventory.Items[i] == null) continue;
                 if (!allowBroken && Inventory.Items[i].Condition <= 0.0f) continue;
-                if (Inventory.Items[i].Prefab.NameMatches(itemName) || Inventory.Items[i].HasTag(itemName)) return true;
-                if (!string.IsNullOrEmpty(Inventory.Items[i].Prefab.Identifier) && Inventory.Items[i].Prefab.Identifier == itemName) return true;
+                if (Inventory.Items[i].Prefab.Identifier == itemIdentifier || Inventory.Items[i].HasTag(itemIdentifier)) return true;
             }
 
             return false;
@@ -1712,8 +1733,11 @@ namespace Barotrauma
             else if ((GameMain.Server == null || GameMain.Server.AllowRagdollButton) && (!IsRagdolled || AnimController.Collider.LinearVelocity.Length() < 1f)) //Keep us ragdolled if we were forced or we're too speedy to unragdoll
                 IsRagdolled = IsKeyDown(InputType.Ragdoll); //Handle this here instead of Control because we can stop being ragdolled ourselves
             
-            if (!IsDead) LockHands = false;
+            UpdateSightRange();
+            if (aiTarget != null) aiTarget.SoundRange = 0.0f;
 
+            lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
+            
             //ragdoll button
             if (IsRagdolled)
             {
@@ -1738,14 +1762,8 @@ namespace Barotrauma
             {
                 SelectedConstruction = null;
             }
-
-            UpdateSightRange();
-            if (aiTarget != null) aiTarget.SoundRange = 0.0f;
-
-            lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
             
             if (!IsDead) LockHands = false;
-            //CPR stuff is handled in the UpdateCPR function in HumanoidAnimController
         }
 
         partial void UpdateControlled(float deltaTime, Camera cam);
@@ -2158,7 +2176,7 @@ namespace Barotrauma
         }
         partial void KillProjSpecific();
 
-        public void Revive(bool isNetworkMessage)
+        public void Revive()
         {
             if (Removed)
             {
@@ -2186,6 +2204,7 @@ namespace Barotrauma
 
             foreach (Limb limb in AnimController.Limbs)
             {
+                limb.body.Enabled = true;
                 limb.IsSevered = false;
             }
 
@@ -2206,6 +2225,9 @@ namespace Barotrauma
 
             base.Remove();
 
+            if (selectedItems[0] != null) selectedItems[0].Drop(this);
+            if (selectedItems[1] != null) selectedItems[1].Drop(this);
+
             if (info != null) info.Remove();
 
 #if CLIENT
@@ -2218,8 +2240,6 @@ namespace Barotrauma
 
             if (aiTarget != null) aiTarget.Remove();
             if (AnimController != null) AnimController.Remove();
-            if (selectedItems[0] != null) selectedItems[0].Drop(this);
-            if (selectedItems[1] != null) selectedItems[1].Drop(this);
 
             CharacterHealth.Remove();
 

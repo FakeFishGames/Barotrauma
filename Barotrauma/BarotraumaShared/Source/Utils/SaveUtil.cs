@@ -125,7 +125,24 @@ namespace Barotrauma
 
             catch (Exception e)
             {
-                DebugConsole.ThrowError("ERROR: deleting save file \"" + filePath + " failed.", e);
+                DebugConsole.ThrowError("ERROR: deleting save file \"" + filePath + "\" failed.", e);
+            }
+
+            //deleting a multiplayer save file -> also delete character data
+            if (Path.GetFullPath(Path.GetDirectoryName(filePath)).Equals(Path.GetFullPath(MultiplayerSaveFolder)))
+            {
+                string characterDataSavePath = MultiPlayerCampaign.GetCharacterDataSavePath(filePath);
+                if (File.Exists(characterDataSavePath))
+                {
+                    try
+                    {
+                        File.Delete(characterDataSavePath);
+                    }
+                    catch (Exception e)
+                    {
+                        DebugConsole.ThrowError("ERROR: deleting character data file \"" + characterDataSavePath + "\" failed.", e);
+                    }
+                }
             }
         }
 

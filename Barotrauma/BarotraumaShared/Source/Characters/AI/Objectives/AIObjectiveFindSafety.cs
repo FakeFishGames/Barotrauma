@@ -65,8 +65,8 @@ namespace Barotrauma
             {
                 goToObjective.TryComplete(deltaTime);
 
-                var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
-                if (pathSteering != null && pathSteering.CurrentPath != null &&
+                if (character.AIController.SteeringManager is IndoorsSteeringManager pathSteering && 
+                    pathSteering.CurrentPath != null &&
                     pathSteering.CurrentPath.Unreachable && !unreachable.Contains(goToObjective.Target))
                 {
                     unreachable.Add(goToObjective.Target as Hull);

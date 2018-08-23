@@ -37,6 +37,12 @@ namespace Barotrauma
             get { return attachJoints; }
         }
 
+        public Vector2? WallAttachPos
+        {
+            get;
+            private set;
+        }
+
         public bool IsAttached
         {
             get { return attachJoints.Count > 0; }
@@ -73,6 +79,7 @@ namespace Barotrauma
             if (character.Submarine != null)
             {
                 DeattachFromBody();
+                WallAttachPos = null;
                 return;
             }
 
@@ -84,8 +91,12 @@ namespace Barotrauma
             {
                 transformedAttachPos += ConvertUnits.ToSimUnits(attachTargetSubmarine.Position);
             }
+            if (transformedAttachPos != Vector2.Zero)
+            {
+                WallAttachPos = transformedAttachPos;
+            }
 
-           switch (enemyAI.State)
+            switch (enemyAI.State)
             {
                 case AIController.AIState.None:
                     if (attachToWalls && character.Submarine == null && Level.Loaded != null)
@@ -133,7 +144,7 @@ namespace Barotrauma
                             //move closer to the wall
                             DeattachFromBody();
                             enemyAI.SteeringManager.SteeringAvoid(deltaTime, 1.0f, 0.1f);
-                            enemyAI.SteeringManager.SteeringSeek(wallAttachPos);
+                            enemyAI.SteeringManager.SteeringSeek(wallAttachPos, 2.0f);
                         }
                     }
                     break;
@@ -148,6 +159,7 @@ namespace Barotrauma
                     }
                     break;
                 default:
+                    WallAttachPos = null;
                     DeattachFromBody();
                     break;
             }

@@ -28,8 +28,8 @@
   </ai>
 
   <inventory slots="RightHand, LeftHand, Head, Any, Any, Any, Any, Any, Pack" accessiblewhenalive="false">
-    <Item name="Velonaceps Calyx Eggs"/>
-    <Item name="Velonaceps Calyx Eggs"/>
+    <Item identifier="huskeggs"/>
+    <Item identifier="huskeggs"/>
   </inventory>
   
 </Character>

@@ -3,6 +3,7 @@
   <Item
     name="Coilgun"
     identifier="coilgun"
+    Tags="turret"
     category="Machine"    
     spritecolor="1.0,0.0,0.0,1.0"
     focusonselected="true"
@@ -11,6 +12,8 @@
 
     <Sprite texture="railgunbase.png" depth="0.01" sourcerect="0,0,256,256"/>
 
+    <StaticBody width="80" radius="80"/>
+    
     <Turret barrelsprite="railgunbarrel.png" canbeselected="true" linkable="true" origin="0.5, 0.85" barrelpos="128, 128" 
       rotationlimits="180,360"
       powerconsumption="200.0"
@@ -28,12 +31,12 @@
       <MoveSound file="Content/Items/Weapons/railgunloop.ogg"/>
       <StartMoveSound file="Content/Items/Weapons/railgunstart.ogg"/>
       <EndMoveSound file="Content/Items/Weapons/railgunstop.ogg"/>
-      <RequiredSkill name="Weapons" level="50"/>
+      <RequiredSkill identifier="weapons" level="50"/>
     </Turret>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="power_in"/>
       <input name="position_in"/>
       <input name="trigger_in"/>
@@ -49,10 +52,10 @@
     <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="0,0,177,128"/>
 
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="6" itempos="24,-75" iteminterval="26,0" itemrotation="90" canbeselected = "true">
-      <Containable name="Coilgun Ammunition Box"/>
+      <Containable identifiers="coilgunammobox"/>
       <!-- when the coilgun is fired, it triggers this statuseffect, causing contained ammunition boxes to spawn new ammo -->
       <StatusEffect type="OnUse" target="Contained">
-        <RequiredItem name="Coilgun Ammunition Box" type="Contained"/>
+        <RequiredItem identifiers="coilgunammobox" type="Contained"/>
         <Use/>        
       </StatusEffect>
     </ItemContainer>
@@ -74,9 +77,9 @@
       of the item, and when the condition is 0, the box is considered empty. -->      
       <!--  -0.5 per usage = 200 shots per box -->
       <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
-        <SpawnItem name="Coilgun Bolt" spawnposition="ThisInventory"/>
+        <SpawnItem name="coilgunbolt" spawnposition="ThisInventory"/>
       </StatusEffect>
-      <Containable name="Coilgun Bolt"/>
+      <Containable identifiers="coilgunbolt"/>
     </ItemContainer>
   </Item>
 
@@ -90,12 +93,6 @@
     <Price locationtype="Military" buyprice="200"/>
     <Price locationtype="City" buyprice="300"/>
 
-    <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="Steel Bar"/>
-      <Item name="Polycarbonate Bar"/>
-    </Deconstruct>
-
     <Sprite texture="weapons.png" sourcerect="0,50,65,7" depth="0.55"/>
 
     <Body width="64" height="5" density="20"/>
@@ -104,8 +101,8 @@
 
     <Projectile characterusable="false" launchimpulse="80.0">
       <Attack structuredamage="20" severlimbsprobability="0.5">
-        <affliction name="Internal Damage" strength="20"/>
-        <affliction name="Bleeding" strength="5"/>
+        <Affliction identifier="internaldamage" strength="20"/>
+        <Affliction identifier="bleeding" strength="5"/>
       </Attack>
       <StatusEffect type="OnActive" target="This">
         <ParticleEmitter particle="ammotrailwater" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1"/>

@@ -7,7 +7,7 @@
     Tags="smallitem,wire"    
     linkable="true"
     canbepicked="true"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="City" buyprice="10"/>
     <Price locationtype="Outpost" buyprice="10"/>
@@ -15,7 +15,7 @@
     <Price locationtype="Military" buyprice="10"/>
 
     <Deconstruct time="5">
-      <Item name="Copper Bar"/>
+      <Item identifier="copperbar"/>
     </Deconstruct>
 
     <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
@@ -32,10 +32,10 @@
     identifier="redwire"
     category="Electrical"
     Tags="smallitem,wire"
-    spritecolor="1.0,0.0,0.0,1.0"
+    spritecolor="0.7,0.06,0.06,1.0"
     linkable="true"
     canbepicked="true"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="City" buyprice="10"/>
     <Price locationtype="Outpost" buyprice="10"/>
@@ -43,7 +43,7 @@
     <Price locationtype="Military" buyprice="10"/>
 
     <Deconstruct time="5">
-      <Item name="Copper Bar"/>
+      <Item identifier="copperbar"/>
     </Deconstruct>
 
     <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
@@ -59,10 +59,10 @@
     identifier="bluewire"
     category="Electrical"
     Tags="smallitem,wire"
-    spritecolor="0.0,0.6,1.0,1.0"    
+    spritecolor="0.1,0.4,0.9,1.0"    
     linkable="true"
     canbepicked="true"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="City" buyprice="10"/>
     <Price locationtype="Outpost" buyprice="10"/>
@@ -70,7 +70,7 @@
     <Price locationtype="Military" buyprice="10"/>
 
     <Deconstruct time="5">
-      <Item name="Copper Bar"/>
+      <Item identifier="copperbar"/>
     </Deconstruct>
 
     <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
@@ -86,10 +86,10 @@
     identifier="orangewire"
     category="Electrical"
     Tags="smallitem,wire"
-    spritecolor="1.0,0.5,0.0,1.0"    
+    spritecolor="0.9,0.58,0.07,1.0"    
     linkable="true"
     canbepicked="true"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="City" buyprice="10"/>
     <Price locationtype="Outpost" buyprice="10"/>
@@ -97,7 +97,7 @@
     <Price locationtype="Military" buyprice="10"/>
 
     <Deconstruct time="5">
-      <Item name="Copper Bar"/>
+      <Item identifier="copperbar"/>
     </Deconstruct>
 
     <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
@@ -109,12 +109,58 @@
   </Item>
 
   <Item
+    name="Green Wire"
+    identifier="greenwire"
+    category="Electrical"
+    Tags="smallitem,wire"
+    spritecolor="0.17,0.45,0.05,1.0"
+    linkable="true"
+    canbepicked="true"
+    cargocontaineridentifier="metalcrate"
+    price="10">
+
+    <Deconstruct time="5">
+      <Item identifier="copperbar"/>
+    </Deconstruct>
+
+    <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
+
+    <Body radius="7" width="25" density="30"/>
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+
+    <Wire/>
+  </Item>
+  
+  <Item
+    name="Black Wire"
+    identifier="blackwire"
+    category="Electrical"
+    Tags="smallitem,wire"
+    spritecolor="0.1,0.1,0.1,1.0"
+    linkable="true"
+    canbepicked="true"
+    cargocontaineridentifier="metalcrate"
+    price="10">
+
+    <Deconstruct time="5">
+      <Item identifier="copperbar"/>
+    </Deconstruct>
+
+    <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
+
+    <Body radius="7" width="25" density="30"/>
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+
+    <Wire/>
+  </Item>
+  
+  <Item
     name="FPGA Circuit"
     identifier="fpgacircuit"
     category="Electrical"
     Tags="smallitem"    
     linkable="true"    
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="Field-programmable gate array - a multi-purpose circuit which can be reconfigured for use in a large variety of electrical devices.">
 
     <Price locationtype="Research" buyprice="80"/>
@@ -123,8 +169,8 @@
     <Price locationtype="Military" buyprice="100"/>
     
     <Deconstruct time="5">
-      <Item name="Copper Bar"/>
-      <Item name="Copper Bar"/>
+      <Item identifier="copperbar"/>
+      <Item identifier="copperbar"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,16,16,16"/>
@@ -140,7 +186,7 @@
     category="Electrical"
     Tags="smallitem"
     linkable="true"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="Sends a signal when both inputs receive a signal within a set period of each other.">
 
     <Price locationtype="Research" buyprice="10"/>
@@ -149,8 +195,8 @@
     <Price locationtype="Military" buyprice="20"/>
     
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/> 
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/> 
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,0,16,16"/>
@@ -161,12 +207,12 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
     
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="signal_in1"/>
       <input name="signal_in2"/>
       <input name="set_output"/>
@@ -180,13 +226,13 @@
     category="Electrical"
     Tags="smallitem"
     linkable="false"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     price="10"
     description="Outputs the sum of the received signals.">
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,80,16,16"/>
@@ -197,11 +243,11 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="signal_in1"/>
       <input name="signal_in2"/>
       <output name="signal_out"/>
@@ -214,7 +260,7 @@
     category="Electrical"
     Tags="smallitem"
     linkable="true"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="Sends a signal if either of the inputs receive a signal.">
 
     <Price locationtype="Research" buyprice="10"/>
@@ -223,8 +269,8 @@
     <Price locationtype="Military" buyprice="20"/>
     
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,0,16,16"/>
@@ -235,12 +281,12 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="signal_in1"/>
       <input name="signal_in2"/>
       <input name="set_output"/>
@@ -254,7 +300,7 @@
     category="Electrical"
     Tags="smallitem"
     linkable="true"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="Sends a signal when the input is NOT receiving a signal.">
 
     <Price locationtype="Research" buyprice="10"/>
@@ -263,8 +309,8 @@
     <Price locationtype="Military" buyprice="20"/>
     
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,0,16,16"/>
@@ -275,12 +321,12 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="signal_in"/>
       <output name="signal_out"/>
     </ConnectionPanel>
@@ -292,7 +338,7 @@
     category="Electrical"
     Tags="smallitem"
     linkable="true"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="When switched on, forwards all received signals from the input connections to the outputs.">
 
     <Price locationtype="Research" buyprice="10"/>
@@ -301,30 +347,32 @@
     <Price locationtype="Military" buyprice="20"/>
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="48,16,16,16"/>
 
     <RelayComponent canbeselected="true" vulnerabletoemp="false">
-      <GuiFrame rect="0,0,200,160" alignment="Center" style="ItemUI"/>
+      <GuiFrame relativesize="0.2,0.15" minsize="350,160" maxsize="420,190" anchor="Center" style="ItemUI"/>
     </RelayComponent>
 
-    <fixrequirement name="Reset fuse" fixDurationHighSkill="1" fixDurationLowSkill="5">
-      <skill name="Electrical Engineering" level="30"/>
-    </fixrequirement>
+    <Repairable selectkey="Action" name="Reset fuse" fixDurationHighSkill="1" fixDurationLowSkill="5" msg="Repair [Screwdriver]" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="electrical" level="40"/>
+      <RequiredItem identifier="screwdriver" type="equipped"/>
+    </Repairable>
 
     <Body width="16" height="16" density="30"/>
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="power_in"/>
       <input name="signal_in1"/>
       <input name="signal_in2"/>
@@ -344,7 +392,7 @@
     category="Electrical"
     Tags="smallitem"
     linkable="true"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="Delays all received signals for a specific amount of time.">
 
     <Price locationtype="Research" buyprice="10"/>
@@ -353,8 +401,8 @@
     <Price locationtype="Military" buyprice="20"/>
     
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,32,16,8"/>
@@ -365,12 +413,12 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="signal_in"/>
       <output name="signal_out"/>
     </ConnectionPanel>
@@ -382,7 +430,7 @@
     category="Electrical"
     Tags="smallitem"
     linkable="true"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="Research" buyprice="20"/>
     <Price locationtype="City" buyprice="40"/>
@@ -390,8 +438,8 @@
     <Price locationtype="Military" buyprice="40"/>
     
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="48,0,16,16"/>
@@ -404,12 +452,12 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
       <input name="set_color"/>
@@ -419,11 +467,11 @@
 
   <Item
     name="Oxygen Detector"    
-    identifier="oxydetector"
+    identifier="oxygendetector"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="Sends out a value between 0-100 depending on the quality of the surrounding air.">
 
     <Price locationtype="Research" buyprice="20"/>
@@ -432,8 +480,8 @@
     <Price locationtype="Military" buyprice="40"/>
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="97,0,31,24"/>
@@ -444,12 +492,12 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <output name="signal_out"/>
     </ConnectionPanel>
   </Item>
@@ -460,7 +508,7 @@
     category="Electrical"
     Tags="smallitem"
     linkable="true"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="Sends out a signal when the detector is submerged.">
 
     <Price locationtype="Research" buyprice="20"/>
@@ -469,8 +517,8 @@
     <Price locationtype="Military" buyprice="40"/>
     
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="65,0,31,24"/>
@@ -481,12 +529,12 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <output name="signal_out"/>
     </ConnectionPanel>
   </Item>
@@ -497,7 +545,7 @@
     category="Electrical"
     Tags="smallitem"
     linkable="true"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="Sends out a signal when it detects movement.">
 
     <Price locationtype="Research" buyprice="20"/>
@@ -506,8 +554,8 @@
     <Price locationtype="Military" buyprice="40"/>
     
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="65,24,31,24"/>
@@ -518,12 +566,12 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <output name="state_out"/>
     </ConnectionPanel>
   </Item>
@@ -534,7 +582,7 @@
     category="Electrical"
     Tags="smallitem"
     linkable="true"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="Sends a signal when a signal matching a specific value is received.">
 
     <Price locationtype="Research" buyprice="10"/>
@@ -543,8 +591,8 @@
     <Price locationtype="Military" buyprice="20"/>
     
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,16,16,16"/>
@@ -555,12 +603,12 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="signal_in"/>
       <input name="set_output"/>
       <input name="set_targetsignal"/>
@@ -574,7 +622,7 @@
     category="Electrical"
     Tags="smallitem"
     linkable="true"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="Sends a signal if the received signal matches a specific regular expression pattern.">
 
     <Price locationtype="Research" buyprice="10"/>
@@ -583,8 +631,8 @@
     <Price locationtype="Military" buyprice="20"/>
     
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,16,16,16"/>
@@ -595,12 +643,12 @@
 
     <Holdable selectkey="Select" pickkey="Use" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true" PickingTime="5.0"
               slots="Any,RightHand,LeftHand" msg="Detach [Wrench]">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="signal_in"/>
       <output name="signal_out"/>
     </ConnectionPanel>
@@ -613,7 +661,7 @@
     category="Electrical"
     Tags="smallitem"
     linkable="true"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="Sends out a periodic, oscillating signal.">
 
     <Price locationtype="Research" buyprice="10"/>
@@ -622,8 +670,8 @@
     <Price locationtype="Military" buyprice="20"/>
     
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,64,16,16"/>
@@ -634,12 +682,12 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="set_frequency"/>
       <input name="set_outputtype"/>
       <output name="signal_out"/>
@@ -652,7 +700,7 @@
     category="Electrical"
     Tags="smallitem"
     linkable="true"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="Allows remote communication between other Wifi Components that are using the same channel.">
 
     <Price locationtype="Research" buyprice="20"/>
@@ -661,8 +709,8 @@
     <Price locationtype="Military" buyprice="40"/>
     
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,32,15,19"/>
@@ -673,12 +721,12 @@
 
     <Holdable selectkey="Select" pickkey="Use" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true" PickingTime="5.0"
         slots="Any,RightHand,LeftHand" msg="Detach [Wrench]">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="signal_in"/>
       <output name="signal_out"/>
     </ConnectionPanel>
@@ -690,7 +738,7 @@
     category="Electrical"
     Tags="smallitem"
     linkable="true"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="Research" buyprice="20"/>
     <Price locationtype="City" buyprice="40"/>
@@ -698,8 +746,8 @@
     <Price locationtype="Military" buyprice="40"/>
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,32,32,32"/>
@@ -708,7 +756,7 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ItemComponent>
@@ -716,8 +764,8 @@
     </ItemComponent>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
     </ConnectionPanel>
@@ -729,7 +777,7 @@
     category="Electrical"
     Tags="smallitem"
     linkable="true"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="Research" buyprice="20"/>
     <Price locationtype="City" buyprice="40"/>
@@ -737,8 +785,8 @@
     <Price locationtype="Military" buyprice="40"/>
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="34,64,23,16"/>
@@ -747,7 +795,7 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ItemComponent>
@@ -755,8 +803,8 @@
     </ItemComponent>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
     </ConnectionPanel>
@@ -770,19 +818,19 @@
     focusonselected="true"
     offsetonselected="500"
     linkable="true"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub.">
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,64,16,32"/>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="control_in"/>
     </ConnectionPanel>
   </Item>

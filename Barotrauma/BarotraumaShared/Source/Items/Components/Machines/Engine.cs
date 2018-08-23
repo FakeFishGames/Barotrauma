@@ -47,7 +47,7 @@ namespace Barotrauma.Items.Components
 
         public float CurrentVolume
         {
-            get { return Math.Abs((force / 100.0f) * (voltage / minVoltage)); }
+            get { return Math.Abs((force / 100.0f) * Math.Min(voltage / minVoltage, 1.0f)); }
         }
 
         public Engine(Item item, XElement element)
@@ -60,7 +60,7 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "propellerdamage":
-                        propellerDamage = new Attack(subElement);
+                        propellerDamage = new Attack(subElement, item.Name + ", Engine");
                         break;
                 }
             }
@@ -77,7 +77,8 @@ namespace Barotrauma.Items.Components
             UpdateAnimation(deltaTime);
 
             currPowerConsumption = Math.Abs(targetForce) / 100.0f * powerConsumption;
-            if (item.IsOptimized("electrical")) currPowerConsumption *= 0.5f;
+            //pumps consume more power when in a bad condition
+            currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / 100.0f);
 
             if (powerConsumption == 0.0f) voltage = 1.0f;
 
@@ -86,8 +87,9 @@ namespace Barotrauma.Items.Components
             Force = MathHelper.Lerp(force, (voltage < minVoltage) ? 0.0f : targetForce, 0.1f);
             if (Math.Abs(Force) > 1.0f)
             {
-                Vector2 currForce = new Vector2((force / 100.0f) * maxForce * (voltage / minVoltage), 0.0f);
-                if (item.IsOptimized("mechanical")) currForce *= 1.5f;
+                Vector2 currForce = new Vector2((force / 100.0f) * maxForce * Math.Min(voltage / minVoltage, 1.0f), 0.0f);
+                //less effective when in a bad condition
+                currForce *= MathHelper.Lerp(0.5f, 2.0f, item.Condition / 100.0f);
 
                 item.Submarine.ApplyForce(currForce);
 

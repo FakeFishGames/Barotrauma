@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace Barotrauma
 {
@@ -286,6 +287,17 @@ namespace Barotrauma
                     NewMessage("- Traitor " + t.Character.Name + "'s target is " + t.TargetCharacter.Name + ".", Color.Cyan);
                 }
                 NewMessage("The code words are: " + traitorManager.codeWords + ", response: " + traitorManager.codeResponse + ".", Color.Cyan);
+            },
+            null,
+            (Client client, Vector2 cursorPos, string[] args) =>
+            {
+                TraitorManager traitorManager = GameMain.Server.TraitorManager;
+                if (traitorManager == null) return;
+                foreach (Traitor t in traitorManager.TraitorList)
+                {
+                    GameMain.Server.SendConsoleMessage("- Traitor " + t.Character.Name + "'s target is " + t.TargetCharacter.Name + ".", client);
+                }
+                GameMain.Server.SendConsoleMessage("The code words are: " + traitorManager.codeWords + ", response: " + traitorManager.codeResponse + ".", client);
             }));
 
             commands.Add(new Command("itemlist", "itemlist: List all the item prefabs available for spawning.", (string[] args) =>
@@ -1387,7 +1399,7 @@ namespace Barotrauma
             commands.Add(new Command("locky", "locky: Lock vertical movement of the main submarine.", (string[] args) =>
             {
                 Submarine.LockY = !Submarine.LockY;
-                NewMessage((Submarine.LockX ? "Vertical submarine movement locked." : "Vertical submarine movement unlocked."), Color.White);
+                NewMessage((Submarine.LockY ? "Vertical submarine movement locked." : "Vertical submarine movement unlocked."), Color.White);
             }, null, null, isCheat: true));
 
             commands.Add(new Command("dumpids", "", (string[] args) =>
@@ -1402,6 +1414,20 @@ namespace Barotrauma
                     ThrowError("Failed to dump ids", e);
                 }
             }));
+
+#if CLIENT && WINDOWS
+            commands.Add(new Command("copyitemnames", "", (string[] args) =>
+            {
+                StringBuilder sb = new StringBuilder();
+                foreach (MapEntityPrefab mp in MapEntityPrefab.List)
+                {
+                    if (!(mp is ItemPrefab)) continue;
+                    sb.AppendLine(mp.Name);
+                }
+                System.Windows.Clipboard.SetText(sb.ToString());
+            }));
+#endif
+
 
             commands.Add(new Command("findentityids", "findentityids [entityname]", (string[] args) =>
             {
@@ -1422,6 +1448,65 @@ namespace Barotrauma
                     }
                 }
             }));
+
+            commands.Add(new Command("giveaffliction", "giveaffliction [affliction name] [affliction strength] [character name]: Add an affliction to a character. If the name parameter is omitted, the affliction is added to the controlled character.", (string[] args) =>
+            {
+                if (args.Length < 2) return;
+
+                AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.Find(a => 
+                    a.Name.ToLowerInvariant() == args[0].ToLowerInvariant() || 
+                    a.Identifier.ToLowerInvariant() == args[0].ToLowerInvariant());
+                if (afflictionPrefab == null)
+                {
+                    ThrowError("Affliction \"" + args[0] + "\" not found.");
+                    return;
+                }
+
+                if (!float.TryParse(args[1], out float afflictionStrength))
+                {
+                    ThrowError("\"" + args[1] + "\" is not a valid affliction strength.");
+                    return;
+                }
+
+                Character targetCharacter = (args.Length <= 2) ? Character.Controlled : FindMatchingCharacter(args.Skip(2).ToArray());
+                if (targetCharacter != null)
+                {
+                    targetCharacter.CharacterHealth.ApplyAffliction(targetCharacter.AnimController.MainLimb, afflictionPrefab.Instantiate(afflictionStrength));
+                }
+            },
+            null,
+            (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (args.Length < 2) return;
+
+                AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.Find(a => a.Name.ToLowerInvariant() == args[0].ToLowerInvariant());
+                if (afflictionPrefab == null)
+                {
+                    GameMain.Server.SendConsoleMessage("Affliction \"" + args[0] + "\" not found.", client);
+                    return;
+                }
+
+                if (!float.TryParse(args[1], out float afflictionStrength))
+                {
+                    GameMain.Server.SendConsoleMessage("\"" + args[1] + "\" is not a valid affliction strength.", client);
+                    return;
+                }
+
+                Character targetCharacter = (args.Length <= 2) ? client.Character : FindMatchingCharacter(args.Skip(2).ToArray());
+                if (targetCharacter != null)
+                {
+                    targetCharacter.CharacterHealth.ApplyAffliction(targetCharacter.AnimController.MainLimb, afflictionPrefab.Instantiate(afflictionStrength));
+                }
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    AfflictionPrefab.List.Select(a => a.Name).ToArray(),
+                    new string[] { "1" },
+                    Character.CharacterList.Select(c => c.Name).ToArray()
+                };
+            }, isCheat: true));
 
             commands.Add(new Command("heal", "heal [character name]: Restore the specified character to full health. If the name parameter is omitted, the controlled character will be healed.", (string[] args) =>
             {
@@ -1459,7 +1544,7 @@ namespace Barotrauma
                 Character revivedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args);
                 if (revivedCharacter == null) return;
                 
-                revivedCharacter.Revive(false);
+                revivedCharacter.Revive();
                 if (GameMain.Server != null)
                 {
                     foreach (Client c in GameMain.Server.ConnectedClients)
@@ -1478,7 +1563,7 @@ namespace Barotrauma
                 Character revivedCharacter = (args.Length == 0) ? client.Character : FindMatchingCharacter(args);
                 if (revivedCharacter == null) return;
 
-                revivedCharacter.Revive(false);
+                revivedCharacter.Revive();
                 if (GameMain.Server != null)
                 {
                     foreach (Client c in GameMain.Server.ConnectedClients)
@@ -1669,7 +1754,14 @@ namespace Barotrauma
             (Client client, Vector2 cursorWorldPos, string[] args) =>
             {
                 Character killedCharacter = (args.Length == 0) ? client.Character : FindMatchingCharacter(args);
-                killedCharacter.SetAllDamage(killedCharacter.MaxVitality * 2, 0.0f, 0.0f);
+                killedCharacter.SetAllDamage(killedCharacter.MaxVitality * 2, 0.0f, 0.0f);          
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                };
             }));
 
             commands.Add(new Command("killmonsters", "killmonsters: Immediately kills all AI-controlled enemies in the level.", (string[] args) =>
@@ -1938,7 +2030,7 @@ namespace Barotrauma
                         var itemContainer = item.GetComponent<ItemContainer>();
                         if (itemContainer != null)
                         {
-                            GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.InventoryState });
+                            GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.InventoryState, 0 });
                         }
 
                         GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.Status });
