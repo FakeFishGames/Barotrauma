@@ -43,9 +43,7 @@ namespace Barotrauma
         //a timer for 
         private DateTime refreshDisableTimer;
         private bool waitingForRefresh;
-
-        private Object lockThis = new Object();
-        
+                
         public ServerListScreen()
         {
             int width = Math.Min(GameMain.GraphicsWidth - 160, 1000);
@@ -398,18 +396,19 @@ namespace Barotrauma
             var serverPlayers = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[3], 1.0f), serverContent.RectTransform),
                 serverInfo.PlayerCount + "/" + serverInfo.MaxPlayers, style: "GUIServerListTextBox");
 
-                if (serverInfo.IP != null)
+            var serverPingText = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[4], 1.0f), serverContent.RectTransform), "?", style: "GUIServerListTextBox");
+
+            if (serverInfo.IP != null)
+            {
+                try
                 {
-                    try
-                    {
-                        PingResult(serverInfo.IP, out string ping);
-                        var serverPing = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[4], 1.0f), serverContent.RectTransform), ping, style: "GUIServerListTextBox");
-                    }
-                    catch (NullReferenceException ex)
-                    {
-                        DebugConsole.ThrowError("Ping is null", ex);
-                    }
+                    GetServerPing(serverInfo, serverPingText);
                 }
+                catch (NullReferenceException ex)
+                {
+                    DebugConsole.ThrowError("Ping is null", ex);
+                }
+            }
 
             var gameStartedBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[5], 0.6f), serverContent.RectTransform, Anchor.Center),
                 label: "", style: "GUIServerListTickBox")
@@ -610,33 +609,57 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public string PingHost(string host)
+        public void GetServerPing(ServerInfo serverInfo, GUITextBlock serverPingText)
         {
-            string rtt = null;
-            IPAddress address = IPAddress.Parse(host);
+            serverInfo.PingChecked = false;
+            serverInfo.Ping = -1;
 
-            PingOptions pingOptions = new PingOptions(128, true);
-            Ping ping = new Ping();
-            byte[] buffer = new byte[32];
+            var pingThread = new Thread(() => { PingServer(serverInfo, 1000); })
+            {
+                IsBackground = true
+            };
+            pingThread.Start();
 
+            CoroutineManager.StartCoroutine(UpdateServerPingText(serverInfo, serverPingText, 1000));
+        }
+
+        private IEnumerable<object> UpdateServerPingText(ServerInfo serverInfo, GUITextBlock serverPingText, int timeOut)
+        {
+            DateTime timeOutTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, milliseconds: timeOut);
+            while (DateTime.Now < timeOutTime)
+            {
+                if (serverInfo.PingChecked)
+                {
+                    serverPingText.Text = serverInfo.Ping > -1 ? serverInfo.Ping.ToString() : "?";
+                    yield return CoroutineStatus.Success;
+                }
+
+                yield return CoroutineStatus.Running;
+            }
+            yield return CoroutineStatus.Success;
+        }
+
+        public void PingServer(ServerInfo serverInfo, int timeOut)
+        {
+            long rtt = -1;
+            IPAddress address = IPAddress.Parse(serverInfo.IP);
             if (address != null)
             {
+                Ping ping = new Ping();
+                byte[] buffer = new byte[32];
                 try
                 {
-                    PingReply pingReply = ping.Send(address, 1000, buffer, pingOptions);
+                    PingReply pingReply = ping.Send(address, timeOut, buffer, new PingOptions(128, true));
 
-                    if (!(pingReply == null))
+                    if (pingReply != null)
                     {
                         switch (pingReply.Status)
                         {
                             case IPStatus.Success:
-                                rtt = pingReply.RoundtripTime.ToString();
-                                break;
-                            case IPStatus.TimedOut:
-                                rtt = "TO";
+                                rtt = pingReply.RoundtripTime;
                                 break;
                             default:
-                                rtt = "?";
+                                rtt = -1;
                                 break;
                         }
                     }
@@ -647,21 +670,10 @@ namespace Barotrauma
                 }
             }
 
-            return rtt;
+            serverInfo.PingChecked = true;
+            serverInfo.Ping = (int)rtt;
         }
-
-        private static volatile string answer;
-
-        public void PingResult(string host, out string result)
-        {
-            var resultThread = new Thread(() => { answer = PingHost(host); });
-
-            resultThread.Start();
-            resultThread.Join();
-
-            result = answer;
-        }
-
+        
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             graphics.Clear(Color.CornflowerBlue);
