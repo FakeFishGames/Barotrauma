@@ -600,7 +600,7 @@ namespace Barotrauma
         {
             ConfigPath = file;
             this.seed = seed;
-            MTRandom rand = new MTRandom(ToolBox.StringToInt(seed));
+            MTRandom random = new MTRandom(ToolBox.StringToInt(seed));
 
             selectedItems = new Item[2];
 
@@ -639,7 +639,6 @@ namespace Barotrauma
             //}
 
             ////choose a random ragdoll element
-            //MTRandom random = new MTRandom(ToolBox.StringToInt(seed));
             //XElement ragdollElement = ragdollElements.Count == 1 ?
             //    ragdollElements[0] : ToolBox.SelectWeightedRandom(ragdollElements, ragdollCommonness, random);
 
