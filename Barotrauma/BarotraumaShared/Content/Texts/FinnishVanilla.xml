@@ -10,6 +10,7 @@
   <JoinServerButton>Liity palvelimelle</JoinServerButton>
   <HostServerButton>Luo palvelin</HostServerButton>
   <SubEditorButton>Sukellusvene-editori</SubEditorButton>
+  <CharacterEditorButton>Hahmoeditori</CharacterEditorButton>
   <SettingsButton>Asetukset</SettingsButton>
   <SteamWorkshopButton>Steam Workshop</SteamWorkshopButton>
   <QuitButton>Poistu</QuitButton>
