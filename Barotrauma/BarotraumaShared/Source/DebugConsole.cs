@@ -1449,7 +1449,7 @@ namespace Barotrauma
                 }
             }));
 
-            commands.Add(new Command("giveaffliction", "giveaffliction [affliction name] [affliction strength] [character name]: Add an affliction to a character. If the name parameter is omitted, the affliction is added to the controlled character.", (string[] args) =>
+            commands.Add(new Command("giveaffliction", "giveaffliction [Affliction identifier] [affliction strength] [character name]: Add an affliction to a character. If the name parameter is omitted, the affliction is added to the controlled character.", (string[] args) =>
             {
                 if (args.Length < 2) return;
 
