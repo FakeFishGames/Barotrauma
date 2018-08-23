@@ -318,6 +318,7 @@
   <ServerListModeSelection>Game mode selection</ServerListModeSelection>
   <ServerListAllowSpectating>Allow spectating</ServerListAllowSpectating>
   <ServerListCompatible>Compatible</ServerListCompatible>
+  <ServerListPing>Ping</ServerListPing>
   <ServerListRoundStarted>Round started</ServerListRoundStarted>
   <ServerListInfo>Info</ServerListInfo>
   <ServerListRefresh>Refresh</ServerListRefresh>

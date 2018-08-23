@@ -220,6 +220,7 @@
   <ServerListName>Nimi</ServerListName>
   <ServerListPlayers>Pelaajat</ServerListPlayers>
   <ServerListVersion>Peliversio</ServerListVersion>
+  <ServerListPing>Ping</ServerListPing>
   <ServerListHasPassword>Salasana suojattu</ServerListHasPassword>
   <ServerListUsingWhitelist>Valkoisen luettelon käyttö</ServerListUsingWhitelist>
   <ServerListContentPackages>Sisältöpaketit</ServerListContentPackages>
