@@ -81,11 +81,10 @@ namespace Barotrauma.Items.Components
 
         public bool CanReceive(WifiComponent sender)
         {
-            if (!HasRequiredContainedItems(false)) return false;
-
             if (sender == null || sender.channel != channel || sender.TeamID != TeamID) return false;
+            if (Vector2.DistanceSquared(item.WorldPosition, sender.item.WorldPosition) > sender.range * sender.range) return false;
 
-            return Vector2.DistanceSquared(item.WorldPosition, sender.item.WorldPosition) <= sender.range * sender.range;
+            return HasRequiredContainedItems(false);
         }
 
         public override void Update(float deltaTime, Camera cam)
