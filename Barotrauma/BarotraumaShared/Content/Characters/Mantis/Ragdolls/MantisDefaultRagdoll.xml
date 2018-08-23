@@ -72,9 +72,9 @@
     </deformablesprite>
     <attack range="200" damagerange="100" duration="0.25" structuredamage="10" itemdamage="12" structuresoundtype="StructureSlash"
             targetforce="-100" severlimbsprobability="0.8" torque="-20" force="10" applyforceonlimbs="0,6">
-      <affliction name="Internal Damage" strength="10"/>
-      <affliction name="Bleeding" strength="50"/>
-      <affliction name="Stun" strength="0.1"/>
+      <Affliction identifier="internaldamage" strength="10"/>
+      <Affliction identifier="bleeding" strength="50"/>
+      <Affliction identifier="stun" strength="0.1"/>
     </attack>
     <sound tag="footstep_armor"/>
   </limb>
