@@ -16,22 +16,7 @@ namespace Barotrauma
             return dictionary.Values.ToList();
         }
 
-        private static EntitySpawner _spawner;
-        public static EntitySpawner Spawner
-        {
-            get
-            {
-                if (_spawner == null)
-                {
-                    _spawner = new EntitySpawner();
-                }
-                return _spawner;
-            }
-            set
-            {
-                _spawner = value;
-            }
-        }
+        public static EntitySpawner Spawner;
 
         private ushort id;
 
