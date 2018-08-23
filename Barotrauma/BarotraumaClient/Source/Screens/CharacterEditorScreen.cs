@@ -917,6 +917,12 @@ namespace Barotrauma
                 Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
                 Submarine.MainSub.Update((float)deltaTime);
                 PhysicsBody.List.ForEach(pb => pb.SetPrevTransform(pb.SimPosition, pb.Rotation));
+                // Handle ragdolling here, because we are not calling the Character.Update() method.
+                character.IsRagdolled = PlayerInput.KeyDown(InputType.Ragdoll);
+                if (character.IsRagdolled)
+                {
+                    character.AnimController.ResetPullJoints();
+                }
                 character.ControlLocalPlayer((float)deltaTime, Cam, false);
                 character.Control((float)deltaTime, Cam);
                 character.AnimController.UpdateAnim((float)deltaTime);
