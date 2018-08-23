@@ -175,8 +175,7 @@ namespace Barotrauma.Items.Components
             if (sound == null) return 0.0f;
             if (sound.VolumeProperty == "") return 1.0f;
 
-            SerializableProperty property = null;
-            if (properties.TryGetValue(sound.VolumeProperty.ToLowerInvariant(), out property))
+            if (properties.TryGetValue(sound.VolumeProperty.ToLowerInvariant(), out SerializableProperty property))
             {
                 float newVolume = 0.0f;
                 try
@@ -188,6 +187,16 @@ namespace Barotrauma.Items.Components
                     return 0.0f;
                 }
                 newVolume *= sound.VolumeMultiplier;
+
+                if (!MathUtils.IsValid(newVolume))
+                {
+                    DebugConsole.Log("Invalid sound volume (item " + item.Name + ", " + GetType().ToString() + "): " + newVolume);
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "ItemComponent.PlaySound:" + item.Name + GetType().ToString(),
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Invalid sound volume (item " + item.Name + ", " + GetType().ToString() + "): " + newVolume);
+                    return 0.0f;
+                }
 
                 return MathHelper.Clamp(newVolume, 0.0f, 1.0f);
             }
