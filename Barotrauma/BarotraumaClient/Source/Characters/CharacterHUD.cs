@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -102,8 +103,7 @@ namespace Barotrauma
                 brokenItemsCheckTimer = 1.0f;
                 foreach (Item item in Item.ItemList)
                 {
-                    if (item.Condition > 0.0f || item.FixRequirements.Count == 0 || item.CurrentHull == null) continue;
-                    if (item.CurrentHull == character.CurrentHull)
+                    if (item.CurrentHull == character.CurrentHull && item.Repairables.Any(r => item.Condition < r.ShowRepairUIThreshold))
                     {
                         brokenItems.Add(item);
                     }
@@ -130,23 +130,7 @@ namespace Barotrauma
                     DrawOrderIndicator(spriteBatch, cam, character, character.CurrentOrder, 1.0f);                    
                 }                
             }
-
-            foreach (Optimizable optimizable in Optimizable.CurrentlyOptimizable)
-            {
-                if (optimizable.DegreeOfSuccess(character) < 0.5f) continue;
-
-                float distSqr = Vector2.DistanceSquared(character.WorldPosition, optimizable.Item.WorldPosition);
-                if (distSqr < 1000.0f * 1000.0f)
-                {
-                    float dist = (float)Math.Sqrt(distSqr);
-                    Vector2 drawPos = optimizable.Item.DrawPosition;
-                    //TODO: proper icon
-                    float alpha = (1000.0f - dist) / 1000.0f * 2.0f;
-
-                    GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, GUI.SubmarineIcon, Color.Yellow * alpha);
-                }
-            }
-
+            
             foreach (Item brokenItem in brokenItems)
             {
                 float dist = Vector2.Distance(character.WorldPosition, brokenItem.WorldPosition);
@@ -154,7 +138,8 @@ namespace Barotrauma
                 //TODO: proper icon
                 float alpha = Math.Min((1000.0f - dist) / 1000.0f * 2.0f, 1.0f);
                 if (alpha <= 0.0f) continue;
-                GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, GUI.SubmarineIcon, Color.OrangeRed * alpha);                
+                GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, GUI.SubmarineIcon, 
+                    Color.Lerp(Color.DarkRed, Color.Orange * 0.5f, brokenItem.Condition / 100.0f) * alpha);                
             }
 
             if (!character.IsUnconscious && character.Stun <= 0.0f)

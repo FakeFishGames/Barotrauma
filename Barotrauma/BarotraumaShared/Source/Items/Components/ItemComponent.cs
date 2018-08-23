@@ -241,17 +241,29 @@ namespace Barotrauma.Items.Components
                 {
                     case "requireditem":
                     case "requireditems":
-                        RelatedItem ri = RelatedItem.Load(subElement);
-                        if (ri != null) requiredItems.Add(ri);
+                        RelatedItem ri = RelatedItem.Load(subElement, item.Name);
+                        if (ri != null)
+                        {
+                            requiredItems.Add(ri);
+                        }
+                        else
+                        {
+                            DebugConsole.ThrowError("Error in item config \"" + item.ConfigFile + "\" - component " + GetType().ToString() + " requires an item with no identifiers.");
+                        }
                         break;
-
                     case "requiredskill":
                     case "requiredskills":
-                        string skillName = subElement.GetAttributeString("name", "");
-                        requiredSkills.Add(new Skill(skillName, subElement.GetAttributeInt("level", 0)));
+                        if (subElement.Attribute("name") != null)
+                        {
+                            DebugConsole.ThrowError("Error in item config \"" + item.ConfigFile + "\" - skill requirement in component " + GetType().ToString() + " should use a skill identifier instead of the name of the skill.");
+                            continue;
+                        }
+
+                        string skillIdentifier = subElement.GetAttributeString("identifier", "");
+                        requiredSkills.Add(new Skill(skillIdentifier, subElement.GetAttributeInt("level", 0)));
                         break;
                     case "statuseffect":
-                        var statusEffect = StatusEffect.Load(subElement);
+                        var statusEffect = StatusEffect.Load(subElement, item.Name);
 
                         if (statusEffectLists == null) statusEffectLists = new Dictionary<ActionType, List<StatusEffect>>();
 
@@ -458,7 +470,7 @@ namespace Barotrauma.Items.Components
         {
             foreach (Skill skill in requiredSkills)
             {
-                float characterLevel = character.GetSkillLevel(skill.Name);
+                float characterLevel = character.GetSkillLevel(skill.Identifier);
                 if (characterLevel < skill.Level)
                 {
                     insufficientSkill = skill;
@@ -480,7 +492,7 @@ namespace Barotrauma.Items.Components
             float skillSuccessSum = 0.0f;
             for (int i = 0; i < requiredSkills.Count; i++)
             {
-                float characterLevel = character.GetSkillLevel(requiredSkills[i].Name);
+                float characterLevel = character.GetSkillLevel(requiredSkills[i].Identifier);
                 skillSuccessSum += (characterLevel - requiredSkills[i].Level);
             }
             float average = skillSuccessSum / requiredSkills.Count;
@@ -567,9 +579,7 @@ namespace Barotrauma.Items.Components
 
             foreach (XAttribute attribute in componentElement.Attributes())
             {
-                SerializableProperty property = null;
-                if (!properties.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out property)) continue;
-                
+                if (!properties.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out SerializableProperty property)) continue;
                 property.TrySetValue(attribute.Value);
             }
 
@@ -584,12 +594,12 @@ namespace Barotrauma.Items.Components
                         if (!overrideRequiredItems) requiredItems.Clear();
                         overrideRequiredItems = true;
 
-                        RelatedItem newRequiredItem = RelatedItem.Load(subElement);
+                        RelatedItem newRequiredItem = RelatedItem.Load(subElement, item.Name);
                         
                         if (newRequiredItem == null) continue;
 
-                        var prevRequiredItem = prevRequiredItems.Find(ri => ri.JoinedNames == newRequiredItem.JoinedNames);
-                        if (prevRequiredItem!=null)
+                        var prevRequiredItem = prevRequiredItems.Find(ri => ri.JoinedIdentifiers == newRequiredItem.JoinedIdentifiers);
+                        if (prevRequiredItem != null)
                         {
                             newRequiredItem.statusEffects = prevRequiredItem.statusEffects;
                             newRequiredItem.Msg = prevRequiredItem.Msg;
@@ -652,13 +662,15 @@ namespace Barotrauma.Items.Components
             {
                 object[] lobject = new object[] { item, element };
                 object component = constructor.Invoke(lobject);
-
                 ic = (ItemComponent)component;
                 ic.name = element.Name.ToString();
             }
             catch (TargetInvocationException e)
             {
                 DebugConsole.ThrowError("Error while loading entity of the type " + t + ".", e.InnerException);
+                GameAnalyticsManager.AddErrorEventOnce("ItemComponent.Load:TargetInvocationException" + item.Name + element.Name,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "Error while loading entity of the type " + t + " (" + e.InnerException + ")\n" + Environment.StackTrace);
             }
 
             return ic;

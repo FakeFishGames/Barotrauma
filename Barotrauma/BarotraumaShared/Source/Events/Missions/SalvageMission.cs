@@ -25,15 +25,26 @@ namespace Barotrauma
         public SalvageMission(MissionPrefab prefab, Location[] locations)
             : base(prefab, locations)
         {
-            string itemName = prefab.ConfigElement.GetAttributeString("itemname", "");
-
-            itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
-            if (itemPrefab == null)
+            if (prefab.ConfigElement.Attribute("itemname") != null)
             {
-                DebugConsole.ThrowError("Error in SalvageMission: couldn't find an item prefab with the name " + itemName);
-                return;
+                DebugConsole.ThrowError("Error in SalvageMission - use item identifier instead of the name of the item.");
+                string itemName = prefab.ConfigElement.GetAttributeString("itemname", "");
+                itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
+                if (itemPrefab == null)
+                {
+                    DebugConsole.ThrowError("Error in SalvageMission: couldn't find an item prefab with the name " + itemName);
+                }
             }
-            
+            else
+            {
+                string itemIdentifier = prefab.ConfigElement.GetAttributeString("itemidentifier", "");
+                itemPrefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
+                if (itemPrefab == null)
+                {
+                    DebugConsole.ThrowError("Error in SalvageMission - couldn't find an item prefab with the identifier " + itemIdentifier);
+                }
+            }
+
             string spawnPositionTypeStr = prefab.ConfigElement.GetAttributeString("spawntype", "");
             if (string.IsNullOrWhiteSpace(spawnPositionTypeStr) ||
                 !Enum.TryParse(spawnPositionTypeStr, true, out spawnPositionType))

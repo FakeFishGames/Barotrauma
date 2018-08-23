@@ -20,7 +20,7 @@ namespace Barotrauma
                         msg.WriteRangedInteger(0, 3, 0);
                         Inventory.ClientWrite(msg, extraData);
                         break;
-                    case NetEntityEvent.Type.Repair:
+                    case NetEntityEvent.Type.CPR:
                         msg.WriteRangedInteger(0, 3, 1);
                         msg.Write(AnimController.Anim == AnimController.Animation.CPR);
                         break;
@@ -231,61 +231,22 @@ namespace Barotrauma
             }
             else
             {
-                ushort infoID       = inc.ReadUInt16();
                 bool hasOwner       = inc.ReadBoolean();
-                int ownerId         = hasOwner ? inc.ReadByte() : -1;
-                
-                string newName      = inc.ReadString();
+                int ownerId         = hasOwner ? inc.ReadByte() : -1;                
                 byte teamID         = inc.ReadByte();
-
                 bool hasAi          = inc.ReadBoolean();
-                bool isFemale       = inc.ReadBoolean();
-                int headSpriteID    = inc.ReadByte();
-                string jobName      = inc.ReadString();
-
-                JobPrefab jobPrefab = null;
-                Dictionary<string, int> skillLevels = new Dictionary<string, int>();
-                if (!string.IsNullOrEmpty(jobName))
-                {
-                    jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
-                    int skillCount = inc.ReadByte();
-                    for (int i = 0; i < skillCount; i++)
-                    {
-                        string skillName = inc.ReadString();
-                        int skillLevel = inc.ReadRangedInteger(0, 100);
-
-                        skillLevels.Add(skillName, skillLevel);
-                    }
-                }
-
-                if (!spawn) return null;
                 
-                CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab);
-                ch.ID = infoID;
-                ch.HeadSpriteId = headSpriteID;
+                if (!spawn) return null;
 
-                System.Diagnostics.Debug.Assert(skillLevels.Count == ch.Job.Skills.Count);
-                if (ch.Job != null)
-                {
-                    foreach (KeyValuePair<string, int> skill in skillLevels)
-                    {
-                        Skill matchingSkill = ch.Job.Skills.Find(s => s.Name == skill.Key);
-                        if (matchingSkill == null)
-                        {
-                            DebugConsole.ThrowError("Skill \"" + skill.Key + "\" not found in character \"" + newName + "\"");
-                            continue;
-                        }
-                        matchingSkill.Level = skill.Value;
-                    }
-                }
+                CharacterInfo info = CharacterInfo.ClientRead(configPath, inc);
 
-                character = Create(configPath, position, seed, ch, GameMain.Client.ID != ownerId, hasAi);
+                character = Create(configPath, position, seed, info, GameMain.Client.ID != ownerId, hasAi);
                 character.ID = id;
                 character.TeamID = teamID;
 
                 if (configPath == HumanConfigFile)
                 {
-                    CharacterInfo duplicateCharacterInfo = GameMain.GameSession.CrewManager.GetCharacterInfos().Find(c => c.ID == infoID);
+                    CharacterInfo duplicateCharacterInfo = GameMain.GameSession.CrewManager.GetCharacterInfos().Find(c => c.ID == info.ID);
                     GameMain.GameSession.CrewManager.RemoveCharacterInfo(duplicateCharacterInfo);
                     GameMain.GameSession.CrewManager.AddCharacter(character);
                 }
@@ -343,8 +304,8 @@ namespace Barotrauma
             }
             else
             {
-                this.IsDead = false;
-
+                if (IsDead) Revive();
+                
                 CharacterHealth.ClientRead(msg);
                 
                 bool ragdolled = msg.ReadBoolean();

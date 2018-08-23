@@ -9,6 +9,10 @@
         public CharacterInfo CharacterInfo
         {
             get { return null; }
+            set
+            { 
+                //do nothing 
+            }
         }
 
         public Character Character

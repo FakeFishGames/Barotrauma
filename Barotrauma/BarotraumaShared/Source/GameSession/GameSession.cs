@@ -93,7 +93,7 @@ namespace Barotrauma
         }
 
 
-        public GameSession(Submarine submarine, string savePath, GameModePreset gameModePreset, string missionType = "")
+        public GameSession(Submarine submarine, string savePath, GameModePreset gameModePreset, MissionType missionType = MissionType.None)
             : this(submarine, savePath)
         {
             CrewManager = new CrewManager(gameModePreset != null && gameModePreset.IsSinglePlayer);
@@ -185,7 +185,7 @@ namespace Barotrauma
             StartRound(randomLevel, true, loadSecondSub);
         }
 
-        public void StartRound(Level level, bool reloadSub = true, bool loadSecondSub = false)
+        public void StartRound(Level level, bool reloadSub = true, bool loadSecondSub = false, bool mirrorLevel = false)
         {
 #if CLIENT
             GameMain.LightManager.LosEnabled = GameMain.NetworkMember == null || GameMain.NetworkMember.CharacterInfo != null;
@@ -213,11 +213,10 @@ namespace Barotrauma
                     Submarine.MainSubs[1].Load(false);
                 }
             }
-            
+                        
             if (level != null)
             {
-                level.Generate();
-
+                level.Generate(mirrorLevel);
                 submarine.SetPosition(submarine.FindSpawnPos(level.StartPosition - new Vector2(0.0f, 2000.0f)));
             }
 
@@ -233,9 +232,9 @@ namespace Barotrauma
             if (GameMode != null)
             {
                 GameMode.MsgBox();
-                if (GameMode is MultiPlayerCampaign campaign && GameMain.Server != null)
+                if (GameMode is MultiPlayerCampaign mpCampaign && GameMain.Server != null)
                 {
-                    campaign.CargoManager.CreateItems();
+                    mpCampaign.CargoManager.CreateItems();
                 }
             }
             
@@ -338,9 +337,9 @@ namespace Barotrauma
             {
                 doc.Save(filePath);
             }
-            catch
+            catch (Exception e)
             {
-                DebugConsole.ThrowError("Saving gamesession to \"" + filePath + "\" failed!");
+                DebugConsole.ThrowError("Saving gamesession to \"" + filePath + "\" failed!", e);
             }
         }
 

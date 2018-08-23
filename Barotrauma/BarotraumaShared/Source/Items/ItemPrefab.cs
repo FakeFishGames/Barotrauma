@@ -9,14 +9,14 @@ namespace Barotrauma
 {
     struct DeconstructItem
     {
-        public readonly string ItemPrefabName;
+        public readonly string ItemIdentifier;
         public readonly float MinCondition;
         public readonly float MaxCondition;
         public readonly float OutCondition;
 
-        public DeconstructItem(string itemPrefabName, float minCondition, float maxCondition, float outCondition)
+        public DeconstructItem(string itemIdentifier, float minCondition, float maxCondition, float outCondition)
         {
-            ItemPrefabName = itemPrefabName;
+            ItemIdentifier = itemIdentifier;
             MinCondition = minCondition;
             MaxCondition = maxCondition;
             OutCondition = outCondition;
@@ -124,6 +124,13 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(false, false)]
+        public bool WaterProof
+        {
+            get;
+            private set;
+        }
+
         [Serialize(0.0f, false)]
         public float ImpactTolerance
         {
@@ -152,8 +159,8 @@ namespace Barotrauma
             private set;
         }
 
-        [Serialize("", false)]
-        public string CargoContainerName
+        [Serialize("", false)]        
+        public string CargoContainerIdentifier
         {
             get;
             private set;
@@ -286,9 +293,10 @@ namespace Barotrauma
             configFile = filePath;
             ConfigElement = element;
 
-            name = element.GetAttributeString("name", "");
-            if (name == "") DebugConsole.ThrowError("Unnamed item in " + filePath + "!");
             identifier = element.GetAttributeString("identifier", "");
+
+            name = TextManager.Get("EntityName." + identifier, true) ?? element.GetAttributeString("name", "");
+            if (name == "") DebugConsole.ThrowError("Unnamed item in " + filePath + "!");
 
             DebugConsole.Log("    " + name);
 
@@ -298,8 +306,7 @@ namespace Barotrauma
                 Aliases = aliases.Split(',');
             }
 
-            MapEntityCategory category;
-            if (!Enum.TryParse(element.GetAttributeString("category", "Misc"), true, out category))
+            if (!Enum.TryParse(element.GetAttributeString("category", "Misc"), true, out MapEntityCategory category))
             {
                 category = MapEntityCategory.Misc;
             }
@@ -317,7 +324,15 @@ namespace Barotrauma
                 Tags.Add(tag.Trim().ToLowerInvariant());
             }
 
+            if (element.Attribute("cargocontainername") != null)
+            {
+                DebugConsole.ThrowError("Error in item prefab \"" + name + "\" - cargo container should be configured using the item's identifier, not the name.");
+            }
+
             SerializableProperty.DeserializeProperties(this, element);
+
+            string translatedDescription = TextManager.Get("EntityDescription." + identifier, true);
+            if (!string.IsNullOrEmpty(translatedDescription)) Description = translatedDescription;
 
             foreach (XElement subElement in element.Elements())
             {
@@ -379,7 +394,13 @@ namespace Barotrauma
 
                         foreach (XElement deconstructItem in subElement.Elements())
                         {
-                            string deconstructItemName = deconstructItem.GetAttributeString("name", "not found");
+                            if (deconstructItem.Attribute("name") != null)
+                            {
+                                DebugConsole.ThrowError("Error in item config \"" + Name + "\" - use item identifiers instead of names to configure the deconstruct items.");
+                                continue;
+                            }
+
+                            string deconstructItemIdentifier = deconstructItem.GetAttributeString("identifier", "notfound");
                             //minCondition does <= check, meaning that below or equeal to min condition will be skipped.
                             float minCondition = deconstructItem.GetAttributeFloat("mincondition", -0.1f);
                             //maxCondition does > check, meaning that above this max the deconstruct item will be skipped.
@@ -387,8 +408,7 @@ namespace Barotrauma
                             //Condition of item on creation
                             float outCondition = deconstructItem.GetAttributeFloat("outcondition", 1.0f);
 
-                            DeconstructItems.Add(new DeconstructItem(deconstructItemName, minCondition, maxCondition, outCondition));
-
+                            DeconstructItems.Add(new DeconstructItem(deconstructItemIdentifier, minCondition, maxCondition, outCondition));
                         }
 
                         break;

@@ -216,7 +216,7 @@ namespace Barotrauma
                     TextManager.Get("Mission") + ": " + mission.Name);
                 new GUITextBlock(
                     new RectTransform(new Vector2(1.0f, 0.05f), locationInfoContainer.RectTransform, Anchor.TopCenter),
-                    TextManager.Get("Reward") + ": " + mission.Reward + " " + TextManager.Get("Credits"));
+                    TextManager.Get("Reward").Replace("[reward]", mission.Reward.ToString()));
                 new GUITextBlock(
                     new RectTransform(new Vector2(1.0f, 0.0f), locationInfoContainer.RectTransform, Anchor.TopCenter),
                     mission.Description, wrap: true);
@@ -283,7 +283,8 @@ namespace Barotrauma
                     {
                         int quantity = numberInput.IntValue - purchasedItem.Quantity;
                         //Cap the numberbox based on the amount we can afford.
-                        quantity = Math.Max((quantity * (priceInfo.BuyPrice / Campaign.Money)), quantity);
+                        quantity = campaign.Money <= 0 ? 
+                            0 : Math.Min((int)(Campaign.Money / (float)priceInfo.BuyPrice), quantity);
                         for (int i = 0; i < quantity; i++)
                         {
                             BuyItem(numberInput, purchasedItem);
@@ -399,7 +400,8 @@ namespace Barotrauma
 
         public string GetMoney()
         {
-            return TextManager.Get("Credits") + ": " + ((GameMain.GameSession == null) ? "0" : string.Format(CultureInfo.InvariantCulture, "{0:N0}", campaign.Money));
+            return TextManager.Get("PlayerCredits").Replace("[credits]",
+                ((GameMain.GameSession == null) ? "0" : string.Format(CultureInfo.InvariantCulture, "{0:N0}", campaign.Money)));
         }
 
         private bool SelectCharacter(GUIComponent component, object selection)

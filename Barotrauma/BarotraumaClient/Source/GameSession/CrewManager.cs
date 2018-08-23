@@ -291,7 +291,7 @@ namespace Barotrauma
                 {
                     if (Character.Controlled == null || !Character.Controlled.CanSpeak) return false;
 
-                    if (order.ItemComponentType != null || !string.IsNullOrEmpty(order.ItemName) || order.Options.Length > 1)
+                    if (order.ItemComponentType != null || order.ItemIdentifiers.Length > 0 || order.Options.Length > 1)
                     {
                         CreateOrderTargetFrame(button, character, order);
                     }
@@ -602,6 +602,7 @@ namespace Barotrauma
                     characterFrame.RemoveChild(currentOrderIcon);
                 }
 
+                if (order == null) continue;
                 int iconSize = (int)(characterFrame.Rect.Height * 0.8f);
                 var img = new GUIImage(new RectTransform(new Point(iconSize, iconSize), characterFrame.RectTransform, Anchor.CenterRight, Pivot.CenterLeft) { AbsoluteOffset = new Point((int)(iconSize * 0.2f), 0) },
                     order.SymbolSprite, scaleToFit: true)
@@ -623,10 +624,10 @@ namespace Barotrauma
         private void CreateOrderTargetFrame(GUIComponent orderButton, Character character, Order order)
         {
             List<Item> matchingItems = new List<Item>();
-            if (order.ItemComponentType != null || !string.IsNullOrEmpty(order.ItemName))
+            if (order.ItemComponentType != null || order.ItemIdentifiers.Length > 0)
             {
-                matchingItems = !string.IsNullOrEmpty(order.ItemName) ?
-                    Item.ItemList.FindAll(it => it.Name == order.ItemName) :
+                matchingItems = order.ItemIdentifiers.Length > 0 ?
+                    Item.ItemList.FindAll(it => order.ItemIdentifiers.Contains(it.Prefab.Identifier) || it.HasTag(order.ItemIdentifiers)) :
                     Item.ItemList.FindAll(it => it.components.Any(ic => ic.GetType() == order.ItemComponentType));
             }
             else
@@ -644,19 +645,21 @@ namespace Barotrauma
             foreach (Item item in matchingItems)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), orderContainer.RectTransform), item != null ? item.Name : order.Name);
-                
-                foreach (string orderOption in order.Options)
-                {
-                    var optionButton = new GUIButton(new RectTransform(new Point(orderContainer.Rect.Width, 20), orderContainer.RectTransform),
-                        orderOption, style: "GUITextBox");
 
-                    optionButton.UserData = item == null ? order : new Order(order, item, item.components.Find(ic => ic.GetType() == order.ItemComponentType));
-                    optionButton.OnClicked += (btn, userData) =>
+                for (int i = 0; i < order.Options.Length; i++)
+                {
+                    string option = order.Options[i];
+                    var optionButton = new GUIButton(new RectTransform(new Point(orderContainer.Rect.Width, 20), orderContainer.RectTransform),
+                        order.OptionNames[i], style: "GUITextBox")
                     {
-                        if (Character.Controlled == null) return false;
-                        SetCharacterOrder(character, userData as Order, orderOption, Character.Controlled);
-                        orderTargetFrame = null;
-                        return true;
+                        UserData = item == null ? order : new Order(order, item, item.components.Find(ic => ic.GetType() == order.ItemComponentType)),
+                        OnClicked = (btn, userData) =>
+                        {
+                            if (Character.Controlled == null) return false;
+                            SetCharacterOrder(character, userData as Order, option, Character.Controlled);
+                            orderTargetFrame = null;
+                            return true;
+                        }
                     };
                 }
             }

@@ -95,7 +95,7 @@ namespace Barotrauma.Items.Components
                         break;
 
                     case "statuseffect":
-                        effects.Add(StatusEffect.Load(subElement));
+                        effects.Add(StatusEffect.Load(subElement, item.Name + ", connection " + Name));
                         break;
                 }
             }
@@ -168,6 +168,11 @@ namespace Barotrauma.Items.Components
                 Connection recipient = wires[i].OtherConnection(this);
                 if (recipient == null) continue;
                 if (recipient.item == this.item || recipient.item == source) continue;
+
+                if (source != null && !source.LastSentSignalRecipients.Contains(recipient.item))
+                {
+                    source.LastSentSignalRecipients.Add(recipient.item);
+                }
 
                 foreach (ItemComponent ic in recipient.item.components)
                 {

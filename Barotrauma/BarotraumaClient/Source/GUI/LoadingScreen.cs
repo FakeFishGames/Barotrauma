@@ -4,16 +4,19 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using System;
 using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
     class LoadingScreen
     {
-        private Texture2D backgroundTexture,monsterTexture,titleTexture;
+        private Texture2D backgroundTexture, monsterTexture, titleTexture;
 
         private RenderTarget2D renderTarget;
 
-        float state;
+        private float state;
+        
+        private string selectedTip;
 
         public Vector2 CenterPosition;
 
@@ -87,6 +90,7 @@ namespace Barotrauma
             };
 
             DrawLoadingText = true;
+            selectedTip = TextManager.Get("LoadingScreenTip", true);
         }
 
         
@@ -108,18 +112,18 @@ namespace Barotrauma
                 }
             }
 #endif
-                        
+            
             drawn = true;
 
             graphics.SetRenderTarget(renderTarget);
 
-            Scale = GameMain.GraphicsHeight/1500.0f;
+            Scale = GameMain.GraphicsHeight / 1500.0f;
 
             state += deltaTime;
 
             if (DrawLoadingText)
             {
-                CenterPosition = new Vector2(GameMain.GraphicsWidth*0.3f, GameMain.GraphicsHeight/2.0f); 
+                CenterPosition = new Vector2(GameMain.GraphicsWidth * 0.3f, GameMain.GraphicsHeight / 2.0f);
                 TitlePosition = CenterPosition + new Vector2(-0.0f + (float)Math.Sqrt(state) * 220.0f, 0.0f) * Scale;
                 TitlePosition.X = Math.Min(TitlePosition.X, (float)GameMain.GraphicsWidth / 2.0f);
             }
@@ -129,7 +133,7 @@ namespace Barotrauma
 
             spriteBatch.Draw(backgroundTexture, CenterPosition, null, Color.White * Math.Min(state / 5.0f, 1.0f), 0.0f,
                 new Vector2(backgroundTexture.Width / 2.0f, backgroundTexture.Height / 2.0f),
-                Scale*1.5f, SpriteEffects.None, 0.2f);
+                Scale * 1.5f, SpriteEffects.None, 0.2f);
 
             spriteBatch.Draw(monsterTexture,
                 CenterPosition + new Vector2((state % 40) * 100.0f - 1800.0f, (state % 40) * 30.0f - 200.0f) * Scale, null,
@@ -138,7 +142,7 @@ namespace Barotrauma
             spriteBatch.Draw(titleTexture,
                 TitlePosition, null,
                 Color.White * Math.Min((state - 1.0f) / 5.0f, 1.0f), 0.0f, new Vector2(titleTexture.Width / 2.0f, titleTexture.Height / 2.0f), Scale, SpriteEffects.None, 0.0f);
-            
+
             spriteBatch.End();
 
             graphics.SetRenderTarget(null);
@@ -148,9 +152,9 @@ namespace Barotrauma
                 WaterRenderer.Instance.ScrollWater(Vector2.One * 10.0f, deltaTime);
                 WaterRenderer.Instance.RenderWater(spriteBatch, renderTarget, null, 0.0f);
             }
-            
+
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
-            
+
             spriteBatch.Draw(titleTexture,
                 TitlePosition, null,
                 Color.White * Math.Min((state - 3.0f) / 5.0f, 1.0f), 0.0f, new Vector2(titleTexture.Width / 2.0f, titleTexture.Height / 2.0f), Scale, SpriteEffects.None, 0.0f);
@@ -174,8 +178,19 @@ namespace Barotrauma
                 if (GUI.LargeFont != null)
                 {
                     GUI.LargeFont.DrawString(spriteBatch, loadText,
-                        new Vector2(GameMain.GraphicsWidth / 2.0f - GUI.LargeFont.MeasureString(loadText).X / 2.0f, GameMain.GraphicsHeight * 0.8f),
+                        new Vector2(GameMain.GraphicsWidth / 2.0f - GUI.LargeFont.MeasureString(loadText).X / 2.0f, GameMain.GraphicsHeight * 0.7f),
                         Color.White);
+                }
+
+                if (GUI.Font != null && selectedTip != null)
+                {
+                    string wrappedTip = ToolBox.WrapText(selectedTip, GameMain.GraphicsWidth * 0.5f, GUI.Font);
+                    string[] lines = wrappedTip.Split('\n');
+                    for (int i = 0; i < lines.Length; i++)
+                    {
+                        GUI.Font.DrawString(spriteBatch, lines[i],
+                            new Vector2(GameMain.GraphicsWidth / 2.0f - GUI.Font.MeasureString(lines[i]).X / 2.0f, GameMain.GraphicsHeight * 0.78f + i * 15), Color.White);
+                    }
                 }
 
             }
@@ -227,7 +242,8 @@ namespace Barotrauma
         {
             drawn = false;
             LoadState = null;
-
+            selectedTip = TextManager.Get("LoadingScreenTip", true);
+            
             while (!drawn)
             {
                 yield return CoroutineStatus.Running;

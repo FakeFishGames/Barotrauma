@@ -5,6 +5,7 @@ using System.Linq;
 using System.Xml.Linq;
 using Lidgren.Network;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Barotrauma
 {
@@ -32,6 +33,8 @@ namespace Barotrauma
 
         private static byte currentCampaignID;
 
+        private List<CharacterCampaignData> characterData = new List<CharacterCampaignData>();
+
         public byte CampaignID
         {
             get; private set;
@@ -53,12 +56,56 @@ namespace Barotrauma
             }
         }
 
+        public void DiscardClientCharacterData(Client client)
+        {
+            characterData.RemoveAll(cd => cd.MatchesClient(client));
+        }
+
+        public CharacterCampaignData GetClientCharacterData(Client client)
+        {
+            return characterData.Find(cd => cd.MatchesClient(client));
+        }
+
+        public CharacterCampaignData GetHostCharacterData()
+        {
+            return characterData.Find(cd => cd.IsHostCharacter);
+        }
+
+        public void AssignPlayerCharacterInfos(IEnumerable<Client> connectedClients, bool assignHost)
+        {
+            foreach (Client client in connectedClients)
+            {
+                if (client.SpectateOnly && GameMain.Server.AllowSpectating) continue;
+                var matchingData = GetClientCharacterData(client);
+                if (matchingData != null) client.CharacterInfo = matchingData.CharacterInfo;
+            }
+
+            if (assignHost)
+            {
+                var hostCharacterData = GetHostCharacterData();
+                if (hostCharacterData?.CharacterInfo != null)
+                {
+                    GameMain.Server.CharacterInfo = hostCharacterData.CharacterInfo;
+                }
+            }
+        }
+
+        public Dictionary<Client, Job> GetAssignedJobs(IEnumerable<Client> connectedClients)
+        {
+            var assignedJobs = new Dictionary<Client, Job>();
+            foreach (Client client in connectedClients)
+            {
+                var matchingData = GetClientCharacterData(client);
+                if (matchingData != null) assignedJobs.Add(client, matchingData.CharacterInfo.Job);
+            }
+            return assignedJobs;
+        }
+
         public override void Start()
         {
             base.Start();            
             lastUpdateID++;
         }
-
 
         public override void End(string endMessage = "")
         {
@@ -92,17 +139,42 @@ namespace Barotrauma
             }*/
 
             GameMain.GameSession.EndRound("");
+            
+            foreach (Client c in GameMain.Server.ConnectedClients)
+            {
+                if (c.HasSpawned)
+                {
+                    //client has spawned this round -> remove old data (and replace with new one if the client still has an alive character)
+                    characterData.RemoveAll(cd => cd.MatchesClient(c));
+                }
+                
+                if (c.Character?.Info != null && !c.Character.IsDead)
+                {
+                    characterData.Add(new CharacterCampaignData(c));
+                }
+            }
 
-            //TODO: save player inventories between mp campaign rounds
+#if CLIENT
+            GameMain.NetLobbyScreen.SetCampaignCharacterInfo(null);
+#endif
+
+            if (GameMain.Server.Character != null)
+            {
+                characterData.RemoveAll(cd => cd.IsHostCharacter);
+                if (!GameMain.Server.Character.IsDead)
+                {
+                    var hostCharacterData = new CharacterCampaignData(GameMain.Server);
+                    characterData.Add(hostCharacterData);
+#if CLIENT
+                    GameMain.NetLobbyScreen.SetCampaignCharacterInfo(hostCharacterData.CharacterInfo);
+#endif
+                }
+            }
 
             //remove all items that are in someone's inventory
             foreach (Character c in Character.CharacterList)
             {
-                if (c.Inventory == null) continue;
-                foreach (Item item in c.Inventory.Items)
-                {
-                    if (item != null) item.Remove();
-                }
+                c.Inventory?.DeleteAllItems();
             }
 
 #if CLIENT
@@ -139,14 +211,24 @@ namespace Barotrauma
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
         }
-
+        
         public static MultiPlayerCampaign LoadNew(XElement element)
         {
             MultiPlayerCampaign campaign = new MultiPlayerCampaign(GameModePreset.list.Find(gm => gm.Name == "Campaign"), null);
-            campaign.Load(element);            
+            campaign.Load(element);
             campaign.SetDelegates();
             
             return campaign;
+        }
+
+        public static string GetCharacterDataSavePath(string savePath)
+        {
+            return Path.Combine(SaveUtil.MultiplayerSaveFolder, Path.GetFileNameWithoutExtension(savePath) + "_CharacterData.xml");
+        }
+
+        public string GetCharacterDataSavePath()
+        {
+            return GetCharacterDataSavePath(GameMain.GameSession.SavePath);
         }
 
         public void Load(XElement element)
@@ -187,6 +269,25 @@ namespace Barotrauma
                         break;
                 }
             }
+
+            if (GameMain.Server != null)
+            {
+                characterData.Clear();
+                string characterDataPath = GetCharacterDataSavePath();
+                var characterDataDoc = XMLExtensions.TryLoadXml(characterDataPath);
+                if (characterDataDoc?.Root == null) return;
+                foreach (XElement subElement in characterDataDoc.Root.Elements())
+                {
+                    characterData.Add(new CharacterCampaignData(subElement));
+                }
+#if CLIENT
+                var hostCharacterData = GetHostCharacterData();
+                if (hostCharacterData?.CharacterInfo != null)
+                {
+                    GameMain.NetLobbyScreen.SetCampaignCharacterInfo(hostCharacterData.CharacterInfo);
+                }
+#endif
+            }
         }
 
         public override void Save(XElement element)
@@ -196,6 +297,22 @@ namespace Barotrauma
                 new XAttribute("cheatsenabled", CheatsEnabled));
             Map.Save(modeElement);
             element.Add(modeElement);
+
+            //save character data to a separate file
+            string characterDataPath = GetCharacterDataSavePath();
+            XDocument characterDataDoc = new XDocument(new XElement("CharacterData"));
+            foreach (CharacterCampaignData cd in characterData)
+            {
+                characterDataDoc.Root.Add(cd.Save());
+            }
+            try
+            {
+                characterDataDoc.Save(characterDataPath);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Saving multiplayer campaign characters to \"" + characterDataPath + "\" failed!", e);
+            }
 
             lastSaveID++;
         }
@@ -219,6 +336,17 @@ namespace Barotrauma
                 msg.Write((UInt16)MapEntityPrefab.List.IndexOf(pi.ItemPrefab));
                 msg.Write((UInt16)pi.Quantity);
             }
+
+            var characterData = GetClientCharacterData(c);
+            if (characterData?.CharacterInfo == null)
+            {
+                msg.Write(false);
+            }
+            else
+            {
+                msg.Write(true);
+                characterData.CharacterInfo.ServerWrite(msg);
+            }
         }
         
         public void ServerRead(NetBuffer msg, Client sender)
@@ -236,7 +364,7 @@ namespace Barotrauma
 
             if (!sender.HasPermission(ClientPermissions.ManageCampaign))
             {
-                DebugConsole.ThrowError("Client \""+sender.Name+"\" does not have a permission to manage the campaign");
+                DebugConsole.ThrowError("Client \"" + sender.Name + "\" does not have a permission to manage the campaign");
                 return;
             }
 

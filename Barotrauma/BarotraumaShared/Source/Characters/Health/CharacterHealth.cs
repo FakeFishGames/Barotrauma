@@ -17,7 +17,7 @@ namespace Barotrauma
                         
             public readonly List<Affliction> Afflictions = new List<Affliction>();
 
-            public readonly Dictionary<string, float> VitalityNameMultipliers = new Dictionary<string, float>();
+            public readonly Dictionary<string, float> VitalityMultipliers = new Dictionary<string, float>();
             public readonly Dictionary<string, float> VitalityTypeMultipliers = new Dictionary<string, float>();
 
             private readonly CharacterHealth characterHealth;
@@ -41,12 +41,18 @@ namespace Barotrauma
                             HighlightArea = subElement.GetAttributeRect("highlightarea", new Rectangle(0, 0, (int)IndicatorSprite.size.X, (int)IndicatorSprite.size.Y));
                             break;
                         case "vitalitymultiplier":
-                            string afflictionName = subElement.GetAttributeString("name", "");
+                            if (subElement.Attribute("name") != null)
+                            {
+                                DebugConsole.ThrowError("Error in character health config (" + characterHealth.character.Name + ") - define vitality multipliers using affliction identifiers or types instead of names.");
+                                continue;
+                            }
+
+                            string afflictionIdentifier = subElement.GetAttributeString("identifier", "");
                             string afflictionType = subElement.GetAttributeString("type", "");
                             float multiplier = subElement.GetAttributeFloat("multiplier", 1.0f);
-                            if (!string.IsNullOrEmpty(afflictionName))
+                            if (!string.IsNullOrEmpty(afflictionIdentifier))
                             {
-                                VitalityNameMultipliers.Add(afflictionName.ToLowerInvariant(), multiplier);
+                                VitalityMultipliers.Add(afflictionIdentifier.ToLowerInvariant(), multiplier);
                             }
                             else
                             {
@@ -316,7 +322,7 @@ namespace Barotrauma
                 matchingAfflictions.AddRange(limbHealths[targetLimb.HealthIndex].Afflictions);
             }
             matchingAfflictions.RemoveAll(a => 
-                a.Prefab.Name.ToLowerInvariant() != affliction && 
+                a.Prefab.Identifier.ToLowerInvariant() != affliction && 
                 a.Prefab.AfflictionType.ToLowerInvariant() != affliction);
 
             if (matchingAfflictions.Count == 0) return;
@@ -543,9 +549,9 @@ namespace Barotrauma
                 foreach (Affliction affliction in limbHealth.Afflictions)
                 {
                     float vitalityDecrease = affliction.GetVitalityDecrease(this);
-                    if (limbHealth.VitalityNameMultipliers.ContainsKey(affliction.Prefab.Name.ToLowerInvariant()))
+                    if (limbHealth.VitalityMultipliers.ContainsKey(affliction.Prefab.Identifier.ToLowerInvariant()))
                     {
-                        vitalityDecrease *= limbHealth.VitalityNameMultipliers[affliction.Prefab.Name.ToLowerInvariant()];
+                        vitalityDecrease *= limbHealth.VitalityMultipliers[affliction.Prefab.Identifier.ToLowerInvariant()];
                     }
                     if (limbHealth.VitalityTypeMultipliers.ContainsKey(affliction.Prefab.AfflictionType.ToLowerInvariant()))
                     {

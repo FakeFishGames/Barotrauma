@@ -71,6 +71,14 @@ namespace Barotrauma
 
                     Submarine selectedSub = subList.SelectedData as Submarine;
                     if (selectedSub == null) return false;
+                    
+                    if (string.IsNullOrEmpty(selectedSub.MD5Hash.Hash))
+                    {
+                        ((GUITextBlock)subList.Selected).TextColor = Color.DarkRed * 0.8f;
+                        subList.Selected.CanBeFocused = false;
+                        subList.Deselect();
+                        return false;
+                    }
 
                     string savePath = SaveUtil.CreateSavePath(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer, saveNameBox.Text);
                     bool hasRequiredContentPackages = selectedSub.RequiredContentPackages.All(cp => GameMain.SelectedPackages.Any(cp2 => cp2.Name == cp));

@@ -20,7 +20,7 @@ namespace Barotrauma
             foreach (Item item in Item.ItemList)
             {
                 if (item.Submarine == null) continue;
-                if (!item.Prefab.NameMatches("Battery") && !item.HasTag("Battery")) continue;
+                if (item.Prefab.Identifier != "battery" && !item.HasTag("battery")) continue;
 
                 var powerContainer = item.GetComponent<PowerContainer>();
                 availableBatteries.Add(powerContainer);

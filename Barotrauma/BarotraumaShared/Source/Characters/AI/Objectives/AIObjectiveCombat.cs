@@ -42,7 +42,7 @@ namespace Barotrauma
         {
             coolDownTimer -= deltaTime;
 
-            var weapon = character.Inventory.FindItem("weapon");
+            var weapon = character.Inventory.FindItemByTag("weapon");
             if (weapon == null)
             {
                 Escape(deltaTime);
@@ -75,7 +75,7 @@ namespace Barotrauma
                         Item containedItem = Array.Find(containedItems, it => it != null && it.Condition > 0.0f && requiredItem.MatchesItem(it));
                         if (containedItem == null)
                         {
-                            var newReloadWeaponObjective = new AIObjectiveContainItem(character, requiredItem.Names, weapon.GetComponent<ItemContainer>());
+                            var newReloadWeaponObjective = new AIObjectiveContainItem(character, requiredItem.Identifiers, weapon.GetComponent<ItemContainer>());
                             if (!newReloadWeaponObjective.IsDuplicate(reloadWeaponObjective))
                             {
                                 reloadWeaponObjective = newReloadWeaponObjective;
@@ -105,6 +105,7 @@ namespace Barotrauma
                 character.SetInput(InputType.Aim, false, true);
 
                 Vector2 enemyDiff = Vector2.Normalize(enemy.Position - character.Position);
+                if (!MathUtils.IsValid(enemyDiff)) enemyDiff = Rand.Vector(1.0f);
                 float weaponAngle = ((weapon.body.Dir == 1.0f) ? weapon.body.Rotation : weapon.body.Rotation - MathHelper.Pi);
                 Vector2 weaponDir = new Vector2((float)Math.Cos(weaponAngle), (float)Math.Sin(weaponAngle));
 

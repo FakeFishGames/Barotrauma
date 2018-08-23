@@ -172,6 +172,7 @@ namespace Barotrauma
             set
             {
                 isSevered = value;
+                if (!isSevered) severedFadeOutTimer = 0.0f;
 #if CLIENT
                 if (isSevered) damageOverlayStrength = 100.0f;
 #endif
@@ -360,10 +361,10 @@ namespace Barotrauma
                         DamagedSprite = new Sprite(subElement, "", damagedSpritePath);
                         break;
                     case "attack":
-                        attack = new Attack(subElement);
+                        attack = new Attack(subElement, (character == null ? "null" : character.Name) + ", limb " + type);
                         break;
                     case "damagemodifier":
-                        damageModifiers.Add(new DamageModifier(subElement));
+                        damageModifiers.Add(new DamageModifier(subElement, character.Name));
                         break;
                 }
             }

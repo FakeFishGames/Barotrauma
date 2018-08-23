@@ -89,7 +89,7 @@ namespace Barotrauma.Items.Components
             List<Skill> inadequateSkills = new List<Skill>();
             if (Character.Controlled != null)
             {
-                inadequateSkills = targetItem.RequiredSkills.FindAll(skill => Character.Controlled.GetSkillLevel(skill.Name) < skill.Level);
+                inadequateSkills = targetItem.RequiredSkills.FindAll(skill => Character.Controlled.GetSkillLevel(skill.Identifier) < skill.Level);
             }
 
             Color textColor = Color.White;
@@ -97,9 +97,9 @@ namespace Barotrauma.Items.Components
             if (!inadequateSkills.Any())
             {
                 text = TextManager.Get("FabricatorRequiredItems")+ ":\n";
-                foreach (Tuple<ItemPrefab, int, float, bool> ip in targetItem.RequiredItems)
+                foreach (FabricableItem.RequiredItem requiredItem in targetItem.RequiredItems)
                 {
-                    text += "   - " + ip.Item1.Name + " x" + ip.Item2 + (ip.Item3 < 1.0f ? ", " + ip.Item3 * 100 + "% " + TextManager.Get("FabricatorRequiredCondition") + "\n" : "\n");
+                    text += "   - " + requiredItem.ItemPrefab.Name + " x" + requiredItem.Amount + (requiredItem.MinCondition < 1.0f ? ", " + requiredItem.MinCondition * 100 + "% " + TextManager.Get("FabricatorRequiredCondition") + "\n" : "\n");
                 }
                 text += '\n' + TextManager.Get("FabricatorRequiredTime") + ": " + targetItem.RequiredTime + " s";
             }
@@ -108,7 +108,7 @@ namespace Barotrauma.Items.Components
                 text = TextManager.Get("FabricatorRequiredSkills") + ":\n";
                 foreach (Skill skill in inadequateSkills)
                 {
-                    text += "   - " + skill.Name + " " + TextManager.Get("Lvl").ToLower() + " " + skill.Level + "\n";
+                    text += "   - " + TextManager.Get("SkillName." + skill.Identifier) + " " + TextManager.Get("Lvl").ToLower() + " " + skill.Level + "\n";
                 }
 
                 textColor = Color.Red;

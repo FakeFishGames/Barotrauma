@@ -75,6 +75,7 @@ namespace Barotrauma
 
         private static Vector2 lastPickedPosition;
         private static float lastPickedFraction;
+        private static Vector2 lastPickedNormal;
 
         private Md5Hash hash;
         
@@ -124,6 +125,11 @@ namespace Barotrauma
         public static float LastPickedFraction
         {
             get { return lastPickedFraction; }
+        }
+
+        public static Vector2 LastPickedNormal
+        {
+            get { return lastPickedNormal; }
         }
 
         public bool Loading
@@ -297,6 +303,15 @@ namespace Barotrauma
                     RecommendedCrewSizeMin = doc.Root.GetAttributeInt("recommendedcrewsizemin", 0);
                     RecommendedCrewSizeMax = doc.Root.GetAttributeInt("recommendedcrewsizemax", 0);
                     RecommendedCrewExperience = doc.Root.GetAttributeString("recommendedcrewexperience", "Unknown");
+
+                    //backwards compatibility (use text tags instead of the actual text)
+                    if (RecommendedCrewExperience == "Beginner")
+                        RecommendedCrewExperience = "CrewExperienceLow";
+                    else if (RecommendedCrewExperience == "Intermediate")
+                        RecommendedCrewExperience = "CrewExperienceMid";
+                    else if (RecommendedCrewExperience == "Experienced")
+                        RecommendedCrewExperience = "CrewExperienceHigh";
+                    
                     string[] contentPackageNames = doc.Root.GetAttributeStringArray("requiredcontentpackages", new string[0]);
                     foreach (string contentPackageName in contentPackageNames)
                     {
@@ -606,6 +621,7 @@ namespace Barotrauma
             }
 
             float closestFraction = 1.0f;
+            Vector2 closestNormal = Vector2.Zero;
             Body closestBody = null;
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
@@ -631,6 +647,7 @@ namespace Barotrauma
                 if (fraction < closestFraction)
                 {
                     closestFraction = fraction;
+                    closestNormal = normal;
                     if (fixture.Body != null) closestBody = fixture.Body;
                 }
                 return fraction;
@@ -639,6 +656,7 @@ namespace Barotrauma
 
             lastPickedPosition = rayStart + (rayEnd - rayStart) * closestFraction;
             lastPickedFraction = closestFraction;
+            lastPickedNormal = closestNormal;
             
             return closestBody;
         }
@@ -651,6 +669,7 @@ namespace Barotrauma
         {
             Body closestBody = null;
             float closestFraction = 1.0f;
+            Vector2 closestNormal = Vector2.Zero;
 
             if (Vector2.Distance(rayStart, rayEnd) < 0.01f)
             {
@@ -679,6 +698,7 @@ namespace Barotrauma
                 {
                     closestBody = fixture.Body;
                     closestFraction = fraction;
+                    closestNormal = normal;
                 }
                 return closestFraction;
             }
@@ -687,6 +707,7 @@ namespace Barotrauma
 
             lastPickedPosition = rayStart + (rayEnd - rayStart) * closestFraction;
             lastPickedFraction = closestFraction;
+            lastPickedNormal = closestNormal;
             return closestBody;
         }
 
@@ -1135,7 +1156,7 @@ namespace Barotrauma
 
             Loading = false;
 
-            MapEntity.MapLoaded(newEntities);
+            MapEntity.MapLoaded(newEntities, true);
 
             foreach (Hull hull in matchingHulls)
             {

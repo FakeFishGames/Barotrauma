@@ -67,19 +67,22 @@ namespace Barotrauma
             
             InitProjSpecific(element);
 
+            //clients don't create items until the server says so
+            if (GameMain.Client != null) return;
+
             foreach (XElement subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "item") continue;
-
-                string itemName = subElement.GetAttributeString("name", "");
-                ItemPrefab itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
+                
+                string itemIdentifier = subElement.GetAttributeString("identifier", "");
+                ItemPrefab itemPrefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
                 if (itemPrefab == null)
                 {
-                    DebugConsole.ThrowError("Error in character inventory \"" + character.SpeciesName + "\" - item \"" + itemName + "\" not found.");
+                    DebugConsole.ThrowError("Error in character inventory \"" + character.SpeciesName + "\" - item \"" + itemIdentifier + "\" not found.");
                     continue;
                 }
 
-                Entity.Spawner.AddToSpawnQueue(itemPrefab, this);
+                Entity.Spawner?.AddToSpawnQueue(itemPrefab, this);
             }
         }
 

@@ -440,7 +440,7 @@ namespace Barotrauma
         /// Has to be done after all the entities have been loaded (an entity can't
         /// be linked to some other entity that hasn't been loaded yet)
         /// </summary>
-        public static void MapLoaded(List<MapEntity> entities)
+        public static void MapLoaded(List<MapEntity> entities, bool updateHulls)
         {
             foreach (MapEntity e in entities)
             {
@@ -467,8 +467,11 @@ namespace Barotrauma
                 entities[i].OnMapLoaded();
             }
 
-            Item.UpdateHulls();
-            Gap.UpdateHulls();
+            if (updateHulls)
+            {
+                Item.UpdateHulls();
+                Gap.UpdateHulls();
+            }
 
             foreach (LinkedSubmarine linkedSub in linkedSubs)
             {

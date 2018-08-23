@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -21,11 +22,16 @@ namespace Barotrauma
             get
             {
                 string disguiseName = "?";
-                if (Character == null || !Character.HideFace)
+                if (Character == null || !Character.HideFace || (GameMain.Server != null && !GameMain.Server.AllowDisguises))
                 {
                     return Name;
                 }
-
+#if CLIENT
+                if (GameMain.Client != null && !GameMain.Client.AllowDisguises)
+                {
+                    return Name;
+                }
+#endif
                 if (Character.Inventory != null)
                 {
                     int cardSlotIndex = Character.Inventory.FindLimbSlot(InvSlotType.Card);
@@ -356,14 +362,14 @@ namespace Barotrauma
             return salary;
         }
 
-        public void IncreaseSkillLevel(string skillName, float increase, Vector2 worldPos)
+        public void IncreaseSkillLevel(string skillIdentifier, float increase, Vector2 worldPos)
         {
             if (Job == null) return;
 
-            float prevLevel = Job.GetSkillLevel(skillName);
-            Job.IncreaseSkillLevel(skillName, increase);
+            float prevLevel = Job.GetSkillLevel(skillIdentifier);
+            Job.IncreaseSkillLevel(skillIdentifier, increase);
 
-            float newLevel = Job.GetSkillLevel(skillName);
+            float newLevel = Job.GetSkillLevel(skillIdentifier);
 #if CLIENT
             if (newLevel - prevLevel > 0.1f)
             {
@@ -385,7 +391,10 @@ namespace Barotrauma
             if ((int)newLevel > (int)prevLevel)
             {
                 GUI.AddMessage(
-                    TextManager.Get("SkillIncreased").Replace("[name]", Name).Replace("[skillname]", skillName).Replace("[newlevel]", ((int)newLevel).ToString()), 
+                    TextManager.Get("SkillIncreased")
+                        .Replace("[name]", Name)
+                        .Replace("[skillname]", TextManager.Get("SkillName." + skillIdentifier))
+                        .Replace("[newlevel]", ((int)newLevel).ToString()), 
                     Color.Green);
             }
 #endif
@@ -427,6 +436,73 @@ namespace Barotrauma
 
             parentElement.Add(charElement);
             return charElement;
+        }
+
+        public void ServerWrite(NetBuffer msg)
+        {
+            msg.Write(ID);
+            msg.Write(Name);
+            msg.Write(Gender == Gender.Female);
+            msg.Write((byte)HeadSpriteId);
+            if (Job != null)
+            {
+                msg.Write(Job.Prefab.Identifier);
+                msg.Write((byte)Job.Skills.Count);
+                foreach (Skill skill in Job.Skills)
+                {
+                    msg.Write(skill.Identifier);
+                    msg.Write(skill.Level);
+                }
+            }
+            else
+            {
+                msg.Write("");
+            }
+        }
+
+        public static CharacterInfo ClientRead(string configPath, NetBuffer inc)
+        {
+            ushort infoID       = inc.ReadUInt16();
+            string newName      = inc.ReadString();
+            bool isFemale       = inc.ReadBoolean();
+            int headSpriteID    = inc.ReadByte();
+            string jobIdentifier      = inc.ReadString();
+
+            JobPrefab jobPrefab = null;
+            Dictionary<string, float> skillLevels = new Dictionary<string, float>();
+            if (!string.IsNullOrEmpty(jobIdentifier))
+            {
+                jobPrefab = JobPrefab.List.Find(jp => jp.Identifier == jobIdentifier);
+                int skillCount = inc.ReadByte();
+                for (int i = 0; i < skillCount; i++)
+                {
+                    string skillIdentifier = inc.ReadString();
+                    float skillLevel = inc.ReadSingle();
+                    skillLevels.Add(skillIdentifier, skillLevel);
+                }
+            }
+
+            CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab)
+            {
+                ID = infoID,
+                HeadSpriteId = headSpriteID
+            };
+
+            System.Diagnostics.Debug.Assert(skillLevels.Count == ch.Job.Skills.Count);
+            if (ch.Job != null)
+            {
+                foreach (KeyValuePair<string, float> skill in skillLevels)
+                {
+                    Skill matchingSkill = ch.Job.Skills.Find(s => s.Identifier == skill.Key);
+                    if (matchingSkill == null)
+                    {
+                        DebugConsole.ThrowError("Skill \"" + skill.Key + "\" not found in character \"" + newName + "\"");
+                        continue;
+                    }
+                    matchingSkill.Level = skill.Value;
+                }
+            }
+            return ch;
         }
 
         public void Remove()

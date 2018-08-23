@@ -17,9 +17,9 @@ namespace Barotrauma
     {
         private static string[] crewExperienceLevels = new string[] 
         {
-            TextManager.Get("CrewExperienceLow"),
-            TextManager.Get("CrewExperienceMid"),
-            TextManager.Get("CrewExperienceHigh")
+            "CrewExperienceLow",
+            "CrewExperienceMid",
+            "CrewExperienceHigh"
         };
 
 
@@ -225,7 +225,8 @@ namespace Barotrauma
 
             foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
             {
-                var catButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform), category.ToString())
+                var catButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform),
+                    TextManager.Get("MapEntityCategory." + category.ToString()))
                 {
                     UserData = category,
                     OnClicked = (btn, userdata) => { entityMenuOpen = true; OpenEntityMenu((MapEntityCategory)userdata); return true; }
@@ -655,23 +656,26 @@ namespace Barotrauma
             var experienceText = new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), crewExpArea.RectTransform), crewExperienceLevels[0], textAlignment: Alignment.Center);
             var toggleExpRight = new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), crewExpArea.RectTransform), ">");
 
+
             toggleExpLeft.OnClicked += (btn, userData) =>
             {
-                int currentIndex = Array.IndexOf(crewExperienceLevels, experienceText.Text);
+                int currentIndex = Array.IndexOf(crewExperienceLevels, (string)experienceText.UserData);
                 currentIndex--;
                 if (currentIndex < 0) currentIndex = crewExperienceLevels.Length - 1;
-                experienceText.Text = crewExperienceLevels[currentIndex];
-                Submarine.MainSub.RecommendedCrewExperience = experienceText.Text;
+                experienceText.UserData = crewExperienceLevels[currentIndex];
+                experienceText.Text = TextManager.Get(crewExperienceLevels[currentIndex]);
+                Submarine.MainSub.RecommendedCrewExperience = (string)experienceText.UserData;
                 return true;
             };
 
             toggleExpRight.OnClicked += (btn, userData) =>
             {
-                int currentIndex = Array.IndexOf(crewExperienceLevels, experienceText.Text);
+                int currentIndex = Array.IndexOf(crewExperienceLevels, (string)experienceText.UserData);
                 currentIndex++;
                 if (currentIndex >= crewExperienceLevels.Length) currentIndex = 0;
-                experienceText.Text = crewExperienceLevels[currentIndex];
-                Submarine.MainSub.RecommendedCrewExperience = experienceText.Text;
+                experienceText.UserData = crewExperienceLevels[currentIndex];
+                experienceText.Text = TextManager.Get(crewExperienceLevels[currentIndex]);
+                Submarine.MainSub.RecommendedCrewExperience = (string)experienceText.UserData;
                 return true;
             };
 
@@ -681,8 +685,9 @@ namespace Barotrauma
                 int max = Submarine.MainSub.RecommendedCrewSizeMax;
                 crewSizeMin.IntValue = min;
                 crewSizeMax.IntValue = max;
-                experienceText.Text = string.IsNullOrEmpty(Submarine.MainSub.RecommendedCrewExperience) ?
+                experienceText.UserData =  string.IsNullOrEmpty(Submarine.MainSub.RecommendedCrewExperience) ?
                     crewExperienceLevels[0] : Submarine.MainSub.RecommendedCrewExperience;
+                experienceText.Text = TextManager.Get((string)experienceText.UserData);
             }
 
             var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedSaveFrame.RectTransform, Anchor.BottomCenter),
@@ -1025,7 +1030,7 @@ namespace Barotrauma
             if (wiringMode)
             {
                 CreateDummyCharacter();
-                var item = new Item(MapEntityPrefab.Find("Screwdriver") as ItemPrefab, Vector2.Zero, null);
+                var item = new Item(MapEntityPrefab.Find(null, "screwdriver") as ItemPrefab, Vector2.Zero, null);
                 dummyCharacter.Inventory.TryPutItem(item, null, new List<InvSlotType>() { InvSlotType.RightHand });
                 wiringToolPanel = CreateWiringPanel();
             }
@@ -1499,7 +1504,7 @@ namespace Barotrauma
             {
                 Rectangle hullRect = rect;
                 hullRect.Y = -hullRect.Y;
-                Hull newHull = new Hull(MapEntityPrefab.Find("Hull"),
+                Hull newHull = new Hull(MapEntityPrefab.Find(null, "hull"),
                                         hullRect,
                                         Submarine.MainSub);
             }
@@ -1512,7 +1517,7 @@ namespace Barotrauma
                 Rectangle gapRect = e.WorldRect;
                 gapRect.Y -= 8;
                 gapRect.Height = 16;
-                Gap newGap = new Gap(MapEntityPrefab.Find("Gap"),
+                Gap newGap = new Gap(MapEntityPrefab.Find(null, "gap"),
                                         gapRect);
             }
         }

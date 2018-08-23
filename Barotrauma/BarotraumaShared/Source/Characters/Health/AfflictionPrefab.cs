@@ -57,7 +57,7 @@ namespace Barotrauma
             //statuseffects applied on the character when the affliction is active
             public readonly List<StatusEffect> StatusEffects = new List<StatusEffect>();
 
-            public Effect(XElement element)
+            public Effect(XElement element, string parentDebugName)
             {
                 MinStrength =  element.GetAttributeFloat("minstrength", 0);
                 MaxStrength =  element.GetAttributeFloat("maxstrength", 0);
@@ -91,7 +91,7 @@ namespace Barotrauma
                     switch (subElement.Name.ToString().ToLowerInvariant())
                     {
                         case "statuseffect":
-                            StatusEffects.Add(StatusEffect.Load(subElement));
+                            StatusEffects.Add(StatusEffect.Load(subElement, parentDebugName));
                             break;
                     }
                 }
@@ -119,6 +119,8 @@ namespace Barotrauma
         //If not a limb-specific affliction, which limb is the indicator shown on in the health menu
         //(e.g. mental health problems on head, lack of oxygen on torso...)
         public readonly LimbType IndicatorLimb;
+
+        public readonly string Identifier;
 
         public readonly string Name, Description;
 
@@ -179,7 +181,8 @@ namespace Barotrauma
                             List.Add(Stun = new AfflictionPrefab(element, typeof(Affliction)));
                             break;
                         case "husk":
-                            List.Add(Husk = new AfflictionPrefab(element, typeof(Affliction)));
+                        case "afflictionhusk":
+                            List.Add(Husk = new AfflictionPrefab(element, typeof(AfflictionHusk)));
                             break;
                         case "cprsettings":
                             CPRSettings.Load(element);
@@ -190,15 +193,26 @@ namespace Barotrauma
                     }
                 }
             }
+
+            if (InternalDamage == null) DebugConsole.ThrowError("Affliction \"Internal Damage\" not defined in the affliction prefabs.");
+            if (Bleeding == null) DebugConsole.ThrowError("Affliction \"Bleeding\" not defined in the affliction prefabs.");
+            if (Burn == null) DebugConsole.ThrowError("Affliction \"Burn\" not defined in the affliction prefabs.");
+            if (OxygenLow == null) DebugConsole.ThrowError("Affliction \"OxygenLow\" not defined in the affliction prefabs.");
+            if (Bloodloss == null) DebugConsole.ThrowError("Affliction \"Bloodloss\" not defined in the affliction prefabs.");
+            if (Pressure == null) DebugConsole.ThrowError("Affliction \"Pressure\" not defined in the affliction prefabs.");
+            if (Stun == null) DebugConsole.ThrowError("Affliction \"Stun\" not defined in the affliction prefabs.");
+            if (Husk == null) DebugConsole.ThrowError("Affliction \"Husk\" not defined in the affliction prefabs.");
         }
 
         public AfflictionPrefab(XElement element, Type type = null)
         {
             typeName = type == null ? element.Name.ToString() : type.Name;
 
-            AfflictionType  = element.GetAttributeString("type", "");
-            Name            = element.GetAttributeString("name", "");
-            Description     = element.GetAttributeString("description", "");
+            Identifier = element.GetAttributeString("identifier", "");
+
+            AfflictionType = element.GetAttributeString("type", "");
+            Name = TextManager.Get("AfflictionName." + Identifier, true) ?? element.GetAttributeString("name", "");
+            Description = TextManager.Get("AfflictionDescription." + Identifier, true) ?? element.GetAttributeString("description", "");
 
             LimbSpecific = element.GetAttributeBool("limbspecific", false);
             if (!LimbSpecific)
@@ -217,8 +231,8 @@ namespace Barotrauma
             DamageOverlayAlpha  = element.GetAttributeFloat("damageoverlayalpha", 0.0f);
             BurnOverlayAlpha    = element.GetAttributeFloat("burnoverlayalpha", 0.0f);
 
-            CauseOfDeathDescription     = element.GetAttributeString("causeofdeathdescription", "");
-            SelfCauseOfDeathDescription = element.GetAttributeString("selfcauseofdeathdescription", "");
+            CauseOfDeathDescription     = TextManager.Get("AfflictionCauseOfDeath." + Identifier, true) ?? element.GetAttributeString("causeofdeathdescription", "");
+            SelfCauseOfDeathDescription = TextManager.Get("AfflictionCauseOfDeathSelf." + Identifier, true) ?? element.GetAttributeString("selfcauseofdeathdescription", "");
 
             AchievementOnRemoved = element.GetAttributeString("achievementonremoved", "");
 
@@ -230,16 +244,21 @@ namespace Barotrauma
                         Icon = new Sprite(subElement);
                         break;
                     case "effect":
-                        effects.Add(new Effect(subElement));
+                        effects.Add(new Effect(subElement, Name));
                         break;
                     case "suitabletreatment":
-                        string treatmentName = subElement.GetAttributeString("name", "").ToLowerInvariant();
-                        if (treatmentSuitability.ContainsKey(treatmentName))
+                        if (subElement.Attribute("name") != null)
                         {
-                            DebugConsole.ThrowError("Error in affliction \"" + Name + "\" - treatment \"" + treatmentName + "\" defined multiple times");
+                            DebugConsole.ThrowError("Error in Affliction prefab \"" + Name + "\" - suitable treatments should be defined using item identifiers, not item names.");
+                        }
+
+                        string treatmentIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
+                        if (treatmentSuitability.ContainsKey(treatmentIdentifier))
+                        {
+                            DebugConsole.ThrowError("Error in affliction \"" + Name + "\" - treatment \"" + treatmentIdentifier + "\" defined multiple times");
                             continue;
                         }
-                        treatmentSuitability.Add(treatmentName, subElement.GetAttributeFloat("suitability", 0.0f));
+                        treatmentSuitability.Add(treatmentIdentifier, subElement.GetAttributeFloat("suitability", 0.0f));
                         break;
                 }
             }
@@ -309,8 +328,11 @@ namespace Barotrauma
 
         public float GetTreatmentSuitability(Item item)
         {
-            if (item == null || !treatmentSuitability.ContainsKey(item.Name.ToLowerInvariant())) return 0.0f;
-            return treatmentSuitability[item.Name.ToLowerInvariant()];
+            if (item == null || !treatmentSuitability.ContainsKey(item.Prefab.Identifier.ToLowerInvariant()))
+            {
+                return 0.0f;
+            }
+            return treatmentSuitability[item.Prefab.Identifier.ToLowerInvariant()];
         }
     }
 }

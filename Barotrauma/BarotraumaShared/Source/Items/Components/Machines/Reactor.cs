@@ -309,7 +309,8 @@ namespace Barotrauma.Items.Components
             if (temperature > allowedTemperature.Y)
             {
                 item.SendSignal(0, "1", "meltdown_warning", null);
-                meltDownTimer += item.IsOptimized("mechanical") ? deltaTime * 0.5f : deltaTime;
+                //faster meltdown if the item is in a bad condition
+                meltDownTimer += MathHelper.Lerp(deltaTime * 2.0f, deltaTime, item.Condition / 100.0f);
 
                 if (meltDownTimer > MeltdownDelay)
                 {
@@ -326,7 +327,7 @@ namespace Barotrauma.Items.Components
             if (temperature > optimalTemperature.Y)
             {
                 float prevFireTimer = fireTimer;
-                fireTimer += item.IsOptimized("mechanical") ? deltaTime * 0.5f : deltaTime;
+                fireTimer += MathHelper.Lerp(deltaTime * 2.0f, deltaTime, item.Condition / 100.0f);
 
                 if (fireTimer >= FireDelay && prevFireTimer < fireDelay)
                 {
@@ -425,8 +426,8 @@ namespace Barotrauma.Items.Components
                 //we need more fuel
                 if (-currPowerConsumption < load * 0.5f && prevAvailableFuel <= 0.0f)
                 {
-                    var containFuelObjective = new AIObjectiveContainItem(character, new string[] { "Fuel Rod", "reactorfuel" }, item.GetComponent<ItemContainer>());
-                    containFuelObjective.MinContainedAmount = containedItems.Count(i => i != null && i.Prefab.NameMatches("Fuel Rod") || i.HasTag("reactorfuel")) + 1;
+                    var containFuelObjective = new AIObjectiveContainItem(character, new string[] { "fuelrod", "reactorfuel" }, item.GetComponent<ItemContainer>());
+                    containFuelObjective.MinContainedAmount = containedItems.Count(i => i != null && i.Prefab.Identifier == "fuelrod" || i.HasTag("reactorfuel")) + 1;
                     containFuelObjective.GetItemPriority = (Item fuelItem) =>
                     {
                         if (fuelItem.ParentInventory?.Owner is Item)
@@ -446,7 +447,7 @@ namespace Barotrauma.Items.Components
             
             switch (objective.Option.ToLowerInvariant())
             {
-                case "power up":
+                case "powerup":
 #if CLIENT
                     onOffSwitch.BarScroll = 0.0f;
 #endif

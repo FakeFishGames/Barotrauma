@@ -289,19 +289,19 @@ namespace Barotrauma
                     GUITextBox namesBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), textBlock.RectTransform, Anchor.CenterRight))
                     {
                         Font = GUI.SmallFont,
-                        Text = relatedItem.JoinedNames
+                        Text = relatedItem.JoinedIdentifiers
                     };
 
                     namesBox.OnDeselected += (textBox, key) =>
                     {
-                        relatedItem.JoinedNames = textBox.Text;
-                        textBox.Text = relatedItem.JoinedNames;
+                        relatedItem.JoinedIdentifiers = textBox.Text;
+                        textBox.Text = relatedItem.JoinedIdentifiers;
                     };
 
                     namesBox.OnEnterPressed += (textBox, text) =>
                     {
-                        relatedItem.JoinedNames = text;
-                        textBox.Text = relatedItem.JoinedNames;
+                        relatedItem.JoinedIdentifiers = text;
+                        textBox.Text = relatedItem.JoinedIdentifiers;
                         return true;
                     };
                 }
@@ -316,12 +316,6 @@ namespace Barotrauma
         
         public virtual void UpdateHUD(Camera cam, Character character, float deltaTime)
         {
-            if (condition <= 0.0f)
-            {
-                FixRequirement.UpdateHud(this, character);
-                return;
-            }
-
             if (HasInGameEditableProperties)
             {
                 UpdateEditing(cam);
@@ -330,19 +324,20 @@ namespace Barotrauma
             activeHUDs.Clear();
             //the HUD of the component with the highest priority will be drawn
             //if all components have a priority of 0, all of them are drawn
-            ItemComponent maxPriorityHUD = null;            
+            List<ItemComponent> maxPriorityHUDs = new List<ItemComponent>();            
             foreach (ItemComponent ic in components)
             {
                 if (ic.CanBeSelected && ic.HudPriority > 0 && ic.ShouldDrawHUD(character) &&
-                    (maxPriorityHUD == null || ic.HudPriority > maxPriorityHUD.HudPriority))
+                    (maxPriorityHUDs.Count == 0 || ic.HudPriority >= maxPriorityHUDs[0].HudPriority))
                 {
-                    maxPriorityHUD = ic;
+                    if (maxPriorityHUDs.Count > 0 && ic.HudPriority > maxPriorityHUDs[0].HudPriority) maxPriorityHUDs.Clear();
+                    maxPriorityHUDs.Add(ic);
                 }
             }
 
-            if (maxPriorityHUD != null)
+            if (maxPriorityHUDs.Count > 0)
             {
-                activeHUDs.Add(maxPriorityHUD);
+                activeHUDs.AddRange(maxPriorityHUDs);                
             }
             else
             {
@@ -387,12 +382,6 @@ namespace Barotrauma
 
             if (Character.Controlled != null && Character.Controlled.SelectedConstruction == this)
             {
-                if (condition <= 0.0f)
-                {
-                    FixRequirement.AddToGUIUpdateList();
-                    return;
-                }
-
                 foreach (ItemComponent ic in activeHUDs)
                 {
                     if (ic.CanBeSelected) ic.AddToGUIUpdateList();
@@ -418,32 +407,11 @@ namespace Barotrauma
                     (components[componentIndex] as IServerSerializable).ClientRead(type, msg, sendingTime);
                     break;
                 case NetEntityEvent.Type.InventoryState:
-                    ownInventory.ClientRead(type, msg, sendingTime);
-                    break;
-                case NetEntityEvent.Type.Repair:
-                    for (int i = 0; i < FixRequirements.Count; i++)
-                    {
-                        ushort fixerID = msg.ReadUInt16();
-                        FixRequirements[i].CurrentFixer = fixerID == 0 ? null : FindEntityByID(fixerID) as Character;
-                        FixRequirements[i].FixProgress = msg.ReadRangedSingle(0.0f, 1.0f, 8);
-                    }
+                    int containerIndex = msg.ReadRangedInteger(0, components.Count - 1);
+                    (components[containerIndex] as ItemContainer).Inventory.ClientRead(type, msg, sendingTime);
                     break;
                 case NetEntityEvent.Type.Status:
-                    condition = msg.ReadRangedSingle(0.0f, prefab.Health, 8);
-
-                    if (FixRequirements.Count > 0)
-                    {
-                        if (Condition <= 0.0f)
-                        {
-                            for (int i = 0; i < FixRequirements.Count; i++)
-                                FixRequirements[i].FixProgress = msg.ReadRangedSingle(0.0f, 1.0f, 8);
-                        }
-                        else
-                        {
-                            for (int i = 0; i < FixRequirements.Count; i++)
-                                FixRequirements[i].FixProgress = 1.0f;
-                        }
-                    }
+                    condition = msg.ReadSingle();
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     ActionType actionType = (ActionType)msg.ReadRangedInteger(0, Enum.GetValues(typeof(ActionType)).Length - 1);
@@ -452,11 +420,14 @@ namespace Barotrauma
 
                     Character target = FindEntityByID(targetID) as Character;
                     Limb targetLimb = targetLimbID < target.AnimController.Limbs.Length ? target.AnimController.Limbs[targetLimbID] : null;
+                    //ignore deltatime - using an item with the useOnSelf buttons is instantaneous
+                    ApplyStatusEffects(actionType, 1.0f, target, targetLimb, true);
 
-                    ApplyStatusEffects(actionType, (float)Timing.Step, target, targetLimb, true);
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
-                    ReadPropertyChange(msg);
+                    ReadPropertyChange(msg, false);
+                    break;
+                case NetEntityEvent.Type.Invalid:
                     break;
             }
         }
@@ -475,18 +446,12 @@ namespace Barotrauma
                 case NetEntityEvent.Type.ComponentState:
                     int componentIndex = (int)extraData[1];
                     msg.WriteRangedInteger(0, components.Count - 1, componentIndex);
-
                     (components[componentIndex] as IClientSerializable).ClientWrite(msg, extraData);
                     break;
                 case NetEntityEvent.Type.InventoryState:
-                    ownInventory.ClientWrite(msg, extraData);
-                    break;
-                case NetEntityEvent.Type.Repair:
-                    if (FixRequirements.Count > 0)
-                    {
-                        int requirementIndex = (int)extraData[1];
-                        msg.WriteRangedInteger(0, FixRequirements.Count - 1, requirementIndex);
-                    }
+                    int containerIndex = (int)extraData[1];
+                    msg.WriteRangedInteger(0, components.Count - 1, containerIndex);
+                    (components[containerIndex] as ItemContainer).Inventory.ClientWrite(msg, extraData);
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     UInt16 characterID = (UInt16)extraData[1];
@@ -498,7 +463,7 @@ namespace Barotrauma
                     msg.Write(targetCharacter == null ? (byte)255 : (byte)Array.IndexOf(targetCharacter.AnimController.Limbs, targetLimb));               
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
-                    WritePropertyChange(msg, extraData);
+                    WritePropertyChange(msg, extraData, true);
                     break;
             }
             msg.WritePadBits();

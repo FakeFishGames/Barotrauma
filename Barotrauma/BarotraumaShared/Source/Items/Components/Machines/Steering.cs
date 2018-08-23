@@ -177,7 +177,6 @@ namespace Barotrauma.Items.Components
             }
 
             currPowerConsumption = powerConsumption;
-            if (item.IsOptimized("electrical")) currPowerConsumption *= 0.5f;
 
             if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
 
@@ -191,7 +190,7 @@ namespace Barotrauma.Items.Components
             {
                 if (user != null && user.Info != null && user.SelectedConstruction == item)
                 {
-                    user.Info.IncreaseSkillLevel("Helm", 0.005f * deltaTime, user.WorldPosition + Vector2.UnitY * 150.0f);
+                    user.Info.IncreaseSkillLevel("helm", 0.005f * deltaTime, user.WorldPosition + Vector2.UnitY * 150.0f);
                 }
 
                 Vector2 velocityDiff = steeringInput - targetVelocity;
@@ -290,6 +289,7 @@ namespace Barotrauma.Items.Components
                         
                         //far enough -> ignore
                         if (Math.Abs(diff.X) > avoidDist.X && Math.Abs(diff.Y) > avoidDist.Y) continue;
+                        if (diff.LengthSquared() < 1.0f) diff = Vector2.UnitY;
 
                         float dot = controlledSub.Velocity == Vector2.Zero ?
                             0.0f : Vector2.Dot(controlledSub.Velocity, -Vector2.Normalize(diff));
@@ -318,16 +318,14 @@ namespace Barotrauma.Items.Components
                 float otherSize = Math.Max(sub.Borders.Width, sub.Borders.Height);
 
                 Vector2 diff = controlledSub.WorldPosition - sub.WorldPosition;
-
                 float dist = diff == Vector2.Zero ? 0.0f : diff.Length();
 
                 //far enough -> ignore
                 if (dist > thisSize + otherSize) continue;
 
-                diff = Vector2.Normalize(diff);
-
+                Vector2 dir = dist <= 0.0001f ? Vector2.UnitY : diff / dist;
                 float dot = controlledSub.Velocity == Vector2.Zero ?
-                    0.0f : Vector2.Dot(Vector2.Normalize(controlledSub.Velocity), -Vector2.Normalize(diff));
+                    0.0f : Vector2.Dot(Vector2.Normalize(controlledSub.Velocity), -dir);
 
                 //heading away -> ignore
                 if (dot < 0.0f) continue;
@@ -409,7 +407,7 @@ namespace Barotrauma.Items.Components
         {
             switch (objective.Option.ToLowerInvariant())
             {
-                case "maintain position":
+                case "maintainposition":
                     if (!posToMaintain.HasValue)
                     {
                         unsentChanges = true;
@@ -421,14 +419,14 @@ namespace Barotrauma.Items.Components
                     AutoPilot = true;
                     MaintainPos = true;
                     break;
-                case "navigate back":
+                case "navigateback":
                     if (!AutoPilot || MaintainPos || LevelEndSelected || !LevelStartSelected)
                     {
                         unsentChanges = true;
                     }
                     SetDestinationLevelStart();
                     break;
-                case "navigate to destination":
+                case "navigatetodestination":
                     if (!AutoPilot || MaintainPos || !LevelEndSelected || LevelStartSelected)
                     {
                         unsentChanges = true;
@@ -488,7 +486,7 @@ namespace Barotrauma.Items.Components
             if (!AutoPilot)
             {
                 steeringInput = newSteeringInput;
-                steeringAdjustSpeed = MathHelper.Lerp(0.2f, 1.0f, c.Character.GetSkillLevel("Helm") / 100.0f);
+                steeringAdjustSpeed = MathHelper.Lerp(0.2f, 1.0f, c.Character.GetSkillLevel("helm") / 100.0f);
             }
             else
             {
