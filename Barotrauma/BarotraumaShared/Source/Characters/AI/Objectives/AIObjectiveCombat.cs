@@ -65,13 +65,11 @@ namespace Barotrauma
 
                 //make sure the weapon is loaded
                 var weaponComponent = weapon.GetComponent<RangedWeapon>() as ItemComponent ?? weapon.GetComponent<MeleeWeapon>() as ItemComponent;
-                Item[] containedItems = weapon.ContainedItems;
-                if (containedItems != null)
+                if (weaponComponent.requiredItems.ContainsKey(RelatedItem.RelationType.Contained))
                 {
-                    foreach (RelatedItem requiredItem in weaponComponent.requiredItems)
+                    Item[] containedItems = weapon.ContainedItems;
+                    foreach (RelatedItem requiredItem in weaponComponent.requiredItems[RelatedItem.RelationType.Contained])
                     {
-                        if (requiredItem.Type != RelatedItem.RelationType.Contained) continue;
-
                         Item containedItem = Array.Find(containedItems, it => it != null && it.Condition > 0.0f && requiredItem.MatchesItem(it));
                         if (containedItem == null)
                         {

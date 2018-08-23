@@ -323,6 +323,11 @@ namespace Barotrauma
             }
         }
 
+        public Inventory OwnInventory
+        {
+            get { return ownInventory; }
+        }
+
         public IEnumerable<Repairable> Repairables
         {
             get { return repairables; }
@@ -504,9 +509,15 @@ namespace Barotrauma
                     if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
                     clone.components[i].properties[property.Key].TrySetValue(property.Value.GetValue());
                 }
-                for (int j = 0; j < components[i].requiredItems.Count; j++)
+
+                //clone requireditem identifiers
+                foreach (var kvp in components[i].requiredItems)
                 {
-                    clone.components[i].requiredItems[j].JoinedIdentifiers = components[i].requiredItems[j].JoinedIdentifiers;
+                    for (int j = 0; j < kvp.Value.Count; j++)
+                    {
+                        clone.components[i].requiredItems[kvp.Key][j].JoinedIdentifiers = 
+                            kvp.Value[j].JoinedIdentifiers;
+                    }
                 }
             }
 

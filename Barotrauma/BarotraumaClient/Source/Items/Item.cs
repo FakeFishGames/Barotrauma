@@ -277,34 +277,38 @@ namespace Barotrauma
                 
                 if (inGame) continue;
 
-                foreach (RelatedItem relatedItem in ic.requiredItems)
+                foreach (var kvp in ic.requiredItems)
                 {
-                    var textBlock = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, 20)),
-                        relatedItem.Type.ToString() + " required", font: GUI.SmallFont)
+                    foreach (RelatedItem relatedItem in kvp.Value)
                     {
-                        Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f)
-                    };
-                    componentEditor.AddCustomContent(textBlock, 1);
+                        var textBlock = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, 20)),
+                            relatedItem.Type.ToString() + " required", font: GUI.SmallFont)
+                        {
+                            Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f)
+                        };
+                        componentEditor.AddCustomContent(textBlock, 1);
 
-                    GUITextBox namesBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), textBlock.RectTransform, Anchor.CenterRight))
-                    {
-                        Font = GUI.SmallFont,
-                        Text = relatedItem.JoinedIdentifiers
-                    };
+                        GUITextBox namesBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), textBlock.RectTransform, Anchor.CenterRight))
+                        {
+                            Font = GUI.SmallFont,
+                            Text = relatedItem.JoinedIdentifiers
+                        };
 
-                    namesBox.OnDeselected += (textBox, key) =>
-                    {
-                        relatedItem.JoinedIdentifiers = textBox.Text;
-                        textBox.Text = relatedItem.JoinedIdentifiers;
-                    };
+                        namesBox.OnDeselected += (textBox, key) =>
+                        {
+                            relatedItem.JoinedIdentifiers = textBox.Text;
+                            textBox.Text = relatedItem.JoinedIdentifiers;
+                        };
 
-                    namesBox.OnEnterPressed += (textBox, text) =>
-                    {
-                        relatedItem.JoinedIdentifiers = text;
-                        textBox.Text = relatedItem.JoinedIdentifiers;
-                        return true;
-                    };
+                        namesBox.OnEnterPressed += (textBox, text) =>
+                        {
+                            relatedItem.JoinedIdentifiers = text;
+                            textBox.Text = relatedItem.JoinedIdentifiers;
+                            return true;
+                        };
+                    }
                 }
+
             }
 
             int contentHeight = editingHUD.Children.Sum(c => c.Rect.Height) + (listBox.CountChildren - 1) * listBox.Spacing;
