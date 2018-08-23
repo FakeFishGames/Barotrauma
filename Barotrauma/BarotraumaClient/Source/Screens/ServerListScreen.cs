@@ -7,6 +7,11 @@ using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Barotrauma
 {
@@ -38,7 +43,7 @@ namespace Barotrauma
         //a timer for 
         private DateTime refreshDisableTimer;
         private bool waitingForRefresh;
-        
+                
         public ServerListScreen()
         {
             int width = Math.Min(GameMain.GraphicsWidth - 160, 1000);
@@ -111,13 +116,14 @@ namespace Barotrauma
 
             columnHeaderContainer.RectTransform.NonScaledSize = new Point(serverList.Content.Rect.Width, columnHeaderContainer.Rect.Height);
 
-            columnRelativeWidth = new float[] { 0.04f, 0.04f, 0.7f, 0.1f, 0.04f, 0.07f };
+            columnRelativeWidth = new float[] { 0.04f, 0.04f, 0.7f, 0.08f, 0.05f, 0.04f, 0.07f };
             string[] columnHeaders = new string[]
             {
                 TextManager.Get("ServerListCompatible"),
                 TextManager.Get("Password"),
                 TextManager.Get("ServerListName"),
                 TextManager.Get("ServerListPlayers"),
+                TextManager.Get("ServerListPing"),
                 TextManager.Get("ServerListRoundStarted"),
                 ""
             };
@@ -125,6 +131,7 @@ namespace Barotrauma
             {
                 GUI.CheckmarkIcon,
                 GUI.LockIcon,
+                null,
                 null,
                 null,
                 null,
@@ -149,7 +156,7 @@ namespace Barotrauma
                 new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[i], 1.0f), columnHeaderContainer.RectTransform),
                     columnHeaders[i], font: GUI.SmallFont, wrap: true)
                 {
-                    //Padding = Vector4.Zero
+                    Padding = Vector4.Zero
                 };
             }
 
@@ -164,7 +171,7 @@ namespace Barotrauma
 			new GUIButton(new RectTransform(new Vector2(0.1f, 0.9f), buttonContainer.RectTransform, Anchor.Center),
 				"", style: "GUIButtonRefresh") {
 
-				ToolTip = " Refresh server list",
+				ToolTip = TextManager.Get("ServerListRefresh"),
 				OnClicked = RefreshServers
 			};
 
@@ -362,13 +369,14 @@ namespace Barotrauma
 
         private void UpdateServerInfo(ServerInfo serverInfo)
         {
+
             var serverFrame = serverList.Content.FindChild(serverInfo);
             if (serverFrame == null) return;
 
             var serverContent = serverFrame.Children.First();
             serverContent.ClearChildren();
 
-            var compatibleBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[0], 0.6f), serverContent.RectTransform, Anchor.Center), label: "", style: "GUIServerListTickBox")
+                var compatibleBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[0], 0.6f), serverContent.RectTransform, Anchor.Center), label: "", style: "GUIServerListTickBox")
             {
                 Selected =
                     serverInfo.GameVersion == GameMain.Version.ToString() &&
@@ -376,7 +384,7 @@ namespace Barotrauma
                 Enabled = false,
                 UserData = "compatible"
             };
-
+            
             var passwordBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[1], 0.6f), serverContent.RectTransform, Anchor.Center), label: "", style: "GUIServerListTickBox")
             {
                 Selected = serverInfo.HasPassword,
@@ -386,9 +394,23 @@ namespace Barotrauma
                         
             var serverName = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[2], 1.0f), serverContent.RectTransform), serverInfo.ServerName, style: "GUIServerListTextBox");
             var serverPlayers = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[3], 1.0f), serverContent.RectTransform),
-                serverInfo.PlayerCount + "/" + serverInfo.MaxPlayers, textAlignment: Alignment.Center, style: "GUIServerListTextBox");
+                serverInfo.PlayerCount + "/" + serverInfo.MaxPlayers, style: "GUIServerListTextBox");
 
-            var gameStartedBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[4], 0.6f), serverContent.RectTransform, Anchor.Center),
+            var serverPingText = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[4], 1.0f), serverContent.RectTransform), "?", style: "GUIServerListTextBox");
+
+            if (serverInfo.IP != null)
+            {
+                try
+                {
+                    GetServerPing(serverInfo, serverPingText);
+                }
+                catch (NullReferenceException ex)
+                {
+                    DebugConsole.ThrowError("Ping is null", ex);
+                }
+            }
+
+            var gameStartedBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[5], 0.6f), serverContent.RectTransform, Anchor.Center),
                 label: "", style: "GUIServerListTickBox")
             {
                 Selected = serverInfo.GameStarted,
@@ -587,6 +609,71 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
+        public void GetServerPing(ServerInfo serverInfo, GUITextBlock serverPingText)
+        {
+            serverInfo.PingChecked = false;
+            serverInfo.Ping = -1;
+
+            var pingThread = new Thread(() => { PingServer(serverInfo, 1000); })
+            {
+                IsBackground = true
+            };
+            pingThread.Start();
+
+            CoroutineManager.StartCoroutine(UpdateServerPingText(serverInfo, serverPingText, 1000));
+        }
+
+        private IEnumerable<object> UpdateServerPingText(ServerInfo serverInfo, GUITextBlock serverPingText, int timeOut)
+        {
+            DateTime timeOutTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, milliseconds: timeOut);
+            while (DateTime.Now < timeOutTime)
+            {
+                if (serverInfo.PingChecked)
+                {
+                    serverPingText.Text = serverInfo.Ping > -1 ? serverInfo.Ping.ToString() : "?";
+                    yield return CoroutineStatus.Success;
+                }
+
+                yield return CoroutineStatus.Running;
+            }
+            yield return CoroutineStatus.Success;
+        }
+
+        public void PingServer(ServerInfo serverInfo, int timeOut)
+        {
+            long rtt = -1;
+            IPAddress address = IPAddress.Parse(serverInfo.IP);
+            if (address != null)
+            {
+                Ping ping = new Ping();
+                byte[] buffer = new byte[32];
+                try
+                {
+                    PingReply pingReply = ping.Send(address, timeOut, buffer, new PingOptions(128, true));
+
+                    if (pingReply != null)
+                    {
+                        switch (pingReply.Status)
+                        {
+                            case IPStatus.Success:
+                                rtt = pingReply.RoundtripTime;
+                                break;
+                            default:
+                                rtt = -1;
+                                break;
+                        }
+                    }
+                }
+                catch (PingException ex)
+                {
+                    DebugConsole.ThrowError("Ping Error", ex);
+                }
+            }
+
+            serverInfo.PingChecked = true;
+            serverInfo.Ping = (int)rtt;
+        }
+        
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             graphics.Clear(Color.CornflowerBlue);
