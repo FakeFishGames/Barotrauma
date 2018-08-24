@@ -191,7 +191,6 @@ namespace Barotrauma
                 }
 
                 NewMessage("Valid permissions are:", Color.White);
-                NewMessage(" - all", Color.White);
                 foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                 {
                     NewMessage(" - " + permission.ToString(), Color.White);
@@ -199,18 +198,10 @@ namespace Barotrauma
                 ShowQuestionPrompt("Permission to grant to \"" + client.Name + "\"?", (perm) =>
                 {
                     ClientPermissions permission = ClientPermissions.None;
-                    if (perm.ToLower() == "all")
+                    if (!Enum.TryParse(perm, true, out permission))
                     {
-                        permission = ClientPermissions.EndRound | ClientPermissions.Kick | ClientPermissions.Ban |
-                            ClientPermissions.SelectSub | ClientPermissions.SelectMode | ClientPermissions.ManageCampaign | ClientPermissions.ConsoleCommands;
-                    }
-                    else
-                    {
-                        if (!Enum.TryParse(perm, true, out permission))
-                        {
-                            NewMessage(perm + " is not a valid permission!", Color.Red);
-                            return;
-                        }
+                        NewMessage(perm + " is not a valid permission!", Color.Red);
+                        return;
                     }
                     client.GivePermission(permission);
                     GameMain.Server.UpdateClientPermissions(client);
@@ -236,7 +227,6 @@ namespace Barotrauma
                 }
 
                 NewMessage("Valid permissions are:", Color.White);
-                NewMessage(" - all", Color.White);
                 foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                 {
                     NewMessage(" - " + permission.ToString(), Color.White);
@@ -244,18 +234,10 @@ namespace Barotrauma
                 ShowQuestionPrompt("Permission to revoke from \"" + client.Name + "\"?", (perm) =>
                 {
                     ClientPermissions permission = ClientPermissions.None;
-                    if (perm.ToLower() == "all")
+                    if (!Enum.TryParse(perm, true, out permission))
                     {
-                        permission = ClientPermissions.EndRound | ClientPermissions.Kick | ClientPermissions.Ban |
-                            ClientPermissions.SelectSub | ClientPermissions.SelectMode | ClientPermissions.ManageCampaign | ClientPermissions.ConsoleCommands;
-                    }
-                    else
-                    {
-                        if (!Enum.TryParse(perm, true, out permission))
-                        {
-                            NewMessage(perm + " is not a valid permission!", Color.Red);
-                            return;
-                        }
+                        NewMessage(perm + " is not a valid permission!", Color.Red);
+                        return;
                     }
                     client.RemovePermission(permission);
                     GameMain.Server.UpdateClientPermissions(client);
@@ -1097,18 +1079,10 @@ namespace Barotrauma
                     string perm = string.Join("", args.Skip(1));
 
                     ClientPermissions permission = ClientPermissions.None;
-                    if (perm.ToLower() == "all")
+                    if (!Enum.TryParse(perm, true, out permission))
                     {
-                        permission = ClientPermissions.EndRound | ClientPermissions.Kick | ClientPermissions.Ban |
-                            ClientPermissions.SelectSub | ClientPermissions.SelectMode | ClientPermissions.ManageCampaign | ClientPermissions.ConsoleCommands;
-                    }
-                    else
-                    {
-                        if (!Enum.TryParse(perm, true, out permission))
-                        {
-                            GameMain.Server.SendConsoleMessage(perm + " is not a valid permission!", senderClient);
-                            return;
-                        }
+                        GameMain.Server.SendConsoleMessage(perm + " is not a valid permission!", senderClient);
+                        return;
                     }
                     client.GivePermission(permission);
                     GameMain.Server.UpdateClientPermissions(client);
@@ -1134,18 +1108,10 @@ namespace Barotrauma
                     string perm = string.Join("", args.Skip(1));
 
                     ClientPermissions permission = ClientPermissions.None;
-                    if (perm.ToLower() == "all")
+                    if (!Enum.TryParse(perm, true, out permission))
                     {
-                        permission = ClientPermissions.EndRound | ClientPermissions.Kick | ClientPermissions.Ban |
-                            ClientPermissions.SelectSub | ClientPermissions.SelectMode | ClientPermissions.ManageCampaign | ClientPermissions.ConsoleCommands;
-                    }
-                    else
-                    {
-                        if (!Enum.TryParse(perm, true, out permission))
-                        {
-                            GameMain.Server.SendConsoleMessage(perm + " is not a valid permission!", senderClient);
-                            return;
-                        }
+                        GameMain.Server.SendConsoleMessage(perm + " is not a valid permission!", senderClient);
+                        return;
                     }
                     client.RemovePermission(permission);
                     GameMain.Server.UpdateClientPermissions(client);

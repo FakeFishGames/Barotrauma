@@ -757,7 +757,6 @@ namespace Barotrauma
                     }
 
                     NewMessage("Valid permissions are:", Color.White);
-                    NewMessage(" - all", Color.White);
                     foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                     {
                         NewMessage(" - " + permission.ToString(), Color.White);
@@ -782,7 +781,6 @@ namespace Barotrauma
                     }
 
                     NewMessage("Valid permissions are:", Color.White);
-                    NewMessage(" - all", Color.White);
                     foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                     {
                         NewMessage(" - " + permission.ToString(), Color.White);

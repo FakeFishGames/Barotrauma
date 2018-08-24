@@ -404,6 +404,13 @@ namespace Barotrauma.Networking
             unauthenticatedClients.Remove(unauthClient);
             unauthClient = null;
             ConnectedClients.Add(newClient);
+
+            if (newClient.Connection == ownerConnection)
+            {
+                newClient.GivePermission(ClientPermissions.All);
+                GameMain.Server.UpdateClientPermissions(newClient);
+                GameMain.Server.SendConsoleMessage("Granted all permissions to " + newClient.Name + ".", newClient);
+            }
             
             GameMain.Server.SendChatMessage(clName + " has joined the server.", ChatMessageType.Server, null);
 

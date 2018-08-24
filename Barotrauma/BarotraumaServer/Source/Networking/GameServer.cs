@@ -825,9 +825,8 @@ namespace Barotrauma.Networking
             ClientPermissions command = ClientPermissions.None;
             try
             {
-                command = (ClientPermissions)inc.ReadByte();
+                command = (ClientPermissions)inc.ReadUInt16();
             }
-
             catch
             {
                 return;
@@ -871,11 +870,17 @@ namespace Barotrauma.Networking
                         }
                     }
                     break;
-                case ClientPermissions.EndRound:
-                    if (gameStarted)
+                case ClientPermissions.ManageRound:
+                    bool end = inc.ReadBoolean();
+                    if (gameStarted && end)
                     {
                         Log("Client \"" + sender.Name + "\" ended the round.", ServerLog.MessageType.ServerMessage);
                         EndGame();
+                    }
+                    else if (!gameStarted && !end)
+                    {
+                        Log("Client \"" + sender.Name + "\" started the round.", ServerLog.MessageType.ServerMessage);
+                        StartGame();
                     }
                     break;
                 case ClientPermissions.SelectSub:
@@ -2113,7 +2118,9 @@ namespace Barotrauma.Networking
 
         private void WritePermissions(NetBuffer msg, Client client)
         {
-            msg.Write((byte)client.Permissions);
+            //could use WriteRangedInt here, but since not much else is written
+            //we don't actually lose any space by writing a short
+            msg.Write((UInt16)client.Permissions);
             if (client.Permissions.HasFlag(ClientPermissions.ConsoleCommands))
             {
                 msg.Write((UInt16)client.PermittedConsoleCommands.Sum(c => c.names.Length));

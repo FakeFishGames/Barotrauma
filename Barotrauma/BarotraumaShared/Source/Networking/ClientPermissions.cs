@@ -8,16 +8,16 @@ namespace Barotrauma.Networking
     [Flags]
     enum ClientPermissions
     {
-        None = 0,
-        EndRound = 1,
-        Kick = 2,
-        Ban = 4,
-        SelectSub = 8,
-        SelectMode = 16,
-        ManageCampaign = 32,
-        ConsoleCommands = 64,
-        ServerLog = 128
-        //If you add more permissions, change how servers send the permissions to client (atm written as one byte)
+        None = 0x0,
+        ManageRound = 0x1,
+        Kick = 0x2,
+        Ban = 0x4,
+        SelectSub = 0x8,
+        SelectMode = 0x10,
+        ManageCampaign = 0x20,
+        ConsoleCommands = 0x40,
+        ServerLog = 0x80,
+        All = 0xff
     }
 
     class PermissionPreset
