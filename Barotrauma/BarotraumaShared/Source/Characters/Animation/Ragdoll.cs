@@ -508,7 +508,7 @@ namespace Barotrauma
         protected void AddLimb(LimbParams limbParams)
         {
             byte ID = Convert.ToByte(limbParams.ID);
-            Limb limb = new Limb(character, limbParams);
+            Limb limb = new Limb(this, character, limbParams);
             limb.body.FarseerBody.OnCollision += OnLimbCollision;
             Limbs[ID] = limb;
             Mass += limb.Mass;

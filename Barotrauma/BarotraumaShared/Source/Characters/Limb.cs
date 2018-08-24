@@ -126,7 +126,10 @@ namespace Barotrauma
         private const float SeveredFadeOutTime = 10.0f;
 
         public readonly Character character;
-
+        /// <summary>
+        /// Note that during the limb initialization, character.AnimController returns null, whereas this field is already assigned.
+        /// </summary>
+        public readonly Ragdoll ragdoll;
         public readonly LimbParams limbParams;
 
         //the physics body of the limb
@@ -245,8 +248,9 @@ namespace Barotrauma
             private set;
         }
 
-        public Limb(Character character, LimbParams limbParams)
+        public Limb(Ragdoll ragdoll, Character character, LimbParams limbParams)
         {
+            this.ragdoll = ragdoll;
             this.character = character;
             this.limbParams = limbParams;
             wearingItems = new List<WearableSprite>();            
