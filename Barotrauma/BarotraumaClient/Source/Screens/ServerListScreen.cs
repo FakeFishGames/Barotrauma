@@ -398,7 +398,11 @@ namespace Barotrauma
 
             var serverPingText = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[4], 1.0f), serverContent.RectTransform), "?", style: "GUIServerListTextBox");
 
-            if (serverInfo.IP != null)
+            if (serverInfo.PingChecked)
+            {
+                serverPingText.Text = serverInfo.Ping > -1 ? serverInfo.Ping.ToString() : "?";
+            }
+            else if (!string.IsNullOrEmpty(serverInfo.IP))
             {
                 try
                 {
