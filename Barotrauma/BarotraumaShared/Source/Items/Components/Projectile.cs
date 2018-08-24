@@ -188,6 +188,8 @@ namespace Barotrauma.Items.Components
             {
                 if (fixture == null || fixture.IsSensor) return -1;
 
+                if (fixture.UserData is Item) return -1;
+
                 if (!fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) &&
                     !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
                     !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) return -1;
@@ -290,6 +292,8 @@ namespace Barotrauma.Items.Components
             if (User != null && User.Removed) User = null;
 
             if (IgnoredBodies.Contains(target.Body)) return false;
+
+            if (target.UserData is Item) return false;
 
             if (target.CollisionCategories == Physics.CollisionCharacter && !(target.Body.UserData is Limb))
             {
