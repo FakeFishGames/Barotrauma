@@ -22,6 +22,7 @@
     <deformablesprite texture="Content/Characters/Mantis/mantis.png" sourcerect="3,168,59,64" depth="0.021" origin="0.3,0.65" subdivisions="15,15">
       <spritedeformation type="bezier" resolution="15,15" multiplier="0.25"/>
       <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.03" changespeed="10" blendmode="add"/>
+      <spritedeformation type="inflate" resolution="15,15" sync="1" frequency="5" scale="0.1" blendmode="add"/>
     </deformablesprite>
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true"/>
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true"/>
@@ -32,6 +33,7 @@
     <deformablesprite texture="Content/Characters/Mantis/mantis.png" sourcerect="66,180,65,70" depth="0.022" origin="0.3,0.65" subdivisions="15,15">
       <spritedeformation type="bezier" resolution="15,15" multiplier="0.25"/>
       <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.03" changespeed="10" blendmode="add"/>
+      <spritedeformation type="inflate" resolution="15,15" sync="1" frequency="5" scale="0.1" blendmode="add"/>
     </deformablesprite>
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true"/>
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true"/>
@@ -42,6 +44,7 @@
     <deformablesprite texture="Content/Characters/Mantis/mantis.png" sourcerect="133,158,46,93" depth="0.023" origin="0.37,0.3" subdivisions="15,15">
       <spritedeformation type="bezier" resolution="15,15" multiplier="0.25"/>
       <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.03" changespeed="10" blendmode="add"/>
+      <spritedeformation type="inflate" resolution="15,15" sync="1" frequency="5" scale="0.1" blendmode="add"/>
     </deformablesprite>
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true"/>
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true"/>

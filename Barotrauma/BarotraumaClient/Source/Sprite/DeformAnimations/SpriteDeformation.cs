@@ -28,7 +28,13 @@ namespace Barotrauma.SpriteDeformations
                 Deformation = new Vector2[_resolution.X, _resolution.Y];
             }
         }
-
+        /// <summary>
+        /// A negative value means that the deformation is used only by one sprite only (default). 
+        /// A positive value means that this deformation is or could be used for multiple sprites.
+        /// This behaviour is not automatic, and has to be implemented for any particular case separately (currently only used in Limbs).
+        /// </summary>
+        public readonly int sync;
+        public readonly string typeName;
         protected BlendMode blendMode;
 
         /// <summary>
@@ -68,6 +74,8 @@ namespace Barotrauma.SpriteDeformations
 
         protected SpriteDeformation(XElement element)
         {
+            typeName = element.GetAttributeString("type", "").ToLowerInvariant();
+            sync = element.GetAttributeInt("sync", -1);
             string blendModeStr = element.GetAttributeString("blendmode", "override");
             if (!Enum.TryParse(blendModeStr, true, out blendMode))
             {
