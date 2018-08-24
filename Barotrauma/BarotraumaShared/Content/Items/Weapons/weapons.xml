@@ -62,7 +62,8 @@
     </RangedWeapon>
 
     <ItemContainer itempos="27,10" iteminterval="0,-4" hideitems="false">
-      <Containable identifiers="spear"/>
+      <ContainedStateIndicator texture="Content/UI/inventoryAtlas.png" sourcerect="11,115,79,18"/>
+      <Containable name="spear"/>
     </ItemContainer>
   </Item>
 
@@ -282,7 +283,8 @@
     </MeleeWeapon>
 
     <ItemContainer capacity="1" hideitems="true">
-      <Containable identifiers="batterycell,fulguriumcatterycell"/>      
+      <ContainedStateIndicator texture="Content/UI/inventoryAtlas.png" sourcerect="3,14,93,29"/>
+      <Containable identifiers="batterycell,fulguriumcatterycell"/>
     </ItemContainer>
   </Item>
 

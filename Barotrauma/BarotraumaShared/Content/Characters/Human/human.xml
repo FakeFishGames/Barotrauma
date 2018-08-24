@@ -33,7 +33,7 @@
     </Limb>
   </health>
 
-  <inventory arrowslot="9" slots="InnerClothes, OuterClothes, RightHand, LeftHand, Head, Card, Headset, Any, Any, Any, Any, Any, Pack"/>
+  <inventory arrowslot="9" slots="InnerClothes, OuterClothes, RightHand, LeftHand, Head, Card, Headset, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any"/>
   
   <ragdoll headposition="154" torsoposition="115" 
            stepsize="42.0, 12.0"

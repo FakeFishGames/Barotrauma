@@ -11,7 +11,7 @@ namespace Barotrauma
     [Flags]
     public enum InvSlotType
     {
-        None = 0, Any = 1, RightHand = 2, LeftHand = 4, Head = 8, InnerClothes = 16, OuterClothes = 32, Headset = 64, Card = 128, Pack = 256
+        None = 0, Any = 1, RightHand = 2, LeftHand = 4, Head = 8, InnerClothes = 16, OuterClothes = 32, Headset = 64, Card = 128
     };
 
     partial class CharacterInventory : Inventory
@@ -59,7 +59,6 @@ namespace Barotrauma
                     case InvSlotType.OuterClothes:
                     case InvSlotType.LeftHand:
                     case InvSlotType.RightHand:
-                    case InvSlotType.Pack:
                         hideEmptySlot[i] = true;
                         break;
                 }               
@@ -273,82 +272,7 @@ namespace Barotrauma
             {
                 if (Items[index] == item) return false;
 
-                bool combined = false;
-                if (allowCombine && Items[index].Combine(item))
-                {
-                    System.Diagnostics.Debug.Assert(Items[index] != null);
-                 
-                    Inventory otherInventory = Items[index].ParentInventory;
-                    if (otherInventory != null && otherInventory.Owner!=null)
-                    {
-                        
-                    }
-
-                    combined = true;
-                }
-                //if moving the item between slots in the same inventory
-                else if (item.ParentInventory == this && allowSwapping)
-                {
-                    int currentIndex = Array.IndexOf(Items, item);                    
-                    Item existingItem = Items[index];
-
-                    if (character.HasEquippedItem(existingItem) && existingItem.AllowedSlots.Contains(InvSlotType.Any))
-                    {
-                        for (int i = 0; i < capacity; i++)
-                        {
-                            if (Items[i] == existingItem && SlotTypes[i] != InvSlotType.Any)
-                            {
-                                Items[i] = null;
-                            }
-                        }
-                    }
-
-                    for (int i = 0; i < capacity; i++)
-                    {
-                        if (Items[i] == item || Items[i] == existingItem)
-                        {
-                            Items[i] = null;
-                        }
-                    }
-                    
-                    //if the item in the slot can be moved to the slot of the moved item
-                    if (TryPutItem(existingItem, currentIndex, false, false, user, createNetworkEvent) &&
-                        TryPutItem(item, index, false, false, user, createNetworkEvent))
-                    {
-#if CLIENT
-                        for (int i = 0; i < capacity; i++)
-                        {
-                            if (Items[i] == item || Items[i] == existingItem)
-                            {
-                                slots[i].ShowBorderHighlight(Color.Green, 0.1f, 0.9f);
-                            }
-                        }
-#endif
-                    }
-                    else
-                    {
-                        for (int i = 0; i < capacity; i++)
-                        {
-                            if (Items[i] == item || Items[i] == existingItem) Items[i] = null;
-                        }
-
-                        //swapping the items failed -> move them back to where they were
-                        TryPutItem(item, currentIndex, false, false, user, createNetworkEvent);
-                        TryPutItem(existingItem, index, false, false, user, createNetworkEvent);
-#if CLIENT
-                        for (int i = 0; i < capacity; i++)
-                        {
-                            if (Items[i] == existingItem)
-                            {
-                                slots[i].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
-                            }
-                        }
-#endif
-
-                    }
-                }
-
-                return combined;
+                return base.TryPutItem(item, index, allowSwapping, allowCombine, user, createNetworkEvent);
             }
 
             if (SlotTypes[index] == InvSlotType.Any)

@@ -104,6 +104,8 @@
   <LosModeTransparent>Transparent</LosModeTransparent>
   <LosModeOpaque>Opaque</LosModeOpaque>
   <ChromaticAberration>Chromatic aberration</ChromaticAberration>
+  <HUDScale>HUD scale</HUDScale>
+  <InventoryScale>Inventory scale</InventoryScale>
   <SoundVolume>Sound volume</SoundVolume>
   <MusicVolume>Music volume</MusicVolume>
   <Controls>Controls</Controls>
