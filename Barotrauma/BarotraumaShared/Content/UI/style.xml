@@ -100,19 +100,14 @@
   </GUIButtonLarge>
 
   <GUIButtonServerListInfo
-  color="0.0,0.0,0.9,1.0"
-  hovercolor="0.0,0.0,1.0,1.0"
-  selectedcolor="1.0,1.0,1.0,1.0">
+    color="0.4,0.59,0.69,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0">
 
-    
-    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="4,116,222,59" slice="41,140,189,151"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="415,172,222,59" slice="452,196,600,207"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect="646,172,222,59" slice="683,196,831,207"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" sourcerect="646,172,222,59" slice="683,196,831,207"/>
-    
-
-    <GUITextBlock
-      textcolor="1.0, 1.0, 1.0, 1.0"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="907,428,22,22"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="907,428,22,22"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect="907,428,22,22"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" sourcerect="907,428,22,22"/>    
   </GUIButtonServerListInfo>
 
   <GUIButtonRefresh
