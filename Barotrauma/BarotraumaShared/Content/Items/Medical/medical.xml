@@ -116,9 +116,9 @@
     description="A mild stimulant which is used as an ingredient in the manufacture of various medicines."
     canuseonself="true">
     
-    <Price locationtype="Research" buyprice="20"/>
-    <Price locationtype="Military" buyprice="30"/>
-    <Price locationtype="City" buyprice="40"/>
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="City" buyprice="30"/>
     
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6" />
 
@@ -153,9 +153,9 @@
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical">
     
-    <Price locationtype="Research" buyprice="20"/>
-    <Price locationtype="Military" buyprice="30"/>
-    <Price locationtype="City" buyprice="40"/>
+    <Price locationtype="Research" buyprice="15"/>
+    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="City" buyprice="25"/>
     
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
@@ -182,9 +182,9 @@
     Tags="smallitem,chem,medical"
     canuseonself="true">
     
-    <Price locationtype="Research" buyprice="20"/>
-    <Price locationtype="Military" buyprice="30"/>
-    <Price locationtype="City" buyprice="40"/>
+    <Price locationtype="Research" buyprice="15"/>
+    <Price locationtype="Military" buyprice="15"/>
+    <Price locationtype="City" buyprice="20"/>
     <Price locationtype="Outpost" buyprice="50"/>
     
     <ItemComponent>
@@ -220,7 +220,7 @@
     
     <Price locationtype="Research" buyprice="20"/>
     <Price locationtype="Military" buyprice="30"/>
-    <Price locationtype="City" buyprice="40"/>
+    <Price locationtype="City" buyprice="30"/>
     
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
@@ -311,7 +311,7 @@
     Tags="smallitem,chem,medical"     
     description="A strong synaptic stimulant and cardiostimulant which is used as a preventative measure against critical condition. Should only be injected once every 30 seconds.">
     
-    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Research" buyprice="70"/>
     <Price locationtype="Military" buyprice="80"/>
     <Price locationtype="City" buyprice="100"/>
     
@@ -345,10 +345,10 @@
     Tags="smallitem,chem,medical"     
     description="Most commonly used for treating oxygen deprivation.">
     
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="80"/>
-    <Price locationtype="City" buyprice="100"/>
-    <Price locationtype="Outpost" buyprice="120"/>
+    <Price locationtype="Research" buyprice="25"/>
+    <Price locationtype="Military" buyprice="25"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="100"/>
     
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" />
 
@@ -412,7 +412,7 @@
     Tags="smallitem,chem,medical"   
     description="A potent muscle stimulant.">
 
-    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Research" buyprice="60"/>
     <Price locationtype="Military" buyprice="80"/>
 
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
@@ -439,8 +439,8 @@
     Tags="smallitem,chem,medical"   
     description="An antiparasitic drug used in the treatment of husk parasite infections. Might require higher dosage to cure the infection at later stages.">
 
-    <Price locationtype="Research" buyprice="300"/>
-    <Price locationtype="Military" buyprice="40"/>
+    <Price locationtype="Research" buyprice="375"/>
+    <Price locationtype="Military" buyprice="350"/>
     <Price locationtype="City" buyprice="500"/>
     
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
@@ -764,8 +764,8 @@
     Tags="smallitem,chem,explosive"
     impacttolerance="8">
     
-    <Price locationtype="Research" buyprice="30"/>
-    <Price locationtype="Military" buyprice="40"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
     
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
@@ -803,7 +803,7 @@
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical">
 
-    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="Research" buyprice="30"/>
     <Price locationtype="Military" buyprice="30"/>
     <Price locationtype="City" buyprice="50"/>
     <Price locationtype="Outpost" buyprice="80"/>
@@ -833,8 +833,8 @@
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical">
     
-    <Price locationtype="Research" buyprice="30"/>
-    <Price locationtype="Military" buyprice="40"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="60"/>
     
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
@@ -889,7 +889,7 @@
     Tags="smallitem,chem,medical"   
     description="Dormant eggs of the Europan lifeform colloquially referred to as 'husk parasite'.">
 
-    <Price locationtype="Research" buyprice="1000"/>
+    <Price locationtype="Research" buyprice="1200"/>
     
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
@@ -917,7 +917,7 @@
     Tags="smallitem,chem,medical"   
     description="A highly potent neurotoxin.">
     
-    <Price locationtype="Research" buyprice="500"/>
+    <Price locationtype="Research" buyprice="450"/>
     <Price locationtype="Military" buyprice="1000"/>
     
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>

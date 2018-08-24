@@ -152,9 +152,9 @@
     category="Misc"
     sonarsize="5">
 
-    <Price locationtype="Outpost" buyprice="300"/>
-    <Price locationtype="Military" buyprice="200"/>
-    <Price locationtype="City" buyprice="300"/>
+    <Price locationtype="Military" buyprice="150"/>
+    <Price locationtype="City" buyprice="180"/>
+    <Price locationtype="Outpost" buyprice="250"/>
 
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
@@ -193,7 +193,7 @@
     category="Misc"
     sonarsize="5">
     
-    <Price locationtype="Military" buyprice="500"/>
+    <Price locationtype="Military" buyprice="400"/>
     
     <Deconstruct time="10">
       <Item identifier="steelbar"/>

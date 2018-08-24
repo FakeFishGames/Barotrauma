@@ -40,6 +40,10 @@
     category="Misc"
     sonarsize="5">
 
+    <Price locationtype="Military" buyprice="140"/>
+    <Price locationtype="City" buyprice="150"/>
+    <Price locationtype="Outpost" buyprice="200"/>
+    
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
       <Item identifier="steelbar"/>
@@ -70,6 +74,10 @@
     identifier="nucleardepthcharge"
     category="Misc"
     sonarsize="5">
+
+    <Price locationtype="Military" buyprice="300"/>
+    <Price locationtype="City" buyprice="400"/>
+    <Price locationtype="Outpost" buyprice="500"/>
 
     <Deconstruct time="20">
       <Item identifier="steelbar"/>

@@ -8,9 +8,9 @@
     cargocontaineridentifier="metalcrate"
     description="One of the most crucial tools on board the submarine. Also works underwater.">
 
-    <Price locationtype="City" buyprice="100"/>
-    <Price locationtype="Research" buyprice="100"/>
-    <Price locationtype="Military" buyprice="100"/>
+    <Price locationtype="City" buyprice="140"/>
+    <Price locationtype="Research" buyprice="140"/>
+    <Price locationtype="Military" buyprice="140"/>
     <Price locationtype="Outpost" buyprice="200"/>
     
     <Sprite texture ="tools.png" sourcerect="0,17,41,17" depth="0.55"/>
@@ -77,9 +77,9 @@
     cargocontaineridentifier="metalcrate"
     description="Cuts through various materials using a jet of ionized oxygen.">
 
-    <Price locationtype="City" buyprice="100"/>
-    <Price locationtype="Research" buyprice="100"/>
-    <Price locationtype="Military" buyprice="100"/>
+    <Price locationtype="City" buyprice="140"/>
+    <Price locationtype="Research" buyprice="140"/>
+    <Price locationtype="Military" buyprice="140"/>
     <Price locationtype="Outpost" buyprice="200"/>
     
     <Deconstruct time="10">
@@ -201,10 +201,10 @@
     Tags="smallitem"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="City" buyprice="10"/>
-    <Price locationtype="Research" buyprice="10"/>
-    <Price locationtype="Military" buyprice="10"/>
-    <Price locationtype="Outpost" buyprice="20"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="100"/>
 
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
@@ -225,10 +225,10 @@
     Tags="smallitem"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="City" buyprice="10"/>
-    <Price locationtype="Research" buyprice="10"/>
-    <Price locationtype="Military" buyprice="10"/>
-    <Price locationtype="Outpost" buyprice="20"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="100"/>
 
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
@@ -251,10 +251,10 @@
     Tags="smallitem"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="City" buyprice="15"/>
-    <Price locationtype="Research" buyprice="15"/>
-    <Price locationtype="Military" buyprice="15"/>
-    <Price locationtype="Outpost" buyprice="20"/>
+    <Price locationtype="City" buyprice="80"/>
+    <Price locationtype="Research" buyprice="80"/>
+    <Price locationtype="Military" buyprice="80"/>
+    <Price locationtype="Outpost" buyprice="100"/>
 
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
@@ -277,10 +277,10 @@
     Tags="smallitem,sonar"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="City" buyprice="50"/>
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="50"/>
-    <Price locationtype="Outpost" buyprice="100"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Research" buyprice="100"/>
+    <Price locationtype="Military" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="150"/>
 
     <Deconstruct time="15">
       <Item identifier="copperbar"/>
@@ -320,10 +320,10 @@
     Tags="smallitem,sonar"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="City" buyprice="50"/>
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="50"/>
-    <Price locationtype="Outpost" buyprice="100"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Research" buyprice="100"/>
+    <Price locationtype="Military" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="150"/>
 
     <Deconstruct time="15">
       <Item identifier="copperbar"/>
@@ -357,10 +357,10 @@
     Tags="smallitem"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="City" buyprice="20"/>
-    <Price locationtype="Research" buyprice="20"/>
-    <Price locationtype="Military" buyprice="20"/>
-    <Price locationtype="Outpost" buyprice="40"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="80"/>
 
     <Deconstruct time="15">
       <Item identifier="copperbar"/>

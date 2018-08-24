@@ -71,10 +71,10 @@
     Tags="smallitem,reactorfuel"
     cargocontaineridentifier="metalcrate">
     
-    <Price locationtype="Military" buyprice="200"/>
-    <Price locationtype="Research" buyprice="300"/>
-    <Price locationtype="City" buyprice="500"/>
-    <Price locationtype="Outpost" buyprice="800"/>
+    <Price locationtype="Military" buyprice="170"/>
+    <Price locationtype="Research" buyprice="170"/>
+    <Price locationtype="City" buyprice="200"/>
+    <Price locationtype="Outpost" buyprice="500"/>
     
     <Deconstruct time="10">
       <Item identifier="steelbar"/>

@@ -7,9 +7,9 @@
     interactthroughwalls="true"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="Military" buyprice="30"/>
-    <Price locationtype="City" buyprice="50"/>
-    <Price locationtype="Outpost" buyprice="50"/>
+    <Price locationtype="Military" buyprice="55"/>
+    <Price locationtype="City" buyprice="60"/>
+    <Price locationtype="Outpost" buyprice="60"/>
 
     <Deconstruct time="5">
       <Item identifier="steelbar"/>
@@ -35,8 +35,8 @@
     cargocontaineridentifier="metalcrate"
     tags="weapon">
 
-    <Price locationtype="Military" buyprice="400"/>
-    <Price locationtype="City" buyprice="500"/>
+    <Price locationtype="Military" buyprice="170"/>
+    <Price locationtype="City" buyprice="200"/>
     
     <Deconstruct time="10">      
       <Item identifier="steelbar"/>
@@ -74,9 +74,9 @@
     cargocontaineridentifier="metalcrate"
     tags="weapon">
 
-    <Price locationtype="Research" buyprice="700"/>
-    <Price locationtype="Military" buyprice="800"/>
-    <Price locationtype="City" buyprice="1000"/>
+    <Price locationtype="Research" buyprice="300"/>
+    <Price locationtype="Military" buyprice="350"/>
+    <Price locationtype="City" buyprice="500"/>
     
     <Deconstruct time="10">      
       <Item identifier="steelbar"/>
@@ -111,9 +111,9 @@
     cargocontaineridentifier="metalcrate"
     tags="smallitem">
 
-    <Price locationtype="Military" buyprice="30"/>
-    <Price locationtype="City" buyprice="50"/>
-    <Price locationtype="Outpost" buyprice="80"/>
+    <Price locationtype="Military" buyprice="15"/>
+    <Price locationtype="City" buyprice="20"/>
+    <Price locationtype="Outpost" buyprice="30"/>
     
     <Sprite texture="weapons.png" sourcerect="52,99,8,3" depth="0.55"/>
 
@@ -135,8 +135,8 @@
     cargocontaineridentifier="metalcrate"
     tags="smallitem,weapon">
 
-    <Price locationtype="Military" buyprice="800"/>
-    <Price locationtype="City" buyprice="1000"/>
+    <Price locationtype="Military" buyprice="300"/>
+    <Price locationtype="City" buyprice="500"/>
     
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
@@ -172,9 +172,9 @@
     cargocontaineridentifier="explosivecrate"
     tags="smallitem,weapon,explosive">
 
-    <Price locationtype="Military" buyprice="200"/>
-    <Price locationtype="City" buyprice="250"/>
-    <Price locationtype="Outpost" buyprice="300"/>
+    <Price locationtype="Military" buyprice="175"/>
+    <Price locationtype="City" buyprice="200"/>
+    <Price locationtype="Outpost" buyprice="250"/>
     
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
@@ -252,8 +252,8 @@
     cargocontaineridentifier="metalcrate"
     description="If verbal orders are insufficient, a high-voltage shock from a Stun Baton may be enough to beat an unruly crew member into submission.">
 
-    <Price locationtype="Military" buyprice="200"/>
-    <Price locationtype="City" buyprice="500"/>
+    <Price locationtype="Military" buyprice="150"/>
+    <Price locationtype="City" buyprice="200"/>
     <Price locationtype="Outpost" buyprice="500"/>
     
     <Deconstruct time="10">
