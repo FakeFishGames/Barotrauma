@@ -73,11 +73,16 @@ namespace Barotrauma
                 Text = GameMain.Config.DefaultPlayerName
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("ServerIP"));
-            ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.045f), leftColumn.RectTransform), "");
+            // TODO: Show IP on server info window
+            //new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("ServerIP"));
+            // Make server list more streamer friendly by not displaying the IP
+            ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.045f), leftColumn.RectTransform), "")
+            {
+                Visible = false
+            };
 
             //spacing
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), leftColumn.RectTransform), style: null);
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.55f), leftColumn.RectTransform), style: null);
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("FilterServers"));
             searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), "");
@@ -228,6 +233,8 @@ namespace Barotrauma
         private bool SelectServer(GUIComponent component, object obj)
         {
             if (obj == null || waitingForRefresh) return false;
+
+            joinButton.Flash();
 
             ServerInfo serverInfo;
             try
@@ -453,9 +460,8 @@ namespace Barotrauma
                 serverPlayers.TextColor *= 0.5f;
             }
 
-            new GUIButton(new RectTransform(new Vector2(columnRelativeWidth[5], 0.8f), serverContent.RectTransform, Anchor.CenterRight), TextManager.Get("ServerListInfo"), textAlignment: Alignment.Center, style: "GUIButtonServerListInfo")
+            new GUIButton(new RectTransform(new Vector2(columnRelativeWidth[5], 0.8f), serverContent.RectTransform, Anchor.Center), style: "GUIButtonServerListInfo")
             {
-                IgnoreLayoutGroups = true,
                 OnClicked = (btn, obj) =>
                 {
                     SelectServer(null, serverInfo);
@@ -634,6 +640,21 @@ namespace Barotrauma
             {
                 if (serverInfo.PingChecked)
                 {
+                    if (serverInfo.Ping != -1)
+                    {
+                        if (serverInfo.Ping < 50)
+                        {
+                            serverPingText.TextColor = Color.Green;
+                        }
+                        else if (serverInfo.Ping > 50 && serverInfo.Ping < 150)
+                        {
+                            serverPingText.TextColor = Color.Yellow;
+                        }
+                        else
+                        {
+                            serverPingText.TextColor = Color.Red;
+                        }
+                    }
                     serverPingText.Text = serverInfo.Ping > -1 ? serverInfo.Ping.ToString() : "?";
                     yield return CoroutineStatus.Success;
                 }
