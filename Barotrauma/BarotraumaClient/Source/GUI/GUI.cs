@@ -50,7 +50,7 @@ namespace Barotrauma
         private static Sound[] sounds;
         private static bool pauseMenuOpen, settingsMenuOpen;
         private static GUIFrame pauseMenu;
-        private static Sprite submarineIcon, arrow, lockIcon, checkmarkIcon;
+        private static Sprite submarineIcon, arrow, lockIcon, checkmarkIcon, timerIcon;
 
         public static KeyboardDispatcher KeyboardDispatcher { get; private set; }
 
@@ -88,6 +88,11 @@ namespace Barotrauma
         {
             get { return lockIcon; }
         }
+
+		public static Sprite TimerIcon 
+		{
+			get { return timerIcon; }
+		}
 
         public static bool SettingsMenuOpen
         {
@@ -156,7 +161,10 @@ namespace Barotrauma
 
             checkmarkIcon = new Sprite("Content/UI/UI_Atlas.png", new Rectangle(932, 398, 33, 28));
             checkmarkIcon.Origin = checkmarkIcon.size / 2;
-        }
+
+			timerIcon = new Sprite("Content/UI/UI_Atlas.png", new Rectangle(997, 653, 18, 21));
+			timerIcon.Origin = timerIcon.size / 2;
+		}
 
         /// <summary>
         /// By default, all the gui elements are drawn automatically in the same order they appear on the update list. 

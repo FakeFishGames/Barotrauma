@@ -325,6 +325,7 @@
   <ServerListCompatible>Compatible</ServerListCompatible>
   <ServerListPing>Ping</ServerListPing>
   <ServerListRoundStarted>Round started</ServerListRoundStarted>
+  <ServerListRoundNotStarted>Round has not started</ServerListRoundNotStarted>
   <ServerListInfo>Info</ServerListInfo>
   <ServerListRefresh>Refresh</ServerListRefresh>
   <ServerListJoin>Join</ServerListJoin>
