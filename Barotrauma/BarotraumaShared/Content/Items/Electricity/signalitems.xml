@@ -538,6 +538,43 @@
       <output name="signal_out"/>
     </ConnectionPanel>
   </Item>
+
+  <Item
+    name="Smoke Detector"
+    identifier="smokedetector"
+    category="Electrical"
+    Tags="smallitem"
+    spritecolor="1.0,0.1,0.1,1.0"
+    cargocontaineridentifier="metalcrate"
+    description="Sends out a signal when it senses smoke.">
+
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="City" buyprice="40"/>
+    <Price locationtype="Outpost" buyprice="40"/>
+    <Price locationtype="Military" buyprice="40"/>
+
+    <Deconstruct time="10">
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
+    </Deconstruct>
+
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="65,0,31,24"/>
+
+    <SmokeDetector FireSizeThreshold="50"/>
+
+    <Body width="31" height="24" density="30"/>
+
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0"
+              aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+      <RequiredItem identifier="wrench" type="Equipped"/>
+    </Holdable>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
+      <output name="signal_out"/>
+    </ConnectionPanel>
+  </Item>
   
   <Item
     name="Motion Detector"
