@@ -139,7 +139,7 @@ namespace Barotrauma
                 null,
                 null,
                 null,
-                null,
+                GUI.TimerIcon,
                 null
             };
 
@@ -392,9 +392,10 @@ namespace Barotrauma
                 UserData = "compatible"
             };
             
-            var passwordBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[1], 0.6f), serverContent.RectTransform, Anchor.Center), label: "", style: "GUIServerListTickBox")
+            var passwordBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[1], 0.6f), serverContent.RectTransform, Anchor.Center), label: "", style: "GUIServerListPasswordTickBox")
             {
-                Selected = serverInfo.HasPassword,
+				ToolTip = TextManager.Get((serverInfo.HasPassword) ? "ServerListHasPassword" : "FilterPassword"),
+				Selected = serverInfo.HasPassword,
                 Enabled = false,
                 UserData = "password"
             };
@@ -422,9 +423,10 @@ namespace Barotrauma
             }
 
             var gameStartedBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[5], 0.6f), serverContent.RectTransform, Anchor.Center),
-                label: "", style: "GUIServerListTickBox")
+                label: "", style: "GUIServerListRoundStartedTickBox")
             {
-                Selected = serverInfo.GameStarted,
+				ToolTip = TextManager.Get((serverInfo.GameStarted) ? "ServerListRoundStarted" : "ServerListRoundNotStarted"),
+				Selected = serverInfo.GameStarted,
                 Enabled = false
             };
 
@@ -460,8 +462,9 @@ namespace Barotrauma
                 serverPlayers.TextColor *= 0.5f;
             }
 
-            new GUIButton(new RectTransform(new Vector2(columnRelativeWidth[5], 0.8f), serverContent.RectTransform, Anchor.Center), style: "GUIButtonServerListInfo")
-            {
+			new GUIButton(new RectTransform(new Vector2(columnRelativeWidth[5], 0.8f), serverContent.RectTransform, Anchor.Center), style: "GUIButtonServerListInfo")
+			{
+				ToolTip = TextManager.Get("ServerListInfo"),
                 OnClicked = (btn, obj) =>
                 {
                     SelectServer(null, serverInfo);
@@ -646,7 +649,7 @@ namespace Barotrauma
                         {
                             serverPingText.TextColor = Color.Green;
                         }
-                        else if (serverInfo.Ping > 50 && serverInfo.Ping < 150)
+                        else if (serverInfo.Ping < 150)
                         {
                             serverPingText.TextColor = Color.Yellow;
                         }
