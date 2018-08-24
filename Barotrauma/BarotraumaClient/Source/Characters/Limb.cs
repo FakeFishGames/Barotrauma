@@ -72,7 +72,11 @@ namespace Barotrauma
         private float wetTimer;
         private float dripParticleTimer;
 
-        public List<SpriteDeformation> Deformations { get; set; } = new List<SpriteDeformation>();
+        /// <summary>
+        /// Note that different limbs can share the same deformations.
+        /// Use ragdoll.SpriteDeformations for a collection that cannot have duplicates.
+        /// </summary>
+        public List<SpriteDeformation> Deformations { get; private set; } = new List<SpriteDeformation>();
         
         public LightSource LightSource
         {
@@ -106,8 +110,24 @@ namespace Barotrauma
                         DeformSprite = new DeformableSprite(subElement);
                         foreach (XElement animationElement in subElement.Elements())
                         {
-                            var newDeformation = SpriteDeformation.Load(animationElement);
-                            if (newDeformation != null) Deformations.Add(newDeformation);
+                            int sync = animationElement.GetAttributeInt("sync", -1);
+                            SpriteDeformation deformation = null;
+                            if (sync > -1)
+                            {
+                                // if the element is marked with the sync attribute, use a deformation of the same type with the same sync value, if there is one already.
+                                string typeName = animationElement.GetAttributeString("type", "").ToLowerInvariant();
+                                deformation = ragdoll.Limbs
+                                    .Where(l => l != null)
+                                    .SelectMany(l => l.Deformations)
+                                    .Where(d => d.typeName == typeName && d.sync == sync)
+                                    .FirstOrDefault();
+                            }
+                            if (deformation == null)
+                            {
+                                deformation = SpriteDeformation.Load(animationElement);
+                                ragdoll.SpriteDeformations.Add(deformation);
+                            }
+                            if (deformation != null) Deformations.Add(deformation);
                         }
                         break;
                     case "lightsource":
@@ -204,14 +224,6 @@ namespace Barotrauma
             {
                 LightSource.ParentSub = body.Submarine;
                 LightSource.Rotation = (dir == Direction.Right) ? body.Rotation : body.Rotation - MathHelper.Pi;
-            }
-
-            if (Deformations != null && Deformations.Count > 0)
-            {
-                for (int i = 0; i < Deformations.Count; i++)
-                {
-                    Deformations[i].Update(deltaTime);
-                }
             }
         }
 
