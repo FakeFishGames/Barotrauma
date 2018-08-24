@@ -103,16 +103,17 @@ namespace Barotrauma
         partial void InitProjSpecific(Character character)
         {
             character.OnAttacked += OnAttacked;
-            
+
+            bool horizontal = HUDLayoutSettings.HealthBarAreaLeft.Width > HUDLayoutSettings.HealthBarAreaLeft.Height;
             healthBar = new GUIProgressBar(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.HealthBarAreaLeft, GUI.Canvas),
-                barSize: 1.0f, color: Color.Green, style: "GUIProgressBarVertical")
+                barSize: 1.0f, color: Color.Green, style: horizontal ? "GUIProgressBar" : "GUIProgressBarVertical")
             {
-                IsHorizontal = HUDLayoutSettings.HealthBarAreaLeft.Width > HUDLayoutSettings.HealthBarAreaLeft.Height
+                IsHorizontal = horizontal
             };
             healthBarShadow = new GUIProgressBar(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.HealthBarAreaLeft, GUI.Canvas),
-                barSize: 1.0f, color: Color.Green, style: "GUIProgressBarVertical")
+                barSize: 1.0f, color: Color.Green, style: horizontal ? "GUIProgressBar" : "GUIProgressBarVertical")
             {
-                IsHorizontal = HUDLayoutSettings.HealthBarAreaLeft.Width > HUDLayoutSettings.HealthBarAreaLeft.Height
+                IsHorizontal = horizontal
             };
             healthShadowSize = 1.0f;
 
@@ -201,6 +202,7 @@ namespace Barotrauma
 
         private void OnAttacked(Character attacker, AttackResult attackResult)
         {
+            if (Math.Abs(attackResult.Damage) < 0.01f && attackResult.Afflictions.Count == 0) return;
             damageOverlayTimer = MathHelper.Clamp(attackResult.Damage / MaxVitality, damageOverlayTimer, 1.0f);
             if (healthShadowDelay <= 0.0f) healthShadowDelay = 1.0f;
 
@@ -215,7 +217,10 @@ namespace Barotrauma
 
             if (alignment == Alignment.Left)
             {
-                healthBar.RectTransform.AbsoluteOffset = healthBarShadow.RectTransform.AbsoluteOffset = HUDLayoutSettings.HealthBarAreaLeft.Location;
+                healthBar.RectTransform.SetPosition(Anchor.BottomLeft);
+                healthBarShadow.RectTransform.SetPosition(Anchor.BottomLeft);
+                healthBar.RectTransform.AbsoluteOffset = healthBarShadow.RectTransform.AbsoluteOffset = 
+                    new Point(HUDLayoutSettings.HealthBarAreaLeft.X, GameMain.GraphicsHeight - HUDLayoutSettings.HealthBarAreaLeft.Bottom);
                 healthBar.RectTransform.NonScaledSize = healthBarShadow.RectTransform.NonScaledSize = HUDLayoutSettings.HealthBarAreaLeft.Size;
                 healthWindow.RectTransform.AbsoluteOffset = HUDLayoutSettings.HealthWindowAreaLeft.Location;
                 healthWindow.RectTransform.NonScaledSize = new Point(HUDLayoutSettings.HealthWindowAreaLeft.Width / 2, HUDLayoutSettings.HealthWindowAreaLeft.Height);
@@ -236,7 +241,10 @@ namespace Barotrauma
             }
             else
             {
-                healthBar.RectTransform.AbsoluteOffset = healthBarShadow.RectTransform.AbsoluteOffset = HUDLayoutSettings.HealthBarAreaRight.Location;
+                healthBar.RectTransform.SetPosition(Anchor.BottomRight);
+                healthBarShadow.RectTransform.SetPosition(Anchor.BottomRight);
+                healthBar.RectTransform.AbsoluteOffset = healthBarShadow.RectTransform.AbsoluteOffset =
+                    new Point(GameMain.GraphicsWidth - HUDLayoutSettings.HealthBarAreaLeft.Right, GameMain.GraphicsHeight - HUDLayoutSettings.HealthBarAreaLeft.Bottom);
                 healthBar.RectTransform.NonScaledSize = healthBarShadow.RectTransform.NonScaledSize = HUDLayoutSettings.HealthBarAreaRight.Size;
                 healthWindow.RectTransform.AbsoluteOffset = new Point(HUDLayoutSettings.HealthWindowAreaRight.Center.X, HUDLayoutSettings.HealthWindowAreaRight.Location.Y);
                 healthWindow.RectTransform.NonScaledSize = new Point(HUDLayoutSettings.HealthWindowAreaRight.Width / 2, HUDLayoutSettings.HealthWindowAreaRight.Height);
@@ -388,7 +396,7 @@ namespace Barotrauma
                     //0-1
                     float pulsateAmount = (float)(Math.Sin(healthBarPulsatePhase) + 1.0f) / 2.0f;
 
-                    healthBar.RectTransform.LocalScale = healthBarShadow.RectTransform.LocalScale = new Vector2(1.0f + pulsateAmount * Math.Min(healthBarPulsateTimer, 0.5f), 1.0f);
+                    healthBar.RectTransform.LocalScale = healthBarShadow.RectTransform.LocalScale = new Vector2(1.0f, (1.0f + pulsateAmount * healthBarPulsateTimer * 0.5f));
                     healthBarPulsatePhase += deltaTime * 5.0f;
                     healthBarPulsateTimer -= deltaTime;
                 }
@@ -461,7 +469,7 @@ namespace Barotrauma
                 healthWindowHealthBarShadow.AddToGUIUpdateList();
                 healthWindowHealthBar.AddToGUIUpdateList();
             }
-            else
+            else if (Character.Controlled == character)
             {
                 healthBarShadow.AddToGUIUpdateList();
                 healthBar.AddToGUIUpdateList();
@@ -516,23 +524,31 @@ namespace Barotrauma
                 Rectangle afflictionArea =  alignment == Alignment.Left ? HUDLayoutSettings.AfflictionAreaLeft : HUDLayoutSettings.AfflictionAreaRight;
                 Point pos = afflictionArea.Location;
 
+                bool horizontal = afflictionArea.Width > afflictionArea.Height;
+                int iconSize = horizontal ? afflictionArea.Height : afflictionArea.Width;
                 foreach (Pair<Sprite, string> statusIcon in statusIcons)
                 {
-                    Rectangle afflictionIconRect = new Rectangle(pos, new Point(afflictionArea.Width, afflictionArea.Width));
+                    Rectangle afflictionIconRect = new Rectangle(pos, new Point(iconSize));
                     interactArea = Rectangle.Union(interactArea, afflictionIconRect);
                     if (afflictionIconRect.Contains(PlayerInput.MousePosition))
                     {
                         highlightedIcon = statusIcon;
                         highlightedIconPos = afflictionIconRect.Center.ToVector2();
                     }
-                    pos.Y += afflictionArea.Width + (int)(5 * GUI.Scale);
+                    if (horizontal)
+                        pos.X += iconSize + (int)(5 * GUI.Scale);
+                    else
+                        pos.Y += iconSize + (int)(5 * GUI.Scale);
                 }
 
                 pos = afflictionArea.Location;
                 foreach (Pair<Sprite, string> statusIcon in statusIcons)
                 {
-                    statusIcon.First.Draw(spriteBatch, pos.ToVector2(), highlightedIcon == statusIcon ? Color.White : Color.White * 0.8f, 0, afflictionArea.Width / statusIcon.First.size.X);
-                    pos.Y += afflictionArea.Width + (int)(5 * GUI.Scale);
+                    statusIcon.First.Draw(spriteBatch, pos.ToVector2(), highlightedIcon == statusIcon ? Color.White : Color.White * 0.8f, 0, iconSize / statusIcon.First.size.X);
+                    if (horizontal)
+                        pos.X += iconSize + (int)(5 * GUI.Scale);
+                    else
+                        pos.Y += iconSize + (int)(5 * GUI.Scale);
                 }
 
                 if (highlightedIcon != null)

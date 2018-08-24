@@ -7,9 +7,11 @@ namespace Barotrauma
     {
         public override void Draw(SpriteBatch spriteBatch, bool subInventory = false)
         {
-            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
+            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y || 
+                prevUIScale != UIScale)
             {
                 CreateSlots();
+                prevUIScale = UIScale;
             }
 
             if (slots != null && slots.Length > 0)
