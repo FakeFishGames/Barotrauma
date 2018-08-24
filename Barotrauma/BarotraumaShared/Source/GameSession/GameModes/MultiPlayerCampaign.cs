@@ -62,7 +62,7 @@ namespace Barotrauma
         public override void Start()
         {
             base.Start();            
-            lastUpdateID++;
+            if (GameMain.NetworkMember.IsServer) lastUpdateID++;
         }
 
         public override void End(string endMessage = "")

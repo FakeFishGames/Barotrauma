@@ -111,7 +111,7 @@ namespace Barotrauma.Networking
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    if (!permissions.HasFlag(ClientPermissions.EndRound)) return false;
+                    if (!permissions.HasFlag(ClientPermissions.ManageRound)) return false;
                     RequestRoundEnd();
                     return true;
                 },
@@ -814,7 +814,7 @@ namespace Barotrauma.Networking
         private void ReadPermissions(NetIncomingMessage inc)
         {
             List<string> permittedConsoleCommands = new List<string>();
-            ClientPermissions newPermissions = (ClientPermissions)inc.ReadByte();
+            ClientPermissions newPermissions = (ClientPermissions)inc.ReadUInt16();
             if (newPermissions.HasFlag(ClientPermissions.ConsoleCommands))
             {
                 UInt16 consoleCommandCount = inc.ReadUInt16();
@@ -874,13 +874,15 @@ namespace Barotrauma.Networking
                     };
                 }
             }
-            
+
+            GameMain.NetLobbyScreen.StartButton.Visible = HasPermission(ClientPermissions.ManageRound);
+            DebugConsole.NewMessage("bop!", Color.Lime);
             GameMain.NetLobbyScreen.SubList.Enabled = Voting.AllowSubVoting || HasPermission(ClientPermissions.SelectSub);
             GameMain.NetLobbyScreen.ModeList.Enabled = Voting.AllowModeVoting || HasPermission(ClientPermissions.SelectMode);
             GameMain.NetLobbyScreen.ShowLogButton.Visible = HasPermission(ClientPermissions.ServerLog);
             showLogButton.Visible = HasPermission(ClientPermissions.ServerLog);
 
-            endRoundButton.Visible = HasPermission(ClientPermissions.EndRound);      
+            endRoundButton.Visible = HasPermission(ClientPermissions.ManageRound);      
         }
 
         private IEnumerable<object> StartGame(NetIncomingMessage inc)
@@ -1611,7 +1613,7 @@ namespace Barotrauma.Networking
         {
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
-            msg.Write((byte)ClientPermissions.Kick);            
+            msg.Write((UInt16)ClientPermissions.Kick);            
             msg.Write(kickedName);
             msg.Write(reason);
 
@@ -1622,7 +1624,7 @@ namespace Barotrauma.Networking
         {
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
-            msg.Write((byte)ClientPermissions.Ban);
+            msg.Write((UInt16)ClientPermissions.Ban);
             msg.Write(kickedName);
             msg.Write(reason);
             msg.Write(range);
@@ -1642,7 +1644,7 @@ namespace Barotrauma.Networking
 
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
-            msg.Write((byte)ClientPermissions.ManageCampaign);
+            msg.Write((UInt16)ClientPermissions.ManageCampaign);
             campaign.ClientWrite(msg);
             msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
@@ -1659,11 +1661,26 @@ namespace Barotrauma.Networking
 
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
-            msg.Write((byte)ClientPermissions.ConsoleCommands);
+            msg.Write((UInt16)ClientPermissions.ConsoleCommands);
             msg.Write(command);
             Vector2 cursorWorldPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
             msg.Write(cursorWorldPos.X);
             msg.Write(cursorWorldPos.Y);
+
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        /// <summary>
+        /// Tell the server to start the round (permission required)
+        /// </summary>
+        public void RequestStartRound()
+        {
+            if (!HasPermission(ClientPermissions.ManageRound)) return;
+
+            NetOutgoingMessage msg = client.CreateMessage();
+            msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
+            msg.Write((UInt16)ClientPermissions.ManageRound);
+            msg.Write(false); //indicates round start
 
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
@@ -1682,7 +1699,7 @@ namespace Barotrauma.Networking
 
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
-            msg.Write((byte)ClientPermissions.SelectSub);
+            msg.Write((UInt16)ClientPermissions.SelectSub);
             msg.Write((UInt16)subIndex);
             msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
@@ -1703,7 +1720,7 @@ namespace Barotrauma.Networking
 
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
-            msg.Write((byte)ClientPermissions.SelectMode);
+            msg.Write((UInt16)ClientPermissions.SelectMode);
             msg.Write((UInt16)modeIndex);
             msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
@@ -1717,7 +1734,8 @@ namespace Barotrauma.Networking
         {
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
-            msg.Write((byte)ClientPermissions.EndRound);
+            msg.Write((UInt16)ClientPermissions.ManageRound);
+            msg.Write(true); //indicates round end
 
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }

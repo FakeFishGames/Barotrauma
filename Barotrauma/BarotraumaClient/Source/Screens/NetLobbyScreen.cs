@@ -224,7 +224,7 @@ namespace Barotrauma
                 backgroundSprite = LocationType.Random(levelSeed)?.Background;
                 seedBox.Text = levelSeed;
 
-                lastUpdateID++;
+                //lastUpdateID++;
             }
         }
 
@@ -535,7 +535,10 @@ namespace Barotrauma
             };
 
             StartButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), defaultModeContainer.RectTransform, Anchor.BottomRight),
-                TextManager.Get("StartGameButton"), style: "GUIButtonLarge");
+                TextManager.Get("StartGameButton"), style: "GUIButtonLarge")
+            {
+                OnClicked = (btn, obj) => { GameMain.Client.RequestStartRound(); return true; }
+            };
             clientHiddenElements.Add(StartButton);
             
             campaignViewButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), defaultModeContainer.RectTransform, Anchor.BottomRight),
@@ -544,7 +547,7 @@ namespace Barotrauma
                 OnClicked = (btn, obj) => { ToggleCampaignView(true); return true; },
                 Visible = false
             };
-
+            
             spectateButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), defaultModeContainer.RectTransform, Anchor.BottomRight),
                 TextManager.Get("SpectateButton"), style: "GUIButtonLarge");
         }
@@ -584,11 +587,12 @@ namespace Barotrauma
             //TODO: is this even applicable anymore?
             clientDisabledElements.ForEach(c => c.Enabled = false);//GameMain.Server != null);
             clientHiddenElements.ForEach(c => c.Visible = false);//GameMain.Server != null);
-            
+            DebugConsole.NewMessage("bop!", Color.Red);
+
             ShowLogButton.Visible =
                 (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.ServerLog));
 
-            spectateButton.Visible = GameMain.Client != null && GameMain.Client.GameStarted;            
+            spectateButton.Visible = GameMain.Client != null && GameMain.Client.GameStarted;
             if (GameMain.Client.CharacterInfo != null)
             {
                 TogglePlayYourself(playYourself);
@@ -1560,7 +1564,7 @@ namespace Barotrauma
                 ToggleCampaignMode(false);
             }
 
-            lastUpdateID++;
+            //lastUpdateID++;
             return true;
         }
 
@@ -1586,7 +1590,7 @@ namespace Barotrauma
             seedBox.Enabled = false;//!enabled && GameMain.Server != null;
 
             if (campaignViewButton != null) campaignViewButton.Visible = enabled;
-            if (StartButton != null) StartButton.Visible = false;//!enabled && GameMain.Server != null;            
+            if (StartButton != null) StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound);//!enabled && GameMain.Server != null;            
 
             if (enabled)
             {
