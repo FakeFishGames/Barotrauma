@@ -234,7 +234,17 @@ namespace Barotrauma.Items.Components
             }
             
             properties = SerializableProperty.DeserializeProperties(this, element);
-            
+#if CLIENT
+            string msg = TextManager.Get(Msg, true);
+            if (msg != null)
+            {
+                foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
+                {
+                    msg = msg.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBind(inputType).ToString());
+                }
+                Msg = msg;
+            }
+#endif
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
