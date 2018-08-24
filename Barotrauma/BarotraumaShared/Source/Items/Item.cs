@@ -46,7 +46,7 @@ namespace Barotrauma
 
         public PhysicsBody body;
 
-        public readonly XElement staticBodyConfig;
+        public readonly XElement StaticBodyConfig;
         
         private Vector2 lastSentPos;
         private bool prevBodyAwake;
@@ -402,7 +402,7 @@ namespace Barotrauma
                     case "brokensprite":
                         break;
                     case "staticbody":
-                        staticBodyConfig = subElement;
+                        StaticBodyConfig = subElement;
                         break;
                     case "aitarget":
                         aiTarget = new AITarget(this);
