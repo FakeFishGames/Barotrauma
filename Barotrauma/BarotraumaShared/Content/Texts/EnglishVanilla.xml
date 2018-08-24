@@ -437,7 +437,7 @@
 
   <!-- Client permissions -->
   <ClientPermission.None>None</ClientPermission.None>
-  <ClientPermission.EndRound>End round</ClientPermission.EndRound>
+  <ClientPermission.ManageRound>Manage round</ClientPermission.ManageRound>
   <ClientPermission.Kick>Kick</ClientPermission.Kick>
   <ClientPermission.Ban>Ban</ClientPermission.Ban>
   <ClientPermission.SelectSub>Select sub</ClientPermission.SelectSub>
@@ -445,6 +445,7 @@
   <ClientPermission.ManageCampaign>Manage campaign</ClientPermission.ManageCampaign>
   <ClientPermission.ConsoleCommands>Console commands</ClientPermission.ConsoleCommands>
   <ClientPermission.ServerLog>Server log</ClientPermission.ServerLog>
+  <ClientPermission.All>All</ClientPermission.All>
 
   <!-- Game modes -->
   <GameMode.Sandbox>Sandbox</GameMode.Sandbox>

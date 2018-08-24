@@ -408,6 +408,8 @@ namespace Barotrauma.Networking
             if (newClient.Connection == ownerConnection)
             {
                 newClient.GivePermission(ClientPermissions.All);
+                newClient.PermittedConsoleCommands.AddRange(DebugConsole.Commands);
+
                 GameMain.Server.UpdateClientPermissions(newClient);
                 GameMain.Server.SendConsoleMessage("Granted all permissions to " + newClient.Name + ".", newClient);
             }
