@@ -63,7 +63,7 @@
 
     <ItemContainer itempos="27,10" iteminterval="0,-4" hideitems="false">
       <ContainedStateIndicator texture="Content/UI/inventoryAtlas.png" sourcerect="11,115,79,18"/>
-      <Containable name="spear"/>
+      <Containable identifier="spear"/>
     </ItemContainer>
   </Item>
 
