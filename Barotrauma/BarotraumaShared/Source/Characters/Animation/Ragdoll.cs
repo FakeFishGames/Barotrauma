@@ -84,8 +84,8 @@ namespace Barotrauma
         public bool onGround;
         private bool ignorePlatforms;
 
-        protected float colliderHeightFromFloor;
-        
+        protected float ColliderHeightFromFloor => ConvertUnits.ToSimUnits(RagdollParams.ColliderHeightFromFloor) * RagdollParams.JointScale;
+
         public Structure Stairs;
                 
         protected Direction dir;
@@ -121,7 +121,7 @@ namespace Barotrauma
                 if (collider[colliderIndex].height<collider[value].height)
                 {
                     Vector2 pos1 = collider[colliderIndex].SimPosition;
-                    pos1.Y -= collider[colliderIndex].height * colliderHeightFromFloor;
+                    pos1.Y -= collider[colliderIndex].height * ColliderHeightFromFloor;
                     Vector2 pos2 = pos1;
                     pos2.Y += collider[value].height * 1.1f;
                     if (GameMain.World.RayCast(pos1, pos2).Any(f => f.CollisionCategories.HasFlag(Physics.CollisionWall))) return;
@@ -306,7 +306,6 @@ namespace Barotrauma
             //}
             ImpactTolerance = element.GetAttributeFloat("impacttolerance", 50.0f);
             CanEnterSubmarine = element.GetAttributeBool("canentersubmarine", true);
-            colliderHeightFromFloor = ConvertUnits.ToSimUnits(element.GetAttributeFloat("colliderheightfromfloor", 45.0f));
             Draggable = element.GetAttributeBool("draggable", false);
             CreateColliders();
             CreateLimbs();
@@ -1203,7 +1202,7 @@ namespace Barotrauma
 
             Vector2 rayStart = Collider.SimPosition;
             Vector2 rayEnd = rayStart;
-            rayEnd.Y -= Collider.height * 0.5f + Collider.radius + colliderHeightFromFloor*1.2f;
+            rayEnd.Y -= Collider.height * 0.5f + Collider.radius + ColliderHeightFromFloor*1.2f;
 
             Vector2 colliderBottomDisplay = ConvertUnits.ToDisplayUnits(GetColliderBottom());
             if (!inWater && !character.IsDead && character.Stun <= 0f && levitatingCollider && Collider.LinearVelocity.Y>-ImpactTolerance)
@@ -1257,7 +1256,7 @@ namespace Barotrauma
                     }
 
                     float tfloorY = rayStart.Y + (rayEnd.Y - rayStart.Y) * closestFraction;
-                    float targetY = tfloorY + ((float)Math.Abs(Math.Cos(Collider.Rotation)) * Collider.height * 0.5f) + Collider.radius + colliderHeightFromFloor;
+                    float targetY = tfloorY + ((float)Math.Abs(Math.Cos(Collider.Rotation)) * Collider.height * 0.5f) + Collider.radius + ColliderHeightFromFloor;
 
                     if (Math.Abs(Collider.SimPosition.Y - targetY) > 0.01f)
                     {
@@ -1290,7 +1289,7 @@ namespace Barotrauma
         protected float GetFloorY(Vector2 simPosition)
         {
             Vector2 rayStart = simPosition;
-            float height = colliderHeightFromFloor;
+            float height = ColliderHeightFromFloor;
             if (HeadPosition.HasValue) height = Math.Max(height, HeadPosition.Value);
             if (TorsoPosition.HasValue) height = Math.Max(height, TorsoPosition.Value);
 
@@ -1700,7 +1699,7 @@ namespace Barotrauma
 
             if (!character.IsUnconscious && !character.IsDead && character.Stun <= 0.0f)
             {
-                offset = -colliderHeightFromFloor;
+                offset = -ColliderHeightFromFloor;
             }
 
             float lowestBound = Collider.SimPosition.Y;
