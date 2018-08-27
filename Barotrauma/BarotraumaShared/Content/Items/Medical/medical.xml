@@ -985,8 +985,9 @@
     <Body width="8" height="16" density="10"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="Character" Health="-5.0">
+      <StatusEffect type="OnUse" target="Character">
         <RequiredItem identifier="medicalsyringe" type="Container"/>
+        <Affliction identifier="internaldamage" amount="0.5"/>
       </StatusEffect>
       <!-- Did You Know? If OxygenAvailable is too low, character will take -5 Oxygen loss per tick, otherwise they restore +10 oxygen. -->
       <StatusEffect tags="poison,sufforin" type="OnUse" target="Character" OxygenAvailable="-10000.0" duration="60.0" delay="20.0">
