@@ -480,6 +480,15 @@ namespace Barotrauma.Networking
                 //slowly reset spam timers
                 c.ChatSpamTimer = Math.Max(0.0f, c.ChatSpamTimer - deltaTime);
                 c.ChatSpamSpeed = Math.Max(0.0f, c.ChatSpamSpeed - deltaTime);
+
+                //constantly increase AFK timer if the client is controlling a character (gets reset to zero every time an input is received)
+                if (gameStarted && c.Character != null) c.KickAFKTimer += deltaTime;
+            }
+
+            List<Client> kickAFK = connectedClients.FindAll(c => c.KickAFKTimer >= KickAFKTime);
+            foreach (Client c in kickAFK)
+            {
+                KickClient(c, TextManager.Get("DisconnectMessage.AFK"));
             }
 
             NetIncomingMessage inc = null; 

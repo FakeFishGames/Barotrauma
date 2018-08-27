@@ -945,7 +945,7 @@ namespace Barotrauma
                 }
             }
 
-            if (GameMain.Server != null && Character.Controlled != this)
+            if (GameMain.Server != null && Controlled != this)
             {
                 if (dequeuedInput.HasFlag(InputNetFlags.FacingLeft))
                 {
@@ -956,7 +956,7 @@ namespace Barotrauma
                     AnimController.TargetDir = Direction.Right;
                 }
             }
-            else if (GameMain.Client != null && Character.controlled != this)
+            else if (GameMain.Client != null && controlled != this)
             {
                 if (memState.Count > 0)
                 {
@@ -964,7 +964,7 @@ namespace Barotrauma
                 }
             }
 
-            if (attackCoolDown >0.0f)
+            if (attackCoolDown > 0.0f)
             {
                 attackCoolDown -= deltaTime;
             }
