@@ -293,7 +293,7 @@ namespace Barotrauma
 
                 btn.OnClicked += (GUIButton button, object userData) =>
                 {
-                    if (Character.Controlled == null || !Character.Controlled.CanSpeak) return false;
+                    if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f) return false;
 
                     if (order.ItemComponentType != null || order.ItemIdentifiers.Length > 0 || order.Options.Length > 1)
                     {
@@ -332,7 +332,7 @@ namespace Barotrauma
 
                 btn.OnClicked += (GUIButton button, object userData) =>
                 {
-                    if (Character.Controlled == null || !Character.Controlled.CanSpeak) return false;
+                    if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f) return false;
                     SetCharacterOrder(character, order, null, Character.Controlled);
                     return true;
                 };
@@ -475,7 +475,7 @@ namespace Barotrauma
             if (conversationTimer <= 0.0f)
             {
                 List<Character> availableSpeakers = GameMain.GameSession.CrewManager.GetCharacters();
-                availableSpeakers.RemoveAll(c => !(c.AIController is HumanAIController) || c.IsDead || !c.CanSpeak);
+                availableSpeakers.RemoveAll(c => !(c.AIController is HumanAIController) || c.IsDead || Character.Controlled.SpeechImpediment >= 100.0f);
                 if (GameMain.Server != null)
                 {
                     foreach (Client client in GameMain.Server.ConnectedClients)
@@ -495,7 +495,7 @@ namespace Barotrauma
                 if (conversationLineTimer <= 0.0f)
                 {
                     //speaker of the next line can't speak, interrupt the conversation
-                    if (!pendingConversationLines[0].First.CanSpeak)
+                    if (pendingConversationLines[0].First.SpeechImpediment >= 100.0f)
                     {
                         pendingConversationLines.Clear();
                         return;
@@ -863,7 +863,7 @@ namespace Barotrauma
         public void UpdateReports(float deltaTime)
         {
             bool hasRadio = false;
-            if (Character.Controlled?.CurrentHull != null && Character.Controlled.CanSpeak)
+            if (Character.Controlled?.CurrentHull != null && Character.Controlled.SpeechImpediment < 100.0f)
             {
                 WifiComponent radio = GetHeadset(Character.Controlled, true);
                 hasRadio = radio != null && radio.CanTransmit();

@@ -387,14 +387,23 @@ namespace Barotrauma
         }
 
         private bool canSpeak;
-        public bool CanSpeak
+
+        private bool speechImpedimentSet;
+
+        //value between 0-100 (50 = speech range is reduced by 50%)
+        private float speechImpediment;
+        public float SpeechImpediment
         {
             get
             {
-                if (!canSpeak) return false;
-                var huskAffliction = CharacterHealth.GetAffliction("huskinfection", false) as AfflictionHusk;
-                if (huskAffliction != null && !huskAffliction.CanSpeak) return false;
-                return !IsUnconscious && Stun <= 0.0f;
+                if (!canSpeak || IsUnconscious || Stun > 0.0f || IsDead) return 100.0f;
+                return speechImpediment;
+            }
+            set
+            {
+                if (value < speechImpediment) return;
+                speechImpedimentSet = true;
+                speechImpediment = MathHelper.Clamp(value, 0.0f, 100.0f);
             }
         }
 
@@ -1641,6 +1650,13 @@ namespace Barotrauma
             }
 
             DisableImpactDamageTimer -= deltaTime;
+
+            if (!speechImpedimentSet)
+            {
+                //if no statuseffect or anything else has set a speech impediment, allow speaking normally
+                speechImpediment = 0.0f;
+            }
+            speechImpedimentSet = false;
             
             if (needsAir)
             {

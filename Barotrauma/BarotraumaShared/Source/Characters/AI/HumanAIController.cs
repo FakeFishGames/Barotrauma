@@ -84,7 +84,7 @@ namespace Barotrauma
                 updateObjectiveTimer = UpdateObjectiveInterval;
             }
 
-            if (Character.CanSpeak)
+            if (Character.Controlled.SpeechImpediment < 100.0f)
             {
                 ReportProblems();
                 UpdateSpeaking();
@@ -259,7 +259,7 @@ namespace Barotrauma
             CurrentOrderOption = option;
             CurrentOrder = order;
             objectiveManager.SetOrder(order, option, orderGiver);
-            if (speak && Character.CanSpeak) Character.Speak(TextManager.Get("DialogAffirmative"), null, 1.0f);
+            if (speak && Character.Controlled.SpeechImpediment < 100.0f) Character.Speak(TextManager.Get("DialogAffirmative"), null, 1.0f);
 
             SetOrderProjSpecific(order);
         }
