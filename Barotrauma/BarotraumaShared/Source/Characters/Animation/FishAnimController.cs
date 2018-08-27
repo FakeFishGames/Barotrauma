@@ -433,8 +433,8 @@ namespace Barotrauma
             WalkPos -= MainLimb.LinearVelocity.X * 0.05f;
 
             Vector2 transformedStepSize = new Vector2(
-                (float)Math.Cos(WalkPos) * CurrentGroundedParams.StepSize.X * 3.0f,
-                (float)Math.Sin(WalkPos) * CurrentGroundedParams.StepSize.Y * 2.0f);
+                (float)Math.Cos(WalkPos) * CurrentGroundedParams.StepSize.X * RagdollParams.JointScale * 3.0f,
+                (float)Math.Sin(WalkPos) * CurrentGroundedParams.StepSize.Y * RagdollParams.JointScale * 2.0f);
 
             foreach (Limb limb in Limbs)
             {
