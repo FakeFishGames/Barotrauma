@@ -635,6 +635,7 @@
   <SteeringVelocityX>Velocity: [kph] km/h</SteeringVelocityX>
   <SteeringVelocityY>Descent velocity: [kph] km/h</SteeringVelocityY>
   <SteeringDepth>Depth: [m] m</SteeringDepth>
+  <SteeringDepthWarning>DANGEROUS PRESSURE</SteeringDepthWarning>
   <SonarSignalWeak>Signal weak</SonarSignalWeak>
   <SonarNoSignal>No signal</SonarNoSignal>
   <PowerContainerCharge>Charge: [charge] kWm ([percentage] %)</PowerContainerCharge>
