@@ -125,7 +125,7 @@ namespace Barotrauma
         {
             get
             {
-                return Crouching ? CurrentGroundedParams.CrouchingTorsoPos : base.TorsoPosition;
+                return Crouching ? CurrentGroundedParams.CrouchingTorsoPos * RagdollParams.JointScale : base.TorsoPosition;
             }
         }
 
@@ -260,7 +260,7 @@ namespace Barotrauma
                 for (int i = -1; i < 2; i += 2)
                 {
                     Vector2 footPos = GetColliderBottom();
-                    footPos = new Vector2(waist.SimPosition.X + Math.Sign(CurrentGroundedParams.StepSize.X * RagdollParams.JointScale * i) * Dir * 0.3f, footPos.Y - 0.1f);
+                    footPos = new Vector2(waist.SimPosition.X + Math.Sign(CurrentGroundedParams.StepSize.X * i) * Dir * 0.3f * RagdollParams.JointScale, footPos.Y - 0.1f * RagdollParams.JointScale);
                     var foot = i == -1 ? rightFoot : leftFoot;
                     MoveLimb(foot, footPos, Math.Abs(foot.SimPosition.X - footPos.X) * 100.0f, true);
                 }
@@ -583,8 +583,8 @@ namespace Barotrauma
                     if (Crouching)
                     {
                         footPos = new Vector2(
-                            waist.SimPosition.X + Math.Sign(stepSize.X * i) * Dir * 0.3f,
-                            colliderPos.Y - 0.1f);
+                            waist.SimPosition.X + Math.Sign(stepSize.X * i) * Dir * 0.3f * RagdollParams.JointScale,
+                            colliderPos.Y - 0.1f * RagdollParams.JointScale);
                     }
                     else
                     {
