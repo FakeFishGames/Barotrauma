@@ -1606,6 +1606,7 @@ namespace Barotrauma
                 }
 
                 skill.Level = skillLevel;
+                GameMain.Server.CreateEntityEvent(character, new object[] { NetEntityEvent.Type.UpdateSkills });
             },
             null,
             (Client client, Vector2 cursorWorldPos, string[] args) =>
@@ -1631,6 +1632,7 @@ namespace Barotrauma
 
                 NewMessage("Client \"" + client.Name + "\" set the \"" + skill.Identifier + "\" skill of " + character.Name + " to " + skillLevel, Color.White);
                 skill.Level = skillLevel;
+                GameMain.Server.CreateEntityEvent(character, new object[] { NetEntityEvent.Type.UpdateSkills });
             },
             () =>
             {
