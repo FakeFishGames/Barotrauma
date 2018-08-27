@@ -334,9 +334,10 @@ namespace Barotrauma
             }
             animSelection.AddItem(AnimationType.SwimSlow.ToString(), AnimationType.SwimSlow);
             animSelection.AddItem(AnimationType.SwimFast.ToString(), AnimationType.SwimFast);
-            animSelection.SelectItem(AnimationType.Walk);
+            animSelection.SelectItem(character.AnimController.CanWalk ? AnimationType.Walk : AnimationType.SwimSlow);
             animSelection.OnSelected += (element, data) =>
             {
+                AnimationType previousAnim = character.AnimController.ForceSelectAnimationType;
                 character.AnimController.ForceSelectAnimationType = (AnimationType)data;               
                 switch (character.AnimController.ForceSelectAnimationType)
                 {
@@ -344,13 +345,19 @@ namespace Barotrauma
                         character.AnimController.forceStanding = true;
                         character.ForceRun = false;
                         SetWallCollisions(true);
-                        TeleportTo(spawnPosition);
+                        if (previousAnim != AnimationType.Walk || previousAnim != AnimationType.Run)
+                        {
+                            TeleportTo(spawnPosition);
+                        }
                         break;
                     case AnimationType.Run:
                         character.AnimController.forceStanding = true;
                         character.ForceRun = true;
                         SetWallCollisions(true);
-                        TeleportTo(spawnPosition);
+                        if (previousAnim != AnimationType.Walk || previousAnim != AnimationType.Run)
+                        {
+                            TeleportTo(spawnPosition);
+                        }
                         break;
                     case AnimationType.SwimSlow:
                         character.AnimController.forceStanding = false;
@@ -925,7 +932,12 @@ namespace Barotrauma
             }
             if (PlayerInput.KeyHit(Keys.E))
             {
-                
+                int nextIndex = animSelection.SelectedIndex + 1;
+                if (nextIndex > animSelection.ListBox.CountChildren - 1)
+                {
+                    nextIndex = 0;
+                }
+                animSelection.Select(nextIndex);
             }
             if (PlayerInput.KeyHit(Keys.F))
             {
