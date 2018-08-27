@@ -322,6 +322,12 @@ namespace Barotrauma
                     return true;
                 }
             };
+            limbScaleBar.Bar.OnClicked += (button, data) =>
+            {
+                character.AnimController.Recreate(RagdollParams);
+                TeleportTo(spawnPosition);
+                return true;
+            };
             // Animation
             animationControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupAnimation = new GUILayoutGroup(new RectTransform(Vector2.One, animationControls.RectTransform)) { CanBeFocused = false };
@@ -1093,7 +1099,7 @@ namespace Barotrauma
             }
 
             // Widgets for all anims -->
-            // Speed
+            // Movement speed
             Vector2 referencePoint = SimToScreen(head != null ? head.SimPosition : collider.SimPosition);
             Vector2 drawPos = referencePoint;
             drawPos += forward * ConvertUnits.ToDisplayUnits(animParams.Speed) * Cam.Zoom;
