@@ -80,8 +80,8 @@ namespace Barotrauma
         protected float? GetValidOrNull(float v) => MathUtils.IsValid(v) ? new float?(v) : null;
         protected float? GetValidOrNull(AnimationParams p, float? v) => p == null ? null : GetValidOrNull(v.Value);
 
-        protected override float? HeadPosition => GetValidOrNull(CurrentGroundedParams, CurrentGroundedParams?.HeadPosition);
-        protected override float? TorsoPosition => GetValidOrNull(CurrentGroundedParams, CurrentGroundedParams?.TorsoPosition);
+        protected override float? HeadPosition => GetValidOrNull(CurrentGroundedParams, CurrentGroundedParams?.HeadPosition * RagdollParams.JointScale);
+        protected override float? TorsoPosition => GetValidOrNull(CurrentGroundedParams, CurrentGroundedParams?.TorsoPosition * RagdollParams.JointScale);
         protected override float? HeadAngle => GetValidOrNull(CurrentAnimationParams, CurrentAnimationParams?.HeadAngleInRadians);
         protected override float? TorsoAngle => GetValidOrNull(CurrentAnimationParams, CurrentAnimationParams?.TorsoAngleInRadians);
 
