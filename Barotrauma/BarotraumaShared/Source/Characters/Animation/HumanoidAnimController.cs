@@ -963,9 +963,9 @@ namespace Barotrauma
                 ladderSimPos += character.SelectedConstruction.Submarine.SimPosition - currentHull.Submarine.SimPosition;
             }
 
-            MoveLimb(head, new Vector2(ladderSimPos.X - 0.27f * Dir, Collider.SimPosition.Y + 0.9f - colliderHeightFromFloor), 10.5f);
-            MoveLimb(torso, new Vector2(ladderSimPos.X - 0.27f * Dir, Collider.SimPosition.Y + 0.7f - colliderHeightFromFloor), 10.5f);
-            MoveLimb(waist, new Vector2(ladderSimPos.X - 0.35f * Dir, Collider.SimPosition.Y + 0.6f - colliderHeightFromFloor), 10.5f);
+            MoveLimb(head, new Vector2(ladderSimPos.X - 0.27f * Dir, Collider.SimPosition.Y + 0.9f - ColliderHeightFromFloor), 10.5f);
+            MoveLimb(torso, new Vector2(ladderSimPos.X - 0.27f * Dir, Collider.SimPosition.Y + 0.7f - ColliderHeightFromFloor), 10.5f);
+            MoveLimb(waist, new Vector2(ladderSimPos.X - 0.35f * Dir, Collider.SimPosition.Y + 0.6f - ColliderHeightFromFloor), 10.5f);
 
             Collider.MoveToPos(new Vector2(ladderSimPos.X - 0.2f * Dir, Collider.SimPosition.Y), 10.5f);            
             
@@ -973,7 +973,7 @@ namespace Barotrauma
                 ladderSimPos.X,
                 Collider.SimPosition.Y + 0.8f + movement.Y * 0.1f - ladderSimPos.Y);
 
-            handPos.Y = Math.Min(-0.2f, handPos.Y) - colliderHeightFromFloor;
+            handPos.Y = Math.Min(-0.2f, handPos.Y) - ColliderHeightFromFloor;
 
             MoveLimb(leftHand,
                 new Vector2(handPos.X,
@@ -990,7 +990,7 @@ namespace Barotrauma
 
             Vector2 footPos = new Vector2(
                 handPos.X - Dir * 0.05f,
-                Collider.SimPosition.Y + 0.9f - colliderHeightFromFloor - stepHeight * 2.7f - ladderSimPos.Y - 0.7f);
+                Collider.SimPosition.Y + 0.9f - ColliderHeightFromFloor - stepHeight * 2.7f - ladderSimPos.Y - 0.7f);
 
             //if (movement.Y < 0) footPos.Y += 0.05f;
 

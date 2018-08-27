@@ -19,6 +19,9 @@ namespace Barotrauma
     {
         public string SpeciesName { get; private set; }
 
+        [Serialize(45f, true), Editable(0f, 1000f)]
+        public float ColliderHeightFromFloor { get; set; }
+
         [Serialize(1.0f, true), Editable(0.5f, 2f)]
         public float LimbScale { get; set; }
 

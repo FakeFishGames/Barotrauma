@@ -386,7 +386,7 @@ namespace Barotrauma
         {
             movement = MathUtils.SmoothStep(movement, TargetMovement, 0.2f);
 
-            float mainLimbHeight = colliderHeightFromFloor;
+            float mainLimbHeight = ColliderHeightFromFloor;
 
             Limb torso = GetLimb(LimbType.Torso);
             if (torso != null)
