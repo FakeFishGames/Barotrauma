@@ -25,13 +25,7 @@ namespace Barotrauma
         private bool flippedX, flippedY;
         public bool FlippedX { get { return flippedX; } }
         public bool FlippedY { get { return flippedY; } }
-
-        public bool MoveWithLevel
-        {
-            get;
-            set;
-        }
-
+        
         public bool ShouldBeSaved = true;
         
         //the position and dimensions of the entity

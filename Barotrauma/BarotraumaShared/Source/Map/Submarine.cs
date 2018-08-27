@@ -734,8 +734,7 @@ namespace Barotrauma
 
             foreach (MapEntity e in subEntities)
             {
-                if (e.MoveWithLevel || e is Item) continue;
-
+                if (e is Item) continue;
                 if (e is LinkedSubmarine)
                 {
                     Submarine sub = ((LinkedSubmarine)e).Sub;
@@ -1254,7 +1253,7 @@ namespace Barotrauma
 
             foreach (MapEntity e in MapEntity.mapEntityList)
             {
-                if (e.MoveWithLevel || e.Submarine != this || !e.ShouldBeSaved) continue;
+                if (e.Submarine != this || !e.ShouldBeSaved) continue;
                 e.Save(element);
             }
         }

@@ -287,12 +287,22 @@ namespace Barotrauma.Items.Components
             IsActive = false;
         }
 
+        public bool CanBeDeattached()
+        {
+            if (!attachable || !attached) return true;
+
+            //don't allow deattaching if outside hulls and not in sub editor
+            return item.CurrentHull != null || Screen.Selected == GameMain.SubEditorScreen;
+        }
+
         public override bool Pick(Character picker)
         {
             if (!attachable)
             {
                 return base.Pick(picker);
             }
+
+            if (!CanBeDeattached()) return false;
 
             if (Attached)
             {
