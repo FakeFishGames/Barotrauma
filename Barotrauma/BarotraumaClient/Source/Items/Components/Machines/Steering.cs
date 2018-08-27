@@ -13,6 +13,8 @@ namespace Barotrauma.Items.Components
 
         private GUIComponent steerArea;
 
+        private GUITextBlock pressureWarningText;
+
         public bool LevelStartSelected
         {
             get { return levelStartTickBox.Selected; }
@@ -112,6 +114,10 @@ namespace Barotrauma.Items.Components
                     return steeringDepth.Replace("[m]", ((int)realWorldDepth).ToString());
                 }
             };
+            pressureWarningText = new GUITextBlock(new RectTransform(new Point(100, 15), textContainer.RectTransform), TextManager.Get("SteeringDepthWarning"), Color.Red)
+            {
+                Visible = false
+            };
 
             steerArea = new GUICustomComponent(new RectTransform(new Point(GuiFrame.Rect.Height, GuiFrame.Rect.Width), GuiFrame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(10, 0) },
                 (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); }, null);
@@ -199,6 +205,8 @@ namespace Barotrauma.Items.Components
         public override void UpdateHUD(Character character, float deltaTime)
         {
             if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
+
+            pressureWarningText.Visible = item.Submarine != null && item.Submarine.AtDamageDepth && Timing.TotalTime % 1.0f < 0.5f;
 
             if (Vector2.Distance(PlayerInput.MousePosition, steerArea.Rect.Center.ToVector2()) < steerArea.Rect.Width / 2)
             {
