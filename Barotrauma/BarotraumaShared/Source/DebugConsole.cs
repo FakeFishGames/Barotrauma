@@ -1538,7 +1538,7 @@ namespace Barotrauma
                     Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
                 };
             }, isCheat: true));
-
+            
             commands.Add(new Command("revive", "revive [character name]: Bring the specified character back from the dead. If the name parameter is omitted, the controlled character will be revived.", (string[] args) =>
             {
                 Character revivedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args);
@@ -1581,6 +1581,63 @@ namespace Barotrauma
                 return new string[][]
                 {
                     Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                };
+            }, isCheat: true));
+
+            commands.Add(new Command("setskill", "setskill [character name] [skill name] [level]: Set the specified skill level to the given value.", (string[] args) =>
+            {
+                if (args.Length < 3) return;
+                Character character = FindMatchingCharacter(args.Take(1).ToArray());
+                if (character?.Info?.Job == null) return;
+
+                var skill = character.Info.Job.Skills.Find(s =>
+                    s.Identifier.ToLowerInvariant() == args[1].ToLowerInvariant() ||
+                    TextManager.Get("SkillName." + s.Identifier, true)?.ToLowerInvariant() == args[0].ToLowerInvariant());
+
+                if (skill == null)
+                {
+                    ThrowError("Skill \"" + args[1] + "\" not found.");
+                    return;
+                }
+
+                if (!int.TryParse(args[2], out int skillLevel))
+                {
+                    ThrowError("\"" + args[2] + "\" is not a valid skill level.");
+                }
+
+                skill.Level = skillLevel;
+            },
+            null,
+            (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (args.Length < 3) return;
+                Character character = FindMatchingCharacter(args.Take(1).ToArray());
+                if (character?.Info?.Job == null) return;
+
+                var skill = character.Info.Job.Skills.Find(s =>
+                    s.Identifier.ToLowerInvariant() == args[1].ToLowerInvariant() ||
+                    TextManager.Get("SkillName." + s.Identifier, true)?.ToLowerInvariant() == args[0].ToLowerInvariant());
+
+                if (skill == null)
+                {
+                    GameMain.Server.SendConsoleMessage("Skill \"" + args[1] + "\" not found.", client);
+                    return;
+                }
+
+                if (!int.TryParse(args[2], out int skillLevel))
+                {
+                    GameMain.Server.SendConsoleMessage("\"" + args[2] + "\" is not a valid skill level.", client);
+                }
+
+                NewMessage("Client \"" + client.Name + "\" set the \"" + skill.Identifier + "\" skill of " + character.Name + " to " + skillLevel, Color.White);
+                skill.Level = skillLevel;
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray(),
+                    Character.CharacterList.FirstOrDefault(c => c.Info?.Job != null)?.Info?.Job?.Skills.Select(s => s.Identifier).ToArray()
                 };
             }, isCheat: true));
 
