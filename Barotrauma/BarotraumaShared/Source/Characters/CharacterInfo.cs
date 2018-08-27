@@ -199,10 +199,10 @@ namespace Barotrauma
             int genderIndex = (this.gender == Gender.Female) ? 1 : 0;
             if (headSpriteRange[genderIndex] != Vector2.Zero)
             {
-                HeadSpriteId = Rand.Range((int)headSpriteRange[genderIndex].X, (int)headSpriteRange[genderIndex].Y + 1);
+                HeadSpriteId = Rand.Range((int)headSpriteRange[genderIndex].X, (int)headSpriteRange[genderIndex].Y + 1, Rand.RandSync.Server);
             }
 
-            this.Job = (jobPrefab == null) ? Job.Random() : new Job(jobPrefab);
+            this.Job = (jobPrefab == null) ? Job.Random(Rand.RandSync.Server) : new Job(jobPrefab);
 
             if (!string.IsNullOrEmpty(name))
             {
