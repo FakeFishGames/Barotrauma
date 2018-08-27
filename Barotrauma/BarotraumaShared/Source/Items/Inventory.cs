@@ -201,6 +201,8 @@ namespace Barotrauma
                 TryPutItem(item, index, false, false, user, createNetworkEvent))
             {
 #if CLIENT
+                if (slots != null)
+                {
                     for (int j = 0; j < capacity; j++)
                     {
                         if (Items[j] == item) slots[j].ShowBorderHighlight(Color.Green, 0.1f, 0.9f);                            
@@ -209,6 +211,7 @@ namespace Barotrauma
                     {
                         if (otherInventory.Items[j] == existingItem) otherInventory.slots[j].ShowBorderHighlight(Color.Green, 0.1f, 0.9f);                            
                     }
+                }
 #endif
                 return true;
             }
@@ -226,7 +229,9 @@ namespace Barotrauma
                 //swapping the items failed -> move them back to where they were
                 otherInventory.TryPutItem(item, otherIndex, false, false, user, createNetworkEvent);
                 TryPutItem(existingItem, index, false, false, user, createNetworkEvent);
-#if CLIENT
+#if CLIENT                
+                if (slots != null)
+                {
                     for (int j = 0; j < capacity; j++)
                     {
                         if (Items[j] == existingItem)
@@ -234,6 +239,7 @@ namespace Barotrauma
                             slots[j].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
                         }
                     }
+                }
 #endif
                 return false;
             }
