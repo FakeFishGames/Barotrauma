@@ -266,9 +266,9 @@ namespace Barotrauma
         private GUIFrame centerPanel;
         private GUIFrame ragdollControls;
         private GUIFrame animationControls;
+        private GUIDropDown animSelection;
         private GUITickBox freezeToggle;
         private GUITickBox animTestPoseToggle;
-        private GUITickBox swimToggle;
         private GUIScrollBar jointScaleBar;
         private GUIScrollBar limbScaleBar;
 
@@ -285,15 +285,15 @@ namespace Barotrauma
             {
                 centerPanel.RectTransform.Parent = null;
             }
-            Point sliderSize = new Point(120, 20);
+            Point elementSize = new Point(120, 20);
             int textAreaHeight = 20;
             centerPanel = new GUIFrame(new RectTransform(new Vector2(0.45f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.Center), style: null) { CanBeFocused = false };
             // Ragdoll
             ragdollControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupRagdoll = new GUILayoutGroup(new RectTransform(Vector2.One, ragdollControls.RectTransform)) { CanBeFocused = false };
-            var jointScaleElement = new GUIFrame(new RectTransform(sliderSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
-            var jointScaleText = new GUITextBlock(new RectTransform(new Point(sliderSize.X, textAreaHeight), jointScaleElement.RectTransform), $"Joint Scale: {RagdollParams.JointScale.FormatAsDoubleDecimal()}", Color.WhiteSmoke, textAlignment: Alignment.Center);
-            jointScaleBar = new GUIScrollBar(new RectTransform(sliderSize, jointScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.2f)
+            var jointScaleElement = new GUIFrame(new RectTransform(elementSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
+            var jointScaleText = new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), jointScaleElement.RectTransform), $"Joint Scale: {RagdollParams.JointScale.FormatAsDoubleDecimal()}", Color.WhiteSmoke, textAlignment: Alignment.Center);
+            jointScaleBar = new GUIScrollBar(new RectTransform(elementSize, jointScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.2f)
             {
                 BarScroll = RagdollParams.JointScale / 2,
                 MinValue = 0.25f,
@@ -307,9 +307,9 @@ namespace Barotrauma
                     return true;
                 }
             };
-            var limbScaleElement = new GUIFrame(new RectTransform(sliderSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
-            var limbScaleText = new GUITextBlock(new RectTransform(new Point(sliderSize.X, textAreaHeight), limbScaleElement.RectTransform), $"Limb Scale: {RagdollParams.LimbScale.FormatAsDoubleDecimal()}", Color.WhiteSmoke, textAlignment: Alignment.Center);
-            limbScaleBar = new GUIScrollBar(new RectTransform(sliderSize, limbScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.2f)
+            var limbScaleElement = new GUIFrame(new RectTransform(elementSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
+            var limbScaleText = new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), limbScaleElement.RectTransform), $"Limb Scale: {RagdollParams.LimbScale.FormatAsDoubleDecimal()}", Color.WhiteSmoke, textAlignment: Alignment.Center);
+            limbScaleBar = new GUIScrollBar(new RectTransform(elementSize, limbScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.2f)
             {
                 BarScroll = RagdollParams.LimbScale / 2,
                 MinValue = 0.25f,
@@ -331,6 +331,49 @@ namespace Barotrauma
             // Animation
             animationControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupAnimation = new GUILayoutGroup(new RectTransform(Vector2.One, animationControls.RectTransform)) { CanBeFocused = false };
+            var animationSelectionElement = new GUIFrame(new RectTransform(new Point(elementSize.X * 2 - 5, elementSize.Y), layoutGroupAnimation.RectTransform), style: null);
+            var animationSelectionText = new GUITextBlock(new RectTransform(new Point(elementSize.X, elementSize.Y), animationSelectionElement.RectTransform), "Selected Animation:", Color.WhiteSmoke, textAlignment: Alignment.Center);
+            animSelection = new GUIDropDown(new RectTransform(new Point(100, elementSize.Y), animationSelectionElement.RectTransform, Anchor.TopRight), elementCount: 4);
+            if (character.AnimController.CanWalk)
+            {
+                animSelection.AddItem(AnimationType.Walk.ToString(), AnimationType.Walk);
+                animSelection.AddItem(AnimationType.Run.ToString(), AnimationType.Run);
+            }
+            animSelection.AddItem(AnimationType.SwimSlow.ToString(), AnimationType.SwimSlow);
+            animSelection.AddItem(AnimationType.SwimFast.ToString(), AnimationType.SwimFast);
+            animSelection.SelectItem(AnimationType.Walk);
+            animSelection.OnSelected += (element, data) =>
+            {
+                character.AnimController.ForceSelectAnimationType = (AnimationType)data;               
+                switch (character.AnimController.ForceSelectAnimationType)
+                {
+                    case AnimationType.Walk:
+                        character.AnimController.forceStanding = true;
+                        character.ForceRun = false;
+                        SetWallCollisions(true);
+                        TeleportTo(spawnPosition);
+                        break;
+                    case AnimationType.Run:
+                        character.AnimController.forceStanding = true;
+                        character.ForceRun = true;
+                        SetWallCollisions(true);
+                        TeleportTo(spawnPosition);
+                        break;
+                    case AnimationType.SwimSlow:
+                        character.AnimController.forceStanding = false;
+                        character.ForceRun = false;
+                        SetWallCollisions(false);
+                        break;
+                    case AnimationType.SwimFast:
+                        character.AnimController.forceStanding = false;
+                        character.ForceRun = true;
+                        SetWallCollisions(false);
+                        break;
+                    default:
+                        throw new NotImplementedException();
+                }
+                return true;
+            };
         }
 
         private void CreateRightPanel()
@@ -472,34 +515,11 @@ namespace Barotrauma
                     return true;
                 }
             };
-            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Force Fast Speed")
-            {
-                OnSelected = (GUITickBox box) =>
-                {
-                    character.ForceRun = box.Selected;
-                    return true;
-                }
-            };
             new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Follow Cursor")
             {
                 OnSelected = (GUITickBox box) =>
                 {
                     character.dontFollowCursor = !box.Selected;
-                    return true;
-                }
-            };
-            swimToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Swim")
-            {
-                Enabled = character.AnimController.CanWalk,
-                Selected = character.AnimController is FishAnimController,
-                OnSelected = (GUITickBox box) =>
-                {
-                    character.AnimController.forceStanding = !box.Selected;
-                    SetWallCollisions(character.AnimController.forceStanding);
-                    if (character.AnimController.forceStanding)
-                    {
-                        TeleportTo(spawnPosition);
-                    }
                     return true;
                 }
             };
@@ -660,14 +680,14 @@ namespace Barotrauma
                 {
                     typeDropdown.AddItem(enumValue.ToString(), enumValue);
                 }
-                typeDropdown.SelectItem(AnimationType.Walk);
-                AnimationType selectedType = AnimationType.Walk;
+                AnimationType selectedType = character.AnimController.ForceSelectAnimationType;
                 typeDropdown.OnSelected = (component, data) =>
                 {
                     selectedType = (AnimationType)data;
                     inputField.Text = character.AnimController.GetAnimationParamsFromType(selectedType).Name;
                     return true;
                 };
+                typeDropdown.SelectItem(selectedType);
                 box.Buttons[0].OnClicked += (b, d) =>
                 {
                     box.Close();
@@ -700,14 +720,14 @@ namespace Barotrauma
                 {
                     typeDropdown.AddItem(enumValue.ToString(), enumValue);
                 }
-                typeDropdown.SelectItem(AnimationType.Walk);
-                AnimationType selectedType = AnimationType.Walk;
+                AnimationType selectedType = character.AnimController.ForceSelectAnimationType;
                 typeDropdown.OnSelected = (component, data) =>
                 {
                     selectedType = (AnimationType)data;
                     PopulateListBox();
                     return true;
                 };
+                typeDropdown.SelectItem(selectedType);
                 void PopulateListBox()
                 {
                     try
@@ -912,7 +932,7 @@ namespace Barotrauma
             }
             if (PlayerInput.KeyHit(Keys.E))
             {
-                swimToggle.Selected = !swimToggle.Selected;
+                
             }
             if (PlayerInput.KeyHit(Keys.F))
             {
