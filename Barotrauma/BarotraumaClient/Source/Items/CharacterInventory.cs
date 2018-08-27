@@ -362,7 +362,8 @@ namespace Barotrauma
                             new Vector2(slots[i].DrawOffset.X, MathHelper.Lerp(slots[i].DrawOffset.Y, 0, 10.0f * deltaTime));
                     }
                 }*/
-                if (Items[i] != null && Character.Controlled?.Inventory == this && 
+                if (Items[i] != null && Character.Controlled?.Inventory == this &&
+                    GUI.KeyboardDispatcher.Subscriber == null &&
                     slots[i].QuickUseKey != Keys.None && PlayerInput.KeyHit(slots[i].QuickUseKey))
                 {
                     QuickUseItem(Items[i], true, false);
