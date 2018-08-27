@@ -933,7 +933,7 @@ namespace Barotrauma
             if (PlayerInput.KeyHit(Keys.E))
             {
                 int nextIndex = animSelection.SelectedIndex + 1;
-                if (nextIndex > animSelection.ListBox.CountChildren - 1)
+                if (nextIndex > 3)
                 {
                     nextIndex = 0;
                 }
