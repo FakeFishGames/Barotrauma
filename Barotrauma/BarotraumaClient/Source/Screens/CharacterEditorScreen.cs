@@ -239,13 +239,6 @@ namespace Barotrauma
             character.AnimController.forceStanding = character.IsHumanoid;
             character.dontFollowCursor = true;
             Character.Controlled = character;
-            float size = ConvertUnits.ToDisplayUnits(character.AnimController.Collider.radius * 2);
-            float margin = 100;
-            float distance = Vector2.Distance(spawnPosition, new Vector2(spawnPosition.X, originalWall.walls.First().WorldPosition.Y)) - margin;
-            if (size > distance)
-            {
-                character.AnimController.Teleport(ConvertUnits.ToSimUnits(new Vector2(0, size * 1.5f)), Vector2.Zero);
-            }
             SetWallCollisions(character.AnimController.forceStanding);
             this.character = character;
             CreateTextures();
