@@ -13,7 +13,21 @@ namespace Barotrauma
         public abstract SwimParams SwimSlowParams { get; set; }
         public abstract SwimParams SwimFastParams { get; set; }
 
-        public AnimationParams CurrentAnimationParams => (InWater || !CanWalk) ? (AnimationParams)CurrentSwimParams : CurrentGroundedParams;
+        public AnimationParams CurrentAnimationParams
+        {
+            get
+            {
+                if (ForceSelectAnimationType == AnimationType.NotDefined)
+                {
+                    return (InWater || !CanWalk) ? (AnimationParams)CurrentSwimParams : CurrentGroundedParams;
+                }
+                else
+                {
+                    return GetAnimationParamsFromType(ForceSelectAnimationType);
+                }
+            }
+        }
+        public AnimationType ForceSelectAnimationType { get; set; }
         public GroundedMovementParams CurrentGroundedParams
         {
             get
@@ -34,9 +48,9 @@ namespace Barotrauma
         public bool CanWalk => CanEnterSubmarine;
         public bool IsMovingBackwards => Math.Sign(targetMovement.X) == -Math.Sign(Dir);
 
-        // TODO: Presupposes that the slow speed is lower than the high speed. 
-        // This is how it should be, but when the parameters are modified in the anim editor, it may be vice versa. 
-        // How should we solve this? Restrict the slow speed value or refactor how the current params are handled?
+        /// <summary>
+        /// Note: Presupposes that the slow speed is lower than the high speed. Otherwise will give invalid results.
+        /// </summary>
         public bool IsMovingFast
         {
             get
