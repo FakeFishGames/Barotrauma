@@ -260,7 +260,7 @@ namespace Barotrauma
                 for (int i = -1; i < 2; i += 2)
                 {
                     Vector2 footPos = GetColliderBottom();
-                    footPos = new Vector2(waist.SimPosition.X + Math.Sign(CurrentGroundedParams.StepSize.X * i) * Dir * 0.3f, footPos.Y - 0.1f);
+                    footPos = new Vector2(waist.SimPosition.X + Math.Sign(CurrentGroundedParams.StepSize.X * RagdollParams.JointScale * i) * Dir * 0.3f, footPos.Y - 0.1f);
                     var foot = i == -1 ? rightFoot : leftFoot;
                     MoveLimb(foot, footPos, Math.Abs(foot.SimPosition.X - footPos.X) * 100.0f, true);
                 }
@@ -391,7 +391,7 @@ namespace Barotrauma
             float walkPosY = (float)Math.Sin(WalkPos);
 
 
-            Vector2 stepSize = CurrentGroundedParams.StepSize;
+            Vector2 stepSize = CurrentGroundedParams.StepSize * RagdollParams.JointScale;
             stepSize.X *= walkPosX;
             stepSize.Y *= walkPosY;                
 
