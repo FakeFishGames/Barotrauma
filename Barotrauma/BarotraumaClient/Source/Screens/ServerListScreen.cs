@@ -24,9 +24,9 @@ namespace Barotrauma
 
         private GUIListBox serverList;
 
-        private GUIButton joinButton;
+        private GUIButton joinButton, directJoinButton;
 
-        private GUITextBox clientNameBox, ipBox;
+        private GUITextBox clientNameBox, ipBox, hiddenIpBox;
 
         private bool masterServerResponded;
         private IRestResponse masterServerResponse;
@@ -70,16 +70,27 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("YourName"));
             clientNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.045f), leftColumn.RectTransform), "")
             {
-                Text = GameMain.Config.DefaultPlayerName
+                Text = GameMain.Config.DefaultPlayerName,
+                OnTextChanged = SelectServer
             };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("ServerIP"));
             // TODO: Show IP on server info window
             // TODO: Make server list more streamer friendly by not displaying the IP
-            ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.045f), leftColumn.RectTransform), "");
+            ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.045f), leftColumn.RectTransform), "")
+            {
+                OnTextChanged = ManualConnectServer
+            };
+
+            hiddenIpBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.045f), leftColumn.RectTransform), "")
+            {
+                Visible = false
+            };
+
+            //directJoinButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.045f), leftColumn.RectTransform), "Direct Connect");
 
             //spacing
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.53f), leftColumn.RectTransform), style: null);
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.45f), leftColumn.RectTransform), style: null);
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("FilterServers"));
             searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), "");
@@ -177,10 +188,11 @@ namespace Barotrauma
 				OnClicked = RefreshServers
 			};
 
-			joinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform, Anchor.TopRight),
+            joinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform, Anchor.TopRight),
                 TextManager.Get("ServerListJoin"), style: "GUIButtonLarge")
             {
-                OnClicked = JoinServer
+                OnClicked = JoinServer,
+                Enabled = false
             };
 
             //--------------------------------------------------------
@@ -227,11 +239,36 @@ namespace Barotrauma
             }
         }
 
+        private bool ManualConnectServer(GUIComponent component, object obj)
+        {
+            if (obj == null || waitingForRefresh) return false;
+
+            if (!string.IsNullOrWhiteSpace(clientNameBox.Text) && !string.IsNullOrWhiteSpace(ipBox.Text))
+            {
+                joinButton.Enabled = true;
+            }
+            else
+            {
+                clientNameBox.Flash();
+                joinButton.Enabled = false;
+            }
+
+            return true;
+        }
+
         private bool SelectServer(GUIComponent component, object obj)
         {
             if (obj == null || waitingForRefresh) return false;
 
-            joinButton.Flash();
+            if (!string.IsNullOrWhiteSpace(clientNameBox.Text))
+            {
+                joinButton.Enabled = true;
+            }
+            else
+            {
+                clientNameBox.Flash();
+                joinButton.Enabled = false;
+            }
 
             ServerInfo serverInfo;
             try
@@ -243,7 +280,7 @@ namespace Barotrauma
                 return false;
             }
 
-            ipBox.Text = serverInfo.IP + ":" + serverInfo.Port;
+            hiddenIpBox.Text = serverInfo.IP + ":" + serverInfo.Port;
 
             return true;
         }
@@ -252,6 +289,10 @@ namespace Barotrauma
         {
             if (waitingForRefresh) return false;
             serverList.ClearChildren();
+
+            ipBox.Text = null;
+            hiddenIpBox.Text = null;
+            joinButton.Enabled = false;
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverList.Content.RectTransform),
                 TextManager.Get("RefreshingServerList"));
@@ -568,19 +609,31 @@ namespace Barotrauma
 
         private bool JoinServer(GUIButton button, object obj)
         {
+
             if (string.IsNullOrWhiteSpace(clientNameBox.Text))
             {
                 clientNameBox.Flash();
+                joinButton.Enabled = false;
                 return false;
             }
 
             GameMain.Config.DefaultPlayerName = clientNameBox.Text;
 
-            string ip = ipBox.Text;
+            string ip;
+
+            if (!string.IsNullOrWhiteSpace(ipBox.Text))
+            {
+                ip = ipBox.Text;
+            }
+            else
+            {
+                ip = hiddenIpBox.Text;
+            }
 
             if (string.IsNullOrWhiteSpace(ip))
             {
                 ipBox.Flash();
+                joinButton.Enabled = false;
                 return false;
             }
 
