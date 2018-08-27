@@ -82,6 +82,8 @@
       <fabricableitem identifier="extinguisher" requiredtime="10">
         <RequiredItem identifier="steelbar"/>
         <RequiredItem identifier="polycarbonatebar"/>
+        <RequiredItem identifier="chlorine"/>
+        <RequiredItem identifier="potassium"/>
       </fabricableitem>
       <fabricableitem identifier="flashlight" requiredtime="10">
         <RequiredItem identifier="copperbar"/>

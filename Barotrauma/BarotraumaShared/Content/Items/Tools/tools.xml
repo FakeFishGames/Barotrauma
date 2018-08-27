@@ -167,17 +167,19 @@
     cargocontaineridentifier="metalcrate"
     description="A handheld carbon dioxide extinguisher.">
 
-    <Price locationtype="City" buyprice="100"/>
-    <Price locationtype="Research" buyprice="100"/>
-    <Price locationtype="Military" buyprice="100"/>
+    <Price locationtype="City" buyprice="140"/>
+    <Price locationtype="Research" buyprice="140"/>
+    <Price locationtype="Military" buyprice="150"/>
     <Price locationtype="Outpost" buyprice="200"/>
 
     <Deconstruct time="10">
       <Item identifier="polycarbonatebar"/>
       <Item identifier="steelbar"/>
+      <Item identifier="potassium" copycondition="true" mincondition="0.1"/>
+      <Item identifier="chlorine" copycondition="true" mincondition="0.1"/>
     </Deconstruct>
 
-    <Sprite texture ="extinguisher.png" depth="0.55" sourcerect="0,0,34,64" origin="0.4,0.5"/>
+    <Sprite texture="extinguisher.png" depth="0.55" sourcerect="0,0,34,64" origin="0.4,0.5"/>
 
     <Body radius="10" height="45" density="5"/>
 
