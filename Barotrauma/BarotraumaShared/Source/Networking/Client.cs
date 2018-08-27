@@ -64,6 +64,8 @@ namespace Barotrauma.Networking
         public float ChatSpamSpeed;
         public float ChatSpamTimer;
         public int ChatSpamCount;
+
+        public float KickAFKTimer;
         
         public double MidRoundSyncTimeOut;
 

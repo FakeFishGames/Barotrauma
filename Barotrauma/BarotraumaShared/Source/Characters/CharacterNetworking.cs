@@ -296,6 +296,16 @@ namespace Barotrauma
                         UInt16 newAim = 0;
                         UInt16 newInteract = 0;
 
+                        if (newInput != InputNetFlags.None && newInput != InputNetFlags.FacingLeft)
+                        {
+                            c.KickAFKTimer = 0.0f;
+                        }
+                        else if (AnimController.Dir < 0.0f != newInput.HasFlag(InputNetFlags.FacingLeft))
+                        {
+                            //character changed the direction they're facing
+                            c.KickAFKTimer = 0.0f;
+                        }
+
                         if (newInput.HasFlag(InputNetFlags.Aim))
                         {
                             newAim = msg.ReadUInt16();

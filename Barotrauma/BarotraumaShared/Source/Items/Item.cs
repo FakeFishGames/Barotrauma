@@ -1531,6 +1531,8 @@ namespace Barotrauma
         {
             NetEntityEvent.Type eventType =
                 (NetEntityEvent.Type)msg.ReadRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1);
+            
+            c.KickAFKTimer = 0.0f;
 
             switch (eventType)
             {

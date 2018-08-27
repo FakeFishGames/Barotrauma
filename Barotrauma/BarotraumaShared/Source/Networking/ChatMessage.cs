@@ -178,6 +178,8 @@ namespace Barotrauma.Networking
 
         public static void ServerRead(NetIncomingMessage msg, Client c)
         {
+            c.KickAFKTimer = 0.0f;
+
             UInt16 ID = msg.ReadUInt16();
             ChatMessageType type = (ChatMessageType)msg.ReadByte();
             string txt = "";

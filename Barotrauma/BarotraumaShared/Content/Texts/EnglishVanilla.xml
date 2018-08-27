@@ -377,6 +377,7 @@
   <DisconnectReason.MissingContentPackage>Missing content package.</DisconnectReason.MissingContentPackage>
   <DisconnectReason.IncompatibleContentPackage>Incompatible content package.</DisconnectReason.IncompatibleContentPackage>
   <DisconnectReason.NotOnWhitelist>You are not on the server's whitelist.</DisconnectReason.NotOnWhitelist>
+  <DisconnectMessage.AFK>You have been away from keyboard for too long.</DisconnectMessage.AFK>
   <DisconnectMessage.SteamAuthNoLongerValid>Steam authentication is no longer valid ([status]).</DisconnectMessage.SteamAuthNoLongerValid>
   <DisconnectMessage.TooManyFailedLogins>Too many failed login attempts.</DisconnectMessage.TooManyFailedLogins>
   <DisconnectMessage.InvalidVersion>Version "[version]" required to connect to the server (Your version: "[clientversion]")</DisconnectMessage.InvalidVersion>
