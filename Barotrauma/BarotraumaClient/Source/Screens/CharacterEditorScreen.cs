@@ -236,7 +236,7 @@ namespace Barotrauma
             spawnPosition = WayPoint.GetRandom(sub: Submarine.MainSub).WorldPosition;
             var character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), hasAi: false, ragdoll: ragdoll);
             character.Submarine = Submarine.MainSub;
-            character.AnimController.forceStanding = character.IsHumanoid;
+            character.AnimController.forceStanding = character.AnimController.CanWalk;
             character.dontFollowCursor = true;
             Character.Controlled = character;
             SetWallCollisions(character.AnimController.forceStanding);
