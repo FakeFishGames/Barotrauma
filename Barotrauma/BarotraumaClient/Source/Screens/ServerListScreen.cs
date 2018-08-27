@@ -73,13 +73,10 @@ namespace Barotrauma
                 Text = GameMain.Config.DefaultPlayerName
             };
 
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("ServerIP"));
             // TODO: Show IP on server info window
-            //new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("ServerIP"));
-            // Make server list more streamer friendly by not displaying the IP
-            ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.045f), leftColumn.RectTransform), "")
-            {
-                Visible = false
-            };
+            // TODO: Make server list more streamer friendly by not displaying the IP
+            ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.045f), leftColumn.RectTransform), "");
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.53f), leftColumn.RectTransform), style: null);
