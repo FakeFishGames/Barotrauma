@@ -47,7 +47,7 @@ namespace Barotrauma
 
         public PhysicsBody body;
 
-        public readonly XElement staticBodyConfig;
+        public readonly XElement StaticBodyConfig;
         
         private Vector2 lastSentPos;
         private bool prevBodyAwake;
@@ -414,7 +414,7 @@ namespace Barotrauma
                     case "price":
                         break;
                     case "staticbody":
-                        staticBodyConfig = subElement;
+                        StaticBodyConfig = subElement;
                         break;
                     case "aitarget":
                         aiTarget = new AITarget(this, subElement);
@@ -1340,6 +1340,7 @@ namespace Barotrauma
             {
                 if (string.IsNullOrEmpty(ic.Msg)) continue;
                 if (!ic.CanBePicked && !ic.CanBeSelected) continue;
+                if (ic is Holdable holdable && !holdable.CanBeDeattached()) continue;
                
                 Color color = Color.Red;
                 if (ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false)) color = Color.Orange;

@@ -637,7 +637,7 @@ namespace Barotrauma
 
         public override XElement Save(XElement parentElement)
         {
-            if (MoveWithLevel) return null;
+            if (!ShouldBeSaved) return null;
             XElement element = new XElement("WayPoint");
 
             element.Add(new XAttribute("ID", ID),

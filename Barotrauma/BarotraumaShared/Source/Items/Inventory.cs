@@ -367,6 +367,9 @@ namespace Barotrauma
 
                     if (GameMain.Server != null)
                     {
+                        var holdable = item.GetComponent<Holdable>();
+                        if (holdable != null && !holdable.CanBeDeattached()) continue;
+
                         if (!item.CanClientAccess(c)) continue;
                     }
                     TryPutItem(item, i, true, true, c.Character, false);

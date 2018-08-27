@@ -13,6 +13,7 @@ using System.Linq;
 using System.Reflection;
 using GameAnalyticsSDK.Net;
 using System.IO;
+using System.Threading;
 
 namespace Barotrauma
 {
@@ -84,6 +85,8 @@ namespace Barotrauma
             get;
             private set;
         }
+
+        private static bool FullscreenOnTabIn;
 
         public static WindowMode WindowMode
         {
@@ -248,7 +251,36 @@ namespace Barotrauma
             TitleScreen = new LoadingScreen(GraphicsDevice);
 
             loadingCoroutine = CoroutineManager.StartCoroutine(Load());
+
+            var myForm = (System.Windows.Forms.Form)System.Windows.Forms.Form.FromHandle(Window.Handle);
+            myForm.Deactivate += new EventHandler(HandleDefocus);
+            myForm.Activated += new EventHandler(HandleFocus);
         }
+
+        private void HandleDefocus(object sender, EventArgs e)
+        {
+            if (GraphicsDeviceManager.IsFullScreen && GraphicsDeviceManager.HardwareModeSwitch)
+            {
+                GraphicsDeviceManager.IsFullScreen = false;
+                GraphicsDeviceManager.ApplyChanges();
+                FullscreenOnTabIn = true;
+                Thread.Sleep(500);
+            }
+        }
+
+        private void HandleFocus(object sender, EventArgs e)
+        {
+            if (FullscreenOnTabIn)
+            {
+                GraphicsDeviceManager.HardwareModeSwitch = true;
+                GraphicsDeviceManager.IsFullScreen = true;
+                GraphicsDeviceManager.ApplyChanges();
+                FullscreenOnTabIn = false;
+                Thread.Sleep(500);
+            }
+        }
+
+
 
         private void InitUserStats()
         {

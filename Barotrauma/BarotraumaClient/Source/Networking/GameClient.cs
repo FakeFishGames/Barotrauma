@@ -1577,6 +1577,11 @@ namespace Barotrauma.Networking
             client.Shutdown("");
             steamAuthTicket?.Cancel();
 
+            foreach (var fileTransfer in FileReceiver.ActiveTransfers)
+            {
+                fileTransfer.Dispose();
+            }
+
             if (HasPermission(ClientPermissions.ServerLog))
             {
                 ServerLog?.Save();
