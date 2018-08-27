@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -2027,6 +2028,8 @@ namespace Barotrauma
             if (element.GetAttributeBool("flippedx", false)) item.FlipX(false);
             if (element.GetAttributeBool("flippedy", false)) item.FlipY(false);
 
+            item.condition = element.GetAttributeFloat("condition", item.prefab.Health);
+
             return item;
         }
 
@@ -2041,6 +2044,11 @@ namespace Barotrauma
 
             if (FlippedX) element.Add(new XAttribute("flippedx", true));
             if (FlippedY) element.Add(new XAttribute("flippedy", true));
+
+            if (condition < prefab.Health)
+            {
+                element.Add(new XAttribute("condition", condition.ToString("G", CultureInfo.InvariantCulture)));
+            }
 
             System.Diagnostics.Debug.Assert(Submarine != null);
 
