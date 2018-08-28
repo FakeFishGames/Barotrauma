@@ -36,6 +36,7 @@ namespace Barotrauma
         private bool showSpritesheet;
         private bool isFreezed;
         private bool autoFreeze = true;
+        private bool lockLimbPairs;
 
         public override void Select()
         {
@@ -412,6 +413,7 @@ namespace Barotrauma
             var jointLimitsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joints Limits") { Selected = editJointLimits };
             freezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Freeze") { Selected = isFreezed };
             var autoFreezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Auto Freeze") { Selected = autoFreeze };
+            var lockLimbPairsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Lock Limb Pairs") { Selected = lockLimbPairs };
             animTestPoseToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Animation Test Pose") { Selected = character.AnimController.AnimationTestPose };
             editAnimsToggle.OnSelected = box =>
             {
@@ -502,6 +504,11 @@ namespace Barotrauma
             autoFreezeToggle.OnSelected = box =>
             {
                 autoFreeze = box.Selected;
+                return true;
+            };
+            lockLimbPairsToggle.OnSelected = box =>
+            {
+                lockLimbPairs = box.Selected;
                 return true;
             };
             animTestPoseToggle.OnSelected = box =>
@@ -1501,6 +1508,42 @@ namespace Barotrauma
                                     joint.LocalAnchorB += input;
                                     TryUpdateJointParam(joint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
                                 }
+                                // Edit the other limbs
+                                if (lockLimbPairs)
+                                {
+                                    string limbType = limb.type.ToString();
+                                    bool isLeft = limbType.Contains("Left");
+                                    bool isRight = limbType.Contains("Right");
+                                    if (isLeft || isRight)
+                                    {
+                                        if (character.IsHumanoid)
+                                        {
+                                            Limb otherLimb = GetOtherLimb(limbType, isLeft);
+                                            if (otherLimb != null)
+                                            {
+                                                UpdateOtherLimb(otherLimb);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            GetOtherLimbs(limb)?.ForEach(l => UpdateOtherLimb(l));
+                                        }
+                                        void UpdateOtherLimb(Limb otherLimb)
+                                        {
+                                            foreach (var otherJoint in character.AnimController.LimbJoints)
+                                            {
+                                                if (joint.BodyA == limb.body.FarseerBody && otherJoint.BodyA == otherLimb.body.FarseerBody)
+                                                {
+                                                    otherJoint.LocalAnchorA = joint.LocalAnchorA;
+                                                }
+                                                else if (joint.BodyB == limb.body.FarseerBody && otherJoint.BodyB == otherLimb.body.FarseerBody)
+                                                {
+                                                    otherJoint.LocalAnchorB = joint.LocalAnchorB;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                             else
                             {
@@ -1510,6 +1553,29 @@ namespace Barotrauma
                     }
                 }
             }
+        }
+
+        private Limb GetOtherLimb(string limbType, bool isLeft)
+        {
+            string otherLimbType = isLeft ? limbType.Replace("Left", "Right") : limbType.Replace("Right", "Left");
+            if (Enum.TryParse(otherLimbType, out LimbType type))
+            {
+                return character.AnimController.GetLimb(type);
+            }
+            return null;
+        }
+
+        // TODO: optimize, this method creates carbage (not much, but it's used frequently)
+        private IEnumerable<Limb> GetOtherLimbs(Limb limb)
+        {
+            var otherLimbs = character.AnimController.Limbs.Where(l => l.type == limb.type && l != limb);
+            string limbType = limb.type.ToString();
+            string otherLimbType = limbType.Contains("Left") ? limbType.Replace("Left", "Right") : limbType.Replace("Right", "Left");
+            if (Enum.TryParse(otherLimbType, out LimbType type))
+            {
+                otherLimbs = otherLimbs.Union(character.AnimController.Limbs.Where(l => l.type == type));
+            }
+            return otherLimbs;
         }
         #endregion
 
