@@ -143,18 +143,29 @@ namespace Barotrauma.Items.Components
 
                 if (!addNode) break;
 
-                if (newConnection.Item.Submarine == null) continue;
+                Submarine refSub = newConnection.Item.Submarine;
+                if (refSub == null)
+                {
+                    Structure attachTarget = Structure.GetAttachTarget(newConnection.Item.WorldPosition);
+                    if (attachTarget == null) continue;
+                    refSub = attachTarget.Submarine;
+                }
 
-                if (nodes.Count > 0 && nodes[0] == newConnection.Item.Position - newConnection.Item.Submarine.HiddenSubPosition) break;
-                if (nodes.Count > 1 && nodes[nodes.Count - 1] == newConnection.Item.Position - newConnection.Item.Submarine.HiddenSubPosition) break;
+                Vector2 nodePos = refSub == null ? 
+                    newConnection.Item.Position : 
+                    newConnection.Item.Position - refSub.HiddenSubPosition;
+
+
+                if (nodes.Count > 0 && nodes[0] == nodePos) break;
+                if (nodes.Count > 1 && nodes[nodes.Count - 1] == nodePos) break;
 
                 if (i == 0)
                 {
-                    nodes.Insert(0, newConnection.Item.Position - newConnection.Item.Submarine.HiddenSubPosition);                    
+                    nodes.Insert(0, nodePos);                    
                 }
                 else
                 {
-                    nodes.Add(newConnection.Item.Position - newConnection.Item.Submarine.HiddenSubPosition);
+                    nodes.Add(nodePos);
                 }
                 
                 break;
@@ -227,7 +238,7 @@ namespace Barotrauma.Items.Components
             if (Screen.Selected != GameMain.SubEditorScreen)
             {
                 //cannot run wires from sub to another
-                if (sub == null || (item.Submarine != sub && sub != null && item.Submarine != null))
+                if (item.Submarine != sub && sub != null && item.Submarine != null)
                 {
                     ClearConnections();
                     return;
@@ -235,8 +246,13 @@ namespace Barotrauma.Items.Components
 
                 if (item.CurrentHull == null)
                 {
-                    newNodePos = item.WorldPosition - sub.Position - sub.HiddenSubPosition;
-                    canPlaceNode = false;
+                    Structure attachTarget = Structure.GetAttachTarget(item.WorldPosition);
+                    canPlaceNode = attachTarget != null;
+
+                    sub = attachTarget?.Submarine;
+                    newNodePos = sub == null ? 
+                        item.WorldPosition :
+                        item.WorldPosition - sub.Position - sub.HiddenSubPosition;
                 }
                 else
                 {
@@ -251,7 +267,7 @@ namespace Barotrauma.Items.Components
                     if (user == null) return;
 
                     Vector2 prevNodePos = nodes[nodes.Count - 1];
-                    prevNodePos += sub.HiddenSubPosition;
+                    if (sub != null) prevNodePos += sub.HiddenSubPosition;
 
                     float currLength = 0.0f;
                     for (int i = 0; i < nodes.Count - 1; i++)
