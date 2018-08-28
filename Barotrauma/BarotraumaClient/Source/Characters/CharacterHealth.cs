@@ -78,8 +78,8 @@ namespace Barotrauma
                 if (openHealthWindow == value) return;
                 if (value != null && !value.UseHealthWindow) return;
 
-                if (value == null && 
-                    Character.Controlled.SelectedCharacter?.CharacterHealth == openHealthWindow && 
+                if (value == null &&
+                    Character.Controlled?.SelectedCharacter?.CharacterHealth == openHealthWindow && 
                     !Character.Controlled.SelectedCharacter.CanInventoryBeAccessed)
                 {
                     Character.Controlled.DeselectCharacter();
