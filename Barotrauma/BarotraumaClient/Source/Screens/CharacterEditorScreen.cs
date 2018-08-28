@@ -1154,7 +1154,7 @@ namespace Barotrauma
                             TryUpdateAnimParam("headleanamount", humanGroundedParams.HeadLeanAmount + scaledInput.X * dir);
                             TryUpdateAnimParam("headposition", humanGroundedParams.HeadPosition - scaledInput.Y * 1.5f / RagdollParams.JointScale);
                             GUI.DrawLine(spriteBatch, drawPos, SimToScreen(head.SimPosition), Color.Red);
-                        });
+                        }, autoFreeze: false);
                         var origin = drawPos + new Vector2(widgetDefaultSize / 2, 0) * dir;
                         GUI.DrawLine(spriteBatch, origin, origin + Vector2.UnitX * 5 * dir, Color.Red);
                     }
@@ -1166,7 +1166,7 @@ namespace Barotrauma
                             float v = groundedParams.HeadPosition - ConvertUnits.ToSimUnits(scaledMouseSpeed.Y) / Cam.Zoom / RagdollParams.JointScale;
                             TryUpdateAnimParam("headposition", v);
                             GUI.DrawLine(spriteBatch, new Vector2(drawPos.X, 0), new Vector2(drawPos.X, GameMain.GraphicsHeight), Color.Red);
-                        });
+                        }, autoFreeze: false);
                     }
                 }
             }
@@ -1193,7 +1193,7 @@ namespace Barotrauma
                             TryUpdateAnimParam("torsoleanamount", humanGroundedParams.TorsoLeanAmount + scaledInput.X * dir);
                             TryUpdateAnimParam("torsoposition", humanGroundedParams.TorsoPosition - scaledInput.Y * 1.5f / RagdollParams.JointScale);
                             GUI.DrawLine(spriteBatch, drawPos, SimToScreen(torso.SimPosition), Color.Red);
-                        });
+                        }, autoFreeze: false);
                         var origin = drawPos + new Vector2(widgetDefaultSize / 2, 0) * dir;
                         GUI.DrawLine(spriteBatch, origin, origin + Vector2.UnitX * 5 * dir, Color.Red);
                     }
@@ -1205,7 +1205,7 @@ namespace Barotrauma
                             float v = groundedParams.TorsoPosition - ConvertUnits.ToSimUnits(scaledMouseSpeed.Y) / Cam.Zoom / RagdollParams.JointScale;
                             TryUpdateAnimParam("torsoposition", v);
                             GUI.DrawLine(spriteBatch, new Vector2(drawPos.X, 0), new Vector2(drawPos.X, GameMain.GraphicsHeight), Color.Red);
-                        });
+                        }, autoFreeze: false);
                     }
                 }
             }
@@ -1739,12 +1739,12 @@ namespace Barotrauma
                 {
                     joint.UpperLimit = MathHelper.ToRadians(-angle);
                     TryUpdateJointParam(joint, "upperlimit", -angle);
-                }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
+                }, rotationOffset: rotationOffset);
                 DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.LowerLimit), "Lower Limit", Color.Yellow, angle =>
                 {
                     joint.LowerLimit = MathHelper.ToRadians(-angle);
                     TryUpdateJointParam(joint, "lowerlimit", -angle);
-                }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
+                }, rotationOffset: rotationOffset);
             }
             else
             {
@@ -1752,19 +1752,19 @@ namespace Barotrauma
                 {
                     joint.UpperLimit = MathHelper.ToRadians(angle);
                     TryUpdateJointParam(joint, "upperlimit", angle);
-                }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
+                }, rotationOffset: rotationOffset);
                 DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), "Lower Limit", Color.Cyan, angle =>
                 {
                     joint.LowerLimit = MathHelper.ToRadians(angle);
                     TryUpdateJointParam(joint, "lowerlimit", angle);
-                }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
+                }, rotationOffset: rotationOffset);
             }
         }
         #endregion
 
         #region Widgets as methods
         private void DrawCircularWidget(SpriteBatch spriteBatch, Vector2 drawPos, float value, string toolTip, Color color, Action<float> onClick,
-            float circleRadius = 30, int widgetSize = 10, float rotationOffset = 0, bool clockWise = true, bool displayAngle = true, bool autoFreeze = false)
+            float circleRadius = 30, int widgetSize = 10, float rotationOffset = 0, bool clockWise = true, bool displayAngle = true, bool? autoFreeze = null)
         {
             var angle = value;
             if (!MathUtils.IsValid(angle))
@@ -1832,7 +1832,7 @@ namespace Barotrauma
 
         public enum WidgetType { Rectangle, Circle }
         private string selectedWidget;
-        private void DrawWidget(SpriteBatch spriteBatch, Vector2 drawPos, WidgetType widgetType, int size, Color color, string name, Action onPressed, bool autoFreeze = false)
+        private void DrawWidget(SpriteBatch spriteBatch, Vector2 drawPos, WidgetType widgetType, int size, Color color, string name, Action onPressed, bool? autoFreeze = null)
         {
             var drawRect = new Rectangle((int)drawPos.X - size / 2, (int)drawPos.Y - size / 2, size, size);
             var inputRect = drawRect;
@@ -1861,7 +1861,7 @@ namespace Barotrauma
                 GUI.DrawString(spriteBatch, new Vector2(drawRect.Right + 5, drawRect.Y - drawRect.Height / 2), name, color, Color.Black * 0.5f);
                 if (PlayerInput.LeftButtonHeld())
                 {
-                    if (autoFreeze)
+                    if (autoFreeze ?? this.autoFreeze)
                     {
                         isFreezed = true;
                     }
