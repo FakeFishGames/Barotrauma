@@ -298,6 +298,9 @@ namespace Barotrauma
         [Serialize(0f, true), Editable]
         public float SteerForce { get; set; }
 
+        [Serialize("0, 0", true), Editable]
+        public Vector2 StepOffset { get; set; }
+
         // Following params are not used right now. The params are assigned to a PhysicsBody.
 
         //[Serialize(0f, true)]
