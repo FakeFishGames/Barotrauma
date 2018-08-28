@@ -316,6 +316,7 @@ namespace Barotrauma
                     return true;
                 }
             };
+            // TODO: doesn't trigger if the mouse is released while the cursor is outside the button rect
             limbScaleBar.Bar.OnClicked += (button, data) =>
             {
                 character.AnimController.Recreate(RagdollParams);
