@@ -295,6 +295,9 @@
   <Store>Store</Store>
   <Hire>Hire</Hire>
   <HireButton>Hire</HireButton>
+  <FireButton>Fire</FireButton>
+  <FireWarningHeader>Are you sure?</FireWarningHeader>
+  <FireWarningText>Are you sure you want to fire [charactername] from your crew? You will not be able to hire the character again.</FireWarningText>
   <Location>Location</Location>
   <HireUnavailable>No-one available for hire.</HireUnavailable>
   <Mission>Mission</Mission>
