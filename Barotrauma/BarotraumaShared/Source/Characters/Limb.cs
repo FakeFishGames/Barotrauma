@@ -135,7 +135,7 @@ namespace Barotrauma
         //the physics body of the limb
         public PhysicsBody body;
                         
-        protected readonly Vector2 stepOffset;
+        public Vector2 StepOffset => ConvertUnits.ToSimUnits(limbParams.StepOffset) * ragdoll.RagdollParams.JointScale;
 
         public Sprite Sprite { get; protected set; }
         public DeformableSprite DeformSprite { get; protected set; }
@@ -225,11 +225,6 @@ namespace Barotrauma
 
         public int RefJointIndex { get; private set; }
 
-        public Vector2 StepOffset
-        {
-            get { return stepOffset; }
-        }
-
         private List<WearableSprite> wearingItems;
         public List<WearableSprite> WearingItems
         {
@@ -291,9 +286,6 @@ namespace Barotrauma
 
                 pullJointPos = element.GetAttributeVector2("pullpos", Vector2.Zero) * Scale;
                 pullJointPos = ConvertUnits.ToSimUnits(pullJointPos);
-
-                stepOffset = element.GetAttributeVector2("stepoffset", Vector2.Zero) * Scale;
-                stepOffset = ConvertUnits.ToSimUnits(stepOffset);
 
                 RefJointIndex = element.GetAttributeInt("refjoint", -1);
 
