@@ -139,14 +139,12 @@
     <Compile Include="Source\Networking\FileTransfer\FileSender.cs" />
     <Compile Include="Source\Networking\GameServer.cs" />
     <Compile Include="Source\Networking\GameServerLogin.cs" />
-    <Compile Include="Source\Networking\GameServerSettings.cs" />
     <Compile Include="Source\Networking\NetEntityEvent\ServerEntityEventManager.cs" />
     <Compile Include="Source\Networking\NetworkMember.cs" />
     <Compile Include="Source\Networking\OrderChatMessage.cs" />
     <Compile Include="Source\Networking\RespawnManager.cs" />
     <Compile Include="Source\Networking\SteamManager.cs" />
     <Compile Include="Source\Networking\Voting.cs" />
-    <Compile Include="Source\Networking\WhiteList.cs" />
     <Compile Include="Source\PlayerInput.cs" />
     <Compile Include="Source\Program.cs" />
     <Compile Include="Source\Screens\NetLobbyScreen.cs" />

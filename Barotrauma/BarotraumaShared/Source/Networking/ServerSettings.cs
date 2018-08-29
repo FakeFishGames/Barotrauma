@@ -9,8 +9,13 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Networking
 {
-    partial class GameServer : NetworkMember, ISerializableEntity
+    partial class ServerSettings : ISerializableEntity
     {
+        public string Name
+        {
+            get { return "ServerSettings"; }
+        }
+
         private class SavedClientPermission
         {
             public readonly string IP;
@@ -38,15 +43,49 @@ namespace Barotrauma.Networking
             }
         }
 
+        public ServerSettings(string serverName, int port, int queryPort, bool enableUPnP)
+        {
+            ServerName = serverName;
+            Port = port;
+            QueryPort = queryPort;
+            EnableUPnP = enableUPnP;
+            
+            ServerLog = new ServerLog(serverName);
+            
+            Voting = new Voting();
+
+            whitelist = new WhiteList();
+            banList = new BanList();
+
+            LoadSettings();
+
+            PermissionPreset.LoadAll(PermissionPresetFile);
+            LoadClientPermissions();
+        }
+
         public const string SettingsFile = "serversettings.xml";
         public static readonly string PermissionPresetFile = "Data" + Path.DirectorySeparatorChar + "permissionpresets.xml";
         public static readonly string ClientPermissionsFile = "Data" + Path.DirectorySeparatorChar + "clientpermissions.xml";
-
+        
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
             get;
             private set;
         }
+
+        public string ServerName;
+
+        public int Port;
+
+        public int QueryPort;
+
+        public bool EnableUPnP;
+
+        public ServerLog ServerLog;
+
+        public Voting Voting;
+
+        public Dictionary<string, bool> monsterEnabled;
 
         public Dictionary<ItemPrefab, int> extraCargo;
 
@@ -70,7 +109,7 @@ namespace Barotrauma.Networking
 
         private bool autoRestart;
 
-        private bool isPublic;
+        public bool isPublic;
 
         private int maxPlayers;
 
@@ -205,7 +244,7 @@ namespace Barotrauma.Networking
         }
 
         [Serialize(true, true)]
-        public override bool AllowDisguises
+        public bool AllowDisguises
         {
             get;
             set;
@@ -335,12 +374,12 @@ namespace Barotrauma.Networking
 
             SerializableProperty.SerializeProperties(this, doc.Root, true);
 
-            doc.Root.SetAttributeValue("name", name);
+            doc.Root.SetAttributeValue("name", ServerName);
             doc.Root.SetAttributeValue("public", isPublic);
-            doc.Root.SetAttributeValue("port", config.Port);
+            doc.Root.SetAttributeValue("port", Port);
             if (Steam.SteamManager.USE_STEAM) doc.Root.SetAttributeValue("queryport", QueryPort);
             doc.Root.SetAttributeValue("maxplayers", maxPlayers);
-            doc.Root.SetAttributeValue("enableupnp", config.EnableUPnP);
+            doc.Root.SetAttributeValue("enableupnp", EnableUPnP);
 
             doc.Root.SetAttributeValue("autorestart", autoRestart);
 
@@ -600,7 +639,7 @@ namespace Barotrauma.Networking
                 File.Delete("Data/clientpermissions.txt");
             }
 
-            Log("Saving client permissions", ServerLog.MessageType.ServerMessage);
+            GameServer.Log("Saving client permissions", ServerLog.MessageType.ServerMessage);
 
             XDocument doc = new XDocument(new XElement("ClientPermissions"));
 
