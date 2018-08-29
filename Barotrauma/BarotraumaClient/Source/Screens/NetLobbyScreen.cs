@@ -60,7 +60,7 @@ namespace Barotrauma
         private GUIFrame playerFrame;
 
         private GUITickBox autoRestartBox;
-        
+                
         private GUIDropDown shuttleList;
         private GUITickBox shuttleTickBox;
 
@@ -148,11 +148,17 @@ namespace Barotrauma
             get;
             private set;
         }
-
+        
         public bool StartButtonEnabled
         {
             get { return StartButton.Enabled; }
             set { StartButton.Enabled = value; }
+        }
+
+        public GUITickBox ReadyToStartBox
+        {
+            get;
+            private set;
         }
 
         public GUIFrame MyCharacterFrame
@@ -317,7 +323,7 @@ namespace Barotrauma
             var midInfoColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.35f, 1.0f), infoColumnContainer.RectTransform, Anchor.BottomLeft))
                 { RelativeSpacing = 0.02f, Stretch = true };
 
-            var rightInfoColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.9f), defaultModeContainer.RectTransform, Anchor.TopRight))
+            var rightInfoColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.85f), defaultModeContainer.RectTransform, Anchor.TopRight))
                 { RelativeSpacing = 0.02f, Stretch = true };
             
             var topButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), rightInfoColumn.RectTransform), isHorizontal: true, childAnchor: Anchor.TopRight)
@@ -488,9 +494,7 @@ namespace Barotrauma
             clientDisabledElements.AddRange(traitorProbabilityButtons);
 
             //bot count ------------------------------------------------------------------
-
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.03f), rightInfoColumn.RectTransform), style: null); //spacing
-
+            
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), TextManager.Get("BotCount"));
             var botCountContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), isHorizontal: true);
             botCountButtons = new GUIButton[2];
@@ -536,8 +540,14 @@ namespace Barotrauma
             StartButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), defaultModeContainer.RectTransform, Anchor.BottomRight),
                 TextManager.Get("StartGameButton"), style: "GUIButtonLarge");
             clientHiddenElements.Add(StartButton);
-            
-            campaignViewButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), defaultModeContainer.RectTransform, Anchor.BottomRight),
+
+            ReadyToStartBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.06f), defaultModeContainer.RectTransform, Anchor.BottomRight),
+                TextManager.Get("ReadyToStartTickBox"), GUI.SmallFont)
+            {
+                Visible = false
+            };
+
+            campaignViewButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), defaultModeContainer.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.0f, 0.06f) },
                 TextManager.Get("CampaignView"), style: "GUIButtonLarge")
             {
                 OnClicked = (btn, obj) => { ToggleCampaignView(true); return true; },
@@ -587,13 +597,25 @@ namespace Barotrauma
                 GameMain.Server != null ||
                 (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.ServerLog));
 
-            spectateButton.Visible = GameMain.Client != null && GameMain.Client.GameStarted;            
+            if (GameMain.Client != null)
+            {
+                spectateButton.Visible = GameMain.Client.GameStarted;
+                ReadyToStartBox.Visible = !GameMain.Client.GameStarted;
+                ReadyToStartBox.Selected = false;
+                GameMain.Client.SetReadyToStart(ReadyToStartBox);
+            }
+            else
+            {
+                spectateButton.Visible = false;
+                ReadyToStartBox.Visible = false;
+            }
             SetPlayYourself(playYourself.Selected);            
 
             if (IsServer && GameMain.Server != null)
             {
                 List<Submarine> subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus)).ToList();
 
+                ReadyToStartBox.Visible = false;
                 StartButton.OnClicked = GameMain.Server.StartGameClicked;
                 settingsButton.OnClicked = GameMain.Server.ToggleSettingsFrame;
 
@@ -643,6 +665,7 @@ namespace Barotrauma
                 GameMain.Client.Voting.ResetVotes(GameMain.Client.ConnectedClients);
                 SetPlayYourself(true);                
                 spectateButton.OnClicked = GameMain.Client.SpectateClicked;
+                ReadyToStartBox.OnSelected = GameMain.Client.SetReadyToStart;
             }
 
             GameMain.NetworkMember.EndVoteCount = 0;

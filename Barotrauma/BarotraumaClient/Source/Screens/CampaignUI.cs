@@ -224,7 +224,7 @@ namespace Barotrauma
 
             if (startButton != null) startButton.Enabled = true;
 
-            selectedLevel = connection.Level;
+            selectedLevel = connection?.Level;
 
             OnLocationSelected?.Invoke(location, connection);
         }
@@ -315,7 +315,7 @@ namespace Barotrauma
             }
             
             PriceInfo priceInfo = pi.ItemPrefab.GetPrice(campaign.Map.CurrentLocation);
-            if (priceInfo.BuyPrice > campaign.Money) return false;
+            if (priceInfo == null || priceInfo.BuyPrice > campaign.Money) return false;
             
             campaign.CargoManager.PurchaseItem(pi.ItemPrefab, 1);
             GameMain.Client?.SendCampaignState();

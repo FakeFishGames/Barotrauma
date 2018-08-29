@@ -405,6 +405,7 @@
   <CampaignView>Campaign view</CampaignView>
   <PlayYourself>Play yourself</PlayYourself>
   <StartGameButton>Start</StartGameButton>
+  <ReadyToStartTickBox>Ready to start</ReadyToStartTickBox>
   <ServerSettingsButton>Settings</ServerSettingsButton>
   <SpectateButton>Spectate</SpectateButton>
   <Gender>Gender</Gender>
