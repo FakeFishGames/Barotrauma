@@ -219,6 +219,16 @@ namespace Barotrauma
             }
             AllowVoteKick = inc.ReadBoolean();
 
+            GameMain.NetworkMember.ConnectedClients.ForEach(c => c.SetVote(VoteType.StartRound, false));
+            byte readyClientCount = inc.ReadByte();
+            for (int i = 0; i < readyClientCount; i++)
+            {
+                byte clientID = inc.ReadByte();
+                var matchingClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == clientID);
+                matchingClient?.SetVote(VoteType.StartRound, true);
+            }
+            UpdateVoteTexts(GameMain.NetworkMember.ConnectedClients, VoteType.StartRound);
+
             inc.ReadPadBits();
         }
     }
