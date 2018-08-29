@@ -157,6 +157,8 @@
   <ServerSettingsMonsterSpawns>Monster Spawns</ServerSettingsMonsterSpawns>
   <ServerSettingsAdditionalCargo>Additional Cargo</ServerSettingsAdditionalCargo>
   <ServerSettingsAutoRestartDelay>Autorestart delay: </ServerSettingsAutoRestartDelay>
+  <ServerSettingsStartWhenClientsReady>Start when players are ready</ServerSettingsStartWhenClientsReady>
+  <ServerSettingsStartWhenClientsReadyRatio>[percentage] % need to be ready</ServerSettingsStartWhenClientsReadyRatio>  
   <ServerSettingsAllowSpectating>Allow spectating</ServerSettingsAllowSpectating>
   <ServerSettingsAllowVoteKick>Allow vote kicking</ServerSettingsAllowVoteKick>
   <ServerSettingsKickVotesRequired>Votes required: </ServerSettingsKickVotesRequired>
