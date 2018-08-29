@@ -1668,6 +1668,9 @@ namespace Barotrauma
             return force;
         }
 
+        /// <summary>
+        /// Note that if there are multiple limbs of the same type, only the first of them is found in the dictionary.
+        /// </summary>
         public Limb GetLimb(LimbType limbType)
         {
             limbDictionary.TryGetValue(limbType, out Limb limb);
