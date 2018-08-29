@@ -120,12 +120,8 @@ namespace Barotrauma.Networking
 
         protected bool gameStarted;
 
-        public Dictionary<string, bool> monsterEnabled;
-
         protected RespawnManager respawnManager;
 
-        public Voting Voting;
-        
         public int Port
         {
             get;
@@ -157,24 +153,12 @@ namespace Barotrauma.Networking
             get { return respawnManager; }
         }
 
-        public ServerLog ServerLog
-        {
-            get;
-            protected set;
-        }
-        
-        public virtual bool AllowDisguises
-        {
-            get;
-            set;
-        }
+        public ServerSettings ServerSettings;
 
         partial void InitProjSpecific();
         public NetworkMember()
         {
             InitProjSpecific();
-            
-            Voting = new Voting();
         }
 
         public bool CanUseRadio(Character sender)
