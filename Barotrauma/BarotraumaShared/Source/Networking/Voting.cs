@@ -185,6 +185,13 @@ namespace Barotrauma
 
             msg.Write(AllowVoteKick);
 
+            var readyClients =  GameMain.Server.ConnectedClients.FindAll(c => c.GetVote<bool>(VoteType.StartRound));
+            msg.Write((byte)readyClients.Count);
+            foreach (Client c in readyClients)
+            {
+                msg.Write(c.ID);
+            }
+
             msg.WritePadBits();
         }
 
