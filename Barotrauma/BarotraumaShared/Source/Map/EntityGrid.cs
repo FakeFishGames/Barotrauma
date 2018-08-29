@@ -16,7 +16,15 @@ namespace Barotrauma
 
         public EntityGrid(Submarine submarine, float cellSize)
         {
-            this.limits = submarine.Borders;
+            //make the grid slightly larger than the borders of the submarine,
+            //because docking ports may create gaps and hulls outside the borders
+            int padding = 128;
+
+            this.limits = new Rectangle(
+                submarine.Borders.X - padding, 
+                submarine.Borders.Y + padding, 
+                submarine.Borders.Width + padding * 2, 
+                submarine.Borders.Height + padding * 2);
             this.Submarine = submarine;
             this.cellSize = cellSize;
 
