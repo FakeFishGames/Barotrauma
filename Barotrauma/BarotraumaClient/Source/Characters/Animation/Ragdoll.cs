@@ -94,7 +94,7 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime)
         {
-            LimbJoints.ForEach(j => j.UpdateDeformations());
+            LimbJoints.ForEach(j => j.UpdateDeformations(deltaTime));
             SpriteDeformations.ForEach(sd => sd.Update(deltaTime));
         }
 
@@ -122,6 +122,7 @@ namespace Barotrauma
             {
                 inversedLimbDrawOrder[i].Draw(spriteBatch, cam);
             }
+            LimbJoints.ForEach(j => j.Draw(spriteBatch));
         }
 
         public void DebugDraw(SpriteBatch spriteBatch)

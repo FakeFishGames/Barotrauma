@@ -14,28 +14,44 @@ namespace Barotrauma
 {
     partial class LimbJoint : RevoluteJoint
     {
-        public void UpdateDeformations()
+        public void UpdateDeformations(float deltaTime)
         {
+            #region Experimental
             //var start = LimbA.WorldPosition;
             //var end = LimbB.WorldPosition;
-            //var forward = end - start;
             //var jointAPos = ConvertUnits.ToDisplayUnits(LocalAnchorA);
             //var control = start + Vector2.Transform(jointAPos, Matrix.CreateRotationZ(LimbA.Rotation));
+            #endregion
+
             void UpdateBezier(Limb limb)
             {
+                if (limb.DeformSprite == null) { return; }
+
+                #region Experimental
+                //var origin = limb.DeformSprite.Origin;
+                //var rotation = limb.Rotation;
+                ////rotation = -rotation;
+                //var pos = limb.WorldPosition;
+                //Matrix matrix = Matrix.CreateTranslation(-origin.X, -origin.Y, 0)
+                //    * Matrix.CreateScale(new Vector3(1, -1, 1))
+                //    * Matrix.CreateRotationZ(rotation)
+                //    * Matrix.CreateTranslation(new Vector3(pos, MathHelper.Clamp(limb.DeformSprite.Sprite.Depth, 0, 1)));
+                #endregion
+
                 foreach (var deformation in limb.Deformations)
                 {
                     if (deformation is BezierDeformation bezierDeformation)
                     {
                         bezierDeformation.flipX = limb.character.AnimController.IsFlipped;
+
+                        #region Sine wave
                         if ((limb.character.AnimController is FishAnimController fishController))
                         {
                             var waveLength = fishController.CurrentSwimParams.WaveLength;
                             var waveAmplitude = fishController.CurrentSwimParams.WaveAmplitude;
-                            var lag = 0;
                             if (waveLength > 0 && waveAmplitude > 0)
                             {
-                                float waveRotation = (float)Math.Sin((fishController.WalkPos - lag) / waveLength);
+                                float waveRotation = (float)Math.Sin(fishController.WalkPos / waveLength);
                                 float v = waveRotation * waveAmplitude;
                                 bezierDeformation.start.X = v;
                                 bezierDeformation.start.Y = v;
@@ -45,21 +61,40 @@ namespace Barotrauma
                                 bezierDeformation.control.Y = v;
                             }
                         }
+                        #endregion
+
+                        #region Experimental
+                        //matrix = Matrix.Invert(matrix);
+                        //matrix = matrix * Matrix.CreateScale(1.0f / limb.DeformSprite.Size.X, 1.0f / limb.DeformSprite.Size.Y, 1);
+                        //bezierDeformation.start = Vector2.Transform(start, matrix) * 1;
+                        //bezierDeformation.end = Vector2.Transform(end, matrix) * 1;
+                        //bezierDeformation.control = Vector2.Transform(control, matrix) * 1;
+                        #endregion
                     }
                 }
             }
             UpdateBezier(LimbA);
             UpdateBezier(LimbB);
-            //start.Y = -start.Y;
-            //end.Y = -end.Y;
-            //control.Y = -control.Y;
-            //GUI.DrawRectangle(spriteBatch, start, Vector2.One * 5, Color.Blue, true);
-            //GUI.DrawRectangle(spriteBatch, end, Vector2.One * 5, Color.Green, true);
+        }
+
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            return;
+            // A debug visualisation on the bezier curve between limbs.
+            var start = LimbA.WorldPosition;
+            var end = LimbB.WorldPosition;
+            var jointAPos = ConvertUnits.ToDisplayUnits(LocalAnchorA);
+            var control = start + Vector2.Transform(jointAPos, Matrix.CreateRotationZ(LimbA.Rotation));
+            start.Y = -start.Y;
+            end.Y = -end.Y;
+            control.Y = -control.Y;
+            //GUI.DrawRectangle(spriteBatch, start, Vector2.One * 5, Color.White, true);
+            //GUI.DrawRectangle(spriteBatch, end, Vector2.One * 5, Color.Black, true);
             //GUI.DrawRectangle(spriteBatch, control, Vector2.One * 5, Color.Black, true);
-            //GUI.DrawLine(spriteBatch, start, end, Color.Black);
-            //GUI.DrawLine(spriteBatch, start, control, Color.Gray);
-            //GUI.DrawLine(spriteBatch, control, end, Color.Gray);
-            //GUI.DrawBezierWithDots(spriteBatch, start, end, control, 1000, Color.Red);
+            //GUI.DrawLine(spriteBatch, start, end, Color.White);
+            //GUI.DrawLine(spriteBatch, start, control, Color.Black);
+            //GUI.DrawLine(spriteBatch, control, end, Color.Black);
+            GUI.DrawBezierWithDots(spriteBatch, start, end, control, 1000, Color.Red);
         }
     }
 
