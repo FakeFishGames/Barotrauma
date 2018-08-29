@@ -135,13 +135,21 @@ namespace Barotrauma
         {
             base.Move(amount);
 
-            FindHulls();
+            if (!DisableHullRechecks) FindHulls();
         }
 
         public static void UpdateHulls()
         {
             foreach (Gap g in GapList)
             {
+                for (int i = g.linkedTo.Count - 1; i >= 0; i--)
+                {
+                    if (g.linkedTo[i].Removed)
+                    {
+                        g.linkedTo.RemoveAt(i);
+                    }
+                }
+
                 if (g.DisableHullRechecks) continue;
                 g.FindHulls();
             }
