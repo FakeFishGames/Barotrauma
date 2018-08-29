@@ -132,11 +132,16 @@ namespace Barotrauma
 
                     break;
                 case VoteType.StartRound:
-                    sender.ReadyToStart = inc.ReadBoolean();
-                    GameServer.Log(sender.Name + (sender.ReadyToStart ? " is ready to start the game." : " is not ready to start the game."), ServerLog.MessageType.ServerMessage);
+                    bool ready = inc.ReadBoolean();
+                    if (ready != sender.GetVote<bool>(VoteType.StartRound))
+                    {
+                        sender.SetVote(VoteType.StartRound, ready);
+                        GameServer.Log(sender.Name + (ready ? " is ready to start the game." : " is not ready to start the game."), ServerLog.MessageType.ServerMessage);
 #if CLIENT
-                    UpdateVoteTexts(GameMain.Server.ConnectedClients, voteType);
+                        UpdateVoteTexts(GameMain.Server.ConnectedClients, voteType);
 #endif
+                    }
+
                     break;
             }
 

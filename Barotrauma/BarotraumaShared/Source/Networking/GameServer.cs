@@ -452,12 +452,21 @@ namespace Barotrauma.Networking
                     initiatedStartGame = false;
                 }
             }
-            else if (autoRestart && Screen.Selected == GameMain.NetLobbyScreen && connectedClients.Count > 0)
+            else if (Screen.Selected == GameMain.NetLobbyScreen && connectedClients.Count > 0 && !gameStarted && !initiatedStartGame)
             {
-                AutoRestartTimer -= deltaTime;                
-                if (AutoRestartTimer < 0.0f && !initiatedStartGame)
+                if (autoRestart) AutoRestartTimer -= deltaTime;        
+                        
+                if (autoRestart && AutoRestartTimer < 0.0f)
                 {
                     StartGame();
+                }
+                else if (StartWhenClientsReady)
+                {
+                    int clientsReady = connectedClients.Count(c => c.GetVote<bool>(VoteType.StartRound));
+                    if (clientsReady / (float)connectedClients.Count >= StartWhenClientsReadyRatio)
+                    {
+                        StartGame();
+                    }
                 }
             }
 
@@ -2170,7 +2179,7 @@ namespace Barotrauma.Networking
             SendVoteStatus(connectedClients);
 
             if (Voting.AllowEndVoting && EndVoteMax > 0 &&
-                ((float)EndVoteCount / (float)EndVoteMax) >= EndVoteRequiredRatio)
+                (EndVoteCount / (float)EndVoteMax) >= EndVoteRequiredRatio)
             {
                 Log("Ending round by votes (" + EndVoteCount + "/" + (EndVoteMax - EndVoteCount) + ")", ServerLog.MessageType.ServerMessage);
                 EndGame();

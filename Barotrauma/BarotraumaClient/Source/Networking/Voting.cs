@@ -95,7 +95,7 @@ namespace Barotrauma
                         if (clientNameBox == null) continue;
 
                         var clientReady = clientNameBox.FindChild("clientready");
-                        if (!client.ReadyToStart)
+                        if (!client.GetVote<bool>(VoteType.StartRound))
                         {
                             if (clientReady != null) clientReady.Parent.RemoveChild(clientReady);
                         }
