@@ -1809,6 +1809,19 @@ namespace Barotrauma.Networking
             return false;
         }
 
+        public bool SetReadyToStart(GUITickBox tickBox)
+        {
+            if (gameStarted)
+            {
+                tickBox.Visible = false;
+                return false;
+            }
+
+            Vote(VoteType.StartRound, tickBox.Selected);
+
+            return true;
+        }
+
         public bool ToggleEndRoundVote(GUITickBox tickBox)
         {
             if (!gameStarted) return false;

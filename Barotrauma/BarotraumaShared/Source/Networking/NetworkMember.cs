@@ -63,7 +63,8 @@ namespace Barotrauma.Networking
         Sub,
         Mode,
         EndRound,
-        Kick
+        Kick,
+        StartRound
     }
 
     enum DisconnectReason
