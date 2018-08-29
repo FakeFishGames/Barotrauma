@@ -2058,16 +2058,15 @@ namespace Barotrauma
                 (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
                 (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
                 rect.Width + "," + rect.Height));
-
+            
             if (linkedTo != null && linkedTo.Count > 0)
             {
-                string[] linkedToIDs = new string[linkedTo.Count];
-
-                for (int i = 0; i < linkedTo.Count; i++)
+                var saveableLinked = linkedTo.Where(l => l.ShouldBeSaved).ToList();
+                string[] linkedToIDs = new string[saveableLinked.Count];
+                for (int i = 0; i < saveableLinked.Count; i++)
                 {
-                    linkedToIDs[i] = linkedTo[i].ID.ToString();
+                    linkedToIDs[i] = saveableLinked[i].ID.ToString();
                 }
-
                 element.Add(new XAttribute("linked", string.Join(",", linkedToIDs)));
             }
 
