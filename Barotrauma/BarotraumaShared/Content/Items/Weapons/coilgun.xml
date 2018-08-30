@@ -4,7 +4,9 @@
     name="Coilgun"
     identifier="coilgun"
     Tags="turret"
-    category="Machine"    
+    category="Machine" 
+    interactthroughwalls="true"
+    interactdistance="10"   
     spritecolor="1.0,0.0,0.0,1.0"
     focusonselected="true"
     offsetonselected="700"
@@ -14,7 +16,8 @@
 
     <StaticBody width="80" radius="80"/>
     
-    <Turret barrelsprite="railgunbarrel.png" canbeselected="true" linkable="true" origin="0.5, 0.85" barrelpos="128, 128" 
+    <Turret barrelsprite="railgunbarrel.png" canbeselected="false" characterusable="false" linkable="true" 
+      origin="0.5, 0.85" barrelpos="128, 128" 
       rotationlimits="180,360"
       powerconsumption="200.0"
       showchargeindicator="true"
