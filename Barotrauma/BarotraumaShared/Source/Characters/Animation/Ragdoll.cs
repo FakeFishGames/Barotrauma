@@ -39,7 +39,9 @@ namespace Barotrauma
                 return limbs;
             }
         }
-        
+
+        public bool HasMultipleLimbsOfSameType => Limbs.Length > limbDictionary.Count;
+
         private bool frozen;
         public bool Frozen
         {
@@ -540,7 +542,19 @@ namespace Barotrauma
             }
 
             limbs = newLimbs;
-            if (limbDictionary.ContainsKey(limb.type)) limbDictionary.Remove(limb.type);
+            if (limbDictionary.ContainsKey(limb.type))
+            {
+                limbDictionary.Remove(limb.type);
+                // If there is another limb of the same type, replace the limb in the dictionary.
+                if (HasMultipleLimbsOfSameType)
+                {
+                    var otherLimb = Limbs.FirstOrDefault(l => l != limb && l.type == limb.type);
+                    if (otherLimb != null)
+                    {
+                        limbDictionary.Add(otherLimb.type, otherLimb);
+                    }
+                }
+            }
 
             // TODO: this could be optimized if needed, but at least we need to remove the limb from the inversedDrawOrder array.
             SetupDrawOrder();
