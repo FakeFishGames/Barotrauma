@@ -1413,7 +1413,7 @@ namespace Barotrauma
                 {
                     origin.X = Math.Abs(origin.X - sourceRect.Width);
                 }
-                var relativeOrigin = new Vector2(origin.X / sourceRect.Width, sprite.Origin.Y / sourceRect.Height);
+                var relativeOrigin = new Vector2(origin.X / sourceRect.Width, origin.Y / sourceRect.Height);
                 TryUpdateLimbParam(selectedLimb, "origin", relativeOrigin);
                 if (limbPairEditing)
                 {
