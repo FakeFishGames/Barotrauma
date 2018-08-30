@@ -36,7 +36,7 @@ namespace Barotrauma
         private bool showSpritesheet;
         private bool isFreezed;
         private bool autoFreeze = true;
-        private bool lockJointPairs;
+        private bool limbPairEditing;
 
         public override void Select()
         {
@@ -413,7 +413,7 @@ namespace Barotrauma
             var jointLimitsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joints Limits") { Selected = editJointLimits };
             freezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Freeze") { Selected = isFreezed };
             var autoFreezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Auto Freeze") { Selected = autoFreeze };
-            var lockJointPairsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Lock Joint Pairs") { Selected = lockJointPairs };
+            var limbPairEditToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Limb Pair Editing") { Selected = limbPairEditing };
             animTestPoseToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Animation Test Pose") { Selected = character.AnimController.AnimationTestPose };
             editAnimsToggle.OnSelected = box =>
             {
@@ -506,9 +506,9 @@ namespace Barotrauma
                 autoFreeze = box.Selected;
                 return true;
             };
-            lockJointPairsToggle.OnSelected = box =>
+            limbPairEditToggle.OnSelected = box =>
             {
-                lockJointPairs = box.Selected;
+                limbPairEditing = box.Selected;
                 return true;
             };
             animTestPoseToggle.OnSelected = box =>
@@ -1118,9 +1118,9 @@ namespace Barotrauma
             // collider does not rotate when the sprite is flipped -> rotates only when swimming
             float dir = character.AnimController.Dir;
             Vector2 colliderBottom = character.AnimController.GetColliderBottom();
-            Vector2 centerOfMass = character.AnimController.GetCenterOfMass();
+            //Vector2 centerOfMass = character.AnimController.GetCenterOfMass();
             Vector2 simSpaceForward = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation));
-            Vector2 simSpaceLeft = Vector2.Transform(-Vector2.UnitX, Matrix.CreateRotationZ(collider.Rotation));
+            //Vector2 simSpaceLeft = Vector2.Transform(-Vector2.UnitX, Matrix.CreateRotationZ(collider.Rotation));
             Vector2 screenSpaceForward = -VectorExtensions.Forward(collider.Rotation, 1);
             Vector2 screenSpaceLeft = screenSpaceForward.Right();
             // The forward vector is left or right in screen space when the unit is not swimming. Cannot rely on the collider here, because the rotation may vary on ground.
@@ -1413,8 +1413,20 @@ namespace Barotrauma
                 {
                     origin.X = Math.Abs(origin.X - sourceRect.Width);
                 }
-                var relativeOrigin = new Vector2(sprite.Origin.X / sourceRect.Width, sprite.Origin.Y / sourceRect.Height);
+                var relativeOrigin = new Vector2(origin.X / sourceRect.Width, sprite.Origin.Y / sourceRect.Height);
                 TryUpdateLimbParam(selectedLimb, "origin", relativeOrigin);
+                if (limbPairEditing)
+                {
+                    UpdateOtherJoints(selectedLimb, (otherLimb, otherJoint) =>
+                    {
+                        otherLimb.ActiveSprite.Origin = sprite.Origin;
+                        if (otherLimb.DamagedSprite != null)
+                        {
+                            otherLimb.DamagedSprite.Origin = sprite.Origin;
+                        }
+                        TryUpdateLimbParam(otherLimb, "origin", relativeOrigin);
+                    });
+                }
             }
         }
 
@@ -1463,7 +1475,7 @@ namespace Barotrauma
                             .Draw(spriteBatch, deltaTime, tformedJointPos);
                         if (joint.LimitEnabled)
                         {
-                            DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: true, rotationOffset: character.AnimController.Collider.Rotation);
+                            DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: true, allowPairEditing: true, rotationOffset: character.AnimController.Collider.Rotation);
                         }
                     }
                     if (editJointPositions)
@@ -1509,7 +1521,7 @@ namespace Barotrauma
                                     TryUpdateJointParam(joint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
                                 }
                                 // Edit the other joints
-                                if (lockJointPairs)
+                                if (limbPairEditing)
                                 {
                                     UpdateOtherJoints(limb, (otherLimb, otherJoint) =>
                                     {
@@ -1539,24 +1551,24 @@ namespace Barotrauma
         private void UpdateOtherJoints(Limb limb, Action<Limb, LimbJoint> updateAction)
         {
             // Edit the other limbs
-            if (lockJointPairs)
+            if (limbPairEditing)
             {
                 string limbType = limb.type.ToString();
                 bool isLeft = limbType.Contains("Left");
                 bool isRight = limbType.Contains("Right");
                 if (isLeft || isRight)
                 {
-                    if (character.IsHumanoid)
+                    if (character.AnimController.HasMultipleLimbsOfSameType)
+                    {
+                        GetOtherLimbs(limb)?.ForEach(l => UpdateOtherJoints(l));
+                    }
+                    else
                     {
                         Limb otherLimb = GetOtherLimb(limbType, isLeft);
                         if (otherLimb != null)
                         {
                             UpdateOtherJoints(otherLimb);
                         }
-                    }
-                    else
-                    {
-                        GetOtherLimbs(limb)?.ForEach(l => UpdateOtherJoints(l));
                     }
                     void UpdateOtherJoints(Limb otherLimb)
                     {
@@ -1772,7 +1784,7 @@ namespace Barotrauma
                             .Draw(spriteBatch, deltaTime, tformedJointPos);
                         if (joint.LimitEnabled)
                         {
-                            DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: false);
+                            DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: false, allowPairEditing: false);
                         }
                     }
                 }
@@ -1804,30 +1816,13 @@ namespace Barotrauma
                                 joint.LocalAnchorB += input;
                                 TryUpdateJointParam(joint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
                             }
-                            // We would have to check that we are not already editing the other limbs -> possible only if we use widgets as classes.
-                            //if (lockLimbPairs)
-                            //{
-                            //    UpdateOtherJoints(limb, (otherLimb, otherJoint) =>
-                            //    {
-                            //        if (joint.BodyA == limb.body.FarseerBody && otherJoint.BodyA == otherLimb.body.FarseerBody)
-                            //        {
-                            //            otherJoint.LocalAnchorA = joint.LocalAnchorA;
-                            //            TryUpdateJointParam(otherJoint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
-                            //        }
-                            //        else if (joint.BodyB == limb.body.FarseerBody && otherJoint.BodyB == otherLimb.body.FarseerBody)
-                            //        {
-                            //            otherJoint.LocalAnchorB = joint.LocalAnchorB;
-                            //            TryUpdateJointParam(otherJoint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
-                            //        }
-                            //    });
-                            //}
                         }
                     }
                 }
             }
         }
 
-        private void DrawJointLimitWidgets(SpriteBatch spriteBatch, Limb limb, LimbJoint joint, Vector2 drawPos, bool autoFreeze, float rotationOffset = 0)
+        private void DrawJointLimitWidgets(SpriteBatch spriteBatch, Limb limb, LimbJoint joint, Vector2 drawPos, bool autoFreeze, bool allowPairEditing, float rotationOffset = 0)
         {
             // The joint limits are flipped and inversed when the character is flipped, so we have to handle it here, because we don't want it to affect the user interface.
             if (character.AnimController.IsFlipped)
@@ -1836,12 +1831,15 @@ namespace Barotrauma
                 {
                     joint.UpperLimit = MathHelper.ToRadians(-angle);
                     TryUpdateJointParam(joint, "upperlimit", -angle);
-                    if (lockJointPairs)
+                    if (allowPairEditing && limbPairEditing)
                     {
                         UpdateOtherJoints(limb, (otherLimb, otherJoint) =>
                         {
-                            otherJoint.UpperLimit = MathHelper.ToRadians(-angle);
-                            TryUpdateJointParam(otherJoint, "upperlimit", -angle);
+                            if (IsMatchingLimb(limb, otherLimb, joint, otherJoint))
+                            {
+                                otherJoint.UpperLimit = MathHelper.ToRadians(-angle);
+                                TryUpdateJointParam(otherJoint, "upperlimit", -angle);
+                            }
                         });
                     }
                 }, rotationOffset: rotationOffset);
@@ -1849,12 +1847,15 @@ namespace Barotrauma
                 {
                     joint.LowerLimit = MathHelper.ToRadians(-angle);
                     TryUpdateJointParam(joint, "lowerlimit", -angle);
-                    if (lockJointPairs)
+                    if (allowPairEditing && limbPairEditing)
                     {
                         UpdateOtherJoints(limb, (otherLimb, otherJoint) =>
                         {
-                            otherJoint.LowerLimit = MathHelper.ToRadians(-angle);
-                            TryUpdateJointParam(otherJoint, "lowerlimit", -angle);
+                            if (IsMatchingLimb(limb, otherLimb, joint, otherJoint))
+                            {
+                                otherJoint.LowerLimit = MathHelper.ToRadians(-angle);
+                                TryUpdateJointParam(otherJoint, "lowerlimit", -angle);
+                            }
                         });
                     }
                 }, rotationOffset: rotationOffset);
@@ -1865,12 +1866,15 @@ namespace Barotrauma
                 {
                     joint.UpperLimit = MathHelper.ToRadians(angle);
                     TryUpdateJointParam(joint, "upperlimit", angle);
-                    if (lockJointPairs)
+                    if (allowPairEditing && limbPairEditing)
                     {
                         UpdateOtherJoints(limb, (otherLimb, otherJoint) =>
                         {
-                            otherJoint.UpperLimit = MathHelper.ToRadians(angle);
-                            TryUpdateJointParam(otherJoint, "upperlimit", angle);
+                            if (IsMatchingLimb(limb, otherLimb, joint, otherJoint))
+                            {
+                                otherJoint.UpperLimit = MathHelper.ToRadians(angle);
+                                TryUpdateJointParam(otherJoint, "upperlimit", angle);
+                            }
                         });
                     }
                 }, rotationOffset: rotationOffset);
@@ -1878,16 +1882,22 @@ namespace Barotrauma
                 {
                     joint.LowerLimit = MathHelper.ToRadians(angle);
                     TryUpdateJointParam(joint, "lowerlimit", angle);
-                    if (lockJointPairs)
+                    if (allowPairEditing && limbPairEditing)
                     {
                         UpdateOtherJoints(limb, (otherLimb, otherJoint) =>
                         {
-                            otherJoint.LowerLimit = MathHelper.ToRadians(angle);
-                            TryUpdateJointParam(otherJoint, "lowerlimit", angle);
+                            if (IsMatchingLimb(limb, otherLimb, joint, otherJoint))
+                            {
+                                otherJoint.LowerLimit = MathHelper.ToRadians(angle);
+                                TryUpdateJointParam(otherJoint, "lowerlimit", angle);
+                            }
                         });
                     }
                 }, rotationOffset: rotationOffset);
             }
+            bool IsMatchingLimb(Limb limb1, Limb limb2, LimbJoint joint1, LimbJoint joint2) =>
+                joint1.BodyA == limb1.body.FarseerBody && joint2.BodyA == limb2.body.FarseerBody ||
+                joint1.BodyB == limb1.body.FarseerBody && joint2.BodyB == limb2.body.FarseerBody;
         }
         #endregion
 
