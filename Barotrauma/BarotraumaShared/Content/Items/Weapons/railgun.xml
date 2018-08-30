@@ -2,6 +2,8 @@
   <Item
     name="Railgun"
     category="Machine"
+    interactthroughwalls="true"
+    interactdistance="10"
     focusonselected="true"
     offsetonselected="700"
     linkable="true">
