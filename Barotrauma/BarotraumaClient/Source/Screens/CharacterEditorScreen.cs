@@ -1367,16 +1367,23 @@ namespace Barotrauma
             foreach (Limb limb in character.AnimController.Limbs)
             {
                 if (limb == null || limb.ActiveSprite == null) { continue; }
-                Vector2 limbScreenPos = SimToScreen(limb.SimPosition);
-                //GUI.DrawRectangle(spriteBatch, new Rectangle(limbBodyPos.ToPoint(), new Point(5, 5)), Color.Red);
-                Vector2 size = limb.ActiveSprite.SourceRect.Size.ToVector2() * Cam.Zoom * limb.Scale;
+                var origin = limb.ActiveSprite.Origin;
+                var sourceRect = limb.ActiveSprite.SourceRect;
+                Vector2 size = sourceRect.Size.ToVector2() * Cam.Zoom * limb.Scale;
                 Vector2 up = -VectorExtensions.Forward(limb.Rotation);
-                corners = MathUtils.GetImaginaryRect(corners, up, limbScreenPos, size);
-                //var rect = new Rectangle(limbBodyPos.ToPoint() - size.Divide(2), size);
-                //GUI.DrawRectangle(spriteBatch, rect, Color.Blue);
+                Vector2 left = up.Right();
+                Vector2 limbScreenPos = SimToScreen(limb.SimPosition);
+                var relativeOrigin = new Vector2(origin.X / sourceRect.Width, origin.Y / sourceRect.Height);
+                var relativeOffset = relativeOrigin - new Vector2(0.5f, 0.5f);
+                Vector2 offset = new Vector2(relativeOffset.X * sourceRect.Width, relativeOffset.Y * sourceRect.Height);
+                offset = offset.X * left + offset.Y * up;
+                // There's a calculation error in here somewhere, but the magic number 1.8 seems to do the trick.
+                Vector2 center = limbScreenPos + offset * 1.8f;
+                corners = MathUtils.GetImaginaryRect(corners, up, center, size);
+                //GUI.DrawRectangle(spriteBatch, center - Vector2.One * 2, Vector2.One * 4, Color.Black, isFilled: true);
                 GUI.DrawRectangle(spriteBatch, corners, Color.Red);
-                GUI.DrawLine(spriteBatch, limbScreenPos, limbScreenPos + up * 20, Color.White, width: 3);
-                GUI.DrawLine(spriteBatch, limbScreenPos, limbScreenPos + up * 20, Color.Red);
+                //GUI.DrawLine(spriteBatch, limbScreenPos, limbScreenPos + up * 20, Color.White, width: 3);
+                //GUI.DrawLine(spriteBatch, limbScreenPos, limbScreenPos + up * 20, Color.Red);
                 // Limb positions
                 GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.White, width: 3);
                 GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.White, width: 3);
@@ -1672,7 +1679,7 @@ namespace Barotrauma
                         var topRight = new Vector2(topLeft.X + rect.Width, topLeft.Y);
                         var bottomRight = new Vector2(topRight.X, topRight.Y + rect.Height);
                         //var bottomLeft = new Vector2(topLeft.X, bottomRight.Y);
-                        DrawWidget(spriteBatch, topLeft, WidgetType.Rectangle, widgetSize, Color.Red, "Position", () =>
+                        DrawWidget(spriteBatch, topLeft - new Vector2(widgetSize / 2), WidgetType.Rectangle, widgetSize, Color.Red, "Position", () =>
                         {
                             // Adjust the source rect location
                             var newRect = limb.ActiveSprite.SourceRect;
