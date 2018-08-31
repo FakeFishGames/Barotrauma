@@ -136,8 +136,8 @@ namespace Barotrauma
 
             int healthWindowY = (int)(MessageAreaTop.Bottom + 10 * GUI.Scale);
             Rectangle healthWindowArea = ChatBoxAlignment == Alignment.Left ?
-                new Rectangle(ChatBoxArea.Right + Padding, healthWindowY, GameMain.GraphicsWidth - ChatBoxArea.Width - inventoryAreaUpperWidth, GameMain.GraphicsHeight - healthWindowY * 2) :
-                new Rectangle(Padding - ChatBoxArea.Width, healthWindowY, GameMain.GraphicsWidth - ChatBoxArea.Width - inventoryAreaUpperWidth, GameMain.GraphicsHeight - healthWindowY * 2);
+                new Rectangle(ChatBoxArea.Right + Padding, healthWindowY, GameMain.GraphicsWidth - ChatBoxArea.Width - inventoryAreaUpperWidth, GameMain.GraphicsHeight - healthWindowY - lowerAreaHeight / 2) :
+                new Rectangle(Padding - ChatBoxArea.Width, healthWindowY, GameMain.GraphicsWidth - ChatBoxArea.Width - inventoryAreaUpperWidth, GameMain.GraphicsHeight - healthWindowY - lowerAreaHeight / 2);
 
             //split the health area vertically, left side for the player's own health and right side for the character they're treating
             //int healthWindowWidth = Math.Min((int)(healthWindowArea.Width * 0.75f) - Padding / 2, 500);
