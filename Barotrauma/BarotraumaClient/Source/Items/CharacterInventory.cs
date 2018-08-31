@@ -211,6 +211,7 @@ namespace Barotrauma
                     break;
                 case Layout.Right:
                     {
+                        int extraOffset = bottomOffset * 2;
                         int x = HUDLayoutSettings.InventoryAreaLower.Right - (int)(SlotTypes.Count(s => s == InvSlotType.Any) * (slotSize.X + spacing));
                         int upperX = HUDLayoutSettings.InventoryAreaLower.Right;
                         for (int i = 0; i < slots.Length; i++)
@@ -224,12 +225,12 @@ namespace Barotrauma
                             if (HideSlot(i)) continue;
                             if (SlotTypes[i] == InvSlotType.Card || SlotTypes[i] == InvSlotType.Headset || SlotTypes[i] == InvSlotType.InnerClothes)
                             {
-                                SlotPositions[i] = new Vector2(upperX, GameMain.GraphicsHeight - bottomOffset * 2 - spacing * 2);
+                                SlotPositions[i] = new Vector2(upperX, GameMain.GraphicsHeight - bottomOffset * 2 - extraOffset - spacing * 2);
                                 upperX += slots[i].Rect.Width + spacing;
                             }
                             else
                             {
-                                SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset);
+                                SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset - extraOffset);
                                 x += slots[i].Rect.Width + spacing;
                             }
                         }
