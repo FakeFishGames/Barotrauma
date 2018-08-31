@@ -51,7 +51,8 @@ namespace Barotrauma
             {
                 if (character.Inventory != null)
                 {
-                    if (!character.LockHands && character.Stun < 0.1f && CharacterHealth.OpenHealthWindow == null)
+                    if (!character.LockHands && character.Stun < 0.1f &&
+                        (CharacterHealth.OpenHealthWindow == null || !CharacterHealth.HideNormalInventory))
                     {
                         character.Inventory.Update(deltaTime);
                     }
@@ -70,7 +71,8 @@ namespace Barotrauma
 
                 if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
-                    if (character.SelectedCharacter.CanInventoryBeAccessed && CharacterHealth.OpenHealthWindow == null)
+                    if (character.SelectedCharacter.CanInventoryBeAccessed &&
+                        (CharacterHealth.OpenHealthWindow == null || !CharacterHealth.HideNormalInventory))
                     {
                         character.SelectedCharacter.Inventory.Update(deltaTime);
                     }
@@ -230,7 +232,8 @@ namespace Barotrauma
                 }
             }
             
-            if (character.Inventory != null && !character.LockHands && character.Stun <= 0.1f && !character.IsDead && CharacterHealth.OpenHealthWindow == null)
+            if (character.Inventory != null && !character.LockHands && character.Stun <= 0.1f && !character.IsDead && 
+                (CharacterHealth.OpenHealthWindow == null || !CharacterHealth.HideNormalInventory))
             {
                 character.Inventory.DrawOwn(spriteBatch);
                 character.Inventory.CurrentLayout = CharacterInventory.Layout.Default;
@@ -240,7 +243,8 @@ namespace Barotrauma
             {
                 if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
-                    if (character.SelectedCharacter.CanInventoryBeAccessed && CharacterHealth.OpenHealthWindow == null)
+                    if (character.SelectedCharacter.CanInventoryBeAccessed &&
+                        (CharacterHealth.OpenHealthWindow == null || !CharacterHealth.HideNormalInventory))
                     {
                         ///character.Inventory.CurrentLayout = Alignment.Left;
                         character.SelectedCharacter.Inventory.CurrentLayout = CharacterInventory.Layout.Right;

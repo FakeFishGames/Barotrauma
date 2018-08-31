@@ -234,7 +234,7 @@ namespace Barotrauma
         {
             Rectangle interactRect = slot.InteractRect;
             interactRect.Location += slot.DrawOffset.ToPoint();
-            bool mouseOn = interactRect.Contains(PlayerInput.MousePosition) && !Locked;
+            bool mouseOn = interactRect.Contains(PlayerInput.MousePosition) && !Locked && GUI.MouseOn == null;
 
             if (selectedSlot != null && selectedSlot.Slot != slot)
             {
