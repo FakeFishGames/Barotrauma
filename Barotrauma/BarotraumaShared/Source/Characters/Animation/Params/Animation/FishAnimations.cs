@@ -72,18 +72,18 @@ namespace Barotrauma
         /// In degrees.
         /// </summary>
         [Serialize(float.NaN, true), Editable]
-        public float FootRotation
+        public float FootAngle
         {
-            get => float.IsNaN(FootRotationInRadians) ? float.NaN : MathHelper.ToDegrees(FootRotationInRadians);
+            get => float.IsNaN(FootAngleInRadians) ? float.NaN : MathHelper.ToDegrees(FootAngleInRadians);
             set
             {
                 if (!float.IsNaN(value))
                 {
-                    FootRotationInRadians = MathHelper.ToRadians(value);
+                    FootAngleInRadians = MathHelper.ToRadians(value);
                 }
             }
         }
-        public float FootRotationInRadians { get; private set; } = float.NaN;
+        public float FootAngleInRadians { get; private set; } = float.NaN;
     }
 
     abstract class FishSwimParams : SwimParams, IFishAnimation
@@ -102,10 +102,28 @@ namespace Barotrauma
 
         [Serialize(true, true), Editable]
         public bool RotateTowardsMovement { get; set; }
+
+        /// <summary>
+        /// In degrees.
+        /// </summary>
+        [Serialize(float.NaN, true), Editable]
+        public float FootAngle
+        {
+            get => float.IsNaN(FootAngleInRadians) ? float.NaN : MathHelper.ToDegrees(FootAngleInRadians);
+            set
+            {
+                if (!float.IsNaN(value))
+                {
+                    FootAngleInRadians = MathHelper.ToRadians(value);
+                }
+            }
+        }
+        public float FootAngleInRadians { get; private set; } = float.NaN;
     }
 
     interface IFishAnimation
     {
-        bool Flip { get; set; }
+        bool Flip { get; }
+        float FootAngle { get; }
     }
 }
