@@ -90,6 +90,8 @@ namespace Barotrauma
         public new FishGroundedParams CurrentGroundedParams => base.CurrentGroundedParams as FishGroundedParams;
         public new FishSwimParams CurrentSwimParams => base.CurrentSwimParams as FishSwimParams;
 
+        protected float? FootAngle => GetValidOrNull(CurrentSwimParams, CurrentSwimParams?.FootAngleInRadians);
+
         public override GroundedMovementParams WalkParams
         {
             get { return FishWalkParams; }
@@ -354,6 +356,19 @@ namespace Barotrauma
                 Limb head = GetLimb(LimbType.Head);
                 head?.body.SmoothRotate(HeadAngle.Value * Dir, CurrentSwimParams.SteerTorque);
             }
+            if (FootAngle.HasValue)
+            {
+                foreach (var limb in Limbs)
+                {
+                    switch (limb.type)
+                    {
+                        case LimbType.LeftFoot:
+                        case LimbType.RightFoot:
+                            limb.body.SmoothRotate(FootAngle.Value * Dir, 50.0f);
+                            break;
+                    }
+                }
+            }
 
             Limb tail = GetLimb(LimbType.Tail);
             if (tail != null)
@@ -467,7 +482,7 @@ namespace Barotrauma
                             8.0f);
                         }
 
-                        if (MathUtils.IsValid(CurrentGroundedParams.FootRotationInRadians)) limb.body.SmoothRotate(CurrentGroundedParams.FootRotationInRadians * Dir, 50.0f);
+                        if (MathUtils.IsValid(CurrentGroundedParams.FootAngleInRadians)) limb.body.SmoothRotate(CurrentGroundedParams.FootAngleInRadians * Dir, 50.0f);
 
                         break;
                     case LimbType.LeftLeg:

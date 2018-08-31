@@ -1221,7 +1221,7 @@ namespace Barotrauma
                 // Fish grounded only
                 if (fishGroundedParams != null)
                 {
-                    DrawCircularWidget(spriteBatch, SimToScreen(colliderBottom), fishGroundedParams.FootRotation, "Foot Rotation", Color.White,
+                    DrawCircularWidget(spriteBatch, SimToScreen(colliderBottom), fishGroundedParams.FootAngle, "Foot Rotation", Color.White,
                         angle => TryUpdateAnimParam("footrotation", angle), circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0);
                 }
                 // Both
