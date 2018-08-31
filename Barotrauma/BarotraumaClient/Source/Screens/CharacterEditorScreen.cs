@@ -1218,13 +1218,13 @@ namespace Barotrauma
             }
             if (foot != null)
             {
-                // Fish grounded only
-                if (fishGroundedParams != null)
+                // Fish only
+                if (animParams is IFishAnimation fishParams)
                 {
-                    DrawCircularWidget(spriteBatch, SimToScreen(colliderBottom), fishGroundedParams.FootAngle, "Foot Rotation", Color.White,
-                        angle => TryUpdateAnimParam("footrotation", angle), circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0);
+                    DrawCircularWidget(spriteBatch, SimToScreen(colliderBottom), fishParams.FootAngle, "Foot Angle", Color.White,
+                        angle => TryUpdateAnimParam("footangle", angle), circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0);
                 }
-                // Both
+                // Grounded only
                 if (groundedParams != null)
                 {
                     referencePoint = SimToScreen(colliderBottom);
