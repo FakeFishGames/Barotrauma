@@ -183,19 +183,20 @@ namespace Barotrauma
             slots = new InventorySlot[capacity];
 
             int rectWidth = (int)(60 * UIScale), rectHeight = (int)(60 * UIScale);
-            int spacing = (int)(10 * UIScale);
+            int spacingX = (int)(10 * UIScale);
+            int spacingY = (int)((10 + EquipIndicator.size.Y) * UIScale);
 
             int rows = (int)Math.Ceiling((double)capacity / slotsPerRow);
             int columns = Math.Min(slotsPerRow, capacity);
 
-            int startX = (int)(CenterPos.X * GameMain.GraphicsWidth) - (rectWidth * columns + spacing * (columns - 1)) / 2;
-            int startY = (int)(CenterPos.Y * GameMain.GraphicsHeight) - (rows * (spacing + rectHeight)) / 2;
+            int startX = (int)(CenterPos.X * GameMain.GraphicsWidth) - (rectWidth * columns + spacingX * (columns - 1)) / 2;
+            int startY = (int)(CenterPos.Y * GameMain.GraphicsHeight) - (rows * (spacingY + rectHeight)) / 2;
 
             Rectangle slotRect = new Rectangle(startX, startY, rectWidth, rectHeight);
             for (int i = 0; i < capacity; i++)
             {
-                slotRect.X = startX + (rectWidth + spacing) * (i % slotsPerRow);
-                slotRect.Y = startY + (rectHeight + spacing) * ((int)Math.Floor((double)i / slotsPerRow));
+                slotRect.X = startX + (rectWidth + spacingX) * (i % slotsPerRow);
+                slotRect.Y = startY + (rectHeight + spacingY) * ((int)Math.Floor((double)i / slotsPerRow));
 
                 slots[i] = new InventorySlot(slotRect);
             }
@@ -462,7 +463,7 @@ namespace Barotrauma
             if (draggingItem != null && PlayerInput.LeftButtonReleased())
             {
                 if (CharacterHealth.OpenHealthWindow != null && 
-                    CharacterHealth.OpenHealthWindow.OnItemDropped(draggingItem))
+                    CharacterHealth.OpenHealthWindow.OnItemDropped(draggingItem, false))
                 {
                     draggingItem = null;
                     return;

@@ -367,7 +367,7 @@ namespace Barotrauma
                     GUI.KeyboardDispatcher.Subscriber == null &&
                     slots[i].QuickUseKey != Keys.None && PlayerInput.KeyHit(slots[i].QuickUseKey))
                 {
-                    QuickUseItem(Items[i], true, false);
+                    QuickUseItem(Items[i], true, false, true);
                 }
             }
             
@@ -415,7 +415,7 @@ namespace Barotrauma
 
             if (doubleClickedItem != null)
             {
-                QuickUseItem(doubleClickedItem, true, true);
+                QuickUseItem(doubleClickedItem, true, true, true);
             }
 
             //make subinventories with one slot always visible
@@ -474,7 +474,7 @@ namespace Barotrauma
                             if (PlayerInput.LeftButtonDown()) slots[i].EquipButtonState = GUIComponent.ComponentState.Pressed;
                             if (PlayerInput.LeftButtonClicked())
                             {
-                                QuickUseItem(Items[i], true, false);
+                                QuickUseItem(Items[i], true, false, false);
                             }
                         }
                     }
@@ -536,8 +536,14 @@ namespace Barotrauma
             }*/
         }
         
-        private void QuickUseItem(Item item, bool allowEquip, bool allowInventorySwap)
+        private void QuickUseItem(Item item, bool allowEquip, bool allowInventorySwap, bool allowApplyTreatment)
         {
+            if (allowApplyTreatment && CharacterHealth.OpenHealthWindow != null)
+            {
+                CharacterHealth.OpenHealthWindow.OnItemDropped(item, ignoreMousePos: true);
+                return;
+            }
+
             bool wasPut = false;
             if (item.ParentInventory != this)
             {

@@ -248,7 +248,7 @@ namespace Barotrauma
 
             hideTimer -= deltaTime;
 
-            if ((hideTimer > 0.0f || hovering || toggleOpen) && Inventory.draggingItem == null)
+            if (hideTimer > 0.0f || hovering || toggleOpen)
             {
                 openState += deltaTime * 5.0f;
             }

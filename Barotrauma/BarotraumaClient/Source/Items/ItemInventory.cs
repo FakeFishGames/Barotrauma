@@ -30,8 +30,8 @@ namespace Barotrauma
                 {
                     if (!subInventory)
                     {
-                        backgroundFrame.Inflate(10, 20);
-                        backgroundFrame.Location -= new Point(0, 10);
+                        backgroundFrame.Inflate(10, 10 + (int)(EquipIndicator.size.Y * UIScale));
+                        backgroundFrame.Location -= new Point(0, 5);
                     }
                 }
 
