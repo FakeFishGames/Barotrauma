@@ -37,6 +37,7 @@ namespace Barotrauma
         private bool isFreezed;
         private bool autoFreeze = true;
         private bool limbPairEditing;
+        private bool uniformScaling;
 
         public override void Select()
         {
@@ -288,6 +289,8 @@ namespace Barotrauma
             var layoutGroupRagdoll = new GUILayoutGroup(new RectTransform(Vector2.One, ragdollControls.RectTransform)) { CanBeFocused = false };
             var jointScaleElement = new GUIFrame(new RectTransform(elementSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
             var jointScaleText = new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), jointScaleElement.RectTransform), $"Joint Scale: {RagdollParams.JointScale.FormatAsDoubleDecimal()}", Color.WhiteSmoke, textAlignment: Alignment.Center);
+            var limbScaleElement = new GUIFrame(new RectTransform(elementSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
+            var limbScaleText = new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), limbScaleElement.RectTransform), $"Limb Scale: {RagdollParams.LimbScale.FormatAsDoubleDecimal()}", Color.WhiteSmoke, textAlignment: Alignment.Center);
             jointScaleBar = new GUIScrollBar(new RectTransform(elementSize, jointScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.2f)
             {
                 BarScroll = RagdollParams.JointScale / 2,
@@ -296,14 +299,15 @@ namespace Barotrauma
                 Step = 0.01f,
                 OnMoved = (scrollBar, value) =>
                 {
-                    TryUpdateRagdollParam("jointscale", value * 2);
-                    jointScaleText.Text = $"Joint Scale: {RagdollParams.JointScale.FormatAsDoubleDecimal()}";
-                    character.AnimController.ResetJoints();
+                    UpdateJointScale(value);
+                    if (uniformScaling)
+                    {
+                        UpdateLimbScale(value);
+                        limbScaleBar.BarScroll = value;
+                    }
                     return true;
                 }
             };
-            var limbScaleElement = new GUIFrame(new RectTransform(elementSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
-            var limbScaleText = new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), limbScaleElement.RectTransform), $"Limb Scale: {RagdollParams.LimbScale.FormatAsDoubleDecimal()}", Color.WhiteSmoke, textAlignment: Alignment.Center);
             limbScaleBar = new GUIScrollBar(new RectTransform(elementSize, limbScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.2f)
             {
                 BarScroll = RagdollParams.LimbScale / 2,
@@ -312,11 +316,26 @@ namespace Barotrauma
                 Step = 0.01f,
                 OnMoved = (scrollBar, value) =>
                 {
-                    TryUpdateRagdollParam("limbscale", value * 2);
-                    limbScaleText.Text = $"Limb Scale: {RagdollParams.LimbScale.FormatAsDoubleDecimal()}";
+                    UpdateLimbScale(value);
+                    if (uniformScaling)
+                    {
+                        UpdateJointScale(value);
+                        jointScaleBar.BarScroll = value;
+                    }
                     return true;
                 }
             };
+            void UpdateJointScale(float value)
+            {
+                TryUpdateRagdollParam("jointscale", value * 2);
+                jointScaleText.Text = $"Joint Scale: {RagdollParams.JointScale.FormatAsDoubleDecimal()}";
+                character.AnimController.ResetJoints();
+            }
+            void UpdateLimbScale(float value)
+            {
+                TryUpdateRagdollParam("limbscale", value * 2);
+                limbScaleText.Text = $"Limb Scale: {RagdollParams.LimbScale.FormatAsDoubleDecimal()}";
+            }
             // TODO: doesn't trigger if the mouse is released while the cursor is outside the button rect
             limbScaleBar.Bar.OnClicked += (button, data) =>
             {
@@ -324,6 +343,25 @@ namespace Barotrauma
                 TeleportTo(spawnPosition);
                 return true;
             };
+            jointScaleBar.Bar.OnClicked += (button, data) =>
+            {
+                if (uniformScaling)
+                {
+                    character.AnimController.Recreate(RagdollParams);
+                    TeleportTo(spawnPosition);
+                }
+                return true;
+            };
+            var uniformScalingToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), ragdollControls.RectTransform) { AbsoluteOffset = new Point(elementSize.X + 10, textAreaHeight) }, "Uniform Scale")
+            {
+                Selected = uniformScaling,
+                OnSelected = (GUITickBox box) =>
+                {
+                    uniformScaling = box.Selected;
+                    return true;
+                }
+            };
+            uniformScalingToggle.TextColor = Color.White;
             // Animation
             animationControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupAnimation = new GUILayoutGroup(new RectTransform(Vector2.One, animationControls.RectTransform)) { CanBeFocused = false };
