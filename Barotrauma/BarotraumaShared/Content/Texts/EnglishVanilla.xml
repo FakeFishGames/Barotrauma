@@ -598,7 +598,6 @@
   <SpamFilterKicked>You have been kicked by the spam filter.</SpamFilterKicked>
   <SpamFilterBlocked>You have been blocked by the spam filter. Try again after 10 seconds.</SpamFilterBlocked>
 
-
   <!-- Item HUDs -->
   <EngineForce>Thrust</EngineForce>
   <EngineBackwards>Backwards</EngineBackwards>
@@ -657,6 +656,10 @@
   <ConnectionLocked>(Locked)</ConnectionLocked>
   <RequiredRepairSkills>Required skills:</RequiredRepairSkills>
   <RepairButton>Repair</RepairButton>
+
+  <!-- Health interface -->
+  <Vitality>Vitality</Vitality>
+  <HealthItemUseTip>Drop items here to use them on the selected limb. You can also use items with the inventory hotkeys or by double clicking.</HealthItemUseTip>
 
   <!-- Item fixing -->
   <FixHeader>Attempting to fix [itemname]</FixHeader>

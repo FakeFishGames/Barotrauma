@@ -136,15 +136,18 @@ namespace Barotrauma
             {
                 Color = Color.LightGray * 0.8f,
                 HoverColor = Color.White,
-                SelectedColor = Color.LightGray * 0.8f
+                SelectedColor = Color.LightGray * 0.8f,
+                ToolTip = TextManager.Get("HealthItemUseTip")
             };
             dropItemArea.TextBlock.Color = dropItemArea.TextBlock.HoverColor = dropItemArea.TextBlock.SelectedColor = Color.Transparent;
 
+            //TODO: replace the text with an icon?
             new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.8f), dropItemArea.RectTransform, Anchor.Center), "Drop items here", wrap: true)
             {
                 Color = Color.Transparent,
                 HoverColor = Color.Transparent,
-                SelectedColor = Color.Transparent
+                SelectedColor = Color.Transparent,
+                ToolTip = TextManager.Get("HealthItemUseTip")
             };
 
             healthWindow = new GUIFrame(new RectTransform(new Point(100, 200), GUI.Canvas));
@@ -476,7 +479,7 @@ namespace Barotrauma
                 {
                     if (!PlayerInput.LeftButtonHeld())
                     {
-                        OnItemDropped(draggingMed.UserData as Item);
+                        OnItemDropped(draggingMed.UserData as Item, ignoreMousePos: false);
                         draggingMed = null;
                     }
                 }
@@ -775,23 +778,24 @@ namespace Barotrauma
 
                 var vitalityText = child.GetChildByUserData("vitality") as GUITextBlock;
                 int vitalityDecrease = (int)affliction.GetVitalityDecrease(this);
-                vitalityText.Text = "Vitality -" + vitalityDecrease;
+                vitalityText.Text = TextManager.Get("Vitality") + " -" + vitalityDecrease;
                 vitalityText.TextColor = vitalityDecrease <= 0 ? Color.LightGreen :
                 Color.Lerp(Color.Orange, Color.Red, affliction.Strength / affliction.Prefab.MaxStrength);
             }
         }
 
-        public bool OnItemDropped(Item item)
+        public bool OnItemDropped(Item item, bool ignoreMousePos)
         {
             //items can be dropped outside the health window
-            if (!HUDLayoutSettings.HealthWindowAreaLeft.Contains(PlayerInput.MousePosition))
+            if (!ignoreMousePos && !HUDLayoutSettings.HealthWindowAreaLeft.Contains(PlayerInput.MousePosition))
             {
                 return false;
             }
             
             //can't apply treatment to dead characters
             if (character.IsDead) return true;
-            if (!dropItemArea.Rect.Contains(PlayerInput.MousePosition) || item == null) return true;
+            if (item == null) return true;
+            if (!ignoreMousePos && !dropItemArea.Rect.Contains(PlayerInput.MousePosition)) return true;
 
             Limb targetLimb = character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex);
 #if CLIENT
