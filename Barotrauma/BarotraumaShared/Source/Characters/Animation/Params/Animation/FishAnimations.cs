@@ -123,7 +123,8 @@ namespace Barotrauma
 
     interface IFishAnimation
     {
-        bool Flip { get; }
-        float FootAngle { get; }
+        bool Flip { get; set; }
+        float FootAngle { get; set; }
+        float FootAngleInRadians { get; }
     }
 }
