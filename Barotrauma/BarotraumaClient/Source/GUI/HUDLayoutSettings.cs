@@ -106,7 +106,7 @@ namespace Barotrauma
             MessageAreaTop = new Rectangle(GameMain.GraphicsWidth / 4, ButtonAreaTop.Bottom, GameMain.GraphicsWidth / 2, ButtonAreaTop.Height);
 
             //slice for the upper slots of the inventory (clothes, id card, headset)
-            int inventoryAreaUpperWidth = (int)Math.Min(GameMain.GraphicsWidth* 0.2f, 300);
+            int inventoryAreaUpperWidth = (int)Math.Min(GameMain.GraphicsWidth * 0.2f, 300);
             int inventoryAreaUpperHeight = (int)Math.Min(GameMain.GraphicsHeight * 0.2f, 200);
             InventoryAreaUpper = new Rectangle(GameMain.GraphicsWidth - inventoryAreaUpperWidth - Padding, ButtonAreaTop.Bottom + Padding, inventoryAreaUpperWidth, inventoryAreaUpperHeight);
 
@@ -136,13 +136,13 @@ namespace Barotrauma
 
             int healthWindowY = (int)(MessageAreaTop.Bottom + 10 * GUI.Scale);
             Rectangle healthWindowArea = ChatBoxAlignment == Alignment.Left ?
-                new Rectangle(ChatBoxArea.Right + 60, healthWindowY, GameMain.GraphicsWidth - ChatBoxArea.Width * 2 - 60 - Padding, InventoryAreaLower.Y - healthWindowY) :
-                new Rectangle(Padding - ChatBoxArea.Width, healthWindowY, GameMain.GraphicsWidth - ChatBoxArea.Width * 2 - 60 - Padding, InventoryAreaLower.Y - healthWindowY);
+                new Rectangle(ChatBoxArea.Right + Padding, healthWindowY, GameMain.GraphicsWidth - ChatBoxArea.Width - inventoryAreaUpperWidth, GameMain.GraphicsHeight - healthWindowY * 2) :
+                new Rectangle(Padding - ChatBoxArea.Width, healthWindowY, GameMain.GraphicsWidth - ChatBoxArea.Width - inventoryAreaUpperWidth, GameMain.GraphicsHeight - healthWindowY * 2);
 
             //split the health area vertically, left side for the player's own health and right side for the character they're treating
-            int healthWindowWidth = Math.Min((int)(healthWindowArea.Width * 0.75f) - Padding / 2, 500);
-            HealthWindowAreaLeft = new Rectangle(healthWindowArea.X, healthWindowArea.Y, healthWindowWidth, healthWindowArea.Height);
-            HealthWindowAreaRight = new Rectangle(healthWindowArea.Right - healthWindowWidth, healthWindowArea.Y, healthWindowWidth, healthWindowArea.Height);
+            //int healthWindowWidth = Math.Min((int)(healthWindowArea.Width * 0.75f) - Padding / 2, 500);
+            HealthWindowAreaLeft = healthWindowArea;// new Rectangle(healthWindowArea.X, healthWindowArea.Y, healthWindowWidth, healthWindowArea.Height);
+            HealthWindowAreaRight = healthWindowArea;// new Rectangle(healthWindowArea.Right - healthWindowWidth, healthWindowArea.Y, healthWindowWidth, healthWindowArea.Height);
 
             //report buttons (report breach etc) appear center right, not visible when health window is open
             int reportAreaWidth = (int)Math.Min(150 * GUI.Scale, 200);
