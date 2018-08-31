@@ -21,13 +21,16 @@ namespace Barotrauma
         private Vector2 position;
         private float rotation;
 
+        private float angularVelocity;
+        private float angularDamping;
+        private float angularSpring;
+
         private Vector2 prevPosition;
         private float prevZoom;
 
         public float Shake;
         private Vector2 shakePosition;
         private float shakeTimer;
-        private Vector2 shakeTargetPosition;
         
         //the area of the world inside the camera view
         private Rectangle worldView;
@@ -60,7 +63,21 @@ namespace Barotrauma
         public float Rotation
         {
             get { return rotation; }
-            set { rotation = value; }
+            set
+            {
+                if (!MathUtils.IsValid(value)) return;
+                rotation = value;
+            }
+        }
+
+        public float AngularVelocity
+        {
+            get { return angularVelocity; }
+            set
+            {
+                if (!MathUtils.IsValid(value)) return;
+                angularVelocity = value;
+            }
         }
 
         public float OffsetAmount
@@ -142,14 +159,15 @@ namespace Barotrauma
             transform = Matrix.CreateTranslation(
                 new Vector3(-interpolatedPosition.X, interpolatedPosition.Y, 0)) *
                 Matrix.CreateScale(new Vector3(interpolatedZoom, interpolatedZoom, 1)) *
-                viewMatrix;
+                Matrix.CreateRotationZ(rotation) * viewMatrix;
 
             shaderTransform = Matrix.CreateTranslation(
                 new Vector3(
                     -interpolatedPosition.X - resolution.X / interpolatedZoom / 2.0f,
                     -interpolatedPosition.Y - resolution.Y / interpolatedZoom / 2.0f, 0)) *
                 Matrix.CreateScale(new Vector3(interpolatedZoom, interpolatedZoom, 1)) *
-                viewMatrix;
+
+                viewMatrix * Matrix.CreateRotationZ(-rotation);
 
             if (Character.Controlled == null)
             {
@@ -228,6 +246,25 @@ namespace Barotrauma
                 Vector2 diff = (targetPos + offset) - position;
 
                 moveCam = diff / MoveSmoothness;
+            }
+            rotation += angularVelocity * deltaTime;
+            angularVelocity *= (1.0f - angularDamping);
+            angularVelocity += -rotation * angularSpring;
+
+            angularDamping = 0.05f;
+            angularSpring = 0.2f;
+
+            if (PlayerInput.KeyHit(Keys.T))
+            {
+                angularVelocity = 1.0f;
+            }
+            if (PlayerInput.KeyHit(Keys.Y))
+            {
+                angularVelocity = 5.0f;
+            }
+            if (PlayerInput.KeyHit(Keys.U))
+            {
+                angularVelocity = 10.0f;
             }
 
             if (Shake < 0.01f)
