@@ -80,7 +80,7 @@
       of the item, and when the condition is 0, the box is considered empty. -->      
       <!--  -0.5 per usage = 200 shots per box -->
       <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
-        <SpawnItem name="coilgunbolt" spawnposition="ThisInventory"/>
+        <SpawnItem identifiers="coilgunbolt" spawnposition="ThisInventory"/>
       </StatusEffect>
       <Containable identifiers="coilgunbolt"/>
     </ItemContainer>
