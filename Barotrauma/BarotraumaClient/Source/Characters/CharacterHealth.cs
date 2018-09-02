@@ -49,6 +49,8 @@ namespace Barotrauma
         private GUIProgressBar healthWindowHealthBar;
         private GUIProgressBar healthWindowHealthBarShadow;
 
+        private GUIComponent deadIndicator;
+
         private GUIButton dropItemArea;
 
         private float dropItemAnimDuration = 0.5f;
@@ -168,6 +170,15 @@ namespace Barotrauma
             );
             new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.1f), healthWindow.RectTransform, anchor: Anchor.TopCenter), "", textAlignment: Alignment.Center);
 
+            deadIndicator = new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.1f), healthWindow.RectTransform, Anchor.Center),
+                text: TextManager.Get("Deceased"), font: GUI.LargeFont, textAlignment: Alignment.Center, wrap: true, style: "GUIToolTip")
+            {
+                Visible = false,
+                CanBeFocused = false
+            };
+            deadIndicator.Color *= 0.5f;
+
+
             healthWindowHealthBar = new GUIProgressBar(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.HealthBarAreaLeft, GUI.Canvas),
                 barSize: 1.0f, color: Color.Green, style: "GUIProgressBar")
             {
@@ -199,7 +210,8 @@ namespace Barotrauma
                     }
 
                     return true;
-                }
+                },
+                Visible = false
             };
 
             UpdateAlignment();
@@ -375,6 +387,8 @@ namespace Barotrauma
                     Math.Min(healthShadowSize + deltaTime, healthBar.BarSize) :
                     Math.Max(healthShadowSize - deltaTime, healthBar.BarSize);
             }
+
+            dropItemArea.Visible = !character.IsDead;
             
             float blurStrength = 0.0f;
             float distortStrength = 0.0f;
@@ -526,7 +540,10 @@ namespace Barotrauma
             cprButton.Visible =
                 character == Character.Controlled?.SelectedCharacter
                 && (character.IsUnconscious || character.Stun > 0.0f)
+                && !character.IsDead
                 && openHealthWindow == this;
+
+            deadIndicator.Visible = character.IsDead;
         }
 
         public void AddToGUIUpdateList()
@@ -791,7 +808,7 @@ namespace Barotrauma
             {
                 return false;
             }
-            
+                        
             //can't apply treatment to dead characters
             if (character.IsDead) return true;
             if (item == null) return true;
@@ -1077,7 +1094,9 @@ namespace Barotrauma
                 if (limbHealth.IndicatorSprite == null) continue;
 
                 float damageLerp = limbHealth.TotalDamage > 0.0f ? MathHelper.Lerp(0.2f, 1.0f, limbHealth.TotalDamage / 100.0f) : 0.0f;
-                Color color = HealthColorLerp(Color.Green, Color.Orange, Color.Red, 1.0f - damageLerp);
+                Color color = character.IsDead ?
+                    Color.Lerp(Color.Black, new Color(150, 100, 100), damageLerp) :
+                    HealthColorLerp(Color.Red, Color.Orange, Color.Green, damageLerp);
                 float scale = Math.Min(drawArea.Width / (float)limbHealth.IndicatorSprite.SourceRect.Width, drawArea.Height / (float)limbHealth.IndicatorSprite.SourceRect.Height);
 
                 if (((i == highlightedLimbIndex || i == selectedLimbIndex) && allowHighlight) || highlightAll)
