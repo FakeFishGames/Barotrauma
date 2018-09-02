@@ -118,9 +118,6 @@ namespace Barotrauma
 
         private float flipTimer;
 
-        // TODO: should this be defined in the character config or is it practically constant?
-        private float deathAnimTimer, deathAnimDuration = 5.0f;
-
         public FishAnimController(Character character, string seed, FishRagdollParams ragdollParams = null) : base(character, seed, ragdollParams) { }
 
         public override void UpdateAnim(float deltaTime)

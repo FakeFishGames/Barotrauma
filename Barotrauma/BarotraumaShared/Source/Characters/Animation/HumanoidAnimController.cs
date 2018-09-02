@@ -179,6 +179,20 @@ namespace Barotrauma
                 return;
             }
 
+            if (character.IsDead)
+            {
+                if (deathAnimTimer < deathAnimDuration)
+                {
+                    deathAnimTimer += deltaTime;
+                    UpdateDying(deltaTime);
+                }
+            }
+            else
+            {
+                deathAnimTimer = 0.0f;
+            }
+            
+
             if (!character.AllowInput)
             {
                 levitatingCollider = false;
@@ -837,12 +851,12 @@ namespace Barotrauma
             handCyclePos += MathHelper.ToRadians(CurrentSwimParams.HandCycleSpeed) * Math.Sign(movement.X);
 
             footPos = Collider.SimPosition - new Vector2((float)Math.Sin(-Collider.Rotation), (float)Math.Cos(-Collider.Rotation)) * 0.4f;
-            
-            for (int i = -1; i<2; i+=2)
+
+            for (int i = -1; i < 2; i += 2)
             {
                 var thigh = i == -1 ? GetLimb(LimbType.LeftThigh) : GetLimb(LimbType.RightThigh);
                 var leg = i == -1 ? GetLimb(LimbType.LeftLeg) : GetLimb(LimbType.RightLeg);
-                
+
                 float thighDiff = Math.Abs(MathUtils.GetShortestAngle(torso.Rotation, thigh.Rotation));
                 if (thighDiff > MathHelper.PiOver2)
                 {
@@ -1078,6 +1092,44 @@ namespace Barotrauma
                 }
                 
                 character.SelectedCharacter.AnimController.IgnorePlatforms = true;
+            }
+        }
+
+        void UpdateDying(float deltaTime)
+        {
+            //the force/torque used to move the limbs goes from 1 to 0 during the death anim duration
+            float strength = 1.0f - deathAnimTimer / deathAnimDuration;
+
+            Limb head = GetLimb(LimbType.Head);
+            Limb torso = GetLimb(LimbType.Torso);
+            
+            //if the head is moving, try to protect it with the hands
+            if (head.LinearVelocity.LengthSquared() > 1.0f && !head.IsSevered)
+            {
+                Limb leftHand = GetLimb(LimbType.LeftHand);
+                Limb rightHand = GetLimb(LimbType.RightHand);
+
+                //move hands in front of the head in the direction of the movement
+                Vector2 protectPos = head.SimPosition + Vector2.Normalize(head.LinearVelocity);
+                if (!rightHand.IsSevered) HandIK(rightHand, protectPos, strength * 0.1f);
+                if (!leftHand.IsSevered) HandIK(leftHand, protectPos, strength * 0.1f);
+            }
+
+            //attempt to make legs stay in a straight line with the torso to prevent the character from doing a split
+            for (int i = 0; i < 2; i++)
+            {
+                var thigh = i == 0 ? GetLimb(LimbType.LeftThigh) : GetLimb(LimbType.RightThigh);
+                if (thigh.IsSevered) continue;
+
+                float thighDiff = Math.Abs(MathUtils.GetShortestAngle(torso.Rotation, thigh.Rotation));
+                float thighTorque = thighDiff * thigh.Mass * Math.Sign(torso.Rotation - thigh.Rotation) * 5.0f;
+                thigh.body.ApplyTorque(thighTorque * strength);                
+
+                var leg = i == 0 ? GetLimb(LimbType.LeftLeg) : GetLimb(LimbType.RightLeg);
+                if (leg.IsSevered) continue;
+                float legDiff = Math.Abs(MathUtils.GetShortestAngle(torso.Rotation, leg.Rotation));
+                float legTorque = legDiff * leg.Mass * Math.Sign(torso.Rotation - leg.Rotation) * 5.0f;
+                leg.body.ApplyTorque(legTorque * strength);                
             }
         }
 

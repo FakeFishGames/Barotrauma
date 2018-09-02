@@ -48,6 +48,10 @@ namespace Barotrauma
         public bool CanWalk => CanEnterSubmarine;
         public bool IsMovingBackwards => Math.Sign(targetMovement.X) == -Math.Sign(Dir);
 
+
+        // TODO: define death anim duration in XML
+        protected float deathAnimTimer, deathAnimDuration = 5.0f;
+
         /// <summary>
         /// Note: Presupposes that the slow speed is lower than the high speed. Otherwise will give invalid results.
         /// </summary>
