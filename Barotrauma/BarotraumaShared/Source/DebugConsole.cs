@@ -1807,13 +1807,13 @@ namespace Barotrauma
             commands.Add(new Command("kill", "kill [character]: Immediately kills the specified character.", (string[] args) =>
             {
                 Character killedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args);
-                killedCharacter.SetAllDamage(killedCharacter.MaxVitality * 2, 0.0f, 0.0f);
+                killedCharacter?.SetAllDamage(killedCharacter.MaxVitality * 2, 0.0f, 0.0f);
             },
             null,
             (Client client, Vector2 cursorWorldPos, string[] args) =>
             {
                 Character killedCharacter = (args.Length == 0) ? client.Character : FindMatchingCharacter(args);
-                killedCharacter.SetAllDamage(killedCharacter.MaxVitality * 2, 0.0f, 0.0f);          
+                killedCharacter?.SetAllDamage(killedCharacter.MaxVitality * 2, 0.0f, 0.0f);          
             },
             () =>
             {
