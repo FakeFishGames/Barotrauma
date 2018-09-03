@@ -65,6 +65,7 @@ namespace Barotrauma
             get { return relativeSize; }
             set
             {
+                if (relativeSize.NearlyEquals(value)) { return; }
                 relativeSize = value;
                 RecalculateAll(resize: true, scale: false, withChildren: true);
             }
@@ -80,12 +81,15 @@ namespace Barotrauma
             get { return minSize ?? Point.Zero; }
             set
             {
+                if (minSize == value) { return; }
                 minSize = value;
                 RecalculateAll(true, false, true);
             }
         }
+
         private static Point maxPoint = new Point(int.MaxValue, int.MaxValue);
         private Point? maxSize;
+
         /// <summary>
         /// Max size in pixels.
         /// Does not affect scaling.
@@ -95,6 +99,7 @@ namespace Barotrauma
             get { return maxSize ?? maxPoint; }
             set
             {
+                if (maxSize == value) { return; }
                 maxSize = value;
                 RecalculateAll(true, false, true);
             }
@@ -109,6 +114,7 @@ namespace Barotrauma
             get { return nonScaledSize; }
             set
             {
+                if (nonScaledSize == value) { return; }
                 nonScaledSize = value.Clamp(MinSize, MaxSize);
                 RecalculateRelativeSize();
                 RecalculateAnchorPoint();
@@ -139,6 +145,7 @@ namespace Barotrauma
             get { return localScale; }
             set
             {
+                if (localScale.NearlyEquals(value)) { return; }
                 localScale = value;
                 RecalculateAll(resize: false, scale: true, withChildren: true);
                 ScaleChanged?.Invoke();
@@ -159,6 +166,7 @@ namespace Barotrauma
             get { return relativeOffset; }
             set
             {
+                if (relativeOffset.NearlyEquals(value)) { return; }
                 relativeOffset = value;
                 RecalculateChildren(false, false);
             }
@@ -173,6 +181,7 @@ namespace Barotrauma
             get { return absoluteOffset; }
             set
             {
+                if (absoluteOffset == value) { return; }
                 absoluteOffset = value;
                 recalculateRect = true;
                 RecalculateChildren(false, false);
@@ -186,6 +195,7 @@ namespace Barotrauma
             get { return screenSpaceOffset; }
             set
             {
+                if (screenSpaceOffset == value) { return; }
                 screenSpaceOffset = value;
                 recalculateRect = true;
                 RecalculateChildren(false, false);
