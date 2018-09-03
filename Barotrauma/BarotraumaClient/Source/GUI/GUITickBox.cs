@@ -23,8 +23,8 @@ namespace Barotrauma
                 if (value == selected) return;
                 selected = value;
                 state = (selected) ? ComponentState.Selected : ComponentState.None;
-
                 box.State = state;
+                OnSelected?.Invoke(this);
             }
         }
         
@@ -118,7 +118,6 @@ namespace Barotrauma
                 if (PlayerInput.LeftButtonClicked())
                 {
                     Selected = !Selected;
-                    OnSelected?.Invoke(this);
                 }
             }
             else

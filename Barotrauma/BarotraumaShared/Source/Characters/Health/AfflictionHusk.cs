@@ -157,13 +157,17 @@ namespace Barotrauma
             }
 
             var torso = character.AnimController.GetLimb(LimbType.Torso);
+
+            // TODO: use limbparams
+
+            throw new System.NotImplementedException();
+
+            //huskAppendage = new Limb(character, limbElement);
+            //huskAppendage.body.Submarine = character.Submarine;
+            //huskAppendage.body.SetTransform(torso.SimPosition, torso.Rotation);
             
-            huskAppendage = new Limb(character, limbElement);
-            huskAppendage.body.Submarine = character.Submarine;
-            huskAppendage.body.SetTransform(torso.SimPosition, torso.Rotation);
-            
-            character.AnimController.AddLimb(huskAppendage);
-            character.AnimController.AddJoint(jointElement);
+            //character.AnimController.AddLimb(huskAppendage);
+            //character.AnimController.AddJoint(jointElement);
         }
 
         private void DeactivateHusk(Character character)

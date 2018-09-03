@@ -1,10 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    //TODO: perhaps find a better place for this?
+    //TODO: Currently this is only used for text positioning? -> move there?
     [Flags]
     public enum Alignment
     {
@@ -602,6 +603,117 @@ namespace Barotrauma
                 // use relative error
                 return diff / (Math.Abs(a) + Math.Abs(b)) < epsilon;
             }
+        }
+
+        /// Returns a position in a curve.
+        /// </summary>
+        public static Vector2 Bezier(Vector2 start, Vector2 control, Vector2 end, float t)
+        {
+            return Pow(1 - t, 2) * start + 2 * t * (1 - t) * control + Pow(t, 2) * end;
+        }
+
+        public static float Pow(float f, float p)
+        {
+            return (float)Math.Pow(f, p);
+        }
+
+        /// <summary>
+        /// Rotates a point in 2d space around another point.
+        /// Modified from:
+        /// http://www.gamefromscratch.com/post/2012/11/24/GameDev-math-recipes-Rotating-one-point-around-another-point.aspx
+        /// </summary>
+        public static Vector2 RotatePointAroundTarget(Vector2 point, Vector2 target, float degrees, bool clockWise = true)
+        {
+            // (Math.PI / 180) * degrees
+            var angle = MathHelper.ToRadians(degrees);
+            var sin = Math.Sin(angle);
+            var cos = Math.Cos(angle);
+            if (!clockWise)
+            {
+                sin = -sin;
+            }
+            Vector2 dir = point - target;
+            var x = (cos * dir.X) - (sin * dir.Y) + target.X;
+            var y = (sin * dir.X) + (cos * dir.Y) + target.Y;
+            return new Vector2((float)x, (float)y);
+        }
+
+        /// <summary>
+        /// Returns the corners of an imaginary rectangle.
+        /// Unlike the XNA rectangle, this can be rotated with the up parameter.
+        /// </summary>
+        public static Vector2[] GetImaginaryRect(Vector2 up, Vector2 center, Vector2 size)
+        {
+            return GetImaginaryRect(new Vector2[4], up, center, size);
+        }
+
+        /// <summary>
+        /// Returns the corners of an imaginary rectangle.
+        /// Unlike the XNA Rectangle, this can be rotated with the up parameter.
+        /// </summary>
+        public static Vector2[] GetImaginaryRect(Vector2[] corners, Vector2 up, Vector2 center, Vector2 size)
+        {
+            if (corners.Length != 4)
+            {
+                throw new Exception("Invalid length for the corners array. Must be 4.");
+            }
+            Vector2 halfSize = size / 2;
+            Vector2 left = up.Right();
+            corners[0] = center + up * halfSize.Y + left * halfSize.X;
+            corners[1] = center + up * halfSize.Y - left * halfSize.X;
+            corners[2] = center - up * halfSize.Y - left * halfSize.X;
+            corners[3] = center - up * halfSize.Y + left * halfSize.X;
+            return corners;
+        }
+
+        /// <summary>
+        /// Check if a point is inside a rectangle.
+        /// Unlike the XNA Rectangle, this rectangle might have been rotated.
+        /// For XNA Rectangles, use the Contains instance method.
+        /// </summary>
+        public static bool RectangleContainsPoint(Vector2[] corners, Vector2 point)
+        {
+            if (corners.Length != 4)
+            {
+                throw new Exception("Invalid length of the corners array! Must be 4");
+            }
+            return RectangleContainsPoint(corners[0], corners[1], corners[2], corners[3], point);
+        }
+
+        /// <summary>
+        /// Check if a point is inside a rectangle.
+        /// Unlike the XNA Rectangle, this rectangle might have been rotated.
+        /// For XNA Rectangles, use the Contains instance method.
+        /// </summary>
+        public static bool RectangleContainsPoint(Vector2 c1, Vector2 c2, Vector2 c3, Vector2 c4, Vector2 point)
+        {
+            return TriangleContainsPoint(c1, c2, c3, point) || TriangleContainsPoint(c1, c3, c4, point);
+        }
+
+        /// <summary>
+        /// Slightly modified from https://gamedev.stackexchange.com/questions/110229/how-do-i-efficiently-check-if-a-point-is-inside-a-rotated-rectangle
+        /// </summary>
+        public static bool TriangleContainsPoint(Vector2 c1, Vector2 c2, Vector2 c3, Vector2 point)
+        {
+            // Compute vectors        
+            Vector2 v0 = c3 - c1;
+            Vector2 v1 = c2 - c1;
+            Vector2 v2 = point - c1;
+
+            // Compute dot products
+            float dot00 = Vector2.Dot(v0, v0);
+            float dot01 = Vector2.Dot(v0, v1);
+            float dot02 = Vector2.Dot(v0, v2);
+            float dot11 = Vector2.Dot(v1, v1);
+            float dot12 = Vector2.Dot(v1, v2);
+
+            // Compute barycentric coordinates
+            float invDenom = 1 / (dot00 * dot11 - dot01 * dot01);
+            float u = (dot11 * dot02 - dot01 * dot12) * invDenom;
+            float v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+
+            // Check if the point is in triangle
+            return u >= 0 && v >= 0 && (u + v) < 1;
         }
     }
 

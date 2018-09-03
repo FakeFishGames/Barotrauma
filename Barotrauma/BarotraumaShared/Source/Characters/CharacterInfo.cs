@@ -56,6 +56,9 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Note: Can be null.
+        /// </summary>
         public Character Character;
 
         public readonly string File;
@@ -151,7 +154,21 @@ namespace Barotrauma
             }
         }
 
-        public CharacterInfo(string file, string name = "", Gender gender = Gender.None, JobPrefab jobPrefab = null)
+        private HumanRagdollParams ragdoll;
+        public HumanRagdollParams Ragdoll
+        {
+            get
+            {
+                if (ragdoll == null)
+                {
+                    ragdoll = HumanRagdollParams.GetDefaultRagdollParams();
+                }
+                return ragdoll;
+            }
+            set { ragdoll = value; }
+        }
+
+        public CharacterInfo(string file, string name = "", Gender gender = Gender.None, JobPrefab jobPrefab = null, HumanRagdollParams ragdoll = null)
         {
             ID = idCounter;
             idCounter++;
@@ -233,8 +250,11 @@ namespace Barotrauma
             personalityTrait = NPCPersonalityTrait.GetRandom(name + HeadSpriteId);
             
             Salary = CalculateSalary();
+            if (ragdoll != null)
+            {
+                this.ragdoll = ragdoll;
+            }
         }
-
 
         public CharacterInfo(XElement element)
         {
@@ -283,11 +303,7 @@ namespace Barotrauma
 
         private void LoadHeadSprite()
         {
-            XDocument doc = XMLExtensions.TryLoadXml(File);
-            if (doc == null) return;
-
-            XElement ragdollElement = doc.Root.Element("ragdoll");
-            foreach (XElement limbElement in ragdollElement.Elements())
+            foreach (XElement limbElement in XMLExtensions.TryLoadXml(Ragdoll.FullPath).Root.Elements())
             {
                 if (limbElement.GetAttributeString("type", "").ToLowerInvariant() != "head") continue;
 
@@ -306,7 +322,6 @@ namespace Barotrauma
                 {
                     string fileWithoutTags = Path.GetFileNameWithoutExtension(file);
                     fileWithoutTags = fileWithoutTags.Split('[', ']').First();
-
                     if (fileWithoutTags != fileName) continue;
                     
                     headSprite = new Sprite(spriteElement, "", file);
