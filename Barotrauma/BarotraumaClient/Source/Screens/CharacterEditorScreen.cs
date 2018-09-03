@@ -38,6 +38,9 @@ namespace Barotrauma
         private bool autoFreeze = true;
         private bool limbPairEditing;
         private bool uniformScaling;
+        private bool lockSpriteOrigin;
+        private bool lockSpritePosition;
+        private bool lockSpriteSize;
 
         public override void Select()
         {
@@ -262,6 +265,7 @@ namespace Barotrauma
         private GUIFrame centerPanel;
         private GUIFrame ragdollControls;
         private GUIFrame animationControls;
+        private GUIFrame spriteControls;
         private GUIDropDown animSelection;
         private GUITickBox freezeToggle;
         private GUITickBox animTestPoseToggle;
@@ -362,6 +366,39 @@ namespace Barotrauma
                 }
             };
             uniformScalingToggle.TextColor = Color.White;
+            // Sprite dimensions
+            spriteControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
+            var layoutGroupSprite = new GUILayoutGroup(new RectTransform(Vector2.One, spriteControls.RectTransform)) { CanBeFocused = false };
+            var lockSpriteOriginToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSprite.RectTransform), "Lock Sprite Origin")
+            {
+                Selected = lockSpriteOrigin,
+                OnSelected = (GUITickBox box) =>
+                {
+                    lockSpriteOrigin = box.Selected;
+                    return true;
+                }
+            };
+            lockSpriteOriginToggle.TextColor = Color.White;
+            var lockSpritePositionToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSprite.RectTransform), "Lock Sprite Position")
+            {
+                Selected = lockSpritePosition,
+                OnSelected = (GUITickBox box) =>
+                {
+                    lockSpritePosition = box.Selected;
+                    return true;
+                }
+            };
+            lockSpritePositionToggle.TextColor = Color.White;
+            var lockSpriteSizeToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSprite.RectTransform), "Lock Sprite Size")
+            {
+                Selected = lockSpriteSize,
+                OnSelected = (GUITickBox box) =>
+                {
+                    lockSpriteSize = box.Selected;
+                    return true;
+                }
+            };
+            lockSpriteSizeToggle.TextColor = Color.White;
             // Animation
             animationControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupAnimation = new GUILayoutGroup(new RectTransform(Vector2.One, animationControls.RectTransform)) { CanBeFocused = false };
@@ -963,6 +1000,10 @@ namespace Barotrauma
             if (editRagdoll)
             {
                 ragdollControls.AddToGUIUpdateList();
+            }
+            if (editSpriteDimensions)
+            {
+                spriteControls.AddToGUIUpdateList();
             }
             if (showParamsEditor)
             {
@@ -1705,11 +1746,14 @@ namespace Barotrauma
                     }
                     if (editSpriteDimensions)
                     {
-                        // Draw the sprite origins
-                        GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitY * 5.0f, limbBodyPos - Vector2.UnitY * 5.0f, Color.White, width: 3);
-                        GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.White, width: 3);
-                        GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitY * 5.0f, limbBodyPos - Vector2.UnitY * 5.0f, Color.Red);
-                        GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.Red);
+                        if (!lockSpriteOrigin)
+                        {
+                            // Draw the sprite origins
+                            GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitY * 5.0f, limbBodyPos - Vector2.UnitY * 5.0f, Color.White, width: 3);
+                            GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.White, width: 3);
+                            GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitY * 5.0f, limbBodyPos - Vector2.UnitY * 5.0f, Color.Red);
+                            GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.Red);
+                        }
                         // Draw the  source rect widgets
                         int widgetSize = 5;
                         Vector2 stringOffset = new Vector2(5, 14);
@@ -1717,50 +1761,56 @@ namespace Barotrauma
                         var topRight = new Vector2(topLeft.X + rect.Width, topLeft.Y);
                         var bottomRight = new Vector2(topRight.X, topRight.Y + rect.Height);
                         //var bottomLeft = new Vector2(topLeft.X, bottomRight.Y);
-                        DrawWidget(spriteBatch, topLeft - new Vector2(widgetSize / 2), WidgetType.Rectangle, widgetSize, Color.Red, "Position", () =>
+                        if (!lockSpritePosition)
                         {
-                            // Adjust the source rect location
-                            var newRect = limb.ActiveSprite.SourceRect;
-                            var newLocation = new Vector2(PlayerInput.MousePosition.X - x, PlayerInput.MousePosition.Y - y);
-                            newRect.Location = newLocation.ToPoint();
-                            limb.ActiveSprite.SourceRect = newRect;
-                            if (limb.DamagedSprite != null)
+                            DrawWidget(spriteBatch, topLeft - new Vector2(widgetSize / 2), WidgetType.Rectangle, widgetSize, Color.Red, "Position", () =>
                             {
-                                limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
-                            }
-                            TryUpdateLimbParam(limb, "sourcerect", newRect);
-                            GUI.DrawString(spriteBatch, topLeft + new Vector2(stringOffset.X, -stringOffset.Y * 1.5f), limb.ActiveSprite.SourceRect.Location.ToString(), Color.White, Color.Black * 0.5f);
-                        });
-                        DrawWidget(spriteBatch, bottomRight, WidgetType.Rectangle, widgetSize, Color.White, "Size", () =>
+                                // Adjust the source rect location
+                                var newRect = limb.ActiveSprite.SourceRect;
+                                var newLocation = new Vector2(PlayerInput.MousePosition.X - x, PlayerInput.MousePosition.Y - y);
+                                newRect.Location = newLocation.ToPoint();
+                                limb.ActiveSprite.SourceRect = newRect;
+                                if (limb.DamagedSprite != null)
+                                {
+                                    limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
+                                }
+                                TryUpdateLimbParam(limb, "sourcerect", newRect);
+                                GUI.DrawString(spriteBatch, topLeft + new Vector2(stringOffset.X, -stringOffset.Y * 1.5f), limb.ActiveSprite.SourceRect.Location.ToString(), Color.White, Color.Black * 0.5f);
+                            }, autoFreeze: false);
+                        }
+                        if (!lockSpriteSize)
                         {
-                            // Adjust the source rect width and height, and the sprite size.
-                            var newRect = limb.ActiveSprite.SourceRect;
-                            int width = (int)PlayerInput.MousePosition.X - rect.X;
-                            int height = (int)PlayerInput.MousePosition.Y - rect.Y;
-                            int dx = newRect.Width - width;
-                            newRect.Width = width;
-                            newRect.Height = height;
-                            limb.ActiveSprite.SourceRect = newRect;
-                            limb.ActiveSprite.size = new Vector2(width, height);
-                            // Also the origin should be adjusted to the new width, so that it will remain at the same position relative to the source rect location.
-                            limb.ActiveSprite.Origin = new Vector2(origin.X - dx, origin.Y);
-                            if (limb.DamagedSprite != null)
+                            DrawWidget(spriteBatch, bottomRight, WidgetType.Rectangle, widgetSize, Color.White, "Size", () =>
                             {
-                                limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
-                                limb.DamagedSprite.Origin = limb.ActiveSprite.Origin;
-                            }
-                            if (character.AnimController.IsFlipped)
-                            {
-                                origin.X = Math.Abs(origin.X - newRect.Width);
-                            }
-                            var relativeOrigin = new Vector2(origin.X / newRect.Width, origin.Y / newRect.Height);
-                            TryUpdateLimbParam(limb, "origin", relativeOrigin);
-                            TryUpdateLimbParam(limb, "sourcerect", newRect);
-                            GUI.DrawString(spriteBatch, bottomRight + stringOffset, limb.ActiveSprite.size.FormatAsZeroDecimal(), Color.White, Color.Black * 0.5f);
-                        });
+                                // Adjust the source rect width and height, and the sprite size.
+                                var newRect = limb.ActiveSprite.SourceRect;
+                                int width = (int)PlayerInput.MousePosition.X - rect.X;
+                                int height = (int)PlayerInput.MousePosition.Y - rect.Y;
+                                int dx = newRect.Width - width;
+                                newRect.Width = width;
+                                newRect.Height = height;
+                                limb.ActiveSprite.SourceRect = newRect;
+                                limb.ActiveSprite.size = new Vector2(width, height);
+                                // Also the origin should be adjusted to the new width, so that it will remain at the same position relative to the source rect location.
+                                limb.ActiveSprite.Origin = new Vector2(origin.X - dx, origin.Y);
+                                if (limb.DamagedSprite != null)
+                                {
+                                    limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
+                                    limb.DamagedSprite.Origin = limb.ActiveSprite.Origin;
+                                }
+                                if (character.AnimController.IsFlipped)
+                                {
+                                    origin.X = Math.Abs(origin.X - newRect.Width);
+                                }
+                                var relativeOrigin = new Vector2(origin.X / newRect.Width, origin.Y / newRect.Height);
+                                TryUpdateLimbParam(limb, "origin", relativeOrigin);
+                                TryUpdateLimbParam(limb, "sourcerect", newRect);
+                                GUI.DrawString(spriteBatch, bottomRight + stringOffset, limb.ActiveSprite.size.FormatAsZeroDecimal(), Color.White, Color.Black * 0.5f);
+                            }, autoFreeze: false);
+                        }
                         if (PlayerInput.LeftButtonHeld() && selectedWidget == null)
                         {
-                            if (rect.Contains(PlayerInput.MousePosition))
+                            if (!lockSpriteOrigin && rect.Contains(PlayerInput.MousePosition))
                             {
                                 var input = scaledMouseSpeed;
                                 input.X *= character.AnimController.Dir;
