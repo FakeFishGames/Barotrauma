@@ -24,8 +24,9 @@ namespace Barotrauma
         
         public Color Color;
 
-        public Color BorderHighlightColor;
-        private CoroutineHandle BorderHighlightCoroutine;
+        public Color HighlightColor;
+        private CoroutineHandle highlightCoroutine;
+        public float HighlightTimer;
         
         public Sprite SlotSprite;
 
@@ -77,30 +78,33 @@ namespace Barotrauma
 
         public void ShowBorderHighlight(Color color, float fadeInDuration, float fadeOutDuration)
         {
-            if (BorderHighlightCoroutine != null)
+            if (highlightCoroutine != null)
             {
-                CoroutineManager.StopCoroutines(BorderHighlightCoroutine);
-                BorderHighlightCoroutine = null;
+                CoroutineManager.StopCoroutines(highlightCoroutine);
+                highlightCoroutine = null;
             }
 
-            BorderHighlightCoroutine = CoroutineManager.StartCoroutine(UpdateBorderHighlight(color, fadeInDuration, fadeOutDuration));
+            highlightCoroutine = CoroutineManager.StartCoroutine(UpdateBorderHighlight(color, fadeInDuration, fadeOutDuration));
         }
 
         private IEnumerable<object> UpdateBorderHighlight(Color color, float fadeInDuration, float fadeOutDuration)
         {
             float t = 0.0f;
+            HighlightTimer = 1.0f;
             while (t < fadeInDuration + fadeOutDuration)
             {
-                BorderHighlightColor = (t < fadeInDuration) ?
+                HighlightColor = (t < fadeInDuration) ?
                     Color.Lerp(Color.Transparent, color, t / fadeInDuration) :
                     Color.Lerp(color, Color.Transparent, (t - fadeInDuration) / fadeOutDuration);
 
                 t += CoroutineManager.DeltaTime;
+                HighlightTimer = 1.0f - t / (fadeInDuration + fadeOutDuration);
 
                 yield return CoroutineStatus.Running;
             }
 
-            BorderHighlightColor = Color.Transparent;
+            HighlightTimer = 0.0f;
+            HighlightColor = Color.Transparent;
 
             yield return CoroutineStatus.Success;
         }
@@ -581,9 +585,11 @@ namespace Barotrauma
             Rectangle rect = slot.Rect;
             rect.Location += slot.DrawOffset.ToPoint();
             
-            if (slot.BorderHighlightColor.A > 0)
+            if (slot.HighlightColor.A > 0)
             {
-                rect.Inflate(rect.Width * (slot.BorderHighlightColor.A / 700.0f), rect.Height * (slot.BorderHighlightColor.A / 700.0f));
+                float scaleUpAmount = 0.5f;
+                float inflateAmount = (slot.HighlightColor.A / 255.0f) * scaleUpAmount * 0.5f;
+                rect.Inflate(rect.Width * inflateAmount, rect.Height * inflateAmount);
             }
 
             var itemContainer = item?.GetComponent<ItemContainer>();
@@ -650,12 +656,12 @@ namespace Barotrauma
             
             if (GameMain.DebugDraw) GUI.DrawRectangle(spriteBatch, rect, Color.White, false, 0, 1);
 
-            if (slot.BorderHighlightColor != Color.Transparent)
+            if (slot.HighlightColor != Color.Transparent)
             {
                 Rectangle highlightRect = rect;
                 highlightRect.Inflate(3, 3);
 
-                GUI.DrawRectangle(spriteBatch, highlightRect, slot.BorderHighlightColor, false, 0, 5);
+                GUI.DrawRectangle(spriteBatch, highlightRect, slot.HighlightColor, false, 0, 5);
             }
 
             if (item != null && drawItem)
@@ -670,7 +676,13 @@ namespace Barotrauma
                         (itemPos.Y - sprite.size.Y / 2 * scale) - rect.Y);
                 }
 
-                sprite.Draw(spriteBatch, itemPos, sprite == item.Sprite ? item.GetSpriteColor() : item.Prefab.InventoryIconColor, 0, scale);
+                float rotation = 0.0f;
+                if (slot.HighlightColor.A > 0)
+                {
+                    rotation = (float)Math.Sin(slot.HighlightTimer * MathHelper.TwoPi) * slot.HighlightTimer * 0.3f;
+                }
+
+                sprite.Draw(spriteBatch, itemPos, sprite == item.Sprite ? item.GetSpriteColor() : item.Prefab.InventoryIconColor, rotation, scale);
                 
                 if (CharacterHealth.OpenHealthWindow != null)
                 {

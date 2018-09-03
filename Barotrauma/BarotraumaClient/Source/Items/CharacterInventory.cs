@@ -615,7 +615,7 @@ namespace Barotrauma
             {
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (Items[i] == item) slots[i].ShowBorderHighlight(Color.Green, 0.1f, 0.9f);
+                    if (Items[i] == item) slots[i].ShowBorderHighlight(Color.Green, 0.1f, 0.4f);
                 }
             }
 
