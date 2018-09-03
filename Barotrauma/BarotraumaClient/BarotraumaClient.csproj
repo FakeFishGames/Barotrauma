@@ -101,10 +101,8 @@
     <Compile Include="Source\Characters\Animation\Ragdoll.cs" />
     <Compile Include="Source\Characters\Attack.cs" />
     <Compile Include="Source\Events\EventManager.cs" />
-    <Compile Include="Source\Extensions\IEnumerableExtensions.cs" />
-    <Compile Include="Source\Extensions\PointExtensions.cs" />
-    <Compile Include="Source\Extensions\RectangleExtensions.cs" />
     <Compile Include="Source\GUI\ChatBox.cs" />
+    <Compile Include="Source\GUI\ParamsEditor.cs" />
     <Compile Include="Source\GUI\ShapeExtensions.cs" />
     <Compile Include="Source\GUI\Graph.cs" />
     <Compile Include="Source\Characters\CharacterHealth.cs" />
@@ -245,11 +243,11 @@
     <Compile Include="Source\Physics\PhysicsBody.cs" />
     <Compile Include="Source\PlayerInput.cs" />
     <Compile Include="Source\Program.cs" />
-    <Compile Include="Source\Screens\AnimationEditorScreen.cs" />
+    <Compile Include="Source\Screens\CharacterEditorScreen.cs" />
     <Compile Include="Source\Screens\BlurEffect.cs" />
     <Compile Include="Source\Screens\CampaignSetupUI.cs" />
     <Compile Include="Source\Screens\CampaignUI.cs" />
-    <Compile Include="Source\Screens\CharacterEditorScreen.cs" />
+    <Compile Include="Source\Screens\OldCharacterEditorScreen.cs" />
     <Compile Include="Source\Screens\SteamWorkshopScreen.cs" />
     <Compile Include="Source\Screens\SubEditorScreen.cs" />
     <Compile Include="Source\Screens\GameScreen.cs" />
@@ -270,6 +268,7 @@
     <Compile Include="Source\Sprite\DeformAnimations\Inflate.cs" />
     <Compile Include="Source\Sprite\DeformAnimations\NoiseDeformation.cs" />
     <Compile Include="Source\Sprite\DeformAnimations\PositionalDeformation.cs" />
+    <Compile Include="Source\Sprite\DeformAnimations\BezierDeformation.cs" />
     <Compile Include="Source\Sprite\DeformAnimations\SpriteDeformation.cs" />
     <Compile Include="Source\Sprite\Sprite.cs" />
     <Compile Include="Source\Sprite\SpriteSheet.cs" />

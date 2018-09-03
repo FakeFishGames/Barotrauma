@@ -9,11 +9,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    partial class Ragdoll
+    abstract partial class Ragdoll
     {
+        public abstract RagdollParams RagdollParams { get; protected set; }
+
         private static List<Ragdoll> list = new List<Ragdoll>();
 
         protected Hull currentHull;
@@ -36,7 +39,9 @@ namespace Barotrauma
                 return limbs;
             }
         }
-        
+
+        public bool HasMultipleLimbsOfSameType => Limbs.Length > limbDictionary.Count;
+
         private bool frozen;
         public bool Frozen
         {
@@ -57,12 +62,9 @@ namespace Barotrauma
 
         private bool simplePhysicsEnabled;
 
-        private Character character;
+        protected Character character;
 
         protected float strongestImpact;
-
-        public float? headPosition, headAngle;
-        public float? torsoPosition, torsoAngle;
 
         protected double onFloorTimer;
 
@@ -84,8 +86,8 @@ namespace Barotrauma
         public bool onGround;
         private bool ignorePlatforms;
 
-        protected float colliderHeightFromFloor;
-        
+        protected float ColliderHeightFromFloor => ConvertUnits.ToSimUnits(RagdollParams.ColliderHeightFromFloor) * RagdollParams.JointScale;
+
         public Structure Stairs;
                 
         protected Direction dir;
@@ -121,7 +123,7 @@ namespace Barotrauma
                 if (collider[colliderIndex].height<collider[value].height)
                 {
                     Vector2 pos1 = collider[colliderIndex].SimPosition;
-                    pos1.Y -= collider[colliderIndex].height * colliderHeightFromFloor;
+                    pos1.Y -= collider[colliderIndex].height * ColliderHeightFromFloor;
                     Vector2 pos2 = pos1;
                     pos2.Y += collider[value].height * 1.1f;
                     if (GameMain.World.RayCast(pos1, pos2).Any(f => f.CollisionCategories.HasFlag(Physics.CollisionWall))) return;
@@ -207,6 +209,9 @@ namespace Barotrauma
             }
         }
 
+        // Currently the camera cannot handle greater speeds. It starts to lag behind.
+        public const float MAX_SPEED = 9;
+
         public Vector2 TargetMovement
         {
             get 
@@ -216,30 +221,15 @@ namespace Barotrauma
             set 
             {
                 if (!MathUtils.IsValid(value)) return;
-                targetMovement.X = MathHelper.Clamp(value.X, -5.0f, 5.0f);
-                targetMovement.Y = MathHelper.Clamp(value.Y, -5.0f, 5.0f);
+                targetMovement.X = MathHelper.Clamp(value.X, -MAX_SPEED, MAX_SPEED);
+                targetMovement.Y = MathHelper.Clamp(value.Y, -MAX_SPEED, MAX_SPEED);
             }
         }
 
-        protected virtual float? HeadPosition
-        { 
-            get { return headPosition; } 
-        }
-
-        protected virtual float? HeadAngle
-        { 
-            get { return headAngle; } 
-        }
-
-        protected virtual float? TorsoPosition
-        { 
-            get { return torsoPosition; } 
-        }
-
-        protected virtual float? TorsoAngle
-        { 
-            get { return torsoAngle; } 
-        }
+        protected abstract float? HeadPosition { get; }
+        protected abstract float? HeadAngle { get; }
+        protected abstract float? TorsoPosition { get; }
+        protected abstract float? TorsoAngle { get; }
 
         public bool Draggable
         {
@@ -262,7 +252,7 @@ namespace Barotrauma
             get { return headInWater; }
         }
 
-        public readonly bool CanEnterSubmarine;
+        public bool CanEnterSubmarine { get; private set; }
 
         public Hull CurrentHull
         {
@@ -296,102 +286,79 @@ namespace Barotrauma
             private set;
         }
         
-        public Ragdoll(Character character, XElement element, string seed)
+        /// <summary>
+        /// Call this to create the ragdoll from the RagdollParams.
+        /// </summary>
+        public void Recreate(RagdollParams ragdollParams)
+        {
+            if (IsFlipped)
+            {
+                Flip();
+            }
+            dir = Direction.Right;
+            RagdollParams = ragdollParams;
+            XElement element = RagdollParams.MainElement;
+            // TODO: maybe the scale should override min and max and not vice versa?
+            //float scale = element.GetAttributeFloat("scale", 1.0f);
+            //if (element.Attribute("minscale") != null)
+            //{
+            //    float minScale = element.GetAttributeFloat("minscale", 1.0f);
+            //    float maxScale = Math.Max(minScale, element.GetAttributeFloat("maxscale", 1.0f));
+            //    scale = MathHelper.Lerp(minScale, maxScale, (float)random.NextDouble());
+            //}
+            ImpactTolerance = element.GetAttributeFloat("impacttolerance", 50.0f);
+            CanEnterSubmarine = element.GetAttributeBool("canentersubmarine", true);
+            Draggable = element.GetAttributeBool("draggable", false);
+            CreateColliders();
+            CreateLimbs();
+            CreateJoints();
+            UpdateCollisionCategories();
+            Limb torso = GetLimb(LimbType.Torso);
+            Limb head = GetLimb(LimbType.Head);
+            MainLimb = torso ?? head;
+        }
+
+        public Ragdoll(Character character, string seed, RagdollParams ragdollParams = null)
         {
             list.Add(this);
             this.character = character;
-            dir = Direction.Right;
+            Recreate(ragdollParams ?? RagdollParams);
+        }
 
-            Random random = new MTRandom(ToolBox.StringToInt(seed));
-            float scale = element.GetAttributeFloat("scale", 1.0f);
-            if (element.Attribute("minscale") != null)
-            {
-                float minScale = element.GetAttributeFloat("minscale", 1.0f);
-                float maxScale = Math.Max(minScale, element.GetAttributeFloat("maxscale", 1.0f));
-                scale = MathHelper.Lerp(minScale, maxScale, (float)random.NextDouble());
-            }
-
-            limbs           = new Limb[element.Elements("limb").Count()];
-            LimbJoints      = new LimbJoint[element.Elements("joint").Count()];
-            limbDictionary  = new Dictionary<LimbType, Limb>();
-
-            if (element.Attribute("headposition") != null)
-            {
-                headPosition = ConvertUnits.ToSimUnits(element.GetAttributeFloat("headposition", 50.0f));
-            }
-            if (element.Attribute("headangle") != null)
-            {
-                headAngle = MathHelper.ToRadians(element.GetAttributeFloat("headangle", 0.0f));
-            }
-            if (element.Attribute("torsoposition") != null)
-            {
-                torsoPosition = ConvertUnits.ToSimUnits(element.GetAttributeFloat("torsoposition", 50.0f));
-            }
-            if (element.Attribute("torsoangle") != null)
-            {
-                torsoAngle = MathHelper.ToRadians(element.GetAttributeFloat("torsoangle", 0.0f));
-            }
-
-            ImpactTolerance = element.GetAttributeFloat("impacttolerance", 50.0f);
-
-            CanEnterSubmarine = element.GetAttributeBool("canentersubmarine", true);
-
-            colliderHeightFromFloor = element.GetAttributeFloat("colliderheightfromfloor", 45.0f);
-            colliderHeightFromFloor = ConvertUnits.ToSimUnits(colliderHeightFromFloor);
-
-            Draggable = element.GetAttributeBool("draggable", false);
-
+        protected void CreateColliders()
+        {
             collider = new List<PhysicsBody>();
-             
-            foreach (XElement subElement in element.Elements())
+            DebugConsole.NewMessage($"Creating colliders from {RagdollParams.Name}.", Color.White);
+            foreach (XElement cElement in RagdollParams.MainElement.Elements("collider"))
             {
-                switch (subElement.Name.ToString())
+                collider.Add(new PhysicsBody(cElement, RagdollParams.LimbScale));
+                collider[collider.Count - 1].UserData = character;
+                collider[collider.Count - 1].FarseerBody.Friction = 0.05f;
+                collider[collider.Count - 1].FarseerBody.Restitution = 0.05f;
+                collider[collider.Count - 1].FarseerBody.FixedRotation = true;
+                collider[collider.Count - 1].CollisionCategories = Physics.CollisionCharacter;
+                collider[collider.Count - 1].FarseerBody.AngularDamping = 5.0f;
+                collider[collider.Count - 1].FarseerBody.FixedRotation = true;
+                collider[collider.Count - 1].FarseerBody.OnCollision += OnLimbCollision;
+                if (collider.Count > 1) collider[collider.Count - 1].PhysEnabled = false;
+            }
+        }
+
+        protected void CreateJoints()
+        {
+            DebugConsole.NewMessage($"Creating joints from {RagdollParams.Name}.", Color.White);
+            LimbJoints = new LimbJoint[RagdollParams.MainElement.Elements("joint").Count()];
+            RagdollParams.Joints.ForEach(j => AddJoint(j));
+            // Check the joints
+            for (int i = 0; i < LimbJoints.Length; i++)
+            {
+                if (LimbJoints[i] == null)
                 {
-                    case "limb":
-                        byte ID = Convert.ToByte(subElement.Attribute("id").Value);
-
-                        Limb limb = new Limb(character, subElement, scale);
-                        
-                        limb.body.FarseerBody.OnCollision += OnLimbCollision;
-                        
-                        Limbs[ID] = limb;
-                        Mass += limb.Mass;
-                        if (!limbDictionary.ContainsKey(limb.type)) limbDictionary.Add(limb.type, limb);
-                        break;
-                    case "joint":
-                        AddJoint(subElement, scale);
-
-                        break;
-                    case "collider":
-                        collider.Add(new PhysicsBody(subElement, scale));
-
-                        collider[collider.Count - 1].UserData = character;
-                        collider[collider.Count - 1].FarseerBody.Friction = 0.05f;
-                        collider[collider.Count - 1].FarseerBody.Restitution = 0.05f;
-                        collider[collider.Count - 1].FarseerBody.FixedRotation = true;
-                        collider[collider.Count - 1].CollisionCategories = Physics.CollisionCharacter;
-                        collider[collider.Count - 1].FarseerBody.AngularDamping = 5.0f;
-                        collider[collider.Count - 1].FarseerBody.FixedRotation = true;
-                        collider[collider.Count - 1].FarseerBody.OnCollision += OnLimbCollision;
-                        if (collider.Count > 1) collider[collider.Count - 1].PhysEnabled = false;
-                        break;
+                    DebugConsole.ThrowError($"Joint {i} null.");
                 }
             }
 
-            if (collider[0] == null)
-            {
-                DebugConsole.ThrowError("No collider configured for \"" + character.Name + "\"!");
-                collider[0] = new PhysicsBody(0.0f, 0.0f, 0.5f, 5.0f)
-                {
-                    UserData = character,
-                    BodyType = BodyType.Dynamic,
-                    CollisionCategories = Physics.CollisionCharacter
-                };
-                collider[0].FarseerBody.AngularDamping = 5.0f;
-                collider[0].FarseerBody.FixedRotation = true;
-                collider[0].FarseerBody.OnCollision += OnLimbCollision;
-            }
-
+            // This block was salvaged from the merge of the dev branch to the animation branch. Not sure if every line made it here.
             outsideCollisionBlocker = BodyFactory.CreateEdge(GameMain.World, -Vector2.UnitX * 2.0f, Vector2.UnitX * 2.0f, "blocker");
             outsideCollisionBlocker.BodyType = BodyType.Static;
             outsideCollisionBlocker.CollisionCategories = Physics.CollisionWall;
@@ -402,11 +369,24 @@ namespace Barotrauma
 
             foreach (var joint in LimbJoints)
             {
+                if (joint == null) { continue; }
                 joint.LimbB?.body?.SetTransform(
                     joint.BodyA.Position + (joint.LocalAnchorA - joint.LocalAnchorB) * 0.1f,
                     (joint.LowerLimit + joint.UpperLimit) / 2.0f);
             }
+        }
 
+        protected void CreateLimbs()
+        {
+            DebugConsole.NewMessage($"Creating limbs from {RagdollParams.Name}.", Color.White);
+            limbDictionary = new Dictionary<LimbType, Limb>();
+            limbs = new Limb[RagdollParams.MainElement.Elements("limb").Count()];
+            RagdollParams.Limbs.ForEach(l => AddLimb(l));
+            SetupDrawOrder();
+        }
+
+        protected void SetupDrawOrder()
+        {
             //make sure every character gets drawn at a distinct "layer" 
             //(instead of having some of the limbs appear behind and some in front of other characters)
             float startDepth = 0.1f;
@@ -416,19 +396,79 @@ namespace Barotrauma
                 if (otherCharacter == character) continue;
                 startDepth += increment;
             }
-
             //make sure each limb has a distinct depth value 
-            List<Limb> depthSortedLimbs = Limbs.OrderBy(l => l.sprite == null ? 0.0f : l.sprite.Depth).ToList();
+            List<Limb> depthSortedLimbs = Limbs.OrderBy(l => l.ActiveSprite == null ? 0.0f : l.ActiveSprite.Depth).ToList();
             foreach (Limb limb in Limbs)
             {
-                if (limb.sprite != null)
-                    limb.sprite.Depth = startDepth + depthSortedLimbs.IndexOf(limb) * 0.00001f;
+                if (limb.ActiveSprite != null)
+                    limb.ActiveSprite.Depth = startDepth + depthSortedLimbs.IndexOf(limb) * 0.00001f;
             }
+            depthSortedLimbs.Reverse();
+            inversedLimbDrawOrder = depthSortedLimbs.ToArray();
+        }
 
-            Limb torso = GetLimb(LimbType.Torso);
-            Limb head = GetLimb(LimbType.Head);
+        /// <summary>
+        /// Inversed draw order, which is used for drawing the limbs in 3d (deformable sprites).
+        /// </summary>
+        protected Limb[] inversedLimbDrawOrder;
 
-            MainLimb = torso ?? head;
+        /// <summary>
+        /// Saves all serializable data in the currently selected ragdoll params. This method should properly handle character flipping.
+        /// </summary>
+        public void SaveRagdoll(string fileNameWithoutExtension = null)
+        {
+            SaveJoints();
+            RagdollParams.Save(fileNameWithoutExtension);
+        }
+
+        /// <summary>
+        /// Resets the serializable data to the currently selected ragdoll params.
+        /// </summary>
+        public void ResetRagdoll()
+        {
+            RagdollParams.Reset();
+            ResetJoints();
+            ResetLimbs();
+        }
+
+        /// <summary>
+        /// Saves the current joint values to the serializable joint params. This method should properly handle character flipping.
+        /// </summary>
+        public void SaveJoints()
+        {
+            LimbJoints.ForEach(j => j.SaveParams());
+        }
+
+        /// <summary>
+        /// Resets the current joint values to the serialized joint params.
+        /// </summary>
+        public void ResetJoints()
+        {
+            LimbJoints.ForEach(j => j.LoadParams());
+        }
+
+        /// <summary>
+        /// Resets the current limb values to the serialized limb params.
+        /// </summary>
+        public void ResetLimbs()
+        {
+            Limbs.ForEach(l => l.LoadParams());
+        }
+
+        public void AddJoint(JointParams jointParams)
+        {
+            byte limb1ID = Convert.ToByte(jointParams.Limb1);
+            byte limb2ID = Convert.ToByte(jointParams.Limb2);
+            LimbJoint joint = new LimbJoint(Limbs[limb1ID], Limbs[limb2ID], jointParams, this);
+            GameMain.World.AddJoint(joint);
+            for (int i = 0; i < LimbJoints.Length; i++)
+            {
+                if (LimbJoints[i] != null) continue;
+                LimbJoints[i] = joint;
+                return;
+            }
+            Array.Resize(ref LimbJoints, LimbJoints.Length + 1);
+            LimbJoints[LimbJoints.Length - 1] = joint;
         }
 
         public void AddJoint(XElement subElement, float scale = 1.0f)
@@ -443,7 +483,7 @@ namespace Barotrauma
             limb2Pos = ConvertUnits.ToSimUnits(limb2Pos);
 
             LimbJoint joint = new LimbJoint(Limbs[limb1ID], Limbs[limb2ID], limb1Pos, limb2Pos);
-            joint.CanBeSevered = subElement.GetAttributeBool("canbesevered", true);
+            //joint.CanBeSevered = subElement.GetAttributeBool("canbesevered", true);
 
             if (subElement.Attribute("lowerlimit") != null)
             {
@@ -466,18 +506,25 @@ namespace Barotrauma
             LimbJoints[LimbJoints.Length - 1] = joint;
         }
 
+        protected void AddLimb(LimbParams limbParams)
+        {
+            byte ID = Convert.ToByte(limbParams.ID);
+            Limb limb = new Limb(this, character, limbParams);
+            limb.body.FarseerBody.OnCollision += OnLimbCollision;
+            Limbs[ID] = limb;
+            Mass += limb.Mass;
+            if (!limbDictionary.ContainsKey(limb.type)) limbDictionary.Add(limb.type, limb);
+        }
+
         public void AddLimb(Limb limb)
         {
             if (Limbs.Contains(limb)) return;
-
             limb.body.FarseerBody.OnCollision += OnLimbCollision;
-
             Array.Resize(ref limbs, Limbs.Length + 1);
-
             Limbs[Limbs.Length - 1] = limb;
-
             Mass += limb.Mass;
             if (!limbDictionary.ContainsKey(limb.type)) limbDictionary.Add(limb.type, limb);
+            SetupDrawOrder();
         }
 
         public void RemoveLimb(Limb limb)
@@ -495,7 +542,22 @@ namespace Barotrauma
             }
 
             limbs = newLimbs;
-            if (limbDictionary.ContainsKey(limb.type)) limbDictionary.Remove(limb.type);
+            if (limbDictionary.ContainsKey(limb.type))
+            {
+                limbDictionary.Remove(limb.type);
+                // If there is another limb of the same type, replace the limb in the dictionary.
+                if (HasMultipleLimbsOfSameType)
+                {
+                    var otherLimb = Limbs.FirstOrDefault(l => l != limb && l.type == limb.type);
+                    if (otherLimb != null)
+                    {
+                        limbDictionary.Add(otherLimb.type, otherLimb);
+                    }
+                }
+            }
+
+            // TODO: this could be optimized if needed, but at least we need to remove the limb from the inversedDrawOrder array.
+            SetupDrawOrder();
 
             //remove all joints that were attached to the removed limb
             LimbJoint[] attachedJoints = Array.FindAll(LimbJoints, lj => lj.LimbA == limb || lj.LimbB == limb);
@@ -511,7 +573,6 @@ namespace Barotrauma
                 }
                 LimbJoints = newJoints;
             }
-
 
             limb.Remove();
             foreach (LimbJoint limbJoint in attachedJoints)
@@ -695,8 +756,11 @@ namespace Barotrauma
         
         partial void ImpactProjSpecific(float impact, Body body);
 
+        public bool IsFlipped { get; private set; }
+
         public virtual void Flip()
         {
+            IsFlipped = !IsFlipped;
             dir = (dir == Direction.Left) ? Direction.Right : Direction.Left;
             
             for (int i = 0; i < LimbJoints.Length; i++)
@@ -718,11 +782,11 @@ namespace Barotrauma
                 
                 limb.Dir = Dir;
 
-                if (limb.sprite != null)
+                if (limb.ActiveSprite != null)
                 {
-                    Vector2 spriteOrigin = limb.sprite.Origin;
-                    spriteOrigin.X = limb.sprite.SourceRect.Width - spriteOrigin.X;
-                    limb.sprite.Origin = spriteOrigin;
+                    Vector2 spriteOrigin = limb.ActiveSprite.Origin;
+                    spriteOrigin.X = limb.ActiveSprite.SourceRect.Width - spriteOrigin.X;
+                    limb.ActiveSprite.Origin = spriteOrigin;
                 }
 
                 
@@ -1152,7 +1216,7 @@ namespace Barotrauma
 
             Vector2 rayStart = Collider.SimPosition;
             Vector2 rayEnd = rayStart;
-            rayEnd.Y -= Collider.height * 0.5f + Collider.radius + colliderHeightFromFloor*1.2f;
+            rayEnd.Y -= Collider.height * 0.5f + Collider.radius + ColliderHeightFromFloor*1.2f;
 
             Vector2 colliderBottomDisplay = ConvertUnits.ToDisplayUnits(GetColliderBottom());
             if (!inWater && !character.IsDead && character.Stun <= 0f && levitatingCollider && Collider.LinearVelocity.Y>-ImpactTolerance)
@@ -1206,7 +1270,7 @@ namespace Barotrauma
                     }
 
                     float tfloorY = rayStart.Y + (rayEnd.Y - rayStart.Y) * closestFraction;
-                    float targetY = tfloorY + ((float)Math.Abs(Math.Cos(Collider.Rotation)) * Collider.height * 0.5f) + Collider.radius + colliderHeightFromFloor;
+                    float targetY = tfloorY + ((float)Math.Abs(Math.Cos(Collider.Rotation)) * Collider.height * 0.5f) + Collider.radius + ColliderHeightFromFloor;
 
                     if (Math.Abs(Collider.SimPosition.Y - targetY) > 0.01f)
                     {
@@ -1222,7 +1286,10 @@ namespace Barotrauma
                     }
                 }
             }
+            UpdateProjSpecific(deltaTime);
         }
+
+        partial void UpdateProjSpecific(float deltaTime);
 
         partial void Splash(Limb limb, Hull limbHull);
 
@@ -1236,7 +1303,7 @@ namespace Barotrauma
         protected float GetFloorY(Vector2 simPosition)
         {
             Vector2 rayStart = simPosition;
-            float height = colliderHeightFromFloor;
+            float height = ColliderHeightFromFloor;
             if (HeadPosition.HasValue) height = Math.Max(height, HeadPosition.Value);
             if (TorsoPosition.HasValue) height = Math.Max(height, TorsoPosition.Value);
 
@@ -1615,6 +1682,9 @@ namespace Barotrauma
             return force;
         }
 
+        /// <summary>
+        /// Note that if there are multiple limbs of the same type, only the first of them is found in the dictionary.
+        /// </summary>
         public Limb GetLimb(LimbType limbType)
         {
             limbDictionary.TryGetValue(limbType, out Limb limb);
@@ -1646,7 +1716,7 @@ namespace Barotrauma
 
             if (!character.IsUnconscious && !character.IsDead && character.Stun <= 0.0f)
             {
-                offset = -colliderHeightFromFloor;
+                offset = -ColliderHeightFromFloor;
             }
 
             float lowestBound = Collider.SimPosition.Y;

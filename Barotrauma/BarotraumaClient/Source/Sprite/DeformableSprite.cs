@@ -2,13 +2,14 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
 {
     partial class DeformableSprite
     {
+        public bool IsFlipped { get; private set; }
+
         private static List<DeformableSprite> list = new List<DeformableSprite>();
 
         private int triangleCount;
@@ -72,17 +73,31 @@ namespace Barotrauma
                     return;
                 }
             }
+            SetupVertexBuffer();
+            SetupIndexBuffer();
+            list.Add(this);
+        }
 
+        private void SetupVertexBuffer(bool flip = false)
+        {
             Vector2 textureSize = new Vector2(sprite.Texture.Width, sprite.Texture.Height);
-            uvTopLeft = Vector2.Divide(sprite.SourceRect.Location.ToVector2(), textureSize);
-            uvBottomRight = Vector2.Divide((sprite.SourceRect.Location + sprite.SourceRect.Size).ToVector2(), textureSize);
+            var pos = sprite.SourceRect.Location;
+            var size = sprite.SourceRect.Size;
+            if (flip)
+            {
+                uvTopLeft = Vector2.Divide(new Vector2(pos.X + size.X, pos.Y), textureSize);
+                uvBottomRight = Vector2.Divide(new Vector2(pos.X, pos.Y + size.Y), textureSize);
+            }
+            else
+            {
+                uvTopLeft = Vector2.Divide(pos.ToVector2(), textureSize);
+                uvBottomRight = Vector2.Divide((pos + size).ToVector2(), textureSize);
+            }
 
-            System.Diagnostics.Debug.Assert(uvTopLeft.X < uvBottomRight.X);
-            System.Diagnostics.Debug.Assert(uvTopLeft.Y < uvBottomRight.Y);
+            //System.Diagnostics.Debug.Assert(uvTopLeft.X < uvBottomRight.X);
+            //System.Diagnostics.Debug.Assert(uvTopLeft.Y < uvBottomRight.Y);
 
             var vertices = new VertexPositionColorTexture[(subDivX + 1) * (subDivY + 1)];
-            triangleCount = subDivX * subDivY * 2;
-            var indices = new ushort[triangleCount * 3];
             for (int x = 0; x <= subDivX; x++)
             {
                 for (int y = 0; y <= subDivY; y++)
@@ -97,6 +112,18 @@ namespace Barotrauma
                 }
             }
 
+            if (vertexBuffer == null)
+            {
+                vertexBuffer = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, vertices.Length, BufferUsage.None);
+            }
+            vertexBuffer.SetData(vertices);
+            IsFlipped = flip;
+        }
+
+        private void SetupIndexBuffer()
+        {
+            triangleCount = subDivX * subDivY * 2;
+            var indices = new ushort[triangleCount * 3];
             int offset = 0;
             for (int i = 0; i < triangleCount / 2; i++)
             {
@@ -110,9 +137,6 @@ namespace Barotrauma
 
                 if ((i + 1) % subDivX == 0) offset++;
             }
-
-            vertexBuffer = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, vertices.Length, BufferUsage.None);
-            vertexBuffer.SetData(vertices);
             indexBuffer = new IndexBuffer(GameMain.Instance.GraphicsDevice, IndexElementSize.SixteenBits, indices.Length, BufferUsage.None);
             indexBuffer.SetData(indices);
 
@@ -121,10 +145,7 @@ namespace Barotrauma
                 { Vector2.Zero, Vector2.Zero },
                 { Vector2.Zero, Vector2.Zero }
             });
-
-            list.Add(this);
         }
-
 
         /// <summary>
         /// Deform the vertices of the sprite using an arbitrary function. The in-parameter of the function is the
@@ -176,10 +197,35 @@ namespace Barotrauma
                 Matrix.CreateTranslation(pos);
         }
 
-        public void Draw(Camera cam, Vector3 pos, Vector2 origin, float rotate, Vector2 scale)
+        private Point spritePos;
+        private Point spriteSize;
+        public void Draw(Camera cam, Vector3 pos, Vector2 origin, float rotate, Vector2 scale, bool flip = false)
         {
+            // If the source rect is modified, we should recalculate the vertex buffer.
+            if (sprite.SourceRect.Location != spritePos || sprite.SourceRect.Size != spriteSize)
+            {
+                spritePos = sprite.SourceRect.Location;
+                spriteSize = sprite.SourceRect.Size;
+                SetupVertexBuffer(flip);
+            }
+            else
+            {
+                if (flip)
+                {
+                    if (!IsFlipped)
+                    {
+                        SetupVertexBuffer(true);
+                    }
+                }
+                else
+                {
+                    if (IsFlipped)
+                    {
+                        SetupVertexBuffer(false);
+                    }
+                }
+            }
             Matrix matrix = GetTransform(pos, origin, rotate, scale);
-
             effect.Parameters["xTransform"].SetValue(matrix * cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f);
             effect.Parameters["xTexture"].SetValue(sprite.Texture);

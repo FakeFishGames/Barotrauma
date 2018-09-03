@@ -19,12 +19,20 @@ namespace Barotrauma
         LeftLeg, RightLeg, LeftFoot, RightFoot, Head, Torso, Tail, Legs, RightThigh, LeftThigh, Waist
     };
     
-    class LimbJoint : RevoluteJoint
+    partial class LimbJoint : RevoluteJoint
     {
         public bool IsSevered;
-        public bool CanBeSevered;
-
+        public bool CanBeSevered => jointParams.CanBeSevered;
+        public readonly JointParams jointParams;
+        public readonly Ragdoll ragdoll;
         public readonly Limb LimbA, LimbB;
+
+        public LimbJoint(Limb limbA, Limb limbB, JointParams jointParams, Ragdoll ragdoll) : this(limbA, limbB, Vector2.One, Vector2.One)
+        {
+            this.jointParams = jointParams;
+            this.ragdoll = ragdoll;
+            LoadParams();
+        }
 
         public LimbJoint(Limb limbA, Limb limbB, Vector2 anchor1, Vector2 anchor2)
             : base(limbA.body.FarseerBody, limbB.body.FarseerBody, anchor1, anchor2)
@@ -32,9 +40,80 @@ namespace Barotrauma
             CollideConnected = false;
             MotorEnabled = true;
             MaxMotorTorque = 0.25f;
-
             LimbA = limbA;
             LimbB = limbB;
+        }
+
+        public void SaveParams()
+        {
+            if (ragdoll.IsFlipped)
+            {
+                jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorA.X, LocalAnchorA.Y) / jointParams.Ragdoll.JointScale);
+                jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorB.X, LocalAnchorB.Y) / jointParams.Ragdoll.JointScale);
+                if (!float.IsNaN(jointParams.LowerLimit))
+                {
+                    jointParams.UpperLimit = MathHelper.ToDegrees(-LowerLimit);
+                }
+                if (!float.IsNaN(jointParams.UpperLimit))
+                {
+                    jointParams.LowerLimit = MathHelper.ToDegrees(-UpperLimit);
+                }
+            }
+            else
+            {
+                jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorA / jointParams.Ragdoll.JointScale);
+                jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorB / jointParams.Ragdoll.JointScale);
+                if (!float.IsNaN(jointParams.UpperLimit))
+                {
+                    jointParams.UpperLimit = MathHelper.ToDegrees(UpperLimit);
+                }
+                if (!float.IsNaN(jointParams.LowerLimit))
+                {
+                    jointParams.LowerLimit = MathHelper.ToDegrees(LowerLimit);
+                }
+            }
+        }
+
+        public void LoadParams()
+        {
+            // If neither of the limits have been defined, disable the limits
+            if (float.IsNaN(jointParams.LowerLimit) && float.IsNaN(jointParams.UpperLimit))
+            {
+                jointParams.LimitEnabled = false;
+            }
+            LimitEnabled = jointParams.LimitEnabled;
+            if (LimitEnabled)
+            {
+                // If limits are enabled, don't allow NaN
+                if (float.IsNaN(jointParams.LowerLimit))
+                {
+                    jointParams.LowerLimit = 0;
+                }
+                if (float.IsNaN(jointParams.UpperLimit))
+                {
+                    jointParams.UpperLimit = 0;
+                }
+            }
+            if (ragdoll.IsFlipped)
+            {
+                LocalAnchorA = ConvertUnits.ToSimUnits(new Vector2(-jointParams.Limb1Anchor.X, jointParams.Limb1Anchor.Y) * jointParams.Ragdoll.JointScale);
+                LocalAnchorB = ConvertUnits.ToSimUnits(new Vector2(-jointParams.Limb2Anchor.X, jointParams.Limb2Anchor.Y) * jointParams.Ragdoll.JointScale);
+                if (!float.IsNaN(jointParams.LowerLimit) && !float.IsNaN(jointParams.UpperLimit))
+                {
+                    UpperLimit = MathHelper.ToRadians(-jointParams.LowerLimit);
+                    LowerLimit = MathHelper.ToRadians(-jointParams.UpperLimit);
+                }
+            }
+            else
+            {
+                LocalAnchorA = ConvertUnits.ToSimUnits(jointParams.Limb1Anchor * jointParams.Ragdoll.JointScale);
+                LocalAnchorB = ConvertUnits.ToSimUnits(jointParams.Limb2Anchor * jointParams.Ragdoll.JointScale);
+                if (!float.IsNaN(jointParams.LowerLimit) && !float.IsNaN(jointParams.UpperLimit))
+                {
+                    UpperLimit = MathHelper.ToRadians(jointParams.UpperLimit);
+                    LowerLimit = MathHelper.ToRadians(jointParams.LowerLimit);
+                }
+            }
         }
     }
     
@@ -47,13 +126,22 @@ namespace Barotrauma
         private const float SeveredFadeOutTime = 10.0f;
 
         public readonly Character character;
-        
+        /// <summary>
+        /// Note that during the limb initialization, character.AnimController returns null, whereas this field is already assigned.
+        /// </summary>
+        public readonly Ragdoll ragdoll;
+        public readonly LimbParams limbParams;
+
         //the physics body of the limb
         public PhysicsBody body;
                         
-        protected readonly Vector2 stepOffset;
-        
-        public Sprite sprite, damagedSprite;
+        public Vector2 StepOffset => ConvertUnits.ToSimUnits(limbParams.StepOffset) * ragdoll.RagdollParams.JointScale;
+
+        public Sprite Sprite { get; protected set; }
+        public DeformableSprite DeformSprite { get; protected set; }
+        public Sprite ActiveSprite => DeformSprite != null ? DeformSprite.Sprite : Sprite;
+
+        public Sprite DamagedSprite { get; set; }
 
         public bool inWater;
 
@@ -75,9 +163,11 @@ namespace Barotrauma
         
         public float AttackTimer;
 
-        public readonly int HealthIndex;
-        
-        public readonly float AttackPriority;
+        public int HealthIndex => limbParams.HealthIndex;
+        public float Scale => limbParams.Ragdoll.LimbScale;
+        public float AttackPriority => limbParams.AttackPriority;
+        public bool DoesFlip => limbParams.Flip;
+        public float SteerForce => limbParams.SteerForce;
 
         public bool IsSevered
         {
@@ -91,8 +181,6 @@ namespace Barotrauma
 #endif
             }
         }
-
-        public bool DoesFlip { get; private set; }
 
         public Vector2 WorldPosition
         {
@@ -114,12 +202,8 @@ namespace Barotrauma
             get { return body.Rotation; }
         }
 
-        public float Scale { get; private set; }
-
         //where an animcontroller is trying to pull the limb, only used for debug visualization
         public Vector2 AnimTargetPos { get; private set; }
-
-        public float SteerForce { get; private set; }
 
         public float Mass
         {
@@ -141,11 +225,6 @@ namespace Barotrauma
 
         public int RefJointIndex { get; private set; }
 
-        public Vector2 StepOffset
-        {
-            get { return stepOffset; }
-        }
-
         private List<WearableSprite> wearingItems;
         public List<WearableSprite> WearingItems
         {
@@ -164,24 +243,20 @@ namespace Barotrauma
             private set;
         }
 
-        public Limb(Character character, XElement element, float scale = 1.0f)
+        public Limb(Ragdoll ragdoll, Character character, LimbParams limbParams)
         {
+            this.ragdoll = ragdoll;
             this.character = character;
+            this.limbParams = limbParams;
             wearingItems = new List<WearableSprite>();            
             dir = Direction.Right;
-            Scale = scale;
-
-            HealthIndex = element.GetAttributeInt("healthindex", 0);
-            AttackPriority = element.GetAttributeFloat("attackpriority", 0);
-
-            DoesFlip = element.GetAttributeBool("flip", false);
-
-            body = new PhysicsBody(element, scale);
+            var element = limbParams.Element;
+            // TODO: reduce (or get rid of) parsing here and use the LimbParams directly
+            body = new PhysicsBody(element, Scale);
             if (element.GetAttributeBool("ignorecollisions", false))
             {
                 body.CollisionCategories = Category.None;
                 body.CollidesWith = Category.None;
-
                 ignoreCollisions = true;
             }
             else
@@ -209,11 +284,8 @@ namespace Barotrauma
                 }
 
 
-                pullJointPos = element.GetAttributeVector2("pullpos", Vector2.Zero) * scale;
+                pullJointPos = element.GetAttributeVector2("pullpos", Vector2.Zero) * Scale;
                 pullJointPos = ConvertUnits.ToSimUnits(pullJointPos);
-
-                stepOffset = element.GetAttributeVector2("stepoffset", Vector2.Zero) * scale;
-                stepOffset = ConvertUnits.ToSimUnits(stepOffset);
 
                 RefJointIndex = element.GetAttributeInt("refjoint", -1);
 
@@ -232,8 +304,6 @@ namespace Barotrauma
             };
 
             GameMain.World.AddJoint(pullJoint);
-
-            SteerForce = element.GetAttributeFloat("steerforce", 0.0f);
             
             if (element.Attribute("mouthpos") != null)
             {
@@ -249,11 +319,10 @@ namespace Barotrauma
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
+                    // DeformableSprites handled by client only
                     case "sprite":
                         string spritePath = subElement.Attribute("texture").Value;
-
                         string spritePathWithTags = spritePath;
-
                         if (character.Info != null)
                         {
                             spritePath = spritePath.Replace("[GENDER]", (character.Info.Gender == Gender.Female) ? "f" : "");
@@ -269,28 +338,23 @@ namespace Barotrauma
                                     Path.GetFileNameWithoutExtension(spritePath) + tags + Path.GetExtension(spritePath));
                             }
                         }
-
                         if (File.Exists(spritePathWithTags))
                         {
-                            sprite = new Sprite(subElement, "", spritePathWithTags);
+                            Sprite = new Sprite(subElement, "", spritePathWithTags);
                         }
                         else
                         {
-
-                            sprite = new Sprite(subElement, "", spritePath);
+                            Sprite = new Sprite(subElement, "", spritePath);
                         }
-
                         break;
                     case "damagedsprite":
                         string damagedSpritePath = subElement.Attribute("texture").Value;
-
                         if (character.Info != null)
                         {
                             damagedSpritePath = damagedSpritePath.Replace("[GENDER]", (character.Info.Gender == Gender.Female) ? "f" : "");
                             damagedSpritePath = damagedSpritePath.Replace("[HEADID]", character.Info.HeadSpriteId.ToString());
                         }
-
-                        damagedSprite = new Sprite(subElement, "", damagedSpritePath);
+                        DamagedSprite = new Sprite(subElement, "", damagedSpritePath);
                         break;
                     case "attack":
                         attack = new Attack(subElement, (character == null ? "null" : character.Name) + ", limb " + type);
@@ -517,16 +581,22 @@ namespace Barotrauma
         
         public void Remove()
         {
-            if (sprite != null)
+            if (Sprite != null)
             {
-                sprite.Remove();
-                sprite = null;
+                Sprite.Remove();
+                Sprite = null;
             }
             
-            if (damagedSprite != null)
+            if (DamagedSprite != null)
             {
-                damagedSprite.Remove();
-                damagedSprite = null;
+                DamagedSprite.Remove();
+                DamagedSprite = null;
+            }
+
+            if (DeformSprite != null)
+            {
+                DeformSprite.Sprite?.Remove();
+                DeformSprite = null;
             }
 
             if (body != null)
@@ -541,6 +611,14 @@ namespace Barotrauma
                 LightSource.Remove();
             }
 #endif
+        }
+
+        public void LoadParams()
+        {
+            bool isFlipped = dir == Direction.Left;
+            Sprite?.LoadParams(limbParams.normalSpriteParams, isFlipped);
+            DamagedSprite?.LoadParams(limbParams.damagedSpriteParams, isFlipped);
+            DeformSprite?.Sprite.LoadParams(limbParams.deformSpriteParams, isFlipped);
         }
     }
 }

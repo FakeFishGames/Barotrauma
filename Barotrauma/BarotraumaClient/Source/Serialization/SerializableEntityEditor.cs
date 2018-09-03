@@ -28,6 +28,230 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Holds the references to the input fields.
+        /// </summary>
+        public Dictionary<SerializableProperty, GUIComponent[]> Fields { get; private set; } = new Dictionary<SerializableProperty, GUIComponent[]>();
+
+        public void UpdateValue(SerializableProperty property, object newValue, bool flash = true)
+        {
+            if (!Fields.TryGetValue(property, out GUIComponent[] fields))
+            {
+                DebugConsole.ThrowError($"No field for {property.Name} found!");
+                return;
+            }
+            if (newValue is float f)
+            {
+                foreach (var field in fields)
+                {
+                    if (field is GUINumberInput numInput)
+                    {
+                        if (numInput.InputType == GUINumberInput.NumberType.Float)
+                        {
+                            numInput.FloatValue = f;
+                            if (flash)
+                            {
+                                numInput.Flash(Color.LightGreen);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (newValue is int integer)
+            {
+                foreach (var field in fields)
+                {
+                    if (field is GUINumberInput numInput)
+                    {
+                        if (numInput.InputType == GUINumberInput.NumberType.Int)
+                        {
+                            numInput.IntValue = integer;
+                            if (flash)
+                            {
+                                numInput.Flash(Color.LightGreen);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (newValue is bool b)
+            {
+                if (fields[0] is GUITickBox tickBox)
+                {
+                    tickBox.Selected = b;
+                    if (flash)
+                    {
+                        tickBox.Flash(Color.LightGreen);
+                    }
+                }
+            }
+            else if (newValue is string s)
+            {
+                if (fields[0] is GUITextBox textBox)
+                {
+                    textBox.Text = s;
+                    if (flash)
+                    {
+                        textBox.Flash(Color.LightGreen);
+                    }
+                }
+            }
+            else if (newValue.GetType().IsEnum)
+            {
+                if (fields[0] is GUIDropDown dropDown)
+                {
+                    dropDown.Select((int)newValue);
+                    if (flash)
+                    {
+                        dropDown.Flash(Color.LightGreen);
+                    }
+                }
+            }
+            else if (newValue is Vector2 v2)
+            {
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    var field = fields[i];
+                    if (field is GUINumberInput numInput)
+                    {
+                        if (numInput.InputType == GUINumberInput.NumberType.Float)
+                        {
+                            numInput.FloatValue = i == 0 ? v2.X : v2.Y;
+                            if (flash)
+                            {
+                                numInput.Flash(Color.LightGreen);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (newValue is Vector3 v3)
+            {
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    var field = fields[i];
+                    if (field is GUINumberInput numInput)
+                    {
+                        if (numInput.InputType == GUINumberInput.NumberType.Float)
+                        {
+                            switch (i)
+                            {
+                                case 0:
+                                    numInput.FloatValue = v3.X;
+                                    break;
+                                case 1:
+                                    numInput.FloatValue = v3.Y;
+                                    break;
+                                case 2:
+                                    numInput.FloatValue = v3.Z;
+                                    break;
+                            }
+                            if (flash)
+                            {
+                                numInput.Flash(Color.LightGreen);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (newValue is Vector4 v4)
+            {
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    var field = fields[i];
+                    if (field is GUINumberInput numInput)
+                    {
+                        if (numInput.InputType == GUINumberInput.NumberType.Float)
+                        {
+                            switch (i)
+                            {
+                                case 0:
+                                    numInput.FloatValue = v4.X;
+                                    break;
+                                case 1:
+                                    numInput.FloatValue = v4.Y;
+                                    break;
+                                case 2:
+                                    numInput.FloatValue = v4.Z;
+                                    break;
+                                case 3:
+                                    numInput.FloatValue = v4.W;
+                                    break;
+                            }
+                            if (flash)
+                            {
+                                numInput.Flash(Color.LightGreen);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (newValue is Color c)
+            {
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    var field = fields[i];
+                    if (field is GUINumberInput numInput)
+                    {
+                        if (numInput.InputType == GUINumberInput.NumberType.Int)
+                        {
+                            switch (i)
+                            {
+                                case 0:
+                                    numInput.IntValue = c.R;
+                                    break;
+                                case 1:
+                                    numInput.IntValue = c.G;
+                                    break;
+                                case 2:
+                                    numInput.IntValue = c.B;
+                                    break;
+                                case 3:
+                                    numInput.IntValue = c.A;
+                                    break;
+                            }
+                            if (flash)
+                            {
+                                numInput.Flash(Color.LightGreen);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (newValue is Rectangle r)
+            {
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    var field = fields[i];
+                    if (field is GUINumberInput numInput)
+                    {
+                        if (numInput.InputType == GUINumberInput.NumberType.Int)
+                        {
+                            switch (i)
+                            {
+                                case 0:
+                                    numInput.IntValue = r.X;
+                                    break;
+                                case 1:
+                                    numInput.IntValue = r.Y;
+                                    break;
+                                case 2:
+                                    numInput.IntValue = r.Width;
+                                    break;
+                                case 3:
+                                    numInput.IntValue = r.Height;
+                                    break;
+                            }
+                            if (flash)
+                            {
+                                numInput.Flash(Color.LightGreen);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// This is the new editor.
         /// </summary>
         public SerializableEntityEditor(RectTransform parent, ISerializableEntity entity, bool inGame, bool showName, string style = "", int elementHeight = 20) : base(style, new RectTransform(Vector2.One, parent))
@@ -50,7 +274,6 @@ namespace Barotrauma
             layoutGroup.RectTransform.NonScaledSize = new Point(layoutGroup.RectTransform.NonScaledSize.X, contentHeight);
         }
 
-        // TODO: remove or refactor? The new system uses a layout group.
         public void AddCustomContent(GUIComponent component, int childIndex)
         {
             component.RectTransform.Parent = layoutGroup.RectTransform;
@@ -128,6 +351,7 @@ namespace Barotrauma
                     return true;
                 }
             };
+            Fields.Add(property, new GUIComponent[] { propertyTickBox });
             return propertyTickBox;
         }
 
@@ -155,6 +379,7 @@ namespace Barotrauma
                     TrySendNetworkUpdate(entity, property);
                 }
             };
+            Fields.Add(property, new GUIComponent[] { numberInput });
             return frame;
         }
 
@@ -182,6 +407,7 @@ namespace Barotrauma
                     TrySendNetworkUpdate(entity, property);
                 }
             };
+            Fields.Add(property, new GUIComponent[] { numberInput });
             return frame;
         }
 
@@ -209,6 +435,7 @@ namespace Barotrauma
                 return true;
             };
             enumDropDown.SelectItem(value);
+            Fields.Add(property, new GUIComponent[] { enumDropDown });
             return frame;
         }
 
@@ -235,6 +462,7 @@ namespace Barotrauma
                     return true;
                 }
             };
+            Fields.Add(property, new GUIComponent[] { propertyBox });
             return frame;
         }
 
@@ -250,6 +478,7 @@ namespace Barotrauma
                 Stretch = false,
                 RelativeSpacing = 0.05f
             };
+            var fields = new GUIComponent[2];
             for (int i = 0; i < 2; i++)
             {
                 var element = new GUIFrame(new RectTransform(new Vector2(0.45f, 1), inputArea.RectTransform), color: Color.Transparent);
@@ -279,7 +508,9 @@ namespace Barotrauma
                         TrySendNetworkUpdate(entity, property);
                     }
                 };
+                fields[i] = numberInput;
             }
+            Fields.Add(property, fields);
             return frame;
         }
 
@@ -295,6 +526,7 @@ namespace Barotrauma
                 Stretch = false,
                 RelativeSpacing = 0.03f
             };
+            var fields = new GUIComponent[3];
             for (int i = 0; i < 3; i++)
             {
                 var element = new GUIFrame(new RectTransform(new Vector2(0.3f, 1), inputArea.RectTransform), color: Color.Transparent);
@@ -328,7 +560,9 @@ namespace Barotrauma
                         TrySendNetworkUpdate(entity, property);
                     }
                 };
+                fields[i] = numberInput;
             }
+            Fields.Add(property, fields);
             return frame;
         }
 
@@ -344,6 +578,7 @@ namespace Barotrauma
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
+            var fields = new GUIComponent[4];
             for (int i = 0; i < 4; i++)
             {
                 var element = new GUIFrame(new RectTransform(new Vector2(0.22f, 1), inputArea.RectTransform), color: Color.Transparent, style: null);
@@ -381,7 +616,9 @@ namespace Barotrauma
                         TrySendNetworkUpdate(entity, property);
                     }
                 };
+                fields[i] = numberInput;
             }
+            Fields.Add(property, fields);
             return frame;
         }
 
@@ -402,7 +639,7 @@ namespace Barotrauma
                 Stretch = true,
                 RelativeSpacing = 0.01f
             };
-
+            var fields = new GUIComponent[4];
             for (int i = 0; i < 4; i++)
             {
                 var element = new GUIFrame(new RectTransform(new Vector2(0.22f, 1), inputArea.RectTransform), color: Color.Transparent, style: null);
@@ -446,7 +683,9 @@ namespace Barotrauma
                     }
                 };
                 colorBox.Color = (Color)property.GetValue();
+                fields[i] = numberInput;
             }
+            Fields.Add(property, fields);
             return frame;
         }
 
@@ -457,6 +696,7 @@ namespace Barotrauma
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
             };
+            var fields = new GUIComponent[4];
             var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 1), frame.RectTransform, Anchor.TopRight), isHorizontal: true)
             {
                 Stretch = true,
@@ -499,7 +739,9 @@ namespace Barotrauma
                         TrySendNetworkUpdate(entity, property);
                     }
                 };
+                fields[i] = numberInput;
             }
+            Fields.Add(property, fields);
             return frame;
         }
         

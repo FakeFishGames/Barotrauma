@@ -3,11 +3,13 @@ using FarseerPhysics;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Items.Components;
 using FarseerPhysics.Dynamics;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -289,6 +291,7 @@ namespace Barotrauma
 
         public bool IsRagdolled;
         public bool IsForceRagdolled;
+        public bool dontFollowCursor;
 
         public bool IsUnconscious
         {
@@ -521,10 +524,12 @@ namespace Barotrauma
         /// <param name="seed">RNG seed to use if the character config has randomizable parameters.</param>
         /// <param name="isRemotePlayer">Is the character controlled by a remote player.</param>
         /// <param name="hasAi">Is the character controlled by AI.</param>
-        public static Character Create(CharacterInfo characterInfo, Vector2 position, string seed, bool isRemotePlayer = false, bool hasAi = true)
+        /// <param name="ragdoll">Ragdoll configuration file. If null, will select randomly.</param>
+        public static Character Create(CharacterInfo characterInfo, Vector2 position, string seed, bool isRemotePlayer = false, bool hasAi = true, RagdollParams ragdoll = null)
         {
-            return Create(characterInfo.File, position, seed, characterInfo, isRemotePlayer, hasAi);
+            return Create(characterInfo.File, position, seed, characterInfo, isRemotePlayer, hasAi, true, ragdoll);
         }
+
         /// <summary>
         /// Create a new character
         /// </summary>
@@ -535,7 +540,8 @@ namespace Barotrauma
         /// <param name="isRemotePlayer">Is the character controlled by a remote player.</param>
         /// <param name="hasAi">Is the character controlled by AI.</param>
         /// <param name="createNetworkEvent">Should clients receive a network event about the creation of this character?</param>
-        public static Character Create(string file, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true)
+        /// <param name="ragdoll">Ragdoll configuration file. If null, will select randomly.</param>
+        public static Character Create(string file, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true, RagdollParams ragdoll = null)
         {
 #if LINUX
             if (!System.IO.File.Exists(file)) 
@@ -566,7 +572,7 @@ namespace Barotrauma
             Character newCharacter = null;
             if (file != humanConfigFile)
             {
-                var aiCharacter = new AICharacter(file, position, seed, characterInfo, isRemotePlayer);
+                var aiCharacter = new AICharacter(file, position, seed, characterInfo, isRemotePlayer, ragdoll);
                 var ai = new EnemyAIController(aiCharacter, file, seed);
                 aiCharacter.SetAI(ai);
 
@@ -576,7 +582,7 @@ namespace Barotrauma
             }
             else if (hasAi)
             {
-                var aiCharacter = new AICharacter(file, position, seed, characterInfo, isRemotePlayer);
+                var aiCharacter = new AICharacter(file, position, seed, characterInfo, isRemotePlayer, ragdoll);
                 var ai = new HumanAIController(aiCharacter);
                 aiCharacter.SetAI(ai);
 
@@ -586,7 +592,7 @@ namespace Barotrauma
             }
             else
             {
-                newCharacter = new Character(file, position, seed, characterInfo, isRemotePlayer);
+                newCharacter = new Character(file, position, seed, characterInfo, isRemotePlayer, ragdoll);
                 //newCharacter.minVitality = -100.0f;
             }
 
@@ -598,12 +604,12 @@ namespace Barotrauma
             return newCharacter;
         }
 
-        protected Character(string file, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false)
+        protected Character(string file, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false, RagdollParams ragdollParams = null)
             : base(null)
         {
             ConfigPath = file;
             this.seed = seed;
-            MTRandom rand = new MTRandom(ToolBox.StringToInt(seed));
+            MTRandom random = new MTRandom(ToolBox.StringToInt(seed));
 
             selectedItems = new Item[2];
 
@@ -632,29 +638,28 @@ namespace Barotrauma
             canSpeak = doc.Root.GetAttributeBool("canspeak", false);
             needsAir = doc.Root.GetAttributeBool("needsair", false);
 
-            List<XElement> ragdollElements = new List<XElement>();
-            List<float> ragdollCommonness = new List<float>();
-            foreach (XElement element in doc.Root.Elements())
-            {
-                if (element.Name.ToString().ToLowerInvariant() != "ragdoll") continue;                
-                ragdollElements.Add(element);
-                ragdollCommonness.Add(element.GetAttributeFloat("commonness", 1.0f));                
-            }
-            
-            //choose a random ragdoll element
-            MTRandom random = new MTRandom(ToolBox.StringToInt(seed));
-            XElement ragdollElement = ragdollElements.Count == 1 ?
-                ragdollElements[0] : ToolBox.SelectWeightedRandom(ragdollElements, ragdollCommonness, random);
+            //List<XElement> ragdollElements = new List<XElement>();
+            //List<float> ragdollCommonness = new List<float>();
+            //foreach (XElement element in doc.Root.Elements())
+            //{
+            //    if (element.Name.ToString().ToLowerInvariant() != "ragdoll") continue;                
+            //    ragdollElements.Add(element);
+            //    ragdollCommonness.Add(element.GetAttributeFloat("commonness", 1.0f));                
+            //}
+
+            ////choose a random ragdoll element
+            //XElement ragdollElement = ragdollElements.Count == 1 ?
+            //    ragdollElements[0] : ToolBox.SelectWeightedRandom(ragdollElements, ragdollCommonness, random);
 
             if (IsHumanoid)
             {
-                AnimController = new HumanoidAnimController(this, ragdollElement, seed);
+                AnimController = new HumanoidAnimController(this, seed, ragdollParams as HumanRagdollParams);
                 AnimController.TargetDir = Direction.Right;
                 
             }
             else
             {
-                AnimController = new FishAnimController(this, ragdollElement, seed);
+                AnimController = new FishAnimController(this, seed, ragdollParams as FishRagdollParams);
                 PressureProtection = 100.0f;
             }
 
@@ -733,18 +738,35 @@ namespace Barotrauma
             {
                 if (string.IsNullOrEmpty(humanConfigFile))
                 {
-                    var characterFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
-
-                    humanConfigFile = characterFiles.FirstOrDefault(c => c.EndsWith("human.xml"));
-                    if (humanConfigFile == null)
-                    {
-                        DebugConsole.ThrowError("Couldn't find a config file for humans from the selected content packages!");
-                        DebugConsole.ThrowError("(The config file must end with \"human.xml\")");
-                        return "";
-                    }
+                    humanConfigFile = GetConfigFile("human");
                 }
                 return humanConfigFile; 
             }
+        }
+
+        private static IEnumerable<string> characterConfigFiles;
+        private static IEnumerable<string> CharacterConfigFiles
+        {
+            get
+            {
+                if (characterConfigFiles == null)
+                {
+                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
+                }
+                return characterConfigFiles;
+            }
+        }
+
+        public static string GetConfigFile(string speciesName)
+        {
+            string configFile = CharacterConfigFiles.FirstOrDefault(c => c.EndsWith($"{speciesName}.xml"));
+            if (configFile == null)
+            {
+                DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
+                DebugConsole.ThrowError($"(The config file must end with \"{speciesName}.xml\")");
+                return string.Empty;
+            }
+            return configFile;
         }
 
         public bool IsKeyHit(InputType inputType)
@@ -857,13 +879,24 @@ namespace Barotrauma
 
         float findFocusedTimer;
 
+        // TODO: reposition? there's also the overrideTargetMovement variable, but it's not in the same manner
+        public Vector2? OverrideMovement { get; set; }
+        public bool ForceRun { get; set; }
+
         public Vector2 GetTargetMovement()
         {
             Vector2 targetMovement = Vector2.Zero;
-            if (IsKeyDown(InputType.Left))  targetMovement.X -= 1.0f;
-            if (IsKeyDown(InputType.Right)) targetMovement.X += 1.0f;
-            if (IsKeyDown(InputType.Up))    targetMovement.Y += 1.0f;
-            if (IsKeyDown(InputType.Down))  targetMovement.Y -= 1.0f;
+            if (OverrideMovement.HasValue)
+            {
+                targetMovement = OverrideMovement.Value;
+            }
+            else
+            {
+                if (IsKeyDown(InputType.Left)) targetMovement.X -= 1.0f;
+                if (IsKeyDown(InputType.Right)) targetMovement.X += 1.0f;
+                if (IsKeyDown(InputType.Up)) targetMovement.Y += 1.0f;
+                if (IsKeyDown(InputType.Down)) targetMovement.Y -= 1.0f;
+            }
 
             //the vertical component is only used for falling through platforms and climbing ladders when not in water,
             //so the movement can't be normalized or the Character would walk slower when pressing down/up
@@ -873,34 +906,37 @@ namespace Barotrauma
                 if (length > 0.0f) targetMovement = targetMovement / length;
             }
 
-            if (IsKeyDown(InputType.Run))
+            bool run = false;
+            if (IsKeyDown(InputType.Run) || ForceRun)
             {
                 //can't run if
                 //  - dragging someone
                 //  - crouching
                 //  - moving backwards
-                if ((SelectedCharacter == null || !SelectedCharacter.CanBeDragged) &&
+                run = (SelectedCharacter == null || !SelectedCharacter.CanBeDragged) &&
                     (!(AnimController is HumanoidAnimController) || !((HumanoidAnimController)AnimController).Crouching) &&
-                    Math.Sign(targetMovement.X) != -Math.Sign(AnimController.Dir))
-                {
-                    targetMovement *= AnimController.InWater ? AnimController.SwimSpeedMultiplier : AnimController.RunSpeedMultiplier;
-                }
+                    !AnimController.IsMovingBackwards;
             }
             
-            targetMovement *= SpeedMultiplier;
-            float maxSpeed = GetCurrentMaxSpeed();
+            targetMovement *= AnimController.GetCurrentSpeed(run) * SpeedMultiplier;
+            SpeedMultiplier = 1; // Reset, items will set the value before the next update
+
+            float maxSpeed = GetCurrentMaxSpeed(run);
             targetMovement.X = MathHelper.Clamp(targetMovement.X, -maxSpeed, maxSpeed);
             targetMovement.Y = MathHelper.Clamp(targetMovement.Y, -maxSpeed, maxSpeed);
-            SpeedMultiplier = 1.0f;
 
             return targetMovement;
         }
 
-        public float GetCurrentMaxSpeed()
+        /// <summary>
+        /// Applies temporary limits to the speed (damage).
+        /// </summary>
+        public float GetCurrentMaxSpeed(bool run)
         {
-            float currMaxSpeed = AnimController.InWater ? AnimController.SwimSpeedMultiplier : AnimController.RunSpeedMultiplier;
+            float currMaxSpeed = AnimController.GetCurrentSpeed(run);
 
-            currMaxSpeed *= 1.5f;
+            //?
+            //currMaxSpeed *= 1.5f;
 
             var leftFoot = AnimController.GetLimb(LimbType.LeftFoot);
             if (leftFoot != null)
@@ -944,7 +980,11 @@ namespace Barotrauma
             {
                 //Limb head = AnimController.GetLimb(LimbType.Head);
 
-                if (cursorPosition.X < AnimController.Collider.Position.X - 10.0f)
+                if (dontFollowCursor)
+                {
+                    AnimController.TargetDir = Direction.Left;
+                }
+                else if (cursorPosition.X < AnimController.Collider.Position.X - 10.0f)
                 {
                     AnimController.TargetDir = Direction.Left;
                 }
