@@ -1452,7 +1452,7 @@ namespace Barotrauma
                     transformedHoldPos = rightHand.pullJoint.WorldAnchorA - transformedHandlePos[0];
                     itemAngle = (rightHand.Rotation + (holdAngle - MathHelper.PiOver2) * Dir);
                 }
-                if (character.SelectedItems[1] == item)
+                else if (character.SelectedItems[1] == item)
                 {
                     if (leftHand.IsSevered) return;
                     transformedHoldPos = leftHand.pullJoint.WorldAnchorA - transformedHandlePos[1];
