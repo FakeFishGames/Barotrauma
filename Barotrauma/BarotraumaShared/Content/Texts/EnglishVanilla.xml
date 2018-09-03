@@ -105,6 +105,8 @@
   <LosModeTransparent>Transparent</LosModeTransparent>
   <LosModeOpaque>Opaque</LosModeOpaque>
   <ChromaticAberration>Chromatic aberration</ChromaticAberration>
+  <HUDScale>HUD scale</HUDScale>
+  <InventoryScale>Inventory scale</InventoryScale>
   <SoundVolume>Sound volume</SoundVolume>
   <MusicVolume>Music volume</MusicVolume>
   <Controls>Controls</Controls>
@@ -156,6 +158,8 @@
   <ServerSettingsMonsterSpawns>Monster Spawns</ServerSettingsMonsterSpawns>
   <ServerSettingsAdditionalCargo>Additional Cargo</ServerSettingsAdditionalCargo>
   <ServerSettingsAutoRestartDelay>Autorestart delay: </ServerSettingsAutoRestartDelay>
+  <ServerSettingsStartWhenClientsReady>Start when players are ready</ServerSettingsStartWhenClientsReady>
+  <ServerSettingsStartWhenClientsReadyRatio>[percentage] % need to be ready</ServerSettingsStartWhenClientsReadyRatio>  
   <ServerSettingsAllowSpectating>Allow spectating</ServerSettingsAllowSpectating>
   <ServerSettingsAllowVoteKick>Allow vote kicking</ServerSettingsAllowVoteKick>
   <ServerSettingsKickVotesRequired>Votes required: </ServerSettingsKickVotesRequired>
@@ -252,6 +256,9 @@
   <DeleteDialogQuestion>Are you sure you want to delete "[file]"?</DeleteDialogQuestion>
   <DeleteFileError>Could not delete file "[file]"!</DeleteFileError>
 
+  <SteamDllNotFound>Initializing Steam client failed (steam_api64.dll not found).</SteamDllNotFound>
+  <SteamClientInitFailed>Initializing Steam client failed. Please make sure Steam is running and you are logged in to an account.</SteamClientInitFailed>
+
   <!-- Pronouns -->
   <PronounMale>He</PronounMale>
   <PronounPossessiveMale>His</PronounPossessiveMale>
@@ -291,6 +298,9 @@
   <Store>Store</Store>
   <Hire>Hire</Hire>
   <HireButton>Hire</HireButton>
+  <FireButton>Fire</FireButton>
+  <FireWarningHeader>Are you sure?</FireWarningHeader>
+  <FireWarningText>Are you sure you want to fire [charactername] from your crew? You will not be able to hire the character again.</FireWarningText>
   <Location>Location</Location>
   <HireUnavailable>No-one available for hire.</HireUnavailable>
   <Mission>Mission</Mission>
@@ -319,7 +329,9 @@
   <ServerListModeSelection>Game mode selection</ServerListModeSelection>
   <ServerListAllowSpectating>Allow spectating</ServerListAllowSpectating>
   <ServerListCompatible>Compatible</ServerListCompatible>
+  <ServerListPing>Ping</ServerListPing>
   <ServerListRoundStarted>Round started</ServerListRoundStarted>
+  <ServerListRoundNotStarted>Round has not started</ServerListRoundNotStarted>
   <ServerListInfo>Info</ServerListInfo>
   <ServerListRefresh>Refresh</ServerListRefresh>
   <ServerListJoin>Join</ServerListJoin>
@@ -371,6 +383,7 @@
   <DisconnectReason.MissingContentPackage>Missing content package.</DisconnectReason.MissingContentPackage>
   <DisconnectReason.IncompatibleContentPackage>Incompatible content package.</DisconnectReason.IncompatibleContentPackage>
   <DisconnectReason.NotOnWhitelist>You are not on the server's whitelist.</DisconnectReason.NotOnWhitelist>
+  <DisconnectMessage.AFK>You have been away from keyboard for too long.</DisconnectMessage.AFK>
   <DisconnectMessage.SteamAuthNoLongerValid>Steam authentication is no longer valid ([status]).</DisconnectMessage.SteamAuthNoLongerValid>
   <DisconnectMessage.TooManyFailedLogins>Too many failed login attempts.</DisconnectMessage.TooManyFailedLogins>
   <DisconnectMessage.InvalidVersion>Version "[version]" required to connect to the server (Your version: "[clientversion]")</DisconnectMessage.InvalidVersion>
@@ -395,6 +408,7 @@
   <CampaignView>Campaign view</CampaignView>
   <PlayYourself>Play yourself</PlayYourself>
   <StartGameButton>Start</StartGameButton>
+  <ReadyToStartTickBox>Ready to start</ReadyToStartTickBox>
   <ServerSettingsButton>Settings</ServerSettingsButton>
   <SpectateButton>Spectate</SpectateButton>
   <Gender>Gender</Gender>
@@ -585,7 +599,6 @@
   <SpamFilterKicked>You have been kicked by the spam filter.</SpamFilterKicked>
   <SpamFilterBlocked>You have been blocked by the spam filter. Try again after 10 seconds.</SpamFilterBlocked>
 
-
   <!-- Item HUDs -->
   <EngineForce>Thrust</EngineForce>
   <EngineBackwards>Backwards</EngineBackwards>
@@ -629,6 +642,7 @@
   <SteeringVelocityX>Velocity: [kph] km/h</SteeringVelocityX>
   <SteeringVelocityY>Descent velocity: [kph] km/h</SteeringVelocityY>
   <SteeringDepth>Depth: [m] m</SteeringDepth>
+  <SteeringDepthWarning>DANGEROUS PRESSURE</SteeringDepthWarning>
   <SonarSignalWeak>Signal weak</SonarSignalWeak>
   <SonarNoSignal>No signal</SonarNoSignal>
   <PowerContainerCharge>Charge: [charge] kWm ([percentage] %)</PowerContainerCharge>
@@ -643,6 +657,10 @@
   <ConnectionLocked>(Locked)</ConnectionLocked>
   <RequiredRepairSkills>Required skills:</RequiredRepairSkills>
   <RepairButton>Repair</RepairButton>
+
+  <!-- Health interface -->
+  <Vitality>Vitality</Vitality>
+  <HealthItemUseTip>Drop items here to use them on the selected limb. You can also use items with the inventory hotkeys or by double clicking.</HealthItemUseTip>
 
   <!-- Item fixing -->
   <FixHeader>Attempting to fix [itemname]</FixHeader>
@@ -821,38 +839,7 @@
   <HuskDormant>Your muscles are aching</HuskDormant>
   <HuskCantSpeak>You feel something moving in your throat. You try to scream but no sound comes out.</HuskCantSpeak>
   <HuskActivate>A strange chitinous appendage bursts out from your mouth. Use it to inject eggs into a living body by pressing [Attack]!</HuskActivate>
-
-  <!-- Gameplay tips -->
-  <LoadingScreenTip>You will not get paid for delivering cargo if any of the cargo goes missing or gets damaged during the transport.</LoadingScreenTip>
-  <LoadingScreenTip>Generating more power than the devices in the submarine are consuming may damage junction boxes or cause fires.</LoadingScreenTip>
-  <LoadingScreenTip>Junction boxes and other electrical devices may get damaged if they stay submerged too long.</LoadingScreenTip>
-  <LoadingScreenTip>Breaking down alien artifacts in a deconstructor may provide you with exotic raw materials.</LoadingScreenTip>
-  <LoadingScreenTip>Special caution must be taken when bringing alien artifacts on board the submarine.</LoadingScreenTip>
-  <LoadingScreenTip>The cephalopod-like watchers are generally docile, but may attack when provoked.</LoadingScreenTip>
-  <LoadingScreenTip>Most submarines are equipped with stationary batteries that can be used as a temporary source of backup power in the case of a reactor failure.</LoadingScreenTip>
-  <LoadingScreenTip>Cannibalistic behavior is very common among crawlers. Killing one in a swarm may distract the rest as they enter into a feeding frenzy.</LoadingScreenTip>
-  <LoadingScreenTip>Mantises can easily tear their way through metal doors with their sharp claws.</LoadingScreenTip>
-  <LoadingScreenTip>The so-called husk parasites slowly take over and consume the body of their host, eventually turning them into nothing but an empty exoskeleton controlled by the parasite.</LoadingScreenTip>
-  <LoadingScreenTip>Many creatures on Europa are protected by a strong shell, and are difficult to damage with conventional weapons unless hit from below.</LoadingScreenTip>
-  <LoadingScreenTip>Railgun shells and depth charges include a compartment that can hold additional explosives.</LoadingScreenTip>
-  <LoadingScreenTip>Loud devices and sonar pings may alert nearby creatures.</LoadingScreenTip>
-  <LoadingScreenTip>Passive sonar can be used to detect nearby sound sources without attracting unwanted attention. You can also get a rough idea of your surroundings based on the sounds reflected from the ice walls.</LoadingScreenTip>
-  <LoadingScreenTip>There are many ways to get past locked doors, including forcing them open with a crowbar or rewiring them to a button you have access to.</LoadingScreenTip>
-  <LoadingScreenTip>Stationary batteries are equipped with docks that can be used to charge battery cells.</LoadingScreenTip>
-  <LoadingScreenTip>Oxygen generators are equipped with docks that can be used to refill oxygen tanks.</LoadingScreenTip>
-  <LoadingScreenTip>Performing CPR without adequate medical skills may cause internal damage to the patient.</LoadingScreenTip>
-  <LoadingScreenTip>Attempting to rewire powered devices without adequate electrical engineering skills may get you electrocuted.</LoadingScreenTip>
-  <LoadingScreenTip>When using a diving mask, be careful not to mix up welding fuel tanks and oxygen tanks.</LoadingScreenTip>
-  <LoadingScreenTip>In the event of a fire, burns are not the only thing to watch out for - fires can quickly consume all the oxygen inside the submarine.</LoadingScreenTip>
-  <LoadingScreenTip>Traversing the so-called Hydrothermal Wastes requires special caution. Not only are they abundant in wildlife, but the water currents caused by geothermal activity make navigation even more hazardous.</LoadingScreenTip>
-  <LoadingScreenTip>Some of the sessile lifeforms in Europa emit low-frequency sounds that may disrupt the submarine's sonar.</LoadingScreenTip>
-
-  <!-- Lore -->
-  <LoadingScreenTip>The radiation belts around Jupiter make it impracticable to establish permanent settlements above Europa's surface, and as such almost all Europan outposts are located below its icy crust.</LoadingScreenTip>
-  <LoadingScreenTip>The dynamics of Europa's underwater ecosystem are still not fully understood, but it is believed that the base of the food chain is mostly formed by chemosynthetic bacteria.</LoadingScreenTip>
-  <LoadingScreenTip>The Europa Coalition started off as a trade and co-operation agreement between the two largest Europan settlements and a handful of private paramilitary groups, but gradually grew to become what is essentially the Europan government.</LoadingScreenTip>
-  <LoadingScreenTip>The much-ridiculed initiative to help submariners cope in a high-stress environment by including professional entertainers in the crews was promptly deemed a failure and discontinued.</LoadingScreenTip>
-
+  
   <SkillName.helm>Helm</SkillName.helm>
   <SkillName.weapons>Weapons</SkillName.weapons>
   <SkillName.mechanical>Mechanical Engineering</SkillName.mechanical>

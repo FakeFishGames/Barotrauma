@@ -82,6 +82,8 @@
       <fabricableitem identifier="extinguisher" requiredtime="10">
         <RequiredItem identifier="steelbar"/>
         <RequiredItem identifier="polycarbonatebar"/>
+        <RequiredItem identifier="chlorine"/>
+        <RequiredItem identifier="potassium"/>
       </fabricableitem>
       <fabricableitem identifier="flashlight" requiredtime="10">
         <RequiredItem identifier="copperbar"/>
@@ -169,7 +171,7 @@
       </fabricableitem>
       
       <fabricableitem identifier="fulguriumbatterycell" requireditems="Steel Bar, Fulgurium Bar" requiredtime="10">
-        <RequiredItem identifier="sulphuricacid" mincondition="0.75"/>
+        <RequiredItem identifier="sulphuricacid" mincondition="0.25" usecondition="true"/>
         <RequiredItem identifier="steelbar"/>
         <RequiredItem identifier="fulguriumbar"/>
       </fabricableitem>
@@ -181,14 +183,14 @@
 
       <fabricableitem identifier="stungrenade" requiredtime="20">
         <RequiredSkill identifier="mechanical" level="30"/>
-        <RequiredItem identifier="flashpowder" mincondition="0.75"/>
-        <RequiredItem identifier="chloralhydrate" mincondition="0.75"/>
+        <RequiredItem identifier="flashpowder"/>
+        <RequiredItem identifier="chloralhydrate"/>
         <RequiredItem identifier="steelbar"/>
       </fabricableitem>
 
       <fabricableitem identifier="incendiumgrenade" requiredtime="20">
         <RequiredSkill identifier="mechanical" level="40"/>
-        <RequiredItem identifier="flashpowder" mincondition="0.75"/>
+        <RequiredItem identifier="flashpowder"/>
         <RequiredItem identifier="steelbar"/>
         <RequiredItem identifier="incendiumbar"/>
       </fabricableitem>
@@ -201,7 +203,7 @@
       <fabricableitem identifier="batterycell" requiredtime="10">
         <RequiredItem identifier="steelbar"/>
         <RequiredItem identifier="copperbar"/>
-        <RequiredItem identifier="sulphuricacid" mincondition="0.75"/>
+        <RequiredItem identifier="sulphuricacid" mincondition="0.25" usecondition="true"/>
       </fabricableitem>
 
       <fabricableitem identifier="fuelrod" requiredtime="10">
@@ -326,13 +328,13 @@
       <fabricableitem identifier="hyperzine" requiredtime="25">
         <RequiredSkill identifier="medical" level="60"/>
         <RequiredItem identifier="phosphorus"/>
-        <RequiredItem identifier="uraniumpowder"/>
+        <RequiredItem identifier="uraniumpowder" mincondition="0.5" usecondition="true"/>
       </fabricableitem>
 
       <fabricableitem identifier="morbusine" requiredtime="30">
         <RequiredSkill identifier="medical" level="60"/>
         <RequiredItem identifier="sulphuricacid"/>
-        <RequiredItem identifier="auxiliorizine"/>
+        <RequiredItem identifier="auxiliorizine" count="2"/>
       </fabricableitem>
 
       <fabricableitem identifier="morbusanide" outcondition="0.25" requiredtime="10">
@@ -343,8 +345,8 @@
 
       <fabricableitem identifier="calyxanide" requiredtime="30">
         <RequiredSkill identifier="medical" level="60"/>
-        <RequiredItem identifier="huskeggs" mincondition="0.25"/>
-        <RequiredItem identifier="antidama1" mincondition="0.25"/>
+        <RequiredItem identifier="huskeggs" mincondition="0.25" usecondition="true"/>
+        <RequiredItem identifier="antidama1"/>
       </fabricableitem>
 
       <fabricableitem identifier="sufforin" requiredtime="30">

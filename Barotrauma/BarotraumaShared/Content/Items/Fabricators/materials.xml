@@ -34,9 +34,9 @@
     canbepicked="true"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="Research" buyprice="100"/>
-    <Price locationtype="Military" buyprice="100"/>
-    <Price locationtype="City" buyprice="500"/>
+    <Price locationtype="Research" buyprice="110"/>
+    <Price locationtype="Military" buyprice="115"/>
+    <Price locationtype="City" buyprice="200"/>
 
     <Deconstruct time="5">
       <Item identifier="uraniumpowder"/>
@@ -59,10 +59,10 @@
     canbepicked="true"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="50"/>
-    <Price locationtype="City" buyprice="50"/>
-    <Price locationtype="Outpost" buyprice="100"/>
+    <Price locationtype="Research" buyprice="5"/>
+    <Price locationtype="Military" buyprice="5"/>
+    <Price locationtype="City" buyprice="5"/>
+    <Price locationtype="Outpost" buyprice="10"/>
     
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
@@ -80,10 +80,10 @@
     canbepicked="true"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="50"/>
-    <Price locationtype="City" buyprice="50"/>
-    <Price locationtype="Outpost" buyprice="100"/>
+    <Price locationtype="Research" buyprice="40"/>
+    <Price locationtype="Military" buyprice="40"/>
+    <Price locationtype="City" buyprice="40"/>
+    <Price locationtype="Outpost" buyprice="60"/>
     
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 

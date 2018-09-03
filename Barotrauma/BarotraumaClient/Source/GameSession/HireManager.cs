@@ -12,10 +12,10 @@ namespace Barotrauma
         {
             availableCharacters = new List<CharacterInfo>();
         }
-        
+
         public void GenerateCharacters(Location location, int amount)
-        {            
-            for (int i = 0 ; i<amount ; i++)
+        {
+            for (int i = 0; i < amount; i++)
             {
                 JobPrefab job = location.Type.GetRandomHireable();
                 if (job == null) return;

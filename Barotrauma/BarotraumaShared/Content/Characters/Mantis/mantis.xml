@@ -6,7 +6,8 @@
   
   <health
     vitality="200"
-    doesbleed="false"/>
+    doesbleed="false"
+    usebloodparticles="false"/>
 
   <sound file="Content/Characters/Mantis/attack1.ogg" state="Attack" range="500"/>
   <sound file="Content/Characters/Mantis/attack2.ogg" state="Attack" range="500"/>

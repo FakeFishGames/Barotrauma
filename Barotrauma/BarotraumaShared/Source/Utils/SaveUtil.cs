@@ -292,6 +292,11 @@ namespace Barotrauma
                 return false;
 
             int iNameLen = BitConverter.ToInt32(bytes, 0);
+            if (iNameLen > 255)
+            {
+                throw new Exception("Failed to decompress \""+sDir+"\" (file name length > 255). The file may be corrupted.");
+            }
+
             bytes = new byte[sizeof(char)];
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < iNameLen; i++)

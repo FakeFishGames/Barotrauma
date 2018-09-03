@@ -31,6 +31,8 @@ namespace Barotrauma
         private bool toggleOpen;
         private float openState;
 
+        private float prevUIScale;
+
         public float HideTimer
         {
             get { return hideTimer; }
@@ -227,7 +229,7 @@ namespace Barotrauma
         {
             if (inputBox != null && inputBox.Selected) hideTimer = HideDelay;
 
-            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
+            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y || prevUIScale != GUI.Scale)
             {
                 guiFrame.RectTransform.AbsoluteOffset = Point.Zero;
                 guiFrame.RectTransform.RelativeOffset = new Vector2(
@@ -235,6 +237,7 @@ namespace Barotrauma
                     HUDLayoutSettings.ChatBoxArea.Y / (float)GameMain.GraphicsHeight);
                 guiFrame.RectTransform.NonScaledSize = HUDLayoutSettings.ChatBoxArea.Size;
                 screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+                prevUIScale = GUI.Scale;
             }
 
             bool hovering =
@@ -245,7 +248,7 @@ namespace Barotrauma
 
             hideTimer -= deltaTime;
 
-            if ((hideTimer > 0.0f || hovering || toggleOpen) && Inventory.draggingItem == null)
+            if (hideTimer > 0.0f || hovering || toggleOpen)
             {
                 openState += deltaTime * 5.0f;
             }

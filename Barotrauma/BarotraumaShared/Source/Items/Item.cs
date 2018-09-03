@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -47,7 +48,7 @@ namespace Barotrauma
 
         public PhysicsBody body;
 
-        public readonly XElement staticBodyConfig;
+        public readonly XElement StaticBodyConfig;
         
         private Vector2 lastSentPos;
         private bool prevBodyAwake;
@@ -323,6 +324,11 @@ namespace Barotrauma
             }
         }
 
+        public Inventory OwnInventory
+        {
+            get { return ownInventory; }
+        }
+
         public IEnumerable<Repairable> Repairables
         {
             get { return repairables; }
@@ -409,7 +415,7 @@ namespace Barotrauma
                     case "price":
                         break;
                     case "staticbody":
-                        staticBodyConfig = subElement;
+                        StaticBodyConfig = subElement;
                         break;
                     case "aitarget":
                         aiTarget = new AITarget(this, subElement);
@@ -504,9 +510,15 @@ namespace Barotrauma
                     if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
                     clone.components[i].properties[property.Key].TrySetValue(property.Value.GetValue());
                 }
-                for (int j = 0; j < components[i].requiredItems.Count; j++)
+
+                //clone requireditem identifiers
+                foreach (var kvp in components[i].requiredItems)
                 {
-                    clone.components[i].requiredItems[j].JoinedIdentifiers = components[i].requiredItems[j].JoinedIdentifiers;
+                    for (int j = 0; j < kvp.Value.Count; j++)
+                    {
+                        clone.components[i].requiredItems[kvp.Key][j].JoinedIdentifiers = 
+                            kvp.Value[j].JoinedIdentifiers;
+                    }
                 }
             }
 
@@ -1329,6 +1341,7 @@ namespace Barotrauma
             {
                 if (string.IsNullOrEmpty(ic.Msg)) continue;
                 if (!ic.CanBePicked && !ic.CanBeSelected) continue;
+                if (ic is Holdable holdable && !holdable.CanBeDeattached()) continue;
                
                 Color color = Color.Red;
                 if (ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false)) color = Color.Orange;
@@ -1518,6 +1531,8 @@ namespace Barotrauma
         {
             NetEntityEvent.Type eventType =
                 (NetEntityEvent.Type)msg.ReadRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1);
+            
+            c.KickAFKTimer = 0.0f;
 
             switch (eventType)
             {
@@ -2015,6 +2030,8 @@ namespace Barotrauma
             if (element.GetAttributeBool("flippedx", false)) item.FlipX(false);
             if (element.GetAttributeBool("flippedy", false)) item.FlipY(false);
 
+            item.condition = element.GetAttributeFloat("condition", item.prefab.Health);
+
             return item;
         }
 
@@ -2030,22 +2047,26 @@ namespace Barotrauma
             if (FlippedX) element.Add(new XAttribute("flippedx", true));
             if (FlippedY) element.Add(new XAttribute("flippedy", true));
 
+            if (condition < prefab.Health)
+            {
+                element.Add(new XAttribute("condition", condition.ToString("G", CultureInfo.InvariantCulture)));
+            }
+
             System.Diagnostics.Debug.Assert(Submarine != null);
 
             element.Add(new XAttribute("rect",
                 (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
                 (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
                 rect.Width + "," + rect.Height));
-
+            
             if (linkedTo != null && linkedTo.Count > 0)
             {
-                string[] linkedToIDs = new string[linkedTo.Count];
-
-                for (int i = 0; i < linkedTo.Count; i++)
+                var saveableLinked = linkedTo.Where(l => l.ShouldBeSaved).ToList();
+                string[] linkedToIDs = new string[saveableLinked.Count];
+                for (int i = 0; i < saveableLinked.Count; i++)
                 {
-                    linkedToIDs[i] = linkedTo[i].ID.ToString();
+                    linkedToIDs[i] = saveableLinked[i].ID.ToString();
                 }
-
                 element.Add(new XAttribute("linked", string.Join(",", linkedToIDs)));
             }
 

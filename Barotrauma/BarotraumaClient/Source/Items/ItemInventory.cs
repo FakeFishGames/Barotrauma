@@ -7,9 +7,11 @@ namespace Barotrauma
     {
         public override void Draw(SpriteBatch spriteBatch, bool subInventory = false)
         {
-            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
+            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y || 
+                prevUIScale != UIScale)
             {
                 CreateSlots();
+                prevUIScale = UIScale;
             }
 
             if (slots != null && slots.Length > 0)
@@ -28,8 +30,8 @@ namespace Barotrauma
                 {
                     if (!subInventory)
                     {
-                        backgroundFrame.Inflate(10, 20);
-                        backgroundFrame.Location -= new Point(0, 10);
+                        backgroundFrame.Inflate(10, 10 + (int)(EquipIndicator.size.Y * UIScale));
+                        backgroundFrame.Location -= new Point(0, 5);
                     }
                 }
 

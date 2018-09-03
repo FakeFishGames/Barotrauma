@@ -43,6 +43,8 @@ namespace Barotrauma
 
         private ChatBox chatBox;
 
+        private float prevUIScale;
+
         //listbox for report buttons that appear at the corner of the screen 
         //when there's something to report in the hull the character is currently in
         private GUIListBox reportButtonContainer;
@@ -125,6 +127,8 @@ namespace Barotrauma
             }
 
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+
+            prevUIScale = GUI.Scale;
         }
 
         #endregion
@@ -289,7 +293,7 @@ namespace Barotrauma
 
                 btn.OnClicked += (GUIButton button, object userData) =>
                 {
-                    if (Character.Controlled == null || !Character.Controlled.CanSpeak) return false;
+                    if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f) return false;
 
                     if (order.ItemComponentType != null || order.ItemIdentifiers.Length > 0 || order.Options.Length > 1)
                     {
@@ -328,7 +332,7 @@ namespace Barotrauma
 
                 btn.OnClicked += (GUIButton button, object userData) =>
                 {
-                    if (Character.Controlled == null || !Character.Controlled.CanSpeak) return false;
+                    if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f) return false;
                     SetCharacterOrder(character, order, null, Character.Controlled);
                     return true;
                 };
@@ -471,7 +475,7 @@ namespace Barotrauma
             if (conversationTimer <= 0.0f)
             {
                 List<Character> availableSpeakers = GameMain.GameSession.CrewManager.GetCharacters();
-                availableSpeakers.RemoveAll(c => !(c.AIController is HumanAIController) || c.IsDead || !c.CanSpeak);
+                availableSpeakers.RemoveAll(c => !(c.AIController is HumanAIController) || c.IsDead || c.SpeechImpediment >= 100.0f);
                 if (GameMain.Server != null)
                 {
                     foreach (Client client in GameMain.Server.ConnectedClients)
@@ -491,7 +495,7 @@ namespace Barotrauma
                 if (conversationLineTimer <= 0.0f)
                 {
                     //speaker of the next line can't speak, interrupt the conversation
-                    if (!pendingConversationLines[0].First.CanSpeak)
+                    if (pendingConversationLines[0].First.SpeechImpediment >= 100.0f)
                     {
                         pendingConversationLines.Clear();
                         return;
@@ -670,16 +674,8 @@ namespace Barotrauma
         public void AddToGUIUpdateList()
         {
             if (GUI.DisableHUD) return;
-            guiFrame.AddToGUIUpdateList();
-            orderTargetFrame?.AddToGUIUpdateList();
-
-            reportButtonContainer.Visible = reportButtonContainer.Content.CountChildren > 0 && ReportButtonsVisible();
-        }
-
-        partial void UpdateProjectSpecific(float deltaTime)
-        {
-            if (GUI.DisableHUD) return;
-            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
+            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y ||
+                prevUIScale != GUI.Scale)
             {
                 var prevCharacterListBox = characterListBox;
                 InitProjectSpecific();
@@ -693,6 +689,15 @@ namespace Barotrauma
                 }
             }
 
+            guiFrame.AddToGUIUpdateList();
+            orderTargetFrame?.AddToGUIUpdateList();
+
+            reportButtonContainer.Visible = reportButtonContainer.Content.CountChildren > 0 && ReportButtonsVisible();
+        }
+
+        partial void UpdateProjectSpecific(float deltaTime)
+        {
+            if (GUI.DisableHUD) return;
             if (chatBox != null) chatBox.Update(deltaTime);
 
             crewArea.Visible = characters.Count > 0 && CharacterHealth.OpenHealthWindow == null;
@@ -858,7 +863,7 @@ namespace Barotrauma
         public void UpdateReports(float deltaTime)
         {
             bool hasRadio = false;
-            if (Character.Controlled?.CurrentHull != null && Character.Controlled.CanSpeak)
+            if (Character.Controlled?.CurrentHull != null && Character.Controlled.SpeechImpediment < 100.0f)
             {
                 WifiComponent radio = GetHeadset(Character.Controlled, true);
                 hasRadio = radio != null && radio.CanTransmit();

@@ -140,31 +140,31 @@ namespace Barotrauma
                 
                 foreach (Item item in Item.ItemList)
                 {
-                    if (item.staticBodyConfig == null) continue;
+                    if (item.StaticBodyConfig == null) continue;
 
-                    float radius = ConvertUnits.ToSimUnits(item.staticBodyConfig.GetAttributeFloat("radius", 0.0f));
-                    float width   = ConvertUnits.ToSimUnits(item.staticBodyConfig.GetAttributeFloat("width", 0.0f));
-                    float height   = ConvertUnits.ToSimUnits(item.staticBodyConfig.GetAttributeFloat("height", 0.0f));
+                    float radius = ConvertUnits.ToSimUnits(item.StaticBodyConfig.GetAttributeFloat("radius", 0.0f));
+                    float width   = ConvertUnits.ToSimUnits(item.StaticBodyConfig.GetAttributeFloat("width", 0.0f));
+                    float height   = ConvertUnits.ToSimUnits(item.StaticBodyConfig.GetAttributeFloat("height", 0.0f));
 
                     if (width != 0.0f && height != 0.0f)
                     {
-                        FixtureFactory.AttachRectangle(width, height, 5.0f, ConvertUnits.ToSimUnits(item.Position), farseerBody, this);
+                        FixtureFactory.AttachRectangle(width, height, 5.0f, ConvertUnits.ToSimUnits(item.Position), farseerBody, this).UserData = item;
                     }
                     else if (radius != 0.0f && width != 0.0f)
                     {
-                        FixtureFactory.AttachRectangle(width, radius * 2, 5.0f, ConvertUnits.ToSimUnits(item.Position), farseerBody, this);
-                        FixtureFactory.AttachCircle(radius, 5.0f, farseerBody, ConvertUnits.ToSimUnits(item.Position) - Vector2.UnitX * width / 2, this);
-                        FixtureFactory.AttachCircle(radius, 5.0f, farseerBody, ConvertUnits.ToSimUnits(item.Position) + Vector2.UnitX * width / 2, this);
+                        FixtureFactory.AttachRectangle(width, radius * 2, 5.0f, ConvertUnits.ToSimUnits(item.Position), farseerBody, this).UserData = item;
+                        FixtureFactory.AttachCircle(radius, 5.0f, farseerBody, ConvertUnits.ToSimUnits(item.Position) - Vector2.UnitX * width / 2, this).UserData = item;
+                        FixtureFactory.AttachCircle(radius, 5.0f, farseerBody, ConvertUnits.ToSimUnits(item.Position) + Vector2.UnitX * width / 2, this).UserData = item;
                     }
                     else if (radius != 0.0f && height != 0.0f)
                     {
-                        FixtureFactory.AttachRectangle(radius * 2, height, 5.0f, ConvertUnits.ToSimUnits(item.Position), farseerBody, this);
-                        FixtureFactory.AttachCircle(radius, 5.0f, farseerBody, ConvertUnits.ToSimUnits(item.Position) - Vector2.UnitY * height / 2, this);
-                        FixtureFactory.AttachCircle(radius, 5.0f, farseerBody, ConvertUnits.ToSimUnits(item.Position) + Vector2.UnitX * height / 2, this);
+                        FixtureFactory.AttachRectangle(radius * 2, height, 5.0f, ConvertUnits.ToSimUnits(item.Position), farseerBody, this).UserData = item;
+                        FixtureFactory.AttachCircle(radius, 5.0f, farseerBody, ConvertUnits.ToSimUnits(item.Position) - Vector2.UnitY * height / 2, this).UserData = item;
+                        FixtureFactory.AttachCircle(radius, 5.0f, farseerBody, ConvertUnits.ToSimUnits(item.Position) + Vector2.UnitX * height / 2, this).UserData = item;
                     }
                     else if (radius != 0.0f)
                     {
-                        FixtureFactory.AttachCircle(radius, 5.0f, farseerBody, ConvertUnits.ToSimUnits(item.Position), this);
+                        FixtureFactory.AttachCircle(radius, 5.0f, farseerBody, ConvertUnits.ToSimUnits(item.Position), this).UserData = item;
                     }
                 }
             }
@@ -431,21 +431,20 @@ namespace Barotrauma
                 return collision;
             }
 
+            contact.GetWorldManifold(out Vector2 normal, out FixedArray2<Vector2> points);
+            if (contact.FixtureA.Body == f1.Body)
+            {
+                normal = -normal;
+            }
+
             if (f2.UserData is VoronoiCell cell)
             {
-                Vector2 collisionNormal = Vector2.Normalize(ConvertUnits.ToDisplayUnits(Body.SimPosition) - cell.Center);
-                if (!MathUtils.IsValid(collisionNormal)) collisionNormal = Rand.Vector(1.0f);
-                HandleLevelCollision(contact, collisionNormal);
+                HandleLevelCollision(contact, normal);
                 return true;
             }
 
             if (f2.Body.UserData is Structure structure)
             {
-                contact.GetWorldManifold(out Vector2 normal, out FixedArray2<Vector2> points);
-                if (contact.FixtureA.Body == f1.Body)
-                {
-                    normal = -normal;
-                }
 
                 HandleLevelCollision(contact, normal);
                 return true;
@@ -705,19 +704,23 @@ namespace Barotrauma
         {
             if (impact < 3.0f) return;
 
-            Vector2 tempNormal;
-            FixedArray2<Vector2> worldPoints;
-            contact.GetWorldManifold(out tempNormal, out worldPoints);
-
+            contact.GetWorldManifold(out Vector2 tempNormal, out FixedArray2<Vector2> worldPoints);
             Vector2 lastContactPoint = worldPoints[0];
+            
+            Vector2 impulse = direction * impact * 0.5f;            
+            impulse = impulse.ClampLength(5.0f);
 
+#if CLIENT
             if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
             {
                 GameMain.GameScreen.Cam.Shake = impact * 2.0f;
+                float angularVelocity = 
+                    (lastContactPoint.X - Body.SimPosition.X) / ConvertUnits.ToSimUnits(submarine.Borders.Width / 2) * impulse.Y 
+                    - (lastContactPoint.Y - Body.SimPosition.Y) / ConvertUnits.ToSimUnits(submarine.Borders.Height / 2) * impulse.X;
+                GameMain.GameScreen.Cam.AngularVelocity = MathHelper.Clamp(angularVelocity * 0.1f, -1.0f, 1.0f);
             }
+#endif
 
-            Vector2 impulse = direction * impact * 0.5f;            
-            impulse = impulse.ClampLength(5.0f);            
             foreach (Character c in Character.CharacterList)
             {
                 if (c.Submarine != submarine) continue;

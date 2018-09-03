@@ -131,14 +131,14 @@ namespace Barotrauma.Networking
             var clientInfo = clientNameBox.FindChild("filetransfer");
             if (clientInfo == null)
             {
-                clientNameBox.ClearChildren();
-                clientInfo = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.9f), clientNameBox.RectTransform, Anchor.CenterRight), style: null)
+                clientInfo = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.9f), clientNameBox.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.1f, 0.0f) }, style: null)
                 {
                     UserData = "filetransfer"
                 };
                 var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), clientInfo.RectTransform),
                     "", textAlignment: Alignment.CenterRight, font: GUI.SmallFont)
                 {
+                    TextScale = 0.8f,
                     TextGetter = () =>
                     {
                         string txt = "";

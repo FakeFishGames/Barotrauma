@@ -72,7 +72,12 @@ namespace Barotrauma
 
             return true;
         }
-        
+
+        public void FireCharacter(CharacterInfo characterInfo)
+        {
+            CrewManager.RemoveCharacterInfo(characterInfo);
+        }
+
         private Submarine GetLeavingSub()
         {
             if (Character.Controlled != null && Character.Controlled.Submarine != null)

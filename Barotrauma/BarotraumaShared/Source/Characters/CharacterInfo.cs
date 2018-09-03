@@ -1,4 +1,5 @@
-﻿using Lidgren.Network;
+﻿using Barotrauma.Networking;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -215,10 +216,10 @@ namespace Barotrauma
             int genderIndex = (this.gender == Gender.Female) ? 1 : 0;
             if (headSpriteRange[genderIndex] != Vector2.Zero)
             {
-                HeadSpriteId = Rand.Range((int)headSpriteRange[genderIndex].X, (int)headSpriteRange[genderIndex].Y + 1);
+                HeadSpriteId = Rand.Range((int)headSpriteRange[genderIndex].X, (int)headSpriteRange[genderIndex].Y + 1, Rand.RandSync.Server);
             }
 
-            this.Job = (jobPrefab == null) ? Job.Random() : new Job(jobPrefab);
+            this.Job = (jobPrefab == null) ? Job.Random(Rand.RandSync.Server) : new Job(jobPrefab);
 
             if (!string.IsNullOrEmpty(name))
             {
@@ -364,41 +365,40 @@ namespace Barotrauma
 
         public void IncreaseSkillLevel(string skillIdentifier, float increase, Vector2 worldPos)
         {
-            if (Job == null) return;
+            if (Job == null || GameMain.Client != null) return;            
 
             float prevLevel = Job.GetSkillLevel(skillIdentifier);
             Job.IncreaseSkillLevel(skillIdentifier, increase);
 
             float newLevel = Job.GetSkillLevel(skillIdentifier);
-#if CLIENT
-            if (newLevel - prevLevel > 0.1f)
-            {
-                GUI.AddMessage(
-                    "+" + ((int)((newLevel - prevLevel) * 100.0f)).ToString() + " XP",
-                    Color.Green,
-                    worldPos,
-                    Vector2.UnitY * 10.0f);
-            }
-            else if (prevLevel % 0.1f > 0.05f && newLevel % 0.1f < 0.05f)
-            {
-                GUI.AddMessage(
-                    "+10 XP",
-                    Color.Green,
-                    worldPos,
-                    Vector2.UnitY * 10.0f);
-            }
 
-            if ((int)newLevel > (int)prevLevel)
+            OnSkillChanged(skillIdentifier, prevLevel, newLevel, worldPos);
+
+            if (GameMain.Server != null && (int)newLevel != (int)prevLevel)
             {
-                GUI.AddMessage(
-                    TextManager.Get("SkillIncreased")
-                        .Replace("[name]", Name)
-                        .Replace("[skillname]", TextManager.Get("SkillName." + skillIdentifier))
-                        .Replace("[newlevel]", ((int)newLevel).ToString()), 
-                    Color.Green);
+                GameMain.Server.CreateEntityEvent(Character, new object[] { NetEntityEvent.Type.UpdateSkills });                
             }
-#endif
         }
+
+        public void SetSkillLevel(string skillIdentifier, float level, Vector2 worldPos)
+        {
+            if (Job == null) return;
+
+            var skill = Job.Skills.Find(s => s.Identifier == skillIdentifier);
+            if (skill == null)
+            {
+                Job.Skills.Add(new Skill(skillIdentifier, level));
+                OnSkillChanged(skillIdentifier, 0.0f, skill.Level, worldPos);
+            }
+            else
+            {
+                float prevLevel = skill.Level;
+                skill.Level = level;
+                OnSkillChanged(skillIdentifier, prevLevel, skill.Level, worldPos);
+            }
+        }
+
+        partial void OnSkillChanged(string skillIdentifier, float prevLevel, float newLevel, Vector2 textPopupPos);
 
         public virtual XElement Save(XElement parentElement)
         {
