@@ -101,9 +101,6 @@
     <Compile Include="Source\Characters\Animation\Ragdoll.cs" />
     <Compile Include="Source\Characters\Attack.cs" />
     <Compile Include="Source\Events\EventManager.cs" />
-    <Compile Include="Source\Extensions\IEnumerableExtensions.cs" />
-    <Compile Include="Source\Extensions\PointExtensions.cs" />
-    <Compile Include="Source\Extensions\RectangleExtensions.cs" />
     <Compile Include="Source\GUI\ChatBox.cs" />
     <Compile Include="Source\GUI\ShapeExtensions.cs" />
     <Compile Include="Source\GUI\Graph.cs" />
