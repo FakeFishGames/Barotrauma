@@ -193,10 +193,7 @@ namespace Barotrauma
                 if (!child.Visible) { continue; }
                 if (RectTransform != null)
                 {
-                    if (child.RectTransform.AbsoluteOffset.X != x || child.RectTransform.AbsoluteOffset.Y != y)
-                    {
-                        child.RectTransform.AbsoluteOffset = new Point(x, y);
-                    }
+                    child.RectTransform.AbsoluteOffset = new Point(x, y);
                 }
                 if (ScrollBar.IsHorizontal)
                 {
