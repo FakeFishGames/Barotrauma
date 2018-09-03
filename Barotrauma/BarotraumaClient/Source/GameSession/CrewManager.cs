@@ -823,7 +823,7 @@ namespace Barotrauma
                         Stretch = true
                     };
 
-                    new GUIImage(new RectTransform(new Vector2(0.2f, 1.0f), paddedFrame.RectTransform), character.AnimController.Limbs[0].sprite, scaleToFit: true);
+                    new GUIImage(new RectTransform(new Vector2(0.2f, 1.0f), paddedFrame.RectTransform), character.AnimController.Limbs[0].ActiveSprite, scaleToFit: true);
 
                     GUITextBlock textBlock = new GUITextBlock(new RectTransform(Vector2.One, paddedFrame.RectTransform),
                         ToolBox.LimitString(character.Info.Name + " (" + character.Info.Job.Name + ")", GUI.Font, paddedFrame.Rect.Width - paddedFrame.Rect.Height));

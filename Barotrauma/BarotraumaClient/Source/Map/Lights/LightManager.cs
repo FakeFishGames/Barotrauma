@@ -255,7 +255,7 @@ namespace Barotrauma.Lights
                 }
                 if (Character.Controlled.FocusedCharacter != null)
                 {
-                    Character.Controlled.FocusedCharacter.Draw(spriteBatch);
+                    Character.Controlled.FocusedCharacter.Draw(spriteBatch, cam);
                 }
 
                 foreach (Item item in Item.ItemList)

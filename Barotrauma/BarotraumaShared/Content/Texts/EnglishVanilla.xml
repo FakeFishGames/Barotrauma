@@ -65,6 +65,7 @@
   <JoinServerButton>Join Server</JoinServerButton>
   <HostServerButton>Host Server</HostServerButton>
   <SubEditorButton>Submarine Editor</SubEditorButton>
+  <CharacterEditorButton>Character Editor</CharacterEditorButton>
   <SettingsButton>Settings</SettingsButton>
   <SteamWorkshopButton>Steam Workshop</SteamWorkshopButton>
   <QuitButton>Quit</QuitButton>

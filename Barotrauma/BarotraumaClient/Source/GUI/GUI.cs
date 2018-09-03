@@ -337,9 +337,6 @@ namespace Barotrauma
                 */
                 GameMain.GameSession?.EventManager?.DebugDrawHUD(spriteBatch);
             }
-            
-            //TODO: move this somewhere else
-            //HumanoidAnimParams.DrawEditor(spriteBatch); 
 
             if (MouseOn != null && !string.IsNullOrWhiteSpace(MouseOn.ToolTip))
             {
@@ -510,8 +507,6 @@ namespace Barotrauma
 
         private static void HandlePersistingElements(float deltaTime)
         {
-            //TODO: move this somewhere else
-            //HumanoidAnimParams.UpdateEditor(deltaTime);
             GUIMessageBox.VisibleBox?.AddToGUIUpdateList();
             if (pauseMenuOpen)
             {
@@ -721,6 +716,18 @@ namespace Barotrauma
             DrawLine(sb, bottomLeft, topLeft, clr, depth, thickness);
         }
 
+        public static void DrawRectangle(SpriteBatch sb, Vector2[] corners, Color clr, float depth = 0.0f, int thickness = 1)
+        {
+            if (corners.Length != 4)
+            {
+                throw new Exception("Invalid length of the corners array! Must be 4");
+            }
+            DrawLine(sb, corners[0], corners[1], clr, depth, thickness);
+            DrawLine(sb, corners[1], corners[2], clr, depth, thickness);
+            DrawLine(sb, corners[2], corners[3], clr, depth, thickness);
+            DrawLine(sb, corners[3], corners[0], clr, depth, thickness);
+        }
+
         public static void DrawProgressBar(SpriteBatch sb, Vector2 start, Vector2 size, float progress, Color clr, float depth = 0.0f)
         {
             DrawProgressBar(sb, start, size, progress, clr, new Color(0.5f, 0.57f, 0.6f, 1.0f), depth);
@@ -806,6 +813,36 @@ namespace Barotrauma
             messages.RemoveAll(m => m.Timer <= 0.0f);
         }
 
+        /// <summary>
+        /// Draws a bezier curve with dots.
+        /// </summary>
+        public static void DrawBezierWithDots(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Vector2 control, int pointCount, Color color, int dotSize = 2)
+        {
+            for (int i = 0; i < pointCount; i++)
+            {
+                float t = (float)i / (pointCount - 1);
+                Vector2 pos = MathUtils.Bezier(start, control, end, t);
+                ShapeExtensions.DrawPoint(spriteBatch, pos, color, dotSize);
+            }
+        }
+
+        public static void DrawSineWithDots(SpriteBatch spriteBatch, Vector2 from, Vector2 dir, float amplitude, float length, float scale, int pointCount, Color color, int dotSize = 2)
+        {
+            Vector2 up = dir.Right();
+            //DrawLine(spriteBatch, from, from + dir, Color.Red);
+            //DrawLine(spriteBatch, from, from + up * dir.Length(), Color.Blue);
+            for (int i = 0; i < pointCount; i++)
+            {
+                Vector2 pos = from;
+                if (i > 0)
+                {
+                    float t = (float)i / (pointCount - 1);
+                    float sin = (float)Math.Sin(t / length * scale) * amplitude;
+                    pos += (up * sin) + (dir * t);
+                }
+                ShapeExtensions.DrawPoint(spriteBatch, pos, color, dotSize);
+            }
+        }
         #endregion
 
         #region Element creation
@@ -1173,14 +1210,10 @@ namespace Barotrauma
         /// <summary>
         /// Displays a message at the center of the screen, automatically preventing overlapping with other centered messages
         /// </summary>
-        public static void AddMessage(string message, Color color, float? lifeTime = null, bool playSound = true)
+        public static void AddMessage(string message, Color color, float? lifeTime = null, bool playSound = true, ScalableFont font = null)
         {
-            foreach (GUIMessage msg in messages)
-            {
-                if (msg.Text == message) return;
-            }
-            
-            messages.Add(new GUIMessage(message, color, lifeTime ?? MathHelper.Clamp(message.Length / 5.0f, 3.0f, 10.0f), LargeFont));
+            if (messages.Any(msg => msg.Text == message)) { return; }
+            messages.Add(new GUIMessage(message, color, lifeTime ?? MathHelper.Clamp(message.Length / 5.0f, 3.0f, 10.0f), font ?? LargeFont));
             if (playSound) PlayUISound(GUISoundType.Message);
         }
 

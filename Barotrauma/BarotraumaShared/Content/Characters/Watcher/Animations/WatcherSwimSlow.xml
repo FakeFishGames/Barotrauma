@@ -1,0 +1,7 @@
+﻿<WatcherSwimFast
+  AnimationType="SwimSlow"
+  speed ="0.5"
+  waveaplitude="0"
+  mirror="true"
+  rotatetowardsmovement="false"
+  />

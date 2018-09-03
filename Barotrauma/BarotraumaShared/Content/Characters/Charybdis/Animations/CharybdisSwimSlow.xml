@@ -1,0 +1,9 @@
+﻿<CharybdisSwimSlow
+  AnimationType="SwimSlow"
+  speed="3"
+  waveamplitude="1"
+  wavelength="60"
+  steertorque="100"
+  flip="True"
+  mirror="False"
+  rotatetowardsmovement="True" />

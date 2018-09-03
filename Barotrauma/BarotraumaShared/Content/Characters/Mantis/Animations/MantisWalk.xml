@@ -1,0 +1,10 @@
+﻿<MantisWalk
+  AnimationType="Walk"
+  speed="3"
+  stepsize="0.15,0.2"
+  legtorque="10"
+  colliderstandangle="0"
+  footangle="180"
+  flip="True"
+  headposition="1.1"
+  headangle="-90"/>

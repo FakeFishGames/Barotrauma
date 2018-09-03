@@ -420,7 +420,7 @@
     <Body width="8" height="16" density="15"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect tags="medical" type="OnUse" target="Character" SpeedMultiplier="1.5" setvalue="true" duration="60.0">
+      <StatusEffect tags="medical" type="OnUse" target="Character" SpeedMultiplier="1.3" setvalue="true" duration="60.0">
         <RequiredItem identifier="medicalsyringe" type="Container"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->

@@ -1,15 +1,20 @@
 ﻿using Barotrauma.Items.Components;
+using Barotrauma.SpriteDeformations;
+using Barotrauma.Extensions;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    partial class Ragdoll
+    abstract partial class Ragdoll
     {
+        public HashSet<SpriteDeformation> SpriteDeformations { get; protected set; } = new HashSet<SpriteDeformation>();
+
         partial void ImpactProjSpecific(float impact, Body body)
         {
             float volume = Math.Min(impact - 3.0f, 1.0f);
@@ -87,7 +92,13 @@ namespace Barotrauma
             }
         }
 
-        public virtual void Draw(SpriteBatch spriteBatch)
+        partial void UpdateProjSpecific(float deltaTime)
+        {
+            LimbJoints.ForEach(j => j.UpdateDeformations(deltaTime));
+            SpriteDeformations.ForEach(sd => sd.Update(deltaTime));
+        }
+
+        public virtual void Draw(SpriteBatch spriteBatch, Camera cam)
         {
             if (simplePhysicsEnabled) return;
 
@@ -102,10 +113,16 @@ namespace Barotrauma
                 return;
             }
 
-            foreach (Limb limb in Limbs)
+            //foreach (Limb limb in Limbs)
+            //{
+            //    limb.Draw(spriteBatch, cam);
+            //}
+
+            for (int i = 0; i < limbs.Length; i++)
             {
-                limb.Draw(spriteBatch);
+                inversedLimbDrawOrder[i].Draw(spriteBatch, cam);
             }
+            LimbJoints.ForEach(j => j.Draw(spriteBatch));
         }
 
         public void DebugDraw(SpriteBatch spriteBatch)

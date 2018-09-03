@@ -1,0 +1,11 @@
+﻿<CrawlerRun
+  AnimationType="Run"
+  speed="4"
+  stepsize="0.15,0.25"
+  legtorque="10"
+  colliderstandangle="90"
+  flip="True"
+  headposition="0.5"
+  torsoposition="0.4"
+  headangle="-90"
+  torsoangle="-120"/>

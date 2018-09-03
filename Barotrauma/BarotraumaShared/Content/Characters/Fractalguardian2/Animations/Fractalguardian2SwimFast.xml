@@ -1,0 +1,6 @@
+﻿<Fractalguardian2SwimFast
+  AnimationType="SwimFast"
+  speed ="1.5"
+  waveamplitude="0"
+  rotatetowardsmovement="false"
+  flip="false"/>
