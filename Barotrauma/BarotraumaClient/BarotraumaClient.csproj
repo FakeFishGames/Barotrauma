@@ -112,6 +112,7 @@
     <Compile Include="Source\GUI\GUILayoutGroup.cs" />
     <Compile Include="Source\GUI\HUDLayoutSettings.cs" />
     <Compile Include="Source\GUI\RectTransform.cs" />
+    <Compile Include="Source\GUI\UISprite.cs" />
     <Compile Include="Source\Items\Components\Machines\Controller.cs" />
     <Compile Include="Source\Items\Components\Repairable.cs" />
     <Compile Include="Source\Items\Components\Signal\MotionSensor.cs" />
