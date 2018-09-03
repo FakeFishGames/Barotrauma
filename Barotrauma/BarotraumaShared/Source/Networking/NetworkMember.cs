@@ -113,6 +113,8 @@ namespace Barotrauma.Networking
 
         protected string name;
 
+        protected ServerSettings serverSettings;
+        
         protected TimeSpan updateInterval;
         protected DateTime updateTimer;
 
@@ -153,7 +155,10 @@ namespace Barotrauma.Networking
             get { return respawnManager; }
         }
 
-        public ServerSettings ServerSettings;
+        public ServerSettings ServerSettings
+        {
+            get { return serverSettings; }
+        }
 
         partial void InitProjSpecific();
         public NetworkMember()
