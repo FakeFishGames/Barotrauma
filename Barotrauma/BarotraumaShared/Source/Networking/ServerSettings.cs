@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,7 +17,7 @@ namespace Barotrauma.Networking
             get { return "ServerSettings"; }
         }
 
-        private class SavedClientPermission
+        public class SavedClientPermission
         {
             public readonly string IP;
             public readonly ulong SteamID;
@@ -43,19 +44,21 @@ namespace Barotrauma.Networking
             }
         }
 
-        public ServerSettings(string serverName, int port, int queryPort, bool enableUPnP)
+        public ServerSettings(string serverName, int port, int queryPort, int maxPlayers, bool isPublic, bool enableUPnP)
         {
             ServerName = serverName;
             Port = port;
             QueryPort = queryPort;
             EnableUPnP = enableUPnP;
+            this.maxPlayers = maxPlayers;
+            this.isPublic = isPublic;
             
             ServerLog = new ServerLog(serverName);
             
             Voting = new Voting();
 
-            whitelist = new WhiteList();
-            banList = new BanList();
+            WhiteList = new WhiteList();
+            BanList = new BanList();
 
             LoadSettings();
 
@@ -91,18 +94,11 @@ namespace Barotrauma.Networking
 
         public bool ShowNetStats;
 
-        private TimeSpan refreshMasterInterval = new TimeSpan(0, 0, 30);
         private TimeSpan sparseUpdateInterval = new TimeSpan(0, 0, 0, 3);
 
         private SelectionMode subSelectionMode, modeSelectionMode;
 
         private float selectedLevelDifficulty;
-
-        private bool registeredToMaster;
-
-        private WhiteList whitelist;
-        private BanList banList;
-
         private string password;
 
         public float AutoRestartTimer;
@@ -113,7 +109,9 @@ namespace Barotrauma.Networking
 
         private int maxPlayers;
 
-        private List<SavedClientPermission> clientPermissions = new List<SavedClientPermission>();
+        public List<SavedClientPermission> ClientPermissions { get; private set; } = new List<SavedClientPermission>();
+
+        public WhiteList WhiteList { get; private set; }
 
         [Serialize(true, true)]
         public bool RandomizeSeed
@@ -210,6 +208,11 @@ namespace Barotrauma.Networking
             }
         }
 
+        public bool HasPassword
+        {
+            get { return !string.IsNullOrEmpty(password); }
+        }
+
         [Serialize(true, true)]
         public bool AllowRespawn
         {
@@ -266,10 +269,7 @@ namespace Barotrauma.Networking
             get { return modeSelectionMode; }
         }
 
-        public BanList BanList
-        {
-            get { return banList; }
-        }
+        public BanList BanList { get; private set; }
 
         [Serialize(true, true)]
         public bool AllowVoteKick
@@ -358,6 +358,11 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
+        
+        public void SetPassword(string password)
+        {
+            this.password = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
+        }
 
         /// <summary>
         /// A list of int pairs that represent the ranges of UTF-16 codes allowed in client names
@@ -368,7 +373,7 @@ namespace Barotrauma.Networking
             private set;
         } = new List<Pair<int, int>>();
 
-        private void SaveSettings()
+        public void SaveSettings()
         {
             XDocument doc = new XDocument(new XElement("serversettings"));
 
@@ -495,8 +500,10 @@ namespace Barotrauma.Networking
             if (GameMain.NetLobbyScreen != null)
             {
                 GameMain.NetLobbyScreen.ServerName = doc.Root.GetAttributeString("name", "");
+#if SERVER
                 GameMain.NetLobbyScreen.SelectedModeName = GameMode;
                 GameMain.NetLobbyScreen.MissionTypeName = MissionType;
+#endif
                 GameMain.NetLobbyScreen.ServerMessageText = doc.Root.GetAttributeString("ServerMessage", "");
             }
 
@@ -521,7 +528,7 @@ namespace Barotrauma.Networking
 
         public void LoadClientPermissions()
         {
-            clientPermissions.Clear();
+            ClientPermissions.Clear();
 
             if (!File.Exists(ClientPermissionsFile))
             {
@@ -558,7 +565,7 @@ namespace Barotrauma.Networking
                 }
 
                 List<DebugConsole.Command> permittedCommands = new List<DebugConsole.Command>();
-                if (permissions.HasFlag(ClientPermissions.ConsoleCommands))
+                if (permissions.HasFlag(Barotrauma.Networking.ClientPermissions.ConsoleCommands))
                 {
                     foreach (XElement commandElement in clientElement.Elements())
                     {
@@ -580,7 +587,7 @@ namespace Barotrauma.Networking
                 {
                     if (ulong.TryParse(steamIdStr, out ulong steamID))
                     {
-                        clientPermissions.Add(new SavedClientPermission(clientName, steamID, permissions, permittedCommands));
+                        ClientPermissions.Add(new SavedClientPermission(clientName, steamID, permissions, permittedCommands));
                     }
                     else
                     {
@@ -590,7 +597,7 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
-                    clientPermissions.Add(new SavedClientPermission(clientName, clientIP, permissions, permittedCommands));
+                    ClientPermissions.Add(new SavedClientPermission(clientName, clientIP, permissions, permittedCommands));
                 }
             }
         }
@@ -613,7 +620,7 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            clientPermissions.Clear();
+            ClientPermissions.Clear();
 
             foreach (string line in lines)
             {
@@ -623,10 +630,10 @@ namespace Barotrauma.Networking
                 string name = string.Join("|", separatedLine.Take(separatedLine.Length - 2));
                 string ip = separatedLine[separatedLine.Length - 2];
 
-                ClientPermissions permissions = ClientPermissions.None;
+                ClientPermissions permissions = Barotrauma.Networking.ClientPermissions.None;
                 if (Enum.TryParse(separatedLine.Last(), out permissions))
                 {
-                    clientPermissions.Add(new SavedClientPermission(name, ip, permissions, new List<DebugConsole.Command>()));
+                    ClientPermissions.Add(new SavedClientPermission(name, ip, permissions, new List<DebugConsole.Command>()));
                 }
             }            
         }
@@ -639,11 +646,13 @@ namespace Barotrauma.Networking
                 File.Delete("Data/clientpermissions.txt");
             }
 
+#if SERVER
             GameServer.Log("Saving client permissions", ServerLog.MessageType.ServerMessage);
+#endif
 
             XDocument doc = new XDocument(new XElement("ClientPermissions"));
 
-            foreach (SavedClientPermission clientPermission in clientPermissions)
+            foreach (SavedClientPermission clientPermission in ClientPermissions)
             {
                 XElement clientElement = new XElement("Client", 
                     new XAttribute("name", clientPermission.Name),
@@ -658,7 +667,7 @@ namespace Barotrauma.Networking
                     clientElement.Add(new XAttribute("ip", clientPermission.IP));
                 }
 
-                if (clientPermission.Permissions.HasFlag(ClientPermissions.ConsoleCommands))
+                if (clientPermission.Permissions.HasFlag(Barotrauma.Networking.ClientPermissions.ConsoleCommands))
                 {
                     foreach (DebugConsole.Command command in clientPermission.PermittedCommands)
                     {
