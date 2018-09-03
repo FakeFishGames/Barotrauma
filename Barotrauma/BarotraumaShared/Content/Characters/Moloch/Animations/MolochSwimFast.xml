@@ -1,0 +1,6 @@
+﻿<MolochSwimFast
+  AnimationType="SwimFast"
+  speed ="3"
+  waveamplitude="0"
+  mirror="true"
+  rotatetowardsmovement="false"/>

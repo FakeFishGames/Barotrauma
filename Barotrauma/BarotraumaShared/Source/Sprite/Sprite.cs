@@ -42,6 +42,8 @@ namespace Barotrauma
             set { depth = MathHelper.Clamp(value, 0.0f, 1.0f); }
         }
 
+        // TODO: use the limb sprite params directly?
+
         public Vector2 Origin
         {
             get { return origin; }
@@ -103,6 +105,20 @@ namespace Barotrauma
             Depth = element.GetAttributeFloat("depth", 0.0f);
 
             list.Add(this);
+        }
+
+        internal void LoadParams(SpriteParams spriteParams, bool isFlipped)
+        {
+            sourceRect = spriteParams.SourceRect;
+            origin = spriteParams.Origin;
+            origin.X = origin.X * sourceRect.Width;
+            if (isFlipped)
+            {
+                origin.X = sourceRect.Width - origin.X;
+            }
+            origin.Y = origin.Y * sourceRect.Height;
+            depth = spriteParams.Depth;
+            // TODO: size?
         }
 
         public Sprite(string newFile, Vector2 newOrigin, bool preMultiplyAlpha = true)

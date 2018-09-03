@@ -1,0 +1,9 @@
+﻿<TigerthresherSwimFast
+  AnimationType="SwimFast"
+  speed="6"
+  wavelength="20"
+  waveamplitude="0.5"
+  steertorque="100"
+  flip="True"
+  mirror="False"
+  rotatetowardsmovement="True"/>

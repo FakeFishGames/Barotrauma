@@ -74,7 +74,7 @@ namespace Barotrauma
             }
         }
         
-        public GUIDropDown(RectTransform rectT, string text = "", int elementCount = 3, string style = "") : base(style, rectT)
+        public GUIDropDown(RectTransform rectT, string text = "", int elementCount = 4, string style = "") : base(style, rectT)
         {
             button = new GUIButton(new RectTransform(Vector2.One, rectT), text, Alignment.CenterLeft, style: "GUIDropDown")
             {
@@ -82,7 +82,7 @@ namespace Barotrauma
             };
             GUI.Style.Apply(button, "", this);
             
-            listBox = new GUIListBox(new RectTransform(new Point(Rect.Width, Rect.Height * MathHelper.Clamp(elementCount - 1, 5, 10)), rectT, Anchor.BottomLeft, Pivot.TopLeft)
+            listBox = new GUIListBox(new RectTransform(new Point(Rect.Width, Rect.Height * MathHelper.Clamp(elementCount, 2, 10)), rectT, Anchor.BottomLeft, Pivot.TopLeft)
             {
                 IsFixedSize = false
             }, style: style)
