@@ -422,6 +422,9 @@ namespace Barotrauma
             set;
         }
 
+        /// <summary>
+        /// Can be used to modify the character's speed via StatusEffects
+        /// </summary>
         public float SpeedMultiplier
         {
             get;
@@ -918,12 +921,17 @@ namespace Barotrauma
                     !AnimController.IsMovingBackwards;
             }
             
-            targetMovement *= AnimController.GetCurrentSpeed(run) * SpeedMultiplier;
-            SpeedMultiplier = 1; // Reset, items will set the value before the next update
-
+            targetMovement *= AnimController.GetCurrentSpeed(run);
             float maxSpeed = GetCurrentMaxSpeed(run);
             targetMovement.X = MathHelper.Clamp(targetMovement.X, -maxSpeed, maxSpeed);
             targetMovement.Y = MathHelper.Clamp(targetMovement.Y, -maxSpeed, maxSpeed);
+
+            //apply speed multiplier if 
+            //  a. it's boosting the movement speed and the character is trying to move fast (= running)
+            //  b. it's a debuff that decreases movement speed
+            if (run || SpeedMultiplier <= 0.0f) targetMovement *= SpeedMultiplier;
+
+            SpeedMultiplier = 1; // Reset, items will set the value before the next update
 
             return targetMovement;
         }
