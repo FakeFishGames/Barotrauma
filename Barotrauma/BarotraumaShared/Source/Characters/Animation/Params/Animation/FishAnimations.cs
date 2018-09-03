@@ -4,14 +4,13 @@ namespace Barotrauma
 {
     class FishWalkParams : FishGroundedParams
     {
+        public static FishWalkParams GetDefaultAnimParams(Character character)
+        {
+            return Check(character) ? GetDefaultAnimParams<FishWalkParams>(character.SpeciesName, AnimationType.Walk) : Empty;
+        }
         public static FishWalkParams GetAnimParams(Character character, string fileName = null)
         {
-            if (!character.AnimController.CanWalk)
-            {
-                DebugConsole.ThrowError($"{character.SpeciesName} cannot use walk animations!");
-                return Empty;
-            }
-            return GetAnimParams<FishWalkParams>(character.SpeciesName, AnimationType.Walk, fileName);
+            return Check(character) ? GetAnimParams<FishWalkParams>(character.SpeciesName, AnimationType.Walk, fileName) : Empty;
         }
 
         protected static FishWalkParams Empty = new FishWalkParams();
@@ -19,14 +18,13 @@ namespace Barotrauma
 
     class FishRunParams : FishGroundedParams
     {
+        public static FishRunParams GetDefaultAnimParams(Character character)
+        {
+            return Check(character) ? GetDefaultAnimParams<FishRunParams>(character.SpeciesName, AnimationType.Run) : Empty;
+        }
         public static FishRunParams GetAnimParams(Character character, string fileName = null)
         {
-            if (!character.AnimController.CanWalk)
-            {
-                DebugConsole.ThrowError($"{character.SpeciesName} cannot use run animations!");
-                return Empty;
-            }
-            return GetAnimParams<FishRunParams>(character.SpeciesName, AnimationType.Run, fileName);
+            return Check(character) ? GetAnimParams<FishRunParams>(character.SpeciesName, AnimationType.Run, fileName) : Empty;
         }
 
         protected static FishRunParams Empty = new FishRunParams();
@@ -34,6 +32,7 @@ namespace Barotrauma
 
     class FishSwimFastParams : FishSwimParams
     {
+        public static FishSwimFastParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<FishSwimFastParams>(character.SpeciesName, AnimationType.SwimFast);
         public static FishSwimFastParams GetAnimParams(Character character, string fileName = null)
         {
             return GetAnimParams<FishSwimFastParams>(character.SpeciesName, AnimationType.SwimFast, fileName);
@@ -42,6 +41,7 @@ namespace Barotrauma
 
     class FishSwimSlowParams : FishSwimParams
     {
+        public static FishSwimSlowParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<FishSwimSlowParams>(character.SpeciesName, AnimationType.SwimSlow);
         public static FishSwimSlowParams GetAnimParams(Character character, string fileName = null)
         {
             return GetAnimParams<FishSwimSlowParams>(character.SpeciesName, AnimationType.SwimSlow, fileName);
@@ -50,6 +50,16 @@ namespace Barotrauma
 
     abstract class FishGroundedParams : GroundedMovementParams, IFishAnimation
     {
+        protected static bool Check(Character character)
+        {
+            if (!character.AnimController.CanWalk)
+            {
+                DebugConsole.ThrowError($"{character.SpeciesName} cannot use run animations!");
+                return false;
+            }
+            return true;
+        }
+
         [Serialize(true, true), Editable]
         public bool Flip { get; set; }
 

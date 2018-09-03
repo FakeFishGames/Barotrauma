@@ -126,6 +126,8 @@ namespace Barotrauma
             return Enum.TryParse(doc.Root.GetAttributeString("AnimationType", "NotDefined"), out AnimationType fileType) && fileType == type;
         }
 
+        public static T GetDefaultAnimParams<T>(string speciesName, AnimationType animType) where T : AnimationParams, new() => GetAnimParams<T>(speciesName, animType, GetDefaultFileName(speciesName, animType));
+
         /// <summary>
         /// If the file name is left null, a random file is selected. If fails, will select the default file. Note: Use the filename without the extensions, don't use the full path!
         /// If a custom folder is used, it's defined in the character info file.

@@ -11,9 +11,13 @@ namespace Barotrauma
     class HumanRagdollParams : RagdollParams
     {
         public static HumanRagdollParams GetRagdollParams(string fileName = null) => GetRagdollParams<HumanRagdollParams>("human", fileName);
+        public static HumanRagdollParams GetDefaultRagdollParams() => GetDefaultRagdollParams<HumanRagdollParams>("human");
     }
 
-    class FishRagdollParams : RagdollParams { }
+    class FishRagdollParams : RagdollParams
+    {
+        public static FishRagdollParams GetDefaultRagdollParams(string speciesName) => GetDefaultRagdollParams<FishRagdollParams>(speciesName);
+    }
 
     class RagdollParams : EditableParams
     {
@@ -49,6 +53,8 @@ namespace Barotrauma
             }
             return folder;
         }
+
+        public static T GetDefaultRagdollParams<T>(string speciesName) where T : RagdollParams, new() => GetRagdollParams<T>(speciesName, GetDefaultFileName(speciesName));
 
         /// <summary>
         /// If the file name is left null, a random file is selected. If fails, will select the default file.  Note: Use the filename without the extensions, don't use the full path!
