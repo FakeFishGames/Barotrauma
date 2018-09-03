@@ -411,12 +411,6 @@ namespace Barotrauma
                     selectedCharacterFrame = child;
                 }
             }
-
-            if (selectedCharacterFrame != null)
-            {
-                selectedCharacterFrame.RectTransform.SetAsFirstChild();
-                characterListBox.BarScroll = 0.0f; 
-            }      
         }
 
         public void ReviveCharacter(Character revivedCharacter)
