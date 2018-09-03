@@ -1070,6 +1070,7 @@ namespace Barotrauma
                 submarineElement = doc.Root;
             }
 
+            GameVersion = GameVersion ?? new Version(submarineElement.GetAttributeString("gameversion", "0.0.0.0"));
             Description = submarineElement.GetAttributeString("description", "");
             Enum.TryParse(submarineElement.GetAttributeString("tags", ""), out tags);
             
@@ -1168,6 +1169,21 @@ namespace Barotrauma
 #if CLIENT
             GameMain.LightManager.OnMapLoaded();
 #endif
+            //if the sub was made using an older version, 
+            //halve the brightness of the lights to make them look (almost) right on the new lighting formula
+            if (Screen.Selected != GameMain.SubEditorScreen && (GameVersion == null || GameVersion < new Version("0.9.0.0")))
+            {
+                DebugConsole.ThrowError("The submarine \"" + Name + "\" was made using an older version of the Barotrauma that used a different formula to calculate the lighting. "
+                    + "The game automatically adjusts the lights make them look better with the new formula, but it's recommended to open the submarine in the submarine editor and make sure everything looks right after the automatic conversion.");
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.Submarine != this) continue;
+                    if (item.ParentInventory != null || item.body != null) continue;
+                    var lightComponent = item.GetComponent<Items.Components.LightComponent>();
+                    if (lightComponent != null) lightComponent.LightColor = new Color(lightComponent.LightColor, lightComponent.LightColor.A / 255.0f * 0.5f);
+                }
+            }
+
 
             ID = (ushort)(ushort.MaxValue - Submarine.loaded.IndexOf(this));
         }
