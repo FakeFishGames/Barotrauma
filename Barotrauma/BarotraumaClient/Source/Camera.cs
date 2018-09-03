@@ -254,19 +254,6 @@ namespace Barotrauma
             angularDamping = 0.05f;
             angularSpring = 0.2f;
 
-            if (PlayerInput.KeyHit(Keys.T))
-            {
-                angularVelocity = 1.0f;
-            }
-            if (PlayerInput.KeyHit(Keys.Y))
-            {
-                angularVelocity = 5.0f;
-            }
-            if (PlayerInput.KeyHit(Keys.U))
-            {
-                angularVelocity = 10.0f;
-            }
-
             if (Shake < 0.01f)
             {
                 shakePosition = Vector2.Zero;
