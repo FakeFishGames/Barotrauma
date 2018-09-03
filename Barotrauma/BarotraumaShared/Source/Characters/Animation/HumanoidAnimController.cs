@@ -197,6 +197,7 @@ namespace Barotrauma
             {
                 levitatingCollider = false;
                 Collider.Enabled = false;
+                Collider.LinearVelocity = MainLimb.LinearVelocity;
                 Collider.FarseerBody.FixedRotation = false;
                 Collider.SetTransformIgnoreContacts(MainLimb.SimPosition, MainLimb.Rotation);
                 return;

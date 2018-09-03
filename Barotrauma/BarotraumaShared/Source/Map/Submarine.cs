@@ -734,8 +734,7 @@ namespace Barotrauma
 
             foreach (MapEntity e in subEntities)
             {
-                if (e.MoveWithLevel || e is Item) continue;
-
+                if (e is Item) continue;
                 if (e is LinkedSubmarine)
                 {
                     Submarine sub = ((LinkedSubmarine)e).Sub;
@@ -1242,19 +1241,10 @@ namespace Barotrauma
             element.Add(new XAttribute("recommendedcrewsizemax", RecommendedCrewSizeMax));
             element.Add(new XAttribute("recommendedcrewexperience", RecommendedCrewExperience ?? ""));
             element.Add(new XAttribute("requiredcontentpackages", string.Join(", ", RequiredContentPackages)));
-
+            
             foreach (MapEntity e in MapEntity.mapEntityList)
             {
-                if (e.linkedTo == null) continue;
-                for (int i = e.linkedTo.Count - 1; i >= 0; i--)
-                {
-                    if (!e.linkedTo[i].ShouldBeSaved) e.linkedTo.RemoveAt(i);
-                }
-            }
-
-            foreach (MapEntity e in MapEntity.mapEntityList)
-            {
-                if (e.MoveWithLevel || e.Submarine != this || !e.ShouldBeSaved) continue;
+                if (e.Submarine != this || !e.ShouldBeSaved) continue;
                 e.Save(element);
             }
         }

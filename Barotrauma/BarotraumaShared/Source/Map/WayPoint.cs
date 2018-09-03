@@ -637,7 +637,7 @@ namespace Barotrauma
 
         public override XElement Save(XElement parentElement)
         {
-            if (MoveWithLevel) return null;
+            if (!ShouldBeSaved) return null;
             XElement element = new XElement("WayPoint");
 
             element.Add(new XAttribute("ID", ID),
@@ -662,6 +662,7 @@ namespace Barotrauma
                 int i = 0;
                 foreach (MapEntity e in linkedTo)
                 {
+                    if (!e.ShouldBeSaved) continue;
                     element.Add(new XAttribute("linkedto" + i, e.ID));
                     i += 1;
                 }

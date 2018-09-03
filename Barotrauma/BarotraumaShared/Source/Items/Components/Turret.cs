@@ -114,7 +114,7 @@ namespace Barotrauma.Items.Components
             get;
             private set;
         }
-
+        
         public Turret(Item item, XElement element)
             : base(item, element)
         {
@@ -212,6 +212,12 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
+            if (!characterUsable && character != null) return false;
+            return TryLaunch(deltaTime, character);
+        }
+
+        private bool TryLaunch(float deltaTime, Character character = null)
+        {
             if (GameMain.Client != null) return false;
 
             if (reload > 0.0f) return false;
@@ -230,7 +236,7 @@ namespace Barotrauma.Items.Components
 
             var projectiles = GetLoadedProjectiles(true);
             if (projectiles.Count == 0) return false;
-            
+
             var batteries = item.GetConnectedComponents<PowerContainer>();
             float availablePower = 0.0f;
             foreach (PowerContainer battery in batteries)
@@ -245,7 +251,7 @@ namespace Barotrauma.Items.Components
                     battery.Item.CreateServerEvent(battery);
                 }
             }
-         
+
             Launch(projectiles[0].Item, character);
 
             if (character != null)
@@ -527,6 +533,12 @@ namespace Barotrauma.Items.Components
                 case "trigger_in":
                     item.Use((float)Timing.Step, sender);
                     user = sender;
+                    //triggering the Use method through item.Use will fail if the item is not characterusable and the signal was sent by a character
+                    //so lets do it manually
+                    if (!characterUsable && sender != null)
+                    {
+                        TryLaunch((float)Timing.Step, sender);
+                    }
                     break;
             }
         }

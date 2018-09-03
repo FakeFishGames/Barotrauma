@@ -199,7 +199,7 @@ namespace Barotrauma
             vitality    = maxVitality;
 
             DoesBleed               = element.GetAttributeBool("doesbleed", true);
-            UseBloodParticles       = element.GetAttributeBool("usebloodparticles", true);
+            UseBloodParticles       = element.GetAttributeBool("usebloodparticles", DoesBleed);
             UseHealthWindow         = element.GetAttributeBool("usehealthwindow", false);
 
             minVitality = (character.ConfigPath == Character.HumanConfigFile) ? -100.0f : 0.0f;

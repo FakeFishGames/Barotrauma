@@ -1137,20 +1137,33 @@ namespace Barotrauma.Networking
                                 GameMain.NetLobbyScreen.SetBotSpawnMode(botSpawnMode);                                
                                 GameMain.NetLobbyScreen.SetAutoRestart(autoRestartEnabled, autoRestartTimer);
 
-                                ConnectedClients.Clear();
-                                GameMain.NetLobbyScreen.ClearPlayers();
+                                List<Client> currentClients = new List<Client>();
                                 for (int i = 0; i < clientNames.Count; i++)
                                 {
-                                    var newClient = new Client(clientNames[i], clientIDs[i]);
+                                    //see if the client already exists
+                                    var existingClient = ConnectedClients.Find(c => c.ID == clientIDs[i] && c.Name == clientNames[i]);
+                                    if (existingClient == null) //if not, create it
+                                    {
+                                        existingClient = new Client(clientNames[i], clientIDs[i]);
+                                        ConnectedClients.Add(existingClient);
+                                        GameMain.NetLobbyScreen.AddPlayer(existingClient.Name);
+                                    }
                                     if (characterIDs[i] > 0)
                                     {
-                                        newClient.Character = Entity.FindEntityByID(characterIDs[i]) as Character;
+                                        existingClient.Character = Entity.FindEntityByID(characterIDs[i]) as Character;
                                     }
-
-                                    ConnectedClients.Add(newClient);
-                                    GameMain.NetLobbyScreen.AddPlayer(newClient.Name);
+                                    currentClients.Add(existingClient);
                                 }
-
+                                //remove clients that aren't present anymore
+                                for (int i = ConnectedClients.Count - 1; i >= 0; i--)
+                                {
+                                    if (!currentClients.Contains(ConnectedClients[i]))
+                                    {
+                                        GameMain.NetLobbyScreen.RemovePlayer(ConnectedClients[i].Name);
+                                        ConnectedClients.RemoveAt(i);
+                                    }
+                                }
+                                
                                 Voting.AllowSubVoting = allowSubVoting;
                                 Voting.AllowModeVoting = allowModeVoting;
                             }
@@ -1577,6 +1590,11 @@ namespace Barotrauma.Networking
             client.Shutdown("");
             steamAuthTicket?.Cancel();
 
+            foreach (var fileTransfer in FileReceiver.ActiveTransfers)
+            {
+                fileTransfer.Dispose();
+            }
+
             if (HasPermission(ClientPermissions.ServerLog))
             {
                 ServerLog?.Save();
@@ -1802,6 +1820,19 @@ namespace Barotrauma.Networking
             client.SendMessage(readyToStartMsg, NetDeliveryMethod.ReliableUnordered);
 
             return false;
+        }
+
+        public bool SetReadyToStart(GUITickBox tickBox)
+        {
+            if (gameStarted)
+            {
+                tickBox.Visible = false;
+                return false;
+            }
+
+            Vote(VoteType.StartRound, tickBox.Selected);
+
+            return true;
         }
 
         public bool ToggleEndRoundVote(GUITickBox tickBox)

@@ -131,6 +131,18 @@ namespace Barotrauma
                     }
 
                     break;
+                case VoteType.StartRound:
+                    bool ready = inc.ReadBoolean();
+                    if (ready != sender.GetVote<bool>(VoteType.StartRound))
+                    {
+                        sender.SetVote(VoteType.StartRound, ready);
+                        GameServer.Log(sender.Name + (ready ? " is ready to start the game." : " is not ready to start the game."), ServerLog.MessageType.ServerMessage);
+#if CLIENT
+                        UpdateVoteTexts(GameMain.Server.ConnectedClients, voteType);
+#endif
+                    }
+
+                    break;
             }
 
             inc.ReadPadBits();
@@ -172,6 +184,13 @@ namespace Barotrauma
             }
 
             msg.Write(AllowVoteKick);
+
+            var readyClients =  GameMain.Server.ConnectedClients.FindAll(c => c.GetVote<bool>(VoteType.StartRound));
+            msg.Write((byte)readyClients.Count);
+            foreach (Client c in readyClients)
+            {
+                msg.Write(c.ID);
+            }
 
             msg.WritePadBits();
         }

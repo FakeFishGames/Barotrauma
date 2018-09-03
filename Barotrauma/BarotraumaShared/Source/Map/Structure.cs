@@ -465,6 +465,24 @@ namespace Barotrauma
             return corners;
         }
 
+        /// <summary>
+        /// Checks if there's a structure items can be attached to at the given position and returns it.
+        /// </summary>
+        public static Structure GetAttachTarget(Vector2 worldPosition)
+        {
+            foreach (MapEntity mapEntity in mapEntityList)
+            {
+                if (!(mapEntity is Structure structure)) continue;
+                if (!structure.Prefab.AllowAttachItems) continue;
+                if (structure.Bodies != null && structure.Bodies.Count > 0) continue;
+                Rectangle worldRect = mapEntity.WorldRect;
+                if (worldPosition.X < worldRect.X || worldPosition.X > worldRect.Right) continue;
+                if (worldPosition.Y > worldRect.Y || worldPosition.Y < worldRect.Y - worldRect.Height) continue;
+                return structure;
+            }
+            return null;
+        }
+
         public override bool IsMouseOn(Vector2 position)
         {
             if (StairDirection == Direction.None)

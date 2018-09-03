@@ -452,12 +452,21 @@ namespace Barotrauma.Networking
                     initiatedStartGame = false;
                 }
             }
-            else if (autoRestart && Screen.Selected == GameMain.NetLobbyScreen && connectedClients.Count > 0)
+            else if (Screen.Selected == GameMain.NetLobbyScreen && connectedClients.Count > 0 && !gameStarted && !initiatedStartGame)
             {
-                AutoRestartTimer -= deltaTime;                
-                if (AutoRestartTimer < 0.0f && !initiatedStartGame)
+                if (autoRestart) AutoRestartTimer -= deltaTime;        
+                        
+                if (autoRestart && AutoRestartTimer < 0.0f)
                 {
                     StartGame();
+                }
+                else if (StartWhenClientsReady)
+                {
+                    int clientsReady = connectedClients.Count(c => c.GetVote<bool>(VoteType.StartRound));
+                    if (clientsReady / (float)connectedClients.Count >= StartWhenClientsReadyRatio)
+                    {
+                        StartGame();
+                    }
                 }
             }
 
@@ -480,6 +489,15 @@ namespace Barotrauma.Networking
                 //slowly reset spam timers
                 c.ChatSpamTimer = Math.Max(0.0f, c.ChatSpamTimer - deltaTime);
                 c.ChatSpamSpeed = Math.Max(0.0f, c.ChatSpamSpeed - deltaTime);
+
+                //constantly increase AFK timer if the client is controlling a character (gets reset to zero every time an input is received)
+                if (gameStarted && c.Character != null) c.KickAFKTimer += deltaTime;
+            }
+
+            List<Client> kickAFK = connectedClients.FindAll(c => c.KickAFKTimer >= KickAFKTime);
+            foreach (Client c in kickAFK)
+            {
+                KickClient(c, TextManager.Get("DisconnectMessage.AFK"));
             }
 
             NetIncomingMessage inc = null; 
@@ -1941,7 +1959,7 @@ namespace Barotrauma.Networking
                     //msg sent by the server
                     if (senderCharacter == null)
                     {
-                        if (Character.Controlled != null && Character.Controlled.CanSpeak)
+                        if (Character.Controlled != null && Character.Controlled.SpeechImpediment < 100.0f)
                         {
                             senderCharacter = Character.Controlled;
                             senderName = Character.Controlled == null ? name : Character.Controlled.Name;
@@ -1963,7 +1981,7 @@ namespace Barotrauma.Networking
                     senderName = senderCharacter == null ? senderClient.Name : senderCharacter.Name;
 
                     //sender doesn't have a character or the character can't speak -> only ChatMessageType.Dead allowed
-                    if (senderCharacter == null || senderCharacter.IsDead || !senderCharacter.CanSpeak)
+                    if (senderCharacter == null || senderCharacter.IsDead || senderCharacter.SpeechImpediment >= 100.0f)
                     {
                         type = ChatMessageType.Dead;
                     }
@@ -2014,7 +2032,7 @@ namespace Barotrauma.Networking
                     break;
                 case ChatMessageType.Dead:
                     //character still alive and capable of speaking -> dead chat not allowed
-                    if (senderClient != null && senderCharacter != null && !senderCharacter.IsDead && senderCharacter.CanSpeak)
+                    if (senderClient != null && senderCharacter != null && !senderCharacter.IsDead && senderCharacter.SpeechImpediment < 100.0f)
                     {
                         return;
                     }
@@ -2088,7 +2106,7 @@ namespace Barotrauma.Networking
         
         public void SendOrderChatMessage(OrderChatMessage message)
         {
-            if (message.Sender == null || !message.Sender.CanSpeak) return;
+            if (message.Sender == null || message.Sender.SpeechImpediment >= 100.0f) return;
             ChatMessageType messageType = ChatMessage.CanUseRadio(message.Sender) ? ChatMessageType.Radio : ChatMessageType.Default;
 
             //check which clients can receive the message and apply distance effects
@@ -2161,7 +2179,7 @@ namespace Barotrauma.Networking
             SendVoteStatus(connectedClients);
 
             if (Voting.AllowEndVoting && EndVoteMax > 0 &&
-                ((float)EndVoteCount / (float)EndVoteMax) >= EndVoteRequiredRatio)
+                (EndVoteCount / (float)EndVoteMax) >= EndVoteRequiredRatio)
             {
                 Log("Ending round by votes (" + EndVoteCount + "/" + (EndVoteMax - EndVoteCount) + ")", ServerLog.MessageType.ServerMessage);
                 EndGame();

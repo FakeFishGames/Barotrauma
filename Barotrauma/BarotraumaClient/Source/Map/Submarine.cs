@@ -249,7 +249,7 @@ namespace Barotrauma
                 }
             }
 
-            if (WayPoint.WayPointList.Find(wp => !wp.MoveWithLevel && wp.SpawnType == SpawnType.Path) == null)
+            if (!WayPoint.WayPointList.Any(wp => wp.ShouldBeSaved && wp.SpawnType == SpawnType.Path))
             {
                 errorMsgs.Add(TextManager.Get("NoWaypointsWarning"));
             }

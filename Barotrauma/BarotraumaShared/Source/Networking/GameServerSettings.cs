@@ -118,13 +118,26 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
-
-
+        
         [Serialize(60.0f, true)]
         public float AutoRestartInterval
         {
             get;
             set;
+        }
+
+        [Serialize(false, true)]
+        public bool StartWhenClientsReady
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(0.8f, true)]
+        public float StartWhenClientsReadyRatio
+        {
+            get;
+            private set;
         }
 
         [Serialize(true, true)]
@@ -270,6 +283,13 @@ namespace Barotrauma.Networking
 
         [Serialize(30.0f, true)]
         public float KillDisconnectedTime
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(120.0f, true)]
+        public float KickAFKTime
         {
             get;
             private set;

@@ -75,6 +75,12 @@ namespace Barotrauma
             campaignSetupUI.LoadGame = (string fileName) =>
             {
                 SaveUtil.LoadGame(fileName);
+                if (!(GameMain.GameSession.GameMode is MultiPlayerCampaign))
+                {
+                    DebugConsole.ThrowError("Failed to load the campaign. The save file appears to be for a single player campaign.");
+                    return;
+                }
+
                 var campaign = ((MultiPlayerCampaign)GameMain.GameSession.GameMode);
                 campaign.LastSaveID++;
 

@@ -27,7 +27,7 @@ namespace Barotrauma.Networking
                 OnClicked = ToggleSettingsFrame
             };
 
-            GUIFrame innerFrame = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.4f), settingsFrame.RectTransform, Anchor.Center) { MinSize = new Point(400, 430) });
+            GUIFrame innerFrame = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.7f), settingsFrame.RectTransform, Anchor.Center) { MinSize = new Point(400, 430) });
             GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center), style: null);
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), "Settings", font: GUI.LargeFont);
@@ -40,7 +40,7 @@ namespace Barotrauma.Networking
 
             var tabValues = Enum.GetValues(typeof(SettingsTab)).Cast<SettingsTab>().ToArray();
             string[] tabNames = new string[tabValues.Count()];
-            for (int i = 0; i<tabNames.Length; i++)
+            for (int i = 0; i < tabNames.Length; i++)
             {
                 tabNames[i] = TextManager.Get("ServerSettings" + tabValues[i] + "Tab");
             }
@@ -351,7 +351,34 @@ namespace Barotrauma.Networking
                 }
             };
             startIntervalSlider.OnMoved(startIntervalSlider, startIntervalSlider.BarScroll);
-            
+
+            //***********************************************
+
+            var startWhenClientsReady = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), 
+                TextManager.Get("ServerSettingsStartWhenClientsReady"))
+            {
+                Selected = StartWhenClientsReady,
+                OnSelected = (tickBox) =>
+                {
+                    StartWhenClientsReady = tickBox.Selected;
+                    return true;
+                }
+            };
+
+            CreateLabeledSlider(serverTab, "ServerSettingsStartWhenClientsReadyRatio", out slider, out sliderLabel);
+            string clientsReadyRequiredLabel = sliderLabel.Text;
+            slider.Step = 0.2f;
+            slider.BarScroll = (StartWhenClientsReadyRatio - 0.5f) * 2.0f;
+            slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+            {
+                StartWhenClientsReadyRatio = barScroll / 2.0f + 0.5f;
+                ((GUITextBlock)scrollBar.UserData).Text = clientsReadyRequiredLabel.Replace("[percentage]", ((int)MathUtils.Round(StartWhenClientsReadyRatio * 100.0f, 10.0f)).ToString());
+                return true;
+            };
+            slider.OnMoved(slider, slider.BarScroll);
+
+            //***********************************************
+
             var allowSpecBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsAllowSpectating"))
             {
                 Selected = AllowSpectating,
@@ -505,7 +532,7 @@ namespace Barotrauma.Networking
                 Stretch = true,
                 RelativeSpacing = 0.05f
             };
-
+            
             slider = new GUIScrollBar(new RectTransform(new Vector2(0.5f, 0.8f), container.RectTransform), barSize: 0.1f);
             label = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.8f), container.RectTransform), 
                 string.IsNullOrEmpty(labelTag) ? "" : TextManager.Get(labelTag), font: GUI.SmallFont);
@@ -524,9 +551,10 @@ namespace Barotrauma.Networking
             }
             subSelectionMode = (SelectionMode)tickBox.UserData;
 
-            foreach (GUIComponent otherTickBox in tickBox.Parent.Children)
+            foreach (GUIComponent otherComponent in tickBox.Parent.Children)
             {
-                ((GUITickBox)otherTickBox).Selected = otherTickBox == tickBox;
+                if (!(otherComponent is GUITickBox otherTickBox)) continue;
+                otherTickBox.Selected = otherTickBox == tickBox;
             }
 
             Voting.AllowSubVoting = subSelectionMode == SelectionMode.Vote;

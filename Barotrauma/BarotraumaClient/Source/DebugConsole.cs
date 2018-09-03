@@ -401,9 +401,9 @@ namespace Barotrauma
                         NewMessage("Removed " + me.Name + " (simposition " + me.SimPosition + ")", Color.Orange);
                         MapEntity.mapEntityList.RemoveAt(i);
                     }
-                    else if (me.MoveWithLevel)
+                    else if (!me.ShouldBeSaved)
                     {
-                        NewMessage("Removed " + me.Name + " (MoveWithLevel==true)", Color.Orange);
+                        NewMessage("Removed " + me.Name + " (!ShouldBeSaved)", Color.Orange);
                         MapEntity.mapEntityList.RemoveAt(i);
                     }
                     else if (me is Item)

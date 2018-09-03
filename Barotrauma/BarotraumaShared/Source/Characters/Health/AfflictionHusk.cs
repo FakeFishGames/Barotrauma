@@ -25,12 +25,7 @@ namespace Barotrauma
         {
             get { return state; }
         }
-
-        public bool CanSpeak
-        {
-            get { return Strength < Prefab.MaxStrength * 0.5f; }
-        }
-
+        
         public AfflictionHusk(AfflictionPrefab prefab, float strength) : 
             base(prefab, strength)
         {
@@ -54,10 +49,12 @@ namespace Barotrauma
             }
             else if (Strength < Prefab.MaxStrength)
             {
+                characterHealth.Character.SpeechImpediment = 100.0f;
                 UpdateTransitionState(deltaTime, characterHealth.Character);
             }
             else
             {
+                characterHealth.Character.SpeechImpediment = 100.0f;
                 UpdateActiveState(deltaTime, characterHealth.Character);
             }
         }

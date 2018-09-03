@@ -1449,7 +1449,7 @@ namespace Barotrauma
                 }
             }));
 
-            commands.Add(new Command("giveaffliction", "giveaffliction [Affliction identifier] [affliction strength] [character name]: Add an affliction to a character. If the name parameter is omitted, the affliction is added to the controlled character.", (string[] args) =>
+            commands.Add(new Command("giveaffliction", "giveaffliction [affliction name] [affliction strength] [character name]: Add an affliction to a character. If the name parameter is omitted, the affliction is added to the controlled character.", (string[] args) =>
             {
                 if (args.Length < 2) return;
 
@@ -1538,7 +1538,7 @@ namespace Barotrauma
                     Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
                 };
             }, isCheat: true));
-
+            
             commands.Add(new Command("revive", "revive [character name]: Bring the specified character back from the dead. If the name parameter is omitted, the controlled character will be revived.", (string[] args) =>
             {
                 Character revivedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args);
@@ -1581,6 +1581,65 @@ namespace Barotrauma
                 return new string[][]
                 {
                     Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                };
+            }, isCheat: true));
+
+            commands.Add(new Command("setskill", "setskill [character name] [skill name] [level]: Set the specified skill level to the given value.", (string[] args) =>
+            {
+                if (args.Length < 3) return;
+                Character character = FindMatchingCharacter(args.Take(1).ToArray());
+                if (character?.Info?.Job == null) return;
+
+                var skill = character.Info.Job.Skills.Find(s =>
+                    s.Identifier.ToLowerInvariant() == args[1].ToLowerInvariant() ||
+                    TextManager.Get("SkillName." + s.Identifier, true)?.ToLowerInvariant() == args[0].ToLowerInvariant());
+
+                if (skill == null)
+                {
+                    ThrowError("Skill \"" + args[1] + "\" not found.");
+                    return;
+                }
+
+                if (!int.TryParse(args[2], out int skillLevel))
+                {
+                    ThrowError("\"" + args[2] + "\" is not a valid skill level.");
+                }
+
+                skill.Level = skillLevel;
+                GameMain.Server.CreateEntityEvent(character, new object[] { NetEntityEvent.Type.UpdateSkills });
+            },
+            null,
+            (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (args.Length < 3) return;
+                Character character = FindMatchingCharacter(args.Take(1).ToArray());
+                if (character?.Info?.Job == null) return;
+
+                var skill = character.Info.Job.Skills.Find(s =>
+                    s.Identifier.ToLowerInvariant() == args[1].ToLowerInvariant() ||
+                    TextManager.Get("SkillName." + s.Identifier, true)?.ToLowerInvariant() == args[0].ToLowerInvariant());
+
+                if (skill == null)
+                {
+                    GameMain.Server.SendConsoleMessage("Skill \"" + args[1] + "\" not found.", client);
+                    return;
+                }
+
+                if (!int.TryParse(args[2], out int skillLevel))
+                {
+                    GameMain.Server.SendConsoleMessage("\"" + args[2] + "\" is not a valid skill level.", client);
+                }
+
+                NewMessage("Client \"" + client.Name + "\" set the \"" + skill.Identifier + "\" skill of " + character.Name + " to " + skillLevel, Color.White);
+                skill.Level = skillLevel;
+                GameMain.Server.CreateEntityEvent(character, new object[] { NetEntityEvent.Type.UpdateSkills });
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray(),
+                    Character.CharacterList.FirstOrDefault(c => c.Info?.Job != null)?.Info?.Job?.Skills.Select(s => s.Identifier).ToArray()
                 };
             }, isCheat: true));
 
@@ -1748,13 +1807,13 @@ namespace Barotrauma
             commands.Add(new Command("kill", "kill [character]: Immediately kills the specified character.", (string[] args) =>
             {
                 Character killedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args);
-                killedCharacter.SetAllDamage(killedCharacter.MaxVitality * 2, 0.0f, 0.0f);
+                killedCharacter?.SetAllDamage(killedCharacter.MaxVitality * 2, 0.0f, 0.0f);
             },
             null,
             (Client client, Vector2 cursorWorldPos, string[] args) =>
             {
                 Character killedCharacter = (args.Length == 0) ? client.Character : FindMatchingCharacter(args);
-                killedCharacter.SetAllDamage(killedCharacter.MaxVitality * 2, 0.0f, 0.0f);          
+                killedCharacter?.SetAllDamage(killedCharacter.MaxVitality * 2, 0.0f, 0.0f);          
             },
             () =>
             {

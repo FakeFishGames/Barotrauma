@@ -60,10 +60,10 @@ namespace Barotrauma.Items.Components
             if (targetItem == null) return false;
 
             if (selectedItemFrame != null) GuiFrame.RemoveChild(selectedItemFrame);
-            
-            selectedItemFrame = new GUIFrame(new RectTransform(new Vector2(0.47f, 0.8f), GuiFrame.Children.First().RectTransform, Anchor.CenterRight),
+
+            selectedItemFrame = new GUIFrame(new RectTransform(new Vector2(0.47f, 0.9f), GuiFrame.Children.First().RectTransform, Anchor.CenterRight),
                 style: "InnerFrame");
-            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), selectedItemFrame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.05f };
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), selectedItemFrame.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.05f) }) { RelativeSpacing = 0.03f, Stretch = true };
 
             if (targetItem.TargetItem.sprite != null)
             {
@@ -85,43 +85,41 @@ namespace Barotrauma.Items.Components
                     targetItem.TargetItem.Description,
                     font: GUI.SmallFont, wrap: true);
             }
-
+            
             List<Skill> inadequateSkills = new List<Skill>();
             if (Character.Controlled != null)
             {
                 inadequateSkills = targetItem.RequiredSkills.FindAll(skill => Character.Controlled.GetSkillLevel(skill.Identifier) < skill.Level);
             }
-
-            Color textColor = Color.White;
+            
             string text;
-            if (!inadequateSkills.Any())
+            text = TextManager.Get("FabricatorRequiredItems")+ ":\n";
+            foreach (FabricableItem.RequiredItem requiredItem in targetItem.RequiredItems)
             {
-                text = TextManager.Get("FabricatorRequiredItems")+ ":\n";
-                foreach (FabricableItem.RequiredItem requiredItem in targetItem.RequiredItems)
-                {
-                    text += "   - " + requiredItem.ItemPrefab.Name + " x" + requiredItem.Amount + (requiredItem.MinCondition < 1.0f ? ", " + requiredItem.MinCondition * 100 + "% " + TextManager.Get("FabricatorRequiredCondition") + "\n" : "\n");
-                }
-                text += '\n' + TextManager.Get("FabricatorRequiredTime") + ": " + targetItem.RequiredTime + " s";
+                text += "   - " + requiredItem.ItemPrefab.Name + " x" + requiredItem.Amount + (requiredItem.MinCondition < 1.0f ? ", " + requiredItem.MinCondition * 100 + "% " + TextManager.Get("FabricatorRequiredCondition") + "\n" : "\n");
             }
-            else
+            text += '\n' + TextManager.Get("FabricatorRequiredTime") + ": " + targetItem.RequiredTime + " s";
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform), text, textColor: Color.White, font: GUI.SmallFont);
+            
+            if (targetItem.RequiredSkills.Any())
             {
                 text = TextManager.Get("FabricatorRequiredSkills") + ":\n";
                 foreach (Skill skill in inadequateSkills)
                 {
                     text += "   - " + TextManager.Get("SkillName." + skill.Identifier) + " " + TextManager.Get("Lvl").ToLower() + " " + skill.Level + "\n";
                 }
-
-                textColor = Color.Red;
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform), text, 
+                    textColor: inadequateSkills.Any() ? Color.Red : Color.White, font: GUI.SmallFont);
             }
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform), text, textColor: textColor, font: GUI.SmallFont);
-
+                
             progressBar = new GUIProgressBar(new RectTransform(new Point(paddedFrame.Rect.Width, 20), paddedFrame.RectTransform),
                 barSize: 0.0f, color: Color.Green)
             {
                 IsHorizontal = true
             };
 
-            activateButton = new GUIButton(new RectTransform(new Point(100, 20), paddedFrame.RectTransform, Anchor.BottomCenter),
+            activateButton = new GUIButton(new RectTransform(new Vector2(0.4f, 0.08f), selectedItemFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.03f) },
                 TextManager.Get("FabricatorCreate"))
             {
                 OnClicked = StartButtonClicked,
