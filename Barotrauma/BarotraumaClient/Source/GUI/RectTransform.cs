@@ -152,7 +152,7 @@ namespace Barotrauma
         private Point screenSpaceOffset = Point.Zero;
         /// <summary>
         /// Defined as portions of the parent size.
-        /// Also the direction of the offset is relative, calculated away from the anchor point, like a padding.
+        /// Also the direction of the offset is relative, calculated away from the anchor point.
         /// </summary>
         public Vector2 RelativeOffset
         {
@@ -174,6 +174,7 @@ namespace Barotrauma
             set
             {
                 absoluteOffset = value;
+                recalculateRect = true;
                 RecalculateChildren(false, false);
             }
         }
@@ -186,6 +187,7 @@ namespace Barotrauma
             set
             {
                 screenSpaceOffset = value;
+                recalculateRect = true;
                 RecalculateChildren(false, false);
             }
         }
@@ -220,7 +222,20 @@ namespace Barotrauma
             }
         }
 
-        public Rectangle Rect => new Rectangle(TopLeft, ScaledSize);
+        private bool recalculateRect = true;
+        private Rectangle _rect;
+        public Rectangle Rect
+        {
+            get
+            {
+                if (recalculateRect)
+                {
+                    _rect = new Rectangle(TopLeft, ScaledSize);
+                    recalculateRect = false;
+                }
+                return _rect;
+            }
+        }
         public Rectangle ParentRect => Parent != null ? Parent.Rect : ScreenRect;
 
         protected Rectangle NonScaledRect => new Rectangle(NonScaledTopLeft, NonScaledSize);
@@ -366,28 +381,33 @@ namespace Barotrauma
             var scale = LocalScale * globalScale;
             var parents = GetParents();
             Scale = parents.Any() ? parents.Select(rt => rt.LocalScale).Aggregate((parent, child) => parent * child) * scale : scale;
+            recalculateRect = true;
             ScaleChanged?.Invoke();
         }
 
         protected void RecalculatePivotOffset()
         {
             PivotOffset = CalculatePivotOffset(Pivot, ScaledSize);
+            recalculateRect = true;
         }
 
         protected void RecalculateAnchorPoint()
         {
             AnchorPoint = CalculateAnchorPoint(Anchor, ParentRect);
+            recalculateRect = true;
         }
 
         protected void RecalculateRelativeSize()
         {
             relativeSize = new Vector2(NonScaledSize.X, NonScaledSize.Y) / new Vector2(NonScaledParentRect.Width, NonScaledParentRect.Height);
+            recalculateRect = true;
             SizeChanged?.Invoke();
         }
 
         protected void RecalculateAbsoluteSize()
         {
             nonScaledSize = NonScaledParentRect.Size.Multiply(RelativeSize).Clamp(MinSize, MaxSize);
+            recalculateRect = true;
             SizeChanged?.Invoke();
         }
 
@@ -452,6 +472,7 @@ namespace Barotrauma
             Anchor = anchor;
             Pivot = pivot ?? MatchPivotToAnchor(anchor);
             ScreenSpaceOffset = Point.Zero;
+            recalculateRect = true;
             RecalculateChildren(false, false);
         }
 
