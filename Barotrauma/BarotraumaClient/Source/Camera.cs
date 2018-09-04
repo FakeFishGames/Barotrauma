@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
-using Barotrauma.Sounds;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -186,8 +186,15 @@ namespace Barotrauma
             }
         }
 
+        private Vector2 previousOffset;
+        
+        /// <summary>
+        /// Resets to false each time the MoveCamera method is called.
+        /// </summary>
+        public bool Freeze { get; set; }
+
         public void MoveCamera(float deltaTime, bool allowMove = true, bool allowZoom = true)
-        {            
+        {
             prevPosition = position;
             prevZoom = zoom;
 
@@ -227,20 +234,30 @@ namespace Barotrauma
                     if (!PlayerInput.KeyDown(Keys.F)) Position = mouseInWorld - (diffViewCenter / Zoom);
                 }
             }
-            else
+            else if (allowMove)
             {
                 Vector2 mousePos = PlayerInput.MousePosition;
-
-                Vector2 offset = mousePos - new Vector2(resolution.X / 2.0f, resolution.Y / 2.0f);
-
+                Vector2 offset = mousePos - resolution.ToVector2() / 2;
                 offset.X = offset.X / (resolution.X * 0.4f);
                 offset.Y = -offset.Y / (resolution.Y * 0.3f);
-
                 if (offset.Length() > 1.0f) offset.Normalize();
+                offset *= offsetAmount;
+                // Freeze the camera movement by default, when the cursor is on top of an ui element.
+                // Setting a positive value to the OffsetAmount, will override this behaviour.
+                if (GUI.MouseOn != null && offsetAmount > 0)
+                {
+                    Freeze = true;
+                }
+                if (Freeze)
+                {
+                    offset = previousOffset;
+                }
+                else
+                {
+                    previousOffset = offset;
+                }
 
-                offset = offset * offsetAmount;
-
-                float newZoom = Math.Min(DefaultZoom - Math.Min(offset.Length() / resolution.Y, 1.0f),1.0f);
+                float newZoom = Math.Min(DefaultZoom - Math.Min(offset.Length() / resolution.Y, 1.0f), 1.0f);
                 Zoom += (newZoom - zoom) / ZoomSmoothness;
 
                 Vector2 diff = (targetPos + offset) - position;
@@ -269,6 +286,7 @@ namespace Barotrauma
             }
 
             Translate(moveCam + shakePosition);
+            Freeze = false;
         }
         
         public Vector2 Position
