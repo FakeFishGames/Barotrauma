@@ -17,15 +17,27 @@ namespace Barotrauma.Items.Components
         private GUIProgressBar progressBar;
         private GUIButton activateButton;
 
+        private GUIComponent inputInventoryHolder, outputInventoryHolder;
+
         partial void InitProjSpecific()
         {
-            var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), GuiFrame.RectTransform, Anchor.Center), style: null);
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.03f
+            };
 
-            itemList = new GUIListBox(new RectTransform(new Vector2(0.47f, 1.0f), paddedFrame.RectTransform))
+            inputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.1f, 1.0f), paddedFrame.RectTransform), style: null);
+
+            itemList = new GUIListBox(new RectTransform(new Vector2(0.4f, 1.0f), paddedFrame.RectTransform))
             {
                 OnSelected = SelectItem
             };
 
+            selectedItemFrame = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.8f), paddedFrame.RectTransform), style: "InnerFrame");
+
+            outputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.1f, 1.0f), paddedFrame.RectTransform), style: null);
+            
             foreach (FabricableItem fi in fabricableItems)
             {
                 GUIFrame frame = new GUIFrame(new RectTransform(new Point(itemList.Rect.Width, 50), itemList.Content.RectTransform), style: null)
@@ -53,16 +65,24 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
-        
+
+        public override void OnItemLoaded()
+        {
+            var itemContainers = item.GetComponents<ItemContainer>();
+            for (int i = 0; i < 2 && i < itemContainers.Count; i++)
+            {
+                itemContainers[i].AllowUIOverlap = true;
+                itemContainers[i].Inventory.RectTransform = i == 0 ? inputInventoryHolder.RectTransform : outputInventoryHolder.RectTransform;
+            }
+        }
+
         private bool SelectItem(GUIComponent component, object obj)
         {
             FabricableItem targetItem = obj as FabricableItem;
             if (targetItem == null) return false;
 
-            if (selectedItemFrame != null) GuiFrame.RemoveChild(selectedItemFrame);
-
-            selectedItemFrame = new GUIFrame(new RectTransform(new Vector2(0.47f, 0.9f), GuiFrame.Children.First().RectTransform, Anchor.CenterRight),
-                style: "InnerFrame");
+            selectedItemFrame.ClearChildren();
+            
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), selectedItemFrame.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.05f) }) { RelativeSpacing = 0.03f, Stretch = true };
 
             if (targetItem.TargetItem.sprite != null)
@@ -161,8 +181,7 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
-            FabricableItem targetItem = itemList.SelectedData as FabricableItem;
-            if (targetItem != null)
+            if (itemList.SelectedData is FabricableItem targetItem)
             {
                 activateButton.Enabled = CanBeFabricated(targetItem, character);
             }

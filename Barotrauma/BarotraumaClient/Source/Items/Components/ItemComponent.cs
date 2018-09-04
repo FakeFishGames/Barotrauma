@@ -60,6 +60,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        [Serialize(false, false)]
+        public bool AllowUIOverlap
+        {
+            get;
+            set;
+        }
+
         [Serialize(0, false)]
         public int HudPriority
         {

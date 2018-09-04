@@ -9,6 +9,7 @@ namespace Barotrauma.Items.Components
     {
         private GUIProgressBar progressBar;
         private GUIButton activateButton;
+        private GUIComponent inputInventoryHolder, outputInventoryHolder;
         
         public override void AddToGUIUpdateList()
         {
@@ -17,16 +18,34 @@ namespace Barotrauma.Items.Components
         
         partial void InitProjSpecific(XElement element)
         {
-            var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.8f), GuiFrame.RectTransform, Anchor.Center), style: null);
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), GuiFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
 
-            progressBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform, Anchor.BottomCenter),
+            inputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.3f), paddedFrame.RectTransform), style: null);
+
+            progressBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform, Anchor.BottomCenter),
                 barSize: 0.0f, color: Color.Green);
 
-            activateButton = new GUIButton(new RectTransform(new Point(200, 30), paddedFrame.RectTransform, Anchor.Center),
+            activateButton = new GUIButton(new RectTransform(new Vector2(0.6f, 0.1f), paddedFrame.RectTransform, Anchor.Center),
                 TextManager.Get("DeconstuctorDeconstruct"))
             {
                 OnClicked = ToggleActive
             };
+
+            outputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), paddedFrame.RectTransform), style: null);
+        }
+
+        public override void OnItemLoaded()
+        {
+            var itemContainers = item.GetComponents<ItemContainer>();
+            for (int i = 0; i < 2 && i < itemContainers.Count; i++)
+            {
+                itemContainers[i].AllowUIOverlap = true;
+                itemContainers[i].Inventory.RectTransform = i == 0 ? inputInventoryHolder.RectTransform : outputInventoryHolder.RectTransform;
+            }
         }
 
         private bool ToggleActive(GUIButton button, object obj)
