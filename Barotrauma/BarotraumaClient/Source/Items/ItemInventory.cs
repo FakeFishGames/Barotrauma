@@ -7,13 +7,6 @@ namespace Barotrauma
     {
         public override void Draw(SpriteBatch spriteBatch, bool subInventory = false)
         {
-            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y || 
-                prevUIScale != UIScale)
-            {
-                CreateSlots();
-                prevUIScale = UIScale;
-            }
-
             if (slots != null && slots.Length > 0)
             {
                 backgroundFrame = slots[0].Rect;
@@ -24,16 +17,12 @@ namespace Barotrauma
                     slotRect.Location += slots[i].DrawOffset.ToPoint();
                     backgroundFrame = Rectangle.Union(backgroundFrame, slotRect);
                 }
-
-                //if no top sprite the top of the frame simply shows the name of the item -> make some room for that
-                if (container.InventoryTopSprite == null)
-                {
-                    if (!subInventory)
-                    {
-                        backgroundFrame.Inflate(10, 10 + (int)(EquipIndicator.size.Y * UIScale));
-                        backgroundFrame.Location -= new Point(0, 5);
-                    }
-                }
+                
+                backgroundFrame = new Rectangle(
+                    backgroundFrame.X - (int)padding.X,
+                    backgroundFrame.Y - (int)padding.Y,
+                    backgroundFrame.Width + (int)(padding.X + padding.Z),
+                    backgroundFrame.Height + (int)(padding.Y + padding.W));
 
                 if (container.InventoryBackSprite == null)
                 {

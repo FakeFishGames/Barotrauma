@@ -24,7 +24,9 @@ namespace Barotrauma
 
         //which slot is the toggle arrow drawn above
         private int toggleArrowSlotIndex;
-        
+
+        private Point screenResolution;
+
         public Vector2[] SlotPositions;
         
         private Layout layout;
@@ -615,7 +617,7 @@ namespace Barotrauma
             {
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (Items[i] == item) slots[i].ShowBorderHighlight(Color.Green, 0.1f, 0.9f);
+                    if (Items[i] == item) slots[i].ShowBorderHighlight(Color.Green, 0.1f, 0.4f);
                 }
             }
 

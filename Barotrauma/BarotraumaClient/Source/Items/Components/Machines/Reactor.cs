@@ -17,9 +17,7 @@ namespace Barotrauma.Items.Components
         private const int GraphSize = 25;
         private float graphTimer;
         private int updateGraphInterval = 500;
-
-        private Point screenResolution;
-
+        
         private Sprite fissionRateMeter, turbineOutputMeter;
         private Sprite meterPointer;
         private Sprite sectorSprite;
@@ -38,6 +36,8 @@ namespace Barotrauma.Items.Components
         private GUITickBox criticalHeatWarning;
         private GUITickBox lowTemperatureWarning;
         private GUITickBox criticalOutputWarning;
+
+        private GUIFrame inventoryContainer;
 
         private GUIComponent leftHUDColumn;
 
@@ -102,7 +102,7 @@ namespace Barotrauma.Items.Components
             int buttonsPerRow = 2;
             int spacing = 5;
             int buttonWidth = columnLeft.Rect.Width / buttonsPerRow - (spacing * (buttonsPerRow - 1));
-            int buttonHeight = (int)(GuiFrame.Rect.Height * 0.35f) / 3;
+            int buttonHeight = (int)(columnLeft.Rect.Height * 0.5f) / 4;
             for (int i = 0; i < warningTexts.Length; i++)
             {
                 var warningBtn = new GUIButton(new RectTransform(new Point(buttonWidth, buttonHeight), columnLeft.RectTransform)
@@ -116,6 +116,7 @@ namespace Barotrauma.Items.Components
                 warningButtons.Add(warningTexts[i], warningBtn);
             }
 
+            inventoryContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.45f), columnLeft.RectTransform, Anchor.BottomLeft), style: null);
 
             //----------------------------------------------------------
             //mid column
@@ -252,17 +253,12 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
-            SetInventoryPos();
-        }
-
-        private void SetInventoryPos()
-        {
-            Inventory inventory = item.GetComponent<ItemContainer>()?.Inventory;
-            inventory.CenterPos = new Vector2(
-                leftHUDColumn.Rect.Center.X / (float)GameMain.GraphicsWidth,
-                (leftHUDColumn.Rect.Y + leftHUDColumn.Rect.Height * 0.85f) / GameMain.GraphicsHeight);
-
-            screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            var itemContainer = item.GetComponent<ItemContainer>();
+            if (itemContainer != null)
+            {
+                itemContainer.AllowUIOverlap = true;
+                itemContainer.Inventory.RectTransform = inventoryContainer.RectTransform;
+            }
         }
 
         private void DrawGraph(SpriteBatch spriteBatch, GUICustomComponent container)
@@ -354,12 +350,7 @@ namespace Barotrauma.Items.Components
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             IsActive = true;
-
-            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
-            {
-                SetInventoryPos();
-            }
-
+            
             bool lightOn = Timing.TotalTime % 0.5f < 0.25f && onOffSwitch.BarScroll < 0.5f;
 
             fissionRateScrollBar.Enabled = !autoTemp;
