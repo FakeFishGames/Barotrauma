@@ -17,9 +17,6 @@ namespace Barotrauma
             : base(owner, capacity, centerPos, slotsPerRow)
         {
             this.container = container;
-#if CLIENT
-            screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-#endif
         }
 
         public override int FindAllowedSlot(Item item)
