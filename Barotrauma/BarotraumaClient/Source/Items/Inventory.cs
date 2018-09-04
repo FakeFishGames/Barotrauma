@@ -125,6 +125,9 @@ namespace Barotrauma
 
         protected Point screenResolution;
 
+        // temp -> todo: calculate when the inventory is created.
+        public Rectangle backgroundFrame;
+
         public float HideTimer;
 
         private bool isSubInventory;
