@@ -243,15 +243,15 @@
   </GUITextBox>
 
   <GUIServerListTextBox
-	color="1.0,1.0,1.0,1.0"
+  color="1.0,1.0,1.0,1.0"
     hovercolor="1.0,1.0,1.0,1.0"
     selectedcolor="0.0,0.5,0.0,1.0"
     textcolor="0.5, 0.55, 0.6, 1.0">
-		<!--
-		<Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="469, 599, 276, 52" slice="480, 610, 731, 640"/>
-		<Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="469, 544, 276, 52" slice="480, 552, 731, 584"/>
-		<Sprite texture="Content/UI/UI_Atlas.png" state="Selected"  sourcerect="469, 490, 276, 52" slice="480, 497, 731, 529"/>
-		-->
+    <!--
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="469, 599, 276, 52" slice="480, 610, 731, 640"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="469, 544, 276, 52" slice="480, 552, 731, 584"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected"  sourcerect="469, 490, 276, 52" slice="480, 497, 731, 529"/>
+    -->
   </GUIServerListTextBox>
 
   <GUINumberInput>
@@ -283,35 +283,29 @@
   </GUITickBox>
 
   <GUIServerListCompatibleTickBox
-	color="1.0,1.0,1.0,1.0"
-	hovercolor="1.0,1.0,1.0,1.0"
-	selectedcolor="1.0,1.0,1.0,1.0" >
-
-	<Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect ="389, 166, 16, 16"/>
-
+    color="1.0,1.0,1.0,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0">
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect ="389, 166, 16, 16"/>
   </GUIServerListCompatibleTickBox>
 
   <GUIServerListPasswordTickBox
     color="0.2,0.2,0.2,1.0"
     hovercolor="1.0,1.0,1.0,1.0"
     selectedcolor="1.0,1.0,1.0,1.0" >
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="1001, 639, 10, 14"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect ="1001, 639, 10, 14"/>
+  </GUIServerListPasswordTickBox>
 
-	<Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="1001, 639, 10, 14"/>
-	<Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect ="1001, 639, 10, 14"/>
-
-   </GUIServerListPasswordTickBox>
-
-   <GUIServerListRoundStartedTickBox
+  <GUIServerListRoundStartedTickBox
     color="0.2,0.2,0.2,1.0"
     hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0" >
+    selectedcolor="1.0,1.0,1.0,1.0">
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="1001, 627, 10, 12"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect ="1001, 627, 10, 12"/>
+  </GUIServerListRoundStartedTickBox>
 
-	<Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="1001, 627, 10, 12"/>
-	<Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect ="1001, 627, 10, 12"/>
-
-   </GUIServerListRoundStartedTickBox>
-
-	<GUIMessageBox
+  <GUIMessageBox
     padding="40.0, 20.0, 40.0, 20.0"
     color="1.0, 1.0, 1.0, 1.0"  
     textcolor="0.0, 0.0, 0.0, 1.0"  

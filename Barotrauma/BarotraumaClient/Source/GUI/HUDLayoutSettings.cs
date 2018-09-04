@@ -106,11 +106,12 @@ namespace Barotrauma
             MessageAreaTop = new Rectangle(GameMain.GraphicsWidth / 4, ButtonAreaTop.Bottom, GameMain.GraphicsWidth / 2, ButtonAreaTop.Height);
 
             //slice for the upper slots of the inventory (clothes, id card, headset)
-            int inventoryAreaUpperWidth = (int)Math.Min(GameMain.GraphicsWidth * 0.2f, 300);
-            int inventoryAreaUpperHeight = (int)Math.Min(GameMain.GraphicsHeight * 0.2f, 200);
+            int inventoryAreaUpperWidth = (int)(GameMain.GraphicsWidth * 0.2f);
+            int inventoryAreaUpperHeight = (int)(GameMain.GraphicsHeight * 0.2f);
             InventoryAreaUpper = new Rectangle(GameMain.GraphicsWidth - inventoryAreaUpperWidth - Padding, ButtonAreaTop.Bottom + Padding, inventoryAreaUpperWidth, inventoryAreaUpperHeight);
 
-            CrewArea = new Rectangle(Padding, ButtonAreaTop.Bottom + Padding, GameMain.GraphicsWidth - InventoryAreaUpper.Width - Padding * 3, InventoryAreaUpper.Height);
+            int crewAreaHeight = (int)Math.Max(GameMain.GraphicsHeight * 0.3f, 150);
+            CrewArea = new Rectangle(Padding, ButtonAreaTop.Bottom + Padding, GameMain.GraphicsWidth - InventoryAreaUpper.Width - Padding * 3, crewAreaHeight);
 
             //horizontal slices at the corners of the screen for health bar and affliction icons
             int healthBarWidth = (int)Math.Max(500 * GUI.Scale, 100);

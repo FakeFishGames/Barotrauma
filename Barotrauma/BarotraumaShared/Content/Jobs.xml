@@ -3,6 +3,7 @@
   <Job name="Captain" identifier="captain"
        description="The Commanding Officer is responsible for commanding the entirety of the crew and ensuring that everything is running smoothly." 
        minnumber="1" maxnumber="1" minkarma="0.7" initialcount="1"
+       uicolor="0.65,0.73,0.84"
        vitalitymodifier="-20">
     <Skills>
       <Skill identifier="helm" level="60,80"/>
@@ -29,6 +30,7 @@
   <Job name="Engineer" identifier="engineer"
        description="Engineers are the backbone of a submarine's crew, complementing a mechanic's Mechanical Engineering skill with their knowledge of electrical engineering. They are capable of performing maintenance on the various electrical pieces of the submarine." 
        minnumber="1" minkarma="0.5" initialcount="1"
+       uicolor="0.88,0.72,0.43"
        vitalitymodifier="-10">
     <Skills>
       <Skill identifier="electrical" level="60,80"/>
@@ -55,6 +57,7 @@
   <Job name="Mechanic" identifier="mechanic"
        description="Mechanics are capable of fixing various mechanical devices with their high Mechanical Engineering skill. Together with engineers they ensure a submarine is working to its fullest." 
        minnumber="1" minkarma="0.5" initialcount="1"
+       uicolor="0.5,0.86,0.9"
        vitalitymodifier="-10">
     <Skills>
       <Skill identifier="mechanical" level="60,80"/>
@@ -81,6 +84,7 @@
   <Job name="Security Officer" identifier="securityofficer"
        description="Security Officers are responsible for keeping the submarine safe from threats, both external and internal. The creatures inhabiting the ocean aren't the only threat they need to worry about, as several of the renegade groups opposing the Europa Coalition are known to have sent infiltrators on board the vessels." 
        maxnumber="2" minkarma="0.7"
+       uicolor="0.57,0.48,0.43"
        vitalitymodifier="0">
     <Skills>
       <Skill identifier="weapons" level="50,60"/>
@@ -105,6 +109,7 @@
   <Job name="Medical Doctor" identifier="medicaldoctor"
        description="Although usually taken for granted, Doctors play an important role on the submarine, possessing the required skill to treat injured or unconscious crew members. Their skills can also be useful for creating various non-medicinal chemicals." 
        maxnumber="2" minkarma="0.7"
+       uicolor="0.81,0.31,0.19"
        vitalitymodifier="0">
     <Skills>
       <Skill identifier="medical" level="60,70"/>

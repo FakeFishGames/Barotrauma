@@ -14,7 +14,7 @@
 
   <Order name="Operate Reactor" aitag="operatereactor" doingtext="Operating Reactor" 
          targetitemtype="Reactor" 
-         options="powerup, shutdown" optionnames="Power up, shutdown" 
+         options="powerup, shutdown" optionnames="Power up, Shutdown" 
          color="1.0,0.78,0.05,1.0"
          appropriatejobs="mechanic,engineer">
     <Sprite texture="Content/UI/uiIcons.png" sourcerect="192,0,64,64"/>
