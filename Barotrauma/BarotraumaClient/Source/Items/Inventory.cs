@@ -232,6 +232,17 @@ namespace Barotrauma
                 if (HideSlot(i)) continue;
                 UpdateSlot(slots[i], i, Items[i], subInventory);
             }
+
+            if (selectedSlot != null)
+            {
+                cam.Freeze = true;
+            }
+            else if (draggingItem != null || backgroundFrame.Contains(PlayerInput.MousePosition))
+            {
+                // TODO: for some reason there is some movement when the cursor is on top of the backgroundFrame 
+                // (maybe it's because the background is calculated in the draw method?)
+                cam.OffsetAmount = 0;
+            }
         }
 
         protected void UpdateSlot(InventorySlot slot, int slotIndex, Item item, bool isSubSlot)
