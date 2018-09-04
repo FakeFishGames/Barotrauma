@@ -299,6 +299,25 @@ namespace Barotrauma
             CreateSlots();
         }
 
+        protected override void ControlCamera(Camera cam)
+        {
+            bool Freeze(Inventory i) => selectedSlot != null || draggingItem != null || i.backgroundFrame.Contains(PlayerInput.MousePosition);
+            if (Freeze(this))
+            {
+                cam.Freeze = true;
+            }
+            else
+            {
+                foreach (var subInventory in highlightedSubInventorySlots)
+                {
+                    if (Freeze(subInventory.Inventory))
+                    {
+                        cam.Freeze = true;
+                    }
+                }
+            }
+        }
+
         public override void Update(float deltaTime, Camera cam, bool isSubInventory = false)
         {
             if (!AccessibleWhenAlive && !character.IsDead) return;
