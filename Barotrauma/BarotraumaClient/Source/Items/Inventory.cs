@@ -214,7 +214,7 @@ namespace Barotrauma
             return slots[i].Disabled || (hideEmptySlot[i] && Items[i] == null);
         }
 
-        public virtual void Update(float deltaTime, bool subInventory = false)
+        public virtual void Update(float deltaTime, Camera cam, bool subInventory = false)
         {
             syncItemsDelay = Math.Max(syncItemsDelay - deltaTime, 0.0f);
 
@@ -295,7 +295,7 @@ namespace Barotrauma
 
         float openState;
 
-        public void UpdateSubInventory(float deltaTime, int slotIndex)
+        public void UpdateSubInventory(float deltaTime, int slotIndex, Camera cam)
         {
             var item = Items[slotIndex];
             if (item == null) return;
@@ -368,7 +368,7 @@ namespace Barotrauma
                 slots[slotIndex].State = GUIComponent.ComponentState.Hover;
             }
             subInventory.isSubInventory = true;    
-            subInventory.Update(deltaTime, true);
+            subInventory.Update(deltaTime, cam, true);
         }
 
 

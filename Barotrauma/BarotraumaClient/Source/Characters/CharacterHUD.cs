@@ -45,7 +45,7 @@ namespace Barotrauma
             }
         }
 
-        public static void Update(float deltaTime, Character character)
+        public static void Update(float deltaTime, Character character, Camera cam)
         {
             if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
@@ -54,7 +54,7 @@ namespace Barotrauma
                     if (!character.LockHands && character.Stun < 0.1f &&
                         (CharacterHealth.OpenHealthWindow == null || !CharacterHealth.HideNormalInventory))
                     {
-                        character.Inventory.Update(deltaTime);
+                        character.Inventory.Update(deltaTime, cam);
                     }
 
                     for (int i = 0; i < character.Inventory.Items.Length - 1; i++)
@@ -64,7 +64,7 @@ namespace Barotrauma
 
                         foreach (ItemComponent ic in item.components)
                         {
-                            if (ic.DrawHudWhenEquipped) ic.UpdateHUD(character, deltaTime);
+                            if (ic.DrawHudWhenEquipped) ic.UpdateHUD(character, deltaTime, cam);
                         }
                     }
                 }
@@ -74,7 +74,7 @@ namespace Barotrauma
                     if (character.SelectedCharacter.CanInventoryBeAccessed &&
                         (CharacterHealth.OpenHealthWindow == null || !CharacterHealth.HideNormalInventory))
                     {
-                        character.SelectedCharacter.Inventory.Update(deltaTime);
+                        character.SelectedCharacter.Inventory.Update(deltaTime, cam);
                     }
                     character.SelectedCharacter.CharacterHealth.UpdateHUD(deltaTime);
                 }

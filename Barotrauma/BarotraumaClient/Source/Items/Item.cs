@@ -353,7 +353,7 @@ namespace Barotrauma
 
             foreach (ItemComponent ic in activeHUDs)
             {
-                if (ic.CanBeSelected) ic.UpdateHUD(character, deltaTime);
+                if (ic.CanBeSelected) ic.UpdateHUD(character, deltaTime, cam);
             }
         }
 
