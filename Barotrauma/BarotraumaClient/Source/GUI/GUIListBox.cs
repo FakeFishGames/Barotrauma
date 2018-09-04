@@ -73,6 +73,11 @@ namespace Barotrauma
             get { return ScrollBar.BarSize; }
         }
 
+        public float TotalSize
+        {
+            get { return totalSize; }
+        }
+
         public int Spacing
         {
             get { return spacing; }
@@ -99,6 +104,7 @@ namespace Barotrauma
             set
             {
                 scrollBarEnabled = value;
+                ScrollBar.Visible = value;
             }
         }
 
@@ -146,11 +152,17 @@ namespace Barotrauma
 
         private void UpdateDimensions()
         {
-            Point frameSize = ScrollBar.IsHorizontal ?
-                new Point(Rect.Width, Rect.Height - 20) :
-                new Point(Rect.Width - 20, Rect.Height);
-
-            Content.RectTransform.NonScaledSize = frameSize;
+            if (!scrollBarEnabled)
+            {
+                Content.RectTransform.NonScaledSize = Rect.Size;
+            }
+            else
+            {
+                Point frameSize = ScrollBar.IsHorizontal ?
+                    new Point(Rect.Width, Rect.Height - 20) :
+                    new Point(Rect.Width - 20, Rect.Height);
+                Content.RectTransform.NonScaledSize = frameSize;
+            }
             ScrollBar.RectTransform.NonScaledSize = ScrollBar.IsHorizontal ? new Point(Rect.Width, 20) : new Point(20, Rect.Height);
         }
         
@@ -379,6 +391,12 @@ namespace Barotrauma
             child.RectTransform.Parent = null;
             if (selected.Contains(child)) selected.Remove(child);
             UpdateScrollBarSize();
+        }
+
+        public override void DrawChildren(SpriteBatch spriteBatch, bool recursive)
+        {
+            //do nothing (the children have to be drawn in the Draw method after the ScissorRectangle has been set)
+            return;
         }
 
         protected override void Draw(SpriteBatch spriteBatch)

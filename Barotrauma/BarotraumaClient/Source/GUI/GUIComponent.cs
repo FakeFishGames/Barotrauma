@@ -385,7 +385,7 @@ namespace Barotrauma
         /// <summary>
         /// Draws all the children manually.
         /// </summary>
-        public void DrawChildren(SpriteBatch spriteBatch, bool recursive)
+        public virtual void DrawChildren(SpriteBatch spriteBatch, bool recursive)
         {
             RectTransform.Children.ForEach(c => c.GUIComponent.DrawManually(spriteBatch, recursive, recursive));
         }
