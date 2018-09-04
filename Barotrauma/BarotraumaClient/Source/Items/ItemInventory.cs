@@ -16,7 +16,7 @@ namespace Barotrauma
 
             if (slots != null && slots.Length > 0)
             {
-                Rectangle backgroundFrame = slots[0].Rect;
+                backgroundFrame = slots[0].Rect;
                 backgroundFrame.Location += slots[0].DrawOffset.ToPoint();
                 for (int i = 1; i < capacity; i++)
                 {
@@ -45,7 +45,7 @@ namespace Barotrauma
                         spriteBatch, backgroundFrame.Location.ToVector2(), 
                         Color.White, Vector2.Zero, 0, 
                         new Vector2(
-                            backgroundFrame.Width / container.InventoryBackSprite.size.X, 
+                            backgroundFrame.Width / container.InventoryBackSprite.size.X,
                             backgroundFrame.Height / container.InventoryBackSprite.size.Y));
                 }
 
