@@ -5,6 +5,20 @@ namespace Barotrauma
 {
     partial class ItemInventory : Inventory
     {
+        protected override void ControlCamera(Camera cam)
+        {
+            if (selectedSlot != null)
+            {
+                cam.Freeze = true;
+            }
+            else if (draggingItem != null || backgroundFrame.Contains(PlayerInput.MousePosition))
+            {
+                // TODO: for some reason there is some movement when the cursor is on top of the backgroundFrame 
+                // (maybe it's because the background is calculated in the draw method?)
+                cam.OffsetAmount = 0;
+            }
+        }
+
         public override void Draw(SpriteBatch spriteBatch, bool subInventory = false)
         {
             if (slots != null && slots.Length > 0)
