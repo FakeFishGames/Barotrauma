@@ -39,7 +39,6 @@ namespace Barotrauma
 
 #if CLIENT
             this.slotsPerRow = slotsPerRow;
-            CenterPos = (centerPos == null) ? new Vector2(0.5f, 0.5f) : (Vector2)centerPos;
 
             if (slotSpriteSmall == null)
             {

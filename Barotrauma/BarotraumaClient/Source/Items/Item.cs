@@ -323,36 +323,42 @@ namespace Barotrauma
         /// </summary>
         private void SetHUDLayout()
         {
+            //reset positions first
             foreach (ItemComponent ic in activeHUDs)
             {
+                if (ic.GuiFrame == null || ic.AllowUIOverlap) continue;
                 ic.GuiFrame.RectTransform.ScreenSpaceOffset = Point.Zero;
             }
 
             bool intersections = true;
             int iterations = 0;
-
             while (intersections && iterations < 100)
             {
                 intersections = false;
                 for (int i = 0; i < activeHUDs.Count; i++)
                 {
+                    if (activeHUDs[i].GuiFrame == null || activeHUDs[i].AllowUIOverlap) continue;
                     Rectangle rect1 = activeHUDs[i].GuiFrame.Rect;
                     for (int j = i + 1; j < activeHUDs.Count; j++)
                     {
+                        if (activeHUDs[j].GuiFrame == null || activeHUDs[j].AllowUIOverlap) continue;
+
                         Rectangle rect2 = activeHUDs[j].GuiFrame.Rect;
                         if (!rect1.Intersects(rect2)) continue;
 
                         intersections = true;
-
                         int rect1Area = rect1.Width * rect1.Height;
                         int rect2Area = rect2.Width * rect2.Height;
-
                         Point centerDiff = rect1.Center - rect2.Center;
+                        //move the interfaces away from each other, in a random direction if they're at the same position
                         Vector2 moveAmount = centerDiff == Point.Zero ? Rand.Vector(1.0f) : Vector2.Normalize(centerDiff.ToVector2());
 
+                        //make sure we don't move the interfaces out of the screen
                         Vector2 moveAmount1 = ClampMoveAmount(rect1, moveAmount * rect1Area / (rect1Area + rect2Area));
                         Vector2 moveAmount2 = ClampMoveAmount(rect2, -moveAmount * rect1Area / (rect1Area + rect2Area));
                         
+                        //move by 10 units in the desired direction and repeat until nothing overlaps
+                        //(or after 100 iterations, in which case we'll just give up and let them overlap)
                         activeHUDs[i].GuiFrame.RectTransform.ScreenSpaceOffset += (moveAmount1 * 10.0f).ToPoint();
                         activeHUDs[j].GuiFrame.RectTransform.ScreenSpaceOffset += (moveAmount2 * 10.0f).ToPoint();
                     }
@@ -366,7 +372,7 @@ namespace Barotrauma
                 {
                     moveAmount.Y = Math.Max(moveAmount.Y, 0.0f);
                 }
-                else if (Rect.Bottom > HUDLayoutSettings.InventoryAreaLower.Y)
+                else if (Rect.Bottom > HUDLayoutSettings.InventoryAreaLower.Center.Y)
                 {
                     moveAmount.Y = Math.Min(moveAmount.Y, 0.0f);
                 }
@@ -417,6 +423,7 @@ namespace Barotrauma
                 }
             }
 
+            //active HUDs have changed, need to reposition
             if (!prevActiveHUDs.SequenceEqual(activeHUDs))
             {
                 SetHUDLayout();

@@ -24,7 +24,9 @@ namespace Barotrauma
 
         //which slot is the toggle arrow drawn above
         private int toggleArrowSlotIndex;
-        
+
+        private Point screenResolution;
+
         public Vector2[] SlotPositions;
         
         private Layout layout;

@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
@@ -126,9 +127,7 @@ namespace Barotrauma
                 
         protected static Sprite slotSpriteSmall, slotSpriteHorizontal, slotSpriteVertical, slotSpriteRound;
         public static Sprite EquipIndicator, EquipIndicatorOn;
-
-        protected Point screenResolution;
-
+        
         public float HideTimer;
 
         private bool isSubInventory;
@@ -158,6 +157,8 @@ namespace Barotrauma
 
         public static Item doubleClickedItem;
 
+        protected Vector4 padding;
+
         private int slotsPerRow;
         public int SlotsPerRow
         {
@@ -170,12 +171,12 @@ namespace Barotrauma
         protected static SlotReference selectedSlot;
 
         public InventorySlot[] slots;
-        
-        public Vector2 CenterPos
-        {
-            get;
-            set;
-        }
+
+        private Rectangle prevRect;
+        /// <summary>
+        /// If set, the inventory is automatically positioned inside the rect
+        /// </summary>
+        public RectTransform RectTransform;
         
         public static SlotReference SelectedSlot
         {
@@ -186,22 +187,43 @@ namespace Barotrauma
         {
             slots = new InventorySlot[capacity];
 
-            int rectWidth = (int)(60 * UIScale), rectHeight = (int)(60 * UIScale);
-            int spacingX = (int)(10 * UIScale);
-            int spacingY = (int)((10 + EquipIndicator.size.Y) * UIScale);
-
             int rows = (int)Math.Ceiling((double)capacity / slotsPerRow);
             int columns = Math.Min(slotsPerRow, capacity);
 
-            int startX = (int)(CenterPos.X * GameMain.GraphicsWidth) - (rectWidth * columns + spacingX * (columns - 1)) / 2;
-            int startY = (int)(CenterPos.Y * GameMain.GraphicsHeight) - (rows * (spacingY + rectHeight)) / 2;
+            Vector2 spacing = new Vector2(10 * UIScale, (10 + EquipIndicator.size.Y) * UIScale);
+            Vector2 rectSize = new Vector2(60.0f * UIScale);
 
-            Rectangle slotRect = new Rectangle(startX, startY, rectWidth, rectHeight);
+            //y is larger to give more space for the header
+            padding = new Vector4(spacing.X, 40 * UIScale, spacing.X, spacing.X);
+
+            Vector2 slotAreaSize = new Vector2(
+                columns * rectSize.X + (columns - 1) * spacing.X,
+                rows * rectSize.Y + (rows - 1) * spacing.Y);
+            slotAreaSize.X += padding.X + padding.Z;
+            slotAreaSize.Y += padding.Y + padding.W;
+
+            Vector2 topLeft = new Vector2(
+                GameMain.GraphicsWidth / 2 - slotAreaSize.X / 2,
+                GameMain.GraphicsHeight / 2 - slotAreaSize.Y / 2);
+
+            if (RectTransform != null)
+            {
+                Vector2 scale = new Vector2(
+                    RectTransform.Rect.Width / slotAreaSize.X,
+                    RectTransform.Rect.Height / slotAreaSize.Y);
+
+                spacing *= scale;
+                rectSize *= scale;
+
+                topLeft = RectTransform.TopLeft.ToVector2() + new Vector2(padding.X, padding.Y);
+                prevRect = RectTransform.Rect;
+            }
+
+            Rectangle slotRect = new Rectangle((int)topLeft.X, (int)topLeft.Y, (int)rectSize.X, (int)rectSize.Y);
             for (int i = 0; i < capacity; i++)
             {
-                slotRect.X = startX + (rectWidth + spacingX) * (i % slotsPerRow);
-                slotRect.Y = startY + (rectHeight + spacingY) * ((int)Math.Floor((double)i / slotsPerRow));
-
+                slotRect.X = (int)(topLeft.X + (rectSize.X + spacing.X) * (i % slotsPerRow));
+                slotRect.Y = (int)(topLeft.Y + (rectSize.Y + spacing.Y) * ((int)Math.Floor((double)i / slotsPerRow)));
                 slots[i] = new InventorySlot(slotRect);
             }
 
@@ -209,8 +231,6 @@ namespace Barotrauma
             {
                 selectedSlot = new SlotReference(this, slots[selectedSlot.SlotIndex], selectedSlot.SlotIndex, selectedSlot.IsSubSlot, selectedSlot.Inventory);
             }
-
-            screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
 
         protected virtual bool HideSlot(int i)
@@ -222,7 +242,8 @@ namespace Barotrauma
         {
             syncItemsDelay = Math.Max(syncItemsDelay - deltaTime, 0.0f);
 
-            if (slots == null || isSubInventory != subInventory)
+            if (slots == null || isSubInventory != subInventory || 
+                (RectTransform != null && RectTransform.Rect != prevRect))
             {
                 CreateSlots();
                 isSubInventory = subInventory;
@@ -239,7 +260,18 @@ namespace Barotrauma
         {
             Rectangle interactRect = slot.InteractRect;
             interactRect.Location += slot.DrawOffset.ToPoint();
-            bool mouseOn = interactRect.Contains(PlayerInput.MousePosition) && !Locked && GUI.MouseOn == null;
+
+            bool mouseOnGUI = false;
+            if (GUI.MouseOn != null)
+            {
+                //block usage if the mouse is on a GUIComponent that's not related to this inventory
+                if (RectTransform == null || (RectTransform != GUI.MouseOn.RectTransform && !RectTransform.IsParentOf(GUI.MouseOn.RectTransform)))
+                {
+                    mouseOnGUI = true;
+                }
+            }
+
+            bool mouseOn = interactRect.Contains(PlayerInput.MousePosition) && !Locked && !mouseOnGUI;
 
             if (selectedSlot != null && selectedSlot.Slot != slot)
             {
