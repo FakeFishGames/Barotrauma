@@ -318,12 +318,78 @@ namespace Barotrauma
             return editingHUD;
         }
         
+        /// <summary>
+        /// Reposition currently active item interfaces to make sure they don't overlap with each other
+        /// </summary>
+        private void SetHUDLayout()
+        {
+            foreach (ItemComponent ic in activeHUDs)
+            {
+                ic.GuiFrame.RectTransform.ScreenSpaceOffset = Point.Zero;
+            }
+
+            bool intersections = true;
+            int iterations = 0;
+
+            while (intersections && iterations < 100)
+            {
+                intersections = false;
+                for (int i = 0; i < activeHUDs.Count; i++)
+                {
+                    Rectangle rect1 = activeHUDs[i].GuiFrame.Rect;
+                    for (int j = i + 1; j < activeHUDs.Count; j++)
+                    {
+                        Rectangle rect2 = activeHUDs[j].GuiFrame.Rect;
+                        if (!rect1.Intersects(rect2)) continue;
+
+                        intersections = true;
+
+                        int rect1Area = rect1.Width * rect1.Height;
+                        int rect2Area = rect2.Width * rect2.Height;
+
+                        Point centerDiff = rect1.Center - rect2.Center;
+                        Vector2 moveAmount = centerDiff == Point.Zero ? Rand.Vector(1.0f) : Vector2.Normalize(centerDiff.ToVector2());
+
+                        Vector2 moveAmount1 = ClampMoveAmount(rect1, moveAmount * rect1Area / (rect1Area + rect2Area));
+                        Vector2 moveAmount2 = ClampMoveAmount(rect2, -moveAmount * rect1Area / (rect1Area + rect2Area));
+                        
+                        activeHUDs[i].GuiFrame.RectTransform.ScreenSpaceOffset += (moveAmount1 * 10.0f).ToPoint();
+                        activeHUDs[j].GuiFrame.RectTransform.ScreenSpaceOffset += (moveAmount2 * 10.0f).ToPoint();
+                    }
+                }
+                iterations++;
+            }
+
+            Vector2 ClampMoveAmount(Rectangle Rect, Vector2 moveAmount)
+            {
+                if (Rect.Y < HUDLayoutSettings.ButtonAreaTop.Y)
+                {
+                    moveAmount.Y = Math.Max(moveAmount.Y, 0.0f);
+                }
+                else if (Rect.Bottom > HUDLayoutSettings.InventoryAreaLower.Y)
+                {
+                    moveAmount.Y = Math.Min(moveAmount.Y, 0.0f);
+                }
+                if (Rect.X < 10)
+                {
+                    moveAmount.X = Math.Max(moveAmount.X, 0.0f);
+                }
+                else if (Rect.Right > GameMain.GraphicsWidth - 10)
+                {
+                    moveAmount.X = Math.Min(moveAmount.X, 0.0f);
+                }
+                return moveAmount;
+            }
+        }
+
         public virtual void UpdateHUD(Camera cam, Character character, float deltaTime)
         {
             if (HasInGameEditableProperties)
             {
                 UpdateEditing(cam);
             }
+
+            List<ItemComponent> prevActiveHUDs = new List<ItemComponent>(activeHUDs);
 
             activeHUDs.Clear();
             //the HUD of the component with the highest priority will be drawn
@@ -351,9 +417,14 @@ namespace Barotrauma
                 }
             }
 
+            if (!prevActiveHUDs.SequenceEqual(activeHUDs))
+            {
+                SetHUDLayout();
+            }
+
             foreach (ItemComponent ic in activeHUDs)
             {
-                if (ic.CanBeSelected) ic.UpdateHUD(character, deltaTime);
+                ic.UpdateHUD(character, deltaTime);
             }
         }
 
