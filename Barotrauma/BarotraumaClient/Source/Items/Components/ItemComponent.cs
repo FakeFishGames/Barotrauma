@@ -213,7 +213,7 @@ namespace Barotrauma.Items.Components
 
         public virtual void AddToGUIUpdateList() { }
 
-        public virtual void UpdateHUD(Character character, float deltaTime) { }
+        public virtual void UpdateHUD(Character character, float deltaTime, Camera cam) { }
 
         private bool LoadElemProjSpecific(XElement subElement)
         {

@@ -194,7 +194,7 @@ namespace Barotrauma
             ControlLocalPlayer(deltaTime, cam);
 
             Lights.LightManager.ViewTarget = this;
-            CharacterHUD.Update(deltaTime, this);
+            CharacterHUD.Update(deltaTime, this, cam);
 
             foreach (HUDProgressBar progressBar in hudProgressBars.Values)
             {

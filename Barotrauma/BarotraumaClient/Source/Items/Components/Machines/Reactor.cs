@@ -351,7 +351,7 @@ namespace Barotrauma.Items.Components
             GuiFrame.AddToGUIUpdateList();
         }
 
-        public override void UpdateHUD(Character character, float deltaTime)
+        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             IsActive = true;
 

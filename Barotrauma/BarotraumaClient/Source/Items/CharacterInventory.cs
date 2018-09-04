@@ -297,11 +297,11 @@ namespace Barotrauma
             CreateSlots();
         }
 
-        public override void Update(float deltaTime, bool isSubInventory = false)
+        public override void Update(float deltaTime, Camera cam, bool isSubInventory = false)
         {
             if (!AccessibleWhenAlive && !character.IsDead) return;
 
-            base.Update(deltaTime);
+            base.Update(deltaTime, cam);
 
             bool hoverOnInventory = GUI.MouseOn == null &&
                 ((selectedSlot != null && selectedSlot.IsSubSlot) || (draggingItem != null && (draggingSlot == null || !draggingSlot.MouseOn())));
@@ -376,7 +376,7 @@ namespace Barotrauma
             {
                 if (highlightedSubInventorySlot.ParentInventory == this)
                 {
-                    UpdateSubInventory(deltaTime, highlightedSubInventorySlot.SlotIndex);
+                    UpdateSubInventory(deltaTime, highlightedSubInventorySlot.SlotIndex, cam);
                 }
                 
                 Rectangle hoverArea = highlightedSubInventorySlot.Slot.Rect;
@@ -438,7 +438,7 @@ namespace Barotrauma
                     if (!highlightedSubInventorySlots.Any(s => s.Inventory == subInventory))
                     {
                         highlightedSubInventorySlots.Add(selectedSlot);
-                        UpdateSubInventory(deltaTime, selectedSlot.SlotIndex);
+                        UpdateSubInventory(deltaTime, selectedSlot.SlotIndex, cam);
                     }
                 }
             }
