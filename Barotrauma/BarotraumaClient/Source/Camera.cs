@@ -248,6 +248,11 @@ namespace Barotrauma
                 {
                     Freeze = true;
                 }
+                if (CharacterHealth.OpenHealthWindow != null)
+                {
+                    offset *= 0;
+                    Freeze = false;
+                }
                 if (Freeze)
                 {
                     offset = previousOffset;
