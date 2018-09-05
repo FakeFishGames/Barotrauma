@@ -318,9 +318,9 @@ namespace Barotrauma
             CreateSlots();
         }
 
-        protected override void ControlCamera(Camera cam)
+        protected override void ControlInput(Camera cam)
         {
-            base.ControlCamera(cam);
+            base.ControlInput(cam);
             // Ignore the background frame of this object in purpose, because it encompasses half of the screen.
             if (highlightedSubInventorySlots.Any(i => i.Inventory.BackgroundFrame.Contains(PlayerInput.MousePosition)))
             {
