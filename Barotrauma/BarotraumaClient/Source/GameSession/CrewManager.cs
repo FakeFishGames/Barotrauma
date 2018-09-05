@@ -743,13 +743,38 @@ namespace Barotrauma
             //more than one target item -> create a minimap-like selection with a pic of the sub
             if (matchingItems.Count > 1)
             {
-                //TODO: implement
+                Rectangle subBorders = Submarine.MainSub.GetDockedBorders();
+
+                Point frameSize;
+                if (subBorders.Width > subBorders.Height)
+                {
+                    //make sure the right side doesn't go over the right side of the screen
+                    frameSize.X = Math.Min(GameMain.GraphicsWidth / 2, GameMain.GraphicsWidth - orderButton.Rect.Center.X - 50);
+                    //height depends on the dimensions of the sub
+                    frameSize.Y = (int)(frameSize.X * (subBorders.Height / (float)subBorders.Width));
+                }
+                else
+                {
+                    //make sure the bottom side doesn't go over the bottom of the screen
+                    frameSize.Y = Math.Min((int)(GameMain.GraphicsHeight * 0.6f), GameMain.GraphicsHeight - orderButton.Rect.Center.Y - 50);
+                    //width depends on the dimensions of the sub
+                    frameSize.X = (int)(frameSize.Y * (subBorders.Width / (float)subBorders.Height));
+                }
+
+                orderTargetFrame = new GUIFrame(new RectTransform(frameSize, GUI.Canvas)
+                    { AbsoluteOffset = new Point(orderButton.Rect.Center.X, orderButton.Rect.Bottom) },
+                    style: "InnerFrame")
+                {
+                    UserData = character
+                };
+
+                Submarine.MainSub.CreateMiniMap(orderTargetFrame);
             }
             //only one target (or an order with no particular targets), just show options
             else
             {
                 orderTargetFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.2f + order.Options.Length * 0.1f, 0.18f), GUI.Canvas)
-                { AbsoluteOffset = new Point(orderButton.Rect.Center.X, orderButton.Rect.Bottom) },
+                    { AbsoluteOffset = new Point(orderButton.Rect.Center.X, orderButton.Rect.Bottom) },
                     isHorizontal: true, childAnchor: Anchor.BottomLeft)
                 {
                     UserData = character,
