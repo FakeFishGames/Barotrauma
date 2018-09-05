@@ -15,18 +15,21 @@ namespace Barotrauma.Items.Components
 
         private GUITextBlock pressureWarningText;
 
+        private bool _levelStartSelected;
         public bool LevelStartSelected
         {
             get { return levelStartTickBox.Selected; }
             set { levelStartTickBox.Selected = value; }
         }
 
+        private bool _levelEndSelected;
         public bool LevelEndSelected
         {
             get { return levelEndTickBox.Selected; }
             set { levelEndTickBox.Selected = value; }
         }
 
+        private bool _maintainPos;
         public bool MaintainPos
         {
             get { return maintainPosTickBox.Selected; }
@@ -60,15 +63,64 @@ namespace Barotrauma.Items.Components
                 TextManager.Get("SteeringMaintainPos"), font: GUI.SmallFont)
             {
                 Enabled = false,
-                OnSelected = ToggleMaintainPosition
+                Selected = _maintainPos,
+                OnSelected = tickBox =>
+                {
+                    if (_maintainPos != tickBox.Selected)
+                    {
+                        unsentChanges = true;
+                        _maintainPos = tickBox.Selected;
+                        if (_maintainPos)
+                        {
+                            LevelStartSelected = false;
+                            LevelEndSelected = false;
+                            if (controlledSub == null)
+                            {
+                                posToMaintain = null;
+                            }
+                            else
+                            {
+                                posToMaintain = controlledSub.WorldPosition;
+                            }
+                        }
+                        else if (!LevelEndSelected && !LevelStartSelected)
+                        {
+                            AutoPilot = false;
+                        }
+                        if (!_maintainPos)
+                        {
+                            posToMaintain = null;
+                        }
+                    }
+                    return true;
+                }
             };
-            
+
             levelStartTickBox = new GUITickBox(new RectTransform(new Point(20, 20), tickBoxContainer.RectTransform),
                 GameMain.GameSession?.StartLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.Name, 20),
                 font: GUI.SmallFont)
             {
                 Enabled = false,
-                OnSelected = SelectDestination
+                Selected = _levelStartSelected,
+                OnSelected = tickBox =>
+                {
+                    if (_levelStartSelected != tickBox.Selected)
+                    {
+                        unsentChanges = true;
+                        _levelStartSelected = tickBox.Selected;
+                        if (_levelStartSelected)
+                        {
+                            LevelEndSelected = false;
+                            MaintainPos = false;
+                            UpdatePath();
+                        }
+                        else if (!MaintainPos && !LevelEndSelected)
+                        {
+                            AutoPilot = false;
+                        }
+                    }
+                    return true;
+                }
             };
 
             levelEndTickBox = new GUITickBox(new RectTransform(new Point(20, 20), tickBoxContainer.RectTransform),
@@ -76,7 +128,26 @@ namespace Barotrauma.Items.Components
                 font: GUI.SmallFont)
             {
                 Enabled = false,
-                OnSelected = SelectDestination
+                Selected = _levelEndSelected,
+                OnSelected = tickBox =>
+                {
+                    if (_levelEndSelected != tickBox.Selected)
+                    {
+                        unsentChanges = true;
+                        _levelEndSelected = tickBox.Selected;
+                        if (_levelEndSelected)
+                        {
+                            LevelStartSelected = false;
+                            MaintainPos = false;
+                            UpdatePath();
+                        }
+                        else if (!MaintainPos && !LevelStartSelected)
+                        {
+                            AutoPilot = false;
+                        }
+                    }
+                    return true;
+                }
             };
 
             var textContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.15f, 0.5f), paddedFrame.RectTransform, Anchor.BottomLeft), childAnchor: Anchor.BottomLeft)
@@ -121,27 +192,6 @@ namespace Barotrauma.Items.Components
 
             steerArea = new GUICustomComponent(new RectTransform(new Point(GuiFrame.Rect.Height, GuiFrame.Rect.Width), GuiFrame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(10, 0) },
                 (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); }, null);
-        }
-
-        private bool ToggleMaintainPosition(GUITickBox tickBox)
-        {
-            unsentChanges = true;
-
-            levelStartTickBox.Selected = false;
-            levelEndTickBox.Selected = false;
-
-            if (controlledSub == null)
-            {
-                posToMaintain = null;
-            }
-            else
-            {
-                posToMaintain = controlledSub.WorldPosition;
-            }
-
-            tickBox.Selected = true;
-
-            return true;
         }
 
         public void DrawHUD(SpriteBatch spriteBatch, Rectangle rect)
@@ -229,28 +279,6 @@ namespace Barotrauma.Items.Components
                     unsentChanges = true;
                 }
             }
-        }
-
-        private bool SelectDestination(GUITickBox tickBox)
-        {
-            unsentChanges = true;
-
-            if (tickBox == levelStartTickBox)
-            {
-                levelEndTickBox.Selected = false;
-            }
-            else
-            {
-                levelStartTickBox.Selected = false;
-            }
-
-            maintainPosTickBox.Selected = false;
-            posToMaintain = null;
-            tickBox.Selected = true;
-
-            UpdatePath();
-
-            return true;
         }
 
         public void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)
