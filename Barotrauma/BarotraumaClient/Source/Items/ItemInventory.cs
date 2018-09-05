@@ -6,14 +6,20 @@ namespace Barotrauma
 {
     partial class ItemInventory : Inventory
     {
-        protected override void ControlCamera(Camera cam)
+        protected override void ControlInput(Camera cam)
         {
-            base.ControlCamera(cam);
+            base.ControlInput(cam);
             if (BackgroundFrame.Contains(PlayerInput.MousePosition))
             {
-                // TODO: For some reason there is some movement when the cursor is on top of the BackgroundFrame.
-                // Update: This is probably due to the update order.
                 cam.OffsetAmount = 0;
+                Character.DisableControls = true;
+                if (Character.Controlled != null)
+                {
+                    if (PlayerInput.KeyHit(InputType.Select))
+                    {
+                        Character.Controlled.SelectedConstruction = null;
+                    }
+                }
             }
         }
 

@@ -264,11 +264,11 @@ namespace Barotrauma
             }
             if (!isSubInventory)
             {
-                ControlCamera(cam);
+                ControlInput(cam);
             }
         }
 
-        protected virtual void ControlCamera(Camera cam)
+        protected virtual void ControlInput(Camera cam)
         {
             // Note that these targets are static. Therefore the outcome is the same if this method is called multiple times or only once.
             if (selectedSlot != null || draggingItem != null)
