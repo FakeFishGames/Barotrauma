@@ -82,7 +82,7 @@ namespace Barotrauma
 
             crewArea = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.CrewArea, guiFrame.RectTransform), "", Color.Transparent)
             {
-                CanBeFocused = false
+                //CanBeFocused = false
             };
             toggleCrewButton = new GUIButton(new RectTransform(new Point((int)(30 * GUI.Scale), HUDLayoutSettings.CrewArea.Height), guiFrame.RectTransform)
             { AbsoluteOffset = HUDLayoutSettings.CrewArea.Location },
