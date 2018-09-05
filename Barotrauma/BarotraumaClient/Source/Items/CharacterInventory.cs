@@ -135,6 +135,25 @@ namespace Barotrauma
             highlightedSubInventorySlots.Clear();
 
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            CalculateBackgroundFrame();
+        }
+
+        protected override void CalculateBackgroundFrame()
+        {
+            Rectangle frame = Rectangle.Empty;
+            for (int i = 0; i < capacity; i++)
+            {
+                if (HideSlot(i)) continue;
+                if (frame == Rectangle.Empty)
+                {
+                    frame = slots[i].Rect;
+                    continue;
+                }
+                frame = Rectangle.Union(frame, slots[i].Rect);
+            }
+            frame.Inflate(10, 30);
+            frame.Location -= new Point(0, 25);
+            BackgroundFrame = frame;
         }
 
         protected override bool HideSlot(int i)
@@ -299,22 +318,13 @@ namespace Barotrauma
             CreateSlots();
         }
 
-        protected override void ControlCamera(Camera cam)
+        protected override void ControlInput(Camera cam)
         {
-            bool Freeze(Inventory i) => selectedSlot != null || draggingItem != null || i.backgroundFrame.Contains(PlayerInput.MousePosition);
-            if (Freeze(this))
+            base.ControlInput(cam);
+            // Ignore the background frame of this object in purpose, because it encompasses half of the screen.
+            if (highlightedSubInventorySlots.Any(i => i.Inventory.BackgroundFrame.Contains(PlayerInput.MousePosition)))
             {
                 cam.Freeze = true;
-            }
-            else
-            {
-                foreach (var subInventory in highlightedSubInventorySlots)
-                {
-                    if (Freeze(subInventory.Inventory))
-                    {
-                        cam.Freeze = true;
-                    }
-                }
             }
         }
 
@@ -658,22 +668,10 @@ namespace Barotrauma
 
             if (layout == Layout.Center)
             {
-                Rectangle backgroundFrame = Rectangle.Empty;
-                for (int i = 0; i < capacity; i++)
-                {
-                    if (HideSlot(i)) continue;
-                    if (backgroundFrame == Rectangle.Empty)
-                    {
-                        backgroundFrame = slots[i].Rect;
-                        continue;
-                    }
-                    backgroundFrame = Rectangle.Union(backgroundFrame, slots[i].Rect);
-                }
-                backgroundFrame.Inflate(10, 30);
-                backgroundFrame.Location -= new Point(0, 25);
-                GUI.DrawRectangle(spriteBatch, backgroundFrame, Color.Black * 0.8f, true);
+                CalculateBackgroundFrame();
+                GUI.DrawRectangle(spriteBatch, BackgroundFrame, Color.Black * 0.8f, true);
                 GUI.DrawString(spriteBatch,
-                    new Vector2((int)(backgroundFrame.Center.X - GUI.Font.MeasureString(character.Name).X / 2), (int)backgroundFrame.Y + 5),
+                    new Vector2((int)(BackgroundFrame.Center.X - GUI.Font.MeasureString(character.Name).X / 2), (int)BackgroundFrame.Y + 5),
                     character.Name, Color.White * 0.9f);
             }
 

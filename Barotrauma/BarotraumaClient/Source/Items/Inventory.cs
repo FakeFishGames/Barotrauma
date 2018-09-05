@@ -129,8 +129,7 @@ namespace Barotrauma
 
         protected Point screenResolution;
 
-        // temp -> todo: calculate when the inventory is created.
-        public Rectangle backgroundFrame;
+        public Rectangle BackgroundFrame { get; protected set; }
 
         public float HideTimer;
 
@@ -235,6 +234,11 @@ namespace Barotrauma
             {
                 selectedSlot = new SlotReference(this, slots[selectedSlot.SlotIndex], selectedSlot.SlotIndex, selectedSlot.IsSubSlot, selectedSlot.Inventory);
             }
+            CalculateBackgroundFrame();
+        }
+
+        protected virtual void CalculateBackgroundFrame()
+        {
         }
 
         protected virtual bool HideSlot(int i)
@@ -260,11 +264,18 @@ namespace Barotrauma
             }
             if (!isSubInventory)
             {
-                ControlCamera(cam);
+                ControlInput(cam);
             }
         }
 
-        protected virtual void ControlCamera(Camera cam) { }
+        protected virtual void ControlInput(Camera cam)
+        {
+            // Note that these targets are static. Therefore the outcome is the same if this method is called multiple times or only once.
+            if (selectedSlot != null || draggingItem != null)
+            {
+                cam.Freeze = true;
+            }
+        }
 
         protected void UpdateSlot(InventorySlot slot, int slotIndex, Item item, bool isSubSlot)
         {
