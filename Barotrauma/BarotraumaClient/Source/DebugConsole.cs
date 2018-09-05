@@ -311,8 +311,7 @@ namespace Barotrauma
 
                 if (GameMain.Client == null)
                 {
-                    GameMain.Client = new GameClient("Name");
-                    GameMain.Client.ConnectToServer(args[0]);
+                    GameMain.Client = new GameClient("Name", args[0]);
                 }
             }));
 

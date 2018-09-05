@@ -91,7 +91,7 @@ namespace Barotrauma
         {
             get
             {
-                return GameMain.NetworkMember.Voting.AllowSubVoting ||
+                return GameMain.NetworkMember.ServerSettings.Voting.AllowSubVoting ||
                     (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.SelectSub));
             }
         }
@@ -356,13 +356,13 @@ namespace Barotrauma
             {
                 OnClicked = (GUIButton button, object userData) =>
                 {
-                    if (GameMain.NetworkMember.ServerLog.LogFrame == null)
+                    if (GameMain.NetworkMember.ServerSettings.ServerLog.LogFrame == null)
                     {
-                        GameMain.NetworkMember.ServerLog.CreateLogFrame();
+                        GameMain.NetworkMember.ServerSettings.ServerLog.CreateLogFrame();
                     }
                     else
                     {
-                        GameMain.NetworkMember.ServerLog.LogFrame = null;
+                        GameMain.NetworkMember.ServerSettings.ServerLog.LogFrame = null;
                         GUI.KeyboardDispatcher.Subscriber = null;
                     }
                     return true;
@@ -578,7 +578,7 @@ namespace Barotrauma
             shuttleList.Enabled = AllowSubSelection;// || GameMain.Server != null;
 
             modeList.Enabled = 
-                GameMain.NetworkMember.Voting.AllowModeVoting || 
+                GameMain.NetworkMember.ServerSettings.Voting.AllowModeVoting || 
                 (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.SelectMode));
 
             //ServerName = (GameMain.Server == null) ? ServerName : GameMain.Server.Name;
@@ -649,7 +649,7 @@ namespace Barotrauma
             else */
             if (GameMain.Client != null)
             {
-                GameMain.Client.Voting.ResetVotes(GameMain.Client.ConnectedClients);
+                GameMain.Client.ServerSettings.Voting.ResetVotes(GameMain.Client.ConnectedClients);
                 if (!playYourself.Selected)
                 {
                     playYourself.Selected = true;
@@ -1105,7 +1105,7 @@ namespace Barotrauma
             VoteType voteType;
             if (component.Parent == GameMain.NetLobbyScreen.SubList.Content)
             {
-                if (!GameMain.Client.Voting.AllowSubVoting)
+                if (!GameMain.Client.ServerSettings.Voting.AllowSubVoting)
                 {
                     if (GameMain.Client.HasPermission(ClientPermissions.SelectSub))
                     {
@@ -1119,7 +1119,7 @@ namespace Barotrauma
             else if (component.Parent == GameMain.NetLobbyScreen.ModeList.Content)
             {
                 if (!((GameModePreset)userData).Votable) return false;
-                if (!GameMain.Client.Voting.AllowModeVoting)
+                if (!GameMain.Client.ServerSettings.Voting.AllowModeVoting)
                 {
                     if (GameMain.Client.HasPermission(ClientPermissions.SelectMode))
                     {
@@ -1190,7 +1190,7 @@ namespace Barotrauma
 
                 if (!GameMain.Client.HasPermission(ClientPermissions.Ban) &&
                     !GameMain.Client.HasPermission(ClientPermissions.Kick) &&
-                    !GameMain.Client.Voting.AllowVoteKick)
+                    !GameMain.Client.ServerSettings.Voting.AllowVoteKick)
                 {
                     return false;
                 }
@@ -1358,7 +1358,7 @@ namespace Barotrauma
             }
 
 
-            if (GameMain.Client != null && GameMain.Client.Voting.AllowVoteKick && selectedClient != null)
+            if (GameMain.Client != null && GameMain.Client.ServerSettings.Voting.AllowVoteKick && selectedClient != null)
             {
                 var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
                     TextManager.Get("VoteToKick"))
