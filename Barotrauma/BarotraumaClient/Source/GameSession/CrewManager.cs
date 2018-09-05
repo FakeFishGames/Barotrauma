@@ -331,9 +331,11 @@ namespace Barotrauma
             //(so we can easily toggle their visibility)
             var wrongOrderList = new GUIListBox(new RectTransform(new Point(50, orderButtonFrame.Rect.Height), orderButtonFrame.RectTransform), isHorizontal: true, style: null)
             {
-                ScrollBarEnabled = false,                
-                Spacing = spacing
+                ScrollBarEnabled = false,
+                Spacing = spacing,
+                ClampMouseRectToParent = false
             };
+            wrongOrderList.Content.ClampMouseRectToParent = false;
 
             for (int i = 0; i < orders.Count; i++)
             {
@@ -378,12 +380,21 @@ namespace Barotrauma
                 }
             }
 
+            var toggleWrongOrderBtn = new GUIButton(new RectTransform(new Point((int)(30 * GUI.Scale), wrongOrderList.Rect.Height), wrongOrderList.Content.RectTransform),
+                "", style: "GUIButtonHorizontalArrow")
+            {
+                CanBeFocused = false
+            };
+
             wrongOrderList.RectTransform.NonScaledSize = new Point(
                 wrongOrderList.Content.Children.Sum(c => c.Rect.Width + wrongOrderList.Spacing),
                 wrongOrderList.RectTransform.NonScaledSize.Y);
             wrongOrderList.RectTransform.SetAsLastChild();
 
-            new GUIFrame(new RectTransform(Vector2.One, wrongOrderList.Content.RectTransform), style: null);
+            new GUIFrame(new RectTransform(new Point(
+                wrongOrderList.Rect.Width - toggleWrongOrderBtn.Rect.Width - wrongOrderList.Spacing, 
+                wrongOrderList.Rect.Height), wrongOrderList.Content.RectTransform), 
+                style: null);
 
             //scale to fit the content
             orderButtonFrame.RectTransform.NonScaledSize = new Point(
@@ -430,11 +441,11 @@ namespace Barotrauma
                 reportButtonFrame.RectTransform.NonScaledSize.Y);
 
             frame.RectTransform.NonScaledSize = new Point(
-                characterInfoWidth + spacing + Math.Max(orderButtonFrame.Rect.Width, reportButtonFrame.Rect.Width),
+                characterInfoWidth + spacing + Math.Max(orderButtonFrame.Rect.Width - wrongOrderList.Rect.Width, reportButtonFrame.Rect.Width),
                 frame.RectTransform.NonScaledSize.Y);
 
             characterListBox.RectTransform.NonScaledSize = new Point(
-                characterListBox.Content.Children.Max(c => c.Rect.Width),
+                characterListBox.Content.Children.Max(c => c.Rect.Width) + wrongOrderList.Rect.Width,
                 characterListBox.RectTransform.NonScaledSize.Y);
             characterListBox.Content.RectTransform.NonScaledSize = characterListBox.RectTransform.NonScaledSize;
             characterListBox.UpdateScrollBarSize();
@@ -536,7 +547,7 @@ namespace Barotrauma
                 timer += CoroutineManager.DeltaTime;
                 yield return CoroutineStatus.Running;
             }
-            component.Parent.RemoveChild(component);
+            component.Parent?.RemoveChild(component);
             characterListBox.UpdateScrollBarSize();
             yield return CoroutineStatus.Success;
         }
@@ -691,7 +702,7 @@ namespace Barotrauma
                     {
                         foreach (GUIComponent listBoxElement in listBox.Content.Children)
                         {
-                            if (listBoxElement is GUIButton orderBtn2) orderButtons.Add(orderBtn2);
+                            if (listBoxElement is GUIButton orderBtn2 && listBoxElement.UserData is Order) orderButtons.Add(orderBtn2);
                         }
                     }
                 }
@@ -741,6 +752,7 @@ namespace Barotrauma
                 { AbsoluteOffset = new Point(orderButton.Rect.Center.X, orderButton.Rect.Bottom) },
                     isHorizontal: true, childAnchor: Anchor.BottomLeft)
                 {
+                    UserData = character,
                     Stretch = true
                 };
 
@@ -850,9 +862,27 @@ namespace Barotrauma
                     GUIListBox wrongOrderList = child.GetChildByUserData("orderbuttons")?.GetChild<GUIListBox>();
                     if (wrongOrderList != null)
                     {
-                        bool mouseOn = wrongOrderList.MouseRect.Contains(PlayerInput.MousePosition);
-                        wrongOrderList.BarScroll += mouseOn ?
-                            -deltaTime * 5.0f : deltaTime * 5.0f;
+                        Rectangle hoverRect = wrongOrderList.Rect;
+                        if (wrongOrderList.BarScroll < 0.5f)
+                        {
+                            //higher tolerance when the orderlist is open (mouse needs to be moved further before it closes)
+                            hoverRect.Inflate((int)(50 * GUI.Scale), (int)(50 * GUI.Scale));
+                        }
+                        else
+                        {
+                            hoverRect.Inflate((int)(30 * GUI.Scale), (int)(0 * GUI.Scale));
+                        }
+
+                        bool toggleOpen = hoverRect.Contains(PlayerInput.MousePosition);
+                        //order target frame open on this character, check if we're giving any of the orders in wrongOrderList
+                        if (!toggleOpen && orderTargetFrame != null && orderTargetFrame.UserData == child.UserData)
+                        {
+                            toggleOpen = wrongOrderList.Content.Children.Any(c => 
+                                c.UserData is Order order && 
+                                orderTargetFrame.Children.Any(c2 => c2.UserData == c.UserData));
+                        }
+
+                        wrongOrderList.BarScroll += toggleOpen ? -deltaTime * 5.0f : deltaTime * 5.0f;
                     }
                 }
             }
@@ -940,7 +970,8 @@ namespace Barotrauma
                     new GUIImage(new RectTransform(new Vector2(0.2f, 1.0f), paddedFrame.RectTransform), character.AnimController.Limbs[0].ActiveSprite, scaleToFit: true);
 
                     GUITextBlock textBlock = new GUITextBlock(new RectTransform(Vector2.One, paddedFrame.RectTransform),
-                        ToolBox.LimitString(character.Info.Name + " (" + character.Info.Job.Name + ")", GUI.Font, paddedFrame.Rect.Width - paddedFrame.Rect.Height));
+                        ToolBox.LimitString(character.Info.Name + " (" + character.Info.Job.Name + ")", GUI.Font, paddedFrame.Rect.Width - paddedFrame.Rect.Height), 
+                        textColor: character.Info.Job.Prefab.UIColor);
                 }
             }
         }
