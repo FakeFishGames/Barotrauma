@@ -26,7 +26,7 @@ namespace Barotrauma
                 {
                     return Name;
                 }
-                else if ((GameMain.NetworkMember != null && !GameMain.NetworkMember.AllowDisguises))
+                else if ((GameMain.NetworkMember != null && !GameMain.NetworkMember.ServerSettings.AllowDisguises))
                 {
                     return Name;
                 }

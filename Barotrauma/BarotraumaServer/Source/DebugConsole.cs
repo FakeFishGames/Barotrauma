@@ -71,7 +71,7 @@ namespace Barotrauma
             AssignOnExecute("botcount", (string[] args) =>
             {
                 if (args.Length < 1 || GameMain.Server == null) return;
-                int botCount = GameMain.Server.BotCount;
+                int botCount = GameMain.Server.ServerSettings.BotCount;
                 int.TryParse(args[0], out botCount);
                 GameMain.NetLobbyScreen.SetBotCount(botCount);
                 NewMessage("Set the number of bots to " + botCount, Color.White);
@@ -94,7 +94,7 @@ namespace Barotrauma
             AssignOnExecute("autorestart", (string[] args) =>
             {
                 if (GameMain.Server == null) return;
-                bool enabled = GameMain.Server.AutoRestart;
+                bool enabled = GameMain.Server.ServerSettings.AutoRestart;
                 if (args.Length > 0)
                 {
                     bool.TryParse(args[0], out enabled);
@@ -103,18 +103,18 @@ namespace Barotrauma
                 {
                     enabled = !enabled;
                 }
-                if (enabled != GameMain.Server.AutoRestart)
+                if (enabled != GameMain.Server.ServerSettings.AutoRestart)
                 {
-                    if (GameMain.Server.AutoRestartInterval <= 0) GameMain.Server.AutoRestartInterval = 10;
-                    GameMain.Server.AutoRestartTimer = GameMain.Server.AutoRestartInterval;
-                    GameMain.Server.AutoRestart = enabled;
+                    if (GameMain.Server.ServerSettings.AutoRestartInterval <= 0) GameMain.Server.ServerSettings.AutoRestartInterval = 10;
+                    GameMain.Server.ServerSettings.AutoRestartTimer = GameMain.Server.ServerSettings.AutoRestartInterval;
+                    GameMain.Server.ServerSettings.AutoRestart = enabled;
 #if CLIENT
                     //TODO: reimplement
                     GameMain.NetLobbyScreen.SetAutoRestart(enabled, GameMain.Server.AutoRestartTimer);
 #endif
                     GameMain.NetLobbyScreen.LastUpdateID++;
                 }
-                NewMessage(GameMain.Server.AutoRestart ? "Automatic restart enabled." : "Automatic restart disabled.", Color.White);
+                NewMessage(GameMain.Server.ServerSettings.AutoRestart ? "Automatic restart enabled." : "Automatic restart disabled.", Color.White);
             });
 
             AssignOnExecute("autorestartinterval",(string[] args) =>
@@ -126,14 +126,14 @@ namespace Barotrauma
                     {
                         if (parsedInt >= 0)
                         {
-                            GameMain.Server.AutoRestart = true;
-                            GameMain.Server.AutoRestartInterval = parsedInt;
-                            if (GameMain.Server.AutoRestartTimer >= GameMain.Server.AutoRestartInterval) GameMain.Server.AutoRestartTimer = GameMain.Server.AutoRestartInterval;
-                            NewMessage("Autorestart interval set to " + GameMain.Server.AutoRestartInterval + " seconds.", Color.White);
+                            GameMain.Server.ServerSettings.AutoRestart = true;
+                            GameMain.Server.ServerSettings.AutoRestartInterval = parsedInt;
+                            if (GameMain.Server.ServerSettings.AutoRestartTimer >= GameMain.Server.ServerSettings.AutoRestartInterval) GameMain.Server.ServerSettings.AutoRestartTimer = GameMain.Server.ServerSettings.AutoRestartInterval;
+                            NewMessage("Autorestart interval set to " + GameMain.Server.ServerSettings.AutoRestartInterval + " seconds.", Color.White);
                         }
                         else
                         {
-                            GameMain.Server.AutoRestart = false;
+                            GameMain.Server.ServerSettings.AutoRestart = false;
                             NewMessage("Autorestart disabled.", Color.White);
                         }
 #if CLIENT
@@ -154,15 +154,15 @@ namespace Barotrauma
                     {
                         if (parsedInt >= 0)
                         {
-                            GameMain.Server.AutoRestart = true;
-                            GameMain.Server.AutoRestartTimer = parsedInt;
-                            if (GameMain.Server.AutoRestartInterval <= GameMain.Server.AutoRestartTimer) GameMain.Server.AutoRestartInterval = GameMain.Server.AutoRestartTimer;
+                            GameMain.Server.ServerSettings.AutoRestart = true;
+                            GameMain.Server.ServerSettings.AutoRestartTimer = parsedInt;
+                            if (GameMain.Server.ServerSettings.AutoRestartInterval <= GameMain.Server.ServerSettings.AutoRestartTimer) GameMain.Server.ServerSettings.AutoRestartInterval = GameMain.Server.ServerSettings.AutoRestartTimer;
                             GameMain.NetLobbyScreen.LastUpdateID++;
-                            NewMessage("Autorestart timer set to " + GameMain.Server.AutoRestartTimer + " seconds.", Color.White);
+                            NewMessage("Autorestart timer set to " + GameMain.Server.ServerSettings.AutoRestartTimer + " seconds.", Color.White);
                         }
                         else
                         {
-                            GameMain.Server.AutoRestart = false;
+                            GameMain.Server.ServerSettings.AutoRestart = false;
                             NewMessage("Autorestart disabled.", Color.White);
                         }
 #if CLIENT
@@ -418,7 +418,7 @@ namespace Barotrauma
             {
                 throw new NotImplementedException();
                 if (GameMain.Server == null) return;
-                GameMain.Server.KarmaEnabled = !GameMain.Server.KarmaEnabled;
+                GameMain.Server.ServerSettings.KarmaEnabled = !GameMain.Server.ServerSettings.KarmaEnabled;
             });
 
             AssignOnExecute("banip", (string[] args) =>
@@ -443,7 +443,7 @@ namespace Barotrauma
                         var clients = GameMain.Server.ConnectedClients.FindAll(c => c.Connection.RemoteEndPoint.Address.ToString() == args[0]);
                         if (clients.Count == 0)
                         {
-                            GameMain.Server.BanList.BanPlayer("Unnamed", args[0], reason, banDuration);
+                            GameMain.Server.ServerSettings.BanList.BanPlayer("Unnamed", args[0], reason, banDuration);
                         }
                         else
                         {
@@ -460,7 +460,7 @@ namespace Barotrauma
             {
                 //TODO: reimplement
                 if (GameMain.Server == null) return;
-                GameMain.Server.ShowNetStats = !GameMain.Server.ShowNetStats;
+                GameMain.Server.ServerSettings.ShowNetStats = !GameMain.Server.ServerSettings.ShowNetStats;
             });
 
             AssignOnExecute("setclientcharacter", (string[] args) =>
@@ -579,7 +579,7 @@ namespace Barotrauma
             commands.Add(new Command("setpassword|setserverpassword", "setpassword [password]: Changes the password of the server that's being hosted.", (string[] args) =>
             {
                 if (GameMain.Server == null || args.Length == 0) return;
-                GameMain.Server.SetPassword(args[0]);
+                GameMain.Server.ServerSettings.SetPassword(args[0]);
             }));
 
             commands.Add(new Command("restart|reset", "restart/reset: Close and restart the server.", (string[] args) =>
@@ -627,8 +627,8 @@ namespace Barotrauma
 
             commands.Add(new Command("randomizeseed", "randomizeseed: Toggles level seed randomization on/off.", (string[] args) =>
             {
-                GameMain.Server.RandomizeSeed = !GameMain.Server.RandomizeSeed;
-                NewMessage((GameMain.Server.RandomizeSeed ? "Enabled" : "Disabled") + " level seed randomization.", Color.Cyan);
+                GameMain.Server.ServerSettings.RandomizeSeed = !GameMain.Server.ServerSettings.RandomizeSeed;
+                NewMessage((GameMain.Server.ServerSettings.RandomizeSeed ? "Enabled" : "Disabled") + " level seed randomization.", Color.Cyan);
             }));
 
             commands.Add(new Command("gamemode", "gamemode [name]/[index]: Select the game mode for the next round. The parameter can either be the name or the index number of the game mode (0 = sandbox, 1 = mission, etc).", (string[] args) =>
@@ -820,7 +820,7 @@ namespace Barotrauma
 
                     if (clients.Count == 0)
                     {
-                        GameMain.Server.BanList.BanPlayer("Unnamed", args[0], reason, duration);
+                        GameMain.Server.ServerSettings.BanList.BanPlayer("Unnamed", args[0], reason, duration);
                     }
                     else
                     {
@@ -881,7 +881,7 @@ namespace Barotrauma
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
                     if (args.Length < 1 || GameMain.Server == null) return;
-                    int botCount = GameMain.Server.BotCount;
+                    int botCount = GameMain.Server.ServerSettings.BotCount;
                     int.TryParse(args[0], out botCount);
                     GameMain.NetLobbyScreen.SetBotCount(botCount);
                     NewMessage("\"" + client.Name + "\" set the number of bots to " + botCount, Color.White);

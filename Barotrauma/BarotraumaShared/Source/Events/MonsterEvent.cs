@@ -70,12 +70,12 @@ namespace Barotrauma
 
             if (GameMain.NetworkMember != null)
             {
-                List<string> monsterNames = GameMain.NetworkMember.monsterEnabled.Keys.ToList();
+                List<string> monsterNames = GameMain.NetworkMember.ServerSettings.monsterEnabled.Keys.ToList();
                 string characterName = Path.GetFileName(Path.GetDirectoryName(characterFile)).ToLower();
                 string tryKey = monsterNames.Find(s => characterName == s.ToLower());
                 if (!string.IsNullOrWhiteSpace(tryKey))
                 {
-                    if (!GameMain.NetworkMember.monsterEnabled[tryKey]) disallowed = true; //spawn was disallowed by host
+                    if (!GameMain.NetworkMember.ServerSettings.monsterEnabled[tryKey]) disallowed = true; //spawn was disallowed by host
                 }
             }
         }

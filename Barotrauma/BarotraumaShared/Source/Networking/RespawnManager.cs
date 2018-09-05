@@ -119,8 +119,8 @@ namespace Barotrauma.Networking
 #if SERVER
             if (networkMember is GameServer server)
             {
-                respawnTimer = server.RespawnInterval;
-                maxTransportTime = server.MaxTransportTime;
+                respawnTimer = server.ServerSettings.RespawnInterval;
+                maxTransportTime = server.ServerSettings.MaxTransportTime;
             }
 #endif
         }
@@ -186,7 +186,7 @@ namespace Barotrauma.Networking
                 server.CreateEntityEvent(this);
 
                 CountdownStarted = false;
-                maxTransportTime = server.MaxTransportTime;
+                maxTransportTime = server.ServerSettings.MaxTransportTime;
                 shuttleReturnTimer = maxTransportTime;
                 shuttleTransportTimer = maxTransportTime;
             }
@@ -257,7 +257,7 @@ namespace Barotrauma.Networking
                     GameServer.Log("The respawn shuttle has left.", ServerLog.MessageType.Spawning);
                     server.CreateEntityEvent(this);
 
-                    respawnTimer = server.RespawnInterval;
+                    respawnTimer = server.ServerSettings.RespawnInterval;
                     CountdownStarted = false;
                 }
 #endif

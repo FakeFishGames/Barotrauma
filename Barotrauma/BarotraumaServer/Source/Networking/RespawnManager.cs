@@ -14,7 +14,7 @@ namespace Barotrauma.Networking
         {
             return networkMember.ConnectedClients.FindAll(c =>
                 c.InGame &&
-                (!c.SpectateOnly || !((GameServer)networkMember).AllowSpectating) &&
+                (!c.SpectateOnly || !((GameServer)networkMember).ServerSettings.AllowSpectating) &&
                 (c.Character == null || c.Character.IsDead));
         }
 
@@ -22,7 +22,7 @@ namespace Barotrauma.Networking
         {
             GameServer server = networkMember as GameServer;
 
-            if (server.BotSpawnMode == BotSpawnMode.Normal)
+            if (server.ServerSettings.BotSpawnMode == BotSpawnMode.Normal)
             {
                 return Character.CharacterList
                     .FindAll(c => c.TeamID == 1 && c.AIController != null && c.Info != null && c.IsDead)
@@ -30,13 +30,13 @@ namespace Barotrauma.Networking
                     .ToList();
             }
 
-            int currPlayerCount = server.ConnectedClients.Count(c => c.InGame && (!c.SpectateOnly || !server.AllowSpectating));
+            int currPlayerCount = server.ConnectedClients.Count(c => c.InGame && (!c.SpectateOnly || !server.ServerSettings.AllowSpectating));
             //if (server.CharacterInfo != null) currPlayerCount++;
 
             var existingBots = Character.CharacterList
                 .FindAll(c => c.TeamID == 1 && c.AIController != null && c.Info != null);
 
-            int requiredBots = server.BotCount - currPlayerCount;
+            int requiredBots = server.ServerSettings.BotCount - currPlayerCount;
             requiredBots -= existingBots.Count(b => !b.IsDead);
 
             List<CharacterInfo> botsToRespawn = new List<CharacterInfo>();
@@ -75,7 +75,7 @@ namespace Barotrauma.Networking
                 totalCharacterCount++;
                 if (server.Character.IsDead) characterToRespawnCount++;
             }*/
-            bool startCountdown = (float)characterToRespawnCount >= Math.Max((float)totalCharacterCount * server.MinRespawnRatio, 1.0f);
+            bool startCountdown = (float)characterToRespawnCount >= Math.Max((float)totalCharacterCount * server.ServerSettings.MinRespawnRatio, 1.0f);
 
             if (startCountdown)
             {
@@ -95,7 +95,7 @@ namespace Barotrauma.Networking
             respawnTimer -= deltaTime;
             if (respawnTimer <= 0.0f)
             {
-                respawnTimer = server.RespawnInterval;
+                respawnTimer = server.ServerSettings.RespawnInterval;
 
                 DispatchShuttle();
             }
