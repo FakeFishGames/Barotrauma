@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -7,49 +8,51 @@ namespace Barotrauma
     {
         protected override void ControlCamera(Camera cam)
         {
-            if (selectedSlot != null)
+            base.ControlCamera(cam);
+            if (BackgroundFrame.Contains(PlayerInput.MousePosition))
             {
-                cam.Freeze = true;
-            }
-            else if (draggingItem != null || backgroundFrame.Contains(PlayerInput.MousePosition))
-            {
-                // TODO: for some reason there is some movement when the cursor is on top of the backgroundFrame 
-                // (maybe it's because the background is calculated in the draw method?)
+                // TODO: For some reason there is some movement when the cursor is on top of the BackgroundFrame.
+                // Update: This is probably due to the update order.
                 cam.OffsetAmount = 0;
             }
+        }
+
+        protected override void CalculateBackgroundFrame()
+        {
+            var firstSlot = slots.FirstOrDefault();
+            if (firstSlot == null) { return; }
+            Rectangle frame = firstSlot.Rect;
+            frame.Location += firstSlot.DrawOffset.ToPoint();
+            for (int i = 1; i < capacity; i++)
+            {
+                Rectangle slotRect = slots[i].Rect;
+                slotRect.Location += slots[i].DrawOffset.ToPoint();
+                frame = Rectangle.Union(frame, slotRect);
+            }
+            BackgroundFrame = new Rectangle(
+                frame.X - (int)padding.X,
+                frame.Y - (int)padding.Y,
+                frame.Width + (int)(padding.X + padding.Z),
+                frame.Height + (int)(padding.Y + padding.W));
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool subInventory = false)
         {
             if (slots != null && slots.Length > 0)
             {
-                backgroundFrame = slots[0].Rect;
-                backgroundFrame.Location += slots[0].DrawOffset.ToPoint();
-                for (int i = 1; i < capacity; i++)
-                {
-                    Rectangle slotRect = slots[i].Rect;
-                    slotRect.Location += slots[i].DrawOffset.ToPoint();
-                    backgroundFrame = Rectangle.Union(backgroundFrame, slotRect);
-                }
-                
-                backgroundFrame = new Rectangle(
-                    backgroundFrame.X - (int)padding.X,
-                    backgroundFrame.Y - (int)padding.Y,
-                    backgroundFrame.Width + (int)(padding.X + padding.Z),
-                    backgroundFrame.Height + (int)(padding.Y + padding.W));
-
+                CalculateBackgroundFrame();
                 if (container.InventoryBackSprite == null)
                 {
-                    GUI.DrawRectangle(spriteBatch, backgroundFrame, Color.Black * 0.8f, true);
+                    GUI.DrawRectangle(spriteBatch, BackgroundFrame, Color.Black * 0.8f, true);
                 }
                 else
                 {
                     container.InventoryBackSprite.Draw(
-                        spriteBatch, backgroundFrame.Location.ToVector2(), 
+                        spriteBatch, BackgroundFrame.Location.ToVector2(), 
                         Color.White, Vector2.Zero, 0, 
                         new Vector2(
-                            backgroundFrame.Width / container.InventoryBackSprite.size.X,
-                            backgroundFrame.Height / container.InventoryBackSprite.size.Y));
+                            BackgroundFrame.Width / container.InventoryBackSprite.size.X,
+                            BackgroundFrame.Height / container.InventoryBackSprite.size.Y));
                 }
 
                 base.Draw(spriteBatch, subInventory);
@@ -57,7 +60,7 @@ namespace Barotrauma
                 if (container.InventoryBottomSprite != null && !subInventory)
                 {
                     container.InventoryBottomSprite.Draw(spriteBatch, 
-                        new Vector2(backgroundFrame.Center.X, backgroundFrame.Bottom) + slots[0].DrawOffset, 
+                        new Vector2(BackgroundFrame.Center.X, BackgroundFrame.Bottom) + slots[0].DrawOffset, 
                         0.0f, UIScale);
                 }
 
@@ -68,13 +71,13 @@ namespace Barotrauma
                     if (!string.IsNullOrEmpty(label) && !subInventory)
                     {
                         GUI.DrawString(spriteBatch,
-                            new Vector2((int)(backgroundFrame.Center.X - GUI.Font.MeasureString(label).X / 2), (int)backgroundFrame.Y + 5),
+                            new Vector2((int)(BackgroundFrame.Center.X - GUI.Font.MeasureString(label).X / 2), (int)BackgroundFrame.Y + 5),
                             label, Color.White * 0.9f);
                     }
                 }
                 else if (!subInventory)
                 {
-                    container.InventoryTopSprite.Draw(spriteBatch, new Vector2(backgroundFrame.Center.X, backgroundFrame.Y), 0.0f, UIScale);
+                    container.InventoryTopSprite.Draw(spriteBatch, new Vector2(BackgroundFrame.Center.X, BackgroundFrame.Y), 0.0f, UIScale);
                 }
             }
             else
