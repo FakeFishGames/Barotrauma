@@ -614,21 +614,21 @@
     <Sprite texture="Content/Items/connectionpanel.png" sourcerect="32,256,32,32" origin="0.5,0.5" tile="false"/>
   </ConnectionPanelScrew>
 
-  <DeviceDisplay
-    color="1.0,1.0,1.0,1.0"
-    textcolor="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"
-    outlinecolor="0.0,0.0,0.0,0.0">
-      <Sprite texture="Content/UI/inventoryAtlas.png" sourcerect ="688,490,335,445" slice="714,514,1002,920"/>
-  </DeviceDisplay>
-
   <MiniMapRoom
     color="1.0,1.0,1.0,1.0"
     textcolor="1.0,1.0,1.0,1.0"
     hovercolor="1.0,1.0,1.0,1.0"
     selectedcolor="1.0,1.0,1.0,1.0"
     outlinecolor="0.0,0.0,0.0,0.0">
-    <Sprite texture="Content/UI/UI_Atlas2.png" sourcerect ="107,5,93,92" slice="127,25,180,77"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" sourcerect="96,0,32,32" slice="106,10,118,22"/>
   </MiniMapRoom>
+
+  <ScanLines
+    color="1.0,1.0,1.0,1.0"
+    textcolor="1.0,1.0,1.0,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0"
+    outlinecolor="0.0,0.0,0.0,0.0">
+    <Sprite texture="Content/UI/UI_Atlas2.png" tile="true" sourcerect="96,64,128,128"/>
+  </ScanLines>
 </style>

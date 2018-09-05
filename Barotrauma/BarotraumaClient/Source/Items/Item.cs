@@ -324,7 +324,7 @@ namespace Barotrauma
         private void SetHUDLayout()
         {
             //reset positions first
-            List<GUIComponent> elementsToMove = new List<GUIComponent>(); 
+            List<GUIComponent> elementsToMove = new List<GUIComponent>();
 
             foreach (ItemComponent ic in activeHUDs)
             {
@@ -333,7 +333,7 @@ namespace Barotrauma
                 elementsToMove.Add(ic.GuiFrame);
             }
 
-            GUI.PreventElementOverlap(elementsToMove, new Rectangle(20,20,GameMain.GraphicsWidth-40, GameMain.GraphicsHeight - 80));
+            GUI.PreventElementOverlap(elementsToMove, new Rectangle(20, 20, GameMain.GraphicsWidth - 40, GameMain.GraphicsHeight - 80));
         }
 
         public virtual void UpdateHUD(Camera cam, Character character, float deltaTime)
