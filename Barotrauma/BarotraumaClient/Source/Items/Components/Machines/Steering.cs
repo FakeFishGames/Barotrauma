@@ -83,6 +83,10 @@ namespace Barotrauma.Items.Components
                                 posToMaintain = controlledSub.WorldPosition;
                             }
                         }
+                        else if (!LevelEndSelected && !LevelStartSelected)
+                        {
+                            AutoPilot = false;
+                        }
                     }
                     return true;
                 }
@@ -107,6 +111,10 @@ namespace Barotrauma.Items.Components
                             posToMaintain = null;
                             UpdatePath();
                         }
+                        else if (!MaintainPos && !LevelEndSelected)
+                        {
+                            AutoPilot = false;
+                        }
                     }
                     return true;
                 }
@@ -130,6 +138,10 @@ namespace Barotrauma.Items.Components
                             maintainPosTickBox.Selected = false;
                             posToMaintain = null;
                             UpdatePath();
+                        }
+                        else if (!MaintainPos && !LevelStartSelected)
+                        {
+                            AutoPilot = false;
                         }
                     }
                     return true;
