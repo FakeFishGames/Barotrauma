@@ -20,7 +20,7 @@ namespace Barotrauma
             if (Job != null)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x + 60, y) }, 
-                    Job.Name, font: font);
+                    Job.Name, textColor: Job.Prefab.UIColor, font: font);
                 y += 25;
             }
 
