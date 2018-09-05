@@ -190,9 +190,6 @@ namespace Barotrauma
 
             if (PreviewImage == null)
             {
-                //var txtBlock = new GUITextBlock(new Rectangle(-20, 60, 256, 128), TextManager.Get("SubPreviewImageNotFound"), Color.Black * 0.5f, null, Alignment.Center, "", frame, true);
-                //var txtBlock = new GUITextBlock(new RectTransform())
-                //txtBlock.OutlineColor = txtBlock.TextColor;
                 new GUITextBlock(new RectTransform(new Vector2(0.45f, 1), upperPart.RectTransform), TextManager.Get("SubPreviewImageNotFound"));
             }
             else
@@ -227,6 +224,54 @@ namespace Barotrauma
             {
                 CanBeFocused = false
             };
+        }
+
+        public void CreateMiniMap(GUIComponent parent, IEnumerable<Entity> pointsOfInterest = null)
+        {
+            Rectangle worldBorders = GetDockedBorders();
+            worldBorders.Location += WorldPosition.ToPoint();
+
+            //create a container that has the same "aspect ratio" as the sub
+            float aspectRatio = worldBorders.Width / (float)worldBorders.Height;
+            float parentAspectRatio = parent.Rect.Width / (float)parent.Rect.Height;
+
+            float scale = 0.9f;
+
+            GUIFrame hullContainer = new GUIFrame(new RectTransform(
+                (parentAspectRatio > aspectRatio ? new Vector2(aspectRatio / parentAspectRatio, 1.0f) : new Vector2(1.0f, parentAspectRatio / aspectRatio)) * scale, 
+                parent.RectTransform, Anchor.Center), 
+                style: null);
+
+            foreach (Hull hull in Hull.hullList)
+            {
+                if (hull.Submarine != this && !DockedTo.Contains(hull.Submarine)) continue;
+
+                Vector2 relativeHullPos = new Vector2(
+                    (hull.WorldRect.X - worldBorders.X) / (float)Borders.Width, 
+                    (worldBorders.Y - hull.WorldRect.Y) / (float)Borders.Height);
+
+                Vector2 relativeHullSize = new Vector2(hull.Rect.Width / (float)worldBorders.Width, hull.Rect.Height / (float)worldBorders.Height);
+
+                var hullFrame = new GUIFrame(new RectTransform(relativeHullSize, hullContainer.RectTransform) { RelativeOffset = relativeHullPos }, style: "MiniMapRoom")
+                {
+                    UserData = hull
+                };
+            }
+
+            if (pointsOfInterest != null)
+            {
+                foreach (Entity entity in pointsOfInterest)
+                {
+                    Vector2 relativePos = new Vector2(
+                        (entity.WorldPosition.X - worldBorders.X) / Borders.Width,
+                        (worldBorders.Y - entity.WorldPosition.Y) / Borders.Height);
+                    new GUIFrame(new RectTransform(new Point(1, 1), hullContainer.RectTransform) { RelativeOffset = relativePos }, style: null)
+                    {
+                        CanBeFocused = false,
+                        UserData = entity
+                    };
+                }
+            }
         }
 
         public void CheckForErrors()

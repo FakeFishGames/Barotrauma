@@ -299,6 +299,10 @@ namespace Barotrauma
         private void ClampChildMouseRects(GUIComponent child)
         {
             child.ClampMouseRectToParent = true;
+
+            //no need to go through grandchildren if the child is a GUIListBox, it handles this by itself
+            if (child is GUIListBox) return;
+
             foreach (GUIComponent grandChild in child.Children)
             {
                 ClampChildMouseRects(grandChild);
