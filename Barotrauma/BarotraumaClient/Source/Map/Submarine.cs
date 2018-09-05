@@ -226,7 +226,7 @@ namespace Barotrauma
             };
         }
 
-        public void CreateMiniMap(GUIComponent parent)
+        public void CreateMiniMap(GUIComponent parent, IEnumerable<Entity> pointsOfInterest = null)
         {
             Rectangle worldBorders = GetDockedBorders();
             worldBorders.Location += WorldPosition.ToPoint();
@@ -256,6 +256,21 @@ namespace Barotrauma
                 {
                     UserData = hull
                 };
+            }
+
+            if (pointsOfInterest != null)
+            {
+                foreach (Entity entity in pointsOfInterest)
+                {
+                    Vector2 relativePos = new Vector2(
+                        (entity.WorldPosition.X - worldBorders.X) / Borders.Width,
+                        (worldBorders.Y - entity.WorldPosition.Y) / Borders.Height);
+                    new GUIFrame(new RectTransform(new Point(1, 1), hullContainer.RectTransform) { RelativeOffset = relativePos }, style: null)
+                    {
+                        CanBeFocused = false,
+                        UserData = entity
+                    };
+                }
             }
         }
 
