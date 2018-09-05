@@ -765,6 +765,7 @@ namespace Barotrauma
                 };
                 Submarine.MainSub.CreateMiniMap(orderTargetFrame, matchingItems);
 
+                List<GUIComponent> optionFrames = new List<GUIComponent>();
                 foreach (Item item in matchingItems)
                 {
                     var itemTargetFrame = orderTargetFrame.Children.First().FindChild(item);
@@ -806,6 +807,8 @@ namespace Barotrauma
                         };
                     }
                 }
+
+                GUI.PreventElementOverlap(optionFrames, new Rectangle(10, 10, GameMain.GraphicsWidth - 20, GameMain.GraphicsHeight - 20));
             }
             //only one target (or an order with no particular targets), just show options
             else

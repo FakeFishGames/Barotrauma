@@ -1097,6 +1097,71 @@ namespace Barotrauma
         {
             return startOffset + (spacing + size) * counter + extra;
         }
+
+        /// <summary>
+        /// Attempts to move a set of UI elements further from each other to prevent them from overlapping
+        /// </summary>
+        /// <param name="elements">UI elements to move</param>
+        /// <param name="clampArea">The elements will not be moved outside this area. If the parameter is not given, the elements are kept inside the window.</param>
+        public static void PreventElementOverlap(IList<GUIComponent> elements, Rectangle? clampArea = null)
+        {
+            Rectangle area = clampArea ?? new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            
+            bool intersections = true;
+            int iterations = 0;
+            while (intersections && iterations < 100)
+            {
+                intersections = false;
+                for (int i = 0; i < elements.Count; i++)
+                {
+                    Rectangle rect1 = elements[i].Rect;
+                    for (int j = i + 1; j < elements.Count; j++)
+                    {
+                        Rectangle rect2 = elements[j].Rect;
+                        if (!rect1.Intersects(rect2)) continue;
+
+                        intersections = true;
+                        int rect1Area = rect1.Width * rect1.Height;
+                        int rect2Area = rect2.Width * rect2.Height;
+                        Point centerDiff = rect1.Center - rect2.Center;
+                        //move the interfaces away from each other, in a random direction if they're at the same position
+                        Vector2 moveAmount = centerDiff == Point.Zero ? Rand.Vector(1.0f) : Vector2.Normalize(centerDiff.ToVector2());
+
+                        //make sure we don't move the interfaces out of the screen
+                        Vector2 moveAmount1 = ClampMoveAmount(rect1, area, moveAmount * rect1Area / (rect1Area + rect2Area));
+                        Vector2 moveAmount2 = ClampMoveAmount(rect2, area, - moveAmount * rect1Area / (rect1Area + rect2Area));
+
+                        //move by 10 units in the desired direction and repeat until nothing overlaps
+                        //(or after 100 iterations, in which case we'll just give up and let them overlap)
+                        elements[i].RectTransform.ScreenSpaceOffset += (moveAmount1 * 10.0f).ToPoint();
+                        elements[j].RectTransform.ScreenSpaceOffset += (moveAmount2 * 10.0f).ToPoint();
+                    }
+                }
+                iterations++;
+            }
+
+            Vector2 ClampMoveAmount(Rectangle Rect, Rectangle clampTo, Vector2 moveAmount)
+            {
+                if (Rect.Y < clampTo.Y)
+                {
+                    moveAmount.Y = Math.Max(moveAmount.Y, 0.0f);
+                }
+                else if (Rect.Bottom > clampTo.Bottom)
+                {
+                    moveAmount.Y = Math.Min(moveAmount.Y, 0.0f);
+                }
+                if (Rect.X < clampTo.X)
+                {
+                    moveAmount.X = Math.Max(moveAmount.X, 0.0f);
+                }
+                else if (Rect.Right > clampTo.Right)
+                {
+                    moveAmount.X = Math.Min(moveAmount.X, 0.0f);
+                }
+                return moveAmount;
+            }
+        }
+
         #endregion
 
         #region Misc
