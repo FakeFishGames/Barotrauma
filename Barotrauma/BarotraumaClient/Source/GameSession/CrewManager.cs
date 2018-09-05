@@ -827,11 +827,12 @@ namespace Barotrauma
                 
                 for (int i = 0; i < order.Options.Length; i++)
                 {
+                    Item item = matchingItems.Count > 0 ? matchingItems[0] : null;
                     string option = order.Options[i];
                     var optionButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.5f), orderTargetFrame.RectTransform),
                         order.OptionNames[i], style: "GUITextBox")
                     {
-                        UserData = order,
+                        UserData = item == null ? order : new Order(order, item, item.components.Find(ic => ic.GetType() == order.ItemComponentType)),
                         OnClicked = (btn, userData) =>
                         {
                             if (Character.Controlled == null) return false;
