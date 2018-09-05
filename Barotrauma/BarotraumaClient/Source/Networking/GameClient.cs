@@ -78,17 +78,12 @@ namespace Barotrauma.Networking
         {
             get { return entityEventManager.MidRoundSyncing; }
         }
-
-        public override bool AllowDisguises
-        {
-            get;
-            set;
-        }
-
+        
         private int ownerKey;
 
-        public GameClient(string newName, int ownerKey=0)
+        public GameClient(string newName, string ip, int ownerKey=0)
         {
+            //TODO: gui stuff should probably not be here?
             this.ownerKey = ownerKey;
 
             inGameHUD = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
@@ -130,13 +125,13 @@ namespace Barotrauma.Networking
             {
                 OnClicked = (GUIButton button, object userData) =>
                 {
-                    if (ServerLog.LogFrame == null)
+                    if (serverSettings.ServerLog.LogFrame == null)
                     {
-                        ServerLog.CreateLogFrame();
+                        serverSettings.ServerLog.CreateLogFrame();
                     }
                     else
                     {
-                        ServerLog.LogFrame = null;
+                        serverSettings.ServerLog.LogFrame = null;
                         GUI.KeyboardDispatcher.Subscriber = null;
                     }
                     return true;
@@ -163,13 +158,17 @@ namespace Barotrauma.Networking
 
             otherClients = new List<Client>();
 
-            ServerLog = new ServerLog("");
+            serverSettings = new ServerSettings("Server", 0, 0, 0, false, false);
+
+            ConnectToServer(ip);
+
+            //ServerLog = new ServerLog("");
 
             ChatMessage.LastID = 0;
             GameMain.NetLobbyScreen = new NetLobbyScreen();
         }
 
-        public void ConnectToServer(string hostIP)
+        private void ConnectToServer(string hostIP)
         {
             string[] address = hostIP.Split(':');
             if (address.Length == 1)
@@ -579,7 +578,7 @@ namespace Barotrauma.Networking
 
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
-                endVoteTickBox.Visible = Voting.AllowEndVoting && HasSpawned;
+                endVoteTickBox.Visible = serverSettings.Voting.AllowEndVoting && HasSpawned;
 
                 if (respawnManager != null)
                 {
@@ -877,8 +876,8 @@ namespace Barotrauma.Networking
 
             GameMain.NetLobbyScreen.StartButton.Visible = HasPermission(ClientPermissions.ManageRound);
             DebugConsole.NewMessage("bop!", Color.Lime);
-            GameMain.NetLobbyScreen.SubList.Enabled = Voting.AllowSubVoting || HasPermission(ClientPermissions.SelectSub);
-            GameMain.NetLobbyScreen.ModeList.Enabled = Voting.AllowModeVoting || HasPermission(ClientPermissions.SelectMode);
+            GameMain.NetLobbyScreen.SubList.Enabled = serverSettings.Voting.AllowSubVoting || HasPermission(ClientPermissions.SelectSub);
+            GameMain.NetLobbyScreen.ModeList.Enabled = serverSettings.Voting.AllowModeVoting || HasPermission(ClientPermissions.SelectMode);
             GameMain.NetLobbyScreen.ShowLogButton.Visible = HasPermission(ClientPermissions.ServerLog);
             showLogButton.Visible = HasPermission(ClientPermissions.ServerLog);
 
@@ -927,7 +926,7 @@ namespace Barotrauma.Networking
             string traitorTargetName = isTraitor ? inc.ReadString() : null;
             
             //monster spawn settings
-            if (monsterEnabled == null)
+            if (serverSettings.monsterEnabled == null)
             {
                 List<string> monsterNames1 = GameMain.Instance.GetFilesOfType(ContentType.Character).ToList();
                 for (int i = 0; i < monsterNames1.Count; i++)
@@ -935,17 +934,17 @@ namespace Barotrauma.Networking
                     monsterNames1[i] = Path.GetFileName(Path.GetDirectoryName(monsterNames1[i]));
                 }
 
-                monsterEnabled = new Dictionary<string, bool>();
+                serverSettings.monsterEnabled = new Dictionary<string, bool>();
                 foreach (string s in monsterNames1)
                 {
-                    if (!monsterEnabled.ContainsKey(s)) monsterEnabled.Add(s, true);
+                    if (!serverSettings.monsterEnabled.ContainsKey(s)) serverSettings.monsterEnabled.Add(s, true);
                 }
             }
 
-            List<string> monsterNames = monsterEnabled.Keys.ToList();
+            List<string> monsterNames = serverSettings.monsterEnabled.Keys.ToList();
             foreach (string s in monsterNames)
             {
-                monsterEnabled[s] = inc.ReadBoolean();
+                serverSettings.monsterEnabled[s] = inc.ReadBoolean();
             }
             inc.ReadPadBits();
 
@@ -962,7 +961,7 @@ namespace Barotrauma.Networking
             GameMain.NetLobbyScreen.UsingShuttle = usingShuttle;
             GameMain.LightManager.LosMode = (LosMode)losMode;
 
-            AllowDisguises = disguisesAllowed;
+            serverSettings.AllowDisguises = disguisesAllowed;
 
             if (campaign == null)
             {
@@ -1141,7 +1140,7 @@ namespace Barotrauma.Networking
                             {
                                 GameMain.NetLobbyScreen.LastUpdateID = updateID;
 
-                                ServerLog.ServerName = serverName;
+                                serverSettings.ServerLog.ServerName = serverName;
 
                                 GameMain.NetLobbyScreen.ServerName = serverName;
                                 GameMain.NetLobbyScreen.ServerMessage.Text = serverText;
@@ -1176,8 +1175,8 @@ namespace Barotrauma.Networking
                                     GameMain.NetLobbyScreen.AddPlayer(newClient.Name);
                                 }
 
-                                Voting.AllowSubVoting = allowSubVoting;
-                                Voting.AllowModeVoting = allowModeVoting;
+                                serverSettings.Voting.AllowSubVoting = allowSubVoting;
+                                serverSettings.Voting.AllowModeVoting = allowModeVoting;
                             }
                         }
 
@@ -1195,7 +1194,7 @@ namespace Barotrauma.Networking
                         ChatMessage.ClientRead(inc);
                         break;
                     case ServerNetObject.VOTE:
-                        Voting.ClientRead(inc);
+                        serverSettings.Voting.ClientRead(inc);
                         break;
                 }
             }
@@ -1540,7 +1539,7 @@ namespace Barotrauma.Networking
             
             if (HasPermission(ClientPermissions.ServerLog))
             {
-                ServerLog?.Save();
+                serverSettings.ServerLog?.Save();
             }
 
             if (GameMain.ServerChildProcess != null)
@@ -1582,7 +1581,7 @@ namespace Barotrauma.Networking
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.UPDATE_LOBBY);
             msg.Write((byte)ClientNetObject.VOTE);
-            Voting.ClientWrite(msg, voteType, data);
+            serverSettings.Voting.ClientWrite(msg, voteType, data);
             msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
@@ -1762,7 +1761,7 @@ namespace Barotrauma.Networking
         {
             if (!gameStarted) return false;
 
-            if (!Voting.AllowEndVoting || !HasSpawned)
+            if (!serverSettings.Voting.AllowEndVoting || !HasSpawned)
             {
                 tickBox.Visible = false;
                 return false;
@@ -1926,7 +1925,7 @@ namespace Barotrauma.Networking
                     }
                 }
             }
-            if (ServerLog.LogFrame != null) ServerLog.LogFrame.AddToGUIUpdateList();
+            if (serverSettings.ServerLog.LogFrame != null) serverSettings.ServerLog.LogFrame.AddToGUIUpdateList();
         }
 
         public virtual void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
@@ -2054,7 +2053,7 @@ namespace Barotrauma.Networking
                         OnClicked = GameMain.NetLobbyScreen.KickPlayer
                     };
                 }
-                else if (Voting.AllowVoteKick)
+                else if (serverSettings.Voting.AllowVoteKick)
                 {
                     var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.15f), characterFrame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.0f, 0.16f) },
                         TextManager.Get("VoteToKick"))

@@ -351,8 +351,7 @@ namespace Barotrauma
                 };
                 GameMain.ServerChildProcess = Process.Start(processInfo);
                 
-                GameMain.Client = new GameClient(name,ownerKey);
-                GameMain.Client.ConnectToServer("127.0.0.1:"+port.ToString());
+                GameMain.Client = new GameClient(name, "127.0.0.1:" + port.ToString(),ownerKey);
             }
             catch (Exception e)
             {
