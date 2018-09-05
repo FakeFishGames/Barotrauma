@@ -126,12 +126,7 @@ namespace Barotrauma
             else if (Tile)
             {
                 Vector2 startPos = new Vector2(rect.X, rect.Y);
-                Vector2 size = new Vector2(Math.Min(Sprite.SourceRect.Width, rect.Width), Math.Min(Sprite.SourceRect.Height, rect.Height));
-
-                if (Sprite.size.X == 0.0f) size.X = rect.Width;
-                if (Sprite.size.Y == 0.0f) size.Y = rect.Height;
-
-                Sprite.DrawTiled(spriteBatch, startPos, size, null, color);
+                Sprite.DrawTiled(spriteBatch, startPos, new Vector2(rect.Width, rect.Height), null, color);
             }
             else
             {
