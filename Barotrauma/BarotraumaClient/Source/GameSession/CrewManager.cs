@@ -734,10 +734,6 @@ namespace Barotrauma
                 matchingItems = order.ItemIdentifiers.Length > 0 ?
                     Item.ItemList.FindAll(it => order.ItemIdentifiers.Contains(it.Prefab.Identifier) || it.HasTag(order.ItemIdentifiers)) :
                     Item.ItemList.FindAll(it => it.components.Any(ic => ic.GetType() == order.ItemComponentType));
-
-            }
-            else
-            {
             }
 
             //more than one target item -> create a minimap-like selection with a pic of the sub
@@ -767,8 +763,49 @@ namespace Barotrauma
                 {
                     UserData = character
                 };
+                Submarine.MainSub.CreateMiniMap(orderTargetFrame, matchingItems);
 
-                Submarine.MainSub.CreateMiniMap(orderTargetFrame);
+                foreach (Item item in matchingItems)
+                {
+                    var itemTargetFrame = orderTargetFrame.Children.First().FindChild(item);
+                    if (itemTargetFrame == null) continue;
+
+                    Anchor anchor = Anchor.TopLeft;
+                    if (itemTargetFrame.RectTransform.RelativeOffset.X < 0.5f && itemTargetFrame.RectTransform.RelativeOffset.Y < 0.5f)
+                        anchor = Anchor.BottomRight;
+                    else if (itemTargetFrame.RectTransform.RelativeOffset.X > 0.5f && itemTargetFrame.RectTransform.RelativeOffset.Y < 0.5f)
+                        anchor = Anchor.BottomLeft;
+                    else if (itemTargetFrame.RectTransform.RelativeOffset.X < 0.5f && itemTargetFrame.RectTransform.RelativeOffset.Y > 0.5f)
+                        anchor = Anchor.TopRight;
+
+                    var optionFrame = new GUIFrame(new RectTransform(new Point((int)(250 * GUI.Scale), (int)((40 + order.Options.Length * 40) * GUI.Scale)), itemTargetFrame.RectTransform, anchor),
+                        style: "InnerFrame");
+
+                    var optionContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f), optionFrame.RectTransform, Anchor.Center))
+                    {
+                        Stretch = true,
+                        RelativeSpacing = 0.05f
+                    };
+
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f,0.3f), optionContainer.RectTransform), item != null ? item.Name : order.Name);
+                    for (int i = 0; i < order.Options.Length; i++)
+                    {
+                        string option = order.Options[i];
+                        var optionButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), optionContainer.RectTransform),
+                            order.OptionNames[i], style: "GUITextBox")
+                        {
+                            UserData = item == null ? order : new Order(order, item, item.components.Find(ic => ic.GetType() == order.ItemComponentType)),
+                            Font = GUI.SmallFont,
+                            OnClicked = (btn, userData) =>
+                            {
+                                if (Character.Controlled == null) return false;
+                                SetCharacterOrder(character, userData as Order, option, Character.Controlled);
+                                orderTargetFrame = null;
+                                return true;
+                            }
+                        };
+                    }
+                }
             }
             //only one target (or an order with no particular targets), just show options
             else
