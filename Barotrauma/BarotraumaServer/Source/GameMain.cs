@@ -115,10 +115,10 @@ namespace Barotrauma
 
         public void StartServer()
         {
-            XDocument doc = XMLExtensions.TryLoadXml(GameServer.SettingsFile);
+            XDocument doc = XMLExtensions.TryLoadXml(ServerSettings.SettingsFile);
             if (doc == null)
             {
-                DebugConsole.ThrowError("File \"" + GameServer.SettingsFile + "\" not found. Starting the server with default settings.");
+                DebugConsole.ThrowError("File \"" + ServerSettings.SettingsFile + "\" not found. Starting the server with default settings.");
                 Server = new GameServer("Server", NetConfig.DefaultPort, NetConfig.DefaultQueryPort, false, "", false, 10);
                 return;
             }

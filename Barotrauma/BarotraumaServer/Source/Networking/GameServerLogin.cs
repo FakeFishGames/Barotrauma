@@ -29,7 +29,7 @@ namespace Barotrauma.Networking
         }
     }
     
-    partial class GameServer : NetworkMember, ISerializableEntity
+    partial class GameServer : NetworkMember
     {
         private Int32 ownerKey = 0;
 
@@ -55,7 +55,7 @@ namespace Barotrauma.Networking
 
             DebugConsole.Log("  Auth ticket data: " + ((authTicketData == null) ? "null" : authTicketData.Length.ToString()));
 
-            if (banList.IsBanned("", clientSteamID))
+            if (serverSettings.BanList.IsBanned("", clientSteamID))
             {
                 return;
             }
@@ -172,7 +172,7 @@ namespace Barotrauma.Networking
             if (unauthClient == null)
             {
                 //new client, generate nonce and add to unauth queue
-                if (ConnectedClients.Count >= maxPlayers)
+                if (ConnectedClients.Count >= serverSettings.MaxPlayers)
                 {
                     //server is full, can't allow new connection
                     connection.Disconnect(DisconnectReason.ServerFull.ToString());
@@ -187,7 +187,7 @@ namespace Barotrauma.Networking
             //if the client is already in the queue, getting another unauth request means that our response was lost; resend
             NetOutgoingMessage nonceMsg = server.CreateMessage();
             nonceMsg.Write((byte)ServerPacketHeader.AUTH_RESPONSE);
-            if (string.IsNullOrEmpty(password))
+            if (!serverSettings.HasPassword)
             {
                 nonceMsg.Write(false); //false = no password
             }
@@ -217,20 +217,17 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            if (!string.IsNullOrEmpty(password))
+            if (!serverSettings.HasPassword)
             {
                 //decrypt message and compare password
-                string saltedPw = password;
-                saltedPw = saltedPw + Convert.ToString(unauthClient.Nonce);
-                saltedPw = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(saltedPw)));
                 string clPw = inc.ReadString();
-                if (clPw != saltedPw)
+                if (!serverSettings.IsPasswordCorrect(clPw,unauthClient.Nonce))
                 {
                     unauthClient.FailedAttempts++;
                     if (unauthClient.FailedAttempts > 3)
                     {
                         //disconnect and ban after too many failed attempts
-                        banList.BanPlayer("Unnamed", unauthClient.Connection.RemoteEndPoint.Address.ToString(), TextManager.Get("DisconnectMessage.TooManyFailedLogins"), duration: null);
+                        serverSettings.BanList.BanPlayer("Unnamed", unauthClient.Connection.RemoteEndPoint.Address.ToString(), TextManager.Get("DisconnectMessage.TooManyFailedLogins"), duration: null);
                         DisconnectUnauthClient(inc, unauthClient, DisconnectReason.TooManyFailedLogins, "");
 
                         Log(inc.SenderConnection.RemoteEndPoint.Address.ToString() + " has been banned from the server (too many wrong passwords)", ServerLog.MessageType.Error);
@@ -352,7 +349,7 @@ namespace Barotrauma.Networking
                 return "\"" + nameAndHash.First + "\" (hash " + Md5Hash.GetShortHash(nameAndHash.Second) + ")";
             }
 
-            if (!whitelist.IsWhiteListed(clName, inc.SenderConnection.RemoteEndPoint.Address.ToString()))
+            if (!serverSettings.Whitelist.IsWhiteListed(clName, inc.SenderConnection.RemoteEndPoint.Address.ToString()))
             {
                 DisconnectUnauthClient(inc, unauthClient, DisconnectReason.NotOnWhitelist, "");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (not in whitelist)", ServerLog.MessageType.Error);
@@ -416,7 +413,7 @@ namespace Barotrauma.Networking
             
             GameMain.Server.SendChatMessage(clName + " has joined the server.", ChatMessageType.Server, null);
 
-            var savedPermissions = clientPermissions.Find(cp => 
+            var savedPermissions = serverSettings.ClientPermissions.Find(cp => 
                 cp.SteamID > 0 ? 
                 cp.SteamID == newClient.SteamID :            
                 cp.IP == newClient.Connection.RemoteEndPoint.Address.ToString());

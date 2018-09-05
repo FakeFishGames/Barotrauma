@@ -35,7 +35,7 @@ namespace Barotrauma
 #if SERVER
             if (GameMain.Server != null)
             {
-                GameMain.Server.SelectedLevelDifficulty = difficulty;
+                GameMain.Server.ServerSettings.SelectedLevelDifficulty = difficulty;
                 lastUpdateID++;
             }
 #endif
@@ -51,7 +51,7 @@ namespace Barotrauma
 
             lastUpdateID++;
             
-            int index = (int)GameMain.Server.TraitorsEnabled + dir;
+            int index = (int)GameMain.Server.ServerSettings.TraitorsEnabled + dir;
             if (index < 0) index = 2;
             if (index > 2) index = 0;
 
@@ -64,10 +64,10 @@ namespace Barotrauma
 #if SERVER
             if (GameMain.Server != null)
             {
-                if (botCount < 0) botCount = GameMain.Server.MaxBotCount;
-                if (botCount > GameMain.Server.MaxBotCount) botCount = 0;
+                if (botCount < 0) botCount = GameMain.Server.ServerSettings.MaxBotCount;
+                if (botCount > GameMain.Server.ServerSettings.MaxBotCount) botCount = 0;
 
-                GameMain.Server.BotCount = botCount;
+                GameMain.Server.ServerSettings.BotCount = botCount;
                 lastUpdateID++;
             }
 #endif
@@ -81,7 +81,7 @@ namespace Barotrauma
 #if SERVER
             if (GameMain.Server != null)
             {
-                GameMain.Server.BotSpawnMode = botSpawnMode;
+                GameMain.Server.ServerSettings.BotSpawnMode = botSpawnMode;
                 lastUpdateID++;
             }
 #endif
@@ -93,7 +93,7 @@ namespace Barotrauma
         public void SetTraitorsEnabled(YesNoMaybe enabled)
         {
 #if SERVER
-            if (GameMain.Server != null) GameMain.Server.TraitorsEnabled = enabled;
+            if (GameMain.Server != null) GameMain.Server.ServerSettings.TraitorsEnabled = enabled;
 #endif
 #if CLIENT
             (traitorProbabilityText as GUITextBlock).Text = enabled.ToString();

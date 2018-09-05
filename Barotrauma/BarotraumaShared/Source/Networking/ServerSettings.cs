@@ -57,7 +57,7 @@ namespace Barotrauma.Networking
             
             Voting = new Voting();
 
-            WhiteList = new WhiteList();
+            Whitelist = new WhiteList();
             BanList = new BanList();
 
             LoadSettings();
@@ -111,7 +111,7 @@ namespace Barotrauma.Networking
 
         public List<SavedClientPermission> ClientPermissions { get; private set; } = new List<SavedClientPermission>();
 
-        public WhiteList WhiteList { get; private set; }
+        public WhiteList Whitelist { get; private set; }
 
         [Serialize(true, true)]
         public bool RandomizeSeed
@@ -362,6 +362,15 @@ namespace Barotrauma.Networking
         public void SetPassword(string password)
         {
             this.password = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
+        }
+
+        public bool IsPasswordCorrect(string input,int nonce)
+        {
+            if (!HasPassword) return true;
+            string saltedPw = password;
+            saltedPw = saltedPw + Convert.ToString(nonce);
+            saltedPw = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(saltedPw)));
+            return input == password;
         }
 
         /// <summary>

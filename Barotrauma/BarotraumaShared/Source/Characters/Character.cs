@@ -137,7 +137,7 @@ namespace Barotrauma
         {
             get
             {
-                if (GameMain.NetworkMember != null && !GameMain.NetworkMember.AllowDisguises) return Name;
+                if (GameMain.NetworkMember != null && !GameMain.NetworkMember.ServerSettings.AllowDisguises) return Name;
                 return info != null && !string.IsNullOrWhiteSpace(info.Name) ? info.Name + (info.DisplayName != info.Name ? " (as " + info.DisplayName + ")" : "") : SpeciesName;
             }
         }
@@ -1697,7 +1697,7 @@ namespace Barotrauma
             //Do ragdoll shenanigans before Stun because it's still technically a stun, innit? Less network updates for us!
             bool allowRagdoll = true;
 #if SERVER
-            allowRagdoll = GameMain.Server.AllowRagdollButton;
+            allowRagdoll = GameMain.Server.ServerSettings.AllowRagdollButton;
 #endif
             if (IsForceRagdolled)
                 IsRagdolled = IsForceRagdolled;

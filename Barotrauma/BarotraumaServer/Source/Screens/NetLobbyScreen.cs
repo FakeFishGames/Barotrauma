@@ -174,19 +174,19 @@ namespace Barotrauma
         public override void Select()
         {
             base.Select();
-            GameMain.Server.Voting.ResetVotes(GameMain.Server.ConnectedClients);
+            GameMain.Server.ServerSettings.Voting.ResetVotes(GameMain.Server.ConnectedClients);
         }
 
         public void RandomizeSettings()
         {
-            if (GameMain.Server.RandomizeSeed) LevelSeed = ToolBox.RandomSeed(8);
+            if (GameMain.Server.ServerSettings.RandomizeSeed) LevelSeed = ToolBox.RandomSeed(8);
 
-            if (GameMain.Server.SubSelectionMode == SelectionMode.Random)
+            if (GameMain.Server.ServerSettings.SubSelectionMode == SelectionMode.Random)
             {
                 var nonShuttles = Submarine.SavedSubmarines.Where(c => !c.HasTag(SubmarineTag.Shuttle) && !c.HasTag(SubmarineTag.HideInMenus)).ToList();
                 SelectedSub = nonShuttles[Rand.Range(0, nonShuttles.Count)];
             }
-            if (GameMain.Server.ModeSelectionMode == SelectionMode.Random)
+            if (GameMain.Server.ServerSettings.ModeSelectionMode == SelectionMode.Random)
             {
                 var allowedGameModes = Array.FindAll(gameModes, m => !m.IsSinglePlayer && m.Name != "Campaign");
                 SelectedModeName = allowedGameModes[Rand.Range(0, allowedGameModes.Length)].Name;
