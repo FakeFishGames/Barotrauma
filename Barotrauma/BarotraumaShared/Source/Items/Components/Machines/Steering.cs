@@ -62,7 +62,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (pathFinder == null) pathFinder = new PathFinder(WayPoint.WayPointList, false);
 #if CLIENT
-                    ToggleMaintainPosition(maintainPosTickBox);
+                    maintainPosTickBox.Selected = true;
 #endif
                 }
 #if CLIENT
