@@ -249,13 +249,13 @@ namespace Barotrauma
                 Vector2 relativeHullPos = new Vector2(
                     (hull.WorldRect.X - worldBorders.X) / (float)Borders.Width, 
                     (worldBorders.Y - hull.WorldRect.Y) / (float)Borders.Height);
-
                 Vector2 relativeHullSize = new Vector2(hull.Rect.Width / (float)worldBorders.Width, hull.Rect.Height / (float)worldBorders.Height);
 
-                var hullFrame = new GUIFrame(new RectTransform(relativeHullSize, hullContainer.RectTransform) { RelativeOffset = relativeHullPos }, style: "MiniMapRoom")
+                var hullFrame = new GUIFrame(new RectTransform(relativeHullSize, hullContainer.RectTransform) { RelativeOffset = relativeHullPos }, style: "MiniMapRoom", color: Color.DarkCyan * 0.8f)
                 {
                     UserData = hull
                 };
+                new GUIFrame(new RectTransform(Vector2.One, hullFrame.RectTransform), style: "ScanLines", color: Color.DarkCyan * 0.8f);
             }
 
             if (pointsOfInterest != null)
