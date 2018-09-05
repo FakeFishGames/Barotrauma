@@ -72,8 +72,8 @@ namespace Barotrauma.Items.Components
                         _maintainPos = tickBox.Selected;
                         if (_maintainPos)
                         {
-                            levelStartTickBox.Selected = false;
-                            levelEndTickBox.Selected = false;
+                            LevelStartSelected = false;
+                            LevelEndSelected = false;
                             if (controlledSub == null)
                             {
                                 posToMaintain = null;
@@ -86,6 +86,10 @@ namespace Barotrauma.Items.Components
                         else if (!LevelEndSelected && !LevelStartSelected)
                         {
                             AutoPilot = false;
+                        }
+                        if (!_maintainPos)
+                        {
+                            posToMaintain = null;
                         }
                     }
                     return true;
@@ -106,9 +110,8 @@ namespace Barotrauma.Items.Components
                         _levelStartSelected = tickBox.Selected;
                         if (_levelStartSelected)
                         {
-                            levelEndTickBox.Selected = false;
-                            maintainPosTickBox.Selected = false;
-                            posToMaintain = null;
+                            LevelEndSelected = false;
+                            MaintainPos = false;
                             UpdatePath();
                         }
                         else if (!MaintainPos && !LevelEndSelected)
@@ -134,9 +137,8 @@ namespace Barotrauma.Items.Components
                         _levelEndSelected = tickBox.Selected;
                         if (_levelEndSelected)
                         {
-                            levelStartTickBox.Selected = false;
-                            maintainPosTickBox.Selected = false;
-                            posToMaintain = null;
+                            LevelStartSelected = false;
+                            MaintainPos = false;
                             UpdatePath();
                         }
                         else if (!MaintainPos && !LevelStartSelected)
