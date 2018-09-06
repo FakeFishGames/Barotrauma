@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Barotrauma
+﻿namespace Barotrauma
 {
     class LineEndingTest
     {
         public int testField = 1;
+        public string testString;
 
         public void TestFunction()
         {
+            // Some comments
 
         }
     }
