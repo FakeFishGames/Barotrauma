@@ -4,6 +4,10 @@
   waveamplitude="1"
   wavelength="60"
   steertorque="100"
-  flip="True"
+  flip="False"
   mirror="False"
-  rotatetowardsmovement="True" />
+  rotatetowardsmovement="True"
+  footangle="NaN"
+  headangle="NaN"
+  torsoangle="NaN"
+  animationtype="SwimSlow" />

@@ -1,7 +1,14 @@
 ﻿<WatcherSwimFast
   AnimationType="SwimSlow"
-  speed ="0.5"
+  speed="0.5"
   waveaplitude="0"
-  mirror="true"
-  rotatetowardsmovement="false"
-  />
+  mirror="False"
+  rotatetowardsmovement="False"
+  flip="True"
+  waveamplitude="1"
+  wavelength="1"
+  footangle="NaN"
+  steertorque="25"
+  headangle="NaN"
+  torsoangle="NaN"
+  animationtype="SwimSlow" />
