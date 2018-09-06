@@ -728,18 +728,25 @@ namespace Barotrauma
         /// </summary>
         private void CreateOrderTargetFrame(GUIComponent orderButton, Character character, Order order)
         {
+            Submarine submarine = Character.Controlled != null && Character.Controlled.TeamID > 1 && Submarine.MainSubs.Length > 1 ?
+                Submarine.MainSubs[1] : 
+                Submarine.MainSub;
+
             List<Item> matchingItems = new List<Item>();
             if (order.ItemComponentType != null || order.ItemIdentifiers.Length > 0)
             {
                 matchingItems = order.ItemIdentifiers.Length > 0 ?
                     Item.ItemList.FindAll(it => order.ItemIdentifiers.Contains(it.Prefab.Identifier) || it.HasTag(order.ItemIdentifiers)) :
                     Item.ItemList.FindAll(it => it.components.Any(ic => ic.GetType() == order.ItemComponentType));
+
+                matchingItems.RemoveAll(it => it.Submarine != submarine && !submarine.DockedTo.Contains(it.Submarine));
             }
+
 
             //more than one target item -> create a minimap-like selection with a pic of the sub
             if (matchingItems.Count > 1)
             {
-                Rectangle subBorders = Submarine.MainSub.GetDockedBorders();
+                Rectangle subBorders = submarine.GetDockedBorders();
 
                 Point frameSize;
                 if (subBorders.Width > subBorders.Height)
@@ -763,7 +770,7 @@ namespace Barotrauma
                 {
                     UserData = character
                 };
-                Submarine.MainSub.CreateMiniMap(orderTargetFrame, matchingItems);
+                submarine.CreateMiniMap(orderTargetFrame, matchingItems);
 
                 List<GUIComponent> optionFrames = new List<GUIComponent>();
                 foreach (Item item in matchingItems)
