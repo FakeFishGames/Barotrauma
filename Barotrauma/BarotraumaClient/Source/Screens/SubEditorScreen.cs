@@ -302,28 +302,28 @@ namespace Barotrauma
             };
             tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowWaypoints"))
             {
-                OnSelected = (GUITickBox obj) => { WayPoint.ShowWayPoints = !WayPoint.ShowWayPoints; return true; },
-                Selected = true
+                Selected = WayPoint.ShowWayPoints,
+                OnSelected = (GUITickBox obj) => { WayPoint.ShowWayPoints = obj.Selected; return true; }
             };
             tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowSpawnpoints"))
             {
-                OnSelected = (GUITickBox obj) => { WayPoint.ShowSpawnPoints = !WayPoint.ShowSpawnPoints; return true; },
-                Selected = true
+                Selected = WayPoint.ShowSpawnPoints,
+                OnSelected = (GUITickBox obj) => { WayPoint.ShowSpawnPoints = obj.Selected; return true; }
             };
             tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowLinks"))
             {
-                OnSelected = (GUITickBox obj) => { Item.ShowLinks = !Item.ShowLinks; return true; },
-                Selected = true
+                Selected = Item.ShowLinks,
+                OnSelected = (GUITickBox obj) => { Item.ShowLinks = obj.Selected; return true; }
             };
             tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowHulls"))
             {
-                OnSelected = (GUITickBox obj) => { Hull.ShowHulls = !Hull.ShowHulls; return true; },
-                Selected = true
+                Selected = Hull.ShowHulls,
+                OnSelected = (GUITickBox obj) => { Hull.ShowHulls = obj.Selected; return true; }
             };
             tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowGaps"))
             {
-                OnSelected = (GUITickBox obj) => { Gap.ShowGaps = !Gap.ShowGaps; return true; },
-                Selected = true
+                Selected = Gap.ShowGaps,
+                OnSelected = (GUITickBox obj) => { Gap.ShowGaps = obj.Selected; return true; },
             };
 
             //empty guiframe as a separator
