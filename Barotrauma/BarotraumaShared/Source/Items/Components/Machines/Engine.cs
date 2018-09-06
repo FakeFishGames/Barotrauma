@@ -20,6 +20,8 @@ namespace Barotrauma.Items.Components
         private float damageTimer;
 
         private bool hasPower;
+
+        private float prevVoltage;
         
         [Editable(0.0f, 10000000.0f, ToolTip = "The amount of force exerted on the submarine when the engine is operating at full power."), 
         Serialize(2000.0f, true)]
@@ -47,7 +49,7 @@ namespace Barotrauma.Items.Components
 
         public float CurrentVolume
         {
-            get { return Math.Abs((force / 100.0f) * (minVoltage <= 0.0f ? 1.0f : Math.Min(voltage / minVoltage, 1.0f))); }
+            get { return Math.Abs((force / 100.0f) * (minVoltage <= 0.0f ? 1.0f : Math.Min(prevVoltage / minVoltage, 1.0f))); }
         }
 
         public Engine(Item item, XElement element)
@@ -82,6 +84,7 @@ namespace Barotrauma.Items.Components
 
             if (powerConsumption == 0.0f) voltage = 1.0f;
 
+            prevVoltage = voltage;
             hasPower = voltage > minVoltage;
 
             Force = MathHelper.Lerp(force, (voltage < minVoltage) ? 0.0f : targetForce, 0.1f);
