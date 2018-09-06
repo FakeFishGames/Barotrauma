@@ -104,7 +104,7 @@ namespace Barotrauma
                 {
                     throw new Exception("[RagdollParams] Selected file null!");
                 }
-                DebugConsole.NewMessage($"[RagdollParams] Loading ragdoll from {selectedFile}.", Color.Orange);
+                DebugConsole.Log($"[RagdollParams] Loading ragdoll from {selectedFile}.");
                 T r = new T();
                 if (r.Load(selectedFile, speciesName))
                 {

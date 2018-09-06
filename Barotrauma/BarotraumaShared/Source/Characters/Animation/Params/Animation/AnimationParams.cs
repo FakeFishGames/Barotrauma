@@ -160,7 +160,7 @@ namespace Barotrauma
                     else if (string.IsNullOrEmpty(fileName))
                     {
                         // Files found, but none specified.
-                        DebugConsole.NewMessage($"[AnimationParams] Selecting random animation of type {animType} for {speciesName}", Color.White);
+                        DebugConsole.Log($"[AnimationParams] Selecting random animation of type {animType} for {speciesName}");
                         selectedFile = filteredFiles.GetRandom();
                     }
                     else
@@ -182,7 +182,7 @@ namespace Barotrauma
                 {
                     throw new Exception("[AnimationParams] Selected file null!");
                 }
-                DebugConsole.NewMessage($"[AnimationParams] Loading animations from {selectedFile}.", Color.Yellow);
+                DebugConsole.Log($"[AnimationParams] Loading animations from {selectedFile}.");
                 T a = new T();
                 if (a.Load(selectedFile, speciesName))
                 {
