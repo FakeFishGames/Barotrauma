@@ -257,7 +257,7 @@ namespace Barotrauma
             }
 
             int spacing = (int)(10 * GUI.Scale);
-            int height = (int)(55 * GUI.Scale);
+            int height = (int)(45 * GUI.Scale);
             characterInfoWidth = (int)(170 * GUI.Scale);
 
             float charactersPerView = characterListBox.Rect.Height / (float)(height + characterListBox.Spacing);
