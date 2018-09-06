@@ -1,6 +1,13 @@
 ﻿<MolochBossSwimSlow
   AnimationType="SwimSlow"
-  speed ="2"
+  speed="2"
   waveamplitude="0"
-  mirror="true"
-  rotatetowardsmovement="false"/>
+  mirror="False"
+  rotatetowardsmovement="False"
+  flip="True"
+  wavelength="1"
+  footangle="NaN"
+  steertorque="25"
+  headangle="NaN"
+  torsoangle="NaN"
+  animationtype="SwimSlow" />
