@@ -294,11 +294,8 @@ namespace Barotrauma
 
             var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowLighting"))
             {
-                OnSelected = (GUITickBox obj) => 
-                {
-                    lightingEnabled = !lightingEnabled;
-                    return true;
-                }
+                Selected = lightingEnabled,
+                OnSelected = (GUITickBox obj) =>  { lightingEnabled = obj.Selected; return true; }
             };
             tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowWaypoints"))
             {
