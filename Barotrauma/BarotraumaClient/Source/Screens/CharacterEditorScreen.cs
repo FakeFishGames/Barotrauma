@@ -1018,7 +1018,7 @@ namespace Barotrauma
             {
                 animTestPoseToggle.Selected = !animTestPoseToggle.Selected;
             }
-            if (PlayerInput.KeyHit(Keys.E))
+            if (PlayerInput.KeyHit(Keys.E) && showAnimControls)
             {
                 int nextIndex = animSelection.SelectedIndex + 1;
                 if (nextIndex > 3)
