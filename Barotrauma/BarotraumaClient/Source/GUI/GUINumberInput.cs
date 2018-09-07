@@ -121,7 +121,11 @@ namespace Barotrauma
             TextBox = new GUITextBox(new RectTransform(new Point(Rect.Width, Rect.Height), rectT), textAlignment: textAlignment, style: style)
             {
                 ClampText = false,
-                OnTextChanged = TextChanged
+                OnTextChanged = TextChanged,
+                // For some reason the caret in the number inputs is dimmer than it should.
+                // It should not be rendered behind anything, as I first suspected.
+                // Therefore this hack.
+                CaretColor = Color.White
             };
             var buttonArea = new GUIFrame(new RectTransform(new Point(buttonSize.X, buttonSize.Y * 2), rectT, Anchor.CenterRight), style: null);
             PlusButton = new GUIButton(new RectTransform(buttonSize, buttonArea.RectTransform), "+");
