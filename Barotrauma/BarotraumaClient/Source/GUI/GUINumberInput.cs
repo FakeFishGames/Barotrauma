@@ -16,8 +16,9 @@ namespace Barotrauma
         public delegate void OnValueChangedHandler(GUINumberInput numberInput);
         public OnValueChangedHandler OnValueChanged;
         
-        private GUITextBox textBox;
-        private GUIButton plusButton, minusButton;
+        public GUITextBox TextBox { get; private set; }
+        public GUIButton PlusButton { get; private set; }
+        public GUIButton MinusButton { get; private set; }
 
         private NumberType inputType;
         public NumberType InputType
@@ -26,9 +27,9 @@ namespace Barotrauma
             set
             {
                 inputType = value;
-                plusButton.Visible = inputType == NumberType.Int ||
+                PlusButton.Visible = inputType == NumberType.Int ||
                     (inputType == NumberType.Float && MinValueFloat > float.MinValue && MaxValueFloat < float.MaxValue);
-                minusButton.Visible = plusButton.Visible;
+                MinusButton.Visible = PlusButton.Visible;
             }
         }
 
@@ -39,9 +40,9 @@ namespace Barotrauma
             set
             {
                 minValueFloat = value;
-                plusButton.Visible = inputType == NumberType.Int ||
+                PlusButton.Visible = inputType == NumberType.Int ||
                     (inputType == NumberType.Float && MinValueFloat > float.MinValue && MaxValueFloat < float.MaxValue);
-                minusButton.Visible = plusButton.Visible;
+                MinusButton.Visible = PlusButton.Visible;
             }                
         }
         public float? MaxValueFloat
@@ -50,9 +51,9 @@ namespace Barotrauma
             set
             {
                 maxValueFloat = value;
-                plusButton.Visible = inputType == NumberType.Int ||
+                PlusButton.Visible = inputType == NumberType.Int ||
                     (inputType == NumberType.Float && MinValueFloat > float.MinValue && MaxValueFloat < float.MaxValue);
-                minusButton.Visible = plusButton.Visible;
+                MinusButton.Visible = PlusButton.Visible;
             }
         }
 
@@ -68,14 +69,14 @@ namespace Barotrauma
                 if (MinValueFloat != null)
                 {
                     floatValue = Math.Max(floatValue, MinValueFloat.Value);
-                    minusButton.Enabled = floatValue > MinValueFloat;
+                    MinusButton.Enabled = floatValue > MinValueFloat;
                 }
                 if (MaxValueFloat != null)
                 {
                     floatValue = Math.Min(floatValue, MaxValueFloat.Value);
-                    plusButton.Enabled = floatValue < MaxValueFloat;
+                    PlusButton.Enabled = floatValue < MaxValueFloat;
                 }
-                textBox.Text = floatValue.ToString("G", CultureInfo.InvariantCulture);
+                TextBox.Text = floatValue.ToString("G", CultureInfo.InvariantCulture);
 
                 OnValueChanged?.Invoke(this);
             }
@@ -95,14 +96,14 @@ namespace Barotrauma
                 if (MinValueInt != null)
                 {
                     intValue = Math.Max(intValue, MinValueInt.Value);
-                    minusButton.Enabled = intValue > MinValueInt;
+                    MinusButton.Enabled = intValue > MinValueInt;
                 }
                 if (MaxValueInt != null)
                 {
                     intValue = Math.Min(intValue, MaxValueInt.Value);
-                    plusButton.Enabled = intValue < MaxValueInt;
+                    PlusButton.Enabled = intValue < MaxValueInt;
                 }
-                textBox.Text = this.intValue.ToString();
+                TextBox.Text = this.intValue.ToString();
 
                 OnValueChanged?.Invoke(this);
             }
@@ -114,27 +115,23 @@ namespace Barotrauma
 
         public GUINumberInput(RectTransform rectT, NumberType inputType, string style = "", Alignment textAlignment = Alignment.Center) : base(style, rectT)
         {
-            textBox = new GUITextBox(new RectTransform(Vector2.One, rectT), textAlignment: textAlignment, style: style)
+            int buttonHeight = Rect.Height / 2;
+            int margin = 2;
+            Point buttonSize = new Point(buttonHeight - margin, buttonHeight - margin);
+            TextBox = new GUITextBox(new RectTransform(new Point(Rect.Width, Rect.Height), rectT), textAlignment: textAlignment, style: style)
             {
                 ClampText = false,
                 OnTextChanged = TextChanged
             };
-            
-
-            int height = Rect.Height / 2;
-            var buttonSize = new Point(height, height);
-
-            plusButton = new GUIButton(new RectTransform(buttonSize, rectT, Anchor.TopRight)
-            {
-                IsFixedSize = false
-            }, "+");
-            plusButton.OnButtonDown += () =>
+            var buttonArea = new GUIFrame(new RectTransform(new Point(buttonSize.X, buttonSize.Y * 2), rectT, Anchor.CenterRight), style: null);
+            PlusButton = new GUIButton(new RectTransform(buttonSize, buttonArea.RectTransform), "+");
+            PlusButton.OnButtonDown += () =>
             {
                 pressedTimer = pressedDelay;
                 return true;
             };
-            plusButton.OnClicked += PlusButtonClicked;
-            plusButton.OnPressed += () =>
+            PlusButton.OnClicked += PlusButtonClicked;
+            PlusButton.OnPressed += () =>
             {
                 if (!IsPressedTimerRunning)
                 {
@@ -149,19 +146,16 @@ namespace Barotrauma
                 }
                 return true;
             };
-            plusButton.Visible = inputType == NumberType.Int;
+            PlusButton.Visible = inputType == NumberType.Int;
 
-            minusButton = new GUIButton(new RectTransform(buttonSize, rectT, Anchor.BottomRight)
-            {
-                IsFixedSize = false
-            }, "-");
-            minusButton.OnButtonDown += () =>
+            MinusButton = new GUIButton(new RectTransform(buttonSize, buttonArea.RectTransform, Anchor.BottomRight), "-");
+            MinusButton.OnButtonDown += () =>
             {
                 pressedTimer = pressedDelay;
                 return true;
             };
-            minusButton.OnClicked += MinusButtonClicked;
-            minusButton.OnPressed += () =>
+            MinusButton.OnClicked += MinusButtonClicked;
+            MinusButton.OnPressed += () =>
             {
                 if (!IsPressedTimerRunning)
                 {
@@ -176,33 +170,33 @@ namespace Barotrauma
                 }
                 return true;
             };
-            minusButton.Visible = inputType == NumberType.Int;
+            MinusButton.Visible = inputType == NumberType.Int;
 
             if (inputType == NumberType.Int)
             {
-                textBox.Text = "0";
-                textBox.OnEnterPressed += (txtBox, txt) =>
+                TextBox.Text = "0";
+                TextBox.OnEnterPressed += (txtBox, txt) =>
                 {
-                    textBox.Text = IntValue.ToString();
-                    textBox.Deselect();
+                    TextBox.Text = IntValue.ToString();
+                    TextBox.Deselect();
                     return true;
                 };
-                textBox.OnDeselected += (txtBox, key) =>
+                TextBox.OnDeselected += (txtBox, key) =>
                 {
-                    textBox.Text = IntValue.ToString();
+                    TextBox.Text = IntValue.ToString();
                 };
             }
             else if (inputType == NumberType.Float)
             {
-                textBox.Text = "0.0";
-                textBox.OnDeselected += (txtBox, key) =>
+                TextBox.Text = "0.0";
+                TextBox.OnDeselected += (txtBox, key) =>
                 {
-                    textBox.Text = FloatValue.ToString("G", CultureInfo.InvariantCulture);
+                    TextBox.Text = FloatValue.ToString("G", CultureInfo.InvariantCulture);
                 };
-                textBox.OnEnterPressed += (txtBox, txt) =>
+                TextBox.OnEnterPressed += (txtBox, txt) =>
                 {
-                    textBox.Text = FloatValue.ToString("G", CultureInfo.InvariantCulture);
-                    textBox.Deselect();
+                    TextBox.Text = FloatValue.ToString("G", CultureInfo.InvariantCulture);
+                    TextBox.Deselect();
                     return true;
                 };
             }
@@ -221,7 +215,6 @@ namespace Barotrauma
                 if (!maxValueFloat.HasValue || !minValueFloat.HasValue) return false;
                 FloatValue += (MaxValueFloat.Value - minValueFloat.Value) / 10.0f;
             }
-
             return false;
         }
 
