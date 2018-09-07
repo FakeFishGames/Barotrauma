@@ -622,13 +622,13 @@ namespace Barotrauma
         private GUIComponent CreateColorField(ISerializableEntity entity, SerializableProperty property, Color value)
         {
             var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, Math.Max(elementHeight, 26)), layoutGroup.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), frame.RectTransform) { MinSize = new Point(80, 26)}, property.Name, font: GUI.SmallFont)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
             };
             var colorBoxBack = new GUIFrame(new RectTransform(new Vector2(0.075f, 1), frame.RectTransform)
             {
-                RelativeOffset = new Vector2(0.2f, 0)
+                AbsoluteOffset = new Point(label.Rect.Width, 0)
             }, color: Color.Black, style: null);
             var colorBox = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), colorBoxBack.RectTransform, Anchor.Center), style: null);
             var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 1), frame.RectTransform, Anchor.TopRight), isHorizontal: true, childAnchor: Anchor.CenterRight)

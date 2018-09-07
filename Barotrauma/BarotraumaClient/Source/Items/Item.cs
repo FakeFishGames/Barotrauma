@@ -251,15 +251,8 @@ namespace Barotrauma
 
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
-            int width = 450, height = 150;
-            int x = GameMain.GraphicsWidth / 2 - width / 2, y = 30;
-            
-            editingHUD = new GUIListBox(new RectTransform(new Point(width, height), GUI.Canvas) { ScreenSpaceOffset = new Point(x, y) })
-            {
-                UserData = this
-            };
-
-            GUIListBox listBox = (GUIListBox)editingHUD;
+            editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, inGame ? Anchor.CenterRight : Anchor.BottomRight) { MinSize = new Point(400, 0) }) { UserData = this };  
+            GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null);
             listBox.Spacing = 5;
             
             var itemEditor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true);
@@ -322,9 +315,9 @@ namespace Barotrauma
 
             }
 
-            int contentHeight = editingHUD.Children.Sum(c => c.Rect.Height) + (listBox.CountChildren - 1) * listBox.Spacing;
-            editingHUD.RectTransform.NonScaledSize =
-                new Point(editingHUD.RectTransform.NonScaledSize.X, MathHelper.Clamp(contentHeight, 50, editingHUD.RectTransform.NonScaledSize.Y));
+            //int contentHeight = editingHUD.Children.Sum(c => c.Rect.Height) + (listBox.CountChildren - 1) * listBox.Spacing;
+            //editingHUD.RectTransform.NonScaledSize =
+            //    new Point(editingHUD.RectTransform.NonScaledSize.X, MathHelper.Clamp(contentHeight, 50, editingHUD.RectTransform.NonScaledSize.Y));
 
             return editingHUD;
         }

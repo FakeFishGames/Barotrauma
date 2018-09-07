@@ -64,21 +64,9 @@ namespace Barotrauma
         
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
-            int width = 600, height = 150;
-            int x = GameMain.GraphicsWidth / 2 - width / 2, y = 30;
-            
-            editingHUD = new GUIListBox(new RectTransform(new Point(width, height), GUI.Canvas) { ScreenSpaceOffset = new Point(x, y) })
-            {
-                UserData = this
-            };
-            
-            GUIListBox listBox = (GUIListBox)editingHUD;
-            new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true);
-
-            editingHUD.RectTransform.NonScaledSize = new Point(
-                editingHUD.RectTransform.NonScaledSize.X,
-                MathHelper.Clamp(listBox.Content.Children.Sum(c => c.Rect.Height), 50, editingHUD.RectTransform.NonScaledSize.Y));
-            
+            editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, inGame ? Anchor.CenterRight : Anchor.BottomRight) { MinSize = new Point(400, 0) }) { UserData = this };
+            GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null);
+            new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true);         
             return editingHUD;
         }
 
