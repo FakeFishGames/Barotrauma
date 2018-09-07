@@ -72,7 +72,8 @@
   <GUIButton
     color="1.0,1.0,1.0,1.0"
     hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0">
+    selectedcolor="1.0,1.0,1.0,1.0"
+    pressedcolor="0.9,0.9,0.9,1.0">
 
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="683, 74, 129, 41" slice="687, 78, 808, 109"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="888, 91, 129, 41" slice="893, 98, 1013, 125"/>
@@ -87,8 +88,9 @@
   <GUIButtonLarge
     color="1.0,1.0,1.0,1.0"
     hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0">
-    
+    selectedcolor="1.0,1.0,1.0,1.0"
+    pressedcolor="0.9,0.9,0.9,1.0">
+
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="4,116,222,59" slice="41,140,189,151"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="415,172,222,59" slice="452,196,600,207"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect="646,172,222,59" slice="683,196,831,207"/>    
