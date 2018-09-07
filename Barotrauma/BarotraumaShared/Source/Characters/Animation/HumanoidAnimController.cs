@@ -754,6 +754,13 @@ namespace Barotrauma
                         if (gap.IsHorizontal || gap.Open <= 0.0f) continue;
                         if (Collider.SimPosition.X < ConvertUnits.ToSimUnits(gap.Rect.X) || Collider.SimPosition.X > ConvertUnits.ToSimUnits(gap.Rect.Right)) continue;
                         
+                        //if the gap is above us and leads outside, there's no surface to limit the movement
+                        if (!gap.IsRoomToRoom && gap.Position.Y > currentHull.Position.Y)
+                        {
+                            surfacePos += 100.0f;
+                            continue;
+                        }
+
                         foreach (var linkedTo in gap.linkedTo)
                         {
                             if (linkedTo is Hull hull && hull != currentHull)
