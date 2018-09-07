@@ -16,8 +16,16 @@ namespace Barotrauma.Items.Components
         private string scrollingText;
         private float scrollPadding;
         private int scrollIndex;
+        private bool needsScrolling;
 
         private float[] charWidths;
+
+        [Serialize("0,0,0,0", true)]
+        public Vector4 Padding
+        {
+            get { return TextBlock.Padding; }
+            set { TextBlock.Padding = value; }
+        }
 
         private string text;
         [Serialize("", true), Editable(100)]
@@ -35,9 +43,7 @@ namespace Barotrauma.Items.Components
 
                 text = value;
                 TextBlock.Text = value;
-                scrollingText = null;
-                scrollAmount = 0;
-                scrollIndex = 0;
+                SetScrollingText();
             }
         }
 
@@ -62,7 +68,6 @@ namespace Barotrauma.Items.Components
             }
         }
 
-
         private bool scrollable;
         [Serialize(false, true)]
         public bool Scrollable
@@ -76,6 +81,7 @@ namespace Barotrauma.Items.Components
                 TextBlock.TextAlignment = scrollable ? Alignment.CenterLeft : Alignment.Center;
             }
         }
+
 
         private GUITextBlock TextBlock
         {
@@ -99,32 +105,59 @@ namespace Barotrauma.Items.Components
         {            
         }
 
+        private void SetScrollingText()
+        {
+            if (!scrollable) return;
+
+            float totalWidth = textBlock.Font.MeasureString(text).X;
+            float textAreaWidth = Math.Max(textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z, 0);
+            if (totalWidth >= textAreaWidth)
+            {
+                //add enough spaces to fill the rect
+                //(so the text can scroll entirely out of view before we reset it back to start)
+                needsScrolling = true;
+                float spaceWidth = textBlock.Font.MeasureChar(' ').X;
+                scrollingText = new string(' ', (int)Math.Ceiling(textAreaWidth / spaceWidth)) + text;
+            }
+            else
+            {
+                //whole text can fit in the textblock, no need to scroll
+                needsScrolling = false;
+                scrollingText = text;
+                scrollAmount = 0.0f;
+                scrollIndex = 0;
+                return;
+            }
+
+            //calculate character widths
+            scrollPadding = 0;
+            charWidths = new float[scrollingText.Length];
+            for (int i = 0; i < scrollingText.Length; i++)
+            {
+                float charWidth = TextBlock.Font.MeasureChar(scrollingText[i]).X;
+                scrollPadding = Math.Max(charWidth, scrollPadding);
+                charWidths[i] = charWidth;
+            }
+
+            scrollIndex = MathHelper.Clamp(scrollIndex, 0, text.Length);
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             if (!scrollable) return;
 
             if (scrollingText == null)
             {
-                //add enough spaces to fill the rect
-                //(so the text can scroll entirely out of view before we reset it back to start)
-                float spaceWidth = textBlock.Font.MeasureChar(' ').X;
-                scrollingText = new string(' ', (int)Math.Ceiling(textBlock.Rect.Width / spaceWidth)) + text;
-
-                //calculate character widths
-                scrollPadding = 0;
-                charWidths = new float[scrollingText.Length];
-                for (int i = 0; i < scrollingText.Length; i++)
-                {
-                    float charWidth = TextBlock.Font.MeasureChar(scrollingText[i]).X;
-                    scrollPadding = Math.Max(charWidth, scrollPadding);
-                    charWidths[i] = charWidth;
-                }
+                SetScrollingText();
             }
+
+            if (!needsScrolling) return;
 
             scrollAmount -= deltaTime * 10;
 
             float currLength = 0;
             StringBuilder sb = new StringBuilder();
+            float textAreaWidth = textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z;
             for (int i = scrollIndex; i < scrollingText.Length; i++)
             {
                 //first character is out of view -> skip to next character
@@ -141,7 +174,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 //reached the right edge, stop adding more character
-                if (scrollAmount + (currLength + charWidths[i] + scrollPadding) >= TextBlock.Rect.Width)
+                if (scrollAmount + (currLength + charWidths[i] + scrollPadding) >= textAreaWidth)
                 {
                     break;
                 }

@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <contentpackage name="Vanilla 0.8" path="Data/ContentPackages/Vanilla 0.8" corepackage="true">
   <Item file="Content/Items/idcard.xml" />
-  <Item file="Content/Items/itemlabel.xml" />
   <Item file="Content/Items/Artifacts/artifacts.xml" />
   <Item file="Content/Items/Button/button.xml" />
   <Item file="Content/Items/Command/command.xml" />
@@ -20,6 +19,7 @@
   <Item file="Content/Items/Engine/engine.xml" />
   <Item file="Content/Items/Fabricators/fabricators.xml" />
   <Item file="Content/Items/Fabricators/materials.xml" />
+  <Item file="Content/Items/Labels/labels.xml" />
   <Item file="Content/Items/Ladder/ladder.xml" />
   <Item file="Content/Items/Medical/medical.xml" />
   <Item file="Content/Items/Misc/misc.xml" />
