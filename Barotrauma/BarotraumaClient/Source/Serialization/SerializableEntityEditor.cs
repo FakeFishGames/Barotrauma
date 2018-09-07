@@ -476,7 +476,7 @@ namespace Barotrauma
                 RelativeSpacing = 0.05f
             };
             var fields = new GUIComponent[2];
-            for (int i = 0; i < 2; i++)
+            for (int i = 1; i >= 0; i--)
             {
                 var element = new GUIFrame(new RectTransform(new Vector2(0.45f, 1), inputArea.RectTransform), style: null);
                 new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), vectorComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
@@ -524,7 +524,7 @@ namespace Barotrauma
                 RelativeSpacing = 0.03f
             };
             var fields = new GUIComponent[3];
-            for (int i = 0; i < 3; i++)
+            for (int i = 2; i >= 0; i--)
             {
                 var element = new GUIFrame(new RectTransform(new Vector2(0.33f, 1), inputArea.RectTransform), style: null);
                 new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), vectorComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
@@ -576,7 +576,7 @@ namespace Barotrauma
                 Stretch = true,
                 RelativeSpacing = 0.01f
             };
-            for (int i = 0; i < 4; i++)
+            for (int i = 3; i >= 0; i--)
             {
                 var element = new GUIFrame(new RectTransform(new Vector2(0.22f, 1), inputArea.RectTransform) { MinSize = new Point(50, 0), MaxSize = new Point(150, 50) }, style: null);
                 new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), vectorComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
@@ -637,7 +637,7 @@ namespace Barotrauma
                 RelativeSpacing = 0.01f
             };
             var fields = new GUIComponent[4];
-            for (int i = 0; i < 4; i++)
+            for (int i = 3; i >= 0; i--)
             {
                 var element = new GUIFrame(new RectTransform(new Vector2(0.2f, 1), inputArea.RectTransform) { MinSize = new Point(40, 0), MaxSize = new Point(100, 50) }, style: null);
                 new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), colorComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
@@ -699,7 +699,7 @@ namespace Barotrauma
                 Stretch = true,
                 RelativeSpacing = 0.01f
             };
-            for (int i = 0; i < 4; i++)
+            for (int i = 3; i >= 0; i--)
             {
                 var element = new GUIFrame(new RectTransform(new Vector2(0.22f, 1), inputArea.RectTransform) { MinSize = new Point(50, 0), MaxSize = new Point(150, 50) }, style: null);
                 new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), rectComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
