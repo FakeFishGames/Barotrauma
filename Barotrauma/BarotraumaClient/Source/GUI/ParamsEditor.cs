@@ -29,7 +29,7 @@ namespace Barotrauma
 
         public GUIListBox CreateEditorBox(RectTransform rectT = null)
         {
-            rectT = rectT ?? new RectTransform(new Vector2(0.25f, 1), GUI.Canvas) { MinSize = new Point(200, GameMain.GraphicsHeight) };
+            rectT = rectT ?? new RectTransform(new Vector2(0.25f, 1), GUI.Canvas) { MinSize = new Point(340, GameMain.GraphicsHeight) };
             EditorBox = new GUIListBox(rectT);
             return EditorBox;
         }
