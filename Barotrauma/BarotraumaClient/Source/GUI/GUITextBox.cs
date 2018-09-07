@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
-using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -29,7 +28,8 @@ namespace Barotrauma
         public delegate bool OnTextChangedHandler(GUITextBox textBox, string text);
         public OnTextChangedHandler OnTextChanged;
 
-        public bool CaretEnabled;
+        public bool CaretEnabled { get; set; }
+        public Color? CaretColor { get; set; }
         
         private int? maxTextLength;
 
@@ -308,7 +308,7 @@ namespace Barotrauma
                     GUI.DrawLine(spriteBatch,
                         new Vector2(Rect.X + (int)caretPos.X + 2, Rect.Y + caretPos.Y + 3),
                         new Vector2(Rect.X + (int)caretPos.X + 2, Rect.Y + caretPos.Y + Font.MeasureString("I").Y - 3),
-                        textBlock.TextColor * (textBlock.TextColor.A / 255.0f));
+                        CaretColor ?? textBlock.TextColor * (textBlock.TextColor.A / 255.0f));
                 }
             }
         }
