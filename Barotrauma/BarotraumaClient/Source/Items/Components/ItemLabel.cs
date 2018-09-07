@@ -1,5 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Text;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -10,20 +12,32 @@ namespace Barotrauma.Items.Components
 
         private Color textColor;
 
+        private float scrollAmount;
+        private string scrollingText;
+        private float scrollPadding;
+        private int scrollIndex;
+
+        private float[] charWidths;
+
+        private string text;
         [Serialize("", true), Editable(100)]
         public string Text
         {
-            get { return textBlock.Text.Replace("\n", ""); }
+            get { return text; }
             set
             {
-                if (value == TextBlock.Text || item.Rect.Width < 5) return;
+                if (value == text || item.Rect.Width < 5) return;
 
-                if (textBlock.Rect.Width != item.Rect.Width || textBlock.Rect.Height != item.Rect.Height)
+                if (TextBlock.Rect.Width != item.Rect.Width || textBlock.Rect.Height != item.Rect.Height)
                 {
                     textBlock = null;
                 }
 
+                text = value;
                 TextBlock.Text = value;
+                scrollingText = null;
+                scrollAmount = 0;
+                scrollIndex = 0;
             }
         }
 
@@ -48,6 +62,21 @@ namespace Barotrauma.Items.Components
             }
         }
 
+
+        private bool scrollable;
+        [Serialize(false, true)]
+        public bool Scrollable
+        {
+            get { return scrollable; }
+            set
+            {
+                scrollable = value;
+                IsActive = value;
+                TextBlock.Wrap = !scrollable;
+                TextBlock.TextAlignment = scrollable ? Alignment.CenterLeft : Alignment.Center;
+            }
+        }
+
         private GUITextBlock TextBlock
         {
             get
@@ -65,16 +94,67 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        /*public override void Move(Vector2 amount)
-        {
-            textBlock.Rect = new Rectangle(item.Rect.X, -item.Rect.Y, item.Rect.Width, item.Rect.Height);
-        }*/
-
         public ItemLabel(Item item, XElement element)
             : base(item, element)
-        {
+        {            
         }
 
+        public override void Update(float deltaTime, Camera cam)
+        {
+            if (!scrollable) return;
+
+            if (scrollingText == null)
+            {
+                //add enough spaces to fill the rect
+                //(so the text can scroll entirely out of view before we reset it back to start)
+                float spaceWidth = textBlock.Font.MeasureChar(' ').X;
+                scrollingText = new string(' ', (int)Math.Ceiling(textBlock.Rect.Width / spaceWidth)) + text;
+
+                //calculate character widths
+                scrollPadding = 0;
+                charWidths = new float[scrollingText.Length];
+                for (int i = 0; i < scrollingText.Length; i++)
+                {
+                    float charWidth = TextBlock.Font.MeasureChar(scrollingText[i]).X;
+                    scrollPadding = Math.Max(charWidth, scrollPadding);
+                    charWidths[i] = charWidth;
+                }
+            }
+
+            scrollAmount -= deltaTime * 10;
+
+            float currLength = 0;
+            StringBuilder sb = new StringBuilder();
+            for (int i = scrollIndex; i < scrollingText.Length; i++)
+            {
+                //first character is out of view -> skip to next character
+                if (i == scrollIndex && scrollAmount < -charWidths[i])
+                {
+                    scrollIndex++;
+                    scrollAmount = 0;
+                    if (scrollIndex >= scrollingText.Length) //reached the last character, reset
+                    {
+                        scrollIndex = 0;
+                        break;
+                    }
+                    continue;
+                }
+
+                //reached the right edge, stop adding more character
+                if (scrollAmount + (currLength + charWidths[i] + scrollPadding) >= TextBlock.Rect.Width)
+                {
+                    break;
+                }
+                else
+                {
+                    currLength += charWidths[i];
+                    sb.Append(scrollingText[i]);
+                }
+            }
+
+            TextBlock.Text = sb.ToString();            
+        }
+                
         public void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
             var drawPos = new Vector2(
@@ -89,8 +169,8 @@ namespace Barotrauma.Items.Components
             {
                 return;
             }
-            
-            textBlock.TextOffset = drawPos - textBlock.Rect.Location.ToVector2();
+
+            textBlock.TextOffset = drawPos - textBlock.Rect.Location.ToVector2() + new Vector2(scrollAmount + scrollPadding, 0.0f);
             textBlock.DrawManually(spriteBatch);
         }
     }

@@ -994,15 +994,18 @@ namespace Barotrauma
         {
             characterModeTickBox.Selected = enabled;
             characterMode = enabled;
-            wiringModeTickBox.Selected = false;
-            wiringMode = false;
+            if (characterMode)
+            {
+                wiringModeTickBox.Selected = false;
+                wiringMode = false;
+            }
             entityMenuOpen = false;
 
             if (characterMode)
             {
                 CreateDummyCharacter();
             }
-            else if (dummyCharacter != null)
+            else if (dummyCharacter != null && !wiringMode)
             {
                 RemoveDummyCharacter();
             }
@@ -1021,8 +1024,11 @@ namespace Barotrauma
         {
             wiringModeTickBox.Selected = enabled;
             wiringMode = enabled;
-            characterModeTickBox.Selected = false;
-            characterMode = false;
+            if (wiringMode)
+            {
+                characterModeTickBox.Selected = false;
+                characterMode = false;
+            }
 
             if (wiringMode)
             {
@@ -1031,7 +1037,7 @@ namespace Barotrauma
                 dummyCharacter.Inventory.TryPutItem(item, null, new List<InvSlotType>() { InvSlotType.RightHand });
                 wiringToolPanel = CreateWiringPanel();
             }
-            else
+            else if (dummyCharacter != null && !characterMode)
             {
                 RemoveDummyCharacter();
             }

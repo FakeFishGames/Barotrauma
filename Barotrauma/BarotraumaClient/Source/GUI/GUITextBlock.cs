@@ -93,6 +93,17 @@ namespace Barotrauma
             get { return textColor; }
             set { textColor = value; }
         }
+
+        public Alignment TextAlignment
+        {
+            get { return textAlignment; }
+            set
+            {
+                if (textAlignment == value) return;
+                textAlignment = value;
+                SetTextPos();
+            }
+        }
                 
         /// <summary>
         /// This is the new constructor.
@@ -154,7 +165,7 @@ namespace Barotrauma
             {
                 overflowClipActive = size.X > rect.Width - padding.X - padding.Z;
             }
-                     
+
             textPos = new Vector2(rect.Width / 2.0f, rect.Height / 2.0f);
             origin = size * 0.5f;
 

@@ -25,7 +25,7 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
-        
+
         public override void Move(Vector2 amount)
         {
             //do nothing
@@ -34,6 +34,16 @@ namespace Barotrauma.Items.Components
         public ItemLabel(Item item, XElement element)
             : base(item, element)
         {
+        }
+
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
+        {
+            switch (connection.Name)
+            {
+                case "set_text":
+                    Text = signal;
+                    break;
+            }
         }
     }
 }

@@ -328,7 +328,7 @@ namespace Barotrauma
         protected void CreateColliders()
         {
             collider = new List<PhysicsBody>();
-            DebugConsole.NewMessage($"Creating colliders from {RagdollParams.Name}.", Color.White);
+            DebugConsole.Log($"Creating colliders from {RagdollParams.Name}.");
             foreach (XElement cElement in RagdollParams.MainElement.Elements("collider"))
             {
                 collider.Add(new PhysicsBody(cElement, RagdollParams.LimbScale));
@@ -346,7 +346,7 @@ namespace Barotrauma
 
         protected void CreateJoints()
         {
-            DebugConsole.NewMessage($"Creating joints from {RagdollParams.Name}.", Color.White);
+            DebugConsole.Log($"Creating joints from {RagdollParams.Name}.");
             LimbJoints = new LimbJoint[RagdollParams.MainElement.Elements("joint").Count()];
             RagdollParams.Joints.ForEach(j => AddJoint(j));
             // Check the joints
@@ -378,7 +378,7 @@ namespace Barotrauma
 
         protected void CreateLimbs()
         {
-            DebugConsole.NewMessage($"Creating limbs from {RagdollParams.Name}.", Color.White);
+            DebugConsole.Log($"Creating limbs from {RagdollParams.Name}.");
             limbDictionary = new Dictionary<LimbType, Limb>();
             limbs = new Limb[RagdollParams.MainElement.Elements("limb").Count()];
             RagdollParams.Limbs.ForEach(l => AddLimb(l));

@@ -94,7 +94,7 @@ namespace Barotrauma
 
         private bool ChangeSpawnType(GUIButton button, object obj)
         {
-            GUITextBlock spawnTypeText = button.Parent as GUITextBlock;
+            GUITextBlock spawnTypeText = button.Parent.GetChild<GUITextBlock>();
 
             spawnType += (int)button.UserData;
 
