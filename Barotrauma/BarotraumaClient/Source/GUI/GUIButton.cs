@@ -119,9 +119,6 @@ namespace Barotrauma
         
         public bool Selected { get; set; }
         
-        /// <summary>
-        /// This is the new constructor.
-        /// </summary>
         public GUIButton(RectTransform rectT, string text = "", Alignment textAlignment = Alignment.Center, string style = "", Color? color = null) : base(style, rectT)
         {
             if (color.HasValue)
@@ -169,6 +166,10 @@ namespace Barotrauma
                         {
                             state = ComponentState.Pressed;
                         }
+                    }
+                    else
+                    {
+                        state = ComponentState.Pressed;
                     }
                 }
                 else if (PlayerInput.LeftButtonClicked())
