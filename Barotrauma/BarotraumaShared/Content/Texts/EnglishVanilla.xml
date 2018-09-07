@@ -504,6 +504,9 @@
   <GenerateWaypointsButton>Generate waypoints</GenerateWaypointsButton>
   <GenerateWaypointsToolTip>AI controlled crew members require waypoints to navigate around the sub.</GenerateWaypointsToolTip>
   <ShowEntitiesLabel>Show</ShowEntitiesLabel>
+  <ShowWalls>Walls</ShowWalls>
+  <ShowStructures>Structures</ShowStructures>
+  <ShowItems>Items</ShowItems>
   <ShowLighting>Lighting</ShowLighting>
   <ShowWaypoints>Waypoints</ShowWaypoints>
   <ShowSpawnpoints>Spawnpoints</ShowSpawnpoints>
