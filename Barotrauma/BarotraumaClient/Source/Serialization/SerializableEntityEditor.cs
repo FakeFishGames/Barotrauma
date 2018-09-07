@@ -481,7 +481,7 @@ namespace Barotrauma
                 var element = new GUIFrame(new RectTransform(new Vector2(0.45f, 1), inputArea.RectTransform), style: null);
                 new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), vectorComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
                 GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight),
-                    GUINumberInput.NumberType.Int)
+                    GUINumberInput.NumberType.Float)
                 {
                     Font = GUI.SmallFont
                 };
@@ -529,7 +529,7 @@ namespace Barotrauma
                 var element = new GUIFrame(new RectTransform(new Vector2(0.33f, 1), inputArea.RectTransform), style: null);
                 new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), vectorComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
                 GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight),
-                    GUINumberInput.NumberType.Int)
+                    GUINumberInput.NumberType.Float)
                 {
                     Font = GUI.SmallFont
                 };
@@ -581,7 +581,7 @@ namespace Barotrauma
                 var element = new GUIFrame(new RectTransform(new Vector2(0.22f, 1), inputArea.RectTransform) { MinSize = new Point(50, 0), MaxSize = new Point(150, 50) }, style: null);
                 new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), vectorComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
                 GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight),
-                    GUINumberInput.NumberType.Int)
+                    GUINumberInput.NumberType.Float)
                 {
                     Font = GUI.SmallFont
                 };
