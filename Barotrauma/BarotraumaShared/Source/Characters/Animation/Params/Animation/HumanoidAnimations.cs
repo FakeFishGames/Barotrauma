@@ -4,37 +4,37 @@ namespace Barotrauma
 {
     class HumanWalkParams : HumanGroundedParams
     {
-        public static HumanWalkParams GetDefaultAnimParams() => GetDefaultAnimParams<HumanWalkParams>("human", AnimationType.Walk);
-        public static HumanWalkParams GetAnimParams(string fileName = null)
+        public static HumanWalkParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<HumanWalkParams>(character.SpeciesName, AnimationType.Walk);
+        public static HumanWalkParams GetAnimParams(Character character, string fileName = null)
         {
-            return GetAnimParams<HumanWalkParams>("human", AnimationType.Walk, fileName);
+            return GetAnimParams<HumanWalkParams>(character.SpeciesName, AnimationType.Walk, fileName);
         }
     }
 
     class HumanRunParams : HumanGroundedParams
     {
-        public static HumanRunParams GetDefaultAnimParams() => GetDefaultAnimParams<HumanRunParams>("human", AnimationType.Run);
-        public static HumanRunParams GetAnimParams(string fileName = null)
+        public static HumanRunParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<HumanRunParams>(character.SpeciesName, AnimationType.Run);
+        public static HumanRunParams GetAnimParams(Character character, string fileName = null)
         {
-            return GetAnimParams<HumanRunParams>("human", AnimationType.Run, fileName);
+            return GetAnimParams<HumanRunParams>(character.SpeciesName, AnimationType.Run, fileName);
         }
     }
 
     class HumanSwimFastParams: HumanSwimParams
     {
-        public static HumanSwimFastParams GetDefaultAnimParams() => GetDefaultAnimParams<HumanSwimFastParams>("human", AnimationType.SwimFast);
-        public static HumanSwimFastParams GetAnimParams(string fileName = null)
+        public static HumanSwimFastParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<HumanSwimFastParams>(character.SpeciesName, AnimationType.SwimFast);
+        public static HumanSwimFastParams GetAnimParams(Character character, string fileName = null)
         {
-            return GetAnimParams<HumanSwimFastParams>("human", AnimationType.SwimFast, fileName);
+            return GetAnimParams<HumanSwimFastParams>(character.SpeciesName, AnimationType.SwimFast, fileName);
         }
     }
 
     class HumanSwimSlowParams : HumanSwimParams
     {
-        public static HumanSwimSlowParams GetDefaultAnimParams() => GetDefaultAnimParams<HumanSwimSlowParams>("human", AnimationType.SwimSlow);
-        public static HumanSwimSlowParams GetAnimParams(string fileName = null)
+        public static HumanSwimSlowParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<HumanSwimSlowParams>(character.SpeciesName, AnimationType.SwimSlow);
+        public static HumanSwimSlowParams GetAnimParams(Character character, string fileName = null)
         {
-            return GetAnimParams<HumanSwimSlowParams>("human", AnimationType.SwimSlow, fileName);
+            return GetAnimParams<HumanSwimSlowParams>(character.SpeciesName, AnimationType.SwimSlow, fileName);
         }
     }
 
