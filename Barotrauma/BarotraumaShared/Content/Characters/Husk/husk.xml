@@ -27,7 +27,7 @@
     <targetpriority tag="husk" state="Attack" priority="0"/>
   </ai>
 
-  <inventory slots="RightHand, LeftHand, Head, Any, Any, Any, Any, Any, Pack" accessiblewhenalive="false">
+  <inventory slots="RightHand, LeftHand, Head, Any, Any, Any, Any, Any" accessiblewhenalive="false">
     <Item identifier="huskeggs"/>
     <Item identifier="huskeggs"/>
   </inventory>

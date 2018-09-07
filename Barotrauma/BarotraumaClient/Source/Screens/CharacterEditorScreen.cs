@@ -180,7 +180,7 @@ namespace Barotrauma
             {
                 if (allFiles == null)
                 {
-                    allFiles = GameMain.Instance.GetFilesOfType(ContentType.Character).Where(f => !f.Contains("husk")).ToList();
+                    allFiles = GameMain.Instance.GetFilesOfType(ContentType.Character).ToList();
                     allFiles.ForEach(f => DebugConsole.NewMessage(f, Color.White));
                 }
                 return allFiles;
@@ -885,16 +885,16 @@ namespace Barotrauma
                         switch (selectedType)
                         {
                             case AnimationType.Walk:
-                                character.AnimController.WalkParams = HumanWalkParams.GetAnimParams(fileName);
+                                character.AnimController.WalkParams = HumanWalkParams.GetAnimParams(character, fileName);
                             break;
                             case AnimationType.Run:
-                                character.AnimController.RunParams = HumanRunParams.GetAnimParams(fileName);
+                                character.AnimController.RunParams = HumanRunParams.GetAnimParams(character, fileName);
                                 break;
                             case AnimationType.SwimSlow:
-                                character.AnimController.SwimSlowParams = HumanSwimSlowParams.GetAnimParams(fileName);
+                                character.AnimController.SwimSlowParams = HumanSwimSlowParams.GetAnimParams(character, fileName);
                                 break;
                             case AnimationType.SwimFast:
-                                character.AnimController.SwimFastParams = HumanSwimFastParams.GetAnimParams(fileName);
+                                character.AnimController.SwimFastParams = HumanSwimFastParams.GetAnimParams(character, fileName);
                                 break;
                             default:
                                 DebugConsole.ThrowError($"Animation type {selectedType.ToString()} not implemented!");
