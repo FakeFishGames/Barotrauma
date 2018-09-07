@@ -217,7 +217,7 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            if (!serverSettings.HasPassword)
+            if (serverSettings.HasPassword)
             {
                 //decrypt message and compare password
                 string clPw = inc.ReadString();
