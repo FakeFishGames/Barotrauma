@@ -290,12 +290,27 @@ namespace Barotrauma
                 OnClicked = GenerateWaypoints
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedLeftPanel.RectTransform), TextManager.Get("ShowEntitiesLabel"));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowEntitiesLabel"));
 
             var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowLighting"))
             {
                 Selected = lightingEnabled,
                 OnSelected = (GUITickBox obj) =>  { lightingEnabled = obj.Selected; return true; }
+            };
+            tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowWalls"))
+            {
+                Selected = Structure.ShowWalls,
+                OnSelected = (GUITickBox obj) => { Structure.ShowWalls = obj.Selected; return true; }
+            };
+            tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowStructures"))
+            {
+                Selected = Structure.ShowStructures,
+                OnSelected = (GUITickBox obj) => { Structure.ShowStructures = obj.Selected; return true; }
+            };
+            tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowItems"))
+            {
+                Selected = Item.ShowItems,
+                OnSelected = (GUITickBox obj) => { Item.ShowItems = obj.Selected; return true; }
             };
             tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowWaypoints"))
             {

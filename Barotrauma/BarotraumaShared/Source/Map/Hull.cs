@@ -104,15 +104,7 @@ namespace Barotrauma
                 Pressure = surface;
             }
         }
-
-        public override bool SelectableInEditor
-        {
-            get
-            {
-                return ShowHulls;
-            }
-        }
-
+        
         public override bool Linkable
         {
             get { return true; }
