@@ -8,6 +8,14 @@ namespace Barotrauma
     {
         private float particleTimer;
 
+        public override bool SelectableInEditor
+        {
+            get
+            {
+                return ShowGaps;
+            }
+        }
+
         public override void Draw(SpriteBatch sb, bool editing, bool back = true)
         {
             if (GameMain.DebugDraw)

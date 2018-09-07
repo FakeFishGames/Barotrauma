@@ -67,6 +67,11 @@ namespace Barotrauma
             }
         }
 
+        public virtual bool SelectableInEditor
+        {
+            get { return true; }
+        }
+
         public static bool SelectedAny
         {
             get { return selectedList.Count > 0; }

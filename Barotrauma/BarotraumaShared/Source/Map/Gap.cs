@@ -95,15 +95,7 @@ namespace Barotrauma
                 return "Gap";
             }
         }
-
-        public override bool SelectableInEditor
-        {
-            get
-            {
-                return ShowGaps;
-            }
-        }
-
+        
         public Gap(MapEntityPrefab prefab, Rectangle rectangle)
            : this (rectangle, Submarine.MainSub)
         { }

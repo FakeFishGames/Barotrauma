@@ -13,11 +13,21 @@ namespace Barotrauma
 {
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
     {
+        public static bool ShowItems = true;
+
         private List<ItemComponent> activeHUDs = new List<ItemComponent>();
 
         public override Sprite Sprite
         {
             get { return prefab.GetActiveSprite(condition); }
+        }
+
+        public override bool SelectableInEditor
+        {
+            get
+            {
+                return parentInventory == null && (body == null || body.Enabled) && ShowItems;
+            }
         }
 
         public Color GetSpriteColor()
@@ -40,6 +50,7 @@ namespace Barotrauma
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (!Visible) return;
+            if (editing && !ShowItems) return;
             
             Color color = (IsSelected && editing) ? Color.Red : GetSpriteColor();
             if (isHighlighted) color = Color.Orange;

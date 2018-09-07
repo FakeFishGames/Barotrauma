@@ -109,15 +109,7 @@ namespace Barotrauma
             get;
             private set;
         }
-
-        public override bool SelectableInEditor
-        {
-            get
-            {
-                return parentInventory == null && (body == null || body.Enabled);
-            }
-        }
-        
+                
         public override string Name
         {
             get { return prefab.Name; }
