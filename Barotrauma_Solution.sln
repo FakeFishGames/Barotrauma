@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BarotraumaClient", "Barotrauma\BarotraumaClient\BarotraumaClient.csproj", "{008C0F83-E914-4966-9135-EA885059EDD8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{85232B20-074D-4723-B0C6-91495391E448} = {85232B20-074D-4723-B0C6-91495391E448}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Farseer Physics MonoGame", "Libraries\Farseer Physics Engine 3.5\Farseer Physics MonoGame.csproj", "{0AAD36E3-51A5-4A07-AB60-5C8A66BD38B7}"
 EndProject
