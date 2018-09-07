@@ -97,9 +97,23 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Completely disables the scroll bar.
+        /// Disables the scroll bar without hiding it.
         /// </summary>
         public bool ScrollBarEnabled { get; set; } = true;
+
+        public bool ScrollBarVisible
+        {
+            get
+            {
+                return ScrollBar.Visible;
+            }
+            set
+            {
+                ScrollBar.Visible = value;
+                AutoHideScrollBar = false;
+            }
+        }
+
         /// <summary>
         /// Automatically hides the scroll bar when the content fits in.
         /// </summary>
@@ -319,7 +333,10 @@ namespace Barotrauma
             }
 
             ScrollBar.Enabled = ScrollBarEnabled && ScrollBar.BarSize < 1.0f;
-            ScrollBar.Visible = ScrollBar.Enabled || !AutoHideScrollBar;
+            if (AutoHideScrollBar)
+            {
+                ScrollBar.Visible = ScrollBar.BarSize < 1.0f;
+            }
 
             if ((GUI.IsMouseOn(this) || IsParentOf(GUI.MouseOn) || GUI.IsMouseOn(ScrollBar)) && PlayerInput.ScrollWheelSpeed != 0)
             {
@@ -428,7 +445,7 @@ namespace Barotrauma
             
             if (HideChildrenOutsideFrame) spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
 
-            if (ScrollBar.Enabled) ScrollBar.DrawManually(spriteBatch, alsoChildren: true, recursive: true);
+            if (ScrollBar.Visible) ScrollBar.DrawManually(spriteBatch, alsoChildren: true, recursive: true);
         }
 
         private bool IsChildInsideFrame(GUIComponent child)

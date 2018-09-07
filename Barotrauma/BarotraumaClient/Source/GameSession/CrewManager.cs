@@ -101,6 +101,7 @@ namespace Barotrauma
             {
                 Spacing = (int)(3 * GUI.Scale),
                 ScrollBarEnabled = false,
+                ScrollBarVisible = false,
                 CanBeFocused = false
             };
 
@@ -332,6 +333,7 @@ namespace Barotrauma
             var wrongOrderList = new GUIListBox(new RectTransform(new Point(50, orderButtonFrame.Rect.Height), orderButtonFrame.RectTransform), isHorizontal: true, style: null)
             {
                 ScrollBarEnabled = false,
+                ScrollBarVisible = false,
                 Spacing = spacing,
                 ClampMouseRectToParent = false
             };
