@@ -875,7 +875,6 @@ namespace Barotrauma.Networking
             }
 
             GameMain.NetLobbyScreen.StartButton.Visible = HasPermission(ClientPermissions.ManageRound);
-            DebugConsole.NewMessage("bop!", Color.Lime);
             GameMain.NetLobbyScreen.SubList.Enabled = serverSettings.Voting.AllowSubVoting || HasPermission(ClientPermissions.SelectSub);
             GameMain.NetLobbyScreen.ModeList.Enabled = serverSettings.Voting.AllowModeVoting || HasPermission(ClientPermissions.SelectMode);
             GameMain.NetLobbyScreen.ShowLogButton.Visible = HasPermission(ClientPermissions.ServerLog);

@@ -587,7 +587,6 @@ namespace Barotrauma
             //TODO: is this even applicable anymore?
             clientDisabledElements.ForEach(c => c.Enabled = false);//GameMain.Server != null);
             clientHiddenElements.ForEach(c => c.Visible = false);//GameMain.Server != null);
-            DebugConsole.NewMessage("bop!", Color.Red);
 
             ShowLogButton.Visible =
                 (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.ServerLog));
