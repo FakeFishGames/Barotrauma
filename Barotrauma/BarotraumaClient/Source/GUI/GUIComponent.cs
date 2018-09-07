@@ -119,6 +119,7 @@ namespace Barotrauma
         protected Color color;
         protected Color hoverColor;
         protected Color selectedColor;
+        protected Color pressedColor;
 
         protected ComponentState state;
 
@@ -251,6 +252,12 @@ namespace Barotrauma
         {
             get { return selectedColor; }
             set { selectedColor = value; }
+        }
+
+        public virtual Color PressedColor
+        {
+            get { return pressedColor; }
+            set { pressedColor = value; }
         }
 
         private RectTransform rectTransform;
@@ -390,15 +397,27 @@ namespace Barotrauma
             RectTransform.Children.ForEach(c => c.GUIComponent.DrawManually(spriteBatch, recursive, recursive));
         }
 
+        protected virtual Color GetCurrentColor(ComponentState state)
+        {
+            switch (state)
+            {
+                case ComponentState.Hover:
+                    return HoverColor;
+                case ComponentState.Pressed:
+                    return PressedColor;
+                case ComponentState.Selected:
+                    return SelectedColor;
+                default:
+                    return Color;
+            }
+        }
+
         protected virtual void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
             var rect = Rect;
 
-            Color currColor = color;
-            if (state == ComponentState.Selected) currColor = selectedColor;
-            if (state == ComponentState.Hover) currColor = hoverColor;
-
+            Color currColor = GetCurrentColor(state);
             if (flashTimer > 0.0f)
             {
                 GUI.DrawRectangle(spriteBatch,
@@ -492,6 +511,7 @@ namespace Barotrauma
             color = style.Color;
             hoverColor = style.HoverColor;
             selectedColor = style.SelectedColor;
+            pressedColor = style.PressedColor;
             
             sprites = style.Sprites;
 

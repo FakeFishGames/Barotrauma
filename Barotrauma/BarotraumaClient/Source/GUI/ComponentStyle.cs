@@ -15,6 +15,7 @@ namespace Barotrauma
 
         public readonly Color HoverColor;
         public readonly Color SelectedColor;
+        public readonly Color PressedColor;
 
         public readonly Color OutlineColor;
 
@@ -45,6 +46,9 @@ namespace Barotrauma
 
             colorVector = element.GetAttributeVector4("selectedcolor", new Vector4(0.0f, 0.0f, 0.0f, 0.0f));
             SelectedColor = new Color(colorVector.X, colorVector.Y, colorVector.Z, colorVector.W);
+
+            colorVector = element.GetAttributeVector4("pressedcolor", new Vector4(1, 1, 1, 1));
+            PressedColor = new Color(colorVector.X, colorVector.Y, colorVector.Z, colorVector.W);
 
             colorVector = element.GetAttributeVector4("outlinecolor", new Vector4(0.0f, 0.0f, 0.0f, 0.0f));
             OutlineColor = new Color(colorVector.X, colorVector.Y, colorVector.Z, colorVector.W);

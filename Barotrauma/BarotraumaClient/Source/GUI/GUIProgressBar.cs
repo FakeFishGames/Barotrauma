@@ -69,9 +69,7 @@ namespace Barotrauma
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
             spriteBatch.GraphicsDevice.ScissorRectangle = sliderRect;
 
-            Color currColor = color;
-            if (state == ComponentState.Selected) currColor = selectedColor;
-            if (state == ComponentState.Hover) currColor = hoverColor;
+            Color currColor = GetCurrentColor(state);
 
             slider.Color = currColor;
             if (AutoDraw)
