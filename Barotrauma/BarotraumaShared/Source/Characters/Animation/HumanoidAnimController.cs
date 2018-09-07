@@ -949,7 +949,6 @@ namespace Barotrauma
             tempTargetMovement.Y = Math.Min(tempTargetMovement.Y, 1.0f);
 
             bool slide = targetMovement.Y < -1.1f;
-            if (slide) tempTargetMovement.Y *= 1.5f;
 
             movement = MathUtils.SmoothStep(movement, tempTargetMovement, 0.3f);
 
