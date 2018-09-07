@@ -278,12 +278,22 @@ namespace Barotrauma
                     continue;
                 }
                 uint charIndex = text[i];
-                GlyphData gd;
-                if (texCoords.TryGetValue(charIndex, out gd))
+                if (texCoords.TryGetValue(charIndex, out GlyphData gd))
                 {
                     currentLineX += gd.advance;
                 }
                 retVal.X = Math.Max(retVal.X,currentLineX);
+            }
+            return retVal;
+        }
+
+        public Vector2 MeasureChar(char c)
+        {
+            Vector2 retVal = Vector2.Zero;
+            retVal.Y = baseHeight * 1.8f;
+            if (texCoords.TryGetValue(c, out GlyphData gd))
+            {
+                retVal.X = gd.advance;
             }
             return retVal;
         }
