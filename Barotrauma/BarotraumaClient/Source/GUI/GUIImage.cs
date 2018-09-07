@@ -86,9 +86,7 @@ namespace Barotrauma
         {
             if (!Visible) return;
 
-            Color currColor = color;
-            if (state == ComponentState.Hover) currColor = hoverColor;
-            if (state == ComponentState.Selected) currColor = selectedColor;
+            Color currColor = GetCurrentColor(state);
 
             if (sprite != null && sprite.Texture != null)
             {
