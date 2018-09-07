@@ -15,7 +15,17 @@ namespace Barotrauma
 
     partial class Structure : MapEntity, IDamageable, IServerSerializable
     {
+        public static bool ShowWalls = true, ShowStructures = true;        
+
         private List<ConvexHull> convexHulls;
+
+        public override bool SelectableInEditor
+        {
+            get
+            {
+                return ShowStructures && (ShowWalls || !HasBody);
+            }
+        }
 
         protected Vector2 textureScale = Vector2.One;
         [Editable, Serialize("1.0, 1.0", true)]
@@ -140,6 +150,11 @@ namespace Barotrauma
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (prefab.sprite == null) return;
+            if (editing)
+            {
+                if (!ShowStructures) return;
+                if (HasBody && !ShowWalls) return;
+            }
 
             Draw(spriteBatch, editing, back, null);
         }
@@ -152,6 +167,11 @@ namespace Barotrauma
         private void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Effect damageEffect = null)
         {
             if (prefab.sprite == null) return;
+            if (editing)
+            {
+                if (!ShowStructures) return;
+                if (HasBody && !ShowWalls) return;
+            }
 
             Color color = (isHighlighted) ? Color.Orange : spriteColor;
             if (IsSelected && editing)

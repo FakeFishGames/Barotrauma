@@ -15,7 +15,15 @@ namespace Barotrauma
         public const int MaxDecalsPerHull = 10;
         
         private List<Decal> decals = new List<Decal>();
-        
+
+        public override bool SelectableInEditor
+        {
+            get
+            {
+                return ShowHulls;
+            }
+        }
+
         public override bool DrawBelowWater
         {
             get

@@ -94,11 +94,6 @@ namespace Barotrauma
             get { return prefab != null && prefab.ResizeVertical; }
         }
 
-        public virtual bool SelectableInEditor
-        {
-            get { return true; }
-        }
-
         public override Vector2 Position
         {
             get
