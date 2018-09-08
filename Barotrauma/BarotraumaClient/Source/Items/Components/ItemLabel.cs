@@ -82,6 +82,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        [Serialize(20.0f, true)]
+        public float ScrollSpeed
+        {
+            get;
+            set;
+        }
 
         private GUITextBlock TextBlock
         {
@@ -153,7 +159,7 @@ namespace Barotrauma.Items.Components
 
             if (!needsScrolling) return;
 
-            scrollAmount -= deltaTime * 10;
+            scrollAmount -= deltaTime * ScrollSpeed;
 
             float currLength = 0;
             StringBuilder sb = new StringBuilder();
