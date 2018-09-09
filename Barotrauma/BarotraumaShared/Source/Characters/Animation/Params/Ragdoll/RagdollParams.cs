@@ -10,8 +10,8 @@ namespace Barotrauma
 {
     class HumanRagdollParams : RagdollParams
     {
-        public static HumanRagdollParams GetRagdollParams(string fileName = null) => GetRagdollParams<HumanRagdollParams>("human", fileName);
-        public static HumanRagdollParams GetDefaultRagdollParams() => GetDefaultRagdollParams<HumanRagdollParams>("human");
+        public static HumanRagdollParams GetRagdollParams(string speciesName, string fileName = null) => GetRagdollParams<HumanRagdollParams>(speciesName, fileName);
+        public static HumanRagdollParams GetDefaultRagdollParams(string speciesName) => GetDefaultRagdollParams<HumanRagdollParams>(speciesName);
     }
 
     class FishRagdollParams : RagdollParams
