@@ -161,7 +161,7 @@ namespace Barotrauma
             {
                 if (ragdoll == null)
                 {
-                    ragdoll = HumanRagdollParams.GetDefaultRagdollParams();
+                    ragdoll = HumanRagdollParams.GetDefaultRagdollParams(Character?.SpeciesName ?? "human");
                 }
                 return ragdoll;
             }

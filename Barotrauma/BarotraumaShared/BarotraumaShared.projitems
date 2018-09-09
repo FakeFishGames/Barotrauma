@@ -16,6 +16,7 @@
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Endworm\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Fractalguardian2\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Fractalguardian\Animations\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Ragdolls\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Mantis\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Molochboss\" />
@@ -71,6 +72,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Ragdolls\HumanDefaultRagdoll.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Ragdolls\HuskDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Ragdolls\HumanRagdollSmall.xml">
