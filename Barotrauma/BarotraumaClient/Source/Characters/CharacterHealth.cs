@@ -461,7 +461,7 @@ namespace Barotrauma
             {
                 healthBar.Color = healthWindowHealthBar.Color = HealthColorLerp(Color.Green, Color.Orange, Color.Red, vitality / MaxVitality);
                 healthBar.HoverColor = healthWindowHealthBar.HoverColor = healthBar.Color * 2.0f;
-                healthBar.BarSize = healthWindowHealthBar.BarSize = (vitality > 0.0f) ? vitality / MaxVitality : 1.0f - vitality / minVitality;
+                healthBar.BarSize = healthWindowHealthBar.BarSize = (vitality > 0.0f) ? vitality / MaxVitality : 1.0f - vitality / MinVitality;
 
                 if (healthBarPulsateTimer > 0.0f)
                 {
