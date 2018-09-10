@@ -177,12 +177,12 @@ namespace Barotrauma
         
         private void DrawMap(SpriteBatch spriteBatch, GUICustomComponent mapContainer)
         {
-            GameMain.GameSession?.Map?.Draw(spriteBatch, mapContainer.Rect);
+            GameMain.GameSession?.Map?.Draw(spriteBatch, mapContainer);
         }
 
         private void UpdateMap(float deltaTime, GUICustomComponent mapContainer)
         {
-            GameMain.GameSession?.Map?.Update(deltaTime, mapContainer.Rect);
+            GameMain.GameSession?.Map?.Update(deltaTime, mapContainer);
         }
         
         public void UpdateCharacterLists()

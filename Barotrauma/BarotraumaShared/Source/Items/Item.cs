@@ -495,7 +495,17 @@ namespace Barotrauma
                 if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
                 clone.properties[property.Key].TrySetValue(property.Value.GetValue());
             }
-            for (int i = 0; i < components.Count; i++)
+
+            if (components.Count != clone.components.Count)
+            {
+                string errorMsg = "Error while cloning item \"" + Name + "\" - clone does not have the same number of components. ";
+                errorMsg += "Original components: " + string.Join(", ", components.Select(c => c.GetType().ToString()));
+                errorMsg += ", cloned components: " + string.Join(", ", clone.components.Select(c => c.GetType().ToString()));
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Item.Clone:" + Name, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+            }
+
+            for (int i = 0; i < components.Count && i < clone.components.Count; i++)
             {
                 foreach (KeyValuePair<string, SerializableProperty> property in components[i].properties)
                 {
@@ -508,6 +518,12 @@ namespace Barotrauma
                 {
                     for (int j = 0; j < kvp.Value.Count; j++)
                     {
+                        if (!clone.components[i].requiredItems.ContainsKey(kvp.Key) ||
+                            clone.components[i].requiredItems[kvp.Key].Count <= j)
+                        {
+                            continue;
+                        }
+
                         clone.components[i].requiredItems[kvp.Key][j].JoinedIdentifiers = 
                             kvp.Value[j].JoinedIdentifiers;
                     }

@@ -137,21 +137,6 @@ namespace Barotrauma
             GUIFrame paddedTopPanel = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.55f), topPanel.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.1f) }, 
                 style: null);
 
-            hullVolumeFrame = new GUIFrame(new RectTransform(new Vector2(0.15f, 0.8f), topPanel.RectTransform, Anchor.BottomLeft, Pivot.TopLeft) { RelativeOffset = new Vector2(0.08f, 0.0f) }, "InnerFrame")
-            {
-                Visible = false
-            };
-
-            GUITextBlock totalHullVolume = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), hullVolumeFrame.RectTransform), "", font: GUI.SmallFont)
-            {
-                TextGetter = GetTotalHullVolume
-            };
-
-            GUITextBlock selectedHullVolume = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), hullVolumeFrame.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.15f) }, "", font: GUI.SmallFont)
-            {
-                TextGetter = GetSelectedHullVolume
-            };
-
             saveAssemblyFrame = new GUIFrame(new RectTransform(new Vector2(0.08f, 0.5f), topPanel.RectTransform, Anchor.BottomRight, Pivot.TopRight) { MinSize = new Point(170, 30) }, "InnerFrame")
             {
                 Visible = false
@@ -221,8 +206,7 @@ namespace Barotrauma
             {
                 TextGetter = GetStructureCount
             };
-
-
+            
             foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
             {
                 var catButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform),
@@ -233,10 +217,24 @@ namespace Barotrauma
                 };
             }
 
+            hullVolumeFrame = new GUIFrame(new RectTransform(new Vector2(0.15f, 2.0f), topPanel.RectTransform, Anchor.BottomLeft, Pivot.TopLeft, minSize: new Point(300, 85)) { AbsoluteOffset = new Point(leftPanel.Rect.Width, 0) }, "GUIToolTip")
+            {
+                Visible = false
+            };
+            GUITextBlock totalHullVolume = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), hullVolumeFrame.RectTransform), "", font: GUI.SmallFont)
+            {
+                TextGetter = GetTotalHullVolume
+            };
+            GUITextBlock selectedHullVolume = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), hullVolumeFrame.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.5f) }, "", font: GUI.SmallFont)
+            {
+                TextGetter = GetSelectedHullVolume
+            };
+
+
             //Entity menu
             //------------------------------------------------
 
-            entityMenu = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.4f), GUI.Canvas, Anchor.Center) { MinSize = new Point(400, 400) });
+            entityMenu = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.6f), GUI.Canvas, Anchor.Center) { MinSize = new Point(400, 400) });
             var paddedTab = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), entityMenu.RectTransform, Anchor.Center), style: null);
             var filterArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedTab.RectTransform), isHorizontal: true)
             {
