@@ -46,7 +46,7 @@ namespace Barotrauma
                 using (Stream fileStream = File.OpenRead(path))
                 {
                     var texture = Texture2D.FromStream(_graphicsDevice, fileStream);
-                    texture = PreMultiplyAlpha(texture);
+                    PreMultiplyAlpha(texture);
                     return texture;
                 }
 
@@ -63,7 +63,7 @@ namespace Barotrauma
             try
             {
                 var texture = Texture2D.FromStream(_graphicsDevice, fileStream);
-                texture = PreMultiplyAlpha(texture);
+                PreMultiplyAlpha(texture);
                 return texture;
             }
             catch (Exception e)
@@ -73,7 +73,7 @@ namespace Barotrauma
             }
         }
 
-        private static Texture2D PreMultiplyAlpha(Texture2D texture)
+        private static void PreMultiplyAlpha(Texture2D texture)
         {
             // Setup a render target to hold our final texture which will have premulitplied alpha values
             using (RenderTarget2D renderTarget = new RenderTarget2D(_graphicsDevice, texture.Width, texture.Height))
@@ -103,9 +103,7 @@ namespace Barotrauma
                 // Unset texture from graphic device and set modified data back to it
                 _graphicsDevice.Textures[0] = null;
                 texture.SetData(data);
-            }  
-
-            return texture;
+            }
         }
        
         
