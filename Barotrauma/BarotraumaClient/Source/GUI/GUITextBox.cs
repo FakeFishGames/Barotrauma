@@ -33,9 +33,29 @@ namespace Barotrauma
         
         private int? maxTextLength;
 
-        private int caretIndex;
+        private int _caretIndex;
+        private int CaretIndex
+        {
+            get { return _caretIndex; }
+            set
+            {
+                if (_caretIndex == value) { return; }
+                previousCaretIndex = _caretIndex;
+                _caretIndex = value;
+                caretPosDirty = true;
+            }
+        }
         private bool caretPosDirty;
         protected Vector2 caretPos;
+
+        private bool shiftDown;
+        private string selectedText = string.Empty;
+        private string clipboard = string.Empty;
+        private int selectedCharacters;
+        private int selectionStartIndex;
+        private int previousCaretIndex;
+        private Vector2 selectionStartPos;
+        private Vector2 selectionRectSize;
 
         public GUITextBlock.TextGetterHandler TextGetter
         {
@@ -169,8 +189,7 @@ namespace Barotrauma
                     }                    
                 }
 
-                caretIndex = Text.Length;
-                caretPosDirty = true;
+                CaretIndex = Text.Length;
             }
         }
         
@@ -204,7 +223,7 @@ namespace Barotrauma
                     //add the number of letters in the line
                     n += lines[i].Length;
                     //caret is on this line
-                    if (caretIndex <= n)
+                    if (CaretIndex <= n)
                     {
                         Vector2 lastLineSize = Font.MeasureString(lines[i]);
                         Vector2 textSize = Font.MeasureString(textBlock.WrappedText.Substring(n+i));
@@ -214,7 +233,7 @@ namespace Barotrauma
             }
             else
             {
-                Vector2 textSize = Font.MeasureString(textBlock.Text.Substring(0, caretIndex));
+                Vector2 textSize = Font.MeasureString(textBlock.Text.Substring(0, CaretIndex));
                 caretPos = new Vector2(textSize.X, 0) + textBlock.TextPos - textBlock.Origin;
             }
             caretPosDirty = false;
@@ -222,7 +241,7 @@ namespace Barotrauma
 
         public void Select()
         {
-            caretIndex = textBlock.Text.Length;
+            CaretIndex = textBlock.Text.Length;
             Selected = true;
             GUI.KeyboardDispatcher.Subscriber = this;
             //if (Clicked != null) Clicked(this);
@@ -249,7 +268,7 @@ namespace Barotrauma
 
             if (flashTimer > 0.0f) flashTimer -= deltaTime;
             if (!Enabled) return;
-            
+            shiftDown = PlayerInput.KeyDown(Keys.LeftShift) || PlayerInput.KeyDown(Keys.RightShift);           
             if (MouseRect.Contains(PlayerInput.MousePosition) && Enabled &&
                 (GUI.MouseOn == null || GUI.MouseOn == this || IsParentOf(GUI.MouseOn) || GUI.MouseOn.IsParentOf(this)))
             {
@@ -301,24 +320,33 @@ namespace Barotrauma
             // Frame is not used in the old system.
             frame?.DrawManually(spriteBatch);
             textBlock.DrawManually(spriteBatch);
-            if (caretVisible)
+            if (Selected)
             {
-                if (caretVisible && Selected)
+                if (caretVisible )
                 {
                     GUI.DrawLine(spriteBatch,
                         new Vector2(Rect.X + (int)caretPos.X + 2, Rect.Y + caretPos.Y + 3),
                         new Vector2(Rect.X + (int)caretPos.X + 2, Rect.Y + caretPos.Y + Font.MeasureString("I").Y - 3),
                         CaretColor ?? textBlock.TextColor * (textBlock.TextColor.A / 255.0f));
                 }
+                if (selectedCharacters > 0)
+                {
+                    // TODO: multiline edit?
+                    bool isLeftToRight = selectionStartIndex < CaretIndex;
+                    Vector2 topLeft = isLeftToRight ? selectionStartPos : new Vector2(selectionStartPos.X - selectionRectSize.X, selectionStartPos.Y);
+                    GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, selectionRectSize, Color.White * 0.25f, isFilled: true);
+                }
+                GUI.DrawString(spriteBatch, new Vector2(100, 0), selectedCharacters.ToString(), Color.White, Color.Black);
+                GUI.DrawString(spriteBatch, new Vector2(100, 20), selectionStartIndex.ToString(), Color.White, Color.Black);
+                GUI.DrawString(spriteBatch, new Vector2(100, 40), selectedText.ToString(), Color.Yellow, Color.Black);
             }
         }
 
         public void ReceiveTextInput(char inputChar)
         {
-            int prevCaretIndex = caretIndex; 
-            Text = Text.Insert(caretIndex, inputChar.ToString());
-            caretIndex = Math.Min(Text.Length, ++prevCaretIndex);
-            caretPosDirty = true;
+            int prevCaretIndex = CaretIndex;
+            Text = Text.Insert(CaretIndex, inputChar.ToString());
+            CaretIndex = Math.Min(Text.Length, ++prevCaretIndex);
             OnTextChanged?.Invoke(this, Text);
         }
         public void ReceiveTextInput(string text)
@@ -333,41 +361,138 @@ namespace Barotrauma
             switch (command)
             {
                 case '\b': //backspace
-                    if (Text.Length > 0 && caretIndex > 0)
+                    if (Text.Length > 0 && CaretIndex > 0)
                     {
-                        caretIndex--;
-                        int prevCaretIndex = caretIndex;
-                        Text = Text.Remove(caretIndex, 1);
-                        caretIndex = prevCaretIndex;
+                        CaretIndex--;
+                        int prevCaretIndex = CaretIndex;
+                        Text = Text.Remove(CaretIndex, 1);
+                        CaretIndex = prevCaretIndex;
+                        ClearSelection();
                     }
+                    OnTextChanged?.Invoke(this, Text);
+                    break;
+                case (char)0x3: // ctrl-c
+                    CopySelectedText();
+                    break;
+                case (char)0x16: // ctrl-v
+                    Text = Text.Insert(CaretIndex, GetCopiedText());
+                    OnTextChanged?.Invoke(this, Text);
+                    break;
+                case (char)0x18: // ctrl-x
+                    CopySelectedText();
+                    if (selectionStartIndex < CaretIndex)
+                    {
+                        Text = Text.Remove(selectionStartIndex, selectedText.Length);
+                    }
+                    else
+                    {
+                        Text = Text.Remove(CaretIndex, selectedText.Length);
+                    }
+                    ClearSelection();
                     OnTextChanged?.Invoke(this, Text);
                     break;
             }
         }
 
+        private void CopySelectedText()
+        {
+#if WINDOWS
+            System.Windows.Clipboard.SetText(selectedText);
+#else
+            clipboard = selectedText;
+#endif
+        }
+
+        private void ClearSelection()
+        {
+            selectedCharacters = 0;
+            selectionStartIndex = -1;
+            selectedText = string.Empty;
+        }
+
+        private string GetCopiedText()
+        {
+            string t;
+#if WINDOWS
+            t = System.Windows.Clipboard.GetText();
+#else
+            t = clipboard;
+#endif
+            return t;
+        }
+
         public void ReceiveSpecialInput(Keys key)
         {
-            if (key == Keys.Left)
+            switch (key)
             {
-                caretIndex = Math.Max(caretIndex - 1, 0);
-                caretTimer = 0;
+                case Keys.Left:
+                    CaretIndex = Math.Max(CaretIndex - 1, 0);
+                    caretTimer = 0;
+                    if (shiftDown)
+                    {
+                        if (selectionStartIndex == -1)
+                        {
+                            selectionStartIndex = CaretIndex;
+                            selectionStartPos = caretPos;
+                        }
+                        bool erase = selectedCharacters > 0 && previousCaretIndex - selectionStartIndex >= selectedCharacters;
+                        if (erase)
+                        {
+                            selectedCharacters--;
+                        }
+                        else
+                        {
+                            selectedCharacters++;
+                            selectionStartIndex = CaretIndex;
+                        }
+                        selectedCharacters = MathHelper.Clamp(selectedCharacters, 0, Text.Length - selectionStartIndex);
+                        selectedText = Text.Substring(selectionStartIndex, selectedCharacters);
+                        selectionRectSize = Font.MeasureString(textBlock.WrappedText.Substring(selectionStartIndex, selectedCharacters));
+                    }
+                    else
+                    {
+                        ClearSelection();
+                    }
+                    break;
+                case Keys.Right:
+                    CaretIndex = Math.Min(CaretIndex + 1, Text.Length);
+                    caretTimer = 0;
+                    if (shiftDown)
+                    {
+                        if (selectionStartIndex == -1)
+                        {
+                            selectionStartIndex = previousCaretIndex;
+                            selectionStartPos = caretPos;
+                        }
+                        bool erase = selectedCharacters > 0 && selectionStartIndex == previousCaretIndex;
+                        if (erase)
+                        {
+                            selectedCharacters--;
+                            selectionStartIndex = CaretIndex;
+                        }
+                        else
+                        {
+                            selectedCharacters++;
+                        }
+                        selectedCharacters = MathHelper.Clamp(selectedCharacters, 0, Text.Length - selectionStartIndex);
+                        selectedText = Text.Substring(selectionStartIndex, selectedCharacters);
+                        selectionRectSize = Font.MeasureString(textBlock.WrappedText.Substring(selectionStartIndex, selectedCharacters));
+                    }
+                    else
+                    {
+                        ClearSelection();
+                    }
+                    break;
+                case Keys.Delete:
+                    if (Text.Length > 0 && CaretIndex < Text.Length)
+                    {
+                        int prevCaretIndex = CaretIndex;
+                        Text = Text.Remove(CaretIndex, 1);
+                        CaretIndex = prevCaretIndex;
+                        OnTextChanged?.Invoke(this, Text);
+                    }
+                    break;
             }
-            else if (key == Keys.Right)
-            {
-                caretIndex = Math.Min(caretIndex + 1, Text.Length);
-                caretTimer = 0;
-            }
-            else if (key == Keys.Delete)
-            {
-                if (Text.Length > 0 && caretIndex < Text.Length)
-                {
-                    int prevCaretIndex = caretIndex;
-                    Text = Text.Remove(caretIndex, 1);
-                    caretIndex = prevCaretIndex;
-                }
-
-            }
-            caretPosDirty = true;
             OnKeyHit?.Invoke(this, key);
         }
     }
