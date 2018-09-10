@@ -4,7 +4,7 @@
   waveamplitude="3"
   wavelength="50"
   steertorque="100"
-  flip="False"
+  flip="True"
   mirror="False"
   rotatetowardsmovement="True"
   footangle="NaN"

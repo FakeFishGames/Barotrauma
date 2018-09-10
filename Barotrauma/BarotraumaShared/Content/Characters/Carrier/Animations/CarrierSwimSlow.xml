@@ -5,9 +5,9 @@
   wavelength="0"
   steertorque="25"
   flip="True"
-  mirror="False"
+  mirror="True"
   rotatetowardsmovement="False"
   footangle="NaN"
-  headangle="NaN"
+  headangle="270"
   torsoangle="NaN"
   animationtype="SwimSlow" />
