@@ -359,29 +359,26 @@ namespace Barotrauma
 
             return (float)(Math.Abs(xDiff * (lineA.Y - point.Y) - yDiff * (lineA.X - point.X)) /
                 Math.Sqrt(xDiff * xDiff + yDiff * yDiff));
-        } 
+        }
 
         public static bool CircleIntersectsRectangle(Vector2 circlePos, float radius, Rectangle rect)
         {
-            float xDist = Math.Abs(circlePos.X - rect.Center.X);
-            float yDist = Math.Abs(circlePos.Y - rect.Center.Y);
-
             int halfWidth = rect.Width / 2;
+            float xDist = Math.Abs(circlePos.X - (rect.X + halfWidth));
+            if (xDist > halfWidth + radius) { return false; }
+
             int halfHeight = rect.Height / 2;
-            
-            if (xDist > (halfWidth + radius))   { return false; }
-            if (yDist > (halfHeight + radius))  { return false; }   
+            float yDist = Math.Abs(circlePos.Y - (rect.Y + halfHeight));
+            if (yDist > halfHeight + radius) { return false; }
 
-
-            if (xDist <= (halfWidth))           { return true; }         
-            if (yDist <= (halfHeight))          { return true; }
+            if (xDist <= halfWidth || yDist <= halfHeight) { return true; }
 
             float distSqX = xDist - halfWidth;
             float distSqY = yDist - halfHeight;
 
-            return (distSqX * distSqX + distSqY * distSqY <= (radius * radius));
+            return distSqX * distSqX + distSqY * distSqY <= radius * radius;
         }
-        
+
         /// <summary>
         /// divide a convex hull into triangles
         /// </summary>
