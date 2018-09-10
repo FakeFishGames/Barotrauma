@@ -6,8 +6,6 @@ namespace Barotrauma
 {
     partial class NetLobbyScreen : Screen
     {
-        public string ServerName = "Server";
-
         private UInt16 lastUpdateID;
         public UInt16 LastUpdateID
         {
@@ -24,7 +22,7 @@ namespace Barotrauma
         //for guitextblock delegate
         public string GetServerName()
         {
-            return ServerName;
+            return GameMain.NetworkMember.ServerSettings.ServerName;
         }
         
         private string levelSeed = "";

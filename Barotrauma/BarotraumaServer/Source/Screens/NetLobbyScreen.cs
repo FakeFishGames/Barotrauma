@@ -66,8 +66,6 @@ namespace Barotrauma
             get { return gameModes[SelectedModeIndex]; }
         }
 
-        public string ServerMessageText;
-
         private int missionTypeIndex;
         public int MissionTypeIndex
         {
@@ -93,12 +91,12 @@ namespace Barotrauma
 
         public void ChangeServerName(string n)
         {
-            ServerName = n; lastUpdateID++;
+            GameMain.Server.ServerSettings.ServerName = n; lastUpdateID++;
         }
 
         public void ChangeServerMessage(string m)
         {
-            ServerMessageText = m; lastUpdateID++;
+            GameMain.Server.ServerSettings.ServerMessageText = m; lastUpdateID++;
         }
         
         public List<JobPrefab> JobPreferences

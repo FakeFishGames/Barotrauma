@@ -62,7 +62,7 @@ namespace Barotrauma.Steam
             instance.server.ServerName = server.Name;
             instance.server.MaxPlayers = server.ServerSettings.MaxPlayers;
             instance.server.Passworded = server.ServerSettings.HasPassword;
-            Instance.server.SetKey("message", GameMain.NetLobbyScreen.ServerMessageText);
+            Instance.server.SetKey("message", GameMain.Server.ServerSettings.ServerMessageText);
             Instance.server.SetKey("version", GameMain.Version.ToString());
             Instance.server.SetKey("contentpackage", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.Name)));
             Instance.server.SetKey("contentpackagehash", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.MD5hash.Hash)));

@@ -143,6 +143,7 @@
     <Compile Include="Source\Networking\NetworkMember.cs" />
     <Compile Include="Source\Networking\OrderChatMessage.cs" />
     <Compile Include="Source\Networking\RespawnManager.cs" />
+    <Compile Include="Source\Networking\ServerSettings.cs" />
     <Compile Include="Source\Networking\SteamManager.cs" />
     <Compile Include="Source\Networking\Voting.cs" />
     <Compile Include="Source\PlayerInput.cs" />
