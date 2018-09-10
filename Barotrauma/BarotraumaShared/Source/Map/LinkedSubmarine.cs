@@ -99,7 +99,12 @@ namespace Barotrauma
         {
             return Vector2.Distance(position, WorldPosition) < 50.0f;
         }
-        
+
+        public override MapEntity Clone()
+        {
+            return CreateDummy(Submarine, filePath, Position);
+        }
+
         private void GenerateWallVertices(XElement rootElement)
         {
             List<Vector2> points = new List<Vector2>();
