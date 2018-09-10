@@ -1141,7 +1141,7 @@ namespace Barotrauma.Networking
 
                                 serverSettings.ServerLog.ServerName = serverName;
 
-                                GameMain.NetLobbyScreen.ServerName = serverName;
+                                serverSettings.ServerName = serverName;
                                 GameMain.NetLobbyScreen.ServerMessage.Text = serverText;
                                 GameMain.NetLobbyScreen.UsingShuttle = usingShuttle;
 

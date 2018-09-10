@@ -17,7 +17,8 @@ namespace Barotrauma.Networking
         ManageCampaign = 0x20,
         ConsoleCommands = 0x40,
         ServerLog = 0x80,
-        All = 0xff
+        ManageSettings = 0x100,
+        All = 0x1ff
     }
 
     class PermissionPreset

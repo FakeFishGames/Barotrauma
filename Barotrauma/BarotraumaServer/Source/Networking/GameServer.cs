@@ -1068,9 +1068,10 @@ namespace Barotrauma.Networking
                 outmsg.Write(true);
                 outmsg.WritePadBits();
 
+                //TODO: use ServerSettings.ServerWrite
                 outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
                 outmsg.Write(GameMain.NetLobbyScreen.GetServerName());
-                outmsg.Write(GameMain.NetLobbyScreen.ServerMessageText);
+                outmsg.Write(GameMain.Server.ServerSettings.ServerMessageText);
 
                 outmsg.Write(c.LastRecvGeneralUpdate < 1);
                 if (c.LastRecvGeneralUpdate < 1)
