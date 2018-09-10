@@ -170,7 +170,7 @@ namespace Barotrauma
         {
             get 
             {
-                return subBody.Borders;
+                return subBody == null ? Rectangle.Empty : subBody.Borders;
             }
         }
 

@@ -495,14 +495,24 @@ namespace Barotrauma
                 if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
                 clone.properties[property.Key].TrySetValue(property.Value.GetValue());
             }
-            for (int i = 0; i < components.Count; i++)
+
+            if (components.Count != clone.components.Count)
+            {
+                string errorMsg = "Error while cloning item \"" + Name + "\" - clone does not have the same number of components. ";
+                errorMsg += "Original components: " + string.Join(", ", components.Select(c => c.GetType().ToString()));
+                errorMsg += ", cloned components: " + string.Join(", ", clone.components.Select(c => c.GetType().ToString()));
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Item.Clone:" + Name, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+            }
+
+            for (int i = 0; i < components.Count && i < clone.components.Count; i++)
             {
                 foreach (KeyValuePair<string, SerializableProperty> property in components[i].properties)
                 {
                     if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
                     clone.components[i].properties[property.Key].TrySetValue(property.Value.GetValue());
                 }
-                for (int j = 0; j < components[i].requiredItems.Count; j++)
+                for (int j = 0; j < components[i].requiredItems.Count && i < clone.components[i].requiredItems.Count; j++)
                 {
                     clone.components[i].requiredItems[j].JoinedNames = components[i].requiredItems[j].JoinedNames;
                 }
