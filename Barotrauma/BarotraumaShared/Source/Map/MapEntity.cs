@@ -163,10 +163,7 @@ namespace Barotrauma
             return (Submarine.RectContains(WorldRect, position));
         }
 
-        public virtual MapEntity Clone()
-        {
-            throw new NotImplementedException();
-        }
+        public abstract MapEntity Clone();
 
         public static List<MapEntity> Clone(List<MapEntity> entitiesToClone)
         {
