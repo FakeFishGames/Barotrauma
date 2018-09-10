@@ -164,10 +164,7 @@ namespace Barotrauma
             return (Submarine.RectContains(WorldRect, position));
         }
 
-        public virtual MapEntity Clone()
-        {
-            throw new NotImplementedException();
-        }
+        public abstract MapEntity Clone();
 
         public static List<MapEntity> Clone(List<MapEntity> entitiesToClone)
         {
@@ -175,7 +172,19 @@ namespace Barotrauma
             foreach (MapEntity e in entitiesToClone)
             {
                 Debug.Assert(e != null);
-                clones.Add(e.Clone());
+                try
+                {
+                    clones.Add(e.Clone());
+                }
+                catch (Exception ex)
+                {
+                    DebugConsole.ThrowError("Cloning entity \"" + e.Name + "\" failed.", ex);
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "MapEntity.Clone:" + e.Name,
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Cloning entity \"" + e.Name + "\" failed (" + ex.Message + ").\n" + ex.StackTrace);
+                    return clones;
+                }
                 Debug.Assert(clones.Last() != null);
             }
 

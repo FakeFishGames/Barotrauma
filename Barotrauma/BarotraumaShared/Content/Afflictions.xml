@@ -202,7 +202,7 @@
     limbspecific="false"
     indicatorlimb="Torso"
     activationthreshold="0"
-    showiconthreshold="100"
+    showiconthreshold="40"
     maxstrength="100"
     achievementonremoved="healhusk">
     <SuitableTreatment identifier="calyxanide" suitability="100"/>

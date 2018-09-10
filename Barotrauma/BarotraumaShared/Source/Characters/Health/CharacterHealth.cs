@@ -218,6 +218,11 @@ namespace Barotrauma
 
         partial void InitProjSpecific(Character character);
 
+        public IEnumerable<Affliction> GetAllAfflictions()
+        {
+            return afflictions.Concat(limbHealths.SelectMany(lh => lh.Afflictions).ToList());
+        }
+
         public Affliction GetAffliction(string afflictionType, bool allowLimbAfflictions = true)
         {
             foreach (Affliction affliction in afflictions)

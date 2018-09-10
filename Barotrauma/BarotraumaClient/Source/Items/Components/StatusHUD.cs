@@ -137,54 +137,77 @@ namespace Barotrauma.Items.Components
             hudPos += Vector2.UnitX * 50.0f;
 
             List<string> texts = new List<string>();
+            List<Color> textColors = new List<Color>();
 
             if (target.Info != null)
             {
                 texts.Add(target.Name);
+                textColors.Add(Color.White);
             }
-
-            //TODO: reimplement
-            /*if (target.IsDead)
+            
+            if (target.IsDead)
             {
                 texts.Add(TextManager.Get("Deceased"));
-                texts.Add(TextManager.Get("CauseOfDeath") + ": " + TextManager.Get("CauseOfDeath." + target.CauseOfDeath.ToString()));
+                textColors.Add(Color.Red);
+                texts.Add(
+                    target.CauseOfDeath.Affliction?.CauseOfDeathDescription ?? 
+                    TextManager.Get("CauseOfDeath") + ": " +TextManager.Get("CauseOfDeath." + target.CauseOfDeath.Type.ToString()));
+                textColors.Add(Color.Red);
             }
             else
             {
-                if (target.IsUnconscious) texts.Add(TextManager.Get("Unconscious"));
-                if (target.Stun > 0.01f) texts.Add(TextManager.Get("Stunned"));
-
-                int healthTextIndex = target.Vitality > 0.9f ? 0 :
-                    MathHelper.Clamp((int)Math.Ceiling((1.0f - (target.Health + 0.5f)) * HealthTexts.Length), 0, HealthTexts.Length - 1);
-
-                texts.Add(HealthTexts[healthTextIndex]);
-
+                if (target.IsUnconscious)
+                {
+                    texts.Add(TextManager.Get("Unconscious"));
+                    textColors.Add(Color.Orange);
+                }
+                if (target.Stun > 0.01f)
+                {
+                    texts.Add(TextManager.Get("Stunned"));
+                    textColors.Add(Color.Orange);
+                }
+                
                 int oxygenTextIndex = MathHelper.Clamp((int)Math.Floor((1.0f - (target.Oxygen / 100.0f)) * OxygenTexts.Length), 0, OxygenTexts.Length - 1);
                 texts.Add(OxygenTexts[oxygenTextIndex]);
+                textColors.Add(Color.Lerp(Color.Red, Color.Green, target.Oxygen / 100.0f));
 
                 if (target.Bleeding > 0.0f)
                 {
-                    int bleedingTextIndex = MathHelper.Clamp((int)Math.Floor(target.Bleeding / 4.0f) * BleedingTexts.Length, 0, BleedingTexts.Length - 1);
+                    int bleedingTextIndex = MathHelper.Clamp((int)Math.Floor(target.Bleeding / 100.0f) * BleedingTexts.Length, 0, BleedingTexts.Length - 1);
                     texts.Add(BleedingTexts[bleedingTextIndex]);
+                    textColors.Add(Color.Lerp(Color.Red, Color.Green, target.Bleeding / 100.0f));
                 }
 
-                if (target.huskInfection != null)
+                var allAfflictions = target.CharacterHealth.GetAllAfflictions();
+                Dictionary<AfflictionPrefab, float> combinedAfflictionStrengths = new Dictionary<AfflictionPrefab, float>();
+                foreach (Affliction affliction in allAfflictions)
                 {
-                    if (target.huskInfection.State == HuskInfection.InfectionState.Transition)
+                    if (affliction.Strength < affliction.Prefab.ActivationThreshold || affliction.Strength < affliction.Prefab.ShowIconThreshold) continue;
+                    if (combinedAfflictionStrengths.ContainsKey(affliction.Prefab))
                     {
-                        texts.Add(TextManager.Get("HuskInfectionTransition"));
+                        combinedAfflictionStrengths[affliction.Prefab] += affliction.Strength;
                     }
-                    else if (target.huskInfection.State == HuskInfection.InfectionState.Active)
+                    else
                     {
-                        texts.Add(TextManager.Get("HuskInfectionActive"));
+                        combinedAfflictionStrengths[affliction.Prefab] = affliction.Strength;
                     }
                 }
-            }*/
 
-            foreach (string text in texts)
+                foreach (AfflictionPrefab affliction in combinedAfflictionStrengths.Keys)
+                {
+                    texts.Add(affliction.Name + ": " + ((int)combinedAfflictionStrengths[affliction]).ToString() + " %");
+                    textColors.Add(Color.Lerp(Color.Red, Color.Green, combinedAfflictionStrengths[affliction] / affliction.MaxStrength));
+                }
+            }
+
+            GUI.DrawString(spriteBatch, hudPos, texts[0], textColors[0] * alpha, Color.Black * 0.7f * alpha, 2);
+            hudPos.X += 5.0f;
+            hudPos.Y += 24.0f;
+
+            for (int i = 1; i < texts.Count; i++)
             {
-                GUI.DrawString(spriteBatch, hudPos, text, Color.LightGreen * alpha, Color.Black * 0.7f * alpha, 2);
-                hudPos.Y += 24.0f;
+                GUI.DrawString(spriteBatch, hudPos, texts[i], textColors[i] * alpha, Color.Black * 0.7f * alpha, 2, GUI.SmallFont);
+                hudPos.Y += 18.0f;
             }
         }
     }

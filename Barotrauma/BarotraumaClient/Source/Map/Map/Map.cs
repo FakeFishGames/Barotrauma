@@ -275,8 +275,10 @@ namespace Barotrauma
             });            
         }
 
-        public void Update(float deltaTime, Rectangle rect)
+        public void Update(float deltaTime, GUICustomComponent mapContainer)
         {
+            Rectangle rect = mapContainer.Rect;
+
             subReticlePosition = Vector2.Lerp(subReticlePosition, currentLocation.MapPosition, deltaTime);
             subReticleAnimState = 0.8f - Vector2.Distance(subReticlePosition, currentLocation.MapPosition) / 50.0f;
             subReticleAnimState = MathHelper.Clamp(subReticleAnimState + (float)Math.Sin(Timing.TotalTime * 3.5f) * 0.2f, 0.0f, 1.0f);
@@ -346,34 +348,39 @@ namespace Barotrauma
                     }
                 }
             }
-
-            zoom += PlayerInput.ScrollWheelSpeed / 1000.0f;
-            zoom = MathHelper.Clamp(zoom, 1.0f, 4.0f);
-
-            if (rect.Contains(PlayerInput.MousePosition) && PlayerInput.MidButtonHeld())
+            
+            if (GUI.MouseOn == mapContainer)
             {
-                drawOffset += PlayerInput.MouseSpeed / zoom;
-            }
-#if DEBUG
-            if (PlayerInput.DoubleClicked() && highlightedLocation != null)
-            {
-                var passedConnection = currentLocation.Connections.Find(c => c.OtherLocation(currentLocation) == highlightedLocation);
-                if (passedConnection != null)
+                zoom += PlayerInput.ScrollWheelSpeed / 1000.0f;
+                zoom = MathHelper.Clamp(zoom, 1.0f, 4.0f);
+
+                if (PlayerInput.MidButtonHeld())
                 {
-                    passedConnection.Passed = true;
+                    drawOffset += PlayerInput.MouseSpeed / zoom;
                 }
+#if DEBUG
+                if (PlayerInput.DoubleClicked() && highlightedLocation != null)
+                {
+                    var passedConnection = currentLocation.Connections.Find(c => c.OtherLocation(currentLocation) == highlightedLocation);
+                    if (passedConnection != null)
+                    {
+                        passedConnection.Passed = true;
+                    }
 
-                Location prevLocation = currentLocation;
-                currentLocation = highlightedLocation;
-                CurrentLocation.Discovered = true;
-                OnLocationChanged?.Invoke(prevLocation, currentLocation);
-                ProgressWorld();
-            }
+                    Location prevLocation = currentLocation;
+                    currentLocation = highlightedLocation;
+                    CurrentLocation.Discovered = true;
+                    OnLocationChanged?.Invoke(prevLocation, currentLocation);
+                    ProgressWorld();
+                }
 #endif
+            }
         }
         
-        public void Draw(SpriteBatch spriteBatch, Rectangle rect)
+        public void Draw(SpriteBatch spriteBatch, GUICustomComponent mapContainer)
         {
+            Rectangle rect = mapContainer.Rect;
+
             Vector2 viewSize = new Vector2(rect.Width / zoom, rect.Height / zoom);
             float edgeBuffer = size * (BackgroundScale - 1.0f) / 2;
             drawOffset.X = MathHelper.Clamp(drawOffset.X, -size - edgeBuffer + viewSize.X / 2.0f, edgeBuffer -viewSize.X / 2.0f);
