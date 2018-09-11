@@ -46,7 +46,7 @@ namespace Barotrauma
 
         protected static string GetFolder(string speciesName)
         {
-            var folder = XMLExtensions.TryLoadXml(Character.GetConfigFile(speciesName)).Root?.Element("ragdolls")?.GetAttributeString("folder", string.Empty);
+            var folder = XMLExtensions.TryLoadXml(Character.GetConfigFile(speciesName))?.Root?.Element("ragdolls")?.GetAttributeString("folder", string.Empty);
             if (string.IsNullOrEmpty(folder) || folder.ToLowerInvariant() == "default")
             {
                 folder = GetDefaultFolder(speciesName);
