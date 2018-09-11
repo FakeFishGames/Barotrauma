@@ -104,7 +104,7 @@ namespace Barotrauma.Networking
                         key |= (UInt32)(hash[hash.Length - 2] << 8);
                         key |= (UInt32)(hash[hash.Length - 1]);
 
-                        if (netProperties.Keys.Contains(key)) throw new Exception("Hashing collision in ServerSettings.netProperties: " + netProperties[key] + " has same key as " + property.Name + " ("+key.ToString()+")");
+                        if (netProperties.ContainsKey(key)) throw new Exception("Hashing collision in ServerSettings.netProperties: " + netProperties[key] + " has same key as " + property.Name + " ("+key.ToString()+")");
 
                         netProperties.Add(key, netPropertyData);
                     }
@@ -433,6 +433,13 @@ namespace Barotrauma.Networking
             outMsg.Write(ServerName);
             outMsg.Write((UInt16)Port);
             outMsg.Write((UInt16)maxPlayers);
+        }
+
+        private void SharedRead(NetIncomingMessage incMsg)
+        {
+            ServerName = incMsg.ReadString();
+            Port = incMsg.ReadUInt16();
+            maxPlayers = incMsg.ReadUInt16();
         }
     }
 }

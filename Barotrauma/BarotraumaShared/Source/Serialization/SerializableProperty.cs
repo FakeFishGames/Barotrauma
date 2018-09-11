@@ -111,6 +111,11 @@ namespace Barotrauma
             return default(T);
         }
 
+        public void SetValue(object val)
+        {
+            propertyInfo.SetValue(obj, val);
+        }
+
         public bool TrySetValue(string value)
         {
             if (value == null) return false;
