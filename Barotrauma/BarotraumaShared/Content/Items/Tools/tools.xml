@@ -375,11 +375,11 @@
 
     <Holdable slots="Any,RightHand,LeftHand,Head" holdpos="30,-15" aimpos="100,0" handle1="-13,0" handle2="-13,0">
       <StatusEffect type="OnActive" target="Contained" Condition="-0.2"/>
+      <!-- the child LightComponent is only active when the Holdable is active, i.e. when the item is being held -->
+      <LightComponent LightColor="1.0,1.0,1.0,1.0" Flicker="0.1" range="800" powerconsumption="10" IsOn="true">
+        <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="2.0,1.0"/>
+      </LightComponent>
     </Holdable>
-
-    <LightComponent LightColor="1.0,1.0,1.0,1.0" Flicker="0.1" range="800" powerconsumption="10" IsOn="true">
-      <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="2.0,1.0"/>
-    </LightComponent>
     
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/inventoryAtlas.png" sourcerect="3,14,93,29"/>
