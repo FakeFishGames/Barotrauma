@@ -408,7 +408,9 @@ namespace Barotrauma
 
         public void ReceiveTextInput(string text)
         {
-            Text += text;
+            int prevCaretIndex = CaretIndex;
+            Text = Text.Insert(CaretIndex, text);
+            CaretIndex = Math.Min(Text.Length, prevCaretIndex + text.Length);
             OnTextChanged?.Invoke(this, Text);
         }
 
@@ -433,18 +435,24 @@ namespace Barotrauma
                     CopySelectedText();
                     break;
                 case (char)0x16: // ctrl-v
-                    Text = Text.Insert(CaretIndex, GetCopiedText());
+                    string text = GetCopiedText();
+                    int previousCaretIndex = CaretIndex;
+                    Text = Text.Insert(CaretIndex, text);
+                    CaretIndex = Math.Min(Text.Length, previousCaretIndex + text.Length);
                     OnTextChanged?.Invoke(this, Text);
                     break;
                 case (char)0x18: // ctrl-x
                     CopySelectedText();
-                    if (selectionStartIndex < CaretIndex)
+                    previousCaretIndex = CaretIndex;
+                    if (IsLeftToRight)
                     {
                         Text = Text.Remove(selectionStartIndex, selectedText.Length);
+                        CaretIndex = Math.Min(Text.Length, previousCaretIndex - selectedText.Length);
                     }
                     else
                     {
-                        Text = Text.Remove(CaretIndex, selectedText.Length);
+                        Text = Text.Remove(selectionEndIndex, selectedText.Length);
+                        CaretIndex = previousCaretIndex;
                     }
                     ClearSelection();
                     OnTextChanged?.Invoke(this, Text);
