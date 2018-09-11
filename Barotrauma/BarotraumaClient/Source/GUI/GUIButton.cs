@@ -69,6 +69,19 @@ namespace Barotrauma
             }
         }
 
+        public override Color PressedColor
+        {
+            get
+            {
+                return base.PressedColor;
+            }
+            set
+            {
+                base.PressedColor = value;
+                frame.PressedColor = value;
+            }
+        }
+
         public override Color OutlineColor
         {
             get { return base.OutlineColor; }
