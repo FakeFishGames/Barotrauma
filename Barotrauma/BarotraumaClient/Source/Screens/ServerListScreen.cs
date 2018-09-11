@@ -181,7 +181,7 @@ namespace Barotrauma
                 OnClicked = GameMain.MainMenuScreen.SelectTab
             };
 
-			new GUIButton(new RectTransform(new Vector2(0.1f, 0.9f), buttonContainer.RectTransform, Anchor.Center),
+			var refreshButton = new GUIButton(new RectTransform(new Vector2(buttonContainer.Rect.Height / (float)buttonContainer.Rect.Width, 0.9f), buttonContainer.RectTransform, Anchor.Center),
 				"", style: "GUIButtonRefresh") {
 
 				ToolTip = TextManager.Get("ServerListRefresh"),
