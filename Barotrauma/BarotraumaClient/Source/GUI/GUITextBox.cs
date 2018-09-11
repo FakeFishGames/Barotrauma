@@ -3,6 +3,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -239,9 +241,35 @@ namespace Barotrauma
             caretPosDirty = false;
         }
 
+        public List<Tuple<Vector2, int>> GetAllPositions()
+        {
+            var positions = new List<Tuple<Vector2, int>>();
+            for (int i = 0; i <= textBlock.Text.Length; i++)
+            {
+                Vector2 textSize = Font.MeasureString(textBlock.Text.Substring(0, i));
+                Vector2 indexPos = new Vector2(textSize.X + textBlock.Padding.X, 0);
+                positions.Add(new Tuple<Vector2, int>(textBlock.Rect.Location.ToVector2() + indexPos, i));
+            }
+            return positions;
+        }
+
+        public int GetCaretIndexFromScreenPos(Vector2 pos)
+        {
+            var positions = GetAllPositions().OrderBy(p => Vector2.DistanceSquared(p.Item1, pos));
+            //DebugConsole.NewMessage($"target pos {pos}", Color.Red);
+            //foreach (var position in positions)
+            //{
+            //    DebugConsole.NewMessage($"{position.Item1} : {position.Item2}", Color.White);
+            //}
+            var posIndex = positions.FirstOrDefault();
+            return posIndex != null ? posIndex.Item2 : textBlock.Text.Length;
+        }
+
         public void Select()
         {
-            CaretIndex = textBlock.Text.Length;
+            //CaretIndex = textBlock.Text.Length;
+            CaretIndex = GetCaretIndexFromScreenPos(PlayerInput.MousePosition);
+            ClearSelection();
             Selected = true;
             GUI.KeyboardDispatcher.Subscriber = this;
             //if (Clicked != null) Clicked(this);
