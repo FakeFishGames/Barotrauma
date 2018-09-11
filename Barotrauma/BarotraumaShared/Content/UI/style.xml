@@ -108,10 +108,10 @@
     hovercolor="1.0,1.0,1.0,1.0"
     selectedcolor="1.0,1.0,1.0,1.0">
 
-    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="907,428,22,22"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="907,428,22,22"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect="907,428,22,22"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" sourcerect="907,428,22,22"/>    
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect="907,428,22,22"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" tile="false" maintainaspectratio="true" sourcerect="907,428,22,22"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" tile="false" maintainaspectratio="true" sourcerect="907,428,22,22"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" tile="false" maintainaspectratio="true" sourcerect="907,428,22,22"/>    
   </GUIButtonServerListInfo>
 
   <GUIButtonRefresh
@@ -119,10 +119,10 @@
     hovercolor="0.3,0.3,0.8,1.0"
     selectedcolor="1.0,1.0,1.0,1.0">
 
-    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="983,353,39,39"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="983,353,39,39"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect="983,353,39,39"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" sourcerect="983,353,39,39"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect="983,353,39,39"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" tile="false" maintainaspectratio="true" sourcerect="983,353,39,39"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" tile="false" maintainaspectratio="true" sourcerect="983,353,39,39"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" tile="false" maintainaspectratio="true" sourcerect="983,353,39,39"/>
 
   </GUIButtonRefresh>
 
