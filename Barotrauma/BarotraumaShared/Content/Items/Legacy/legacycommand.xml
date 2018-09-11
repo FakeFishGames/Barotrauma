@@ -50,7 +50,7 @@
     </Repairable>
 
     <Sonar canbeselected = "true" powerconsumption="100" displaybordersize="0.2">
-      <GuiFrame relativesize="0.5,0.7" anchor="Center" style="ItemUI" color="0,0,0,0"/>
+      <GuiFrame relativesize="0.5,0.7" anchor="Center" style="ItemUI"/>
       <StatusEffect type="InWater" target="This" condition="-1.0"/>
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5"/>
       <ScreenOverlay texture="Content/Items/Command/sonarOverlay.png" origin="0.5,0.5"/>
