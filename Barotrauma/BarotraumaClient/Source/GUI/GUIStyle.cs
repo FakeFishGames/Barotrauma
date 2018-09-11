@@ -14,6 +14,8 @@ namespace Barotrauma
         public ScalableFont LargeFont { get; private set; }
 
         public Sprite CursorSprite { get; private set; }
+
+        public UISprite UIGlow { get; private set; }
             
         public GUIStyle(string file, GraphicsDevice graphicsDevice)
         {
@@ -46,6 +48,9 @@ namespace Barotrauma
                         break;
                     case "cursor":
                         CursorSprite = new Sprite(subElement);
+                        break;
+                    case "uiglow":
+                        UIGlow = new UISprite(subElement);
                         break;
                     default:
                         GUIComponentStyle componentStyle = new GUIComponentStyle(subElement);

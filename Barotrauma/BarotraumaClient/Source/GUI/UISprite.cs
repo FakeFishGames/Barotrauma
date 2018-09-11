@@ -74,7 +74,7 @@ namespace Barotrauma
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch, Rectangle rect, Color color, SpriteEffects spriteEffects)
+        public void Draw(SpriteBatch spriteBatch, Rectangle rect, Color color, SpriteEffects spriteEffects = SpriteEffects.None)
         {
             if (Slice)
             {

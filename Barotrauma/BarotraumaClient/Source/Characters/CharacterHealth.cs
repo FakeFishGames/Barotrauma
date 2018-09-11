@@ -506,7 +506,7 @@ namespace Barotrauma
                 if (dropItemAnimTimer > 0.0f)
                 {
                     dropItemAnimTimer -= deltaTime;
-                    if (dropItemAnimTimer <= 0.0f) dropItemArea.Children.First().Flash(Color.Green * 0.8f);
+                    if (dropItemAnimTimer <= 0.0f) dropItemArea.Children.First().Flash(Color.Green);
                 }
             }
             else

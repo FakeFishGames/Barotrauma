@@ -203,7 +203,7 @@ namespace Barotrauma
                 UserData = message.SenderName,
                 CanBeFocused = false
             };
-            msg.Flash(Color.Yellow * 0.5f);
+            msg.Flash(Color.Yellow);
             //some spacing at the bottom of the msg
             msg.RectTransform.NonScaledSize += new Point(0, 5);
                         
