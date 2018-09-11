@@ -241,7 +241,7 @@ namespace Barotrauma
             caretPosDirty = false;
         }
 
-        public List<Tuple<Vector2, int>> GetAllPositions()
+        protected List<Tuple<Vector2, int>> GetAllPositions()
         {
             var positions = new List<Tuple<Vector2, int>>();
             for (int i = 0; i <= textBlock.Text.Length; i++)
