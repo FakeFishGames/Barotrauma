@@ -762,7 +762,7 @@ namespace Barotrauma
 
         public static string GetConfigFile(string speciesName)
         {
-            string configFile = CharacterConfigFiles.FirstOrDefault(c => c.EndsWith($"{speciesName}.xml"));
+            string configFile = CharacterConfigFiles.FirstOrDefault(c => Path.GetFileName(c) == $"{speciesName}.xml");
             if (configFile == null)
             {
                 DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
