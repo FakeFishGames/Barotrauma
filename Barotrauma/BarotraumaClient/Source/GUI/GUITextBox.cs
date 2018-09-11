@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -50,11 +51,13 @@ namespace Barotrauma
         private bool caretPosDirty;
         protected Vector2 caretPos;
 
-        private bool shiftDown;
+        private bool isSelecting;
         private string selectedText = string.Empty;
         private string clipboard = string.Empty;
         private int selectedCharacters;
         private int selectionStartIndex;
+        private int selectionEndIndex;
+        private bool IsLeftToRight => selectionStartIndex <= selectionEndIndex;
         private int previousCaretIndex;
         private Vector2 selectionStartPos;
         private Vector2 selectionRectSize;
@@ -256,23 +259,17 @@ namespace Barotrauma
         public int GetCaretIndexFromScreenPos(Vector2 pos)
         {
             var positions = GetAllPositions().OrderBy(p => Vector2.DistanceSquared(p.Item1, pos));
-            //DebugConsole.NewMessage($"target pos {pos}", Color.Red);
-            //foreach (var position in positions)
-            //{
-            //    DebugConsole.NewMessage($"{position.Item1} : {position.Item2}", Color.White);
-            //}
             var posIndex = positions.FirstOrDefault();
             return posIndex != null ? posIndex.Item2 : textBlock.Text.Length;
         }
 
         public void Select()
         {
-            //CaretIndex = textBlock.Text.Length;
+            Selected = true;
             CaretIndex = GetCaretIndexFromScreenPos(PlayerInput.MousePosition);
             ClearSelection();
-            Selected = true;
             GUI.KeyboardDispatcher.Subscriber = this;
-            //if (Clicked != null) Clicked(this);
+            OnSelected?.Invoke(this, Keys.None);
         }
 
         public void Deselect()
@@ -296,19 +293,51 @@ namespace Barotrauma
 
             if (flashTimer > 0.0f) flashTimer -= deltaTime;
             if (!Enabled) return;
-            shiftDown = PlayerInput.KeyDown(Keys.LeftShift) || PlayerInput.KeyDown(Keys.RightShift);           
-            if (MouseRect.Contains(PlayerInput.MousePosition) && Enabled && (GUI.MouseOn == null || GUI.IsMouseOn(this)))
+            if (MouseRect.Contains(PlayerInput.MousePosition) && (GUI.MouseOn == null || GUI.IsMouseOn(this)))
             {
                 state = ComponentState.Hover;
-                if (PlayerInput.LeftButtonClicked())
+                if (PlayerInput.LeftButtonDown())
                 {
                     Select();
-                    OnSelected?.Invoke(this, Keys.None);
+                }
+                else
+                {
+                    isSelecting = PlayerInput.LeftButtonHeld();
+                }
+                if (isSelecting)
+                {
+                    if (!MathUtils.NearlyEqual(PlayerInput.MouseSpeed.X, 0))
+                    {
+                        CaretIndex = GetCaretIndexFromScreenPos(PlayerInput.MousePosition);
+                        CalculateCaretPos();
+                        if (selectionStartIndex == -1)
+                        {
+                            selectionStartIndex = CaretIndex;
+                            selectionStartPos = caretPos;
+                        }
+                        selectionEndIndex = CaretIndex;
+                        selectedCharacters = Math.Abs(selectionStartIndex - selectionEndIndex);
+                        if (IsLeftToRight)
+                        {
+                            selectedText = Text.Substring(selectionStartIndex, selectedCharacters);
+                            selectionRectSize = Font.MeasureString(textBlock.WrappedText.Substring(selectionStartIndex, selectedCharacters));
+                        }
+                        else
+                        {
+                            selectedText = Text.Substring(selectionEndIndex, selectedCharacters);
+                            selectionRectSize = Font.MeasureString(textBlock.WrappedText.Substring(selectionEndIndex, selectedCharacters));
+                        }
+                    }
                 }
             }
             else
             {
+                isSelecting = false;
                 state = ComponentState.None;
+            }
+            if (!isSelecting)
+            {
+                isSelecting = PlayerInput.KeyDown(Keys.LeftShift) || PlayerInput.KeyDown(Keys.RightShift);
             }
             
             if (CaretEnabled)
@@ -359,12 +388,12 @@ namespace Barotrauma
                 if (selectedCharacters > 0)
                 {
                     // TODO: multiline edit?
-                    bool isLeftToRight = selectionStartIndex < CaretIndex;
-                    Vector2 topLeft = isLeftToRight ? selectionStartPos : new Vector2(selectionStartPos.X - selectionRectSize.X, selectionStartPos.Y);
+                    Vector2 topLeft = IsLeftToRight ? selectionStartPos : new Vector2(selectionStartPos.X - selectionRectSize.X, selectionStartPos.Y);
                     GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, selectionRectSize, Color.White * 0.25f, isFilled: true);
                 }
-                GUI.DrawString(spriteBatch, new Vector2(100, 0), selectedCharacters.ToString(), Color.White, Color.Black);
+                GUI.DrawString(spriteBatch, new Vector2(100, 0), selectedCharacters.ToString(), Color.LightBlue, Color.Black);
                 GUI.DrawString(spriteBatch, new Vector2(100, 20), selectionStartIndex.ToString(), Color.White, Color.Black);
+                GUI.DrawString(spriteBatch, new Vector2(140, 20), selectionEndIndex.ToString(), Color.White, Color.Black);
                 GUI.DrawString(spriteBatch, new Vector2(100, 40), selectedText.ToString(), Color.Yellow, Color.Black);
             }
         }
@@ -436,6 +465,7 @@ namespace Barotrauma
         {
             selectedCharacters = 0;
             selectionStartIndex = -1;
+            selectionEndIndex = -1;
             selectedText = string.Empty;
         }
 
@@ -457,7 +487,7 @@ namespace Barotrauma
                 case Keys.Left:
                     CaretIndex = Math.Max(CaretIndex - 1, 0);
                     caretTimer = 0;
-                    if (shiftDown)
+                    if (isSelecting)
                     {
                         if (selectionStartIndex == -1)
                         {
@@ -486,7 +516,7 @@ namespace Barotrauma
                 case Keys.Right:
                     CaretIndex = Math.Min(CaretIndex + 1, Text.Length);
                     caretTimer = 0;
-                    if (shiftDown)
+                    if (isSelecting)
                     {
                         if (selectionStartIndex == -1)
                         {
