@@ -53,8 +53,9 @@ namespace Barotrauma.Items.Components
                 CanBeFocused = false
             };
 
-            isActiveTickBox = new GUITickBox(new RectTransform(new Point(20, 20), paddedFrame.RectTransform), "Active Sonar")
+            isActiveTickBox = new GUITickBox(new RectTransform(new Point(20, 20), paddedFrame.RectTransform), TextManager.Get("SonarActive"))
             {
+                ToolTip = TextManager.Get("SonarTipActive"),
                 OnSelected = (GUITickBox box) =>
                 {
                     if (GameMain.Server != null)

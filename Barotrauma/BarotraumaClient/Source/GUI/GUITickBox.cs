@@ -69,6 +69,7 @@ namespace Barotrauma
             {
                 base.ToolTip = value;
                 box.ToolTip = value;
+                text.ToolTip = value;
             }
         }
 
