@@ -99,6 +99,7 @@ namespace Barotrauma.Networking
 
                 Voting.ServerWrite(outMsg);
 
+                outMsg.Write((UInt16)netProperties.Keys.Count);
                 foreach (UInt32 key in netProperties.Keys)
                 {
                     outMsg.Write(key);
