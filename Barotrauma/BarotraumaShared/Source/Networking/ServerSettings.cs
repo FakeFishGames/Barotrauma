@@ -2,8 +2,10 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
@@ -44,6 +46,21 @@ namespace Barotrauma.Networking
             }
         }
 
+
+        partial class NetPropertyData
+        {
+            SerializableProperty property;
+            string typeString;
+            
+            public NetPropertyData(SerializableProperty property,string typeString)
+            {
+                this.property = property;
+                this.typeString = typeString;
+            }
+        };
+
+        Dictionary<UInt32,NetPropertyData> netProperties;
+
         partial void InitProjSpecific();
 
         public ServerSettings(string serverName, int port, int queryPort, int maxPlayers, bool isPublic, bool enableUPnP)
@@ -61,7 +78,39 @@ namespace Barotrauma.Networking
 
             Whitelist = new WhiteList();
             BanList = new BanList();
+            
+            netProperties = new Dictionary<UInt32, NetPropertyData>();
 
+            using (MD5 md5 = MD5.Create())
+            {
+                var saveProperties = SerializableProperty.GetProperties<Serialize>(this);
+                foreach (var property in saveProperties)
+                {
+                    object value = property.GetValue();
+                    if (value == null) continue;
+
+                    string typeName = SerializableProperty.GetSupportedTypeName(value.GetType());
+                    if (typeName != null || property.PropertyType.IsEnum)
+                    {
+                        NetPropertyData netPropertyData = new NetPropertyData(property, typeName);
+
+                        //calculate key based on MD5 hash instead of string.GetHashCode
+                        //to ensure consistent results across platforms
+                        byte[] inputBytes = Encoding.ASCII.GetBytes(property.Name);
+                        byte[] hash = md5.ComputeHash(inputBytes);
+
+                        UInt32 key = (UInt32)((property.Name.Length & 0xff) << 24); //could use more of the hash here instead?
+                        key |= (UInt32)(hash[hash.Length - 3] << 16);
+                        key |= (UInt32)(hash[hash.Length - 2] << 8);
+                        key |= (UInt32)(hash[hash.Length - 1]);
+
+                        if (netProperties.Keys.Contains(key)) throw new Exception("Hashing collision in ServerSettings.netProperties: " + netProperties[key] + " has same key as " + property.Name + " ("+key.ToString()+")");
+
+                        netProperties.Add(key, netPropertyData);
+                    }
+                }
+            }
+            
             InitProjSpecific();
         }
 
