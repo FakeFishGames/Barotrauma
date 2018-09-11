@@ -18,6 +18,8 @@ namespace Barotrauma
 
         private bool getDivingGearIfNeeded;
 
+        public float CloseEnough = 0.5f;
+
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
             if (objectiveManager.CurrentOrder == this)
@@ -73,13 +75,12 @@ namespace Barotrauma
             if (target == character)
             {
                 character.AIController.SteeringManager.Reset();
-
                 return;
             }
 
             waitUntilPathUnreachable -= deltaTime;
 
-            if (character.SelectedConstruction!=null && character.SelectedConstruction.GetComponent<Ladder>()==null)
+            if (character.SelectedConstruction != null && character.SelectedConstruction.GetComponent<Ladder>() == null)
             {
                 character.SelectedConstruction = null;
             }
@@ -103,7 +104,7 @@ namespace Barotrauma
                 }
             }
 
-            if (Vector2.DistanceSquared(currTargetPos, character.SimPosition) < 0.5f * 0.5f)
+            if (Vector2.DistanceSquared(currTargetPos, character.SimPosition) < CloseEnough * CloseEnough)
             {
                 character.AIController.SteeringManager.Reset();
                 character.AnimController.TargetDir = currTargetPos.X > character.SimPosition.X ? Direction.Right : Direction.Left;
