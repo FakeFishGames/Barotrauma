@@ -89,6 +89,8 @@ namespace Barotrauma.Networking
         {
             SharedWrite(outMsg);
 
+            Voting.ServerWrite(outMsg);
+
             if (c.HasPermission(Networking.ClientPermissions.ManageSettings))
             {
                 outMsg.Write(true);
@@ -96,8 +98,6 @@ namespace Barotrauma.Networking
                 outMsg.Write(EnableUPnP);
                 outMsg.WritePadBits();
                 outMsg.Write(QueryPort);
-
-                Voting.ServerWrite(outMsg);
 
                 outMsg.Write((UInt16)netProperties.Keys.Count);
                 foreach (UInt32 key in netProperties.Keys)
