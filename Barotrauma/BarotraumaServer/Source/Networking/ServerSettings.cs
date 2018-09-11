@@ -1,6 +1,8 @@
 ﻿using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -13,6 +15,67 @@ namespace Barotrauma.Networking
         public const string SettingsFile = "serversettings.xml";
         public static readonly string PermissionPresetFile = "Data" + Path.DirectorySeparatorChar + "permissionpresets.xml";
         public static readonly string ClientPermissionsFile = "Data" + Path.DirectorySeparatorChar + "clientpermissions.xml";
+
+        partial class NetPropertyData
+        {
+            public void Write(NetOutgoingMessage msg)
+            {
+                switch (typeString)
+                {
+                    case "float":
+                        msg.Write((byte)4);
+                        msg.Write((float)property.GetValue());
+                        break;
+                    case "vector2":
+                        msg.Write((byte)8);
+                        msg.Write(((Vector2)property.GetValue()).X);
+                        msg.Write(((Vector2)property.GetValue()).Y);
+                        break;
+                    case "vector3":
+                        msg.Write((byte)12);
+                        msg.Write(((Vector3)property.GetValue()).X);
+                        msg.Write(((Vector3)property.GetValue()).Y);
+                        msg.Write(((Vector3)property.GetValue()).Z);
+                        break;
+                    case "vector4":
+                        msg.Write((byte)16);
+                        msg.Write(((Vector4)property.GetValue()).X);
+                        msg.Write(((Vector4)property.GetValue()).Y);
+                        msg.Write(((Vector4)property.GetValue()).Z);
+                        msg.Write(((Vector4)property.GetValue()).W);
+                        break;
+                    case "color":
+                        msg.Write((byte)4);
+                        msg.Write(((Color)property.GetValue()).R);
+                        msg.Write(((Color)property.GetValue()).G);
+                        msg.Write(((Color)property.GetValue()).B);
+                        msg.Write(((Color)property.GetValue()).A);
+                        break;
+                    case "rectangle":
+                        msg.Write((byte)16);
+                        msg.Write(((Rectangle)property.GetValue()).X);
+                        msg.Write(((Rectangle)property.GetValue()).Y);
+                        msg.Write(((Rectangle)property.GetValue()).Width);
+                        msg.Write(((Rectangle)property.GetValue()).Height);
+                        break;
+                    default:
+                        string strVal = property.GetValue().ToString();
+
+                        //the length of a string can take a variable amount of bytes
+                        //so we calculate how many they would be here
+                        int headerLength = 1;
+                        int strLen = strVal.Length;
+                        while (strLen >= 0x80)
+                        {
+                            headerLength++;
+                            strLen >>= 7;
+                        }
+                        msg.Write((byte)(strVal.Length + headerLength));
+                        msg.Write(strVal);
+                        break;
+                }
+            }
+        }
 
         partial void InitProjSpecific()
         {
@@ -31,7 +94,16 @@ namespace Barotrauma.Networking
                 outMsg.Write(true);
                 outMsg.Write(isPublic);
                 outMsg.Write(EnableUPnP);
+                outMsg.WritePadBits();
                 outMsg.Write(QueryPort);
+
+                Voting.ServerWrite(outMsg);
+
+                foreach (UInt32 key in netProperties.Keys)
+                {
+                    outMsg.Write(key);
+                    netProperties[key].Write(outMsg);
+                }
             }
             else
             {

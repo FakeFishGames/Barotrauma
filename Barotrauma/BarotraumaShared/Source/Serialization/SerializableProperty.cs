@@ -367,6 +367,16 @@ namespace Barotrauma
             }
         }
 
+        public static string GetSupportedTypeName(Type type)
+        {
+            string typeName = null;
+            if (!supportedTypes.TryGetValue(type, out typeName))
+            {
+                return null;
+            }
+            return typeName;
+        }
+
         public static List<SerializableProperty> GetProperties<T>(ISerializableEntity obj)
         {
             List<SerializableProperty> editableProperties = new List<SerializableProperty>();
