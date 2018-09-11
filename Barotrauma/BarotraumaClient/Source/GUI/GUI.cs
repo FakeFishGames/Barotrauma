@@ -63,6 +63,8 @@ namespace Barotrauma
         public static ScalableFont SmallFont => Style?.SmallFont;
         public static ScalableFont LargeFont => Style?.LargeFont;
 
+        public static UISprite UIGlow => Style.UIGlow;
+
         public static Sprite SubmarineIcon
         {
             get { return submarineIcon; }

@@ -711,10 +711,7 @@ namespace Barotrauma
 
             if (slot.HighlightColor != Color.Transparent)
             {
-                Rectangle highlightRect = rect;
-                highlightRect.Inflate(3, 3);
-
-                GUI.DrawRectangle(spriteBatch, highlightRect, slot.HighlightColor, false, 0, 5);
+                GUI.UIGlow.Draw(spriteBatch, rect, slot.HighlightColor);
             }
 
             if (item != null && drawItem)

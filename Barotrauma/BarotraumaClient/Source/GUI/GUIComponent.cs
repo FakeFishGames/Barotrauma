@@ -416,15 +416,8 @@ namespace Barotrauma
         {
             if (!Visible) return;
             var rect = Rect;
-
+            
             Color currColor = GetCurrentColor(state);
-            if (flashTimer > 0.0f)
-            {
-                GUI.DrawRectangle(spriteBatch,
-                    new Rectangle(rect.X - 5, rect.Y - 5, rect.Width + 10, rect.Height + 10),
-                    flashColor * (flashTimer / FlashDuration), true);
-            }
-
             if (currColor.A > 0.0f && (sprites == null || !sprites.Any())) GUI.DrawRectangle(spriteBatch, rect, currColor * (currColor.A / 255.0f), true);
 
             if (sprites != null && sprites[state] != null && currColor.A > 0.0f)
@@ -433,6 +426,13 @@ namespace Barotrauma
                 {
                     uiSprite.Draw(spriteBatch, rect, currColor * (currColor.A / 255.0f), SpriteEffects);
                 }
+            }
+
+            if (flashTimer > 0.0f)
+            {
+                GUI.UIGlow.Draw(spriteBatch,
+                    rect,
+                    flashColor * (flashTimer / FlashDuration));
             }
         }
 
@@ -472,7 +472,7 @@ namespace Barotrauma
         public virtual void Flash(Color? color = null)
         {
             flashTimer = FlashDuration;
-            flashColor = (color == null) ? Color.Red * 0.8f : (Color)color;
+            flashColor = (color == null) ? Color.Red : (Color)color;
         }
 
         public void FadeOut(float duration, bool removeAfter)
