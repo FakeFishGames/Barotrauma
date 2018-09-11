@@ -74,14 +74,14 @@ namespace Barotrauma.Networking
         {
             SharedRead(incMsg);
 
+            Voting.ClientRead(incMsg);
+
             if (incMsg.ReadBoolean())
             {
                 isPublic = incMsg.ReadBoolean();
                 EnableUPnP = incMsg.ReadBoolean();
                 incMsg.ReadPadBits();
                 QueryPort = incMsg.ReadUInt16();
-
-                Voting.ClientRead(incMsg);
 
                 int count = incMsg.ReadUInt16();
                 for (int i=0;i<count;i++)
