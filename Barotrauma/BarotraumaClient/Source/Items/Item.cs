@@ -17,9 +17,10 @@ namespace Barotrauma
 
         private List<ItemComponent> activeHUDs = new List<ItemComponent>();
 
+        private Sprite activeSprite;
         public override Sprite Sprite
         {
-            get { return prefab.GetActiveSprite(condition); }
+            get { return activeSprite; }
         }
 
         public override bool SelectableInEditor
@@ -45,6 +46,19 @@ namespace Barotrauma
                 }
             }
             return color;
+        }
+
+        partial void SetActiveSprite()
+        {
+            activeSprite = prefab.sprite;
+            foreach (BrokenItemSprite brokenSprite in prefab.BrokenSprites)
+            {
+                if (condition <= brokenSprite.MaxCondition)
+                {
+                    activeSprite = brokenSprite.Sprite;
+                    break;
+                }
+            }
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
@@ -81,12 +95,10 @@ namespace Barotrauma
                 }
             }
 
-            Sprite selectedSprite = prefab.GetActiveSprite(condition);
-
-            if (selectedSprite != null)
+            if (activeSprite != null)
             {
-                SpriteEffects oldEffects = selectedSprite.effects;
-                selectedSprite.effects ^= SpriteEffects;
+                SpriteEffects oldEffects = activeSprite.effects;
+                activeSprite.effects ^= SpriteEffects;
 
                 float depth = GetDrawDepth();
 
@@ -97,14 +109,14 @@ namespace Barotrauma
 
                     if (prefab.ResizeHorizontal || prefab.ResizeVertical || flipHorizontal || flipVertical)
                     {
-                        selectedSprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color);
+                        activeSprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color);
                         fadeInBrokenSprite?.Sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color * fadeInBrokenSpriteAlpha,
-                            depth: selectedSprite.Depth - 0.000001f);
+                            depth: activeSprite.Depth - 0.000001f);
 
                     }
                     else
                     {
-                        selectedSprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, 0.0f, 1.0f, SpriteEffects.None, depth);
+                        activeSprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, 0.0f, 1.0f, SpriteEffects.None, depth);
                         fadeInBrokenSprite?.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color * fadeInBrokenSpriteAlpha, 0.0f, 1.0f, SpriteEffects.None, depth - 0.000001f);
                     }
 
@@ -133,11 +145,11 @@ namespace Barotrauma
                             }
                         }
                     }
-                    body.Draw(spriteBatch, selectedSprite, color, depth);
+                    body.Draw(spriteBatch, activeSprite, color, depth);
                     if (fadeInBrokenSprite != null) body.Draw(spriteBatch, fadeInBrokenSprite.Sprite, color * fadeInBrokenSpriteAlpha, depth - 0.000001f);
                 }
 
-                selectedSprite.effects = oldEffects;
+                activeSprite.effects = oldEffects;
             }
 
             //use a backwards for loop because the drawable components may disable drawing, 
@@ -446,6 +458,7 @@ namespace Barotrauma
                     break;
                 case NetEntityEvent.Type.Status:
                     condition = msg.ReadSingle();
+                    SetActiveSprite();
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     ActionType actionType = (ActionType)msg.ReadRangedInteger(0, Enum.GetValues(typeof(ActionType)).Length - 1);

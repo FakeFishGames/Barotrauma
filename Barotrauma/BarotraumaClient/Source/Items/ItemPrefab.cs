@@ -26,20 +26,6 @@ namespace Barotrauma
 
         public Sprite InventoryIcon;
         
-        public Sprite GetActiveSprite(float condition)
-        {
-            Sprite activeSprite = sprite;
-            foreach (BrokenItemSprite brokenSprite in BrokenSprites)
-            {
-                if (condition <= brokenSprite.MaxCondition)
-                {
-                    activeSprite = brokenSprite.Sprite;
-                    break;
-                }
-            }
-            return activeSprite;
-        }
-
         public override void DrawPlacing(SpriteBatch spriteBatch, Camera cam, Rectangle? placeRect = null)
         {
             Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
