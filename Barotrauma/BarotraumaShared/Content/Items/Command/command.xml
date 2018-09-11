@@ -64,7 +64,7 @@
     </Repairable>
 
     <Sonar canbeselected = "true" powerconsumption="100" displaybordersize="-0.1">
-      <GuiFrame relativesize="0.5,0.7" anchor="Center" style="ItemUI" color="0,0,0,0"/>
+      <GuiFrame relativesize="0.5,0.7" anchor="Center" style="ItemUI"/>
       <StatusEffect type="InWater" target="This" condition="-1.0"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap1.ogg" range="500" loop="false"/>
