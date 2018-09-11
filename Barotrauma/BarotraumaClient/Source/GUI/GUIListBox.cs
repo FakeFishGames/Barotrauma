@@ -30,6 +30,20 @@ namespace Barotrauma
 
         public bool HideChildrenOutsideFrame = true;
 
+        private bool useGridLayout;
+
+        public bool UseGridLayout
+        {
+            get { return useGridLayout; }
+            set
+            {
+                if (useGridLayout == value) return;
+                useGridLayout = value;
+                childrenNeedsRecalculation = true;
+                scrollBarNeedsRecalculation = true;
+            }
+        }
+
         public GUIComponent Selected
         {
             get
@@ -95,7 +109,7 @@ namespace Barotrauma
                 Content.Color = value;
             }
         }
-
+        
         /// <summary>
         /// Disables the scroll bar without hiding it.
         /// </summary>
@@ -220,13 +234,45 @@ namespace Barotrauma
                         child.RectTransform.AbsoluteOffset = new Point(x, y);
                     }
                 }
-                if (ScrollBar.IsHorizontal)
+
+                if (useGridLayout)
                 {
-                    x += child.Rect.Width + spacing;
+                    if (ScrollBar.IsHorizontal)
+                    {
+                        if (y + child.Rect.Height + spacing > Content.Rect.Height)
+                        {
+                            y = 0;
+                            x += child.Rect.Width + spacing;
+                        }
+                        else
+                        {
+                            y += child.Rect.Height + spacing;
+                        }
+
+                    }
+                    else
+                    {
+                        if (x + child.Rect.Width + spacing > Content.Rect.Width)
+                        {
+                            x = 0;
+                            y += child.Rect.Height + spacing;
+                        }
+                        else
+                        {
+                            x += child.Rect.Width + spacing;
+                        }
+                    }
                 }
                 else
                 {
-                    y += child.Rect.Height + spacing;
+                    if (ScrollBar.IsHorizontal)
+                    {
+                        x += child.Rect.Width + spacing;
+                    }
+                    else
+                    {
+                        y += child.Rect.Height + spacing;
+                    }
                 }
             }
         }
@@ -381,16 +427,49 @@ namespace Barotrauma
         public void UpdateScrollBarSize()
         {
             if (Content == null) return;
-            
+
             totalSize = 0;
-            var children = Content.Children;
-            foreach (GUIComponent child in children)
+            var children = Content.Children.Where(c => c.Visible);
+            if (useGridLayout)
             {
-                if (!child.Visible) { continue; }
-                totalSize += (ScrollBar.IsHorizontal) ? child.Rect.Width : child.Rect.Height;
+                int pos = 0;
+                foreach (GUIComponent child in children)
+                {
+                    if (ScrollBar.IsHorizontal)
+                    {
+                        if (pos + child.Rect.Height + spacing > Content.Rect.Height || child == children.Last())
+                        {
+                            pos = 0;
+                            totalSize += child.Rect.Width + spacing;
+                        }
+                        else
+                        {
+                            pos += child.Rect.Height + spacing;
+                        }
+                    }
+                    else
+                    {
+                        if (pos + child.Rect.Width + spacing > Content.Rect.Width || child == children.Last())
+                        {
+                            pos = 0;
+                            totalSize += child.Rect.Height + spacing;
+                        }
+                        else
+                        {
+                            pos += child.Rect.Width + spacing;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                foreach (GUIComponent child in children)
+                {
+                    totalSize += (ScrollBar.IsHorizontal) ? child.Rect.Width : child.Rect.Height;
+                }
+                totalSize += Content.CountChildren * spacing;
             }
 
-            totalSize += Content.CountChildren * spacing;
 
             ScrollBar.BarSize = ScrollBar.IsHorizontal ?
                 Math.Max(Math.Min(Content.Rect.Width / (float)totalSize, 1.0f), 5.0f / Content.Rect.Width) :
