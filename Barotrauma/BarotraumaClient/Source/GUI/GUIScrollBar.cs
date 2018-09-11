@@ -23,6 +23,17 @@ namespace Barotrauma
         
         public bool IsBooleanSwitch;
 
+        public override string ToolTip
+        {
+            get { return base.ToolTip; }
+            set
+            {
+                base.ToolTip = value;
+                Frame.ToolTip = value;
+                Bar.ToolTip = value;
+            }
+        }
+
         private float minValue;
         public float MinValue
         {

@@ -790,6 +790,7 @@ namespace Barotrauma
 
                     var optionFrame = new GUIFrame(new RectTransform(new Point((int)(250 * GUI.Scale), (int)((40 + order.Options.Length * 40) * GUI.Scale)), itemTargetFrame.RectTransform, anchor),
                         style: "InnerFrame");
+                    optionFrames.Add(optionFrame);
 
                     var optionContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f), optionFrame.RectTransform, Anchor.Center))
                     {
@@ -857,38 +858,7 @@ namespace Barotrauma
                         new GUIFrame(new RectTransform(new Vector2(0.1f, 1.0f), orderTargetFrame.RectTransform), style: null);
                     }
                 }
-            }
-
-
-            /*orderTargetFrame = new GUIFrame(new RectTransform(new Point(200, matchingItems.Count * (order.Options.Length + 1) * 20 + 10), GUI.Canvas) { AbsoluteOffset = new Point(orderButton.Rect.Center.X, orderButton.Rect.Bottom) },
-                style: "InnerFrame");
-
-            var orderContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), orderTargetFrame.RectTransform, Anchor.Center))
-            {
-                Stretch = true
-            };
-
-            foreach (Item item in matchingItems)
-            {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), orderContainer.RectTransform), item != null ? item.Name : order.Name);
-
-                for (int i = 0; i < order.Options.Length; i++)
-                {
-                    string option = order.Options[i];
-                    var optionButton = new GUIButton(new RectTransform(new Point(orderContainer.Rect.Width, 20), orderContainer.RectTransform),
-                        order.OptionNames[i], style: "GUITextBox")
-                    {
-                        UserData = item == null ? order : new Order(order, item, item.components.Find(ic => ic.GetType() == order.ItemComponentType)),
-                        OnClicked = (btn, userData) =>
-                        {
-                            if (Character.Controlled == null) return false;
-                            SetCharacterOrder(character, userData as Order, option, Character.Controlled);
-                            orderTargetFrame = null;
-                            return true;
-                        }
-                    };
-                }
-            }*/
+            }            
         }
 
         #region Updating and drawing the UI
