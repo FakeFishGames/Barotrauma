@@ -208,6 +208,8 @@ namespace Barotrauma
                     }
                 }
 
+                SetActiveSprite();
+
                 if (GameMain.Server != null && lastSentCondition != condition)
                 {
                     if (Math.Abs(lastSentCondition - condition) > 1.0f || condition == 0.0f || condition == prefab.Health)
@@ -390,6 +392,8 @@ namespace Barotrauma
 
             if (submarine == null || !submarine.Loading) FindHull();
 
+            SetActiveSprite();
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -477,7 +481,7 @@ namespace Barotrauma
             {
                 ownInventory = itemContainer.Inventory;
             }
-            
+                        
             InsertToList();
             ItemList.Add(this);
 
@@ -622,6 +626,8 @@ namespace Barotrauma
 
             if (findNewHull) FindHull();
         }
+
+        partial void SetActiveSprite();
 
         public override void Move(Vector2 amount)
         {
@@ -2039,6 +2045,7 @@ namespace Barotrauma
             if (element.GetAttributeBool("flippedy", false)) item.FlipY(false);
 
             item.condition = element.GetAttributeFloat("condition", item.prefab.Health);
+            item.SetActiveSprite();
 
             return item;
         }
