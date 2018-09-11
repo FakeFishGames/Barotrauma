@@ -409,7 +409,11 @@ namespace Barotrauma
             switch (command)
             {
                 case '\b': //backspace
-                    if (Text.Length > 0 && CaretIndex > 0)
+                    if (selectedCharacters > 0)
+                    {
+                        RemoveSelectedText();
+                    }
+                    else if (Text.Length > 0 && CaretIndex > 0)
                     {
                         CaretIndex--;
                         int prevCaretIndex = CaretIndex;
@@ -431,19 +435,7 @@ namespace Barotrauma
                     break;
                 case (char)0x18: // ctrl-x
                     CopySelectedText();
-                    previousCaretIndex = CaretIndex;
-                    if (IsLeftToRight)
-                    {
-                        Text = Text.Remove(selectionStartIndex, selectedText.Length);
-                        CaretIndex = Math.Min(Text.Length, previousCaretIndex - selectedText.Length);
-                    }
-                    else
-                    {
-                        Text = Text.Remove(selectionEndIndex, selectedText.Length);
-                        CaretIndex = previousCaretIndex;
-                    }
-                    ClearSelection();
-                    OnTextChanged?.Invoke(this, Text);
+                    RemoveSelectedText();
                     break;
                 case (char)0x1: // ctrl-a
                     SelectAll();
@@ -490,7 +482,11 @@ namespace Barotrauma
                     }
                     break;
                 case Keys.Delete:
-                    if (Text.Length > 0 && CaretIndex < Text.Length)
+                    if (selectedCharacters > 0)
+                    {
+                        RemoveSelectedText();
+                    }
+                    else if (Text.Length > 0 && CaretIndex < Text.Length)
                     {
                         int prevCaretIndex = CaretIndex;
                         Text = Text.Remove(CaretIndex, 1);
@@ -538,6 +534,21 @@ namespace Barotrauma
             t = clipboard;
 #endif
             return t;
+        }
+
+        private void RemoveSelectedText()
+        {
+            if (IsLeftToRight)
+            {
+                Text = Text.Remove(selectionStartIndex, selectedText.Length);
+            }
+            else
+            {
+                Text = Text.Remove(selectionEndIndex, selectedText.Length);
+            }
+            CaretIndex = Math.Min(Text.Length, previousCaretIndex);
+            ClearSelection();
+            OnTextChanged?.Invoke(this, Text);
         }
 
         private void CalculateSelection()
