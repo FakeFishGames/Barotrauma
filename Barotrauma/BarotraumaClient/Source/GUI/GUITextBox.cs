@@ -304,6 +304,10 @@ namespace Barotrauma
                 {
                     isSelecting = PlayerInput.LeftButtonHeld();
                 }
+                if (PlayerInput.DoubleClicked())
+                {
+                    SelectAll();
+                }
                 if (isSelecting)
                 {
                     if (!MathUtils.NearlyEqual(PlayerInput.MouseSpeed.X, 0))
