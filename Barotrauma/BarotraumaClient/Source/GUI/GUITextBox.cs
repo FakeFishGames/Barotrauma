@@ -269,8 +269,7 @@ namespace Barotrauma
             if (flashTimer > 0.0f) flashTimer -= deltaTime;
             if (!Enabled) return;
             shiftDown = PlayerInput.KeyDown(Keys.LeftShift) || PlayerInput.KeyDown(Keys.RightShift);           
-            if (MouseRect.Contains(PlayerInput.MousePosition) && Enabled &&
-                (GUI.MouseOn == null || GUI.MouseOn == this || IsParentOf(GUI.MouseOn) || GUI.MouseOn.IsParentOf(this)))
+            if (MouseRect.Contains(PlayerInput.MousePosition) && Enabled && (GUI.MouseOn == null || GUI.IsMouseOn(this)))
             {
                 state = ComponentState.Hover;
                 if (PlayerInput.LeftButtonClicked())
@@ -349,11 +348,13 @@ namespace Barotrauma
             CaretIndex = Math.Min(Text.Length, ++prevCaretIndex);
             OnTextChanged?.Invoke(this, Text);
         }
+
         public void ReceiveTextInput(string text)
         {
             Text += text;
             OnTextChanged?.Invoke(this, Text);
         }
+
         public void ReceiveCommandInput(char command)
         {
             if (Text == null) Text = "";
