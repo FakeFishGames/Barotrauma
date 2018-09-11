@@ -93,7 +93,10 @@ namespace Barotrauma
             switch (order.AITag.ToLowerInvariant())
             {
                 case "follow":
-                    currentOrder = new AIObjectiveGoTo(orderGiver, character, true);
+                    currentOrder = new AIObjectiveGoTo(orderGiver, character, true)
+                    {
+                        CloseEnough = 1.5f
+                    };
                     break;
                 case "wait":
                     currentOrder = new AIObjectiveGoTo(character, character, true);
