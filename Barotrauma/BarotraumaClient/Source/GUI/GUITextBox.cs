@@ -441,6 +441,9 @@ namespace Barotrauma
                     ClearSelection();
                     OnTextChanged?.Invoke(this, Text);
                     break;
+                case (char)0x1: // ctrl-a
+                    SelectAll();
+                    break;
             }
         }
 
@@ -493,6 +496,16 @@ namespace Barotrauma
                     break;
             }
             OnKeyHit?.Invoke(this, key);
+        }
+
+        public void SelectAll()
+        {
+            CaretIndex = 0;
+            CalculateCaretPos();
+            selectionStartPos = caretPos;
+            selectionStartIndex = 0;
+            CaretIndex = Text.Length;
+            CalculateSelection();
         }
 
         private void CopySelectedText()
