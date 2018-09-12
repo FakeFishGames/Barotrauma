@@ -25,6 +25,8 @@ namespace Barotrauma
 
         private Camera cam;
 
+        private Point screenResolution;
+
         private bool lightingEnabled;
 
         public GUIComponent topPanel, leftPanel;
@@ -130,13 +132,16 @@ namespace Barotrauma
             get { return wiringMode; }
         }
 
-
         public SubEditorScreen(ContentManager content)
         {
             cam = new Camera();
-            
+            CreateUI();
+        }
+
+        private void CreateUI()
+        {
             topPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.04f), GUI.Canvas) { MinSize = new Point(0, 35) }, "GUIFrameTop");
-            GUIFrame paddedTopPanel = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.55f), topPanel.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.1f) }, 
+            GUIFrame paddedTopPanel = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.55f), topPanel.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.1f) },
                 style: null);
 
             saveAssemblyFrame = new GUIFrame(new RectTransform(new Vector2(0.08f, 0.5f), topPanel.RectTransform, Anchor.BottomRight, Pivot.TopRight) { MinSize = new Point(170, 30) }, "InnerFrame")
@@ -199,7 +204,9 @@ namespace Barotrauma
             leftPanel = new GUIFrame(new RectTransform(new Vector2(0.08f, 1.0f), GUI.Canvas) { MinSize = new Point(170, 0) }, "GUIFrameLeft");
             GUILayoutGroup paddedLeftPanel = new GUILayoutGroup(new RectTransform(
                 new Point((int)(leftPanel.Rect.Width * 0.8f), (int)(GameMain.GraphicsHeight - topPanel.Rect.Height * 0.95f)),
-                leftPanel.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, topPanel.Rect.Height) }) { AbsoluteSpacing = 5 };
+                leftPanel.RectTransform, Anchor.Center)
+            { AbsoluteOffset = new Point(0, topPanel.Rect.Height) })
+            { AbsoluteSpacing = 5 };
 
             GUITextBlock itemCount = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedLeftPanel.RectTransform), "ItemCount")
             {
@@ -210,7 +217,7 @@ namespace Barotrauma
             {
                 TextGetter = GetStructureCount
             };
-            
+
             hullVolumeFrame = new GUIFrame(new RectTransform(new Vector2(0.15f, 2.0f), topPanel.RectTransform, Anchor.BottomLeft, Pivot.TopLeft, minSize: new Point(300, 85)) { AbsoluteOffset = new Point(leftPanel.Rect.Width, 0) }, "GUIToolTip")
             {
                 Visible = false
@@ -257,7 +264,7 @@ namespace Barotrauma
                     TextManager.Get("MapEntityCategory." + category.ToString()))
                 {
                     UserData = category,
-                    OnClicked = (btn, userdata) => 
+                    OnClicked = (btn, userdata) =>
                     {
                         entityMenuOpen = true;
                         OpenEntityMenu((MapEntityCategory)userdata);
@@ -288,7 +295,7 @@ namespace Barotrauma
                 UseGridLayout = true,
                 CheckSelected = MapEntityPrefab.GetSelected
             };
-            UpdateEntityList();                       
+            UpdateEntityList();
 
             //empty guiframe as a separator
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), paddedLeftPanel.RectTransform), style: null);
@@ -326,7 +333,7 @@ namespace Barotrauma
             var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowLighting"))
             {
                 Selected = lightingEnabled,
-                OnSelected = (GUITickBox obj) =>  { lightingEnabled = obj.Selected; return true; }
+                OnSelected = (GUITickBox obj) => { lightingEnabled = obj.Selected; return true; }
             };
             tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowWalls"))
             {
@@ -377,6 +384,8 @@ namespace Barotrauma
             {
                 OnSelected = SelectPrefab
             };
+
+            screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
 
         private void UpdateEntityList()
@@ -1658,8 +1667,6 @@ namespace Barotrauma
                     saveFrame.AddToGUIUpdateList();
                 }              
             }
-
-            //GUI.AddToGUIUpdateList();
         }
 
         /// <summary>
@@ -1668,6 +1675,14 @@ namespace Barotrauma
         /// </summary>
         public override void Update(double deltaTime)
         {
+            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
+            {
+                saveFrame = null;
+                loadFrame = null;
+                saveAssemblyFrame = null;
+                CreateUI();
+            }
+
             if (tutorial != null) tutorial.Update((float)deltaTime);
 
             if (entityMenuOpened)
