@@ -20,7 +20,7 @@ namespace Barotrauma
         public bool Locked;
 
         private ushort[] receivedItemIDs;
-        private float syncItemsDelay;
+        protected float syncItemsDelay;
         private CoroutineHandle syncItemsCoroutine;
 
         public int Capacity
@@ -143,6 +143,8 @@ namespace Barotrauma
         {
             if (Owner == null) return;
 
+            Inventory prevInventory = item.ParentInventory;
+
             if (removeItem)
             {
                 item.Drop(user);
@@ -164,6 +166,8 @@ namespace Barotrauma
             if (createNetworkEvent)
             {
                 CreateNetworkEvent();
+                //also delay syncing the inventory the item was inside
+                if (prevInventory != null && prevInventory != this) prevInventory.syncItemsDelay = 1.0f;
             }
         }
 
@@ -265,7 +269,8 @@ namespace Barotrauma
             }
 #if CLIENT
             else if (GameMain.Client != null)
-            {
+            {            
+                syncItemsDelay = 1.0f;
                 GameMain.Client.CreateEntityEvent(Owner as IClientSerializable, new object[] { NetEntityEvent.Type.InventoryState });
             }
 #endif
@@ -328,8 +333,6 @@ namespace Barotrauma
         public void ClientWrite(NetBuffer msg, object[] extraData = null)
         {
             ServerWrite(msg, null);
-
-            syncItemsDelay = 1.0f;
         }
 
         public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
@@ -342,26 +345,53 @@ namespace Barotrauma
                 newItemIDs[i] = msg.ReadUInt16();
             }
 
-            if (this is CharacterInventory)
+            
+            if (c == null || c.Character == null) return;
+
+            bool accessible = c.Character.CanAccessInventory(this);
+            if (this is CharacterInventory && accessible)
             {
-                if (Owner == null || !(Owner is Character)) return;
-                if (!((CharacterInventory)this).AccessibleWhenAlive && !((Character)Owner).IsDead) return;
+                if (Owner == null || !(Owner is Character))
+                {
+                    accessible = false;
+                }
+                else if (!((CharacterInventory)this).AccessibleWhenAlive && !((Character)Owner).IsDead)
+                {
+                    accessible = false;
+                }
             }
 
-            if (c == null || c.Character == null || !c.Character.CanAccessInventory(this))
+            if (!accessible)
             {
+                //create a network event to correct the client's inventory state
+                //otherwise they may have an item in their inventory they shouldn't have been able to pick up,
+                //and receiving an event for that inventory later will cause the item to be dropped
+                CreateNetworkEvent();
+                for (int i = 0; i < capacity; i++)
+                {
+                    var item = Entity.FindEntityByID(newItemIDs[i]) as Item;
+                    if (item == null) continue;
+                    if (item.ParentInventory != null && item.ParentInventory != this)
+                    {
+                        item.ParentInventory.CreateNetworkEvent();
+                    }
+                }
                 return;
             }
+            
+            List<Inventory> prevItemInventories = new List<Inventory>(Items.Select(i => i?.ParentInventory));
 
             for (int i = 0; i < capacity; i++)
             {
-                if (newItemIDs[i] == 0 || (Entity.FindEntityByID(newItemIDs[i]) as Item != Items[i]))
+                Item newItem = newItemIDs[i] == 0 ? null : Entity.FindEntityByID(newItemIDs[i]) as Item;
+                prevItemInventories.Add(newItem?.ParentInventory);
+
+                if (newItemIDs[i] == 0 || (newItem != Items[i]))
                 {
                     if (Items[i] != null) Items[i].Drop();
                     System.Diagnostics.Debug.Assert(Items[i] == null);
                 }
             }
-
 
             for (int i = 0; i < capacity; i++)
             {
@@ -382,6 +412,10 @@ namespace Barotrauma
             }
 
             CreateNetworkEvent();
+            foreach (Inventory prevInventory in prevItemInventories.Distinct())
+            {
+                if (prevInventory != this) prevInventory?.CreateNetworkEvent();
+            }
 
             foreach (Item item in Items.Distinct())
             {

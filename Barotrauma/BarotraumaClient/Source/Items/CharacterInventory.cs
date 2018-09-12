@@ -330,7 +330,11 @@ namespace Barotrauma
 
         public override void Update(float deltaTime, Camera cam, bool isSubInventory = false)
         {
-            if (!AccessibleWhenAlive && !character.IsDead) return;
+            if (!AccessibleWhenAlive && !character.IsDead)
+            {
+                syncItemsDelay = Math.Max(syncItemsDelay - deltaTime, 0.0f);
+                return;
+            }
 
             base.Update(deltaTime, cam);
 
