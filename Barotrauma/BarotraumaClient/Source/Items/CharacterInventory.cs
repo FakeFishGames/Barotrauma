@@ -87,7 +87,7 @@ namespace Barotrauma
             CreateSlots();
         }
 
-        protected override void CreateSlots()
+        public override void CreateSlots()
         {
             if (slots == null) slots = new InventorySlot[capacity];
             

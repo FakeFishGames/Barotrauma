@@ -111,7 +111,9 @@ namespace Barotrauma
                 UserData = pathBox,
                 ToolTip = TextManager.Get("ReloadLinkedSubTooltip")
             };
-            
+
+            PositionEditingHUD();
+
             return editingHUD;
         }
 

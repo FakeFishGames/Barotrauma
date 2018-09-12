@@ -186,7 +186,7 @@ namespace Barotrauma
             get { return selectedSlot; }
         }
         
-        protected virtual void CreateSlots()
+        public virtual void CreateSlots()
         {
             slots = new InventorySlot[capacity];
 
