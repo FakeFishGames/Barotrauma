@@ -500,7 +500,6 @@ namespace Barotrauma
         {
             while (syncItemsDelay > 0.0f || (GameMain.Client != null && GameMain.Client.MidRoundSyncing))
             {
-                syncItemsDelay -= CoroutineManager.DeltaTime;
                 yield return CoroutineStatus.Running;
             }
 
