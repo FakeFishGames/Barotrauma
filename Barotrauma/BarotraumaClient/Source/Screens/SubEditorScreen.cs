@@ -27,11 +27,11 @@ namespace Barotrauma
 
         private bool lightingEnabled;
 
-        public GUIComponent topPanel, leftPanel;
+        public GUIComponent TopPanel, LeftPanel;
 
         private bool entityMenuOpen = true, entityMenuOpened;
         private float entityMenuOpenState = 1.0f;
-        private GUIComponent entityMenu;
+        public GUIComponent EntityMenu;
         private GUITextBox entityFilterBox;
         private GUIListBox entityList;
         private GUIButton toggleEntityMenuButton;
@@ -135,11 +135,11 @@ namespace Barotrauma
         {
             cam = new Camera();
             
-            topPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.04f), GUI.Canvas) { MinSize = new Point(0, 35) }, "GUIFrameTop");
-            GUIFrame paddedTopPanel = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.55f), topPanel.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.1f) }, 
+            TopPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.04f), GUI.Canvas) { MinSize = new Point(0, 35) }, "GUIFrameTop");
+            GUIFrame paddedTopPanel = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.55f), TopPanel.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.1f) }, 
                 style: null);
 
-            saveAssemblyFrame = new GUIFrame(new RectTransform(new Vector2(0.08f, 0.5f), topPanel.RectTransform, Anchor.BottomRight, Pivot.TopRight) { MinSize = new Point(170, 30) }, "InnerFrame")
+            saveAssemblyFrame = new GUIFrame(new RectTransform(new Vector2(0.08f, 0.5f), TopPanel.RectTransform, Anchor.BottomRight, Pivot.TopRight) { MinSize = new Point(170, 30) }, "InnerFrame")
             {
                 Visible = false
             };
@@ -196,10 +196,14 @@ namespace Barotrauma
                 return true;
             };
 
-            leftPanel = new GUIFrame(new RectTransform(new Vector2(0.08f, 1.0f), GUI.Canvas) { MinSize = new Point(170, 0) }, "GUIFrameLeft");
+            LeftPanel = new GUIFrame(new RectTransform(new Vector2(0.08f, 1.0f), GUI.Canvas) { MinSize = new Point(170, 0) }, "GUIFrameLeft");
             GUILayoutGroup paddedLeftPanel = new GUILayoutGroup(new RectTransform(
-                new Point((int)(leftPanel.Rect.Width * 0.8f), (int)(GameMain.GraphicsHeight - topPanel.Rect.Height * 0.95f)),
-                leftPanel.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, topPanel.Rect.Height) }) { AbsoluteSpacing = 5 };
+                new Point((int)(LeftPanel.Rect.Width * 0.8f), (int)(GameMain.GraphicsHeight - TopPanel.Rect.Height * 0.95f)),
+                LeftPanel.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, TopPanel.Rect.Height) })
+            {
+                RelativeSpacing = 0.01f,
+                Stretch = true
+            };
 
             GUITextBlock itemCount = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedLeftPanel.RectTransform), "ItemCount")
             {
@@ -211,7 +215,7 @@ namespace Barotrauma
                 TextGetter = GetStructureCount
             };
             
-            hullVolumeFrame = new GUIFrame(new RectTransform(new Vector2(0.15f, 2.0f), topPanel.RectTransform, Anchor.BottomLeft, Pivot.TopLeft, minSize: new Point(300, 85)) { AbsoluteOffset = new Point(leftPanel.Rect.Width, 0) }, "GUIToolTip")
+            hullVolumeFrame = new GUIFrame(new RectTransform(new Vector2(0.15f, 2.0f), TopPanel.RectTransform, Anchor.BottomLeft, Pivot.TopLeft, minSize: new Point(300, 85)) { AbsoluteOffset = new Point(LeftPanel.Rect.Width, 0) }, "GUIToolTip")
             {
                 Visible = false
             };
@@ -228,10 +232,10 @@ namespace Barotrauma
             //Entity menu
             //------------------------------------------------
 
-            entityMenu = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth - leftPanel.Rect.Width + 20, (int)(300 * GUI.Scale)), GUI.Canvas, Anchor.BottomRight),
+            EntityMenu = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth - LeftPanel.Rect.Width + 20, (int)(300 * GUI.Scale)), GUI.Canvas, Anchor.BottomRight),
                 style: "GUIFrameBottom");
 
-            toggleEntityMenuButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.1f), entityMenu.RectTransform, Anchor.TopCenter, Pivot.BottomCenter) { RelativeOffset = new Vector2(0.0f, -0.12f) },
+            toggleEntityMenuButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.1f), EntityMenu.RectTransform, Anchor.TopCenter, Pivot.BottomCenter) { RelativeOffset = new Vector2(0.0f, -0.12f) },
                 style: "GUIButtonVerticalArrow")
             {
                 OnClicked = (btn, userdata) =>
@@ -245,7 +249,7 @@ namespace Barotrauma
                 }
             };
 
-            var tabButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.1f), entityMenu.RectTransform, Anchor.TopRight, Pivot.BottomRight),
+            var tabButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.1f), EntityMenu.RectTransform, Anchor.TopRight, Pivot.BottomRight),
                 isHorizontal: true)
             {
                 RelativeSpacing = 0.01f,
@@ -266,7 +270,7 @@ namespace Barotrauma
                 };
             }
 
-            var paddedTab = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.8f), entityMenu.RectTransform, Anchor.Center), style: null);
+            var paddedTab = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.8f), EntityMenu.RectTransform, Anchor.Center), style: null);
             var filterArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), paddedTab.RectTransform), isHorizontal: true)
             {
                 AbsoluteSpacing = 5,
@@ -373,12 +377,12 @@ namespace Barotrauma
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform), style: null);
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform), TextManager.Get("PreviouslyUsedLabel"));
-            previouslyUsedList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), paddedLeftPanel.RectTransform))
+            previouslyUsedList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.25f), paddedLeftPanel.RectTransform))
             {
                 OnSelected = SelectPrefab
             };
         }
-
+        
         private void UpdateEntityList()
         {
             entityList.Content.ClearChildren();
@@ -394,7 +398,7 @@ namespace Barotrauma
                     style: "GUITextBox")
                 {
                     UserData = ep,
-                    ToolTip = ep.Description
+                    ToolTip = string.IsNullOrEmpty(ep.Description) ? ep.Name : ep.Name + '\n' + ep.Description
                 };
 
                 GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.8f), frame.RectTransform, Anchor.Center), style: null)
@@ -408,10 +412,6 @@ namespace Barotrauma
                     CanBeFocused = false
                 };
                 textBlock.Text = ToolBox.LimitString(textBlock.Text, textBlock.Font, textBlock.Rect.Width);
-                if (!string.IsNullOrWhiteSpace(ep.Description))
-                {
-                    textBlock.ToolTip = ep.Description;
-                }
 
                 if (ep.sprite != null)
                 {
@@ -511,10 +511,15 @@ namespace Barotrauma
 
             dummyCharacter = Character.Create(Character.HumanConfigFile, Vector2.Zero, "");
 
-            for (int i = 0; i<dummyCharacter.Inventory.SlotPositions.Length; i++)
+            //make space for the entity menu
+            for (int i = 0; i < dummyCharacter.Inventory.SlotPositions.Length; i++)
             {
-                dummyCharacter.Inventory.SlotPositions[i].X += leftPanel.Rect.Width+10;
+                if (dummyCharacter.Inventory.SlotPositions[i].Y > GameMain.GraphicsHeight / 2)
+                {
+                    dummyCharacter.Inventory.SlotPositions[i].Y -= 50 * GUI.Scale;
+                }
             }
+            dummyCharacter.Inventory.CreateSlots();
 
             Character.Controlled = dummyCharacter;
             GameMain.World.ProcessChanges();
@@ -1090,6 +1095,7 @@ namespace Barotrauma
             characterMode = enabled;
             if (characterMode)
             {
+                entityMenuOpen = false;
                 wiringModeTickBox.Selected = false;
                 wiringMode = false;
             }
@@ -1119,6 +1125,7 @@ namespace Barotrauma
             wiringMode = enabled;
             if (wiringMode)
             {
+                entityMenuOpen = false;
                 characterModeTickBox.Selected = false;
                 characterMode = false;
             }
@@ -1158,7 +1165,8 @@ namespace Barotrauma
 
         private GUIFrame CreateWiringPanel()
         {
-            GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(0.03f, 0.35f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(120, 300) },
+            GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(0.03f, 0.35f), GUI.Canvas, Anchor.CenterRight)
+                { MinSize = new Point(120, 300), RelativeOffset = new Vector2(0.0f, -0.1f) },
                 style: "GUIFrameRight");
 
             GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.8f, 0.85f), frame.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.1f, 0.0f) })
@@ -1630,9 +1638,9 @@ namespace Barotrauma
                 MapEntity.HighlightedListBox.AddToGUIUpdateList();
             }
 
-            entityMenu.AddToGUIUpdateList();  
-            leftPanel.AddToGUIUpdateList();
-            topPanel.AddToGUIUpdateList();
+            EntityMenu.AddToGUIUpdateList();  
+            LeftPanel.AddToGUIUpdateList();
+            TopPanel.AddToGUIUpdateList();
 
             if (wiringMode)
             {
@@ -1747,7 +1755,7 @@ namespace Barotrauma
                 (float)Math.Min(entityMenuOpenState + deltaTime * 5.0f, 1.0f) :
                 (float)Math.Max(entityMenuOpenState - deltaTime * 5.0f, 0.0f);
 
-            entityMenu.RectTransform.ScreenSpaceOffset = Vector2.Lerp(new Vector2(0.0f, entityMenu.Rect.Height - 10), Vector2.Zero, entityMenuOpenState).ToPoint();
+            EntityMenu.RectTransform.ScreenSpaceOffset = Vector2.Lerp(new Vector2(0.0f, EntityMenu.Rect.Height - 10), Vector2.Zero, entityMenuOpenState).ToPoint();
 
             if (wiringMode)
             {

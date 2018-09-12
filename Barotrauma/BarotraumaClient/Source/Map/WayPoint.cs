@@ -67,9 +67,7 @@ namespace Barotrauma
             {
                 editingHUD = CreateEditingHUD();
             }
-
-            editingHUD.UpdateManually((float)Timing.Step);
-
+            
             if (PlayerInput.LeftButtonClicked())
             {
                 Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
@@ -85,11 +83,6 @@ namespace Barotrauma
                     e.linkedTo.Add(this);
                 }
             }
-        }
-
-        public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
-        {
-            if (editingHUD != null) editingHUD.DrawManually(spriteBatch);
         }
 
         private bool ChangeSpawnType(GUIButton button, object obj)
@@ -228,6 +221,8 @@ namespace Barotrauma
                     ToolTip = TextManager.Get("SpawnpointJobsTooltip")
                 };
             }
+            
+            PositionEditingHUD();
 
             return editingHUD;
         }        

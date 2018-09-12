@@ -217,8 +217,6 @@ namespace Barotrauma
                 editingHUD = CreateEditingHUD(Screen.Selected != GameMain.SubEditorScreen);
             }
 
-            editingHUD.UpdateManually((float)Timing.Step);
-
             if (Screen.Selected != GameMain.SubEditorScreen) return;
 
             if (!Linkable) return;
@@ -255,12 +253,7 @@ namespace Barotrauma
                 }
             }
         }
-
-        public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
-        {
-            if (editingHUD != null && editingHUD.UserData == this) editingHUD.DrawManually(spriteBatch);
-        }
-
+        
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
             editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) }) { UserData = this };  
@@ -277,16 +270,13 @@ namespace Barotrauma
 
             foreach (ItemComponent ic in components)
             {
-                if (ic.requiredItems.Count == 0)
+                if (inGame)
                 {
-                    if (inGame)
-                    {
-                        if (SerializableProperty.GetProperties<InGameEditable>(ic).Count == 0) continue;
-                    }
-                    else
-                    {
-                        if (SerializableProperty.GetProperties<Editable>(ic).Count == 0) continue;
-                    }
+                    if (SerializableProperty.GetProperties<InGameEditable>(ic).Count == 0) continue;
+                }
+                else
+                {
+                    if (ic.requiredItems.Count == 0 && SerializableProperty.GetProperties<Editable>(ic).Count == 0) continue;
                 }
 
                 var componentEditor = new SerializableEntityEditor(listBox.Content.RectTransform, ic, inGame, showName: !inGame);
@@ -324,12 +314,10 @@ namespace Barotrauma
                         };
                     }
                 }
-
             }
 
-            //int contentHeight = editingHUD.Children.Sum(c => c.Rect.Height) + (listBox.CountChildren - 1) * listBox.Spacing;
-            //editingHUD.RectTransform.NonScaledSize =
-            //    new Point(editingHUD.RectTransform.NonScaledSize.X, MathHelper.Clamp(contentHeight, 50, editingHUD.RectTransform.NonScaledSize.Y));
+            PositionEditingHUD();
+            SetHUDLayout();
 
             return editingHUD;
         }
@@ -341,6 +329,11 @@ namespace Barotrauma
         {
             //reset positions first
             List<GUIComponent> elementsToMove = new List<GUIComponent>();
+
+            if (editingHUD != null && editingHUD.UserData == this)
+            {
+                elementsToMove.Add(editingHUD);
+            }
 
             foreach (ItemComponent ic in activeHUDs)
             {
@@ -354,9 +347,12 @@ namespace Barotrauma
 
         public virtual void UpdateHUD(Camera cam, Character character, float deltaTime)
         {
-            if (HasInGameEditableProperties)
+            bool editingHUDCreated = false;
+            if (HasInGameEditableProperties || 
+                Screen.Selected == GameMain.SubEditorScreen)
             {
                 UpdateEditing(cam);
+                editingHUDCreated = editingHUD != null;
             }
 
             List<ItemComponent> prevActiveHUDs = new List<ItemComponent>(activeHUDs);
@@ -388,7 +384,7 @@ namespace Barotrauma
             }
 
             //active HUDs have changed, need to reposition
-            if (!prevActiveHUDs.SequenceEqual(activeHUDs))
+            if (!prevActiveHUDs.SequenceEqual(activeHUDs) || editingHUDCreated)
             {
                 SetHUDLayout();
             }
@@ -416,13 +412,13 @@ namespace Barotrauma
         {
             if (Screen.Selected is SubEditorScreen)
             {
-                if (editingHUD != null) editingHUD.AddToGUIUpdateList();
+                if (editingHUD != null && editingHUD.UserData == this) editingHUD.AddToGUIUpdateList();
             }
             else
             {
                 if (HasInGameEditableProperties)
                 {
-                    if (editingHUD != null) editingHUD.AddToGUIUpdateList();
+                    if (editingHUD != null && editingHUD.UserData == this) editingHUD.AddToGUIUpdateList();
                 }
             }
 

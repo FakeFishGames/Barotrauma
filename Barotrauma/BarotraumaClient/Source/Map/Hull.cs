@@ -66,13 +66,11 @@ namespace Barotrauma
         {
             editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) }) { UserData = this };
             GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null);
-            new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true);         
-            return editingHUD;
-        }
+            new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true);
 
-        public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
-        {
-            if (editingHUD != null && editingHUD.UserData == this) editingHUD.DrawManually(spriteBatch);
+            PositionEditingHUD();
+
+            return editingHUD;
         }
 
         public override void UpdateEditing(Camera cam)
@@ -81,9 +79,7 @@ namespace Barotrauma
             {
                 editingHUD = CreateEditingHUD(Screen.Selected != GameMain.SubEditorScreen);
             }
-
-            editingHUD.UpdateManually((float)Timing.Step);
-
+            
             if (!PlayerInput.KeyDown(Keys.Space)) return;
             bool lClick = PlayerInput.LeftButtonClicked();
             bool rClick = PlayerInput.RightButtonClicked();

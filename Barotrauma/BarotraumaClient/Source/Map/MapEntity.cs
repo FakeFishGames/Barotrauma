@@ -560,6 +560,41 @@ namespace Barotrauma
 
         public virtual void UpdateEditing(Camera cam) { }
 
+        protected static void PositionEditingHUD()
+        {
+            int maxHeight = 100;
+            if (Screen.Selected == GameMain.SubEditorScreen)
+            {
+                editingHUD.RectTransform.SetPosition(Anchor.TopRight);
+                editingHUD.RectTransform.AbsoluteOffset = new Point(0, GameMain.SubEditorScreen.TopPanel.Rect.Bottom * 2);
+                maxHeight = (GameMain.GraphicsHeight - GameMain.SubEditorScreen.EntityMenu.Rect.Height) - GameMain.SubEditorScreen.TopPanel.Rect.Bottom * 2 - 40;
+            }
+            else
+            {
+                editingHUD.RectTransform.SetPosition(Anchor.TopRight);
+                editingHUD.RectTransform.RelativeOffset = new Vector2(0.0f, (HUDLayoutSettings.InventoryAreaUpper.Bottom + 10.0f) / (editingHUD.RectTransform.Parent ?? GUI.Canvas).Rect.Height);
+                maxHeight = HUDLayoutSettings.InventoryAreaLower.Bottom - HUDLayoutSettings.InventoryAreaLower.Y - 10;
+            }
+
+            var listBox = editingHUD.GetChild<GUIListBox>();
+            if (listBox != null)
+            {
+                int padding = 20;
+                int contentHeight = 0;
+                foreach (GUIComponent child in listBox.Content.Children)
+                {
+                    contentHeight += child.Rect.Height + listBox.Spacing;
+                    child.RectTransform.MaxSize = new Point(int.MaxValue, child.Rect.Height);
+                }
+
+                editingHUD.RectTransform.Resize(
+                    new Point(
+                        editingHUD.RectTransform.NonScaledSize.X, 
+                        MathHelper.Clamp(contentHeight + padding * 2, 50, maxHeight)), resizeChildren: false);
+                listBox.RectTransform.Resize(new Point(listBox.RectTransform.NonScaledSize.X, editingHUD.RectTransform.NonScaledSize.Y - padding * 2), resizeChildren: false);
+            }
+        }
+
         public virtual void DrawEditing(SpriteBatch spriteBatch, Camera cam) { }
 
         private void UpdateResizing(Camera cam)
