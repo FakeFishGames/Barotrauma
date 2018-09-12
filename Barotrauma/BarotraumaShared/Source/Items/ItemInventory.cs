@@ -101,6 +101,7 @@ namespace Barotrauma
 #if CLIENT
             else if (GameMain.Client != null)
             {
+                syncItemsDelay = 1.0f;
                 GameMain.Client.CreateEntityEvent(Owner as IClientSerializable, new object[] { NetEntityEvent.Type.InventoryState, componentIndex });
             }
 #endif
