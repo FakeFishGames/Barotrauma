@@ -10,7 +10,8 @@ namespace Barotrauma.Networking
         {
             public void Read(NetIncomingMessage msg)
             {
-                byte size = msg.ReadByte();
+                long oldPos = msg.Position;
+                UInt32 size = msg.ReadVariableUInt32();
 
                 float x; float y; float z; float w;
                 byte r; byte g; byte b; byte a;
@@ -60,6 +61,7 @@ namespace Barotrauma.Networking
                         property.SetValue(new Rectangle(ix, iy, width, height));
                         return;
                     default:
+                        msg.Position = oldPos; //reset position to properly read the string
                         string incVal = msg.ReadString();
                         property.TrySetValue(incVal);
                         return;
@@ -93,7 +95,7 @@ namespace Barotrauma.Networking
                     }
                     else
                     {
-                        byte size = incMsg.ReadByte();
+                        UInt32 size = incMsg.ReadVariableUInt32();
                         incMsg.Position += 8 * size;
                     }
                 }
