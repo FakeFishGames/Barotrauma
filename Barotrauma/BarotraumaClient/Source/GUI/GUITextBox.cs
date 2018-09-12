@@ -59,6 +59,7 @@ namespace Barotrauma
         private bool IsLeftToRight => selectionStartIndex <= selectionEndIndex;
         private int previousCaretIndex;
         private Vector2 selectionStartPos;
+        private Vector2 selectionEndPos;
         private Vector2 selectionRectSize;
 
         public GUITextBlock.TextGetterHandler TextGetter
@@ -403,9 +404,7 @@ namespace Barotrauma
                 }
                 if (selectedCharacters > 0)
                 {
-                    // TODO: multiline edit
-                    Vector2 topLeft = IsLeftToRight ? selectionStartPos : new Vector2(selectionStartPos.X - selectionRectSize.X, selectionStartPos.Y);
-                    GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, selectionRectSize, Color.White * 0.25f, isFilled: true);
+                    DrawSelectionRect(spriteBatch);
                 }
                 //GUI.DrawString(spriteBatch, new Vector2(100, 0), selectedCharacters.ToString(), Color.LightBlue, Color.Black);
                 //GUI.DrawString(spriteBatch, new Vector2(100, 20), selectionStartIndex.ToString(), Color.White, Color.Black);
@@ -415,6 +414,73 @@ namespace Barotrauma
                 //GUI.DrawString(spriteBatch, new Vector2(100, 80), $"caret pos: {caretPos.ToString()}", Color.Red, Color.Black);
                 //GUI.DrawString(spriteBatch, new Vector2(100, 100), $"text start pos: {(textBlock.TextPos - textBlock.Origin).ToString()}", Color.White, Color.Black);
                 //GUI.DrawString(spriteBatch, new Vector2(100, 120), $"cursor pos: {PlayerInput.MousePosition.ToString()}", Color.White, Color.Black);
+            }
+        }
+
+        private void DrawSelectionRect(SpriteBatch spriteBatch)
+        {
+            if (textBlock.WrappedText.Contains("\n"))
+            {
+                // Multiline selection
+                string[] lines = textBlock.WrappedText.Split('\n');
+                int totalIndex = 0;
+                int previousCharacters = 0;
+                Vector2 offset = textBlock.TextPos - textBlock.Origin;
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    string currentLine = lines[i];
+                    int currentLineLength = currentLine.Length;
+                    totalIndex += currentLineLength;
+                    bool containsSelection = IsLeftToRight
+                        ? selectionStartIndex < totalIndex && selectionEndIndex > previousCharacters
+                        : selectionEndIndex < totalIndex && selectionStartIndex > previousCharacters;
+                    if (containsSelection)
+                    {
+                        if ((IsLeftToRight && selectionStartIndex < previousCharacters && selectionEndIndex > totalIndex)
+                            || !IsLeftToRight && selectionEndIndex < previousCharacters && selectionStartIndex > totalIndex)
+                        {
+                            // selects the whole line
+                            Vector2 currentLineSize = Font.MeasureString(currentLine);
+                            Vector2 topLeft = offset + new Vector2(0, currentLineSize.Y * i);
+                            GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, currentLineSize, Color.Blue * 0.25f, isFilled: true);
+                        }
+                        else
+                        {
+                            if (IsLeftToRight)
+                            {
+                                // This works. TODO: Combine with the inversed
+                                // Select starting from the beginning, if the selection begins before this line
+                                bool selectFromTheBeginning = selectionStartIndex < previousCharacters;
+                                int startIndex = Math.Abs(selectionStartIndex - previousCharacters);
+                                int endIndex = Math.Abs(selectionEndIndex - previousCharacters);
+                                if (selectFromTheBeginning)
+                                {
+                                    startIndex = 0;
+                                }
+                                int characters = Math.Min(endIndex - startIndex, currentLineLength - startIndex);
+                                Vector2 currentLineSize = Font.MeasureString(currentLine);
+                                Vector2 topLeft = new Vector2(selectionStartPos.X, offset.Y + currentLineSize.Y * i);
+                                if (selectFromTheBeginning)
+                                {
+                                    topLeft.X = offset.X;
+                                }
+                                Vector2 selectedTextSize = Font.MeasureString(currentLine.Substring(startIndex, characters));
+                                GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, selectedTextSize, Color.Green * 0.25f, isFilled: true);
+                            }
+                            else
+                            {
+                                // TODO: inversed selection from right to left
+                            }
+                        }
+                    }
+                    previousCharacters = totalIndex;
+                }
+            }
+            else
+            {
+                // Single line selection
+                Vector2 topLeft = IsLeftToRight ? selectionStartPos : selectionEndPos;
+                GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, selectionRectSize, Color.White * 0.25f, isFilled: true);
             }
         }
 
@@ -585,12 +651,17 @@ namespace Barotrauma
 
         private void CalculateSelection()
         {
+            if (caretPosDirty)
+            {
+                CalculateCaretPos();
+            }
             if (selectionStartIndex == -1)
             {
                 selectionStartIndex = CaretIndex;
                 selectionStartPos = caretPos;
             }
             selectionEndIndex = CaretIndex;
+            selectionEndPos = caretPos;
             selectedCharacters = Math.Abs(selectionStartIndex - selectionEndIndex);
             if (IsLeftToRight)
             {
