@@ -23,36 +23,36 @@ namespace Barotrauma.Networking
                 switch (typeString)
                 {
                     case "float":
-                        msg.Write((byte)4);
+                        msg.WriteVariableUInt32(4);
                         msg.Write((float)property.GetValue());
                         break;
                     case "vector2":
-                        msg.Write((byte)8);
+                        msg.WriteVariableUInt32(8);
                         msg.Write(((Vector2)property.GetValue()).X);
                         msg.Write(((Vector2)property.GetValue()).Y);
                         break;
                     case "vector3":
-                        msg.Write((byte)12);
+                        msg.WriteVariableUInt32(12);
                         msg.Write(((Vector3)property.GetValue()).X);
                         msg.Write(((Vector3)property.GetValue()).Y);
                         msg.Write(((Vector3)property.GetValue()).Z);
                         break;
                     case "vector4":
-                        msg.Write((byte)16);
+                        msg.WriteVariableUInt32(16);
                         msg.Write(((Vector4)property.GetValue()).X);
                         msg.Write(((Vector4)property.GetValue()).Y);
                         msg.Write(((Vector4)property.GetValue()).Z);
                         msg.Write(((Vector4)property.GetValue()).W);
                         break;
                     case "color":
-                        msg.Write((byte)4);
+                        msg.WriteVariableUInt32(4);
                         msg.Write(((Color)property.GetValue()).R);
                         msg.Write(((Color)property.GetValue()).G);
                         msg.Write(((Color)property.GetValue()).B);
                         msg.Write(((Color)property.GetValue()).A);
                         break;
                     case "rectangle":
-                        msg.Write((byte)16);
+                        msg.WriteVariableUInt32(16);
                         msg.Write(((Rectangle)property.GetValue()).X);
                         msg.Write(((Rectangle)property.GetValue()).Y);
                         msg.Write(((Rectangle)property.GetValue()).Width);
@@ -60,17 +60,7 @@ namespace Barotrauma.Networking
                         break;
                     default:
                         string strVal = property.GetValue().ToString();
-
-                        //the length of a string can take a variable amount of bytes
-                        //so we calculate how many they would be here
-                        int headerLength = 1;
-                        int strLen = strVal.Length;
-                        while (strLen >= 0x80)
-                        {
-                            headerLength++;
-                            strLen >>= 7;
-                        }
-                        msg.Write((byte)(strVal.Length + headerLength));
+                        
                         msg.Write(strVal);
                         break;
                 }
