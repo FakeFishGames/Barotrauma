@@ -5,7 +5,6 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -222,17 +221,21 @@ namespace Barotrauma
             if (textBlock.WrappedText.Contains("\n"))
             {
                 string[] lines = textBlock.WrappedText.Split('\n');
-                int n = 0;
-                for (int i = 0; i<lines.Length; i++)
+                int totalIndex = 0;
+                for (int i = 0; i < lines.Length; i++)
                 {
-                    //add the number of letters in the line
-                    n += lines[i].Length;
-                    //caret is on this line
-                    if (CaretIndex <= n)
+                    int currentLineLength = lines[i].Length;
+                    totalIndex += currentLineLength;
+                    // The caret is on this line
+                    if (CaretIndex < totalIndex || totalIndex == textBlock.Text.Length)
                     {
+                        int diff = totalIndex - CaretIndex;
+                        int index = currentLineLength - diff;
+                        Vector2 lineTextSize = Font.MeasureString(lines[i].Substring(0, index));
                         Vector2 lastLineSize = Font.MeasureString(lines[i]);
-                        Vector2 textSize = Font.MeasureString(textBlock.WrappedText.Substring(n+i));
-                        caretPos = new Vector2(lastLineSize.X, textSize.Y - lastLineSize.Y) + textBlock.TextPos - textBlock.Origin;
+                        float totalTextHeight = Font.MeasureString(textBlock.WrappedText.Substring(0, totalIndex)).Y;
+                        caretPos = new Vector2(lineTextSize.X, totalTextHeight - lastLineSize.Y) + textBlock.TextPos - textBlock.Origin;
+                        break;
                     }
                 }
             }
@@ -247,11 +250,35 @@ namespace Barotrauma
         protected List<Tuple<Vector2, int>> GetAllPositions()
         {
             var positions = new List<Tuple<Vector2, int>>();
-            for (int i = 0; i <= textBlock.Text.Length; i++)
+            if (textBlock.WrappedText.Contains("\n"))
             {
-                Vector2 textSize = Font.MeasureString(textBlock.Text.Substring(0, i));
-                Vector2 indexPos = new Vector2(textSize.X + textBlock.Padding.X, 0);
-                positions.Add(new Tuple<Vector2, int>(textBlock.Rect.Location.ToVector2() + indexPos, i));
+                string[] lines = textBlock.WrappedText.Split('\n');
+                int index = 0;
+                int totalIndex = 0;
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    string line = lines[i];
+                    totalIndex += line.Length;
+                    float totalTextHeight = Font.MeasureString(textBlock.WrappedText.Substring(0, totalIndex)).Y;
+                    for (int j = 0; j <= line.Length; j++)
+                    {
+                        Vector2 lineTextSize = Font.MeasureString(line.Substring(0, j));
+                        Vector2 indexPos = new Vector2(lineTextSize.X + textBlock.Padding.X, totalTextHeight + textBlock.Padding.Y);
+                        //DebugConsole.NewMessage($"index: {idx}, pos: {indexPos}", Color.AliceBlue);
+                        positions.Add(new Tuple<Vector2, int>(textBlock.Rect.Location.ToVector2() + indexPos, index + j));
+                    }
+                    index = totalIndex;
+                }
+            }
+            else
+            {
+                for (int i = 0; i <= textBlock.Text.Length; i++)
+                {
+                    Vector2 textSize = Font.MeasureString(textBlock.Text.Substring(0, i));
+                    Vector2 indexPos = new Vector2(textSize.X + textBlock.Padding.X, textSize.Y + textBlock.Padding.Y);
+                    //DebugConsole.NewMessage($"index: {i}, pos: {indexPos}", Color.WhiteSmoke);
+                    positions.Add(new Tuple<Vector2, int>(textBlock.Rect.Location.ToVector2() + indexPos, i));
+                }
             }
             return positions;
         }
@@ -260,6 +287,7 @@ namespace Barotrauma
         {
             var positions = GetAllPositions().OrderBy(p => Vector2.DistanceSquared(p.Item1, pos));
             var posIndex = positions.FirstOrDefault();
+            //GUI.AddMessage($"index: {posIndex.Item2}, pos: {posIndex.Item1}", Color.WhiteSmoke);
             return posIndex != null ? posIndex.Item2 : textBlock.Text.Length;
         }
 
@@ -375,14 +403,18 @@ namespace Barotrauma
                 }
                 if (selectedCharacters > 0)
                 {
-                    // TODO: multiline edit?
+                    // TODO: multiline edit
                     Vector2 topLeft = IsLeftToRight ? selectionStartPos : new Vector2(selectionStartPos.X - selectionRectSize.X, selectionStartPos.Y);
                     GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, selectionRectSize, Color.White * 0.25f, isFilled: true);
                 }
-                GUI.DrawString(spriteBatch, new Vector2(100, 0), selectedCharacters.ToString(), Color.LightBlue, Color.Black);
-                GUI.DrawString(spriteBatch, new Vector2(100, 20), selectionStartIndex.ToString(), Color.White, Color.Black);
-                GUI.DrawString(spriteBatch, new Vector2(140, 20), selectionEndIndex.ToString(), Color.White, Color.Black);
-                GUI.DrawString(spriteBatch, new Vector2(100, 40), selectedText.ToString(), Color.Yellow, Color.Black);
+                //GUI.DrawString(spriteBatch, new Vector2(100, 0), selectedCharacters.ToString(), Color.LightBlue, Color.Black);
+                //GUI.DrawString(spriteBatch, new Vector2(100, 20), selectionStartIndex.ToString(), Color.White, Color.Black);
+                //GUI.DrawString(spriteBatch, new Vector2(140, 20), selectionEndIndex.ToString(), Color.White, Color.Black);
+                //GUI.DrawString(spriteBatch, new Vector2(100, 40), selectedText.ToString(), Color.Yellow, Color.Black);
+                //GUI.DrawString(spriteBatch, new Vector2(100, 60), $"caret index: {CaretIndex.ToString()}", Color.Red, Color.Black);
+                //GUI.DrawString(spriteBatch, new Vector2(100, 80), $"caret pos: {caretPos.ToString()}", Color.Red, Color.Black);
+                //GUI.DrawString(spriteBatch, new Vector2(100, 100), $"text start pos: {(textBlock.TextPos - textBlock.Origin).ToString()}", Color.White, Color.Black);
+                //GUI.DrawString(spriteBatch, new Vector2(100, 120), $"cursor pos: {PlayerInput.MousePosition.ToString()}", Color.White, Color.Black);
             }
         }
 
