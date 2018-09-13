@@ -363,6 +363,14 @@ namespace Barotrauma
             TitleScreen.LoadState = 10.0f;
         yield return CoroutineStatus.Running;
 
+            StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
+            TitleScreen.LoadState = 15.0f;
+        yield return CoroutineStatus.Running;
+
+            ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
+            TitleScreen.LoadState = 30.0f;
+        yield return CoroutineStatus.Running;
+
             JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
             // Add any missing jobs from the prefab into Config.JobNamePreferences.
             foreach (JobPrefab job in JobPrefab.List)
@@ -371,14 +379,6 @@ namespace Barotrauma
             }
 
             NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
-
-            StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
-            TitleScreen.LoadState = 20.0f;
-        yield return CoroutineStatus.Running;
-
-            ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
-            TitleScreen.LoadState = 30.0f;
-        yield return CoroutineStatus.Running;
 
             ItemAssemblyPrefab.LoadAll();
             TitleScreen.LoadState = 35.0f;
