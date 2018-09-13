@@ -442,54 +442,34 @@ namespace Barotrauma
                         {
                             // select the whole line
                             Vector2 topLeft = offset + new Vector2(0, currentLineSize.Y * i);
-                            GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, currentLineSize, Color.Blue * 0.25f, isFilled: true);
+                            GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, currentLineSize, Color.White * 0.25f, isFilled: true);
                         }
                         else
                         {
                             if (IsLeftToRight)
                             {
                                 bool selectFromTheBeginning = selectionStartIndex <= previousCharacters;
-                                int startIndex = Math.Abs(selectionStartIndex - previousCharacters);
+                                int startIndex = selectFromTheBeginning ? 0 : Math.Abs(selectionStartIndex - previousCharacters);
                                 int endIndex = Math.Abs(selectionEndIndex - previousCharacters);
-                                if (selectFromTheBeginning)
-                                {
-                                    startIndex = 0;
-                                }
                                 int characters = Math.Min(endIndex - startIndex, currentLineLength - startIndex);
-                                Vector2 topLeft = new Vector2(selectionStartPos.X, offset.Y + currentLineSize.Y * i);
-                                if (selectFromTheBeginning)
-                                {
-                                    topLeft.X = offset.X;
-                                }
                                 Vector2 selectedTextSize = Font.MeasureString(currentLine.Substring(startIndex, characters));
-                                GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, selectedTextSize, Color.Green * 0.25f, isFilled: true);
+                                Vector2 topLeft = selectFromTheBeginning
+                                    ? new Vector2(offset.X, offset.Y + currentLineSize.Y * i)
+                                    : new Vector2(selectionStartPos.X, offset.Y + currentLineSize.Y * i);
+                                GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, selectedTextSize, Color.White * 0.25f, isFilled: true);
                             }
                             else
                             {
                                 bool selectFromTheBeginning = selectionStartIndex >= totalIndex;
-                                bool selectToTheEnd = selectionEndIndex <= previousCharacters;
-                                int startIndex = Math.Abs(selectionStartIndex - previousCharacters);
-                                int endIndex = Math.Abs(selectionEndIndex - previousCharacters);
-                                if (selectFromTheBeginning)
-                                {
-                                    startIndex = currentLineLength;
-                                }
-                                if (selectToTheEnd)
-                                {
-                                    endIndex = 0;
-                                }
+                                bool selectFromTheStart = selectionEndIndex <= previousCharacters;
+                                int startIndex = selectFromTheBeginning ? currentLineLength : Math.Abs(selectionStartIndex - previousCharacters);
+                                int endIndex = selectFromTheStart ? 0 : Math.Abs(selectionEndIndex - previousCharacters);
                                 int characters = Math.Min(Math.Abs(endIndex - startIndex), currentLineLength);
                                 Vector2 selectedTextSize = Font.MeasureString(currentLine.Substring(endIndex, characters));
-                                Vector2 topLeft;
-                                if (selectFromTheBeginning)
-                                {
-                                    topLeft = new Vector2(offset.X + currentLineSize.X - selectedTextSize.X, offset.Y + currentLineSize.Y * i);
-                                }
-                                else
-                                {
-                                    topLeft = new Vector2(selectionStartPos.X - selectedTextSize.X, offset.Y + currentLineSize.Y * i);
-                                }
-                                GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, selectedTextSize, Color.Red * 0.25f, isFilled: true);
+                                Vector2 topLeft = selectFromTheBeginning
+                                    ? new Vector2(offset.X + currentLineSize.X - selectedTextSize.X, offset.Y + currentLineSize.Y * i)
+                                    : new Vector2(selectionStartPos.X - selectedTextSize.X, offset.Y + currentLineSize.Y * i);
+                                GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, selectedTextSize, Color.White * 0.25f, isFilled: true);
                             }
                         }
                     }
