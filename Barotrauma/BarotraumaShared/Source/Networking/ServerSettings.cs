@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -45,8 +46,7 @@ namespace Barotrauma.Networking
                 this.PermittedCommands = permittedCommands;
             }
         }
-
-
+        
         partial class NetPropertyData
         {
             SerializableProperty property;
@@ -58,6 +58,12 @@ namespace Barotrauma.Networking
                 this.typeString = typeString;
             }
         };
+
+        public Dictionary<string, SerializableProperty> SerializableProperties
+        {
+            get;
+            private set;
+        }
 
         Dictionary<UInt32,NetPropertyData> netProperties;
 
@@ -78,7 +84,9 @@ namespace Barotrauma.Networking
 
             Whitelist = new WhiteList();
             BanList = new BanList();
-            
+
+            InitProjSpecific();
+
             netProperties = new Dictionary<UInt32, NetPropertyData>();
 
             using (MD5 md5 = MD5.Create())
@@ -104,20 +112,12 @@ namespace Barotrauma.Networking
                         key |= (UInt32)(hash[hash.Length - 2] << 8);
                         key |= (UInt32)(hash[hash.Length - 1]);
 
-                        if (netProperties.ContainsKey(key)) throw new Exception("Hashing collision in ServerSettings.netProperties: " + netProperties[key] + " has same key as " + property.Name + " ("+key.ToString()+")");
+                        if (netProperties.ContainsKey(key)) throw new Exception("Hashing collision in ServerSettings.netProperties: " + netProperties[key] + " has same key as " + property.Name + " (" + key.ToString() + ")");
 
                         netProperties.Add(key, netPropertyData);
                     }
                 }
             }
-            
-            InitProjSpecific();
-        }
-
-        public Dictionary<string, SerializableProperty> SerializableProperties
-        {
-            get;
-            private set;
         }
 
         public string ServerName;

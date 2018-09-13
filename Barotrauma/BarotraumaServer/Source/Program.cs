@@ -25,9 +25,11 @@ namespace Barotrauma
         {
             GameMain game = null;
             Thread inputThread = null;
-            
+
+#if !DEBUG
             try
             {
+#endif
                 game = new GameMain(args);
                 inputThread = new Thread(new ThreadStart(game.ProcessInput));
                 inputThread.Start();
@@ -35,12 +37,14 @@ namespace Barotrauma
                 inputThread.Abort(); inputThread.Join();
                 if (GameSettings.SendUserStatistics) GameAnalytics.OnStop();
                 SteamManager.ShutDown();
+#if !DEBUG
             }
             catch (Exception e)
             {
                 CrashDump(game, "servercrashreport.log", e);
                 inputThread.Abort(); inputThread.Join();
             }
+#endif
         }
         
         static void CrashDump(GameMain game, string filePath, Exception exception)
