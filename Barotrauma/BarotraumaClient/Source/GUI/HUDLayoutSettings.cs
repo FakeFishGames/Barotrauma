@@ -103,13 +103,6 @@ namespace Barotrauma
             //slice from the top of the screen for misc buttons (info, end round, server controls)
             ButtonAreaTop = new Rectangle(Padding, Padding, GameMain.GraphicsWidth - Padding * 2, (int)(50 * GUI.Scale));
 
-            MessageAreaTop = new Rectangle(GameMain.GraphicsWidth / 4, ButtonAreaTop.Bottom, GameMain.GraphicsWidth / 2, ButtonAreaTop.Height);
-
-            //slice for the upper slots of the inventory (clothes, id card, headset)
-            int inventoryAreaUpperWidth = (int)(GameMain.GraphicsWidth * 0.2f);
-            int inventoryAreaUpperHeight = (int)(GameMain.GraphicsHeight * 0.2f);
-            InventoryAreaUpper = new Rectangle(GameMain.GraphicsWidth - inventoryAreaUpperWidth - Padding, ButtonAreaTop.Bottom + Padding, inventoryAreaUpperWidth, inventoryAreaUpperHeight);
-
             int crewAreaHeight = (int)Math.Max(GameMain.GraphicsHeight * 0.3f, 150);
             CrewArea = new Rectangle(Padding, ButtonAreaTop.Bottom + Padding, GameMain.GraphicsWidth - InventoryAreaUpper.Width - Padding * 3, crewAreaHeight);
 
@@ -120,9 +113,17 @@ namespace Barotrauma
             HealthBarAreaLeft = new Rectangle(Padding, GameMain.GraphicsHeight - healthBarHeight - Padding, healthBarWidth, healthBarHeight);
             AfflictionAreaLeft = new Rectangle(Padding, HealthBarAreaLeft.Y - afflictionAreaHeight - Padding, healthBarWidth, afflictionAreaHeight);
             
-            HealthBarAreaRight = new Rectangle(GameMain.GraphicsWidth - Padding - healthBarWidth, HealthBarAreaLeft.Y, healthBarWidth, HealthBarAreaLeft.Height);
-            AfflictionAreaRight = new Rectangle(HealthBarAreaRight.X, AfflictionAreaLeft.Y, healthBarWidth, afflictionAreaHeight);
-            
+            HealthBarAreaRight = new Rectangle(GameMain.GraphicsWidth - Padding - healthBarWidth, ButtonAreaTop.Bottom + Padding, healthBarWidth, HealthBarAreaLeft.Height);
+            AfflictionAreaRight = new Rectangle(HealthBarAreaRight.X, HealthBarAreaRight.Bottom + Padding, healthBarWidth, afflictionAreaHeight);
+
+            int messageAreaPos = GameMain.GraphicsWidth - HealthBarAreaRight.X;
+            MessageAreaTop = new Rectangle(messageAreaPos + Padding, ButtonAreaTop.Bottom, GameMain.GraphicsWidth - (messageAreaPos + Padding) * 2, ButtonAreaTop.Height);
+
+            //slice for the upper slots of the inventory (clothes, id card, headset)
+            int inventoryAreaUpperWidth = (int)(GameMain.GraphicsWidth * 0.2f);
+            int inventoryAreaUpperHeight = (int)(GameMain.GraphicsHeight * 0.2f);
+            InventoryAreaUpper = new Rectangle(GameMain.GraphicsWidth - inventoryAreaUpperWidth - Padding, HealthBarAreaRight.Bottom + Padding, inventoryAreaUpperWidth, inventoryAreaUpperHeight);
+
             //chatbox between upper and lower inventory areas, can be on either side depending on the alignment
             ChatBoxAlignment = Alignment.Left;
             int chatBoxWidth = (int)(500 * GUI.Scale);
@@ -131,19 +132,17 @@ namespace Barotrauma
                 new Rectangle(Padding, AfflictionAreaLeft.Y - chatBoxHeight - Padding, chatBoxWidth, chatBoxHeight) :
                 new Rectangle(GameMain.GraphicsWidth - Padding - chatBoxWidth, AfflictionAreaLeft.Y - chatBoxHeight - Padding, chatBoxWidth, chatBoxHeight);
 
-            int lowerAreaHeight = (int)Math.Min(GameMain.GraphicsHeight * 0.35f, 280);
-            //entire bottom side of the screen for inventory, minus health and affliction areas at the sides
-            InventoryAreaLower = new Rectangle(ChatBoxArea.Right + Padding, GameMain.GraphicsHeight - lowerAreaHeight, GameMain.GraphicsWidth - Padding * 2 - ChatBoxArea.Right, lowerAreaHeight);
+            int lowerAreaHeight = (int)Math.Min(GameMain.GraphicsHeight * 0.25f, 280);
+            InventoryAreaLower = new Rectangle(Padding, GameMain.GraphicsHeight - lowerAreaHeight, GameMain.GraphicsWidth - Padding * 2, lowerAreaHeight);
 
-            int healthWindowY = (int)(MessageAreaTop.Bottom + 10 * GUI.Scale);
+            int healthWindowY = InventoryAreaUpper.Bottom + Padding;
             Rectangle healthWindowArea = ChatBoxAlignment == Alignment.Left ?
                 new Rectangle(ChatBoxArea.Right + Padding, healthWindowY, GameMain.GraphicsWidth - ChatBoxArea.Width - inventoryAreaUpperWidth, GameMain.GraphicsHeight - healthWindowY - lowerAreaHeight / 2) :
                 new Rectangle(Padding - ChatBoxArea.Width, healthWindowY, GameMain.GraphicsWidth - ChatBoxArea.Width - inventoryAreaUpperWidth, GameMain.GraphicsHeight - healthWindowY - lowerAreaHeight / 2);
 
-            //split the health area vertically, left side for the player's own health and right side for the character they're treating
-            //int healthWindowWidth = Math.Min((int)(healthWindowArea.Width * 0.75f) - Padding / 2, 500);
-            HealthWindowAreaLeft = healthWindowArea;// new Rectangle(healthWindowArea.X, healthWindowArea.Y, healthWindowWidth, healthWindowArea.Height);
-            HealthWindowAreaRight = healthWindowArea;// new Rectangle(healthWindowArea.Right - healthWindowWidth, healthWindowArea.Y, healthWindowWidth, healthWindowArea.Height);
+            int healthWindowPadding = Padding * 3;
+            HealthWindowAreaLeft = new Rectangle(healthWindowPadding, healthWindowY, GameMain.GraphicsWidth / 2 - healthWindowPadding, GameMain.GraphicsHeight - healthWindowY - lowerAreaHeight);
+            HealthWindowAreaRight = new Rectangle(GameMain.GraphicsWidth / 2, healthWindowY, GameMain.GraphicsWidth / 2 - healthWindowPadding, GameMain.GraphicsHeight - healthWindowY - lowerAreaHeight);
 
             //report buttons (report breach etc) appear center right, not visible when health window is open
             int reportAreaWidth = (int)Math.Min(150 * GUI.Scale, 200);
