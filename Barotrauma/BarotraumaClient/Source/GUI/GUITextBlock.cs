@@ -41,6 +41,20 @@ namespace Barotrauma
             }
         }
 
+        public override ScalableFont Font
+        {
+            get
+            {
+                return base.Font;
+            }
+            set
+            {
+                if (base.Font == value) return;
+                base.Font = value;
+                SetTextPos();
+            }
+        }
+
         public string Text
         {
             get { return text; }
