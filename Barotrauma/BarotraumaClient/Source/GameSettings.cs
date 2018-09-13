@@ -117,20 +117,22 @@ namespace Barotrauma
             var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.46f, 0.95f), tabs[(int)Tab.Graphics].RectTransform, Anchor.CenterRight)
                 { RelativeOffset = new Vector2(0.02f, 0.0f) }) { RelativeSpacing = 0.01f, Stretch = true };
 
+            var supportedDisplayModes = new List<DisplayMode>();
+            foreach (DisplayMode mode in GraphicsAdapter.DefaultAdapter.SupportedDisplayModes)
+            {
+                if (supportedDisplayModes.Any(m => m.Width == mode.Width && m.Height == mode.Height)) continue;
+                supportedDisplayModes.Add(mode);
+            }
+
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("Resolution"));
-            var resolutionDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform))
+            var resolutionDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), elementCount: supportedDisplayModes.Count)
             {
                 OnSelected = SelectResolution
             };
-
-            var supportedModes = new List<DisplayMode>();
-            foreach (DisplayMode mode in GraphicsAdapter.DefaultAdapter.SupportedDisplayModes)
+            
+            foreach (DisplayMode mode in supportedDisplayModes)
             {
-                if (supportedModes.FirstOrDefault(m => m.Width == mode.Width && m.Height == mode.Height) != null) continue;
-
                 resolutionDD.AddItem(mode.Width + "x" + mode.Height, mode);
-                supportedModes.Add(mode);
-
                 if (GraphicsWidth == mode.Width && GraphicsHeight == mode.Height) resolutionDD.SelectItem(mode);
             }
 
