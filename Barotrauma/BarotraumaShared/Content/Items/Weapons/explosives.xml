@@ -117,6 +117,7 @@
     </Holdable>
 
     <ItemContainer canbeselected="true" capacity="1" itempos="0,0" hideitems="false">
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,204,110,226"/>
       <Containable identifiers="explosive"/>
     </ItemContainer>
 

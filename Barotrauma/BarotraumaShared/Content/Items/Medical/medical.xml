@@ -30,6 +30,7 @@
     </MeleeWeapon>
 
     <ItemContainer capacity="1" hideitems="true">
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,29,120,35"/>
       <Containable identifiers="chem"/>
     </ItemContainer>
 

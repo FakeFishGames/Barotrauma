@@ -680,9 +680,10 @@ namespace Barotrauma
                         Rectangle containedIndicatorArea = new Rectangle(rect.X,
                             dir < 0 ? rect.Bottom + HUDLayoutSettings.Padding / 2 : rect.Y - HUDLayoutSettings.Padding / 2 - ContainedIndicatorHeight, rect.Width, ContainedIndicatorHeight);
                         containedIndicatorArea.Inflate(-4, 0);
-                        
-                        if (itemContainer.ContainedStateIndicator == null)
+                                                
+                        if (itemContainer.ContainedStateIndicator?.Texture == null)
                         {
+                            containedIndicatorArea.Inflate(0, -2);
                             GUI.DrawRectangle(spriteBatch, containedIndicatorArea, Color.DarkGray * 0.8f, true);
                             GUI.DrawRectangle(spriteBatch,
                                 new Rectangle(containedIndicatorArea.X, containedIndicatorArea.Y, (int)(containedIndicatorArea.Width * containedState), containedIndicatorArea.Height),
@@ -690,16 +691,24 @@ namespace Barotrauma
                         }
                         else
                         {
-                            itemContainer.ContainedStateIndicator.Draw(spriteBatch, containedIndicatorArea.Location.ToVector2(),
-                                Color.DarkGray * 0.8f, 
-                                origin: Vector2.Zero,
+                            Sprite indicatorSprite = itemContainer.ContainedStateIndicator;
+                            float indicatorScale = Math.Min(
+                                containedIndicatorArea.Width / (float)indicatorSprite.SourceRect.Width,
+                                containedIndicatorArea.Height / (float)indicatorSprite.SourceRect.Height);
+
+                            indicatorSprite.Draw(spriteBatch, containedIndicatorArea.Center.ToVector2(),
+                                Color.DarkGray * 0.6f, 
+                                origin: indicatorSprite.size / 2,
                                 rotate: 0.0f,
-                                scale: new Vector2(containedIndicatorArea.Width / (float)itemContainer.ContainedStateIndicator.SourceRect.Width, containedIndicatorArea.Height / (float)itemContainer.ContainedStateIndicator.SourceRect.Height));
+                                scale: indicatorScale);
                      
-                            spriteBatch.Draw(itemContainer.ContainedStateIndicator.Texture,
-                                new Rectangle(containedIndicatorArea.Location, new Point((int)(containedIndicatorArea.Width * containedState), containedIndicatorArea.Height)),
-                                new Rectangle(itemContainer.ContainedStateIndicator.SourceRect.Location, new Point((int)(itemContainer.ContainedStateIndicator.SourceRect.Width * containedState), itemContainer.ContainedStateIndicator.SourceRect.Height)),
-                                Color.Lerp(Color.Red, Color.Green, containedState) * 0.8f);
+                            spriteBatch.Draw(indicatorSprite.Texture, containedIndicatorArea.Center.ToVector2(),
+                                sourceRectangle: new Rectangle(indicatorSprite.SourceRect.Location, new Point((int)(indicatorSprite.SourceRect.Width * containedState), indicatorSprite.SourceRect.Height)),
+                                color: Color.Lerp(Color.Red, Color.Green, containedState) * 0.8f,
+                                rotation: 0.0f,
+                                origin: indicatorSprite.size / 2,
+                                scale: indicatorScale,
+                                effects: SpriteEffects.None, layerDepth: 0.0f);
                         }
                     }
                 }

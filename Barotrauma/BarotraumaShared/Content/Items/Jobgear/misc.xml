@@ -21,7 +21,7 @@
     </WifiComponent>
 
     <ItemContainer capacity="1" hideitems="true">
-      <ContainedStateIndicator texture="Content/UI/inventoryAtlas.png" sourcerect="3,14,93,29"/>
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31"/>
       <Containable identifiers="batterycell,fulguriumbatterycell"/>
     </ItemContainer>
 

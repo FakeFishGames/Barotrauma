@@ -64,7 +64,7 @@
 
     <!-- one welding fuel or oxygen tank can be contained inside the welding tool -->    
     <ItemContainer capacity="1" hideitems="false" itempos="-17,-21">
-      <ContainedStateIndicator texture="Content/UI/inventoryAtlas.png" sourcerect="8,67,86,25"/>
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27"/>
       <Containable identifiers="weldingfueltank,oxygentank,oxygenitetank"/>
     </ItemContainer>
   </Item>
@@ -123,7 +123,7 @@
     </RepairTool>
 
     <ItemContainer capacity="1" hideitems="false" itempos="9,-15">
-      <ContainedStateIndicator texture="Content/UI/inventoryAtlas.png" sourcerect="8,67,86,25"/>
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27"/>
       <Containable identifiers="weldingfueltank,oxygentank,oxygenitetank"/>
     </ItemContainer>
   </Item>
@@ -308,7 +308,7 @@
     </Sonar>
 
     <ItemContainer capacity="1" hideitems="true">
-      <ContainedStateIndicator texture="Content/UI/inventoryAtlas.png" sourcerect="3,14,93,29"/>
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31"/>
       <Containable identifiers="batterycell,fulguriumbatterycell">
         <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true"/>
       </Containable>
@@ -345,7 +345,7 @@
     </LightComponent>
 
     <ItemContainer capacity="1" hideitems="true">
-      <ContainedStateIndicator texture="Content/UI/inventoryAtlas.png" sourcerect="3,14,93,29"/>
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31"/>
       <Containable identifiers="batterycell,fulguriumbatterycell">
         <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true"/>
       </Containable>
@@ -382,7 +382,7 @@
     </Holdable>
     
     <ItemContainer capacity="1" hideitems="true">
-      <ContainedStateIndicator texture="Content/UI/inventoryAtlas.png" sourcerect="3,14,93,29"/>
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31"/>
       <Containable identifiers="batterycell,fulguriumbatterycell">
         <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true"/>
       </Containable>

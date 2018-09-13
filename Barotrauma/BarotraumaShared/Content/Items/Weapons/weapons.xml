@@ -62,7 +62,7 @@
     </RangedWeapon>
 
     <ItemContainer itempos="27,10" iteminterval="0,-4" hideitems="false">
-      <ContainedStateIndicator texture="Content/UI/inventoryAtlas.png" sourcerect="11,115,79,18"/>
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,0,121,30"/>
       <Containable identifier="spear"/>
     </ItemContainer>
   </Item>
@@ -99,6 +99,7 @@
     </RangedWeapon>
 
     <ItemContainer capacity="1" itempos="0,10" hideitems="false">
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,29,120,35"/>
       <Containable identifiers="medicalsyringe"/>
     </ItemContainer>
   </Item>
@@ -161,6 +162,7 @@
     </RangedWeapon>
 
     <ItemContainer capacity="6" hideitems="true">
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22"/>
       <Containable identifiers="revolverround"/>
     </ItemContainer>
   </Item>
@@ -283,7 +285,7 @@
     </MeleeWeapon>
 
     <ItemContainer capacity="1" hideitems="true">
-      <ContainedStateIndicator texture="Content/UI/inventoryAtlas.png" sourcerect="3,14,93,29"/>
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31"/>
       <Containable identifiers="batterycell,fulguriumcatterycell"/>
     </ItemContainer>
   </Item>
