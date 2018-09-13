@@ -32,7 +32,7 @@ namespace Barotrauma
 
         public bool CaretEnabled { get; set; }
         public Color? CaretColor { get; set; }
-        
+
         private int? maxTextLength;
 
         private int _caretIndex;
@@ -166,7 +166,10 @@ namespace Barotrauma
                 textBlock.HoverColor = value;
             }
         }
-                
+
+        // TODO: should this be defined in the stylesheet?
+        public Color SelectionColor { get; set; } = Color.White * 0.25f;
+
         public string Text
         {
             get
@@ -444,7 +447,7 @@ namespace Barotrauma
                         {
                             // select the whole line
                             Vector2 topLeft = offset + new Vector2(0, currentLineSize.Y * i);
-                            GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, currentLineSize, Color.White * 0.25f, isFilled: true);
+                            GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, currentLineSize, SelectionColor, isFilled: true);
                         }
                         else
                         {
@@ -458,7 +461,7 @@ namespace Barotrauma
                                 Vector2 topLeft = selectFromTheBeginning
                                     ? new Vector2(offset.X, offset.Y + currentLineSize.Y * i)
                                     : new Vector2(selectionStartPos.X, offset.Y + currentLineSize.Y * i);
-                                GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, selectedTextSize, Color.White * 0.25f, isFilled: true);
+                                GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, selectedTextSize, SelectionColor, isFilled: true);
                             }
                             else
                             {
@@ -471,7 +474,7 @@ namespace Barotrauma
                                 Vector2 topLeft = selectFromTheBeginning
                                     ? new Vector2(offset.X + currentLineSize.X - selectedTextSize.X, offset.Y + currentLineSize.Y * i)
                                     : new Vector2(selectionStartPos.X - selectedTextSize.X, offset.Y + currentLineSize.Y * i);
-                                GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, selectedTextSize, Color.White * 0.25f, isFilled: true);
+                                GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, selectedTextSize, SelectionColor, isFilled: true);
                             }
                         }
                     }
@@ -482,7 +485,7 @@ namespace Barotrauma
             {
                 // Single line selection
                 Vector2 topLeft = IsLeftToRight ? selectionStartPos : selectionEndPos;
-                GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, selectionRectSize, Color.White * 0.25f, isFilled: true);
+                GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, selectionRectSize, SelectionColor, isFilled: true);
             }
         }
 
