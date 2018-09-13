@@ -1,6 +1,9 @@
 ﻿using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 
 namespace Barotrauma.Networking
 {
@@ -69,6 +72,19 @@ namespace Barotrauma.Networking
 
                 //size didn't match: skip this
                 msg.Position += 8 * size;
+            }
+        }
+
+        partial void InitProjSpecific()
+        {
+            var properties = TypeDescriptor.GetProperties(GetType()).Cast<PropertyDescriptor>();
+
+            SerializableProperties = new Dictionary<string, SerializableProperty>();
+
+            foreach (var property in properties)
+            {
+                SerializableProperty objProperty = new SerializableProperty(property, this);
+                SerializableProperties.Add(property.Name.ToLowerInvariant(), objProperty);
             }
         }
 
