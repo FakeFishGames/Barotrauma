@@ -49,6 +49,7 @@ namespace Barotrauma
         }
         private bool caretPosDirty;
         protected Vector2 caretPos;
+        public Vector2 CaretScreenPos => Rect.Location.ToVector2() + caretPos;
 
         private bool isSelecting;
         private string selectedText = string.Empty;
@@ -265,7 +266,7 @@ namespace Barotrauma
                     {
                         Vector2 lineTextSize = Font.MeasureString(line.Substring(0, j));
                         Vector2 indexPos = new Vector2(lineTextSize.X + textBlock.Padding.X, totalTextHeight + textBlock.Padding.Y);
-                        //DebugConsole.NewMessage($"index: {idx}, pos: {indexPos}", Color.AliceBlue);
+                        //DebugConsole.NewMessage($"index: {index}, pos: {indexPos}", Color.AliceBlue);
                         positions.Add(new Tuple<Vector2, int>(textBlock.Rect.Location.ToVector2() + indexPos, index + j));
                     }
                     index = totalIndex;
@@ -412,8 +413,9 @@ namespace Barotrauma
                 //GUI.DrawString(spriteBatch, new Vector2(100, 40), selectedText.ToString(), Color.Yellow, Color.Black);
                 //GUI.DrawString(spriteBatch, new Vector2(100, 60), $"caret index: {CaretIndex.ToString()}", Color.Red, Color.Black);
                 //GUI.DrawString(spriteBatch, new Vector2(100, 80), $"caret pos: {caretPos.ToString()}", Color.Red, Color.Black);
-                //GUI.DrawString(spriteBatch, new Vector2(100, 100), $"text start pos: {(textBlock.TextPos - textBlock.Origin).ToString()}", Color.White, Color.Black);
-                //GUI.DrawString(spriteBatch, new Vector2(100, 120), $"cursor pos: {PlayerInput.MousePosition.ToString()}", Color.White, Color.Black);
+                //GUI.DrawString(spriteBatch, new Vector2(100, 100), $"caret screen pos: {CaretScreenPos.ToString()}", Color.Red, Color.Black);
+                //GUI.DrawString(spriteBatch, new Vector2(100, 120), $"text start pos: {(textBlock.TextPos - textBlock.Origin).ToString()}", Color.White, Color.Black);
+                //GUI.DrawString(spriteBatch, new Vector2(100, 140), $"cursor pos: {PlayerInput.MousePosition.ToString()}", Color.White, Color.Black);
             }
         }
 
@@ -548,36 +550,25 @@ namespace Barotrauma
                 case Keys.Left:
                     CaretIndex = Math.Max(CaretIndex - 1, 0);
                     caretTimer = 0;
-                    if (isSelecting)
-                    {
-                        if (selectionStartIndex == -1)
-                        {
-                            selectionStartIndex = CaretIndex + 1;
-                            selectionStartPos = caretPos;
-                        }
-                        CalculateSelection();
-                    }
-                    else
-                    {
-                        ClearSelection();
-                    }
+                    HandleSelection();
                     break;
                 case Keys.Right:
                     CaretIndex = Math.Min(CaretIndex + 1, Text.Length);
                     caretTimer = 0;
-                    if (isSelecting)
-                    {
-                        if (selectionStartIndex == -1)
-                        {
-                            selectionStartIndex = CaretIndex - 1;
-                            selectionStartPos = caretPos;
-                        }
-                        CalculateSelection();
-                    }
-                    else
-                    {
-                        ClearSelection();
-                    }
+                    HandleSelection();
+                    break;
+                case Keys.Up:
+                    float lineHeight = Font.MeasureString(Text).Y / 2;
+                    CaretIndex = GetCaretIndexFromScreenPos(new Vector2(CaretScreenPos.X, CaretScreenPos.Y - lineHeight));
+                    caretTimer = 0;
+                    HandleSelection();
+                    break;
+                case Keys.Down:
+                    lineHeight = Font.MeasureString(Text).Y * 2;
+                    int newIndex = GetCaretIndexFromScreenPos(new Vector2(CaretScreenPos.X, CaretScreenPos.Y + lineHeight));
+                    CaretIndex = newIndex != CaretIndex ? newIndex : Text.Length;
+                    caretTimer = 0;
+                    HandleSelection();
                     break;
                 case Keys.Delete:
                     if (selectedCharacters > 0)
@@ -594,6 +585,22 @@ namespace Barotrauma
                     break;
             }
             OnKeyHit?.Invoke(this, key);
+            void HandleSelection()
+            {
+                if (isSelecting)
+                {
+                    if (selectionStartIndex == -1)
+                    {
+                        selectionStartIndex = CaretIndex - 1;
+                        selectionStartPos = caretPos;
+                    }
+                    CalculateSelection();
+                }
+                else
+                {
+                    ClearSelection();
+                }
+            }
         }
 
         public void SelectAll()
