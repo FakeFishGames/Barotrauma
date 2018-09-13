@@ -61,7 +61,7 @@ namespace Barotrauma
             hidden = true;
 
             SlotPositions = new Vector2[SlotTypes.Length];
-            CurrentLayout = Layout.Default;
+            CurrentLayout = Layout.Right;
             SetSlotPositions(layout);
         }
 
@@ -184,6 +184,10 @@ namespace Barotrauma
             Point slotSize = (slotSpriteSmall.size * UIScale).ToPoint();
             int bottomOffset = slotSize.Y + spacing * 2 + ContainedIndicatorHeight;
 
+            if (slots == null) CreateSlots();
+
+            var upperSlots = InvSlotType.Card | InvSlotType.Headset | InvSlotType.InnerClothes;
+
             switch (layout)
             {
                 case Layout.Default:
@@ -232,19 +236,27 @@ namespace Barotrauma
                     break;
                 case Layout.Right:
                     {
-                        int extraOffset = bottomOffset * 2;
-                        int x = HUDLayoutSettings.InventoryAreaLower.Right - (int)(SlotTypes.Count(s => s == InvSlotType.Any) * (slotSize.X + spacing));
+                        int extraOffset = 0;
+                        int x = HUDLayoutSettings.InventoryAreaLower.Right;
                         int upperX = HUDLayoutSettings.InventoryAreaLower.Right;
                         for (int i = 0; i < slots.Length; i++)
                         {
-                            if (SlotTypes[i] == InvSlotType.Any || HideSlot(i)) continue;
-                            upperX -= slotSize.X + spacing;
+                            if (HideSlot(i)) continue;
+                            if (upperSlots.HasFlag(SlotTypes[i]))
+                            {
+                                upperX -= slotSize.X + spacing;
+                            }
+                            else
+                            {
+                                x -= slotSize.X + spacing;
+                            }
                         }
 
+                        int lowerX = x;
                         for (int i = 0; i < SlotPositions.Length; i++)
                         {
                             if (HideSlot(i)) continue;
-                            if (SlotTypes[i] == InvSlotType.Card || SlotTypes[i] == InvSlotType.Headset || SlotTypes[i] == InvSlotType.InnerClothes)
+                            if (upperSlots.HasFlag(SlotTypes[i]))
                             {
                                 SlotPositions[i] = new Vector2(upperX, GameMain.GraphicsHeight - bottomOffset * 2 - extraOffset - spacing * 2);
                                 upperX += slots[i].Rect.Width + spacing;
@@ -255,6 +267,14 @@ namespace Barotrauma
                                 x += slots[i].Rect.Width + spacing;
                             }
                         }
+
+                        x = lowerX;
+                        for (int i = 0; i < SlotPositions.Length; i++)
+                        {
+                            if (!HideSlot(i)) continue;
+                            x -= slots[i].Rect.Width + spacing;
+                            SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset - extraOffset);
+                        }
                     }
                     break;
                 case Layout.Left:
@@ -264,7 +284,7 @@ namespace Barotrauma
                         for (int i = 0; i < SlotPositions.Length; i++)
                         {
                             if (HideSlot(i)) continue;
-                            if (SlotTypes[i] == InvSlotType.Card || SlotTypes[i] == InvSlotType.Headset || SlotTypes[i] == InvSlotType.InnerClothes)
+                            if (upperSlots.HasFlag(SlotTypes[i]))
                             {
                                 SlotPositions[i] = new Vector2(upperX, GameMain.GraphicsHeight - bottomOffset * 2 - spacing * 2);
                                 upperX += slots[i].Rect.Width + spacing;
@@ -274,6 +294,12 @@ namespace Barotrauma
                                 SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset);
                                 x += slots[i].Rect.Width + spacing;
                             }
+                        }
+                        for (int i = 0; i < SlotPositions.Length; i++)
+                        {
+                            if (!HideSlot(i)) continue;
+                            SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset);
+                            x += slots[i].Rect.Width + spacing;
                         }
                     }
                     break;

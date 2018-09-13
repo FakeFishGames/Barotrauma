@@ -114,7 +114,7 @@ namespace Barotrauma
     {
         public static float UIScale
         {
-            get { return (GameMain.GraphicsWidth / 1920.0f + GameMain.GraphicsHeight / 1080.0f) / 2.0f * GameSettings.InventoryScale; }
+            get { return (GameMain.GraphicsWidth / 1920.0f + GameMain.GraphicsHeight / 1080.0f) / 2.5f * GameSettings.InventoryScale; }
         }
 
         public static int ContainedIndicatorHeight
@@ -126,9 +126,7 @@ namespace Barotrauma
                 
         protected static Sprite slotSpriteSmall, slotSpriteHorizontal, slotSpriteVertical, slotSpriteRound;
         public static Sprite EquipIndicator, EquipIndicatorOn;
-
-        protected Point screenResolution;
-
+        
         public Rectangle BackgroundFrame { get; protected set; }
 
         public float HideTimer;
