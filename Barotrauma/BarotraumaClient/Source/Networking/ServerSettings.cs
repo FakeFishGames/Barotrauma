@@ -116,6 +116,10 @@ namespace Barotrauma.Networking
                     }
                 }
             }
+            else
+            {
+                incMsg.ReadPadBits();
+            }
         }
     }
 }

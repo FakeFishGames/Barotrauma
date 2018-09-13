@@ -1070,8 +1070,7 @@ namespace Barotrauma.Networking
 
                 //TODO: use ServerSettings.ServerWrite
                 outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
-                outmsg.Write(GameMain.NetLobbyScreen.GetServerName());
-                outmsg.Write(GameMain.Server.ServerSettings.ServerMessageText);
+                serverSettings.ServerWrite(outmsg, c);
 
                 outmsg.Write(c.LastRecvGeneralUpdate < 1);
                 if (c.LastRecvGeneralUpdate < 1)
@@ -2092,9 +2091,7 @@ namespace Barotrauma.Networking
 
         private void WritePermissions(NetBuffer msg, Client client)
         {
-            //could use WriteRangedInt here, but since not much else is written
-            //we don't actually lose any space by writing a short
-            msg.Write((UInt16)client.Permissions);
+            msg.WriteVariableUInt32((UInt32)client.Permissions);
             if (client.Permissions.HasFlag(ClientPermissions.ConsoleCommands))
             {
                 msg.Write((UInt16)client.PermittedConsoleCommands.Sum(c => c.names.Length));

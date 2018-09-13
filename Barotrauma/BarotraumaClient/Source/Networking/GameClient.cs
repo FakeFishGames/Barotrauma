@@ -813,7 +813,7 @@ namespace Barotrauma.Networking
         private void ReadPermissions(NetIncomingMessage inc)
         {
             List<string> permittedConsoleCommands = new List<string>();
-            ClientPermissions newPermissions = (ClientPermissions)inc.ReadUInt16();
+            ClientPermissions newPermissions = (ClientPermissions)inc.ReadVariableUInt32();
             if (newPermissions.HasFlag(ClientPermissions.ConsoleCommands))
             {
                 UInt16 consoleCommandCount = inc.ReadUInt16();
@@ -1086,9 +1086,8 @@ namespace Barotrauma.Networking
                         if (lobbyUpdated)
                         {
                             UInt16 updateID     = inc.ReadUInt16();
-                            string serverName   = inc.ReadString();
-                            string serverText   = inc.ReadString();
- 
+                            serverSettings.ClientRead(inc); //TODO: ignore if this message is too old
+
                             if (inc.ReadBoolean())
                             {
                                 if (GameSettings.VerboseLogging)
@@ -1139,10 +1138,9 @@ namespace Barotrauma.Networking
                             {
                                 GameMain.NetLobbyScreen.LastUpdateID = updateID;
 
-                                serverSettings.ServerLog.ServerName = serverName;
-
-                                serverSettings.ServerName = serverName;
-                                GameMain.NetLobbyScreen.ServerMessage.Text = serverText;
+                                serverSettings.ServerLog.ServerName = serverSettings.ServerName;
+                                
+                                GameMain.NetLobbyScreen.ServerMessage.Text = serverSettings.ServerMessageText;
                                 GameMain.NetLobbyScreen.UsingShuttle = usingShuttle;
 
                                 if (!allowSubVoting) GameMain.NetLobbyScreen.TrySelectSub(selectSubName, selectSubHash, GameMain.NetLobbyScreen.SubList);

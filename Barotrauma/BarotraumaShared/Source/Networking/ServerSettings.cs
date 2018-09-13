@@ -51,6 +51,10 @@ namespace Barotrauma.Networking
         {
             SerializableProperty property;
             string typeString;
+            public string Name
+            {
+                get { return property.Name; }
+            }
             
             public NetPropertyData(SerializableProperty property,string typeString)
             {
@@ -433,6 +437,8 @@ namespace Barotrauma.Networking
             outMsg.Write(ServerName);
             outMsg.Write((UInt16)Port);
             outMsg.Write((UInt16)maxPlayers);
+            outMsg.Write(ServerName);
+            outMsg.Write(ServerMessageText);
         }
 
         private void SharedRead(NetIncomingMessage incMsg)
@@ -440,6 +446,8 @@ namespace Barotrauma.Networking
             ServerName = incMsg.ReadString();
             Port = incMsg.ReadUInt16();
             maxPlayers = incMsg.ReadUInt16();
+            ServerName = incMsg.ReadString();
+            ServerMessageText = incMsg.ReadString();
         }
     }
 }
