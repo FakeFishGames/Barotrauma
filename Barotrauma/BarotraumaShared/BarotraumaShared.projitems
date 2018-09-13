@@ -1887,7 +1887,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\PriceInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\NPCPersonalityTrait.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\FileTransfer\FileTransfer.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\GameServerSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\OrderChatMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\DamageModifier.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\RespawnManager.cs" />

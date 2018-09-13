@@ -1086,7 +1086,10 @@ namespace Barotrauma.Networking
                         if (lobbyUpdated)
                         {
                             UInt16 updateID     = inc.ReadUInt16();
-                            serverSettings.ClientRead(inc); //TODO: ignore if this message is too old
+
+                            UInt16 settingsLen = inc.ReadUInt16();
+                            byte[] settingsData = inc.ReadBytes(settingsLen);
+                            
 
                             if (inc.ReadBoolean())
                             {
@@ -1136,6 +1139,10 @@ namespace Barotrauma.Networking
                             //ignore the message if we already a more up-to-date one
                             if (NetIdUtils.IdMoreRecent(updateID, GameMain.NetLobbyScreen.LastUpdateID))
                             {
+                                NetBuffer settingsBuf = new NetBuffer();
+                                settingsBuf.Write(settingsData, 0, settingsLen); settingsBuf.Position = 0;
+                                serverSettings.ClientRead(settingsBuf);
+
                                 GameMain.NetLobbyScreen.LastUpdateID = updateID;
 
                                 serverSettings.ServerLog.ServerName = serverSettings.ServerName;
