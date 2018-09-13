@@ -423,7 +423,12 @@ namespace Barotrauma
         private IEnumerable<object> WaitForKeyPress(GUITextBox keyBox)
         {
             yield return CoroutineStatus.Running;
-
+            
+            while (PlayerInput.LeftButtonHeld() || PlayerInput.LeftButtonClicked())
+            {
+                //wait for the mouse to be released, so that we don't interpret clicking on the textbox as the keybinding
+                yield return CoroutineStatus.Running;
+            }
             while (keyBox.Selected && PlayerInput.GetKeyboardState.GetPressedKeys().Length == 0 && 
                 !PlayerInput.LeftButtonClicked() && !PlayerInput.RightButtonClicked() && !PlayerInput.MidButtonClicked())
             {
