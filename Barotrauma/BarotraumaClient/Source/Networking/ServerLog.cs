@@ -11,7 +11,7 @@ namespace Barotrauma.Networking
 
         public void CreateLogFrame()
         {
-            LogFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.5f);
+            LogFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
             new GUIButton(new RectTransform(Vector2.One, LogFrame.RectTransform), "", style: null).OnClicked += (btn, userData) =>
             {
                 LogFrame = null;

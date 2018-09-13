@@ -319,19 +319,20 @@
     <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect ="1001, 627, 10, 12"/>
   </GUIServerListRoundStartedTickBox>
 
-  <GUIMessageBox
-    padding="40.0, 20.0, 40.0, 20.0"
-    color="1.0, 1.0, 1.0, 1.0"  
-    textcolor="0.0, 0.0, 0.0, 1.0"  
-    hovercolor="0.8, 0.8, 0.8, 1.0"
-    selectedcolor="1.0, 0.82, 0.05, 1.0"    
-    outlinecolor="0.5, 0.57, 0.6, 1.0">
+  <GUIMessageBox    
+    color="0.0, 0.0, 0.0, 0.8"
+    hovercolor="0.0, 0.0, 0.0, 0.8"
+    selectedcolor="0.0, 0.0, 0.0, 0.8"
+    pressedcolor="0.0, 0.0, 0.0, 0.8"
+    textcolor="0.0, 0.0, 0.0, 0.0">
+
+    <Sprite texture="Content/UI/InnerShadow.png" sourcerect="0,0,512,512" slice="170,170,342,342"/>
+    
     <GUIFrame
       padding="40.0, 20.0, 40.0, 20.0"
       color="1.0,1.0,1.0,1.0"
       hovercolor="1.0,1.0,1.0,1.0"
-      selectedcolor="1.0,1.0,1.0,1.0"
-  
+      selectedcolor="1.0,1.0,1.0,1.0"  
       textcolor="0.0, 0.0, 0.0, 1.0">
 
       <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 541, 420, 220" slice="87,576,430,687"/>
@@ -389,6 +390,19 @@
       <Sprite texture="Content/UI/UI_Atlas2.png" state="Hover" tile="false" sourcerect ="56, 7, 31, 847"/>
     </Slider>
   </GUIProgressBarVertical>
+
+
+  <GUIBackgroundBlocker
+    color="0.0, 0.0, 0.0, 0.8"
+    hovercolor="0.0, 0.0, 0.0, 0.8"
+    selectedcolor="0.0, 0.0, 0.0, 0.8"
+    pressedcolor="0.0, 0.0, 0.0, 0.8"
+    textcolor="0.0, 0.0, 0.0, 0.0">
+
+    <Sprite texture="Content/UI/InnerShadow.png" sourcerect="0,0,512,512" slice="170,170,342,342"/>
+    <GUITextBlock
+      textcolor="0.0, 0.0, 0.0, 0.0"/>
+  </GUIBackgroundBlocker>
   
   <ItemUI
     padding="40.0,40.0,40.0,40.0"

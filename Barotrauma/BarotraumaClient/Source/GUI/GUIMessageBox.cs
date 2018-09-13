@@ -35,7 +35,7 @@ namespace Barotrauma
         
         // TODO: allow to use a relative size.
         public GUIMessageBox(string headerText, string text, string[] buttons, int width = DefaultWidth, int height = 0, Alignment textAlignment = Alignment.TopLeft)
-            : base(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null, color: Color.Black * 0.5f)
+            : base(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: "")
         {
             int headerHeight = 30;
 

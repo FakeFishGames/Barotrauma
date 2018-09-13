@@ -76,6 +76,12 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch, Rectangle rect, Color color, SpriteEffects spriteEffects = SpriteEffects.None)
         {
+            if (Sprite.Texture == null)
+            {
+                GUI.DrawRectangle(spriteBatch, rect, Color.Magenta);
+                return;
+            }
+
             if (Slice)
             {
                 Vector2 pos = new Vector2(rect.X, rect.Y);

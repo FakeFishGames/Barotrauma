@@ -36,7 +36,7 @@ namespace Barotrauma
         {
             int width = 600, height = 400;
             
-            infoFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style:null, color: Color.Black * 0.8f);
+            infoFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
 
             var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.35f), infoFrame.RectTransform, Anchor.Center) { MinSize = new Point(width,height) });
 

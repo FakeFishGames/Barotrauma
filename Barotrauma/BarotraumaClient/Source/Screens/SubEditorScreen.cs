@@ -595,12 +595,9 @@ namespace Barotrauma
             if (characterMode) SetCharacterMode(false);
             if (wiringMode) SetWiringMode(false);
 
-            saveFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.5f)
+            saveFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
             {
-                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) saveFrame = null; return true; },
-                HoverColor = Color.Black * 0.5f,
-                SelectedColor = Color.Black * 0.5f,
-                PressedColor = Color.Black * 0.5f
+                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) saveFrame = null; return true; }
             };
 
             var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.36f), saveFrame.RectTransform, Anchor.Center) { MinSize = new Point(400, 400) });
@@ -802,12 +799,9 @@ namespace Barotrauma
             if (characterMode) SetCharacterMode(false);
             if (wiringMode) SetWiringMode(false);
 
-            saveFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.5f)
+            saveFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
             {
-                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) saveFrame = null; return true; },
-                HoverColor = Color.Black * 0.5f,
-                SelectedColor = Color.Black * 0.5f,
-                PressedColor = Color.Black * 0.5f
+                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) saveFrame = null; return true; }
             };
 
             var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.2f), saveFrame.RectTransform, Anchor.Center) { MinSize = new Point(400, 200) });
@@ -886,12 +880,9 @@ namespace Barotrauma
 
             Submarine.RefreshSavedSubs();
 
-            loadFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.5f)
+            loadFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
             {
                 OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) loadFrame = null; return true; },
-                HoverColor = Color.Black * 0.5f,
-                SelectedColor = Color.Black * 0.5f,
-                PressedColor = Color.Black * 0.5f
             };
 
             var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.36f), loadFrame.RectTransform, Anchor.Center) { MinSize = new Point(300, 400) });
