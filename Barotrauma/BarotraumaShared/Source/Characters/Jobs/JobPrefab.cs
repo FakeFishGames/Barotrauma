@@ -100,9 +100,9 @@ namespace Barotrauma
         {
             SerializableProperty.DeserializeProperties(this, element);
 
-            string translatedName = TextManager.Get("JobName."+Identifier, true);
+            string translatedName = TextManager.Get("JobName." + Identifier, true);
             if (!string.IsNullOrEmpty(translatedName)) Name = translatedName;
-            
+
             string translatedDescription = TextManager.Get("JobDescription." + Identifier, true);
             if (!string.IsNullOrEmpty(translatedDescription)) Description = translatedDescription;
 
@@ -118,8 +118,32 @@ namespace Barotrauma
                         Items = subElement;
                         foreach (XElement itemElement in subElement.Elements())
                         {
-                            string itemName = itemElement.GetAttributeString("name", "");
-                            if (!string.IsNullOrWhiteSpace(itemName)) ItemNames.Add(itemName);
+                            if (itemElement.Element("name") != null)
+                            {
+                                DebugConsole.ThrowError("Error in job config \"" + Name + "\" - use identifiers instead of names to configure the items.");
+                                ItemNames.Add(itemElement.GetAttributeString("name", ""));
+                                continue;
+                            }
+
+                            string itemIdentifier = itemElement.GetAttributeString("identifier", "");
+                            if (string.IsNullOrWhiteSpace(itemIdentifier))
+                            {
+                                DebugConsole.ThrowError("Error in job config \"" + Name + "\" - item with no identifier.");
+                                ItemNames.Add("");
+                            }
+                            else
+                            {
+                                var prefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
+                                if (prefab == null)
+                                {
+                                    DebugConsole.ThrowError("Error in job config \"" + Name + "\" - item prefab \""+itemIdentifier+"\" not found.");
+                                    ItemNames.Add("");
+                                }
+                                else
+                                {
+                                    ItemNames.Add(prefab.Name);
+                                }
+                            }                            
                         }
                         break;
                     case "skills":
