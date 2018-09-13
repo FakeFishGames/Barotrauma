@@ -183,10 +183,7 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1, 0), messageBox.Content.RectTransform, Anchor.TopCenter), Name, textAlignment: Alignment.Center, font: GUI.LargeFont, wrap: true);
 
             var upperPart = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), messageBox.Content.RectTransform, Anchor.Center, Pivot.BottomCenter), color: Color.Transparent);
-            var descriptionBox = new GUIFrame(new RectTransform(new Vector2(1, 0.2f), messageBox.Content.RectTransform, Anchor.Center, Pivot.TopCenter)
-            {
-                RelativeOffset = new Vector2(0, 0.1f),
-            }, color: Color.Transparent);
+            var descriptionBox = new GUIListBox(new RectTransform(new Vector2(1, 0.35f), messageBox.Content.RectTransform, Anchor.Center, Pivot.TopCenter));
 
             if (PreviewImage == null)
             {
@@ -219,8 +216,8 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
                 $"{TextManager.Get("RequiredContentPackages")}: {string.Join(", ", RequiredContentPackages)}", 
                 font: GUI.SmallFont, wrap: true);
-
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.RectTransform, Anchor.TopLeft), Description, font: GUI.SmallFont, wrap: true)
+            
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform, Anchor.TopLeft), Description, font: GUI.SmallFont, wrap: true)
             {
                 CanBeFocused = false
             };

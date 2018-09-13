@@ -21,7 +21,7 @@ namespace Barotrauma.Networking
         
         private void CreateSettingsFrame()
         {
-            settingsFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.5f);
+            settingsFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
             new GUIButton(new RectTransform(Vector2.One, settingsFrame.RectTransform), "", style: null)
             {
                 OnClicked = ToggleSettingsFrame

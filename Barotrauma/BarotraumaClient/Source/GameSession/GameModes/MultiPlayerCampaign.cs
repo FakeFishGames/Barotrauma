@@ -10,7 +10,7 @@ namespace Barotrauma
     {
         public static GUIComponent StartCampaignSetup()
         {
-            GUIFrame background = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.5f);
+            GUIFrame background = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
 
             GUIFrame setupBox = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.45f), background.RectTransform, Anchor.Center) { MinSize = new Point(500, 500) });
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), setupBox.RectTransform, Anchor.Center))

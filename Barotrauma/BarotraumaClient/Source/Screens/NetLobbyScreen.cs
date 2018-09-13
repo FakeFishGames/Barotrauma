@@ -1198,7 +1198,7 @@ namespace Barotrauma
                 }
             }
 
-            playerFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.6f);
+            playerFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
             var playerFrameInner = new GUIFrame(new RectTransform(GameMain.Server != null ? new Point(450, 370) : new Point(450, 150), playerFrame.RectTransform, Anchor.Center));
             var paddedPlayerFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), playerFrameInner.RectTransform, Anchor.Center))
             {
