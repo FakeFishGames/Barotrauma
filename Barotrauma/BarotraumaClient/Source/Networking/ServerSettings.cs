@@ -11,7 +11,7 @@ namespace Barotrauma.Networking
     {
         partial class NetPropertyData
         {
-            public void Read(NetIncomingMessage msg)
+            public void Read(NetBuffer msg)
             {
                 long oldPos = msg.Position;
                 UInt32 size = msg.ReadVariableUInt32();
@@ -88,7 +88,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ClientRead(NetIncomingMessage incMsg)
+        public void ClientRead(NetBuffer incMsg)
         {
             SharedRead(incMsg);
 

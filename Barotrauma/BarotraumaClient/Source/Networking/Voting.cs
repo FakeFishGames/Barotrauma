@@ -123,7 +123,7 @@ namespace Barotrauma
             msg.WritePadBits();
         }
         
-        public void ClientRead(NetIncomingMessage inc)
+        public void ClientRead(NetBuffer inc)
         {
             AllowSubVoting = inc.ReadBoolean();
             if (allowSubVoting)

@@ -13,6 +13,21 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Networking
 {
+    enum SelectionMode
+    {
+        Manual = 0, Random = 1, Vote = 2
+    }
+
+    enum YesNoMaybe
+    {
+        No = 0, Maybe = 1, Yes = 2
+    }
+
+    enum BotSpawnMode
+    {
+        Normal, Fill
+    }
+
     partial class ServerSettings : ISerializableEntity
     {
         public string Name
@@ -432,7 +447,7 @@ namespace Barotrauma.Networking
             private set;
         } = new List<Pair<int, int>>();
         
-        private void SharedWrite(NetOutgoingMessage outMsg)
+        private void SharedWrite(NetBuffer outMsg)
         {
             outMsg.Write(ServerName);
             outMsg.Write((UInt16)Port);
@@ -441,7 +456,7 @@ namespace Barotrauma.Networking
             outMsg.Write(ServerMessageText);
         }
 
-        private void SharedRead(NetIncomingMessage incMsg)
+        private void SharedRead(NetBuffer incMsg)
         {
             ServerName = incMsg.ReadString();
             Port = incMsg.ReadUInt16();

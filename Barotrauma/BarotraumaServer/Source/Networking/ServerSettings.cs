@@ -18,7 +18,7 @@ namespace Barotrauma.Networking
 
         partial class NetPropertyData
         {
-            public void Write(NetOutgoingMessage msg)
+            public void Write(NetBuffer msg)
             {
                 switch (typeString)
                 {
@@ -75,7 +75,7 @@ namespace Barotrauma.Networking
             LoadClientPermissions();
         }
 
-        public void ServerWrite(NetOutgoingMessage outMsg,Client c)
+        public void ServerWrite(NetBuffer outMsg,Client c)
         {
             SharedWrite(outMsg);
 

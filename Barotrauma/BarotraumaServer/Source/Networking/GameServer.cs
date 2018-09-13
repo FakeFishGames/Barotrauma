@@ -1070,7 +1070,12 @@ namespace Barotrauma.Networking
 
                 //TODO: use ServerSettings.ServerWrite
                 outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
-                serverSettings.ServerWrite(outmsg, c);
+
+                NetBuffer settingsBuf = new NetBuffer();
+                serverSettings.ServerWrite(settingsBuf, c);
+
+                outmsg.Write((UInt16)settingsBuf.LengthBytes);
+                outmsg.Write(settingsBuf.Data,0,settingsBuf.LengthBytes);
 
                 outmsg.Write(c.LastRecvGeneralUpdate < 1);
                 if (c.LastRecvGeneralUpdate < 1)
