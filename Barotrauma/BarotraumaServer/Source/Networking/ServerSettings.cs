@@ -87,7 +87,7 @@ namespace Barotrauma.Networking
                 outMsg.Write(isPublic);
                 outMsg.Write(EnableUPnP);
                 outMsg.WritePadBits();
-                outMsg.Write(QueryPort);
+                outMsg.Write((UInt16)QueryPort);
 
                 outMsg.Write((UInt16)netProperties.Keys.Count);
                 foreach (UInt32 key in netProperties.Keys)
@@ -99,6 +99,7 @@ namespace Barotrauma.Networking
             else
             {
                 outMsg.Write(false);
+                outMsg.WritePadBits();
             }
         }
 
