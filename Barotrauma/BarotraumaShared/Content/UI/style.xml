@@ -466,58 +466,52 @@
   </CPRButton>
 
   <HealthCircleInner1
-    color="0.54,0.7,0.79,0.6"
-    hovercolor="0.54,0.7,0.79,1.0"
-    selectedcolor="0.54,0.7,0.79,1.0">
+    color="1,1,1,0.6"
+    hovercolor="1,1,1,0.8">
     <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect ="0, 0, 683, 683"/>
   </HealthCircleInner1>
 
   <HealthCircleInner2
-    color="0.15,0.24,0.29,0.6"
-    hovercolor="0.15,0.24,0.29,1.0"
-    selectedcolor="0.15,0.24,0.29,1.0">
+    color="1,1,1,0.6"
+    hovercolor="1,1,1,0.8">
     <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect ="1366, 1366, 682, 682"/>
   </HealthCircleInner2>
 
+  <!--
   <HealthCircleInner3
-    color="0.54,0.7,0.79,0.8"
-    hovercolor="0.54,0.7,0.79,1.0"
-    selectedcolor="0.54,0.7,0.79,1.0">
+    color="1,1,1,0.8"
+    hovercolor="1,1,1,0.8">
     <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect ="683, 1366, 683, 682"/>
   </HealthCircleInner3>
+  -->
 
   <HealthCircleMid1
-    color="0.15,0.24,0.29,0.8"
-    hovercolor="0.15,0.24,0.29,1.0"
-    selectedcolor="0.15,0.24,0.29,1.0">
+    color="1,1,1,0.4"
+    hovercolor="1,1,1,0.6">
     <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect ="683, 0, 683, 683"/>
   </HealthCircleMid1>
 
   <HealthCircleMid2
-    color="0.54,0.7,0.79,0.8"
-    hovercolor="0.54,0.7,0.79,1.0"
-    selectedcolor="0.54,0.7,0.79,1.0">
+    color="1,1,1,0.6"
+    hovercolor="1,1,1,0.8">
     <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect ="1366, 0, 682, 683"/>
   </HealthCircleMid2>
 
   <HealthCircleOuter1
-    color="0.15,0.24,0.29,0.8"
-    hovercolor="0.15,0.24,0.29,1.0"
-    selectedcolor="0.15,0.24,0.29,1.0">
+    color="1,1,1,0.3"
+    hovercolor="1,1,1,0.3">
     <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect ="683, 683, 683, 683"/>
   </HealthCircleOuter1>
 
   <HealthCircleOuter2
-    color="0.54,0.7,0.79,0.8"
-    hovercolor="0.54,0.7,0.79,1.0"
-    selectedcolor="0.54,0.7,0.79,1.0">
+    color="1,1,1,0.8"
+    hovercolor="1,1,1,0.8">
     <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect ="1366, 683, 683, 683"/>
   </HealthCircleOuter2>
 
   <HealthCircleOuter3
-    color="0.54,0.7,0.79,0.8"
-    hovercolor="0.54,0.7,0.79,1.0"
-    selectedcolor="0.54,0.7,0.79,1.0">
+    color="1,1,1,0.3"
+    hovercolor="1,1,1,0.3">
     <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect ="0, 1366, 683, 682"/>
   </HealthCircleOuter3>
   <!-- /health interface -->

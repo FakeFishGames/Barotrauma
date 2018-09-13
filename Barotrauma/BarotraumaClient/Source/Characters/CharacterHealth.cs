@@ -508,10 +508,16 @@ namespace Barotrauma
 
                     img.State = GUI.MouseOn == dropItemArea ? GUIComponent.ComponentState.Hover : GUIComponent.ComponentState.None;
 
-                    img.Rotation += (rotationSpeed + dropItemAnimTimer * 10.0f) * deltaTime;
+                    img.Rotation = (img.Rotation + (rotationSpeed + dropItemAnimTimer * 10.0f) * deltaTime) % MathHelper.TwoPi;
                     rotationSpeed = (rotationSpeed + 0.3f) % 1.0f;
 
-                    if (i < 5)
+                    byte alpha = img.Color.A;
+                    byte hoverAlpha = img.HoverColor.A;
+                    img.Color = HealthColorLerp(Color.Green, Color.Orange, Color.Red, vitality / MaxVitality);
+                    img.Color = new Color(img.Color.R, img.Color.G, img.Color.B, alpha);
+                    img.HoverColor = new Color(img.Color.R, img.Color.G, img.Color.B, hoverAlpha);
+
+                    if (i < 4)
                     {
                         img.Scale = 1.0f - (float)Math.Sin(dropItemAnimTimer / dropItemAnimDuration * MathHelper.TwoPi) * 0.3f;
                     }
