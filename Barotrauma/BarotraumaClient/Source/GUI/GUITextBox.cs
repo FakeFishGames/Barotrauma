@@ -567,7 +567,8 @@ namespace Barotrauma
                         }
                     }
                     float lineHeight = Font.MeasureString(Text).Y;
-                    CaretIndex = GetCaretIndexFromScreenPos(new Vector2(CaretScreenPos.X, CaretScreenPos.Y - lineHeight / 2));
+                    int newIndex = GetCaretIndexFromScreenPos(new Vector2(CaretScreenPos.X, CaretScreenPos.Y - lineHeight / 2));
+                    CaretIndex = newIndex != CaretIndex ? newIndex : 0;
                     caretTimer = 0;
                     HandleSelection();
                     break;
@@ -581,7 +582,7 @@ namespace Barotrauma
                         }
                     }
                     lineHeight = Font.MeasureString(Text).Y;
-                    int newIndex = GetCaretIndexFromScreenPos(new Vector2(CaretScreenPos.X, CaretScreenPos.Y + lineHeight * 2));
+                    newIndex = GetCaretIndexFromScreenPos(new Vector2(CaretScreenPos.X, CaretScreenPos.Y + lineHeight * 2));
                     CaretIndex = newIndex != CaretIndex ? newIndex : Text.Length;
                     caretTimer = 0;
                     HandleSelection();
