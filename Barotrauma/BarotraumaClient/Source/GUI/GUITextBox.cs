@@ -558,14 +558,30 @@ namespace Barotrauma
                     HandleSelection();
                     break;
                 case Keys.Up:
-                    float lineHeight = Font.MeasureString(Text).Y / 2;
-                    CaretIndex = GetCaretIndexFromScreenPos(new Vector2(CaretScreenPos.X, CaretScreenPos.Y - lineHeight));
+                    if (isSelecting)
+                    {
+                        if (selectionStartIndex == -1)
+                        {
+                            selectionStartIndex = CaretIndex - 1;
+                            selectionStartPos = caretPos;
+                        }
+                    }
+                    float lineHeight = Font.MeasureString(Text).Y;
+                    CaretIndex = GetCaretIndexFromScreenPos(new Vector2(CaretScreenPos.X, CaretScreenPos.Y - lineHeight / 2));
                     caretTimer = 0;
                     HandleSelection();
                     break;
                 case Keys.Down:
-                    lineHeight = Font.MeasureString(Text).Y * 2;
-                    int newIndex = GetCaretIndexFromScreenPos(new Vector2(CaretScreenPos.X, CaretScreenPos.Y + lineHeight));
+                    if (isSelecting)
+                    {
+                        if (selectionStartIndex == -1)
+                        {
+                            selectionStartIndex = CaretIndex - 1;
+                            selectionStartPos = caretPos;
+                        }
+                    }
+                    lineHeight = Font.MeasureString(Text).Y;
+                    int newIndex = GetCaretIndexFromScreenPos(new Vector2(CaretScreenPos.X, CaretScreenPos.Y + lineHeight * 2));
                     CaretIndex = newIndex != CaretIndex ? newIndex : Text.Length;
                     caretTimer = 0;
                     HandleSelection();
