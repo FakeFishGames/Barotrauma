@@ -7,7 +7,7 @@ namespace Barotrauma.Networking
 {
     partial class GameServer : NetworkMember, ISerializableEntity
     {
-        private GUIFrame settingsFrame;
+        private GUIButton settingsFrame;
         private GUIFrame[] settingsTabs;
         private int settingsTabIndex;
 
@@ -18,10 +18,13 @@ namespace Barotrauma.Networking
             Banlist,
             Whitelist
         }
-        
+
         private void CreateSettingsFrame()
         {
-            settingsFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
+            settingsFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
+            {
+                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) ToggleSettingsFrame(btn, userdata); return true; }
+            };
             new GUIButton(new RectTransform(Vector2.One, settingsFrame.RectTransform), "", style: null)
             {
                 OnClicked = ToggleSettingsFrame

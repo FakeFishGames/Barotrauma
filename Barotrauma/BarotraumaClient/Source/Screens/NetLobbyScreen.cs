@@ -56,8 +56,8 @@ namespace Barotrauma
         
         private GUIFrame playerInfoContainer;
         private GUIImage playerHeadSprite;
-        private GUIFrame jobInfoFrame;
-        private GUIFrame playerFrame;
+        private GUIButton jobInfoFrame;
+        private GUIButton playerFrame;
 
         private GUITickBox autoRestartBox;
                 
@@ -1198,7 +1198,11 @@ namespace Barotrauma
                 }
             }
 
-            playerFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
+            playerFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
+            {
+                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) ClosePlayerFrame(btn, userdata); return true; }
+            };
+        
             var playerFrameInner = new GUIFrame(new RectTransform(GameMain.Server != null ? new Point(450, 370) : new Point(450, 150), playerFrame.RectTransform, Anchor.Center));
             var paddedPlayerFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), playerFrameInner.RectTransform, Anchor.Center))
             {
@@ -1662,11 +1666,13 @@ namespace Barotrauma
             if (jobPrefab == null) return false;
 
             jobInfoFrame = jobPrefab.CreateInfoFrame();
-            GUIButton closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), jobInfoFrame.GetChild(0).GetChild(0).RectTransform, Anchor.BottomRight),
+            GUIButton closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), jobInfoFrame.GetChild(2).GetChild(0).RectTransform, Anchor.BottomRight),
                 TextManager.Get("Close"))
             {
                 OnClicked = CloseJobInfo
             };
+            jobInfoFrame.OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) CloseJobInfo(btn, userdata); return true; };
+            
             return true;
         }
 
