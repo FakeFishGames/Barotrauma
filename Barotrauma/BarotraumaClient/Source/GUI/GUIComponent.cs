@@ -26,7 +26,7 @@ namespace Barotrauma
 
         public GUIComponent GetChild(int index)
         {
-            if (index < 0 || index > CountChildren) return null;
+            if (index < 0 || index >= CountChildren) return null;
             return RectTransform.GetChild(index).GUIComponent;
         }
 
