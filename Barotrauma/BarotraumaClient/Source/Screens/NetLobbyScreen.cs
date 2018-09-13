@@ -402,7 +402,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            shuttleList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform));
+            shuttleList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform), elementCount: 10);
 
             //gamemode ------------------------------------------------------------------
 

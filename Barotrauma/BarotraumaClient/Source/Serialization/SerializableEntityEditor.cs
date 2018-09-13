@@ -415,7 +415,8 @@ namespace Barotrauma
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
             };
-            GUIDropDown enumDropDown = new GUIDropDown(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform, Anchor.TopRight))
+            GUIDropDown enumDropDown = new GUIDropDown(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform, Anchor.TopRight),
+                elementCount: Enum.GetValues(value.GetType()).Length)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
             };
