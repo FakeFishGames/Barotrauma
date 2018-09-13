@@ -548,11 +548,19 @@ namespace Barotrauma
             switch (key)
             {
                 case Keys.Left:
+                    if (isSelecting)
+                    {
+                        InitSelectionStart();
+                    }
                     CaretIndex = Math.Max(CaretIndex - 1, 0);
                     caretTimer = 0;
                     HandleSelection();
                     break;
                 case Keys.Right:
+                    if (isSelecting)
+                    {
+                        InitSelectionStart();
+                    }
                     CaretIndex = Math.Min(CaretIndex + 1, Text.Length);
                     caretTimer = 0;
                     HandleSelection();
@@ -560,11 +568,7 @@ namespace Barotrauma
                 case Keys.Up:
                     if (isSelecting)
                     {
-                        if (selectionStartIndex == -1)
-                        {
-                            selectionStartIndex = CaretIndex - 1;
-                            selectionStartPos = caretPos;
-                        }
+                        InitSelectionStart();
                     }
                     float lineHeight = Font.MeasureString(Text).Y;
                     int newIndex = GetCaretIndexFromScreenPos(new Vector2(CaretScreenPos.X, CaretScreenPos.Y - lineHeight / 2));
@@ -575,11 +579,7 @@ namespace Barotrauma
                 case Keys.Down:
                     if (isSelecting)
                     {
-                        if (selectionStartIndex == -1)
-                        {
-                            selectionStartIndex = CaretIndex - 1;
-                            selectionStartPos = caretPos;
-                        }
+                        InitSelectionStart();
                     }
                     lineHeight = Font.MeasureString(Text).Y;
                     newIndex = GetCaretIndexFromScreenPos(new Vector2(CaretScreenPos.X, CaretScreenPos.Y + lineHeight * 2));
@@ -606,11 +606,7 @@ namespace Barotrauma
             {
                 if (isSelecting)
                 {
-                    if (selectionStartIndex == -1)
-                    {
-                        selectionStartIndex = CaretIndex - 1;
-                        selectionStartPos = caretPos;
-                    }
+                    InitSelectionStart();
                     CalculateSelection();
                 }
                 else
@@ -673,7 +669,7 @@ namespace Barotrauma
             OnTextChanged?.Invoke(this, Text);
         }
 
-        private void CalculateSelection()
+        private void InitSelectionStart()
         {
             if (caretPosDirty)
             {
@@ -684,6 +680,11 @@ namespace Barotrauma
                 selectionStartIndex = CaretIndex;
                 selectionStartPos = caretPos;
             }
+        }
+
+        private void CalculateSelection()
+        {
+            InitSelectionStart();
             selectionEndIndex = CaretIndex;
             selectionEndPos = caretPos;
             selectedCharacters = Math.Abs(selectionStartIndex - selectionEndIndex);
