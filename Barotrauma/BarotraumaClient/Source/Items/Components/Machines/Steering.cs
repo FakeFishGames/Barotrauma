@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 
@@ -14,6 +15,9 @@ namespace Barotrauma.Items.Components
         private GUIComponent steerArea;
 
         private GUITextBlock pressureWarningText;
+
+        private Vector2 keyboardInput;
+        private float keyboardInputSpeed = 200;
 
         private bool _levelStartSelected;
         public bool LevelStartSelected
@@ -219,7 +223,7 @@ namespace Barotrauma.Items.Components
 
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)steeringInputPos.X - 5, (int)steeringInputPos.Y - 5, 10, 10), Color.White);
 
-                if (Vector2.Distance(PlayerInput.MousePosition, new Vector2(velRect.Center.X, velRect.Center.Y)) < 200.0f)
+                if (keyboardInput.Length() > 0 || Vector2.Distance(PlayerInput.MousePosition, new Vector2(velRect.Center.X, velRect.Center.Y)) < 200.0f)
                 {
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)steeringInputPos.X - 10, (int)steeringInputPos.Y - 10, 20, 20), Color.Red);
                 }
@@ -254,6 +258,13 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
+            if (steerArea.Rect.Contains(PlayerInput.MousePosition))
+            {
+                if (!PlayerInput.KeyDown(InputType.Select) && !PlayerInput.KeyHit(InputType.Select))
+                {
+                    Character.DisableControls = true;
+                }
+            }
             if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
 
             pressureWarningText.Visible = item.Submarine != null && item.Submarine.AtDamageDepth && Timing.TotalTime % 1.0f < 0.5f;
@@ -262,20 +273,51 @@ namespace Barotrauma.Items.Components
             {
                 if (PlayerInput.LeftButtonHeld())
                 {
+                    Vector2 inputPos = PlayerInput.MousePosition - steerArea.Rect.Center.ToVector2();
+                    inputPos.Y = -inputPos.Y;
                     if (AutoPilot && !LevelStartSelected && !LevelEndSelected)
                     {
-                        Vector2 inputPos = PlayerInput.MousePosition - steerArea.Rect.Center.ToVector2();
-                        inputPos.Y = -inputPos.Y;
-                        posToMaintain = controlledSub == null ? item.WorldPosition : controlledSub.WorldPosition
-                            + inputPos / sonar.DisplayRadius * sonar.Range;                        
+                        posToMaintain = controlledSub == null ? item.WorldPosition : controlledSub.WorldPosition + inputPos / sonar.DisplayRadius * sonar.Range;                        
                     }
                     else
                     {
-                        SteeringInput = PlayerInput.MousePosition - steerArea.Rect.Center.ToVector2();
-                        steeringInput.Y = -steeringInput.Y;
-                        steeringAdjustSpeed = character == null ? 
-                            0.2f : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("helm") / 100.0f);
+                        SteeringInput = inputPos;
+                        //steeringAdjustSpeed = character == null ? 0.2f : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("helm") / 100.0f);
                     }
+                    unsentChanges = true;
+                }
+            }
+            keyboardInput = Vector2.Zero;
+            if (!AutoPilot)
+            {
+                steeringAdjustSpeed = character == null ? 0.2f : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("helm") / 100.0f);
+                if (PlayerInput.KeyDown(InputType.Left))
+                {
+                    keyboardInput -= Vector2.UnitX;
+                }
+                if (PlayerInput.KeyDown(InputType.Right))
+                {
+                    keyboardInput += Vector2.UnitX;
+                }
+                if (PlayerInput.KeyDown(InputType.Up))
+                {
+                    keyboardInput += Vector2.UnitY;
+                }
+                if (PlayerInput.KeyDown(InputType.Down))
+                {
+                    keyboardInput -= Vector2.UnitY;
+                }
+                if (PlayerInput.KeyDown(Keys.LeftShift))
+                {
+                    SteeringInput += keyboardInput * deltaTime * keyboardInputSpeed;
+                }
+                else
+                {
+                    float s = SteeringInput.Length() / steeringMaxLength * deltaTime * keyboardInputSpeed;
+                    SteeringInput = Vector2.Lerp(SteeringInput, SteeringInput + keyboardInput, MathHelper.Clamp(s, 0.2f, 10));
+                }
+                if (keyboardInput.Length() > 0)
+                {
                     unsentChanges = true;
                 }
             }
