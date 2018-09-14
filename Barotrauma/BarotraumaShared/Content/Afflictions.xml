@@ -71,7 +71,7 @@
     <Effect minstrength="0" maxstrength="100" multiplybymaxvitality="true"            
       minvitalitydecrease="0"
       maxvitalitydecrease="1"/>
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,0,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="128,768,128,128" color="195,136,60,255" origin="0,0"/>
   </InternalDamage>
 
   <Bleeding
@@ -91,7 +91,7 @@
       minvitalitydecrease="0"
       maxvitalitydecrease="10"
       strengthchange="-0.1"/>
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="0,0,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="896,640,128,128" color="139,60,42,255" origin="0,0"/>
    </Bleeding>
 
   <Burn
@@ -110,7 +110,7 @@
     <Effect minstrength="0" maxstrength="100" multiplybymaxvitality="true"
       minvitalitydecrease="0"
       maxvitalitydecrease="1"/>
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="768,640,128,128" color="195,104,60,255" origin="0,0"/>
   </Burn>
 
   <OxygenLow
@@ -133,7 +133,7 @@
     <Effect minstrength="50" maxstrength="200" multiplybymaxvitality="true"
       minvitalitydecrease="0"
       maxvitalitydecrease="2"/>
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,48,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="512,640,128,128" color="68,157,198,255" origin="0,0"/>
   </OxygenLow>
 
   <Bloodloss
@@ -155,7 +155,7 @@
       minvitalitydecrease="0"
       maxvitalitydecrease="2"
       strengthchange="-0.1"/>
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,0,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="0,768,128,128" color="139,60,42,255" origin="0,0"/>
   </Bloodloss>
 
   <Stun
@@ -172,7 +172,7 @@
       minvitalitydecrease="0"
       maxvitalitydecrease="0"
       strengthchange="-1.0"/>
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,48,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="128,640,128,128" color="195,177,60,255" origin="0,0"/>
   </Stun>
 
   <Pressure
@@ -189,7 +189,7 @@
     <Effect minstrength="0" maxstrength="1" multiplybymaxvitality="true"
       minvitalitydecrease="1"
       maxvitalitydecrease="1"/>
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="0,48,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="768,768,128,128" color="143,111,160,255" origin="0,0"/>
   </Pressure>
 
   <AfflictionHusk
@@ -210,7 +210,7 @@
     <Effect minstrength="0" maxstrength="100"
       maxvitalitydecrease="0"
       strengthchange="0.3"/>
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,48,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="0,640,128,128" color="60,107,195,255" origin="0,0"/>
   </AfflictionHusk>
   
   <!-- Special afflictions -->
@@ -265,7 +265,7 @@
       <StatusEffect target="Character" SpeedMultiplier="0.5" setvalue="true"/>
     </Effect>
     
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="384,640,128,128" color="170,194,147,255" origin="0,0"/>
   </Affliction>
 
   <Affliction
@@ -314,10 +314,10 @@
       maxchromaticaberration="10.0"
       minradialdistort="0.0"
       maxradialdistort="10.0">
-      <StatusEffect target="Character" SpeedMultiplier="0.5" setvalue="true"/>
+      <StatusEffect target="Character" SpeedMultiplier="0.5" color="195,136,60,255" setvalue="true"/>
     </Effect>
 
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="195,126,60,128" origin="0,0"/>
   </Affliction>
 
   <Affliction
@@ -355,7 +355,7 @@
       <StatusEffect target="Character" SpeedMultiplier="0.5" setvalue="true"/>
     </Effect>
 
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="640,768,128,128" color="103,103,103,255" origin="0,0"/>
   </Affliction>
   
   <!-- Gradually applies the "opiate withdrawal" affliction to the character -->
@@ -392,7 +392,7 @@
       </StatusEffect>
     </Effect>
     
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="512,768,128,128" color="195,180,60,255" origin="0,0"/>
   </Affliction>
 
   <AfflictionBleeding
@@ -412,7 +412,7 @@
     <Effect minstrength="0" maxstrength="100"
       minvitalitydecrease="0"
       maxvitalitydecrease="10"/>
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="0,0,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="256,768,128,128" color="195,60,60,255" origin="0,0"/>
   </AfflictionBleeding>
 
   <Affliction
@@ -443,6 +443,6 @@
       <StatusEffect target="Character" SpeedMultiplier="0.8" setvalue="true"/>
     </Effect>
 
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
   </Affliction>
 </Afflictions>

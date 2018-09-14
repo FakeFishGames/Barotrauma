@@ -352,7 +352,7 @@ namespace Barotrauma
                     style: null);
                 var img = new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), order.Prefab.SymbolSprite);
                 img.Scale = iconSize / (float)img.SourceRect.Width;
-                img.Color = order.Color;
+                img.Color = Color.Lerp(order.Color, frame.Color, 0.5f);
                 img.ToolTip = order.Name;
 
                 img.HoverColor = Color.Lerp(img.Color, Color.White, 0.5f);
@@ -633,7 +633,7 @@ namespace Barotrauma
         /// </summary>
         public void SetCharacterOrder(Character character, Order order, string option, Character orderGiver)
         {
-            if (order.TargetAllCharacters)
+            if (order != null && order.TargetAllCharacters)
             {
                 if (orderGiver == null || orderGiver.CurrentHull == null) return;
                 AddOrder(new Order(order.Prefab, orderGiver.CurrentHull, null), order.Prefab.FadeOutTime);
