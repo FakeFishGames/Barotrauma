@@ -148,13 +148,7 @@ namespace Barotrauma
                 LocationType.Random(levelSeed); //call to sync up with clients
             }
         }
-
-        public bool StartButtonEnabled
-        {
-            get { return true; }
-            set { /* do nothing */ }
-        }
-
+        
         public void ToggleCampaignMode(bool enabled)
         {
             for (int i = 0; i < GameModes.Length; i++)
