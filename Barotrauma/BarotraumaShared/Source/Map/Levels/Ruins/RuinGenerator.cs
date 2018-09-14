@@ -1,6 +1,7 @@
 ﻿using FarseerPhysics;
 using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -35,7 +36,7 @@ namespace Barotrauma.RuinGeneration
 
         public Alignment GetLineAlignment(Line line)
         {
-            if (line.A.Y == line.B.Y)
+            if (line.IsHorizontal)
             {
                 if (line.A.Y > rect.Center.Y && line.B.Y > rect.Center.Y)
                 {
@@ -70,7 +71,7 @@ namespace Barotrauma.RuinGeneration
 
             foreach (Line line in Walls)
             {
-                if (line.A.X == line.B.X) //vertical line
+                if (!line.IsHorizontal) //vertical line
                 {
                     //line doesn't intersect the rectangle
                     if (rectangle.X > line.A.X || rectangle.Right < line.A.X ||
@@ -100,7 +101,7 @@ namespace Barotrauma.RuinGeneration
                         newLines.Add(new Line(new Vector2(line.A.X, rectangle.Bottom), line.B, line.Type));
                     }
                 }
-                else if (line.A.Y == line.B.Y) //horizontal line
+                else
                 {
                     //line doesn't intersect the rectangle
                     if (rectangle.X > line.B.X || rectangle.Right < line.A.X ||
@@ -130,22 +131,39 @@ namespace Barotrauma.RuinGeneration
                         newLines.Add(new Line(new Vector2(rectangle.Right, line.A.Y), line.B, line.Type));
                     }
                 }
-                else
-                {
-                    DebugConsole.ThrowError("Error in StructureGenerator.SplitLines - lines must be axis aligned");
-                }
-
             }
 
             Walls = newLines;
         }
+
+        public void MirrorX(Vector2 mirrorOrigin)
+        {
+            rect.X = (int)(mirrorOrigin.X + (mirrorOrigin.X - rect.Right));
+            for (int i = 0; i < Walls.Count; i++)
+            {
+                Walls[i].A = new Vector2(mirrorOrigin.X + (mirrorOrigin.X - Walls[i].A.X), Walls[i].A.Y);
+                Walls[i].B = new Vector2(mirrorOrigin.X + (mirrorOrigin.X - Walls[i].B.X), Walls[i].B.Y);
+
+                if (Walls[i].B.X < Walls[i].A.X)
+                {
+                    var temp = Walls[i].A.X;
+                    Walls[i].A.X = Walls[i].B.X;
+                    Walls[i].B.X = temp;
+                }
+            }
+        }
     }
 
-    struct Line
+    class Line
     {
-        public readonly Vector2 A, B;
+        public Vector2 A, B;
 
         public readonly RuinStructureType Type;
+
+        public bool IsHorizontal
+        {
+            get { return Math.Abs(A.Y - B.Y) < Math.Abs(A.X - B.X); }
+        }
 
         public Line(Vector2 a, Vector2 b, RuinStructureType type)
         {
@@ -183,7 +201,7 @@ namespace Barotrauma.RuinGeneration
             private set;
         }
 
-        public Ruin(VoronoiCell closestPathCell, List<VoronoiCell> caveCells, Rectangle area)
+        public Ruin(VoronoiCell closestPathCell, List<VoronoiCell> caveCells, Rectangle area, bool mirror = false)
         {
             Area = area;
 
@@ -194,10 +212,10 @@ namespace Barotrauma.RuinGeneration
 
             allShapes = new List<RuinShape>();
 
-            Generate(closestPathCell, caveCells, area);
+            Generate(closestPathCell, caveCells, area, mirror);
         }
              
-        public void Generate(VoronoiCell closestPathCell, List<VoronoiCell> caveCells, Rectangle area)
+        public void Generate(VoronoiCell closestPathCell, List<VoronoiCell> caveCells, Rectangle area, bool mirror = false)
         {
             corridors.Clear();
             rooms.Clear();
@@ -243,7 +261,12 @@ namespace Barotrauma.RuinGeneration
             float shortestDistance = 0.0f;
             foreach (BTRoom leaf in rooms)
             {
-                float distance = Vector2.Distance(leaf.Rect.Center.ToVector2(), closestPathCell.Center);
+                Vector2 leafPos = leaf.Rect.Center.ToVector2();
+                if (mirror)
+                {
+                    leafPos.X = area.Center.X + (area.Center.X - leafPos.X);
+                }
+                float distance = Vector2.Distance(leafPos, closestPathCell.Center);
                 if (entranceRoom == null || distance < shortestDistance)
                 {
                     entranceRoom = leaf;
@@ -289,13 +312,21 @@ namespace Barotrauma.RuinGeneration
 
             BTRoom.CalculateDistancesFromEntrance(entranceRoom, corridors);
 
-            allShapes = GenerateStructures(caveCells);
+            allShapes = GenerateStructures(caveCells, area, mirror);
         }
 
-        private List<RuinShape> GenerateStructures(List<VoronoiCell> caveCells)
+        private List<RuinShape> GenerateStructures(List<VoronoiCell> caveCells, Rectangle ruinArea, bool mirror)
         {
             List<RuinShape> shapes = new List<RuinShape>(rooms);
             shapes.AddRange(corridors);
+
+            if (mirror)
+            {
+                foreach (RuinShape shape in shapes)
+                {
+                    shape.MirrorX(ruinArea.Center.ToVector2());
+                }
+            }
             
             foreach (RuinShape leaf in shapes)
             {
@@ -317,15 +348,15 @@ namespace Barotrauma.RuinGeneration
                     var structurePrefab = RuinStructure.GetRandom(wallType, leaf.GetLineAlignment(wall));
                     if (structurePrefab == null) continue;
 
-                    float radius = (wall.A.X == wall.B.X) ? 
-                        (structurePrefab.Prefab as StructurePrefab).Size.X * 0.5f : 
+                    float radius = (wall.A.X == wall.B.X) ?
+                        (structurePrefab.Prefab as StructurePrefab).Size.X * 0.5f :
                         (structurePrefab.Prefab as StructurePrefab).Size.Y * 0.5f;
 
                     Rectangle rect = new Rectangle(
-                        (int)(wall.A.X - radius), 
-                        (int)(wall.B.Y + radius), 
-                        (int)((wall.B.X - wall.A.X) + radius*2.0f), 
-                        (int)((wall.B.Y - wall.A.Y) + radius*2.0f));
+                        (int)(wall.A.X - radius),
+                        (int)(wall.B.Y + radius),
+                        (int)((wall.B.X - wall.A.X) + radius * 2.0f),
+                        (int)((wall.B.Y - wall.A.Y) + radius * 2.0f));
 
                     //cut a section off from both ends of a horizontal wall to get nicer looking corners 
                     if (wall.A.Y == wall.B.Y)
@@ -334,8 +365,10 @@ namespace Barotrauma.RuinGeneration
                         if (rect.Width < Submarine.GridSize.X) continue;
                     }
 
-                    var structure = new Structure(rect, structurePrefab.Prefab as StructurePrefab, null);
-                    structure.MoveWithLevel = true;
+                    var structure = new Structure(rect, structurePrefab.Prefab as StructurePrefab, null)
+                    {
+                        ShouldBeSaved = false
+                    };
                     structure.SetCollisionCategory(Physics.CollisionLevel);
                 }
 
@@ -345,11 +378,14 @@ namespace Barotrauma.RuinGeneration
 
                 Rectangle backgroundRect = new Rectangle(leaf.Rect.X, leaf.Rect.Y + leaf.Rect.Height, leaf.Rect.Width, leaf.Rect.Height);
 
-                new Structure(backgroundRect, (background.Prefab as StructurePrefab), null).MoveWithLevel = true;
+                new Structure(backgroundRect, (background.Prefab as StructurePrefab), null)
+                {
+                    ShouldBeSaved = false
+                };
 
-                var submarineBlocker = BodyFactory.CreateRectangle(GameMain.World, 
+                var submarineBlocker = BodyFactory.CreateRectangle(GameMain.World,
                     ConvertUnits.ToSimUnits(leaf.Rect.Width),
-                    ConvertUnits.ToSimUnits(leaf.Rect.Height), 
+                    ConvertUnits.ToSimUnits(leaf.Rect.Height),
                     1, ConvertUnits.ToSimUnits(leaf.Center));
 
                 submarineBlocker.IsStatic = true;
@@ -389,8 +425,10 @@ namespace Barotrauma.RuinGeneration
                     doorPos.Y = (wall.A.Y + wall.B.Y) / 2.0f;
                 }
 
-                var door = new Item(doorPrefab.Prefab as ItemPrefab, doorPos, null);
-                door.MoveWithLevel = true;
+                var door = new Item(doorPrefab.Prefab as ItemPrefab, doorPos, null)
+                {
+                    ShouldBeSaved = false
+                };
 
                 door.GetComponent<Items.Components.Door>().IsOpen = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < 0.8f;
 
@@ -401,11 +439,13 @@ namespace Barotrauma.RuinGeneration
 
                 var sensor = new Item(sensorPrefab, new Vector2(
                     Rand.Range(sensorRoom.Rect.X, sensorRoom.Rect.Right, Rand.RandSync.Server),
-                    Rand.Range(sensorRoom.Rect.Y, sensorRoom.Rect.Bottom, Rand.RandSync.Server)), null);
-                sensor.MoveWithLevel = true;
+                    Rand.Range(sensorRoom.Rect.Y, sensorRoom.Rect.Bottom, Rand.RandSync.Server)), null)
+                {
+                    ShouldBeSaved = false
+                };
 
                 var wire = new Item(wirePrefab, sensorRoom.Center, null).GetComponent<Items.Components.Wire>();
-                wire.Item.MoveWithLevel = false;
+                wire.Item.ShouldBeSaved = false;
 
                 var conn1 = door.Connections.Find(c => c.Name == "set_state");
                 conn1.AddLink(0, wire);
@@ -423,6 +463,7 @@ namespace Barotrauma.RuinGeneration
                 Alignment[] alignments = new Alignment[] { Alignment.Top, Alignment.Bottom, Alignment.Right, Alignment.Left, Alignment.Center };
 
                 var prop = RuinStructure.GetRandom(RuinStructureType.Prop, alignments[Rand.Int(alignments.Length, Rand.RandSync.Server)]);
+                if (prop == null) continue;
 
                 Vector2 size = (prop.Prefab is StructurePrefab) ? ((StructurePrefab)prop.Prefab).Size : Vector2.Zero;
 
@@ -451,15 +492,17 @@ namespace Barotrauma.RuinGeneration
 
                 if (prop.Prefab is ItemPrefab)
                 {
-                    var item = new Item((ItemPrefab)prop.Prefab, position, null);
-                    item.MoveWithLevel = true;
+                    new Item((ItemPrefab)prop.Prefab, position, null);
                 }
                 else
                 {
                     new Structure(new Rectangle(
-                        (int)(position.X - size.X/2.0f), (int)(position.Y + size.Y/2.0f),
+                        (int)(position.X - size.X / 2.0f), (int)(position.Y + size.Y / 2.0f),
                         (int)size.X, (int)size.Y),
-                        prop.Prefab as StructurePrefab, null).MoveWithLevel = true;
+                        prop.Prefab as StructurePrefab, null)
+                    {
+                        ShouldBeSaved = false
+                    };
                 }
             }
 

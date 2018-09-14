@@ -12,6 +12,7 @@ namespace Barotrauma.Items.Components
     {
         public readonly ItemPrefab TargetItem;
 
+        //TODO: refactor this (maybe make it a struct)
         public readonly List<Tuple<ItemPrefab, int, float, bool>> RequiredItems;
 
         public readonly float RequiredTime;
@@ -291,7 +292,6 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            //TODO: apply OutCondition
             if (containers[1].Inventory.Items.All(i => i != null))
             {
                 Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, item.Position, item.Submarine, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition);

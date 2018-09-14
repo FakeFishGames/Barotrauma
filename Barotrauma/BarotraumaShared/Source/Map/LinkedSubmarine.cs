@@ -99,7 +99,12 @@ namespace Barotrauma
         {
             return Vector2.Distance(position, WorldPosition) < 50.0f;
         }
-        
+
+        public override MapEntity Clone()
+        {
+            return CreateDummy(Submarine, filePath, Position);
+        }
+
         private void GenerateWallVertices(XElement rootElement)
         {
             List<Vector2> points = new List<Vector2>();
@@ -261,22 +266,16 @@ namespace Barotrauma
                 if (saveElement.Attribute("pos") != null) saveElement.Attribute("pos").Remove();
                 saveElement.Add(new XAttribute("pos", XMLExtensions.Vector2ToString(Position - Submarine.HiddenSubPosition)));
 
-
-
                 var linkedPort = linkedTo.FirstOrDefault(lt => (lt is Item) && ((Item)lt).GetComponent<DockingPort>() != null);
                 if (linkedPort != null)
                 {
                     if (saveElement.Attribute("linkedto") != null) saveElement.Attribute("linkedto").Remove();
-
                     saveElement.Add(new XAttribute("linkedto", linkedPort.ID));
                 }
             }
             else
             {
-
                 saveElement = new XElement("LinkedSubmarine");
-
-
                 sub.SaveToXElement(saveElement);
             }
 

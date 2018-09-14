@@ -377,11 +377,11 @@ namespace Barotrauma
                     (components[componentIndex] as IServerSerializable).ClientRead(type, msg, sendingTime);
                     break;
                 case NetEntityEvent.Type.InventoryState:
-                    ownInventory.ClientRead(type, msg, sendingTime);
+                    int containerIndex = msg.ReadRangedInteger(0, components.Count - 1);
+                    (components[containerIndex] as ItemContainer).Inventory.ClientRead(type, msg, sendingTime);
                     break;
                 case NetEntityEvent.Type.Status:
-                    condition = msg.ReadRangedSingle(0.0f, prefab.Health, 8);
-
+                    condition = msg.ReadSingle();
                     if (FixRequirements.Count > 0)
                     {
                         if (Condition <= 0.0f)
@@ -401,10 +401,13 @@ namespace Barotrauma
                     ushort targetID = msg.ReadUInt16();
 
                     Character target = FindEntityByID(targetID) as Character;
-                    ApplyStatusEffects(actionType, (float)Timing.Step, target, true);
+                    //ignore deltatime - using an item with the useOnSelf buttons is instantaneous
+                    ApplyStatusEffects(actionType, 1.0f, target, true);
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
-                    ReadPropertyChange(msg);
+                    ReadPropertyChange(msg, false);
+                    break;
+                case NetEntityEvent.Type.Invalid:
                     break;
             }
         }
@@ -423,11 +426,12 @@ namespace Barotrauma
                 case NetEntityEvent.Type.ComponentState:
                     int componentIndex = (int)extraData[1];
                     msg.WriteRangedInteger(0, components.Count - 1, componentIndex);
-
                     (components[componentIndex] as IClientSerializable).ClientWrite(msg, extraData);
                     break;
                 case NetEntityEvent.Type.InventoryState:
-                    ownInventory.ClientWrite(msg, extraData);
+                    int containerIndex = (int)extraData[1];
+                    msg.WriteRangedInteger(0, components.Count - 1, containerIndex);
+                    (components[containerIndex] as ItemContainer).Inventory.ClientWrite(msg, extraData);
                     break;
                 case NetEntityEvent.Type.Repair:
                     if (FixRequirements.Count > 0)
@@ -441,7 +445,7 @@ namespace Barotrauma
                     //on the character of the client who sent the message                    
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
-                    WritePropertyChange(msg, extraData);
+                    WritePropertyChange(msg, extraData, true);
                     break;
             }
             msg.WritePadBits();
@@ -453,12 +457,25 @@ namespace Barotrauma
             float newRotation = msg.ReadRangedSingle(0.0f, MathHelper.TwoPi, 7);
             bool awake = msg.ReadBoolean();
             Vector2 newVelocity = Vector2.Zero;
-
+            
             if (awake)
             {
                 newVelocity = new Vector2(
                     msg.ReadRangedSingle(-MaxVel, MaxVel, 12),
                     msg.ReadRangedSingle(-MaxVel, MaxVel, 12));
+            }
+
+            if (!MathUtils.IsValid(newPosition) || !MathUtils.IsValid(newRotation) || !MathUtils.IsValid(newVelocity))
+            {
+                string errorMsg = "Received invalid position data for the item \"" + Name
+                    + "\" (position: " + newPosition + ", rotation: " + newRotation + ", velocity: " + newVelocity + ")";
+#if DEBUG
+                DebugConsole.ThrowError(errorMsg);
+#endif
+                GameAnalyticsManager.AddErrorEventOnce("Item.ClientReadPosition:InvalidData" + ID,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    errorMsg);
+                return;
             }
 
             if (body == null)
@@ -470,7 +487,7 @@ namespace Barotrauma
             body.FarseerBody.Awake = awake;
             if (body.FarseerBody.Awake)
             {
-                if ((newVelocity - body.LinearVelocity).Length() > 8.0f) body.LinearVelocity = newVelocity;
+                if ((newVelocity - body.LinearVelocity).LengthSquared() > 8.0f * 8.0f) body.LinearVelocity = newVelocity;
             }
             else
             {
@@ -490,11 +507,12 @@ namespace Barotrauma
 
             if ((newPosition - SimPosition).Length() > body.LinearVelocity.Length() * 2.0f)
             {
-                body.SetTransform(newPosition, newRotation);
-
-                Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
-                rect.X = (int)(displayPos.X - rect.Width / 2.0f);
-                rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
+                if (body.SetTransform(newPosition, newRotation))
+                {
+                    Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
+                    rect.X = (int)(displayPos.X - rect.Width / 2.0f);
+                    rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
+                }
             }
         }
 

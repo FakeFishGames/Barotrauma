@@ -37,7 +37,6 @@ namespace Barotrauma
                 Level.PositionType.Cave | Level.PositionType.MainPath | Level.PositionType.Ruin, 500.0f, 10000.0f, 30.0f);
 
             item = new Item(itemPrefab, position, null);
-            item.MoveWithLevel = true;
             item.body.FarseerBody.IsKinematic = true;
 
             //try to find a nearby artifact holder (or any alien itemcontainer) and place the artifact inside it
@@ -66,7 +65,7 @@ namespace Barotrauma
             switch (state)
             {
                 case 0:
-                    if (item.ParentInventory!=null) item.body.FarseerBody.IsKinematic = false;
+                    if (item.ParentInventory != null) item.body.FarseerBody.IsKinematic = false;                    
                     if (item.CurrentHull == null) return;
 
                     state = 1;

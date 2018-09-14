@@ -122,6 +122,12 @@ namespace Barotrauma.Networking
             get { return respawnManager; }
         }
 
+        public ServerLog ServerLog
+        {
+            get;
+            protected set;
+        }
+
         public NetworkMember()
         {
             InitProjSpecific();
@@ -162,7 +168,7 @@ namespace Barotrauma.Networking
 
             while (chatBox.CountChildren > 20)
             {
-                chatBox.RemoveChild(chatBox.children[1]);
+                chatBox.RemoveChild(chatBox.children[0]);
             }
 
             if (!string.IsNullOrWhiteSpace(message.SenderName))

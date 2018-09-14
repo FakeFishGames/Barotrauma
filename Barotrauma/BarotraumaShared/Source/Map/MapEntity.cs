@@ -20,15 +20,8 @@ namespace Barotrauma
 
         //observable collection because some entities may need to be notified when the collection is modified
         public ObservableCollection<MapEntity> linkedTo;
-
-        //protected float soundRange;
-        //protected float sightRange;
-
-        public bool MoveWithLevel
-        {
-            get;
-            set;
-        }
+        
+        public bool ShouldBeSaved = true;
         
         //the position and dimensions of the entity
         protected Rectangle rect;
@@ -45,7 +38,8 @@ namespace Barotrauma
         private static bool resizing;
         private int resizeDirX, resizeDirY;
         
-        public virtual Rectangle Rect { 
+        public virtual Rectangle Rect
+        { 
             get { return rect; }
             set { rect = value; }
         }
@@ -169,10 +163,7 @@ namespace Barotrauma
             return (Submarine.RectContains(WorldRect, position));
         }
 
-        public virtual MapEntity Clone()
-        {
-            throw new NotImplementedException();
-        }
+        public abstract MapEntity Clone();
 
         public static List<MapEntity> Clone(List<MapEntity> entitiesToClone)
         {
@@ -180,7 +171,19 @@ namespace Barotrauma
             foreach (MapEntity e in entitiesToClone)
             {
                 Debug.Assert(e != null);
-                clones.Add(e.Clone());
+                try
+                {
+                    clones.Add(e.Clone());
+                }
+                catch (Exception ex)
+                {
+                    DebugConsole.ThrowError("Cloning entity \"" + e.Name + "\" failed.", ex);
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "MapEntity.Clone:" + e.Name,
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Cloning entity \"" + e.Name + "\" failed (" + ex.Message + ").\n" + ex.StackTrace);
+                    return clones;
+                }
                 Debug.Assert(clones.Last() != null);
             }
 
@@ -217,12 +220,29 @@ namespace Barotrauma
 
                     var connectedItem = originalWire.Connections[n].Item;
                     if (connectedItem == null) continue;
-                    
+
                     //index of the item the wire is connected to
                     int itemIndex = entitiesToClone.IndexOf(connectedItem);
+                    if (itemIndex < 0)
+                    {
+                        DebugConsole.ThrowError("Error while cloning wires - item \"" + connectedItem.Name + "\" was not found in entities to clone.");
+                        GameAnalyticsManager.AddErrorEventOnce("MapEntity.Clone:ConnectedNotFound" + connectedItem.ID,
+                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            "Error while cloning wires - item \"" + connectedItem.Name + "\" was not found in entities to clone.");
+                        continue;
+                    }
+
                     //index of the connection in the connectionpanel of the target item
                     int connectionIndex = connectedItem.Connections.IndexOf(originalWire.Connections[n]);
-                    
+                    if (connectionIndex < 0)
+                    {
+                        DebugConsole.ThrowError("Error while cloning wires - connection \"" + originalWire.Connections[n].Name + "\" was not found in connected item \"" + connectedItem.Name + "\".");
+                        GameAnalyticsManager.AddErrorEventOnce("MapEntity.Clone:ConnectionNotFound" + connectedItem.ID,
+                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            "Error while cloning wires - connection \"" + originalWire.Connections[n].Name + "\" was not found in connected item \"" + connectedItem.Name + "\".");
+                        continue;
+                    }
+
                     (clones[itemIndex] as Item).Connections[connectionIndex].TryAddLink(cloneWire);
                     cloneWire.Connect((clones[itemIndex] as Item).Connections[connectionIndex], false);
                 }
@@ -353,15 +373,12 @@ namespace Barotrauma
 
                 foreach (ushort i in e.linkedToID)
                 {
-                    MapEntity linked = FindEntityByID(i) as MapEntity;
-
-                    if (linked != null) e.linkedTo.Add(linked);
+                    if (FindEntityByID(i) is MapEntity linked) e.linkedTo.Add(linked);
                 }
             }
 
             List<LinkedSubmarine> linkedSubs = new List<LinkedSubmarine>();
-            
-            for (int i = 0; i<mapEntityList.Count; i++)
+            for (int i = 0; i < mapEntityList.Count; i++)
             {
                 if (mapEntityList[i].Submarine != sub) continue;
 
@@ -374,8 +391,11 @@ namespace Barotrauma
                 mapEntityList[i].OnMapLoaded();
             }
             
-            Item.UpdateHulls();
-            Gap.UpdateHulls();
+            if (sub != null)
+            {
+                Item.UpdateHulls();
+                Gap.UpdateHulls();
+            }
 
             foreach (LinkedSubmarine linkedSub in linkedSubs)
             {

@@ -192,8 +192,13 @@ namespace Barotrauma.Items.Components
 
             voltage = 0.0f;
         }
-
+                
 #if CLIENT
+        public override void UpdateBroken(float deltaTime, Camera cam)
+        {
+            light.Color = Color.Transparent;
+        }
+
         protected override void RemoveComponentSpecific()
         {
             base.RemoveComponentSpecific();

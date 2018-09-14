@@ -177,7 +177,7 @@ namespace Barotrauma
                 if (levelSeed == value) return;
 
                 levelSeed = value;
-                backgroundSprite = LocationType.Random(levelSeed).Background;
+                backgroundSprite = LocationType.Random(levelSeed)?.Background;
                 seedBox.Text = levelSeed;
             }
         }
@@ -379,13 +379,13 @@ namespace Barotrauma
             showLogButton.UserData = "showlog";
             showLogButton.OnClicked = (GUIButton button, object userData) =>
             {
-                if (GameMain.Server.ServerLog.LogFrame == null)
+                if (GameMain.NetworkMember.ServerLog.LogFrame == null)
                 {
-                    GameMain.Server.ServerLog.CreateLogFrame();
+                    GameMain.NetworkMember.ServerLog.CreateLogFrame();
                 }
                 else
                 {
-                    GameMain.Server.ServerLog.LogFrame = null;
+                    GameMain.NetworkMember.ServerLog.LogFrame = null;
                     GUIComponent.KeyboardDispatcher.Subscriber = null;
                 }
                 return true;
@@ -435,7 +435,9 @@ namespace Barotrauma
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "settingsButton"));
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "spectateButton"));
 
-            InfoFrame.FindChild("showlog").Visible = GameMain.Server != null;
+            InfoFrame.FindChild("showlog").Visible = 
+                GameMain.Server != null || 
+                (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.ServerLog));
             
             if (campaignViewButton == null)
             {
@@ -501,7 +503,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (GameSettings.SendUserStatistics) GameAnalyticsSDK.Net.GameAnalytics.SetCustomDimension01("multiplayer");
+                GameAnalyticsManager.SetCustomDimension01("multiplayer");
 
                 if (GameModePreset.list.Count > 0 && modeList.Selected == null) modeList.Select(0);
 
@@ -737,8 +739,21 @@ namespace Barotrauma
             //hash will be null if opening the sub file failed -> don't select the sub
             if (string.IsNullOrWhiteSpace(hash))
             {
-                (component as GUITextBlock).TextColor = Color.DarkRed * 0.8f;
-                component.CanBeFocused = false;
+                GUITextBlock submarineTextBlock = component.GetChild<GUITextBlock>();
+                if (submarineTextBlock != null)
+                {
+                    submarineTextBlock.TextColor = Color.DarkRed * 0.8f;
+                    submarineTextBlock.CanBeFocused = false;
+                }
+                else
+                {
+                    DebugConsole.ThrowError("Failed to select submarine. Selected GUIComponent was of the type \"" + (component == null ? "null" : component.GetType().ToString()) + "\".");
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "NetLobbyScreen.SelectSub:InvalidComponent", 
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Failed to select submarine. Selected GUIComponent was of the type \"" + (component == null ? "null" : component.GetType().ToString()) + "\".");
+                }
+
 
                 StartButton.Enabled = false;
 
@@ -782,8 +797,8 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
-            var matchingSub = Submarine.SavedSubmarines.Find(s => s.Name == sub.Name && s.MD5Hash.Hash == sub.MD5Hash.Hash);
-            if (matchingSub == null) matchingSub = Submarine.SavedSubmarines.Find(s => s.Name == sub.Name);
+            var matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == sub.Name && s.MD5Hash.Hash == sub.MD5Hash.Hash);
+            if (matchingSub == null) matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == sub.Name);
 
             if (matchingSub == null)
             {
@@ -1467,8 +1482,8 @@ namespace Barotrauma
                 return false;
             }
 
-            Submarine sub = Submarine.SavedSubmarines.Find(m => m.Name == subName && m.MD5Hash.Hash == md5Hash);
-            if (sub == null) sub = Submarine.SavedSubmarines.Find(m => m.Name == subName);
+            Submarine sub = Submarine.SavedSubmarines.FirstOrDefault(m => m.Name == subName && m.MD5Hash.Hash == md5Hash);
+            if (sub == null) sub = Submarine.SavedSubmarines.FirstOrDefault(m => m.Name == subName);
 
             var matchingListSub = subList.children.Find(c => c.UserData == sub);
             if (matchingListSub != null)
@@ -1520,7 +1535,7 @@ namespace Barotrauma
                 requestFileBox.Buttons[0].OnClicked += (GUIButton button, object userdata) =>
                 {
                     string[] fileInfo = (string[])userdata;
-                    GameMain.Client.RequestFile(FileTransferType.Submarine, fileInfo[0], fileInfo[1]);
+                    GameMain.Client?.RequestFile(FileTransferType.Submarine, fileInfo[0], fileInfo[1]);
                     return true;
                 };
                 requestFileBox.Buttons[1].OnClicked += requestFileBox.Close;

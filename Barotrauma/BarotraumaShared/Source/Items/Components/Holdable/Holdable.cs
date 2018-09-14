@@ -124,6 +124,17 @@ namespace Barotrauma.Items.Components
             }    
         }
 
+        public override void Load(XElement componentElement)
+        {
+            base.Load(componentElement);
+            if (attachable)
+            {
+                prevMsg = Msg;
+                prevPickKey = PickKey;
+                prevRequiredItems = new List<RelatedItem>(requiredItems);
+            }
+        }
+
         public override void Drop(Character dropper)
         {
             Drop(true, dropper);
@@ -160,7 +171,24 @@ namespace Barotrauma.Items.Components
             if (item.body != null)
             {
                 item.body.ResetDynamics();
-                item.SetTransform(picker.SimPosition, 0.0f);
+                Limb heldHand;
+                Limb arm;
+                if (picker.Inventory.IsInLimbSlot(item, InvSlotType.LeftHand))
+                {
+                    heldHand = picker.AnimController.GetLimb(LimbType.LeftHand);
+                    arm = picker.AnimController.GetLimb(LimbType.LeftArm);
+
+                }
+                else
+                {
+                    heldHand = picker.AnimController.GetLimb(LimbType.RightHand);
+                    arm = picker.AnimController.GetLimb(LimbType.RightArm);
+                }
+                
+                float xDif = (heldHand.SimPosition.X - arm.SimPosition.X) / 2f;
+                float yDif = (heldHand.SimPosition.Y - arm.SimPosition.Y) / 2.5f;
+                //hand simPosition is actually in the wrist so need to move the item out from it slightly
+                item.SetTransform(heldHand.SimPosition + new Vector2(xDif,yDif), 0.0f);
             }
 
             picker.DeselectItem(item);
@@ -214,12 +242,22 @@ namespace Barotrauma.Items.Components
             IsActive = false;
         }
 
+        public bool CanBeDeattached()
+        {
+            if (!attachable || !attached) return true;
+
+            //don't allow deattaching if outside hulls and not in sub editor
+            return item.CurrentHull != null || Screen.Selected == GameMain.SubEditorScreen;
+        }
+
         public override bool Pick(Character picker)
         {
             if (!attachable)
             {
                 return base.Pick(picker);
             }
+
+            if (!CanBeDeattached()) return false;
 
             if (Attached)
             {
@@ -330,7 +368,7 @@ namespace Barotrauma.Items.Components
 
             if (picker.HasSelectedItem(item))
             {
-                picker.AnimController.HoldItem(deltaTime, item, handlePos, holdPos, aimPos, picker.IsKeyDown(InputType.Aim), holdAngle);
+                picker.AnimController.HoldItem(deltaTime, item, handlePos, holdPos, aimPos, picker.IsKeyDown(InputType.Aim) && aimPos != Vector2.Zero, holdAngle);
             }
             else
             {
@@ -410,7 +448,7 @@ namespace Barotrauma.Items.Components
 
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
-            bool isAttached = msg.ReadBoolean();
+            bool shouldBeAttached = msg.ReadBoolean();
             Vector2 simPosition = new Vector2(msg.ReadFloat(), msg.ReadFloat());
 
             if (!attachable)
@@ -419,7 +457,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (isAttached)
+            if (shouldBeAttached)
             {
                 Drop(false, null);
                 item.SetTransform(simPosition, 0.0f);
@@ -427,16 +465,19 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                DropConnectedWires(null);
-
-                if (body != null)
+                if (attached)
                 {
-                    item.body = body;
-                    item.body.Enabled = true;
-                }
-                IsActive = false;
+                    DropConnectedWires(null);
 
-                DeattachFromWall();
+                    if (body != null)
+                    {
+                        item.body = body;
+                        item.body.Enabled = true;
+                    }
+                    IsActive = false;
+
+                    DeattachFromWall();
+                }
             }
         }
     }

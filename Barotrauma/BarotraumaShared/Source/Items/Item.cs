@@ -45,6 +45,8 @@ namespace Barotrauma
         public List<IDrawableComponent> drawableComponents;
 
         public PhysicsBody body;
+
+        public readonly XElement StaticBodyConfig;
         
         private Vector2 lastSentPos;
         private bool prevBodyAwake;
@@ -252,6 +254,11 @@ namespace Barotrauma
             get { return prefab.FireProof; }
         }
 
+        public bool WaterProof
+        {
+            get { return prefab.WaterProof; }
+        }
+
         public bool CanUseOnSelf
         {
             get { return prefab.CanUseOnSelf; }
@@ -268,7 +275,16 @@ namespace Barotrauma
                 return IsInWater();
             }
         }
-        
+
+        /// <summary>
+        /// A list of items the last signal sent by this item went through
+        /// </summary>
+        public List<Item> LastSentSignalRecipients
+        {
+            get;
+            private set;
+        } = new List<Item>();
+
         public ItemPrefab Prefab
         {
             get { return prefab; }
@@ -335,18 +351,18 @@ namespace Barotrauma
             }
         }
 
-        public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine, float? spawnCondition = null)
+        public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine)
             : this(new Rectangle(
                 (int)(position.X - itemPrefab.sprite.size.X / 2), 
                 (int)(position.Y + itemPrefab.sprite.size.Y / 2), 
                 (int)itemPrefab.sprite.size.X, 
                 (int)itemPrefab.sprite.size.Y), 
-            itemPrefab, submarine, spawnCondition)
+            itemPrefab, submarine)
         {
 
         }
 
-        public Item(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine, float? spawnCondition = null)
+        public Item(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine)
             : base(itemPrefab, submarine)
         {
             prefab = itemPrefab;
@@ -361,7 +377,7 @@ namespace Barotrauma
                        
             rect = newRect;
                         
-            condition = (float)(spawnCondition ?? prefab.Health);
+            condition = prefab.Health;
             lastSentCondition = condition;
 
             XElement element = prefab.ConfigElement;
@@ -384,6 +400,9 @@ namespace Barotrauma
                     case "sprite":
                     case "deconstruct":
                     case "brokensprite":
+                        break;
+                    case "staticbody":
+                        StaticBodyConfig = subElement;
                         break;
                     case "aitarget":
                         aiTarget = new AITarget(this);
@@ -416,11 +435,8 @@ namespace Barotrauma
                 //and add them to the corresponding statuseffect list
                 foreach (List<StatusEffect> componentEffectList in ic.statusEffectLists.Values)
                 {
-
                     ActionType actionType = componentEffectList.First().type;
-
-                    List<StatusEffect> statusEffectList;
-                    if (!statusEffectLists.TryGetValue(actionType, out statusEffectList))
+                    if (!statusEffectLists.TryGetValue(actionType, out List<StatusEffect> statusEffectList))
                     {
                         statusEffectList = new List<StatusEffect>();
                         statusEffectLists.Add(actionType, statusEffectList);
@@ -479,14 +495,29 @@ namespace Barotrauma
                 if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
                 clone.properties[property.Key].TrySetValue(property.Value.GetValue());
             }
-            for (int i = 0; i < components.Count; i++)
+
+            if (components.Count != clone.components.Count)
+            {
+                string errorMsg = "Error while cloning item \"" + Name + "\" - clone does not have the same number of components. ";
+                errorMsg += "Original components: " + string.Join(", ", components.Select(c => c.GetType().ToString()));
+                errorMsg += ", cloned components: " + string.Join(", ", clone.components.Select(c => c.GetType().ToString()));
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Item.Clone:" + Name, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+            }
+
+            for (int i = 0; i < components.Count && i < clone.components.Count; i++)
             {
                 foreach (KeyValuePair<string, SerializableProperty> property in components[i].properties)
                 {
                     if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
                     clone.components[i].properties[property.Key].TrySetValue(property.Value.GetValue());
                 }
+                for (int j = 0; j < components[i].requiredItems.Count && i < clone.components[i].requiredItems.Count; j++)
+                {
+                    clone.components[i].requiredItems[j].JoinedNames = components[i].requiredItems[j].JoinedNames;
+                }
             }
+            
             if (ContainedItems != null)
             {
                 foreach (Item containedItem in ContainedItems)
@@ -532,6 +563,20 @@ namespace Barotrauma
 
         public void SetTransform(Vector2 simPosition, float rotation, bool findNewHull = true)
         {
+            if (!MathUtils.IsValid(simPosition))
+            {
+                string errorMsg =
+                    "Attempted to move the item " + Name +
+                    " to an invalid position (" + simPosition + ")\n" + Environment.StackTrace;
+
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "Item.SetPosition:InvalidPosition" + ID,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    errorMsg);
+                return;
+            }
+
             if (body != null)
             {
                 try
@@ -637,7 +682,6 @@ namespace Barotrauma
             if (Container == null) return null;
 
             Item rootContainer = Container;
-
             while (rootContainer.Container != null)
             {
                 rootContainer = rootContainer.Container;
@@ -783,12 +827,6 @@ namespace Barotrauma
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (Level.Loaded != null && WorldPosition.Y < Level.MaxEntityDepth)
-            {
-                Spawner.AddToRemoveQueue(this);
-                return;
-            }
-
             ApplyStatusEffects(ActionType.Always, deltaTime, null);
 
             foreach (ItemComponent ic in components)
@@ -851,14 +889,29 @@ namespace Barotrauma
                             MathHelper.Clamp(body.LinearVelocity.X, -MaxVel, MaxVel),
                             MathHelper.Clamp(body.LinearVelocity.Y, -MaxVel, MaxVel));
                     }
+
+                    if (CurrentHull == null && body.SimPosition.Y < ConvertUnits.ToSimUnits(Level.MaxEntityDepth))
+                    {
+                        Spawner.AddToRemoveQueue(this);
+                        return;
+                    }
                 }
 
                 UpdateNetPosition();
             }
 
             inWater = IsInWater();
-
-            if (inWater) ApplyStatusEffects(ActionType.InWater, deltaTime);
+            if (inWater)
+            {
+                bool waterProof = WaterProof;
+                Item container = this.Container;
+                while (!waterProof && container != null)
+                {
+                    waterProof = container.WaterProof;
+                    container = container.Container;
+                }
+                if (!waterProof) ApplyStatusEffects(ActionType.InWater, deltaTime);
+            }
 
             if (body == null || !body.Enabled || !inWater || ParentInventory != null) return;
 
@@ -997,9 +1050,10 @@ namespace Barotrauma
                 }
             }
         }
-
+        
         public void SendSignal(int stepsTaken, string signal, string connectionName, Character sender, float power = 0.0f)
         {
+            LastSentSignalRecipients.Clear();
             if (connections == null) return;
 
             stepsTaken++;
@@ -1192,6 +1246,7 @@ namespace Barotrauma
             {
                 if (string.IsNullOrEmpty(ic.Msg)) continue;
                 if (!ic.CanBePicked && !ic.CanBeSelected) continue;
+                if (ic is Holdable holdable && !holdable.CanBeDeattached()) continue;
                
                 Color color = Color.Red;
                 if (ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false)) color = Color.Orange;
@@ -1268,29 +1323,75 @@ namespace Barotrauma
         
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null) 
         {
+            string errorMsg = "";
             if (extraData == null || extraData.Length == 0 || !(extraData[0] is NetEntityEvent.Type))
             {
+                if (extraData == null)
+                {
+                    errorMsg = "Failed to write a network event for the item \"" + Name + "\" - event data was null.";
+                }
+                else if (extraData.Length == 0)
+                {
+                    errorMsg = "Failed to write a network event for the item \"" + Name + "\" - event data was empty.";
+                }
+                else
+                {
+                    errorMsg = "Failed to write a network event for the item \"" + Name + "\" - event type not set.";
+                }
+                msg.WriteRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)NetEntityEvent.Type.Invalid);
+                DebugConsole.Log(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Item.ServerWrite:InvalidData" + Name, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
             }
+
+            int initialWritePos = msg.LengthBits;
 
             NetEntityEvent.Type eventType = (NetEntityEvent.Type)extraData[0];
             msg.WriteRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)eventType);
             switch (eventType)
             {
                 case NetEntityEvent.Type.ComponentState:
+                    if (extraData.Length < 2 || !(extraData[1] is int))
+                    {
+                        errorMsg = "Failed to write a component state event for the item \"" + Name + "\" - component index not given.";
+                        break;
+                    }
                     int componentIndex = (int)extraData[1];
-                    msg.WriteRangedInteger(0, components.Count-1, componentIndex);
-
+                    if (componentIndex < 0 || componentIndex >= components.Count)
+                    {
+                        errorMsg = "Failed to write a component state event for the item \"" + Name + "\" - component index out of range (" + componentIndex + ").";
+                        break;
+                    }
+                    else if (!(components[componentIndex] is IServerSerializable))
+                    {
+                        errorMsg = "Failed to write a component state event for the item \"" + Name + "\" - component \"" + components[componentIndex] + "\" is not server serializable.";
+                        break;
+                    }
+                    msg.WriteRangedInteger(0, components.Count - 1, componentIndex);
                     (components[componentIndex] as IServerSerializable).ServerWrite(msg, c, extraData);
                     break;
                 case NetEntityEvent.Type.InventoryState:
-                    ownInventory.ServerWrite(msg, c, extraData);
+                    if (extraData.Length < 2 || !(extraData[1] is int))
+                    {
+                        errorMsg = "Failed to write an inventory state event for the item \"" + Name + "\" - component index not given.";
+                        break;
+                    }
+                    int containerIndex = (int)extraData[1];
+                    if (containerIndex < 0 || containerIndex >= components.Count)
+                    {
+                        errorMsg = "Failed to write an inventory state event for the item \"" + Name + "\" - container index out of range (" + containerIndex + ").";
+                        break;
+                    }
+                    else if (!(components[containerIndex] is ItemContainer))
+                    {
+                        errorMsg = "Failed to write an inventory state event for the item \"" + Name + "\" - component \"" + components[containerIndex] + "\" is not server serializable.";
+                        break;
+                    }
+                    msg.WriteRangedInteger(0, components.Count - 1, containerIndex);
+                    (components[containerIndex] as ItemContainer).Inventory.ServerWrite(msg, c);
                     break;
                 case NetEntityEvent.Type.Status:
-                    //clamp to (MaxHealth / 255.0f) if condition > 0.0f
-                    //to prevent condition from being rounded down to 0.0 even if the item is not broken
-                    msg.WriteRangedSingle(condition > 0.0f ? Math.Max(condition, prefab.Health / 255.0f) : 0.0f, 0.0f, prefab.Health, 8);
-
+                    msg.Write(condition);
                     if (condition <= 0.0f && FixRequirements.Count > 0)
                     {
                         for (int i = 0; i < FixRequirements.Count; i++)
@@ -1305,9 +1406,30 @@ namespace Barotrauma
                     msg.Write(targetID);
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
-                    WritePropertyChange(msg, extraData);
+                    try
+                    {
+                        WritePropertyChange(msg, extraData, false);
+                    }
+                    catch (Exception e)
+                    {
+                        errorMsg = "Failed to write a ChangeProperty network event for the item \"" + Name + "\" (" + e.Message + ")";
+                    }
+                    break;
+                default:
+                    errorMsg = "Failed to write a network event for the item \"" + Name + "\" - \"" + eventType + "\" is not a valid entity event type for items.";
                     break;
             }
+
+            if (!string.IsNullOrEmpty(errorMsg))
+            {
+                //something went wrong - rewind the write position and write invalid event type to prevent creating an unreadable event
+                msg.ReadBits(msg.Data, 0, initialWritePos);
+                msg.LengthBits = initialWritePos;
+                msg.WriteRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)NetEntityEvent.Type.Invalid);
+                DebugConsole.Log(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Item.ServerWrite:" + errorMsg, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+            }
+
         }
 
         public void ServerRead(ClientNetObject type, NetBuffer msg, Client c) 
@@ -1322,7 +1444,8 @@ namespace Barotrauma
                     (components[componentIndex] as IClientSerializable).ServerRead(type, msg, c);
                     break;
                 case NetEntityEvent.Type.InventoryState:
-                    ownInventory.ServerRead(type, msg, c);
+                    int containerIndex = msg.ReadRangedInteger(0, components.Count - 1);
+                    (components[containerIndex] as ItemContainer).Inventory.ServerRead(type, msg, c);
                     break;
                 case NetEntityEvent.Type.Repair:
                     if (FixRequirements.Count == 0) return;
@@ -1347,7 +1470,7 @@ namespace Barotrauma
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     if (c.Character == null || !c.Character.CanInteractWith(this)) return;
 
-                    ApplyStatusEffects(ActionType.OnUse, (float)Timing.Step, c.Character);
+                    ApplyStatusEffects(ActionType.OnUse, 1.0f, c.Character);
 
                     if (ContainedItems == null || ContainedItems.All(i => i == null))
                     {
@@ -1364,14 +1487,14 @@ namespace Barotrauma
                     
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
-                    ReadPropertyChange(msg);
+                    ReadPropertyChange(msg, true);
                     break;
             }
         }
 
-        private void WritePropertyChange(NetBuffer msg, object[] extraData)
+        private void WritePropertyChange(NetBuffer msg, object[] extraData, bool inGameEditableOnly)
         {
-            var allProperties = GetProperties<InGameEditable>();
+            var allProperties = inGameEditableOnly ? GetProperties<InGameEditable>() : GetProperties<Editable>();
             SerializableProperty property = extraData[1] as SerializableProperty;
             if (property != null)
             {
@@ -1430,16 +1553,24 @@ namespace Barotrauma
                     msg.Write(((Rectangle)value).Width);
                     msg.Write(((Rectangle)value).Height);
                 }
+                else if (value is Enum)
+                {
+                    msg.Write((int)value);
+                }
                 else
                 {
                     throw new System.NotImplementedException("Serializing item properties of the type \"" + value.GetType() + "\" not supported");
                 }
             }
+            else
+            {
+                throw new ArgumentException("Failed to write propery value - property \"" + (property == null ? "null" : property.Name) + "\" is not serializable.");
+            }
         }
 
-        private void ReadPropertyChange(NetBuffer msg)
+        private void ReadPropertyChange(NetBuffer msg, bool inGameEditableOnly)
         {
-            var allProperties = GetProperties<InGameEditable>();
+            var allProperties = inGameEditableOnly ? GetProperties<InGameEditable>() : GetProperties<Editable>();
             if (allProperties.Count == 0) return;
 
             int propertyIndex = 0;
@@ -1487,6 +1618,24 @@ namespace Barotrauma
             {
                 property.TrySetValue(new Vector4(msg.ReadInt32(), msg.ReadInt32(), msg.ReadInt32(), msg.ReadInt32()));
             }
+            else if (typeof(Enum).IsAssignableFrom(type))
+            {
+                int intVal = msg.ReadInt32();
+                try
+                {
+                    property.TrySetValue(Enum.ToObject(type, intVal));
+                }
+                catch (Exception e)
+                {
+#if DEBUG
+                    DebugConsole.ThrowError("Failed to convert the int value \"" + intVal + "\" to " + type, e);
+#endif
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "Item.ReadPropertyChange:" + Name + ":" + type,
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
+                        "Failed to convert the int value \"" + intVal + "\" to " + type + " (item " + Name + ")");
+                }
+            }
             else
             {
                 return;
@@ -1523,10 +1672,35 @@ namespace Barotrauma
             {
                 msg.Write(ParentInventory.Owner.ID);
 
-                int index = ParentInventory.FindIndex(this);
-                msg.Write(index < 0 ? (byte)255 : (byte)index);
+                //find the index of the ItemContainer this item is inside to get the item to
+                //spawn in the correct inventory in multi-inventory items like fabricators
+                byte containerIndex = 0;
+                if (Container != null)
+                {
+                    for (int i = 0; i < Container.components.Count; i++)
+                    {
+                        if (Container.components[i] is ItemContainer container && 
+                            container.Inventory == ParentInventory)
+                        {
+                            containerIndex = (byte)i;
+                            break;
+                        }
+                    }
+                }
+                msg.Write(containerIndex);
+
+                int slotIndex = ParentInventory.FindIndex(this);
+                msg.Write(slotIndex < 0 ? (byte)255 : (byte)slotIndex);
             }
-            
+
+            byte teamID = 0;
+            foreach (WifiComponent wifiComponent in GetComponents<WifiComponent>())
+            {
+                teamID = wifiComponent.TeamID;
+                break;
+            }
+
+            msg.Write(teamID);
             bool tagsChanged = tags.Count != prefab.Tags.Count || !tags.All(t => prefab.Tags.Contains(t));
             msg.Write(tagsChanged);
             if (tagsChanged)
@@ -1554,10 +1728,12 @@ namespace Barotrauma
 
             Vector2 pos = Vector2.Zero;
             Submarine sub = null;
+            int itemContainerIndex = -1;
             int inventorySlotIndex = -1;
 
             if (inventoryId > 0)
             {
+                itemContainerIndex = msg.ReadByte();
                 inventorySlotIndex = msg.ReadByte();
             }
             else
@@ -1571,6 +1747,7 @@ namespace Barotrauma
                 }
             }
 
+            byte teamID = msg.ReadByte();
             bool tagsChanged = msg.ReadBoolean();
             string tags = "";
             if (tagsChanged)
@@ -1596,23 +1773,29 @@ namespace Barotrauma
                 }
                 else if (inventoryOwner is Item)
                 {
-                    var containers = (inventoryOwner as Item).GetComponents<Items.Components.ItemContainer>();
-                    if (containers != null && containers.Any())
+                    if ((inventoryOwner as Item).components[itemContainerIndex] is ItemContainer container)
                     {
-                        inventory = containers.Last().Inventory;
+                        inventory = container.Inventory;
                     }
                 }
             }
 
-            var item = new Item(itemPrefab, pos, sub);
-            item.ID = itemId;
+            var item = new Item(itemPrefab, pos, sub)
+            {
+                ID = itemId
+            };
+
+            foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
+            {
+                wifiComponent.TeamID = teamID;
+            }
             if (descriptionChanged) item.Description = itemDesc;
             if (tagsChanged) item.Tags = tags;
 
             if (sub != null)
             {
                 item.CurrentHull = Hull.FindHull(pos + sub.Position, null, true);
-                item.Submarine = item.CurrentHull == null ? null : item.CurrentHull.Submarine;
+                item.Submarine = item.CurrentHull?.Submarine;
             }
 
             if (inventory != null)
@@ -1766,16 +1949,15 @@ namespace Barotrauma
                     (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
                     (int)(rect.Y - Submarine.HiddenSubPosition.Y)));
             }
-
+            
             if (linkedTo != null && linkedTo.Count > 0)
             {
-                string[] linkedToIDs = new string[linkedTo.Count];
-
-                for (int i = 0; i < linkedTo.Count; i++)
+                var saveableLinked = linkedTo.Where(l => l.ShouldBeSaved).ToList();
+                string[] linkedToIDs = new string[saveableLinked.Count];
+                for (int i = 0; i < saveableLinked.Count; i++)
                 {
-                    linkedToIDs[i] = linkedTo[i].ID.ToString();
+                    linkedToIDs[i] = saveableLinked[i].ID.ToString();
                 }
-
                 element.Add(new XAttribute("linked", string.Join(",", linkedToIDs)));
             }
 

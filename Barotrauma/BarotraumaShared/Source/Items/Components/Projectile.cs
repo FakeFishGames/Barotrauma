@@ -12,6 +12,22 @@ namespace Barotrauma.Items.Components
 {
     class Projectile : ItemComponent
     {
+        struct HitscanResult
+        {
+            public Fixture Fixture;
+            public Vector2 Point;
+            public Vector2 Normal;
+            public float Fraction;
+
+            public HitscanResult(Fixture fixture, Vector2 point, Vector2 normal, float fraction)
+            {
+                Fixture = fixture;
+                Point = point;
+                Normal = normal;
+                Fraction = fraction;
+            }
+        }
+
         //continuous collision detection is used while the projectile is moving faster than this
         const float ContinuousCollisionThreshold = 5.0f;
 
@@ -168,7 +184,7 @@ namespace Barotrauma.Items.Components
             GameMain.World.RemoveJoint(stickJoint);
             stickJoint = null;
         }
-
+        
         private void DoHitscan(Vector2 dir)
         {
             float rotation = item.body.Rotation;
@@ -183,37 +199,41 @@ namespace Barotrauma.Items.Components
             Vector2 rayStart = item.SimPosition;
             Vector2 rayEnd = item.SimPosition + dir * 1000.0f;
 
-            List<Tuple<Fixture, Vector2, Vector2>> hits = new List<Tuple<Fixture, Vector2, Vector2>>();
-            GameMain.World.RayCast((fixture, point, normal, fraction) =>
+            List<HitscanResult> hits = new List<HitscanResult>();
+
+            hits.AddRange(DoRayCast(rayStart, rayEnd));
+
+            if (item.Submarine != null)
             {
-                if (fixture == null || fixture.IsSensor) return -1;
-
-                if (!fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) &&
-                    !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
-                    !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) return -1;
-
-                /*item.body.SetTransform(point, rotation);
-                if (OnProjectileCollision(fixture, normal))
+                //shooting indoors, do a hitscan outside as well
+                hits.AddRange(DoRayCast(rayStart + item.Submarine.SimPosition, rayEnd + item.Submarine.SimPosition));
+            }
+            else
+            {
+                //shooting outdoors, see if we can hit anything inside a sub
+                foreach (Submarine submarine in Submarine.Loaded)
                 {
-                    Character.Controlled.AnimController.Teleport(point - Character.Controlled.SimPosition, Vector2.Zero);
-                    hitSomething = true;
-                    return 0;
-                }*/
+                    var inSubHits = DoRayCast(rayStart - submarine.SimPosition, rayEnd - submarine.SimPosition);
+                    //transform back to world coordinates
+                    for (int i = 0; i < inSubHits.Count; i++)
+                    {
+                        inSubHits[i] = new HitscanResult(
+                            inSubHits[i].Fixture, 
+                            inSubHits[i].Point + submarine.SimPosition, 
+                            inSubHits[i].Normal, 
+                            inSubHits[i].Fraction);
+                    }
 
-                hits.Add(new Tuple<Fixture, Vector2, Vector2>(fixture,point,normal));
-
-                return hits.Count<25 ? 1 : 0;
-            }, rayStart, rayEnd);
+                    hits.AddRange(inSubHits);
+                }
+            }
 
             bool hitSomething = false;
-            hits = hits.OrderBy(t => Vector2.DistanceSquared(rayStart, t.Item2)).ToList();
-            foreach (Tuple<Fixture, Vector2, Vector2> t in hits)
+            hits = hits.OrderBy(h => h.Fraction).ToList();
+            foreach (HitscanResult h in hits)
             {
-                Fixture fixture = t.Item1;
-                Vector2 point = t.Item2;
-                Vector2 normal = t.Item3;
-                item.body.SetTransform(point, rotation);
-                if (OnProjectileCollision(fixture, normal))
+                item.body.SetTransform(h.Point, rotation);
+                if (OnProjectileCollision(h.Fixture, h.Normal))
                 {
                     hitSomething = true;
                     break;
@@ -227,6 +247,27 @@ namespace Barotrauma.Items.Components
             }
         }
         
+        private List<HitscanResult> DoRayCast(Vector2 rayStart, Vector2 rayEnd)
+        {
+            List<HitscanResult> hits = new List<HitscanResult>();
+            GameMain.World.RayCast((fixture, point, normal, fraction) =>
+            {
+                if (fixture == null || fixture.IsSensor) return -1;
+
+                if (fixture.UserData is Item) return -1;
+
+                if (!fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) &&
+                    !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
+                    !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) return -1;
+
+                hits.Add(new HitscanResult(fixture, point, normal, fraction));
+
+                return hits.Count < 25 ? 1 : 0;
+            }, rayStart, rayEnd);
+
+            return hits;
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null); 
@@ -291,6 +332,8 @@ namespace Barotrauma.Items.Components
 
             if (IgnoredBodies.Contains(target.Body)) return false;
 
+            if (target.UserData is Item) return false;
+
             if (target.CollisionCategories == Physics.CollisionCharacter && !(target.Body.UserData is Limb))
             {
                 return false;
@@ -305,7 +348,7 @@ namespace Barotrauma.Items.Components
                     item.Move(-submarine.Position);
                     item.Submarine = submarine;
                     item.body.Submarine = submarine;
-                    return true;
+                    return !Hitscan;
                 }
 
                 Structure structure;

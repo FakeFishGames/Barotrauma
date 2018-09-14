@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Barotrauma.Items.Components;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -134,6 +135,11 @@ namespace Barotrauma
                 item.AddTag("job:" + Name);
                 if (!string.IsNullOrWhiteSpace(spawnPoint.IdCardDesc))
                     item.Description = spawnPoint.IdCardDesc;
+            }
+
+            foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
+            {
+                wifiComponent.TeamID = character.TeamID;
             }
             
             if (parentItem != null) parentItem.Combine(item);

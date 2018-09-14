@@ -28,7 +28,7 @@
     name="Red Wire"
     category="Electrical"
     Tags="smallitem,wire"
-    spritecolor="1.0,0.0,0.0,1.0"
+    spritecolor="0.7,0.06,0.06,1.0"
     linkable="true"
     canbepicked="true"
     cargocontainername="Metal Crate"
@@ -50,7 +50,7 @@
     name="Blue Wire"
     category="Electrical"
     Tags="smallitem,wire"
-    spritecolor="0.0,0.6,1.0,1.0"    
+    spritecolor="0.1,0.4,0.9,1.0"    
     linkable="true"
     canbepicked="true"
     cargocontainername="Metal Crate"
@@ -72,7 +72,7 @@
     name="Orange Wire"
     category="Electrical"
     Tags="smallitem,wire"
-    spritecolor="1.0,0.5,0.0,1.0"    
+    spritecolor="0.9,0.58,0.07,1.0"    
     linkable="true"
     canbepicked="true"
     cargocontainername="Metal Crate"
@@ -90,6 +90,50 @@
     <Wire/>
   </Item>
 
+  <Item
+    name="Green Wire"
+    category="Electrical"
+    Tags="smallitem,wire"
+    spritecolor="0.17,0.45,0.05,1.0"
+    linkable="true"
+    canbepicked="true"
+    cargocontainername="Metal Crate"
+    price="10">
+
+    <Deconstruct time="5">
+      <Item name="Copper Bar"/>
+    </Deconstruct>
+
+    <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
+
+    <Body radius="7" width="25" density="30"/>
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+
+    <Wire/>
+  </Item>
+  
+  <Item
+    name="Black Wire"
+    category="Electrical"
+    Tags="smallitem,wire"
+    spritecolor="0.1,0.1,0.1,1.0"
+    linkable="true"
+    canbepicked="true"
+    cargocontainername="Metal Crate"
+    price="10">
+
+    <Deconstruct time="5">
+      <Item name="Copper Bar"/>
+    </Deconstruct>
+
+    <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
+
+    <Body radius="7" width="25" density="30"/>
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+
+    <Wire/>
+  </Item>
+  
   <Item
     name="FPGA Circuit"
     category="Electrical"
@@ -261,7 +305,7 @@
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="48,16,16,16"/>
 
-    <RelayComponent canbeselected = "true">
+    <RelayComponent canbeselected="true" vulnerabletoemp="false">
       <GuiFrame rect="0,0,200,160" alignment="Center" style="ItemUI"/>
     </RelayComponent>
 

@@ -63,6 +63,14 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
+        
+        [Serialize(10.0f, true), Editable(ToolTip = "How fast the device can be recharged. "+
+            "For example, a recharge speed of 100 kW and a capacity of 1000 kW*min would mean it takes 10 minutes to fully charge the device.")]
+        public float MaxRechargeSpeed
+        {
+            get { return maxRechargeSpeed; }
+            set { maxRechargeSpeed = Math.Max(value, 1.0f); }
+        }
 
         [Serialize(10.0f, true), Editable]
         public float RechargeSpeed
@@ -74,14 +82,6 @@ namespace Barotrauma.Items.Components
                 rechargeSpeed = MathHelper.Clamp(value, 0.0f, maxRechargeSpeed);
                 rechargeSpeed = MathUtils.RoundTowardsClosest(rechargeSpeed, Math.Max(maxRechargeSpeed * 0.1f, 1.0f));
             }
-        }
-
-        [Serialize(10.0f, false), Editable(ToolTip = "How fast the device can be recharged. "+
-            "For example, a recharge speed of 100 kW and a capacity of 1000 kW*min would mean it takes 10 minutes to fully charge the device.")]
-        public float MaxRechargeSpeed
-        {
-            get { return maxRechargeSpeed; }
-            set { maxRechargeSpeed = Math.Max(value, 1.0f); }
         }
 
         public PowerContainer(Item item, XElement element)

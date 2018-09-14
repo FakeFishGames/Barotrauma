@@ -135,10 +135,14 @@ namespace Barotrauma.Networking
 
                 catch (Exception e)
                 {
+                    string entityName = bufferedEvent.TargetEntity == null ? "null" : bufferedEvent.TargetEntity.ToString();
                     if (GameSettings.VerboseLogging)
                     {
-                        DebugConsole.ThrowError("Failed to read event for entity \"" + bufferedEvent.TargetEntity.ToString() + "\"!", e);
+                        DebugConsole.ThrowError("Failed to read server event for entity \"" + entityName + "\"!", e);
                     }
+                    GameAnalyticsManager.AddErrorEventOnce("ServerEntityEventManager.Read:ReadFailed" + entityName,
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Failed to read server event for entity \"" + entityName + "\"!\n" + e.StackTrace);
                 }
 
                 bufferedEvent.IsProcessed = true;
@@ -301,7 +305,7 @@ namespace Barotrauma.Networking
             else
             {
                 double midRoundSyncTimeOut = uniqueEvents.Count / MaxEventsPerWrite * server.UpdateInterval.TotalSeconds;
-                midRoundSyncTimeOut = Math.Max(5.0f, midRoundSyncTimeOut * 2.0f);
+                midRoundSyncTimeOut = Math.Max(10.0f, midRoundSyncTimeOut * 2.0f);
 
                 client.UnreceivedEntityEventCount = (UInt16)uniqueEvents.Count;
                 client.FirstNewEventID = 0;

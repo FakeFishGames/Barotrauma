@@ -15,9 +15,9 @@ namespace Barotrauma
     {
         private static string[] crewExperienceLevels = new string[] 
         {
-            TextManager.Get("CrewExperienceLow"),
-            TextManager.Get("CrewExperienceMid"),
-            TextManager.Get("CrewExperienceHigh")
+            "CrewExperienceLow",
+            "CrewExperienceMid",
+            "CrewExperienceHigh"
         };
 
         private Camera cam;
@@ -349,7 +349,7 @@ namespace Barotrauma
 
             cam.UpdateTransform();
 
-            if (GameSettings.SendUserStatistics) GameAnalyticsSDK.Net.GameAnalytics.SetCustomDimension01("editor");
+            GameAnalyticsManager.SetCustomDimension01("editor");
         }
 
         public override void Deselect()
@@ -587,23 +587,26 @@ namespace Barotrauma
             var toggleExpRight = new GUIButton(new Rectangle(350, y, 20, 20), ">", "", saveFrame);
             var experienceText = new GUITextBlock(new Rectangle(250, y, 100, 20), crewExperienceLevels[0], "", Alignment.TopLeft, Alignment.Center, saveFrame);
 
+
             toggleExpLeft.OnClicked += (btn, userData) =>
             {
-                int currentIndex = Array.IndexOf(crewExperienceLevels, experienceText.Text);
+                int currentIndex = Array.IndexOf(crewExperienceLevels, (string)experienceText.UserData);
                 currentIndex--;
                 if (currentIndex < 0) currentIndex = crewExperienceLevels.Length - 1;
-                experienceText.Text = crewExperienceLevels[currentIndex];
-                Submarine.MainSub.RecommendedCrewExperience = experienceText.Text;
+                experienceText.UserData = crewExperienceLevels[currentIndex];
+                experienceText.Text = TextManager.Get(crewExperienceLevels[currentIndex]);
+                Submarine.MainSub.RecommendedCrewExperience = (string)experienceText.UserData;
                 return true;
             };
 
             toggleExpRight.OnClicked += (btn, userData) =>
             {
-                int currentIndex = Array.IndexOf(crewExperienceLevels, experienceText.Text);
+                int currentIndex = Array.IndexOf(crewExperienceLevels, (string)experienceText.UserData);
                 currentIndex++;
                 if (currentIndex >= crewExperienceLevels.Length) currentIndex = 0;
-                experienceText.Text = crewExperienceLevels[currentIndex];
-                Submarine.MainSub.RecommendedCrewExperience = experienceText.Text;
+                experienceText.UserData = crewExperienceLevels[currentIndex];
+                experienceText.Text = TextManager.Get(crewExperienceLevels[currentIndex]);
+                Submarine.MainSub.RecommendedCrewExperience = (string)experienceText.UserData;
                 return true;
             };
 
@@ -613,8 +616,9 @@ namespace Barotrauma
                 int max = Submarine.MainSub.RecommendedCrewSizeMax;
                 crewSizeMin.IntValue = min;
                 crewSizeMax.IntValue = max;
-                experienceText.Text = string.IsNullOrEmpty(Submarine.MainSub.RecommendedCrewExperience) ?
+                experienceText.UserData =  string.IsNullOrEmpty(Submarine.MainSub.RecommendedCrewExperience) ?
                     crewExperienceLevels[0] : Submarine.MainSub.RecommendedCrewExperience;
+                experienceText.Text = TextManager.Get((string)experienceText.UserData);
             }
 
             var saveButton = new GUIButton(new Rectangle(-90, 0, 80, 20), TextManager.Get("SaveSubButton"), Alignment.Right | Alignment.Bottom, "", saveFrame);
@@ -1080,6 +1084,12 @@ namespace Barotrauma
                     wallPoints.Add(new Vector2(e.WorldRect.X + halfW, -e.WorldRect.Y));
                     wallPoints.Add(new Vector2(e.WorldRect.X + halfW, -e.WorldRect.Y + e.WorldRect.Height));
                 }
+            }
+
+            if (wallPoints.Count < 4)
+            {
+                DebugConsole.ThrowError("Generating hulls for the submarine failed. Not enough wall structures to generate hulls.");
+                return;
             }
 
             min = wallPoints[0];

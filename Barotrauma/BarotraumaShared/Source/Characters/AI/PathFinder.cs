@@ -92,7 +92,7 @@ namespace Barotrauma
 
         public PathFinder(List<WayPoint> wayPoints, bool insideSubmarine = false)
         {
-            nodes = PathNode.GenerateNodes(wayPoints.FindAll(w => w.MoveWithLevel != insideSubmarine));
+            nodes = PathNode.GenerateNodes(wayPoints.FindAll(w => (w.Submarine != null) == insideSubmarine));
 
             foreach (WayPoint wp in wayPoints)
             {

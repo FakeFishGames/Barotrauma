@@ -71,7 +71,7 @@ namespace Barotrauma.Items.Components
                 rotation = (minRotation + maxRotation) / 2;
             }
         }
-
+        
         public Turret(Item item, XElement element)
             : base(item, element)
         {
@@ -156,6 +156,12 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
+            if (!characterUsable && character != null) return false;
+            return TryLaunch(character);
+        }
+
+        private bool TryLaunch(Character character = null)
+        {
             if (GameMain.Client != null) return false;
 
             if (reload > 0.0f) return false;
@@ -164,7 +170,7 @@ namespace Barotrauma.Items.Components
             if (projectiles.Count == 0) return false;
 
             if (GetAvailablePower() < powerConsumption) return false;
-            
+
             var batteries = item.GetConnectedComponents<PowerContainer>();
 
             float availablePower = 0.0f;
@@ -180,7 +186,7 @@ namespace Barotrauma.Items.Components
                     battery.Item.CreateServerEvent(battery);
                 }
             }
-         
+
             Launch(projectiles[0].Item, character);
 
             if (character != null)
@@ -413,14 +419,20 @@ namespace Barotrauma.Items.Components
                     break;
                 case "trigger_in":
                     item.Use((float)Timing.Step, sender);
+                    //triggering the Use method through item.Use will fail if the item is not characterusable and the signal was sent by a character
+                    //so lets do it manually
+                    if (!characterUsable && sender != null)
+                    {
+                        TryLaunch(sender);
+                    }
                     break;
             }
         }
 
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
-            //ID of the launched projectile
-            msg.Write(((Item)extraData[2]).ID);
+            Item item = (Item)extraData[2];
+            msg.Write(item.Removed ? (ushort)0 : item.ID);
         }
     }
 }

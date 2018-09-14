@@ -11,9 +11,7 @@ namespace Barotrauma.Items.Components
         static float fullLoad;
 
         private int updateCount;
-
-        const float FireProbability = 0.15f;
-
+        
         //affects how fast changes in power/load are carried over the grid
         static float inertia = 5.0f;
 
@@ -40,6 +38,29 @@ namespace Barotrauma.Items.Components
         public float PowerLoad
         {
             get { return powerLoad; }
+        }
+
+        [Serialize(true, true), Editable(ToolTip = "Can the item be damaged if too much power is supplied to the power grid.")]
+        public bool CanBeOverloaded
+        {
+            get;
+            set;
+        }
+
+        [Serialize(2.0f, true), Editable(MinValueFloat = 1.0f, ToolTip = 
+            "How much power has to be supplied to the grid relative to the load before item starts taking damage. "
+            +"E.g. a value of 2 means that the grid has to be receiving twice as much power as the devices in the grid are consuming.")]
+        public float OverloadVoltage
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.15f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, ToolTip = "The probability for a fire to start when the item breaks.")]
+        public float FireProbability
+        {
+            get;
+            set;
         }
 
         //can the component transfer power
@@ -147,10 +168,13 @@ namespace Barotrauma.Items.Components
                 //(except if running as a client)
                 if (GameMain.Client != null) continue;
 
+                //if the item can't be fixed, don't allow it to break
+                if (item.FixRequirements.Count == 0 || !CanBeOverloaded) continue;
+
                 //relays don't blow up if the power is higher than load, only if the output is high enough 
                 //(i.e. enough power passing through the relay)
                 if (this is RelayComponent) continue;
-                if (-pt.currPowerConsumption < Math.Max(pt.powerLoad * Rand.Range(1.9f, 2.1f), 200.0f)) continue;
+                if (-pt.currPowerConsumption < Math.Max(pt.powerLoad, 200.0f) * OverloadVoltage) continue;
 
                 float prevCondition = pt.item.Condition;
                 pt.item.Condition -= deltaTime * 10.0f;
@@ -170,7 +194,7 @@ namespace Barotrauma.Items.Components
                     }
 #endif
 
-                    if (FireProbability > 0.0f && Rand.Int((int)(1.0f / FireProbability)) == 1)
+                    if (FireProbability > 0.0f && FireProbability < Rand.Range(0.0f, 1.0f))
                     {
                         new FireSource(pt.item.WorldPosition);
                     }

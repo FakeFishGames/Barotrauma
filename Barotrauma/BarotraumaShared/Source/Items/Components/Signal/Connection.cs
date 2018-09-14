@@ -160,6 +160,11 @@ namespace Barotrauma.Items.Components
                 if (recipient == null) continue;
                 if (recipient.item == this.item || recipient.item == source) continue;
 
+                if (source != null && !source.LastSentSignalRecipients.Contains(recipient.item))
+                {
+                    source.LastSentSignalRecipients.Add(recipient.item);
+                }
+
                 foreach (ItemComponent ic in recipient.item.components)
                 {
                     ic.ReceiveSignal(stepsTaken, signal, recipient, item, sender, power);

@@ -244,13 +244,12 @@ namespace Barotrauma
                 GameMain.LightManager.LosEffect.Parameters["xTexture"].SetValue(renderTargetBackground);
                 GameMain.LightManager.LosEffect.Parameters["xLosTexture"].SetValue(GameMain.LightManager.losTexture);
 #endif
-
-
-                //convert the los color to HLS and make sure the luminance of the color is always the same regardless
-                //of the ambient light color and the luminance of the damage overlight color
+                //convert the los color to HLS and make sure the luminance of the color is always the same
+                //as the luminance of the ambient light color
                 float r = Math.Min(CharacterHUD.damageOverlayTimer * 0.5f, 0.5f);
+                Vector3 ambientLightHls = GameMain.LightManager.AmbientLight.RgbToHLS();
                 Vector3 losColorHls = Color.Lerp(GameMain.LightManager.AmbientLight, Color.Red, r).RgbToHLS();
-                losColorHls.Y = 0.1f;
+                losColorHls.Y = ambientLightHls.Y;
                 Color losColor = ToolBox.HLSToRGB(losColorHls);
 
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointClamp, null, null, GameMain.LightManager.LosEffect, null);

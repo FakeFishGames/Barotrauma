@@ -62,7 +62,7 @@ namespace Barotrauma.Items.Components
             if (selectedItemFrame != null) GuiFrame.RemoveChild(selectedItemFrame);
 
             //int width = 200, height = 150;
-            selectedItemFrame = new GUIFrame(new Rectangle(0, 0, (int)(GuiFrame.Rect.Width * 0.4f), 300), Color.Black * 0.8f, Alignment.CenterY | Alignment.Right, null, GuiFrame);
+            selectedItemFrame = new GUIFrame(new Rectangle(0, 0, (int)(GuiFrame.Rect.Width * 0.4f), 350), Color.Black * 0.8f, Alignment.CenterY | Alignment.Right, null, GuiFrame);
 
             selectedItemFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
@@ -105,36 +105,41 @@ namespace Barotrauma.Items.Components
                 {
                     inadequateSkills = targetItem.RequiredSkills.FindAll(skill => Character.Controlled.GetSkillLevel(skill.Name) < skill.Level);
                 }
-
-                Color textColor = Color.White;
-                string text;
-                if (!inadequateSkills.Any())
+                
+                string text = TextManager.Get("FabricatorRequiredItems")+ ":\n";
+                foreach (Tuple<ItemPrefab, int, float, bool> ip in targetItem.RequiredItems)
                 {
-                    text = TextManager.Get("FabricatorRequiredItems")+ ":\n";
-                    foreach (Tuple<ItemPrefab, int, float, bool> ip in targetItem.RequiredItems)
-                    {
-                        text += "   - " + ip.Item1.Name + " x" + ip.Item2 + (ip.Item3 < 1.0f ? ", " + ip.Item3 * 100 + "% " + TextManager.Get("FabricatorRequiredCondition") + "\n" : "\n");
-                    }
-                    text += TextManager.Get("FabricatorRequiredTime") + ": " + targetItem.RequiredTime + " s";
+                    text += "   - " + ip.Item1.Name + " x" + ip.Item2 + (ip.Item3 < 1.0f ? ", " + ip.Item3 * 100 + "% " + TextManager.Get("FabricatorRequiredCondition") + "\n" : "\n");
                 }
-                else
+                text += TextManager.Get("FabricatorRequiredTime") + ": " + targetItem.RequiredTime + " s\n";
+                                
+                var requiredItemsText = new GUITextBlock(
+                    new Rectangle(0, y, 0, 0),
+                    text,
+                    Color.Transparent, Color.White,
+                    Alignment.TopLeft,
+                    Alignment.TopLeft, null,
+                    selectedItemFrame,
+                    font: GUI.SmallFont);
+
+                
+                if (targetItem.RequiredSkills.Any())
                 {
                     text = TextManager.Get("FabricatorRequiredSkills") + ":\n";
                     foreach (Skill skill in inadequateSkills)
                     {
                         text += "   - " + skill.Name + " " + TextManager.Get("Lvl").ToLower() + " " + skill.Level + "\n";
                     }
-
-                    textColor = Color.Red;
+                    new GUITextBlock(
+                        new Rectangle(0, y + requiredItemsText.Rect.Height, 0, 0),
+                        text,
+                        Color.Transparent, inadequateSkills.Any() ? Color.Red : Color.White,
+                        Alignment.TopLeft,
+                        Alignment.TopLeft, null,
+                        selectedItemFrame,
+                        font: GUI.SmallFont); 
                 }
-
-                new GUITextBlock(
-                    new Rectangle(0, y, 0, 25),
-                    text,
-                    Color.Transparent, textColor,
-                    Alignment.TopLeft,
-                    Alignment.TopLeft, null,
-                    selectedItemFrame);
+               
 
                 activateButton = new GUIButton(new Rectangle(0, -30, 100, 20), TextManager.Get("FabricatorCreate"), Color.White, Alignment.CenterX | Alignment.Bottom, "", selectedItemFrame);
                 activateButton.OnClicked = StartButtonClicked;

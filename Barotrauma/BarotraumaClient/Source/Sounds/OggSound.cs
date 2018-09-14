@@ -39,7 +39,7 @@ namespace Barotrauma.Sounds
 
             using (VorbisReader reader = new VorbisReader(oggFile))
             {
-                int bufferSize = (int)reader.TotalSamples;
+                int bufferSize = (int)reader.TotalSamples * reader.Channels;
 
                 float[] buffer = new float[bufferSize];
                 sound.castBuffer = new short[bufferSize];
@@ -52,11 +52,13 @@ namespace Barotrauma.Sounds
                 sound.format = reader.Channels == 1 ? ALFormat.Mono16 : ALFormat.Stereo16;
                 sound.sampleRate = reader.SampleRate;
 
+                ALHelper.Check();
+
                 //alSourceId = AL.GenSource();
                 AL.BufferData(sound.alBufferId, reader.Channels == 1 ? ALFormat.Mono16 : ALFormat.Stereo16, sound.castBuffer,
                               readSamples * sizeof(short), reader.SampleRate);
 
-                ALHelper.Check();
+                ALHelper.Check(oggFile);
             }
 
             //AL.Source(alSourceId, ALSourcei.Buffer, alBufferId);
@@ -100,12 +102,12 @@ namespace Barotrauma.Sounds
  
         public void Dispose()
         {
-            //var state = AL.GetSourceState(alSourceId);
-            //if (state == ALSourceState.Playing || state == ALSourceState.Paused)
-            //    Stop();
             System.Diagnostics.Debug.WriteLine(alBufferId);
-            //AL.DeleteSource(alSourceId);
-            AL.DeleteBuffer(alBufferId);
+            if (alBufferId > 0)
+            {
+                AL.DeleteBuffer(alBufferId);
+                alBufferId = 0;
+            }
             
             //if (ALHelper.Efx.IsInitialized)
             //    ALHelper.Efx.DeleteFilter(alFilterId);

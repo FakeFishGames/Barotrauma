@@ -17,11 +17,16 @@ namespace Barotrauma
             get
             {
                 string disguiseName = "?";
-                if (Character == null || !Character.HideFace)
+                if (Character == null || !Character.HideFace || (GameMain.Server != null && !GameMain.Server.AllowDisguises))
                 {
                     return Name;
                 }
-
+#if CLIENT
+                if (GameMain.Client != null && !GameMain.Client.AllowDisguises)
+                {
+                    return Name;
+                }
+#endif
                 if (Character.Inventory != null)
                 {
                     int cardSlotIndex = Character.Inventory.FindLimbSlot(InvSlotType.Card);

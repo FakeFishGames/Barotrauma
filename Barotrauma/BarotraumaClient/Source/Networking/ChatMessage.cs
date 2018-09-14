@@ -32,18 +32,26 @@ namespace Barotrauma.Networking
 
             if (NetIdUtils.IdMoreRecent(ID, LastID))
             {
-                if (type == ChatMessageType.MessageBox)
+                switch (type)
                 {
-                    new GUIMessageBox("", txt);
+                    case ChatMessageType.MessageBox:
+                        new GUIMessageBox("", txt);
+                        break;
+                    case ChatMessageType.Console:
+                        DebugConsole.NewMessage(txt, MessageColor[(int)ChatMessageType.Console]);
+                        break;
+                    case ChatMessageType.ServerLog:
+                        if (!Enum.TryParse(senderName, out ServerLog.MessageType messageType))
+                        {
+                            return;
+                        }
+                        GameMain.Client.ServerLog?.WriteLine(txt, messageType);
+                        break;
+                    default:
+                        GameMain.Client.AddChatMessage(txt, type, senderName, senderCharacter);
+                        break;
                 }
-                else if (type == ChatMessageType.Console)
-                {
-                    DebugConsole.NewMessage(txt, MessageColor[(int)ChatMessageType.Console]);
-                }
-                else
-                {
-                    GameMain.Client.AddChatMessage(txt, type, senderName, senderCharacter);
-                }
+                
                 LastID = ID;
             }
         }

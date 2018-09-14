@@ -45,16 +45,24 @@ namespace Barotrauma.Sounds
             //logHandler(String.Format("Total memory : {0:0.###} {1}          ", usedHeap, sizes[order]), 0, 6);
         }
 
-        public static void Check()
+        public static void Check(string extraErrorMsg = "")
         {
             ALError error;
             if ((error = AL.GetError()) != ALError.NoError)
             {
+                string errorMsg = "OpenAL error: " + AL.GetErrorString(error);
+                if (!string.IsNullOrEmpty(extraErrorMsg)) errorMsg += " {" + extraErrorMsg + "} ";
+                errorMsg += "\n" + Environment.StackTrace;
+
 #if DEBUG
-                DebugConsole.ThrowError("OpenAL error: " + AL.GetErrorString(error) + "\n" + Environment.StackTrace);
+                DebugConsole.ThrowError(errorMsg);
 #else
-                DebugConsole.NewMessage("OpenAL error: " + AL.GetErrorString(error) + "\n" + Environment.StackTrace, Microsoft.Xna.Framework.Color.Red);
+                DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
 #endif
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "OggStream.Check:" + AL.GetErrorString(error) + extraErrorMsg,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    errorMsg);
             }
         }
     }
@@ -83,9 +91,17 @@ namespace Barotrauma.Sounds
         public Action<string, int, int> LogHandler;
 #endif
 
-        public OggStream(string filename, int bufferCount = DefaultBufferCount) : this(File.OpenRead(filename), bufferCount) { }
-        public OggStream(Stream stream, int bufferCount = DefaultBufferCount)
+        public string FileName
         {
+            get;
+            private set;
+        }
+
+        public OggStream(string filename, int bufferCount = DefaultBufferCount) : this(File.OpenRead(filename), filename, bufferCount) { }
+        public OggStream(Stream stream, string fileName, int bufferCount = DefaultBufferCount)
+        {
+            this.FileName = fileName;
+
             BufferCount = bufferCount;
 
             alBufferIds = AL.GenBuffers(bufferCount);
@@ -94,7 +110,7 @@ namespace Barotrauma.Sounds
             if (ALHelper.XRam.IsInitialized)
             {
                 ALHelper.XRam.SetBufferMode(BufferCount, ref alBufferIds[0], XRamExtension.XRamStorage.Hardware);
-                ALHelper.Check();
+                ALHelper.Check(fileName);
             }
 
             if (ALHelper.Efx.IsInitialized)
@@ -163,7 +179,7 @@ namespace Barotrauma.Sounds
 
             AL.SourcePlay(alSourceId);
             this.Volume = volume;
-            ALHelper.Check();
+            ALHelper.Check(FileName);
 
             Preparing = false;
 
@@ -177,7 +193,7 @@ namespace Barotrauma.Sounds
 
             OggStreamer.Instance.RemoveStream(this);
             AL.SourcePause(alSourceId);
-            ALHelper.Check();
+            ALHelper.Check(FileName);
         }
 
         public void Resume()
@@ -187,7 +203,7 @@ namespace Barotrauma.Sounds
 
             OggStreamer.Instance.AddStream(this);
             AL.SourcePlay(alSourceId);
-            ALHelper.Check();
+            ALHelper.Check(FileName);
         }
 
         public void Stop()
@@ -226,7 +242,7 @@ namespace Barotrauma.Sounds
             set
             {
                 AL.Source(alSourceId, ALSourcef.Gain, volume = value);
-                ALHelper.Check();
+                ALHelper.Check(FileName);
             }
         }
 
@@ -256,20 +272,20 @@ namespace Barotrauma.Sounds
             /*if (ALHelper.Efx.IsInitialized)
                 ALHelper.Efx.DeleteFilter(alFilterId);*/
 
-            ALHelper.Check();
+            ALHelper.Check(FileName);
         }
 
         void StopPlayback()
         {
             AL.SourceStop(alSourceId);
-            ALHelper.Check();
+            ALHelper.Check(FileName);
         }
 
         void Empty()
         {
             int queued;
             AL.GetSource(alSourceId, ALGetSourcei.BuffersQueued, out queued);
-            ALHelper.Check();
+            ALHelper.Check(FileName);
 
             if (queued > 0)
             {
@@ -292,12 +308,12 @@ namespace Barotrauma.Sounds
                     if (processed > 0)
                     {
                         AL.SourceUnqueueBuffers(alSourceId, processed, salvaged);
-                        ALHelper.Check();
+                        ALHelper.Check(FileName);
                     }
 
                     // Try turning it off again?
                     AL.SourceStop(alSourceId);
-                    ALHelper.Check();
+                    ALHelper.Check(FileName);
 
                     Empty();
                 }
@@ -314,7 +330,7 @@ namespace Barotrauma.Sounds
                 // Fill first buffer synchronously
                 OggStreamer.Instance.FillBuffer(this, alBufferIds[0]);
                 AL.SourceQueueBuffer(alSourceId, alBufferIds[0]);
-                ALHelper.Check();
+                ALHelper.Check(FileName);
 
                 // Schedule the others asynchronously
                 OggStreamer.Instance.AddStream(this);
@@ -429,7 +445,7 @@ namespace Barotrauma.Sounds
             }
             AL.BufferData(bufferId, stream.Reader.Channels == 1 ? ALFormat.Mono16 : ALFormat.Stereo16, castBuffer,
                             readSamples * sizeof(short), stream.Reader.SampleRate);
-            ALHelper.Check();
+            ALHelper.Check(stream.FileName);
 
             return readSamples != BufferSize;
         }
@@ -466,10 +482,10 @@ namespace Barotrauma.Sounds
 
                         int queued;
                         AL.GetSource(stream.alSourceId, ALGetSourcei.BuffersQueued, out queued);
-                        ALHelper.Check();
+                        ALHelper.Check(stream.FileName);
                         int processed;
                         AL.GetSource(stream.alSourceId, ALGetSourcei.BuffersProcessed, out processed);
-                        ALHelper.Check();
+                        ALHelper.Check(stream.FileName);
 
                         if (processed == 0 && queued == stream.BufferCount) continue;
 
@@ -496,7 +512,7 @@ namespace Barotrauma.Sounds
                         }
 
                         AL.SourceQueueBuffers(stream.alSourceId, tempBuffers.Length, tempBuffers);
-                        ALHelper.Check();
+                        ALHelper.Check(stream.FileName);
 
                         if (finished && !stream.IsLooped)
                             continue;
@@ -514,7 +530,7 @@ namespace Barotrauma.Sounds
                         if (state == ALSourceState.Stopped)
                         {
                             AL.SourcePlay(stream.alSourceId);
-                            ALHelper.Check();
+                            ALHelper.Check(stream.FileName);
                         }
                     }
                 }

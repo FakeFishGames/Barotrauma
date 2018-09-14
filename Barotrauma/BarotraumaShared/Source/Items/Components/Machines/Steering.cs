@@ -211,8 +211,9 @@ namespace Barotrauma.Items.Components
                     {
                         Vector2 diff = item.Submarine.WorldPosition - (Vector2)intersection;
 
-                        //far enough -> ignore
-                        if (diff.Length() > avoidRadius) continue;
+                        float dist = diff.Length();
+                        //far enough or too close to normalize the diff -> ignore
+                        if (dist > avoidRadius || dist < 0.00001f) continue;
 
                         float dot = item.Submarine.Velocity == Vector2.Zero ?
                             0.0f : Vector2.Dot(item.Submarine.Velocity, -Vector2.Normalize(diff));
@@ -241,16 +242,15 @@ namespace Barotrauma.Items.Components
                 float otherSize = Math.Max(sub.Borders.Width, sub.Borders.Height);
 
                 Vector2 diff = item.Submarine.WorldPosition - sub.WorldPosition;
-
                 float dist = diff == Vector2.Zero ? 0.0f : diff.Length();
 
                 //far enough -> ignore
                 if (dist > thisSize + otherSize) continue;
 
-                diff = Vector2.Normalize(diff);
+                Vector2 dir = dist <= 0.0001f ? Vector2.UnitY : diff / dist;
 
                 float dot = item.Submarine.Velocity == Vector2.Zero ?
-                    0.0f : Vector2.Dot(Vector2.Normalize(item.Submarine.Velocity), -Vector2.Normalize(diff));
+                    0.0f : Vector2.Dot(Vector2.Normalize(item.Submarine.Velocity), -dir);
 
                 //heading away -> ignore
                 if (dot < 0.0f) continue;

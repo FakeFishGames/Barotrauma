@@ -122,6 +122,13 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(false, false)]
+        public bool WaterProof
+        {
+            get;
+            private set;
+        }
+
         [Serialize(0.0f, false)]
         public float ImpactTolerance
         {

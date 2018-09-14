@@ -418,12 +418,13 @@ namespace Barotrauma
                 if (int.TryParse(discoveredStrs[i], out index)) locations[index].Discovered = true;
             }
 
-            string passedStr = element.GetAttributeString("passed", "");
-            string[] passedStrs = passedStr.Split(',');
-            for (int i = 0; i < passedStrs.Length; i++)
+            foreach (XElement subElement in element.Elements())
             {
-                int index = -1;
-                if (int.TryParse(passedStrs[i], out index)) connections[index].Passed = true;
+                if (subElement.Name.ToString() != "connection") continue;
+                int connectionIndex = subElement.GetAttributeInt("i", -1);
+                if (connectionIndex < 0 || connectionIndex >= connections.Count) continue;
+                connections[connectionIndex].Passed = true;
+                connections[connectionIndex].MissionsCompleted = subElement.GetAttributeInt("m", 0);
             }
         }
 
@@ -442,12 +443,16 @@ namespace Barotrauma
             }
             mapElement.Add(new XAttribute("discovered", string.Join(",", discoveredLocations)));
 
-            List<int> passedConnections = new List<int>();
             for (int i = 0; i < connections.Count; i++)
             {
-                if (connections[i].Passed) passedConnections.Add(i);
+                if (!connections[i].Passed) continue;
+                connections[i].CheckMissionCompleted();
+
+                var connectionElement = new XElement("connection", new XAttribute("i", i));
+                if (connections[i].MissionsCompleted > 0) connectionElement.Add(new XAttribute("m", connections[i].MissionsCompleted));
+                mapElement.Add(connectionElement);
+                
             }
-            mapElement.Add(new XAttribute("passed", string.Join(",", passedConnections)));
 
             element.Add(mapElement);
         }
@@ -467,7 +472,7 @@ namespace Barotrauma
 
         public bool Passed;
 
-        private int missionsCompleted;
+        public int MissionsCompleted;
 
         private Mission mission;
         public Mission Mission
@@ -476,12 +481,12 @@ namespace Barotrauma
             {
                 if (mission == null || mission.Completed)
                 {
-                    if (mission != null && mission.Completed) missionsCompleted++;
+                    if (mission != null && mission.Completed) MissionsCompleted++;
 
                     long seed = (long)locations[0].MapPosition.X + (long)locations[0].MapPosition.Y * 100;
                     seed += (long)locations[1].MapPosition.X * 10000 + (long)locations[1].MapPosition.Y * 1000000;
 
-                    MTRandom rand = new MTRandom((int)((seed + missionsCompleted) % int.MaxValue));
+                    MTRandom rand = new MTRandom((int)((seed + MissionsCompleted) % int.MaxValue));
 
                     if (rand.NextDouble() < 0.3f) return null;
 
@@ -518,8 +523,16 @@ namespace Barotrauma
         public LocationConnection(Location location1, Location location2)
         {
             locations = new Location[] { location1, location2 };
+            MissionsCompleted = 0;
+        }
 
-            missionsCompleted = 0;
+        public void CheckMissionCompleted()
+        {
+            if (mission != null && mission.Completed)
+            {
+                MissionsCompleted++;
+                mission = null;
+            }
         }
 
         public Location OtherLocation(Location location)
