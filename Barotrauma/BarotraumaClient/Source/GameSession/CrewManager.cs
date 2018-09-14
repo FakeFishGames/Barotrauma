@@ -350,12 +350,23 @@ namespace Barotrauma
 
                 var btn = new GUIButton(new RectTransform(new Point(iconSize, iconSize), btnParent, Anchor.CenterLeft),
                     style: null);
+
+                new GUIFrame(new RectTransform(new Vector2(1.5f), btn.RectTransform, Anchor.Center), "OuterGlow")
+                {
+                    Color = Color.Lerp(order.Color, frame.Color, 0.5f) * 0.8f,
+                    HoverColor = Color.Lerp(order.Color, frame.Color, 0.5f) * 1.0f,
+                    PressedColor = Color.Lerp(order.Color, frame.Color, 0.5f) * 0.6f,
+                    UserData = "selected",
+                    CanBeFocused = false,
+                    Visible = false
+                };
+
                 var img = new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), order.Prefab.SymbolSprite);
                 img.Scale = iconSize / (float)img.SourceRect.Width;
                 img.Color = Color.Lerp(order.Color, frame.Color, 0.5f);
                 img.ToolTip = order.Name;
-
                 img.HoverColor = Color.Lerp(img.Color, Color.White, 0.5f);
+
 
                 btn.OnClicked += (GUIButton button, object userData) =>
                 {
@@ -711,14 +722,10 @@ namespace Barotrauma
 
                 foreach (GUIButton button in orderButtons)
                 {
-                    //TODO: sprite that indicates that the order is selected
-                    if (order == null || ((Order)button.UserData).Prefab != order.Prefab)
+                    var selectedIndicator = button.GetChildByUserData("selected");
+                    if (selectedIndicator != null)
                     {
-                        button.Color = Color.Transparent;
-                    }
-                    else
-                    {
-                        button.Color = Color.White;
+                        selectedIndicator.Visible = (order != null && ((Order)button.UserData).Prefab == order.Prefab);
                     }
                 }
             }

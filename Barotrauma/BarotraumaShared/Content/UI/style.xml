@@ -7,6 +7,14 @@
   <Font file="Content/Fonts/Exo2-Medium.otf" size="14"/>
   <SmallFont file="Content/Fonts/Exo2-Light.otf" size="12"/>
   <LargeFont file="Content/Fonts/Code Pro Bold.otf" size="22"/>
+
+  <OuterGlow
+    color="1.0,1.0,1.0,0.8"
+    hovercolor="1.0,1.0,1.0,0.8"
+    selectedcolor="1.0,1.0,1.0,0.8">
+
+    <Sprite texture="Content/UI/OuterGlow.png" size="0.0, 0.0" sourcerect ="0, 0, 256, 256" slice="96,96,160,160"/>
+  </OuterGlow>
   
   <GUIFrame
     padding="40.0, 50.0, 40.0, 50.0"
