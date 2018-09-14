@@ -139,6 +139,7 @@ namespace Barotrauma
         public readonly string AchievementOnRemoved;
 
         public readonly Sprite Icon;
+        public readonly Color IconColor;
 
         private List<Effect> effects = new List<Effect>();
 
@@ -236,12 +237,14 @@ namespace Barotrauma
 
             AchievementOnRemoved = element.GetAttributeString("achievementonremoved", "");
 
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "icon":
                         Icon = new Sprite(subElement);
+                        IconColor = subElement.GetAttributeColor("color", Color.White);
                         break;
                     case "effect":
                         effects.Add(new Effect(subElement, Name));

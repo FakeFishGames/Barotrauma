@@ -1773,7 +1773,7 @@ namespace Barotrauma
                 //wiringToolPanel.Update((float)deltaTime);
             }
 
-            if (PlayerInput.LeftButtonClicked() && GUI.MouseOn != entityFilterBox)
+            if (PlayerInput.LeftButtonClicked() && !GUI.IsMouseOn(entityFilterBox))
             {
                 entityFilterBox.Deselect();
             }

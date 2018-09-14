@@ -236,7 +236,7 @@ namespace Barotrauma
             List<Order> orders = new List<Order>();
             foreach (Order order in Order.PrefabList)
             {
-                if (order.TargetAllCharacters) continue;
+                if (order.TargetAllCharacters || order.SymbolSprite == null) continue;
                 if (order.AppropriateJobs == null || order.AppropriateJobs.Length == 0)
                 {
                     orders.Insert(0, order);
@@ -250,6 +250,7 @@ namespace Barotrauma
             }
             foreach (Order order in Order.PrefabList)
             {
+                if (order.SymbolSprite == null) continue;
                 if (!order.TargetAllCharacters && !orders.Contains(order))
                 {
                     orders.Add(order);
@@ -350,24 +351,41 @@ namespace Barotrauma
 
                 var btn = new GUIButton(new RectTransform(new Point(iconSize, iconSize), btnParent, Anchor.CenterLeft),
                     style: null);
+
+                new GUIFrame(new RectTransform(new Vector2(1.5f), btn.RectTransform, Anchor.Center), "OuterGlow")
+                {
+                    Color = Color.Lerp(order.Color, frame.Color, 0.5f) * 0.8f,
+                    HoverColor = Color.Lerp(order.Color, frame.Color, 0.5f) * 1.0f,
+                    PressedColor = Color.Lerp(order.Color, frame.Color, 0.5f) * 0.6f,
+                    UserData = "selected",
+                    CanBeFocused = false,
+                    Visible = false
+                };
+
                 var img = new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), order.Prefab.SymbolSprite);
                 img.Scale = iconSize / (float)img.SourceRect.Width;
-                img.Color = order.Color;
+                img.Color = Color.Lerp(order.Color, frame.Color, 0.5f);
                 img.ToolTip = order.Name;
-
                 img.HoverColor = Color.Lerp(img.Color, Color.White, 0.5f);
-
+                
                 btn.OnClicked += (GUIButton button, object userData) =>
                 {
                     if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f) return false;
-
-                    if (order.ItemComponentType != null || order.ItemIdentifiers.Length > 0 || order.Options.Length > 1)
+                    
+                    if (btn.GetChildByUserData("selected").Visible)
                     {
-                        CreateOrderTargetFrame(button, character, order);
+                        SetCharacterOrder(character, Order.PrefabList.Find(o => o.AITag == "dismissed"), null, Character.Controlled);
                     }
                     else
                     {
-                        SetCharacterOrder(character, order, null, Character.Controlled);
+                        if (order.ItemComponentType != null || order.ItemIdentifiers.Length > 0 || order.Options.Length > 1)
+                        {
+                            CreateOrderTargetFrame(button, character, order);
+                        }
+                        else
+                        {
+                            SetCharacterOrder(character, order, null, Character.Controlled);
+                        }
                     }
                     return true;
                 };
@@ -417,7 +435,7 @@ namespace Barotrauma
 
             foreach (Order order in Order.PrefabList)
             {
-                if (!order.TargetAllCharacters) continue;
+                if (!order.TargetAllCharacters || order.SymbolSprite == null) continue;
                 var btn = new GUIButton(new RectTransform(new Point(iconSize, iconSize), reportButtonFrame.RectTransform, Anchor.CenterLeft),
                     style: null);
                 var img = new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), order.Prefab.SymbolSprite, scaleToFit: true)
@@ -633,7 +651,7 @@ namespace Barotrauma
         /// </summary>
         public void SetCharacterOrder(Character character, Order order, string option, Character orderGiver)
         {
-            if (order.TargetAllCharacters)
+            if (order != null && order.TargetAllCharacters)
             {
                 if (orderGiver == null || orderGiver.CurrentHull == null) return;
                 AddOrder(new Order(order.Prefab, orderGiver.CurrentHull, null), order.Prefab.FadeOutTime);
@@ -711,14 +729,10 @@ namespace Barotrauma
 
                 foreach (GUIButton button in orderButtons)
                 {
-                    //TODO: sprite that indicates that the order is selected
-                    if (order == null || ((Order)button.UserData).Prefab != order.Prefab)
+                    var selectedIndicator = button.GetChildByUserData("selected");
+                    if (selectedIndicator != null)
                     {
-                        button.Color = Color.Transparent;
-                    }
-                    else
-                    {
-                        button.Color = Color.White;
+                        selectedIndicator.Visible = (order != null && ((Order)button.UserData).Prefab == order.Prefab);
                     }
                 }
             }
