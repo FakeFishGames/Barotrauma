@@ -39,7 +39,7 @@ namespace Barotrauma
         public float Depth
         {
             get { return depth; }
-            set { depth = MathHelper.Clamp(value, 0.0f, 1.0f); }
+            set { depth = MathHelper.Clamp(value, 0.001f, 0.999f); }
         }
 
         // TODO: use the limb sprite params directly?
@@ -102,7 +102,7 @@ namespace Barotrauma
             size.X *= sourceRect.Width;
             size.Y *= sourceRect.Height;
 
-            Depth = element.GetAttributeFloat("depth", 0.0f);
+            Depth = element.GetAttributeFloat("depth", 0.001f);
 
             list.Add(this);
         }
