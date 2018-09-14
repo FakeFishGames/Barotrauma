@@ -9,45 +9,22 @@ namespace Barotrauma.Networking
     {
         private NetStats netStats;
 
-        private GUIButton showLogButton;
-
         private GUIScrollBar clientListScrollBar;
 
         void InitProjSpecific()
         {
-            //----------------------------------------
-
             var endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170, 20, 150, 20), "End round", Alignment.TopLeft, "", inGameHUD);
             endRoundButton.OnClicked = (btn, userdata) => { EndGame(); return true; };
-
-            showLogButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170, 20, 150, 20), "Server Log", Alignment.TopLeft, "", inGameHUD);
-            showLogButton.OnClicked = (GUIButton button, object userData) =>
-            {
-                if (log.LogFrame == null)
-                {
-                    log.CreateLogFrame();
-                }
-                else
-                {
-                    log.LogFrame = null;
-                    GUIComponent.KeyboardDispatcher.Subscriber = null;
-                }
-                return true;
-            };
-
+            
             GUIButton settingsButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170 - 170, 20, 150, 20), "Settings", Alignment.TopLeft, "", inGameHUD);
             settingsButton.OnClicked = ToggleSettingsFrame;
             settingsButton.UserData = "settingsButton";
-
-            //----------------------------------------
         }
 
         public override void AddToGUIUpdateList()
         {
-            if (started) base.AddToGUIUpdateList();
-
+            base.AddToGUIUpdateList();
             if (settingsFrame != null) settingsFrame.AddToGUIUpdateList();
-            if (log.LogFrame != null) log.LogFrame.AddToGUIUpdateList();
         }
 
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
@@ -58,9 +35,18 @@ namespace Barotrauma.Networking
             {
                 settingsFrame.Draw(spriteBatch);
             }
-            else if (log.LogFrame != null)
+            else if (ServerLog.LogFrame != null)
             {
-                log.LogFrame.Draw(spriteBatch);
+                ServerLog.LogFrame.Draw(spriteBatch);
+            }
+
+            if (Screen.Selected == GameMain.GameScreen && !GUI.DisableHUD)
+            {
+                if (EndVoteCount > 0)
+                {
+                    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 180.0f, 40),
+                        "Votes to end the round (y/n): " + EndVoteCount + "/" + (EndVoteMax - EndVoteCount), Color.White, null, 0, GUI.SmallFont);
+                }
             }
 
             if (!ShowNetStats) return;

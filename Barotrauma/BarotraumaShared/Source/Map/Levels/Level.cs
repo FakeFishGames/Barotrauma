@@ -25,12 +25,12 @@ namespace Barotrauma
         [Flags]
         public enum PositionType
         {
-            MainPath=1, Cave=2, Ruin=4
+            MainPath = 1, Cave = 2, Ruin = 4
         }
-        
+
         struct InterestingPosition
         {
-            public readonly Vector2 Position;
+            public Vector2 Position;
             public readonly PositionType PositionType;
 
             public InterestingPosition(Vector2 position, PositionType positionType)
@@ -55,7 +55,8 @@ namespace Barotrauma
         //private float shaftHeight;
 
         //List<Body> bodies;
-        private List<VoronoiCell> cells;
+        //TODO: change back to private
+        public List<VoronoiCell> cells;
 
         //private VertexBuffer vertexBuffer;
 
@@ -145,7 +146,11 @@ namespace Barotrauma
             private set;
         }
 
-
+        public bool Mirrored
+        {
+            get;
+            private set;
+        }
 
         public LevelGenerationParams GenerationParams
         {
@@ -170,7 +175,9 @@ namespace Barotrauma
 
             this.generationParams = generationParams;
 
-            borders = new Rectangle(0, 0, (int)generationParams.Width, (int)generationParams.Height);
+            borders = new Rectangle(0, 0, 
+                (int)(Math.Ceiling(generationParams.Width / GridCellSize) * GridCellSize), 
+                (int)(Math.Ceiling(generationParams.Height / GridCellSize) * GridCellSize));
         }
 
         public static Level CreateRandom(LocationConnection locationConnection)
@@ -192,8 +199,10 @@ namespace Barotrauma
             return new Level(seed, Rand.Range(30.0f, 80.0f, Rand.RandSync.Server), LevelGenerationParams.GetRandom(seed));
         }
 
-        public void Generate(bool mirror = false)
+        public void Generate(bool mirror)
         {
+            Mirrored = mirror;
+
             if (backgroundSpriteManager == null)
             {
                 var files = GameMain.SelectedPackage.GetFilesOfType(ContentType.BackgroundSpritePrefabs);
@@ -303,9 +312,7 @@ namespace Barotrauma
                         if (y < borders.Height - siteInterval.Y) sites.Add(new Vector2(x, y) + Vector2.UnitY * siteInterval * 0.5f);
                         if (x < borders.Width - siteInterval.X && y < borders.Height - siteInterval.Y) sites.Add(new Vector2(x, y) + Vector2.One * siteInterval * 0.5f);
                     }
-
-                    if (mirror) site.X = borders.Width - site.X;
-
+                    
                     sites.Add(site);
                 }
             }
@@ -334,7 +341,7 @@ namespace Barotrauma
             //----------------------------------------------------------------------------------
 
             List<VoronoiCell> mainPath = CaveGenerator.GeneratePath(pathNodes, cells, cellGrid, GridCellSize,                
-                new Rectangle(pathBorders.X, pathBorders.Y, pathBorders.Width, borders.Height), 0.5f, mirror);
+                new Rectangle(pathBorders.X, pathBorders.Y, pathBorders.Width, borders.Height), 0.5f, false);
 
             for (int i = 2; i < mainPath.Count; i += 3)
             {
@@ -348,8 +355,10 @@ namespace Barotrauma
 
             foreach (InterestingPosition positionOfInterest in positionsOfInterest)
             {
-                WayPoint wayPoint = new WayPoint(positionOfInterest.Position, SpawnType.Enemy, null);
-                wayPoint.MoveWithLevel = true;
+                WayPoint wayPoint = new WayPoint(
+                    mirror ? new Vector2(borders.X - positionOfInterest.Position.X, positionOfInterest.Position.Y) : positionOfInterest.Position,
+                    SpawnType.Enemy,
+                    submarine: null);
             }
 
             startPosition.X = pathCells[0].Center.X;
@@ -377,20 +386,19 @@ namespace Barotrauma
                 
                 pathCells.AddRange(newPathCells);
             }
-
-            Debug.WriteLine("path: " + sw2.ElapsedMilliseconds + " ms");
+            
             sw2.Restart();
 
 
             //----------------------------------------------------------------------------------
             // remove unnecessary cells and create some holes at the bottom of the level
             //----------------------------------------------------------------------------------
-
+            
             cells = CleanCells(pathCells);            
             pathCells.AddRange(CreateBottomHoles(generationParams.BottomHoleProbability, new Rectangle(
                 (int)(borders.Width * 0.2f), 0,
                 (int)(borders.Width * 0.6f), (int)(borders.Height * 0.8f))));
-            
+
             foreach (VoronoiCell cell in cells)
             {
                 if (cell.Center.Y < borders.Height / 2) continue;
@@ -400,7 +408,7 @@ namespace Barotrauma
             //----------------------------------------------------------------------------------
             // initialize the cells that are still left and insert them into the cell grid
             //----------------------------------------------------------------------------------
-
+            
             foreach (VoronoiCell cell in pathCells)
             {
                 cell.edges.ForEach(e => e.OutsideLevel = false);
@@ -415,6 +423,62 @@ namespace Barotrauma
                 {
                     cellGrid[x, y].Clear();
                 }
+            }
+
+            //----------------------------------------------------------------------------------
+            // mirror if needed
+            //----------------------------------------------------------------------------------
+            
+            if (mirror)
+            {
+                HashSet<GraphEdge> mirroredEdges = new HashSet<GraphEdge>();
+                HashSet<Site> mirroredSites = new HashSet<Site>();
+                List<VoronoiCell> allCells = new List<VoronoiCell>(cells);
+                allCells.AddRange(pathCells);
+                foreach (VoronoiCell cell in allCells)
+                {
+                    foreach (GraphEdge edge in cell.edges)
+                    {
+                        if (mirroredEdges.Contains(edge)) continue;
+                        edge.point1.X = borders.Width - edge.point1.X;
+                        edge.point2.X = borders.Width - edge.point2.X;
+                        if (!mirroredSites.Contains(edge.site1))
+                        {
+                            //make sure that sites right at the edge of a grid cell end up in the same cell as in the non-mirrored level
+                            if (edge.site1.coord.x % GridCellSize < 1.0f &&
+                                edge.site1.coord.x % GridCellSize >= 0.0f) edge.site1.coord.x += 1.0f;
+                            edge.site1.coord.x = borders.Width - edge.site1.coord.x;
+                            mirroredSites.Add(edge.site1);
+                        }
+                        if (!mirroredSites.Contains(edge.site2))
+                        {
+                            if (edge.site2.coord.x % GridCellSize < 1.0f &&
+                                edge.site2.coord.x % GridCellSize >= 0.0f) edge.site2.coord.x += 1.0f;
+                            edge.site2.coord.x = borders.Width - edge.site2.coord.x;
+                            mirroredSites.Add(edge.site2);
+                        }
+                        mirroredEdges.Add(edge);
+                    }
+                }
+
+
+                foreach (List<Vector2> smallTunnel in smallTunnels)
+                {
+                    for (int i = 0; i < smallTunnel.Count; i++)
+                    {
+                        smallTunnel[i] = new Vector2(borders.Width - smallTunnel[i].X, smallTunnel[i].Y);
+                    }
+                }
+
+                for (int i = 0; i < positionsOfInterest.Count; i++)
+                {
+                    positionsOfInterest[i] = new InterestingPosition(
+                        new Vector2(borders.Width - positionsOfInterest[i].Position.X, positionsOfInterest[i].Position.Y),
+                        positionsOfInterest[i].PositionType);
+                }
+
+                startPosition.X = borders.Width - startPosition.X;
+                endPosition.X = borders.Width - endPosition.X;
             }
 
             foreach (VoronoiCell cell in cells)
@@ -435,10 +499,9 @@ namespace Barotrauma
             ruins = new List<Ruin>();
             for (int i = 0; i < generationParams.RuinCount; i++)
             {
-                GenerateRuin(mainPath);
+                GenerateRuin(mainPath, mirror);
             }
-
-
+            
             //----------------------------------------------------------------------------------
             // generate the bodies and rendered triangles of the cells
             //----------------------------------------------------------------------------------
@@ -449,11 +512,11 @@ namespace Barotrauma
             List<VoronoiCell> cellsWithBody = new List<VoronoiCell>(cells);
 
             List<Vector2[]> triangles;
-            bodies = CaveGenerator.GeneratePolygons(cellsWithBody, out triangles);
+            bodies = CaveGenerator.GeneratePolygons(cellsWithBody, this, out triangles);
 
 #if CLIENT
             renderer.SetBodyVertices(CaveGenerator.GenerateRenderVerticeList(triangles).ToArray(), generationParams.WallColor);
-            renderer.SetWallVertices(CaveGenerator.GenerateWallShapes(cells), generationParams.WallColor);
+            renderer.SetWallVertices(CaveGenerator.GenerateWallShapes(cells, this), generationParams.WallColor);
 #endif
 
             TopBarrier = BodyFactory.CreateEdge(GameMain.World, 
@@ -466,7 +529,7 @@ namespace Barotrauma
 
             bodies.Add(TopBarrier);
 
-            GenerateSeaFloor();
+            GenerateSeaFloor(mirror);
 
             backgroundSpriteManager.PlaceSprites(this, generationParams.BackgroundSpriteAmount);
 #if CLIENT
@@ -545,7 +608,6 @@ namespace Barotrauma
             List<WayPoint> wayPoints = new List<WayPoint>();
 
             var newWaypoint = new WayPoint(new Rectangle((int)pathCells[0].Center.X, borders.Height, 10, 10), null);
-            newWaypoint.MoveWithLevel = true;
             wayPoints.Add(newWaypoint);
             
             for (int i = 0; i < pathCells.Count; i++)
@@ -553,7 +615,6 @@ namespace Barotrauma
                 pathCells[i].CellType = CellType.Path;
 
                 newWaypoint = new WayPoint(new Rectangle((int)pathCells[i].Center.X, (int)pathCells[i].Center.Y, 10, 10), null);
-                newWaypoint.MoveWithLevel = true;
                 wayPoints.Add(newWaypoint);
                
                 wayPoints[wayPoints.Count-2].linkedTo.Add(newWaypoint);
@@ -571,7 +632,6 @@ namespace Barotrauma
             }
 
             newWaypoint = new WayPoint(new Rectangle((int)pathCells[pathCells.Count - 1].Center.X, borders.Height, 10, 10), null);
-            newWaypoint.MoveWithLevel = true;
             wayPoints.Add(newWaypoint);
 
             wayPoints[wayPoints.Count - 2].linkedTo.Add(newWaypoint);
@@ -665,7 +725,7 @@ namespace Barotrauma
             return newCells;
         }
 
-        private void GenerateSeaFloor()
+        private void GenerateSeaFloor(bool mirror)
         {
             BottomPos = generationParams.SeaFloorDepth;
             SeaFloorTopPos = BottomPos;
@@ -688,19 +748,27 @@ namespace Barotrauma
             {
                 for (int i = 0; i < bottomPositions.Count - 1; i++)
                 {
-                    bottomPositions.Insert(i+1,
+                    bottomPositions.Insert(i + 1,
                         (bottomPositions[i] + bottomPositions[i + 1]) / 2.0f +
                         Vector2.UnitY * Rand.Range(0.0f, generationParams.SeaFloorVariance, Rand.RandSync.Server));
-                    
+
                     i++;
                 }
 
                 currInverval /= 2.0f;
             }
 
+            if (mirror)
+            {
+                for (int i = 0; i < bottomPositions.Count; i++)
+                {
+                    bottomPositions[i] = new Vector2(borders.Size.X - bottomPositions[i].X, bottomPositions[i].Y);
+                }
+            }
+
             SeaFloorTopPos = bottomPositions.Max(p => p.Y);
             
-            extraWalls = new LevelWall[] { new LevelWall(bottomPositions, new Vector2(0.0f, -2000.0f), backgroundColor) };
+            extraWalls = new LevelWall[] { new LevelWall(bottomPositions, new Vector2(0.0f, -2000.0f), backgroundColor, this) };
 
             BottomBarrier = BodyFactory.CreateEdge(GameMain.World,
                 ConvertUnits.ToSimUnits(new Vector2(borders.X, 0)),
@@ -809,12 +877,13 @@ namespace Barotrauma
             return tunnelNodes;
         }
 
-        private void GenerateRuin(List<VoronoiCell> mainPath)
+        private void GenerateRuin(List<VoronoiCell> mainPath, bool mirror)
         {
             Vector2 ruinSize = new Vector2(Rand.Range(5000.0f, 8000.0f, Rand.RandSync.Server), Rand.Range(5000.0f, 8000.0f, Rand.RandSync.Server));
             float ruinRadius = Math.Max(ruinSize.X, ruinSize.Y) * 0.5f;
-
-            Vector2 ruinPos = cells[Rand.Int(cells.Count, Rand.RandSync.Server)].Center;
+            
+            int cellIndex = Rand.Int(cells.Count, Rand.RandSync.Server);
+            Vector2 ruinPos = cells[cellIndex].Center;
 
             //50% chance of placing the ruins at a cave
             if (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < 0.5f)
@@ -824,26 +893,34 @@ namespace Barotrauma
 
             ruinPos.Y = Math.Min(ruinPos.Y, borders.Y + borders.Height - ruinSize.Y / 2);
             ruinPos.Y = Math.Max(ruinPos.Y, SeaFloorTopPos + ruinSize.Y / 2.0f);
+
+            float minDist = ruinRadius * 2.0f;
+            float minDistSqr = minDist * minDist;
             
             int iter = 0;
-            while (mainPath.Any(p => Vector2.Distance(ruinPos, p.Center) < ruinRadius * 2.0f))
+            while (mainPath.Any(p => Vector2.DistanceSquared(ruinPos, p.Center) < minDistSqr))
             {
                 Vector2 weighedPathPos = ruinPos;
                 iter++;
 
                 foreach (VoronoiCell pathCell in mainPath)
                 {
-                    float dist = Vector2.Distance(pathCell.Center, ruinPos);
-                    if (dist > 10000.0f) continue;
+                    Vector2 diff = ruinPos - pathCell.Center;
+                    float distSqr = diff.LengthSquared();
+                    if (distSqr < 1.0f)
+                    {
+                        diff = Vector2.UnitY;
+                        distSqr = 1.0f;
+                    }
+                    if (distSqr > 10000.0f * 10000.0f) continue;
 
-                    Vector2 moveAmount = Vector2.Normalize(ruinPos - pathCell.Center) * 100000.0f / dist;
+                    Vector2 moveAmount = Vector2.Normalize(diff) * 100000.0f / (float)Math.Sqrt(distSqr);
                     
                     weighedPathPos += moveAmount;
                     weighedPathPos.Y = Math.Min(borders.Y + borders.Height - ruinSize.Y / 2, weighedPathPos.Y);
                 }
 
                 ruinPos = weighedPathPos;
-
                 if (iter > 10000) break;
             }
 
@@ -858,10 +935,10 @@ namespace Barotrauma
                     closestDist = dist;
                 }
             }
-
-            var ruin = new Ruin(closestPathCell, cells, new Rectangle(MathUtils.ToPoint(ruinPos - ruinSize * 0.5f), MathUtils.ToPoint(ruinSize)));
+            
+            var ruin = new Ruin(closestPathCell, cells, new Rectangle(MathUtils.ToPoint(ruinPos - ruinSize * 0.5f), MathUtils.ToPoint(ruinSize)), mirror);
             ruins.Add(ruin);
-
+            
             ruin.RuinShapes.Sort((shape1, shape2) => shape2.DistanceFromEntrance.CompareTo(shape1.DistanceFromEntrance));
             for (int i = 0; i < 4; i++)
             {
@@ -919,7 +996,7 @@ namespace Barotrauma
                     ConvertUnits.ToSimUnits(endPos),
                     null, Physics.CollisionLevel) != null)
                 {
-                    position = ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition) +  Vector2.Normalize(startPos - endPos)*offsetFromWall;
+                    position = ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition) + Vector2.Normalize(startPos - endPos) * offsetFromWall;
                     break;
                 }
 
@@ -1011,15 +1088,12 @@ namespace Barotrauma
 
             List<VoronoiCell> cells = new List<VoronoiCell>();
 
-            for (int x = startX; x <= endX; x++)
+            for (int y = startY; y <= endY; y++)
             {
-                for (int y = startY; y <= endY; y++)
+                for (int x = startX; x <= endX; x++)
                 {
-                    foreach (VoronoiCell cell in cellGrid[x, y])
-                    {
-                        cells.Add(cell);
-                    }
-                }
+                    foreach (VoronoiCell cell in cellGrid[x, y]) cells.Add(cell); 
+                }                              
             }
 
             if (extraWalls != null)

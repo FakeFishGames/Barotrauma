@@ -78,15 +78,13 @@ namespace Barotrauma
                 {
                     float distSqr = Vector2.DistanceSquared(item.WorldPosition, worldPosition);
                     if (distSqr > displayRangeSqr) continue;
-
-                    //ignore reactors (don't want to blow them up)
-                    if (item.GetComponent<Reactor>() != null) continue;
-
+                    
                     float distFactor = 1.0f - (float)Math.Sqrt(distSqr) / displayRange;
 
                     //damage repairable power-consuming items
-                    var powerTransfer = item.GetComponent<Powered>();
-                    if (powerTransfer != null && item.FixRequirements.Count > 0)
+                    var powered = item.GetComponent<Powered>();
+                    if (powered == null || !powered.VulnerableToEMP) continue;
+                    if (item.FixRequirements.Count > 0)
                     {
                         item.Condition -= 100 * empStrength * distFactor;
                     }
@@ -182,6 +180,7 @@ namespace Barotrauma
                     if (limb.WorldPosition != worldPosition && force > 0.0f)
                     {
                         Vector2 limbDiff = Vector2.Normalize(limb.WorldPosition - worldPosition);
+                        if (!MathUtils.IsValid(limbDiff)) limbDiff = Rand.Vector(1.0f);
                         Vector2 impulsePoint = limb.SimPosition - limbDiff * limbRadius;
                         limb.body.ApplyLinearImpulse(limbDiff * distFactor * force, impulsePoint);
                     }

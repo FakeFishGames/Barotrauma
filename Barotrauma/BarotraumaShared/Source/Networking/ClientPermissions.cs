@@ -23,7 +23,9 @@ namespace Barotrauma.Networking
         [Description("Manage campaign")]
         ManageCampaign = 32,
         [Description("Console commands")]
-        ConsoleCommands = 64
+        ConsoleCommands = 64,
+        [Description("Access server log")]
+        ServerLog = 128
     }
 
     class PermissionPreset

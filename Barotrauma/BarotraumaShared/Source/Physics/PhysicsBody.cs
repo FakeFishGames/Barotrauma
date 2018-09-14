@@ -125,8 +125,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (!MathUtils.IsValid((Vector2)value)) return;
-
+                    if (!IsValidValue(value.Value, "target position", -1e5f, 1e5f)) return;
                     targetPosition = new Vector2(
                         MathHelper.Clamp(((Vector2)value).X, -10000.0f, 10000.0f),
                         MathHelper.Clamp(((Vector2)value).Y, -10000.0f, 10000.0f));
@@ -145,7 +144,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (!MathUtils.IsValid((float)value)) return;
+                    if (!IsValidValue(value.Value, "target rotation")) return;
                     targetRotation = value;
                 }
  
@@ -185,11 +184,16 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Exception in PhysicsBody.Enabled = "+value+" ("+isPhysEnabled+")",e);
-                    if (UserData!=null) DebugConsole.NewMessage("PhysicsBody UserData: "+UserData.GetType().ToString(), Color.Red);
+                    DebugConsole.ThrowError("Exception in PhysicsBody.Enabled = " + value + " (" + isPhysEnabled + ")", e);
+                    if (UserData != null) DebugConsole.NewMessage("PhysicsBody UserData: " + UserData.GetType().ToString(), Color.Red);
                     if (GameMain.World.ContactManager == null) DebugConsole.NewMessage("ContactManager is null!", Color.Red);
                     else if (GameMain.World.ContactManager.BroadPhase == null) DebugConsole.NewMessage("Broadphase is null!", Color.Red);
                     if (body.FixtureList == null) DebugConsole.NewMessage("FixtureList is null!", Color.Red);
+
+                    if (UserData is Entity entity)
+                    {
+                        DebugConsole.NewMessage("Entity \"" + entity.ToString() + "\" removed!", Color.Red);
+                    }
                 }
             }
         }
@@ -223,13 +227,21 @@ namespace Barotrauma
         public Vector2 LinearVelocity
         {
             get { return body.LinearVelocity; }
-            set { body.LinearVelocity = value; }
+            set
+            {
+                if (!IsValidValue(value, "velocity", -1000.0f, 1000.0f)) return;
+                body.LinearVelocity = value;
+            }
         }
 
         public float AngularVelocity
         {
             get { return body.AngularVelocity; }
-            set { body.AngularVelocity = value; }
+            set
+            {
+                if (!IsValidValue(value, "angular velocity")) return;
+                body.AngularVelocity = value;
+            }
         }
 
         public float Mass
@@ -360,6 +372,50 @@ namespace Barotrauma
             this.radius = radius;
         }
 
+        public bool IsValidValue(float value, string valueName, float? minValue = null, float? maxValue = null)
+        {
+            if (!MathUtils.IsValid(value) ||
+                (minValue.HasValue && value < minValue.Value) ||
+                (maxValue.HasValue && value > maxValue.Value))
+            {
+                string userData = UserData == null ? "null" : UserData.ToString();
+                string errorMsg =
+                    "Attempted to apply invalid " + valueName +
+                    " to a physics body (userdata: " + userData +
+                    "), value: " + value + "\n" + Environment.StackTrace;
+
+                if (GameSettings.VerboseLogging) DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "PhysicsBody.SetPosition:InvalidPosition" + userData,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    errorMsg);
+                return false;
+            }
+            return true;
+        }
+
+        private bool IsValidValue(Vector2 value, string valueName, float? minValue = null, float? maxValue = null)
+        {
+            if (!MathUtils.IsValid(value) ||
+                (minValue.HasValue && (value.X < minValue.Value || value.Y < minValue.Value)) ||
+                (maxValue.HasValue && (value.X > maxValue.Value || value.Y > maxValue)))
+            {
+                string userData = UserData == null ? "null" : UserData.ToString();
+                string errorMsg =
+                    "Attempted to apply invalid " + valueName +
+                    " to a physics body (userdata: " + userData +
+                    "), value: " + value + "\n" + Environment.StackTrace;
+
+                if (GameSettings.VerboseLogging) DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "PhysicsBody.SetPosition:InvalidPosition" + userData,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    errorMsg);
+                return false;
+            }
+            return true;
+        }
+
         public void ResetDynamics()
         {
             body.ResetDynamics();
@@ -367,6 +423,7 @@ namespace Barotrauma
 
         public void ApplyLinearImpulse(Vector2 impulse)
         {
+            if (!IsValidValue(impulse, "impulse", -1e10f, 1e10f)) return;
             body.ApplyLinearImpulse(impulse);
         }
 
@@ -375,6 +432,9 @@ namespace Barotrauma
         /// </summary>
         public void ApplyLinearImpulse(Vector2 impulse, float maxVelocity)
         {
+            if (!IsValidValue(impulse, "impulse", -1e10f, 1e10f)) return;
+            if (!IsValidValue(maxVelocity, "max velocity")) return;
+
             float currSpeed = body.LinearVelocity.Length();
             Vector2 velocityAddition = impulse / Mass;
             Vector2 newVelocity = body.LinearVelocity + velocityAddition;
@@ -385,47 +445,63 @@ namespace Barotrauma
 
         public void ApplyLinearImpulse(Vector2 impulse, Vector2 point)
         {
+            if (!IsValidValue(impulse, "impulse", -1e10f, 1e10f)) return;
             body.ApplyLinearImpulse(impulse, point);
         }
 
         public void ApplyForce(Vector2 force)
         {
+            if (!IsValidValue(force, "force", -1e10f, 1e10f)) return;
             body.ApplyForce(force);
         }
 
         public void ApplyForce(Vector2 force, Vector2 point)
         {
+            if (!IsValidValue(force, "force", -1e10f, 1e10f)) return;
+            if (!IsValidValue(point, "point")) return;
             body.ApplyForce(force, point);
         }
 
         public void ApplyTorque(float torque)
         {
+            if (!IsValidValue(torque, "torque")) return;
             body.ApplyTorque(torque);
         }
 
-        public void SetTransform(Vector2 simPosition, float rotation)
+        public bool SetTransform(Vector2 simPosition, float rotation)
         {
             System.Diagnostics.Debug.Assert(MathUtils.IsValid(simPosition));
             System.Diagnostics.Debug.Assert(Math.Abs(simPosition.X) < 1000000.0f);
             System.Diagnostics.Debug.Assert(Math.Abs(simPosition.Y) < 1000000.0f);
-            
+
+            if (!IsValidValue(simPosition, "position", -1e10f, 1e10f)) return false;
+            if (!IsValidValue(rotation, "rotation")) return false;
+
             body.SetTransform(simPosition, rotation);
             SetPrevTransform(simPosition, rotation);
+            return true;
         }
 
-        public void SetTransformIgnoreContacts(Vector2 simPosition, float rotation)
+        public bool SetTransformIgnoreContacts(Vector2 simPosition, float rotation)
         {
             System.Diagnostics.Debug.Assert(MathUtils.IsValid(simPosition));
             System.Diagnostics.Debug.Assert(Math.Abs(simPosition.X) < 1000000.0f);
             System.Diagnostics.Debug.Assert(Math.Abs(simPosition.Y) < 1000000.0f);
-            
+
+            if (!IsValidValue(simPosition, "position", -1e10f, 1e10f)) return false;
+            if (!IsValidValue(rotation, "rotation")) return false;
+
             body.SetTransformIgnoreContacts(ref simPosition, rotation);
             SetPrevTransform(simPosition, rotation);
+            return true;
         }
 
-        public void SetPrevTransform(Vector2 position, float rotation)
+        public void SetPrevTransform(Vector2 simPosition, float rotation)
         {
-            prevPosition = position;
+            if (!IsValidValue(simPosition, "position", -1e10f, 1e10f)) return;
+            if (!IsValidValue(rotation, "rotation")) return;
+
+            prevPosition = simPosition;
             prevRotation = rotation;
         }
 
@@ -440,16 +516,19 @@ namespace Barotrauma
                 prevPosition = (Vector2)targetPosition;
             }
 
-            body.SetTransform((Vector2)targetPosition, targetRotation == null ? body.Rotation : (float)targetRotation);
+            SetTransform((Vector2)targetPosition, targetRotation == null ? body.Rotation : (float)targetRotation);
             targetPosition = null;
         }
 
-        public void MoveToPos(Vector2 pos, float force, Vector2? pullPos = null)
+        public void MoveToPos(Vector2 simPosition, float force, Vector2? pullPos = null)
         {
             if (pullPos == null) pullPos = body.Position;
 
+            if (!IsValidValue(simPosition, "position", -1e10f, 1e10f)) return;
+            if (!IsValidValue(force, "force")) return;
+
             Vector2 vel = body.LinearVelocity;
-            Vector2 deltaPos = pos - (Vector2)pullPos;
+            Vector2 deltaPos = simPosition - (Vector2)pullPos;
             deltaPos *= force;
             body.ApplyLinearImpulse((deltaPos - vel * 0.5f) * body.Mass, (Vector2)pullPos);
         }
@@ -474,8 +553,8 @@ namespace Barotrauma
                 dragForce = Math.Min(drag, Mass * 500.0f) * -velDir;                
             }
 
-            body.ApplyForce(dragForce + buoyancy);
-            body.ApplyTorque(body.AngularVelocity * body.Mass * -0.08f);
+            ApplyForce(dragForce + buoyancy);
+            ApplyTorque(body.AngularVelocity * body.Mass * -0.08f);
         }
 
 
@@ -559,18 +638,17 @@ namespace Barotrauma
         public void SmoothRotate(float targetRotation, float force = 10.0f)
         {
             float nextAngle = body.Rotation + body.AngularVelocity * (float)Timing.Step;
-
             float angle = MathUtils.GetShortestAngle(nextAngle, targetRotation);
-
-            float torque = angle * 60.0f * (force/100.0f);
+            float torque = angle * 60.0f * (force / 100.0f);
 
             if (body.IsKinematic)
             {
+                if (!IsValidValue(torque, "torque")) return;
                 body.AngularVelocity = torque;
             }
             else
             {
-                body.ApplyTorque(body.Mass * torque);
+                ApplyTorque(body.Mass * torque);
             }
         }
         

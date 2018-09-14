@@ -79,11 +79,16 @@ namespace Barotrauma
 
         private List<CharacterStateInfo> memState        = new List<CharacterStateInfo>();
         private List<CharacterStateInfo> memLocalState   = new List<CharacterStateInfo>();
-
+        
         private bool networkUpdateSent;
 
         public bool isSynced = false;
-        
+
+        public string OwnerClientIP;
+        public string OwnerClientName;
+        public bool ClientDisconnected;
+        public float KillDisconnectedTimer;
+
         public List<CharacterStateInfo> MemState
         {
             get { return memState; }

@@ -9,10 +9,7 @@ using System.Linq;
 namespace Barotrauma.Networking
 {
     class RespawnManager : Entity, IServerSerializable
-    {
-        private readonly float respawnInterval;
-        private float maxTransportTime;
-        
+    {        
         public enum State
         {
             Waiting,
@@ -66,6 +63,8 @@ namespace Barotrauma.Networking
 
         private float respawnTimer, shuttleReturnTimer, shuttleTransportTimer;
 
+        private float maxTransportTime;
+
         private float updateReturnTimer;
 
         public Submarine RespawnShuttle
@@ -113,15 +112,12 @@ namespace Barotrauma.Networking
             {
                 respawnShuttle = null;
             }
-            
-            var server = networkMember as GameServer;
-            if (server != null)
-            {
-                respawnInterval = server.RespawnInterval;
-                maxTransportTime = server.MaxTransportTime;
-            }
 
-            respawnTimer = respawnInterval;            
+            if (networkMember is GameServer server)
+            {
+                respawnTimer = server.RespawnInterval;
+                maxTransportTime = server.MaxTransportTime;
+            }      
         }
         
         private List<Client> GetClientsToRespawn()
@@ -195,7 +191,7 @@ namespace Barotrauma.Networking
             respawnTimer -= deltaTime;
             if (respawnTimer <= 0.0f)
             {
-                respawnTimer = respawnInterval;
+                respawnTimer = server.RespawnInterval;
 
                 DispatchShuttle();
             }
@@ -243,6 +239,7 @@ namespace Barotrauma.Networking
                 server.CreateEntityEvent(this);
 
                 CountdownStarted = false;
+                maxTransportTime = server.MaxTransportTime;
                 shuttleReturnTimer = maxTransportTime;
                 shuttleTransportTimer = maxTransportTime;
             }
@@ -277,15 +274,15 @@ namespace Barotrauma.Networking
                     if (door.IsOpen) door.SetState(false,false,true);
                 }
 
+                var server = networkMember as GameServer;
+                if (server == null) return;
+                
                 var shuttleGaps = Gap.GapList.FindAll(g => g.Submarine == respawnShuttle && g.ConnectedWall != null);
-                shuttleGaps.ForEach(g => g.Remove());
+                shuttleGaps.ForEach(g => Spawner.AddToRemoveQueue(g));
 
                 var dockingPorts = Item.ItemList.FindAll(i => i.Submarine == respawnShuttle && i.GetComponent<DockingPort>() != null);
                 dockingPorts.ForEach(d => d.GetComponent<DockingPort>().Undock());
 
-                var server = networkMember as GameServer;
-                if (server == null) return;
-                
                 //shuttle has returned if the path has been traversed or the shuttle is close enough to the exit
 
                 if (!CoroutineManager.IsCoroutineRunning("forcepos"))
@@ -311,7 +308,7 @@ namespace Barotrauma.Networking
                     GameServer.Log("The respawn shuttle has left.", ServerLog.MessageType.Spawning);
                     server.CreateEntityEvent(this);
 
-                    respawnTimer = respawnInterval;
+                    respawnTimer = server.RespawnInterval;
                     CountdownStarted = false;
                 }
             }
@@ -353,12 +350,21 @@ namespace Barotrauma.Networking
 
         private IEnumerable<object> ForceShuttleToPos(Vector2 position, float speed)
         {
+            if (respawnShuttle == null)
+            {
+                yield return CoroutineStatus.Success;
+            }
+
             respawnShuttle.PhysicsBody.FarseerBody.IgnoreCollisionWith(Level.Loaded.TopBarrier);
 
             while (Math.Abs(position.Y - respawnShuttle.WorldPosition.Y) > 100.0f)
             {
-                Vector2 displayVel = Vector2.Normalize(position - respawnShuttle.WorldPosition) * speed;
-                respawnShuttle.SubBody.Body.LinearVelocity = ConvertUnits.ToSimUnits(displayVel);
+                Vector2 diff = position - respawnShuttle.WorldPosition;
+                if (diff.LengthSquared() > 0.01f)
+                {
+                    Vector2 displayVel = Vector2.Normalize(diff) * speed;
+                    respawnShuttle.SubBody.Body.LinearVelocity = ConvertUnits.ToSimUnits(displayVel);
+                }
                 yield return CoroutineStatus.Running;
 
                 if (respawnShuttle.SubBody == null) yield return CoroutineStatus.Success;
@@ -373,6 +379,8 @@ namespace Barotrauma.Networking
         {
             shuttleTransportTimer = maxTransportTime;
             shuttleReturnTimer = maxTransportTime;
+
+            if (respawnShuttle == null) return;
 
             foreach (Item item in Item.ItemList)
             {
@@ -405,7 +413,7 @@ namespace Barotrauma.Networking
             }
 
             var shuttleGaps = Gap.GapList.FindAll(g => g.Submarine == respawnShuttle && g.ConnectedWall != null);
-            shuttleGaps.ForEach(g => g.Remove());
+            shuttleGaps.ForEach(g => Spawner.AddToRemoveQueue(g));
 
             foreach (Hull hull in Hull.hullList)
             {
@@ -427,7 +435,7 @@ namespace Barotrauma.Networking
                         foreach (Item item in c.Inventory.Items)
                         {
                             if (item == null) continue;
-                            Entity.Spawner.AddToRemoveQueue(item);
+                            Spawner.AddToRemoveQueue(item);
                         }
                     }
                     
@@ -448,7 +456,7 @@ namespace Barotrauma.Networking
             var server = networkMember as GameServer;
             if (server == null) return;
 
-            var respawnSub = respawnShuttle != null ? respawnShuttle : Submarine.MainSub;
+            var respawnSub = respawnShuttle ?? Submarine.MainSub;
             
             var clients = GetClientsToRespawn();
             foreach (Client c in clients)
@@ -508,37 +516,41 @@ namespace Barotrauma.Networking
                 {
 #endif
                     clients[i].Character = character;
+                    character.OwnerClientIP = clients[i].Connection.RemoteEndPoint.Address.ToString();
+                    character.OwnerClientName = clients[i].Name;
                     GameServer.Log(string.Format("Respawning {0} ({1}) as {2}", clients[i].Name, clients[i].Connection?.RemoteEndPoint?.Address, characterInfos[i].Job.Name), ServerLog.MessageType.Spawning);
 
 #if CLIENT
                 }
 #endif
 
-                Vector2 pos = cargoSp == null ? character.Position : cargoSp.Position;
-                
-                if (divingSuitPrefab != null && oxyPrefab != null)
+                if (respawnShuttle != null)
                 {
-                    var divingSuit  = new Item(divingSuitPrefab, pos, respawnSub);
-                    Spawner.CreateNetworkEvent(divingSuit, false);
-                    respawnItems.Add(divingSuit);
+                    Vector2 pos = cargoSp == null ? character.Position : cargoSp.Position;                
+                    if (divingSuitPrefab != null && oxyPrefab != null)
+                    {
+                        var divingSuit  = new Item(divingSuitPrefab, pos, respawnSub);
+                        Spawner.CreateNetworkEvent(divingSuit, false);
+                        respawnItems.Add(divingSuit);
 
-                    var oxyTank     = new Item(oxyPrefab, pos, respawnSub);
-                    Spawner.CreateNetworkEvent(oxyTank, false);
-                    divingSuit.Combine(oxyTank);
-                    respawnItems.Add(oxyTank);
-                }
+                        var oxyTank     = new Item(oxyPrefab, pos, respawnSub);
+                        Spawner.CreateNetworkEvent(oxyTank, false);
+                        divingSuit.Combine(oxyTank);
+                        respawnItems.Add(oxyTank);
+                    }
 
-                if (scooterPrefab != null && batteryPrefab != null)
-                {
-                    var scooter     = new Item(scooterPrefab, pos, respawnSub);
-                    Spawner.CreateNetworkEvent(scooter, false);
+                    if (scooterPrefab != null && batteryPrefab != null)
+                    {
+                        var scooter     = new Item(scooterPrefab, pos, respawnSub);
+                        Spawner.CreateNetworkEvent(scooter, false);
 
-                    var battery     = new Item(batteryPrefab, pos, respawnSub);
-                    Spawner.CreateNetworkEvent(battery, false);
+                        var battery     = new Item(batteryPrefab, pos, respawnSub);
+                        Spawner.CreateNetworkEvent(battery, false);
 
-                    scooter.Combine(battery);
-                    respawnItems.Add(scooter);
-                    respawnItems.Add(battery);
+                        scooter.Combine(battery);
+                        respawnItems.Add(scooter);
+                        respawnItems.Add(battery);
+                    }
                 }
                                 
                 //give the character the items they would've gotten if they had spawned in the main sub

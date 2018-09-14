@@ -33,6 +33,9 @@ namespace Barotrauma.Items.Components
 
         private Character character;
 
+        private Item focusTarget;
+        private float targetRotation;
+
         public Vector2 UserPos
         {
             get { return userPos; }
@@ -116,7 +119,7 @@ namespace Barotrauma.Items.Components
                 else
                 {
                     diff.Y = 0.0f;
-                    if (diff != Vector2.Zero && diff.Length() > 10.0f)
+                    if (diff != Vector2.Zero && diff.LengthSquared() > 10.0f * 10.0f)
                     {
                         character.AnimController.TargetMovement = Vector2.Normalize(diff);
                         character.AnimController.TargetDir = diff.X > 0.0f ? Direction.Right : Direction.Left;
@@ -174,7 +177,7 @@ namespace Barotrauma.Items.Components
             
             return true;
         }
-
+        
         public override bool SecondaryUse(float deltaTime, Character character = null)
         {
             if (this.character != character)
@@ -190,7 +193,7 @@ namespace Barotrauma.Items.Components
             }
             if (character == null) return false;     
 
-            Entity focusTarget = GetFocusTarget();
+            focusTarget = GetFocusTarget();
             if (focusTarget == null)
             {
                 Vector2 centerPos = new Vector2(item.WorldRect.Center.X, item.WorldRect.Center.Y);
@@ -198,9 +201,7 @@ namespace Barotrauma.Items.Components
                 Vector2 offset = character.CursorWorldPosition - centerPos;
                 offset.Y = -offset.Y;
 
-                float targetRotation = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(offset));
-
-                item.SendSignal(0, targetRotation.ToString(), "position_out", character);
+                targetRotation = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(offset));
                 return false;
             }
             
@@ -211,7 +212,7 @@ namespace Barotrauma.Items.Components
                 Lights.LightManager.ViewTarget = focusTarget;
                 cam.TargetPos = focusTarget.WorldPosition;
 
-                cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, (focusTarget as Item).Prefab.OffsetOnSelected, deltaTime*10.0f);
+                cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, (focusTarget as Item).Prefab.OffsetOnSelected, deltaTime * 10.0f);
             }
 #endif
             
@@ -232,9 +233,7 @@ namespace Barotrauma.Items.Components
                 Vector2 offset = character.CursorWorldPosition - centerPos;
                 offset.Y = -offset.Y;
 
-                float targetRotation = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(offset));
-
-                item.SendSignal(0, targetRotation.ToString(), "position_out", character);
+                targetRotation = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(offset));
             }
 
             return true;
@@ -242,17 +241,17 @@ namespace Barotrauma.Items.Components
 
         private Item GetFocusTarget()
         {
-            foreach (Connection c in item.Connections)
-            {
-                if (c.Name != "position_out") continue;
+            item.SendSignal(0, targetRotation.ToString(), "position_out", character);
 
-                foreach (Connection c2 in c.Recipients)
+            for (int i = item.LastSentSignalRecipients.Count - 1; i >= 0; i--)
+            {
+                if (item.LastSentSignalRecipients[i].Condition <= 0.0f) continue;
+                if (item.LastSentSignalRecipients[i].Prefab.FocusOnSelected)
                 {
-                    if (c2 == null || c2.Item == null || !c2.Item.Prefab.FocusOnSelected) continue;
-                    return c2.Item;
+                    return item.LastSentSignalRecipients[i];
                 }
             }
-
+            
             return null;
         }
 

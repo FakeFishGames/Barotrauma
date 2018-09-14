@@ -143,7 +143,7 @@ namespace Barotrauma.Sounds
                 volume = 0.0f;
             }
 
-            if (sourceIndex<1 || soundsPlaying[sourceIndex] != sound)
+            if (sourceIndex < 1 || soundsPlaying[sourceIndex] != sound)
             {
                 sourceIndex = Play(sound, position, volume, 0.0f, true);
             }
@@ -153,7 +153,7 @@ namespace Barotrauma.Sounds
                 AL.Source(alSources[sourceIndex], ALSourceb.Looping, true);
             }
 
-            ALHelper.Check();
+            ALHelper.Check(sound?.FilePath);
             return sourceIndex;
         }
 
@@ -165,7 +165,7 @@ namespace Barotrauma.Sounds
                 return;
 
             AL.SourcePause(alSources[sourceIndex]);
-            ALHelper.Check();
+            ALHelper.Check(soundsPlaying[sourceIndex]?.FilePath);
         }
 
         public static void Resume(int sourceIndex)
@@ -176,7 +176,7 @@ namespace Barotrauma.Sounds
                 return;
 
             AL.SourcePlay(alSources[sourceIndex]);
-            ALHelper.Check();
+            ALHelper.Check(soundsPlaying[sourceIndex]?.FilePath);
         }
         
         public static void Stop(int sourceIndex)
@@ -291,7 +291,7 @@ namespace Barotrauma.Sounds
 
                         ALHelper.Efx.Filter(lowpassFilterId, OpenTK.Audio.OpenAL.EfxFilterf.LowpassGainHF, lowPassHfGain = value);                        
                         ALHelper.Efx.BindFilterToSource(alSources[i], lowpassFilterId);
-                        ALHelper.Check();
+                        ALHelper.Check(soundsPlaying[i]?.FilePath);
                     }
                 }
             }
@@ -316,7 +316,7 @@ namespace Barotrauma.Sounds
 
             ALHelper.Efx.Filter(lowpassFilterId, OpenTK.Audio.OpenAL.EfxFilterf.LowpassGainHF, lowPassGain);
             ALHelper.Efx.BindFilterToSource(alSources[sourceIndex], lowpassFilterId);
-            ALHelper.Check();
+            ALHelper.Check(soundsPlaying[sourceIndex]?.FilePath);
         }
 
         public static OggStream StartStream(string file, float volume = 1.0f)
@@ -331,7 +331,7 @@ namespace Barotrauma.Sounds
 
             oggStream.Play(volume);
 
-            ALHelper.Check();
+            ALHelper.Check(file);
 
             return oggStream;
         }
@@ -361,15 +361,15 @@ namespace Barotrauma.Sounds
 
             for (int i = 0; i < DefaultSourceCount; i++)
             {
+                string soundPath = soundsPlaying[i]?.FilePath;
                 var state = OpenTK.Audio.OpenAL.AL.GetSourceState(alSources[i]);
                 if (state == OpenTK.Audio.OpenAL.ALSourceState.Playing || state == OpenTK.Audio.OpenAL.ALSourceState.Paused)
                 {
                     Stop(i);
                 }
 
-                OpenTK.Audio.OpenAL.AL.DeleteSource(alSources[i]);
-                
-                ALHelper.Check();
+                OpenTK.Audio.OpenAL.AL.DeleteSource(alSources[i]);                
+                ALHelper.Check(soundPath);
             }
 
             if (oggStream != null)

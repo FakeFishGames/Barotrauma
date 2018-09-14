@@ -2,6 +2,7 @@
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -151,7 +152,12 @@ namespace Barotrauma
                 {
                     int votes = inc.ReadByte();
                     string subName = inc.ReadString();
-                    Submarine sub = Submarine.SavedSubmarines.Find(sm => sm.Name == subName);
+                    List<Submarine> serversubs = new List<Submarine>();
+                    foreach (GUIComponent item in GameMain.NetLobbyScreen?.SubList?.children)
+                    {
+                        if (item.UserData != null && item.UserData is Submarine) serversubs.Add(item.UserData as Submarine);
+                    }
+                    Submarine sub = serversubs.FirstOrDefault(sm => sm.Name == subName);
                     SetVoteText(GameMain.NetLobbyScreen.SubList, sub, votes);
                 }
             }

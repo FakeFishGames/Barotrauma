@@ -24,6 +24,7 @@ namespace Barotrauma.Networking
         protected GUIFrame inGameHUD;
         protected GUIListBox chatBox;
         protected GUITextBox chatMsgBox;
+        protected GUIButton showLogButton;
 
         public GUIFrame InGameHUD
         {
@@ -34,6 +35,23 @@ namespace Barotrauma.Networking
         {
             inGameHUD = new GUIFrame(new Rectangle(0, 0, 0, 0), null, null);
             inGameHUD.CanBeFocused = false;
+
+            showLogButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170, 20, 150, 20), "Server Log", Alignment.TopLeft, "", inGameHUD)
+            {
+                OnClicked = (GUIButton button, object userData) =>
+                {
+                    if (ServerLog.LogFrame == null)
+                    {
+                        ServerLog.CreateLogFrame();
+                    }
+                    else
+                    {
+                        ServerLog.LogFrame = null;
+                        GUIComponent.KeyboardDispatcher.Subscriber = null;
+                    }
+                    return true;
+                }
+            };
 
             int width = (int)MathHelper.Clamp(GameMain.GraphicsWidth * 0.35f, 350, 500);
             int height = (int)MathHelper.Clamp(GameMain.GraphicsHeight * 0.15f, 100, 200);
@@ -109,53 +127,44 @@ namespace Barotrauma.Networking
             {
                 inGameHUD.AddToGUIUpdateList();
             }
+            if (ServerLog.LogFrame != null) ServerLog.LogFrame.AddToGUIUpdateList();
         }
 
         public virtual void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
-            if (!gameStarted || Screen.Selected != GameMain.GameScreen || GUI.DisableHUD) return;
-
-            GameMain.GameSession.CrewManager.Draw(spriteBatch);
-
-            inGameHUD.Draw(spriteBatch);
-
-            if (EndVoteCount > 0)
+            if (GUI.DisableHUD) return;
+            
+            if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
-                if (GameMain.NetworkMember.myCharacter == null)
+                GameMain.GameSession.CrewManager.Draw(spriteBatch);
+
+                inGameHUD.Draw(spriteBatch);
+
+                if (respawnManager != null)
                 {
-                    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 180.0f, 40),
-                        "Votes to end the round (y/n): " + EndVoteCount + "/" + (EndVoteMax - EndVoteCount), Color.White, null, 0, GUI.SmallFont);
-                }
-                else
-                {
-                    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 140.0f, 40),
-                        "Votes (y/n): " + EndVoteCount + "/" + (EndVoteMax - EndVoteCount), Color.White, null, 0, GUI.SmallFont);
+                    string respawnInfo = "";
+
+                    if (respawnManager.CurrentState == RespawnManager.State.Waiting &&
+                        respawnManager.CountdownStarted)
+                    {
+                        respawnInfo = respawnManager.UsingShuttle ? "Respawn Shuttle dispatching in " : "Respawning players in ";
+                        respawnInfo = respawnManager.RespawnTimer <= 0.0f ? "" : respawnInfo + ToolBox.SecondsToReadableTime(respawnManager.RespawnTimer);
+                    }
+                    else if (respawnManager.CurrentState == RespawnManager.State.Transporting)
+                    {
+                        respawnInfo = respawnManager.TransportTimer <= 0.0f ? "" : "Shuttle leaving in " + ToolBox.SecondsToReadableTime(respawnManager.TransportTimer);
+                    }
+
+                    if (!string.IsNullOrEmpty(respawnInfo))
+                    {
+                        GUI.DrawString(spriteBatch,
+                            new Vector2(120.0f, 10),
+                            respawnInfo, Color.White, null, 0, GUI.SmallFont);
+                    }
                 }
             }
-
-            if (respawnManager != null)
-            {
-                string respawnInfo = "";
-
-                if (respawnManager.CurrentState == RespawnManager.State.Waiting &&
-                    respawnManager.CountdownStarted)
-                {
-                    respawnInfo = respawnManager.UsingShuttle ? "Respawn Shuttle dispatching in " : "Respawning players in ";
-                    respawnInfo = respawnManager.RespawnTimer <= 0.0f ? "" : respawnInfo + ToolBox.SecondsToReadableTime(respawnManager.RespawnTimer);
-                }
-                else if (respawnManager.CurrentState == RespawnManager.State.Transporting)
-                {
-                    respawnInfo = respawnManager.TransportTimer <= 0.0f ? "" : "Shuttle leaving in " + ToolBox.SecondsToReadableTime(respawnManager.TransportTimer);
-                }
-
-                if (!string.IsNullOrEmpty(respawnInfo))
-                {
-                    GUI.DrawString(spriteBatch,
-                        new Vector2(120.0f, 10),
-                        respawnInfo, Color.White, null, 0, GUI.SmallFont);
-                }
-
-            }
+            
+            ServerLog.LogFrame?.Draw(spriteBatch);
         }
 
         public virtual bool SelectCrewCharacter(Character character, GUIComponent characterFrame)

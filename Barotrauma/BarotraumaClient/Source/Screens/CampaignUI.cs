@@ -85,7 +85,7 @@ namespace Barotrauma
             int sellColumnWidth = (tabs[(int)Tab.Store].Rect.Width - 40) / 2 - 20;
 
             selectedItemList = new GUIListBox(new Rectangle(0, 30, sellColumnWidth, tabs[(int)Tab.Store].Rect.Height - 80), Color.White * 0.7f, "", tabs[(int)Tab.Store]);
-            selectedItemList.OnSelected = SellItem;
+            //selectedItemList.OnSelected = SellItem;
             
             storeItemList = new GUIListBox(new Rectangle(0, 30, sellColumnWidth, tabs[(int)Tab.Store].Rect.Height - 80), Color.White * 0.7f, Alignment.TopRight, "", tabs[(int)Tab.Store]);
             storeItemList.OnSelected = BuyItem;
@@ -149,6 +149,8 @@ namespace Barotrauma
                     null, null,
                     Alignment.TopRight, "", frame);
             }
+
+            RefreshItemTab();
         }
 
         public void Update(float deltaTime)
@@ -216,55 +218,92 @@ namespace Barotrauma
             OnLocationSelected?.Invoke(location, connection);
         }
 
-        private void CreateItemFrame(MapEntityPrefab ep, GUIListBox listBox, int width)
+        private void CreateItemFrame(PurchasedItem pi, GUIListBox listBox, int width)
         {
             GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 50), "ListBoxElement", listBox);
-            frame.UserData = ep;
+            frame.UserData = pi;
             frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
 
-            frame.ToolTip = ep.Description;
+            frame.ToolTip = pi.itemPrefab.Description;
 
             ScalableFont font = listBox.Rect.Width < 280 ? GUI.SmallFont : GUI.Font;
 
             GUITextBlock textBlock = new GUITextBlock(
                 new Rectangle(50, 0, 0, 25),
-                ep.Name,
+                pi.itemPrefab.Name,
                 null, null,
                 Alignment.Left, Alignment.CenterX | Alignment.Left,
                 "", frame);
             textBlock.Font = font;
             textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
-            textBlock.ToolTip = ep.Description;
+            textBlock.ToolTip = pi.itemPrefab.Description;
 
-            if (ep.sprite != null)
+            if (pi.itemPrefab.sprite != null)
             {
-                GUIImage img = new GUIImage(new Rectangle(0, 0, 40, 40), ep.sprite, Alignment.CenterLeft, frame);
-                img.Color = ep.SpriteColor;
+                GUIImage img = new GUIImage(new Rectangle(0, 0, 40, 40), pi.itemPrefab.sprite, Alignment.CenterLeft, frame);
+                img.Color = pi.itemPrefab.SpriteColor;
                 img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
             }
 
             textBlock = new GUITextBlock(
-                new Rectangle(width - 80, 0, 80, 25),
-                ep.Price.ToString(),
+                new Rectangle(width - 160, 0, 80, 25),
+                pi.itemPrefab.Price.ToString(),
                 null, null, Alignment.TopLeft,
                 Alignment.TopLeft, "", frame);
             textBlock.Font = font;
-            textBlock.ToolTip = ep.Description;
+            textBlock.ToolTip = pi.itemPrefab.Description;
+
+            //If its the store menu, quantity will always be 0
+            if (pi.quantity > 0)
+            {
+                var amountInput = new GUINumberInput(new Rectangle(width - 80, 0, 50, 40), "", GUINumberInput.NumberType.Int, frame);
+                amountInput.MinValueInt = 0;
+                amountInput.MaxValueInt = 1000;
+                amountInput.UserData = pi;
+                amountInput.IntValue = pi.quantity;
+                amountInput.OnValueChanged += (numberInput) =>
+                {
+                    PurchasedItem purchasedItem = numberInput.UserData as PurchasedItem;
+
+                    //Attempting to buy
+                    if (numberInput.IntValue > purchasedItem.quantity)
+                    {
+                        int quantity = numberInput.IntValue - purchasedItem.quantity;
+                        //Cap the numberbox based on the amount we can afford.
+                        quantity = campaign.Money <= 0 ? 
+                            0 : Math.Min((int)(Campaign.Money / (float)purchasedItem.itemPrefab.Price), quantity);
+                        for (int i = 0; i < quantity; i++)
+                        {
+                            BuyItem(numberInput, purchasedItem);
+                        }
+                        numberInput.IntValue = purchasedItem.quantity;
+                    }
+                    //Attempting to sell
+                    else
+                    {
+                        int quantity = purchasedItem.quantity - numberInput.IntValue;
+                        for (int i = 0; i < quantity; i++)
+                        {
+                            SellItem(numberInput, purchasedItem);
+                        }
+                    }
+                };
+            }
         }
 
         private bool BuyItem(GUIComponent component, object obj)
         {
-            ItemPrefab prefab = obj as ItemPrefab;
-            if (prefab == null) return false;
+            PurchasedItem pi = obj as PurchasedItem;
+            if (pi == null || pi.itemPrefab == null) return false;
 
             if (GameMain.Client != null && !GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign))
             {
                 return false;
             }
 
-            if (prefab.Price > campaign.Money) return false;
+            if (pi.itemPrefab.Price > campaign.Money) return false;
             
-            campaign.CargoManager.PurchaseItem(prefab);
+            campaign.CargoManager.PurchaseItem(pi.itemPrefab, 1);
             GameMain.Client?.SendCampaignState();
 
             return false;
@@ -272,15 +311,15 @@ namespace Barotrauma
 
         private bool SellItem(GUIComponent component, object obj)
         {
-            ItemPrefab prefab = obj as ItemPrefab;
-            if (prefab == null) return false;
+            PurchasedItem pi = obj as PurchasedItem;
+            if (pi == null || pi.itemPrefab == null) return false;
 
             if (GameMain.Client != null && !GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign))
             {
                 return false;
             }
             
-            campaign.CargoManager.SellItem(prefab);
+            campaign.CargoManager.SellItem(pi.itemPrefab,1);
             GameMain.Client?.SendCampaignState();
 
             return false;
@@ -289,10 +328,13 @@ namespace Barotrauma
         private void RefreshItemTab()
         {
             selectedItemList.ClearChildren();
-            foreach (ItemPrefab ip in campaign.CargoManager.PurchasedItems)
+            foreach (PurchasedItem pi in campaign.CargoManager.PurchasedItems)
             {
-                CreateItemFrame(ip, selectedItemList, selectedItemList.Rect.Width);
+                CreateItemFrame(pi, selectedItemList, selectedItemList.Rect.Width);
             }
+            selectedItemList.children.Sort((x, y) => (x.UserData as PurchasedItem).itemPrefab.Name.CompareTo((y.UserData as PurchasedItem).itemPrefab.Name));
+            selectedItemList.children.Sort((x, y) => (x.UserData as PurchasedItem).itemPrefab.Category.CompareTo((y.UserData as PurchasedItem).itemPrefab.Category));
+            selectedItemList.UpdateScrollBarSize();
         }
         
         public void SelectTab(Tab tab)
@@ -311,16 +353,16 @@ namespace Barotrauma
             storeItemList.ClearChildren();
 
             MapEntityCategory category = (MapEntityCategory)selection;
-            var items = MapEntityPrefab.List.FindAll(ep => ep.Price > 0.0f && ep.Category.HasFlag(category));
+            var items = MapEntityPrefab.List.FindAll(ep => ep.Price > 0.0f && ep.Category.HasFlag(category) && ep is ItemPrefab);
 
             int width = storeItemList.Rect.Width;
 
-            foreach (MapEntityPrefab ep in items)
+            foreach (ItemPrefab ep in items)
             {
-                CreateItemFrame(ep, storeItemList, width);
+                CreateItemFrame(new PurchasedItem((ItemPrefab)ep,0), storeItemList, width);
             }
 
-            storeItemList.children.Sort((x, y) => (x.UserData as MapEntityPrefab).Name.CompareTo((y.UserData as MapEntityPrefab).Name));
+            storeItemList.children.Sort((x, y) => (x.UserData as PurchasedItem).itemPrefab.Name.CompareTo((y.UserData as PurchasedItem).itemPrefab.Name));
 
             foreach (GUIComponent child in button.Parent.children)
             {

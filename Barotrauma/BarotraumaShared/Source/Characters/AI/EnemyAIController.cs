@@ -274,7 +274,15 @@ namespace Barotrauma
 
         private void UpdateEscape(float deltaTime)
         {
-            SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(SimPosition - selectedAiTarget.SimPosition) * 5);
+            if (selectedAiTarget == null || selectedAiTarget.Entity == null || selectedAiTarget.Entity.Removed)
+            {
+                state = AIState.None;
+                return;
+            }
+
+            Vector2 escapeDir = Vector2.Normalize(SimPosition - selectedAiTarget.SimPosition);
+            if (!MathUtils.IsValid(escapeDir)) escapeDir = Vector2.UnitY;
+            SteeringManager.SteeringManual(deltaTime, escapeDir * 5);
             SteeringManager.SteeringWander(1.0f);
             SteeringManager.SteeringAvoid(deltaTime, 2f);
         }
@@ -484,8 +492,10 @@ namespace Barotrauma
 
             if (dist < ConvertUnits.ToSimUnits(500.0f))
             {
+                Vector2 attackDir = Vector2.Normalize(Character.SimPosition - attackPosition);
+                if (!MathUtils.IsValid(attackDir)) attackDir = Vector2.UnitY;
                 steeringManager.SteeringSeek(attackPosition, -0.8f);
-                steeringManager.SteeringManual(deltaTime, Vector2.Normalize(Character.SimPosition - attackPosition) * (1.0f - (dist / 500.0f)));
+                steeringManager.SteeringManual(deltaTime, attackDir * (1.0f - (dist / 500.0f)));
             }
 
             steeringManager.SteeringAvoid(deltaTime, 1.0f);

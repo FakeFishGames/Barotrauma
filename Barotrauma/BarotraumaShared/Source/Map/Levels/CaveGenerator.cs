@@ -183,7 +183,7 @@ namespace Barotrauma
 
             foreach (GraphEdge ge in graphEdges)
             {
-                if (ge.point1 == ge.point2) continue;
+                if (Vector2.DistanceSquared(ge.point1, ge.point2) < 0.001f) continue;
 
                 for (int i = 0; i < 2; i++)
                 {
@@ -323,18 +323,9 @@ namespace Barotrauma
                 //choose random edge (ignoring ones where the adjacent cell is outside limits)
                 else
                 {
-
-
-                    //if (allowedEdges.Count==0)
-                    //{
-                    //    edgeIndex = Rand.Int(currentCell.edges.Count, false);
-                    //}
-                    //else
-                    //{
                     edgeIndex = Rand.Int(allowedEdges.Count, Rand.RandSync.Server);
                     if (mirror && edgeIndex > 0) edgeIndex = allowedEdges.Count - edgeIndex;
                     edgeIndex = currentCell.edges.IndexOf(allowedEdges[edgeIndex]);
-                    //}
                 }
 
                 currentCell = currentCell.edges[edgeIndex].AdjacentCell(currentCell);
@@ -357,14 +348,22 @@ namespace Barotrauma
 
             return pathCells;
         }
-        
-        public static List<Body> GeneratePolygons(List<VoronoiCell> cells, out List<Vector2[]> renderTriangles, bool setSolid=true)
+
+        public static List<Body> GeneratePolygons(List<VoronoiCell> cells, Level level, out List<Vector2[]> renderTriangles, bool setSolid = true)
         {
             renderTriangles = new List<Vector2[]>();
             var bodies = new List<Body>();
 
             List<Vector2> tempVertices = new List<Vector2>();
             List<Vector2> bodyPoints = new List<Vector2>();
+
+            Body cellBody = new Body(GameMain.World)
+            {
+                SleepingAllowed = false,
+                BodyType = BodyType.Static,
+                CollisionCategories = Physics.CollisionLevel
+            };
+            bodies.Add(cellBody);
 
             for (int n = cells.Count - 1; n >= 0; n-- )
             {
@@ -412,33 +411,35 @@ namespace Barotrauma
                     cell.bodyVertices.Add(bodyPoints[i]);
                     bodyPoints[i] = ConvertUnits.ToSimUnits(bodyPoints[i]);
                 }
-
-
+                
                 if (cell.CellType == CellType.Empty) continue;
 
+                cellBody.UserData = cell;
                 var triangles = MathUtils.TriangulateConvexHull(bodyPoints, ConvertUnits.ToSimUnits(cell.Center));
-
-                Body cellBody = new Body(GameMain.World);
-
+                
                 for (int i = 0; i < triangles.Count; i++)
                 {
                     //don't create a triangle if any of the vertices are too close to each other
                     //(apparently Farseer doesn't like polygons with a very small area, see Shape.ComputeProperties)
-                    if (Vector2.Distance(triangles[i][0], triangles[i][1]) < 0.05f ||
-                        Vector2.Distance(triangles[i][0], triangles[i][2]) < 0.05f ||
-                        Vector2.Distance(triangles[i][1], triangles[i][2]) < 0.05f) continue;
+                    if (Vector2.DistanceSquared(triangles[i][0], triangles[i][1]) < 0.006f ||
+                        Vector2.DistanceSquared(triangles[i][0], triangles[i][2]) < 0.006f ||
+                        Vector2.DistanceSquared(triangles[i][1], triangles[i][2]) < 0.006f) continue;
                     
                     Vertices bodyVertices = new Vertices(triangles[i]);
-                    FixtureFactory.AttachPolygon(bodyVertices, 5.0f, cellBody);
+                    var newFixture = FixtureFactory.AttachPolygon(bodyVertices, 5.0f, cellBody);
+                    newFixture.UserData = cell;
+
+                    if (newFixture.Shape.MassData.Area < FarseerPhysics.Settings.Epsilon)
+                    {
+                        DebugConsole.ThrowError("Invalid triangle created by CaveGenerator (" + triangles[i][0] + ", " + triangles[i][1] + ", " + triangles[i][2] + ")");
+                        GameAnalyticsManager.AddErrorEventOnce(
+                            "CaveGenerator.GeneratePolygons:InvalidTriangle",
+                            GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
+                            "Invalid triangle created by CaveGenerator (" + triangles[i][0] + ", " + triangles[i][1] + ", " + triangles[i][2] + "). Seed: " + level.Seed);
+                    }
                 }
                 
-                cellBody.UserData = cell;
-                cellBody.SleepingAllowed = false;
-                cellBody.BodyType = BodyType.Kinematic;
-                cellBody.CollisionCategories = Physics.CollisionLevel;
-
                 cell.body = cellBody;
-                bodies.Add(cellBody);
             }
 
             return bodies;

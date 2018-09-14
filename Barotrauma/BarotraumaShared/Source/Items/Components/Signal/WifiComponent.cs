@@ -14,6 +14,8 @@ namespace Barotrauma.Items.Components
 
         private int channel;
 
+        public byte TeamID;
+
         [Serialize(20000.0f, false)]
         public float Range
         {
@@ -59,7 +61,7 @@ namespace Barotrauma.Items.Components
         {
             if (!HasRequiredContainedItems(false)) return false;
 
-            if (sender == null || sender.channel != channel) return false;
+            if (sender == null || sender.channel != channel || sender.TeamID != TeamID) return false;
 
             return Vector2.Distance(item.WorldPosition, sender.item.WorldPosition) <= sender.Range;
         }
@@ -95,6 +97,16 @@ namespace Barotrauma.Items.Components
                     foreach (WifiComponent wifiComp in receivers)
                     {
                         wifiComp.item.SendSignal(stepsTaken, signal, "signal_out", sender);
+                        if (source != null)
+                        {
+                            foreach (Item receiverItem in wifiComp.item.LastSentSignalRecipients)
+                            {
+                                if (!source.LastSentSignalRecipients.Contains(receiverItem))
+                                {
+                                    source.LastSentSignalRecipients.Add(receiverItem);
+                                }
+                            }
+                        }
                     }
                     break;
             }

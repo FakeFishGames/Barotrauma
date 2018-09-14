@@ -80,9 +80,9 @@ namespace Barotrauma
             }
 
             float steeringSpeed = steering.Length();
-            if (steeringSpeed>speed)
+            if (steeringSpeed > speed)
             {
-               steering = Vector2.Normalize(steering) * Math.Abs(speed);
+                steering = Vector2.Normalize(steering) * Math.Abs(speed);
             }
 
             host.Steering = steering;
@@ -97,12 +97,12 @@ namespace Barotrauma
             targetVel = Vector2.Normalize(targetVel) * speed;
             Vector2 newSteering = targetVel - host.Steering;
 
-            if (newSteering==Vector2.Zero) return Vector2.Zero;
+            if (newSteering == Vector2.Zero) return Vector2.Zero;
 
             float steeringSpeed = (newSteering + host.Steering).Length();
             if (steeringSpeed > Math.Abs(speed))
             {
-                newSteering = Vector2.Normalize(newSteering)*Math.Abs(speed);
+                newSteering = Vector2.Normalize(newSteering) * Math.Abs(speed);
             }
 
             return newSteering;
@@ -151,8 +151,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    Structure closestStructure = closestBody.UserData as Structure;
-                    if (closestStructure != null)
+                    if (closestBody.UserData is Structure closestStructure)
                     {
                         Vector2 obstaclePosition = Submarine.LastPickedPosition;
                         if (closestStructure.IsHorizontal)
@@ -166,15 +165,17 @@ namespace Barotrauma
 
                         avoidSteering = Vector2.Normalize(Submarine.LastPickedPosition - obstaclePosition);
                     }
-                    else if (closestBody.UserData is Item)
+                    else if (closestBody.UserData is Item item)
                     {
-                        Item item = (Item)closestBody.UserData;
                         avoidSteering = Vector2.Normalize(Submarine.LastPickedPosition - item.SimPosition);
                     }
                     else
                     {
                         avoidSteering = Vector2.Normalize(host.SimPosition - Submarine.LastPickedPosition);
                     }
+                    //failed to normalize (the obstacle to avoid is at the same position as the character?)
+                    // -> move to a random direction
+                    if (!MathUtils.IsValid(avoidSteering)) avoidSteering = Rand.Vector(1.0f);
                 }
 
             }

@@ -151,11 +151,11 @@ namespace Barotrauma.Networking
         {
             get
             {
-                return log.LinesPerFile;
+                return ServerLog.LinesPerFile;
             }
             set
             {
-                log.LinesPerFile = value;
+                ServerLog.LinesPerFile = value;
             }
         }
 
@@ -172,6 +172,13 @@ namespace Barotrauma.Networking
 
         [Serialize(true, true)]
         public bool AllowRespawn
+        {
+            get;
+            set;
+        }
+
+        [Serialize(true, true)]
+        public bool AllowDisguises
         {
             get;
             set;
@@ -214,6 +221,13 @@ namespace Barotrauma.Networking
 
         [Serialize(0.6f, true)]
         public float KickVoteRequiredRatio
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(30.0f, true)]
+        public float KillDisconnectedTime
         {
             get;
             private set;
@@ -274,6 +288,15 @@ namespace Barotrauma.Networking
             private set;
         }
 
+        /// <summary>
+        /// A list of int pairs that represent the ranges of UTF-16 codes allowed in client names
+        /// </summary>
+        public List<Pair<int, int>> AllowedClientNameChars
+        {
+            get;
+            private set;
+        } = new List<Pair<int, int>>();
+
         private void SaveSettings()
         {
             XDocument doc = new XDocument(new XElement("serversettings"));
@@ -294,6 +317,8 @@ namespace Barotrauma.Networking
             doc.Root.SetAttributeValue("TraitorsEnabled", TraitorsEnabled.ToString());
 
             doc.Root.SetAttributeValue("AllowedRandomMissionTypes", string.Join(",", AllowedRandomMissionTypes));
+
+            doc.Root.SetAttributeValue("AllowedClientNameChars", string.Join(",", AllowedClientNameChars.Select(c => c.First + "-" + c.Second)));
 
 #if SERVER
             doc.Root.SetAttributeValue("password", password);
@@ -353,6 +378,36 @@ namespace Barotrauma.Networking
             Enum.TryParse(doc.Root.GetAttributeString("TraitorsEnabled", "No"), out traitorsEnabled);
             TraitorsEnabled = traitorsEnabled;
             GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
+
+            //"65-90", "97-122", "48-59" = upper and lower case english alphabet and numbers
+            string[] allowedClientNameCharsStr = doc.Root.GetAttributeStringArray("AllowedClientNameChars", new string[] { "32-33", "65-90", "97-122", "48-59" });
+            foreach (string allowedClientNameCharRange in allowedClientNameCharsStr)
+            {
+                string[] splitRange = allowedClientNameCharRange.Split('-');
+                if (splitRange.Length == 0 || splitRange.Length > 2)
+                {
+                    DebugConsole.ThrowError("Error in server settings - "+ allowedClientNameCharRange+" is not a valid range for characters allowed in client names.");
+                    continue;
+                }
+
+                int min = -1;
+                if (!int.TryParse(splitRange[0], out min))
+                {
+                    DebugConsole.ThrowError("Error in server settings - " + allowedClientNameCharRange + " is not a valid range for characters allowed in client names.");
+                    continue;
+                }
+                int max = min;
+                if (splitRange.Length == 2)
+                {
+                    if (!int.TryParse(splitRange[1], out max))
+                    {
+                        DebugConsole.ThrowError("Error in server settings - " + allowedClientNameCharRange + " is not a valid range for characters allowed in client names.");
+                        continue;
+                    }
+                }
+
+                if (min > -1 && max > -1) AllowedClientNameChars.Add(Pair<int, int>.Create(min, max));
+            }
 
             AllowedRandomMissionTypes = doc.Root.GetAttributeStringArray(
                 "AllowedRandomMissionTypes",

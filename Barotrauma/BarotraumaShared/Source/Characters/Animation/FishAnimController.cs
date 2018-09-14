@@ -64,8 +64,16 @@ namespace Barotrauma
                 }
                 else
                 {
-                    Collider.LinearVelocity = (MainLimb.SimPosition - Collider.SimPosition) * 60.0f;
-                    Collider.SmoothRotate(MainLimb.Rotation);
+                    Vector2 diff = (MainLimb.SimPosition - Collider.SimPosition);
+                    if (diff.LengthSquared() > 10.0f * 10.0f)
+                    {
+                        Collider.SetTransform(MainLimb.SimPosition, MainLimb.Rotation);
+                    }
+                    else
+                    {
+                        Collider.LinearVelocity = diff * 60.0f;
+                        Collider.SmoothRotate(MainLimb.Rotation);
+                    }
                 }
 
                 if (character.IsDead && deathAnimTimer < deathAnimDuration)

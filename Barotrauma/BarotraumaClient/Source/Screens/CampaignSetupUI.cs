@@ -57,6 +57,14 @@ namespace Barotrauma
                 
                 Submarine selectedSub = subList.SelectedData as Submarine;
                 if (selectedSub == null) return false;
+                
+                if (string.IsNullOrEmpty(selectedSub.MD5Hash.Hash))
+                {
+                    ((GUITextBlock)subList.Selected).TextColor = Color.DarkRed * 0.8f;
+                    subList.Selected.CanBeFocused = false;
+                    subList.Deselect();
+                    return false;
+                }
 
                 string savePath = SaveUtil.CreateSavePath(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer, saveNameBox.Text);
                 if (selectedSub.HasTag(SubmarineTag.Shuttle) || !selectedSub.CompatibleContentPackages.Contains(GameMain.SelectedPackage.Name))
@@ -144,7 +152,7 @@ namespace Barotrauma
                     return true;
                 };
             }
-            if (Submarine.SavedSubmarines.Count > 0) subList.Select(Submarine.SavedSubmarines[0]);
+            if (Submarine.SavedSubmarines.Any()) subList.Select(Submarine.SavedSubmarines.First());
         }
 
         public void UpdateLoadMenu()

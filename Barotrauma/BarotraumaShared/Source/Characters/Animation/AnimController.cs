@@ -68,6 +68,7 @@ namespace Barotrauma
 
         public virtual void DragCharacter(Character target) { }
 
+        public virtual void UpdateUseItem(bool allowMovement, Vector2 handPos) { }
 
    }
 }

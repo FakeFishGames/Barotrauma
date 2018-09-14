@@ -63,6 +63,7 @@ namespace Barotrauma
                 character.SetInput(InputType.Aim, false, true);
 
                 Vector2 enemyDiff = Vector2.Normalize(enemy.Position - character.Position);
+                if (!MathUtils.IsValid(enemyDiff)) enemyDiff = Rand.Vector(1.0f);
                 float weaponAngle = ((weapon.body.Dir == 1.0f) ? weapon.body.Rotation : weapon.body.Rotation - MathHelper.Pi);
                 Vector2 weaponDir = new Vector2((float)Math.Cos(weaponAngle), (float)Math.Sin(weaponAngle));
 

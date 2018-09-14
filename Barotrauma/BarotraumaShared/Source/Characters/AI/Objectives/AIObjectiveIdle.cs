@@ -30,14 +30,9 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-
             var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
+            if (pathSteering == null) return;
 
-            if (pathSteering==null)
-            {
-                return;
-            }
-            
             if (character.AnimController.InWater)
             {
                 //attempt to find a safer place if in water
@@ -67,16 +62,16 @@ namespace Barotrauma
             
             newTargetTimer -= deltaTime;
 
-                  
+
             //wander randomly 
             // - if reached the end of the path 
             // - if the target is unreachable
             // - if the path requires going outside
-            if (pathSteering==null || (pathSteering.CurrentPath != null && 
+            if (pathSteering == null || (pathSteering.CurrentPath != null &&
                 (pathSteering.CurrentPath.NextNode == null || pathSteering.CurrentPath.Unreachable || pathSteering.CurrentPath.HasOutdoorsNodes)))
             {
                 //steer away from edges of the hull
-                if (character.AnimController.CurrentHull!=null)
+                if (character.AnimController.CurrentHull != null)
                 {
                     float leftDist = character.Position.X - character.AnimController.CurrentHull.Rect.X;
                     float rightDist = character.AnimController.CurrentHull.Rect.Right - character.Position.X;
@@ -113,8 +108,13 @@ namespace Barotrauma
 
                 return;                
             }
- 
-            if (currentTarget == null) return;
+             
+            if (currentTarget?.Entity == null) return;
+            if (currentTarget.Entity.Removed)
+            {
+                currentTarget = null;
+                return;
+            }
             character.AIController.SteeringManager.SteeringSeek(currentTarget.SimPosition, 2.0f);
         }
 

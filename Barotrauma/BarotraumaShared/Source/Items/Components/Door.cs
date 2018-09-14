@@ -334,9 +334,13 @@ namespace Barotrauma.Items.Components
                 body.Remove();
                 body = null;
             }
-
-
-            if (linkedGap != null) linkedGap.Remove();
+            
+            //no need to remove the gap if we're unloading the whole submarine
+            //otherwise the gap will be removed twice and cause console warnings
+            if (!Submarine.Unloading)
+            {
+                if (linkedGap != null) linkedGap.Remove();
+            }
 
             doorSprite.Remove();
             if (weldedSprite != null) weldedSprite.Remove();
@@ -349,6 +353,14 @@ namespace Barotrauma.Items.Components
 
         private void PushCharactersAway()
         {
+            if (!MathUtils.IsValid(item.SimPosition))
+            {
+                DebugConsole.ThrowError("Failed to push a character out of a doorway - position of the door is not valid (" + item.SimPosition + ")");
+                GameAnalyticsManager.AddErrorEventOnce("PushCharactersAway:DoorPosInvalid", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                      "Failed to push a character out of a doorway - position of the door is not valid (" + item.SimPosition + ").");
+                return;
+            }
+
             //push characters out of the doorway when the door is closing/opening
             Vector2 simPos = ConvertUnits.ToSimUnits(new Vector2(item.Rect.X, item.Rect.Y));
 
@@ -360,6 +372,16 @@ namespace Barotrauma.Items.Components
 
             foreach (Character c in Character.CharacterList)
             {
+                if (!c.Enabled) continue;
+                if (!MathUtils.IsValid(c.SimPosition))
+                {
+                    DebugConsole.ThrowError("Failed to push a character out of a doorway - position of the character \"" + c.Name + "\" is not valid (" + c.SimPosition + ")");
+                    GameAnalyticsManager.AddErrorEventOnce("PushCharactersAway:CharacterPosInvalid", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Failed to push a character out of a doorway - position of the character \"" + c.Name + "\" is not valid (" + c.SimPosition + ")." +
+                        " Removed: " + c.Removed +
+                        " Remoteplayer: " + c.IsRemotePlayer);
+                    continue;
+                }
                 int dir = isHorizontal ? Math.Sign(c.SimPosition.Y - item.SimPosition.Y) : Math.Sign(c.SimPosition.X - item.SimPosition.X);
 
                 List<PhysicsBody> bodies = c.AnimController.Limbs.Select(l => l.body).ToList();
@@ -368,17 +390,24 @@ namespace Barotrauma.Items.Components
                 foreach (PhysicsBody body in bodies)
                 {
                     float diff = 0.0f;
+                    if (!MathUtils.IsValid(body.SimPosition))
+                    {
+                        DebugConsole.ThrowError("Failed to push a limb out of a doorway - position of the body (character \"" + c.Name + "\") is not valid (" + body.SimPosition + ")");
+                        GameAnalyticsManager.AddErrorEventOnce("PushCharactersAway:LimbPosInvalid", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            "Failed to push a character out of a doorway - position of the character \"" + c.Name + "\" is not valid (" + body.SimPosition + ")." +
+                            " Removed: " + c.Removed +
+                            " Remoteplayer: " + c.IsRemotePlayer);
+                        continue;
+                    }
 
                     if (isHorizontal)
                     {
                         if (body.SimPosition.X < simPos.X || body.SimPosition.X > simPos.X + simSize.X) continue;
-
                         diff = body.SimPosition.Y - item.SimPosition.Y;
                     }
                     else
                     {
                         if (body.SimPosition.Y > simPos.Y || body.SimPosition.Y < simPos.Y - simSize.Y) continue;
-
                         diff = body.SimPosition.X - item.SimPosition.X;
                     }
                    
@@ -442,8 +471,10 @@ namespace Barotrauma.Items.Components
 
         public void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage = false)
         {
-            if (isStuck || (predictedState == null && isOpen == open) || (predictedState != null && isOpen == predictedState.Value)) return;
-
+            if (isStuck || 
+                (predictedState == null && isOpen == open) || 
+                (predictedState != null && isOpen == predictedState.Value && isOpen == open)) return;
+            
             if (GameMain.Client != null && !isNetworkMessage)
             {
                 //clients can "predict" that the door opens/closes when a signal is received

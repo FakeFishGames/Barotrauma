@@ -82,13 +82,15 @@ namespace Barotrauma
 
             locationTitle.Text = TextManager.Get("Location") + ": " + campaign.Map.CurrentLocation.Name;
 
+            campaign.Map.SelectLocation(-1);
+
             bottomPanel.ClearChildren();
             campaignUI = new CampaignUI(campaign, bottomPanel);
             campaignUI.StartRound = StartRound;
-            campaignUI.OnLocationSelected = SelectLocation;            
+            campaignUI.OnLocationSelected = SelectLocation;
             campaignUI.UpdateCharacterLists();
 
-            if (GameSettings.SendUserStatistics) GameAnalyticsSDK.Net.GameAnalytics.SetCustomDimension01("singleplayer");
+            GameAnalyticsManager.SetCustomDimension01("singleplayer");
         }
         
         public override void AddToGUIUpdateList()
@@ -190,7 +192,10 @@ namespace Barotrauma
 
         private IEnumerable<object> LoadRound()
         {
-            GameMain.GameSession.StartRound(campaignUI.SelectedLevel, true);
+            GameMain.GameSession.StartRound(campaignUI.SelectedLevel, 
+                reloadSub: true, 
+                loadSecondSub: false,
+                mirrorLevel: GameMain.GameSession.Map.CurrentLocation != GameMain.GameSession.Map.SelectedConnection.Locations[0]);
             GameMain.GameScreen.Select();
 
             yield return CoroutineStatus.Success;

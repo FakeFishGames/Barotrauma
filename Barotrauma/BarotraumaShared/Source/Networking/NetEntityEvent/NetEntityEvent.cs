@@ -7,6 +7,7 @@ namespace Barotrauma.Networking
     {
         public enum Type
         {
+            Invalid,
             ComponentState, 
             InventoryState,
             Status,

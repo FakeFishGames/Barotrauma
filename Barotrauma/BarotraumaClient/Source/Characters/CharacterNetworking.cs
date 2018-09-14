@@ -150,7 +150,7 @@ namespace Barotrauma
                     msg.ReadPadBits();
 
                     int index = 0;
-                    if (GameMain.NetworkMember.Character == this)
+                    if (GameMain.NetworkMember.Character == this && AllowInput)
                     {
                         var posInfo = new CharacterStateInfo(pos, rotation, networkUpdateID, facingRight ? Direction.Right : Direction.Left, selectedEntity, animation);
                         while (index < memState.Count && NetIdUtils.IdMoreRecent(posInfo.ID, memState[index].ID))
@@ -188,6 +188,7 @@ namespace Barotrauma
 
                                 controlled = this;
                                 IsRemotePlayer = false;
+                                GameMain.Client.HasSpawned = true;
                                 GameMain.Client.Character = this;
                                 GameMain.LightManager.LosEnabled = true;
                             }
@@ -286,6 +287,7 @@ namespace Barotrauma
 
                 if (GameMain.Client.ID == ownerId)
                 {
+                    GameMain.Client.HasSpawned = true;
                     GameMain.Client.Character = character;
                     Controlled = character;
 
@@ -342,7 +344,7 @@ namespace Barotrauma
             }
             else
             {
-                this.isDead = false;
+                if (this.isDead) Revive();
 
                 health = msg.ReadRangedSingle(minHealth, maxHealth, 8);
 

@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using GameAnalyticsSDK.Net;
+using System.Threading;
 
 namespace Barotrauma
 {
@@ -74,7 +75,8 @@ namespace Barotrauma
             get;
             private set;
         }
-        
+        private static bool FullscreenOnTabIn;
+
         public static WindowMode WindowMode
         {
             get;
@@ -134,7 +136,7 @@ namespace Barotrauma
                 Config.WasGameUpdated = false;
                 Config.Save("config.xml");
             }
-
+            
             ApplyGraphicsSettings();
 
             Content.RootDirectory = "Content";
@@ -231,7 +233,36 @@ namespace Barotrauma
             TitleScreen = new LoadingScreen(GraphicsDevice);
 
             loadingCoroutine = CoroutineManager.StartCoroutine(Load());
+
+            var myForm = (System.Windows.Forms.Form)System.Windows.Forms.Form.FromHandle(Window.Handle);
+            myForm.Deactivate += new EventHandler(HandleDefocus);
+            myForm.Activated += new EventHandler(HandleFocus);
         }
+
+        private void HandleDefocus(object sender, EventArgs e)
+        {
+            if (GraphicsDeviceManager.IsFullScreen && GraphicsDeviceManager.HardwareModeSwitch)
+            {
+                GraphicsDeviceManager.IsFullScreen = false;
+                GraphicsDeviceManager.ApplyChanges();
+                FullscreenOnTabIn = true;
+                Thread.Sleep(500);
+            }
+        }
+
+        private void HandleFocus(object sender, EventArgs e)
+        {
+            if (FullscreenOnTabIn)
+            {
+                GraphicsDeviceManager.HardwareModeSwitch = true;
+                GraphicsDeviceManager.IsFullScreen = true;
+                GraphicsDeviceManager.ApplyChanges();
+                FullscreenOnTabIn = false;
+                Thread.Sleep(500);
+            }
+        }
+
+
 
         private void InitUserStats()
         {
@@ -244,12 +275,18 @@ namespace Barotrauma
                     new string[] { "Yes", "No" });
                 userStatsPrompt.Buttons[0].OnClicked += (btn, userdata) =>
                 {
+                    GameSettings.ShowUserStatisticsPrompt = false;
                     GameSettings.SendUserStatistics = true;
                     GameAnalyticsManager.Init();
                     return true;
                 };
                 userStatsPrompt.Buttons[0].OnClicked += userStatsPrompt.Close;
-                userStatsPrompt.Buttons[1].OnClicked += (btn, userdata) => { GameSettings.SendUserStatistics = false; return true; };
+                userStatsPrompt.Buttons[1].OnClicked += (btn, userdata) =>
+                {
+                    GameSettings.ShowUserStatisticsPrompt = false;
+                    GameSettings.SendUserStatistics = false;
+                    return true;
+                };
                 userStatsPrompt.Buttons[1].OnClicked += userStatsPrompt.Close;
             }
             else if (GameSettings.SendUserStatistics)

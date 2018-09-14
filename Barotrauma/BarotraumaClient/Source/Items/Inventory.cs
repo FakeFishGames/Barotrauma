@@ -1,4 +1,6 @@
 ﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -463,6 +465,76 @@ namespace Barotrauma
             if (item == null || !drawItem) return;
 
             item.Sprite.Draw(spriteBatch, new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), item.GetSpriteColor());
+        }
+
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        {
+            receivedItemIDs = new ushort[capacity];
+
+            for (int i = 0; i < capacity; i++)
+            {
+                receivedItemIDs[i] = msg.ReadUInt16();
+            }
+
+            //delay applying the new state if less than 1 second has passed since this client last sent a state to the server
+            //prevents the inventory from briefly reverting to an old state if items are moved around in quick succession
+
+            //also delay if we're still midround syncing, some of the items in the inventory may not exist yet
+            if (syncItemsDelay > 0.0f || GameMain.Client.MidRoundSyncing)
+            {
+                if (syncItemsCoroutine != null) CoroutineManager.StopCoroutines(syncItemsCoroutine);
+                syncItemsCoroutine = CoroutineManager.StartCoroutine(SyncItemsAfterDelay());
+            }
+            else
+            {
+                if (syncItemsCoroutine != null)
+                {
+                    CoroutineManager.StopCoroutines(syncItemsCoroutine);
+                    syncItemsCoroutine = null;
+                }
+                ApplyReceivedState();
+            }
+        }
+
+        private IEnumerable<object> SyncItemsAfterDelay()
+        {
+            while (syncItemsDelay > 0.0f || (GameMain.Client != null && GameMain.Client.MidRoundSyncing))
+            {
+                yield return CoroutineStatus.Running;
+            }
+
+            if (Owner.Removed || GameMain.Client == null)
+            {
+                yield return CoroutineStatus.Success;
+            }
+
+            ApplyReceivedState();
+
+            yield return CoroutineStatus.Success;
+        }
+
+        private void ApplyReceivedState()
+        {
+            for (int i = 0; i < capacity; i++)
+            {
+                if (receivedItemIDs[i] == 0 || (Entity.FindEntityByID(receivedItemIDs[i]) as Item != Items[i]))
+                {
+                    if (Items[i] != null) Items[i].Drop();
+                    System.Diagnostics.Debug.Assert(Items[i] == null);
+                }
+            }
+            
+            for (int i = 0; i < capacity; i++)
+            {
+                if (receivedItemIDs[i] > 0)
+                {
+                    var item = Entity.FindEntityByID(receivedItemIDs[i]) as Item;
+                    if (item == null || item == Items[i]) continue;
+                    TryPutItem(item, i, true, true, null, false);
+                }
+            }
+
+            receivedItemIDs = null;
         }
     }
 }
