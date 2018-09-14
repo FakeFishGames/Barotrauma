@@ -310,7 +310,7 @@ namespace Barotrauma
                 LightSource.Position = body.DrawPosition;
                 LightSource.LightSpriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipVertically;
             }
-            
+            float depthStep = 0.000001f;
             WearableSprite onlyDrawable = wearingItems.Find(w => w.HideOtherWearables);
             foreach (WearableSprite wearable in WearingItems)
             {
@@ -325,15 +325,20 @@ namespace Barotrauma
 
                 if (wearable.InheritLimbDepth)
                 {
-                    depth = ActiveSprite.Depth - 0.000001f;
+                    depth = ActiveSprite.Depth - depthStep;
                     if (wearable.DepthLimb != LimbType.None)
                     {
                         Limb depthLimb = character.AnimController.GetLimb(wearable.DepthLimb);
                         if (depthLimb != null)
                         {
-                            depth = depthLimb.ActiveSprite.Depth - 0.000001f;
+                            depth = depthLimb.ActiveSprite.Depth - depthStep;
                         }
                     }
+                }
+                // Draw outer cloths on top of inner cloths.
+                if (wearable.WearableComponent.AllowedSlots.Contains(InvSlotType.OuterClothes))
+                {
+                    depth -= depthStep;
                 }
 
                 Color wearableColor = wearable.WearableComponent.Item.GetSpriteColor();
