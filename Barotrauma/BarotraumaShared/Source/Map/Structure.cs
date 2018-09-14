@@ -147,8 +147,6 @@ namespace Barotrauma
             get { return prefab.Tags; }
         }
 
-        // TODO: encapsulate visuals?
-
         protected Color spriteColor;
         [Editable, Serialize("1.0,1.0,1.0,1.0", true)]
         public Color SpriteColor
@@ -156,7 +154,7 @@ namespace Barotrauma
             get { return spriteColor; }
             set { spriteColor = value; }
         }
-        
+
         public override Rectangle Rect
         {
             get
