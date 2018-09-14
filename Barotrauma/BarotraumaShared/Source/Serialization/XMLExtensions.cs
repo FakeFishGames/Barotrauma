@@ -431,6 +431,14 @@ namespace Barotrauma
                 float.TryParse(strComponents[i], NumberStyles.Float, CultureInfo.InvariantCulture, out components[i]);
             }
 
+            if (components.Any(c => c > 1.0f))
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    components[i] = components[i] / 255.0f;
+                }
+            }
+
             return new Color(components[0], components[1], components[2], components[3]);
         }
         
