@@ -50,7 +50,8 @@ namespace Barotrauma
         }
 
         private GUIFrame defaultModeContainer, campaignContainer;
-        private GUIButton campaignViewButton, spectateButton, settingsButton;
+        private GUIButton campaignViewButton, spectateButton;
+        public GUIButton SettingsButton { get; private set; }
 
         private GUITickBox playYourself;
         
@@ -148,13 +149,7 @@ namespace Barotrauma
             get;
             private set;
         }
-
-        public bool StartButtonEnabled
-        {
-            get { return StartButton.Enabled; }
-            set { StartButton.Enabled = value; }
-        }
-
+        
         public GUIFrame MyCharacterFrame
         {
             get { return myCharacterFrame; }
@@ -347,9 +342,9 @@ namespace Barotrauma
             };
             clientDisabledElements.Add(serverMessage);
             
-            settingsButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), topButtonContainer.RectTransform, Anchor.TopRight),
+            SettingsButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), topButtonContainer.RectTransform, Anchor.TopRight),
                 TextManager.Get("ServerSettingsButton"));
-            clientHiddenElements.Add(settingsButton);
+            clientHiddenElements.Add(SettingsButton);
 
             ShowLogButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), topButtonContainer.RectTransform, Anchor.TopRight),
                 TextManager.Get("ServerLog"))
@@ -1589,6 +1584,7 @@ namespace Barotrauma
             seedBox.Enabled = false;//!enabled && GameMain.Server != null;
 
             if (campaignViewButton != null) campaignViewButton.Visible = enabled;
+            if (SettingsButton != null) SettingsButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             if (StartButton != null) StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound);//!enabled && GameMain.Server != null;            
 
             if (enabled)

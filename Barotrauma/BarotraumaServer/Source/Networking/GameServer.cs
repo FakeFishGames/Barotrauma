@@ -407,8 +407,7 @@ namespace Barotrauma.Networking
                 if (startGameCoroutine != null && !CoroutineManager.IsCoroutineRunning(startGameCoroutine))
                 {
                     if (serverSettings.AutoRestart) serverSettings.AutoRestartTimer = Math.Max(serverSettings.AutoRestartInterval, 5.0f);
-                    GameMain.NetLobbyScreen.StartButtonEnabled = true;
-
+                    
                     GameMain.NetLobbyScreen.LastUpdateID++;
 
                     startGameCoroutine = null;
@@ -1235,8 +1234,7 @@ namespace Barotrauma.Networking
         private IEnumerable<object> InitiateStartGame(Submarine selectedSub, Submarine selectedShuttle, bool usingShuttle, GameModePreset selectedMode)
         {
             initiatedStartGame = true;
-            GameMain.NetLobbyScreen.StartButtonEnabled = false;
-
+            
             if (connectedClients.Any())
             {
                 NetOutgoingMessage msg = server.CreateMessage();
@@ -1283,8 +1281,6 @@ namespace Barotrauma.Networking
         private IEnumerable<object> StartGame(Submarine selectedSub, Submarine selectedShuttle, bool usingShuttle, GameModePreset selectedMode)
         {
             entityEventManager.Clear();
-
-            GameMain.NetLobbyScreen.StartButtonEnabled = false;
             
             roundStartSeed = DateTime.Now.Millisecond;
             Rand.SetSyncedSeed(roundStartSeed);
@@ -1457,9 +1453,7 @@ namespace Barotrauma.Networking
             GameMain.GameScreen.Select();
 
             AddChatMessage("Press TAB to chat. Use \"r;\" to talk through the radio.", ChatMessageType.Server);
-
-            GameMain.NetLobbyScreen.StartButtonEnabled = true;
-
+            
             gameStarted = true;
             initiatedStartGame = false;
 
