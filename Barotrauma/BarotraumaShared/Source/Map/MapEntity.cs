@@ -60,7 +60,7 @@ namespace Barotrauma
         {
             get
             {
-                return Sprite != null && Sprite.Depth > 0.5f;
+                return Sprite != null && SpriteDepth > 0.5f;
             }
         }
 
@@ -490,6 +490,30 @@ namespace Barotrauma
             if (linkedTo == null) return;
             if (linkedTo.Contains(e)) linkedTo.Remove(e);
         }
-        
+
+        #region Serialized properties
+        // We could use NaN or nullables, but in this case the first is not preferable, because it needs to be checked every time the value is used.
+        // Nullable on the other requires boxing that we don't want to do too often, since it generates garbage.
+        public bool SpriteDepthOverrideIsSet { get; private set; }
+        public float SpriteOverrideDepth => SpriteDepth;
+        private float _spriteOverrideDepth = float.NaN;
+        [Editable(0.001f, 0.999f), Serialize(float.NaN, true)]
+        public float SpriteDepth
+        {
+            get
+            {
+                if (SpriteDepthOverrideIsSet) { return _spriteOverrideDepth; }
+                return Sprite != null ? Sprite.Depth : 0;
+            }
+            set
+            {
+                if (!float.IsNaN(value))
+                {
+                    _spriteOverrideDepth = MathHelper.Clamp(value, 0.001f, 0.999f);
+                    SpriteDepthOverrideIsSet = true;
+                }
+            }
+        }
+        #endregion
     }
 }

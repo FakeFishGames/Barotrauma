@@ -192,7 +192,7 @@ namespace Barotrauma
                             int i = 0;
                             while (i < highlightedEntities.Count &&
                                 e.Sprite != null &&
-                                (highlightedEntities[i].Sprite == null || highlightedEntities[i].Sprite.Depth < e.Sprite.Depth))
+                                (highlightedEntities[i].Sprite == null || highlightedEntities[i].SpriteDepth < e.SpriteDepth))
                             {
                                 i++;
                             }

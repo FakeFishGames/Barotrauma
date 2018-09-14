@@ -1171,7 +1171,7 @@ namespace Barotrauma
 
         public float GetDrawDepth()
         {
-            return Sprite.Depth + ((ID % 255) * 0.000001f);
+            return SpriteDepth + ((ID % 255) * 0.000001f);
         }
 
         public bool IsInsideTrigger(Vector2 worldPosition)
