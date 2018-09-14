@@ -676,10 +676,15 @@ namespace Barotrauma
                 pos = afflictionArea.Location;
                 foreach (Pair<AfflictionPrefab, string> statusIcon in statusIcons)
                 {
-                    statusIcon.First.Icon?.Draw(spriteBatch, 
-                        pos.ToVector2(), 
+                    var slot = GUI.Style.GetComponentStyle("AfflictionIconSlot");
+                    slot.Sprites[highlightedIcon == statusIcon ? GUIComponent.ComponentState.Hover : GUIComponent.ComponentState.None][0].Draw(
+                        spriteBatch, new Rectangle(pos, new Point(iconSize)),
+                        highlightedIcon == statusIcon ? slot.HoverColor : slot.Color);
+
+                    statusIcon.First.Icon?.Draw(spriteBatch,
+                        pos.ToVector2(),
                         highlightedIcon == statusIcon ? statusIcon.First.IconColor : statusIcon.First.IconColor * 0.8f,
-                        rotate: 0, 
+                        rotate: 0,
                         scale: iconSize / statusIcon.First.Icon.size.X);
                     if (horizontal)
                         pos.X += iconSize + (int)(5 * GUI.Scale);
@@ -747,17 +752,21 @@ namespace Barotrauma
             foreach (Affliction affliction in limbAfflictions)
             {
                 if (affliction.Strength < affliction.Prefab.ShowIconThreshold) continue;
-                var icon = new GUIImage(new RectTransform(new Point(afflictionContainer.Rect.Height), afflictionContainer.RectTransform), affliction.Prefab.Icon)
+                var icon = new GUIFrame(new RectTransform(new Point(afflictionContainer.Rect.Height), afflictionContainer.RectTransform), "AfflictionIconSlot")
                 {
-                    UserData = affliction,
+                    UserData = affliction
+                };
+
+                new GUIImage(new RectTransform(Vector2.One, icon.RectTransform), affliction.Prefab.Icon, scaleToFit: true)
+                {
                     Color = affliction.Prefab.IconColor * 0.8f,
                     HoverColor = affliction.Prefab.IconColor * 0.9f,
                     SelectedColor = affliction.Prefab.IconColor,
-                    Scale = (afflictionContainer.Rect.Height / affliction.Prefab.Icon.size.X) * 0.8f
+                    CanBeFocused = false
                 };
                 if (afflictionInfoContainer.FindChild(affliction) != null)
                 {
-                    icon.Scale *= 1.2f;
+                    icon.RectTransform.LocalScale *= 1.2f;
                     icon.State = GUIComponent.ComponentState.Selected;
                 }
                 if (icon.Rect.Contains(PlayerInput.MousePosition))

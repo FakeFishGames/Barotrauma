@@ -473,6 +473,13 @@
       padding="10.0, 0.0, 10.0, 0.0"/>
   </CPRButton>
 
+  <AfflictionIconSlot
+    color="1.0,1.0,1.0,0.7"
+    hovercolor="1.0,1.0,1.0,0.9"
+    selectedcolor="1.0,1.0,1.0,1.0">
+    <Sprite texture="Content/UI/UI_Atlas.png" sourcerect ="746, 704, 120, 120" slice="754, 711, 865, 816"/>
+  </AfflictionIconSlot>
+
   <HealthCircleInner1
     color="1,1,1,0.6"
     hovercolor="1,1,1,0.8">
