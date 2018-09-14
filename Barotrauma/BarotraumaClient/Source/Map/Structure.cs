@@ -174,7 +174,7 @@ namespace Barotrauma
 
             Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
 
-            float depth = prefab.sprite.Depth;
+            float depth = SpriteDepthOverrideIsSet ? SpriteOverrideDepth : prefab.sprite.Depth;
             depth -= (ID % 255) * 0.000001f;
 
             Vector2 textureOffset = this.textureOffset;
@@ -203,7 +203,7 @@ namespace Barotrauma
                     prefab.BackgroundSprite.effects = oldEffects;
                 }
             }
-
+            // TODO: use SpriteOverrideDepth if defined?
             if (back == prefab.sprite.Depth > 0.5f || editing)
             {
                 SpriteEffects oldEffects = prefab.sprite.effects;
