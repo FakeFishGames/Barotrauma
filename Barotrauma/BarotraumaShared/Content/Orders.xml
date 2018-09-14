@@ -1,5 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Orders>
+  <Order name="Dismissed" aitag="dismissed" doingtext="Dismissed" color="0.0,1.0,0.0,1.0"/>
+  
   <Order name="Follow" aitag="follow" doingtext="Following" color="1.0,0.5,0.1,1.0">
     <Sprite texture="Content/UI/IconAtlas.png" sourcerect="0,128,128,128"/>
   </Order>
@@ -7,12 +9,6 @@
   <Order name="Wait" aitag="wait" doingtext="Waiting" color="1.0,0.0,0.0,1.0">
     <Sprite texture="Content/UI/IconAtlas.png" sourcerect="256,0,128,128"/>
   </Order>
-
-  <!--
-  <Order name="Dismissed" aitag="dismissed" doingtext="Dismissed" color="0.0,1.0,0.0,1.0">
-    <Sprite texture="Content/UI/IconAtlas.png" sourcerect="64,0,128,128"/>
-  </Order>
-  -->
 
   <Order name="Operate Reactor" aitag="operatereactor" doingtext="Operating Reactor"
          targetitemtype="Reactor"
