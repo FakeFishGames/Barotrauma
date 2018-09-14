@@ -73,7 +73,8 @@ namespace Barotrauma.Items.Components
                 }
             };
 
-            new GUICustomComponent(new RectTransform(new Point(GuiFrame.Rect.Height, GuiFrame.Rect.Width), GuiFrame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(10, 0) },
+            int viewSize = Math.Min(GuiFrame.Rect.Width - 150, GuiFrame.Rect.Height);
+            new GUICustomComponent(new RectTransform(new Point(viewSize), GuiFrame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(10, 0) },
                 (spriteBatch, guiCustomComponent) => { DrawSonar(spriteBatch, guiCustomComponent.Rect); }, null);
 
             GuiFrame.CanBeFocused = false;
