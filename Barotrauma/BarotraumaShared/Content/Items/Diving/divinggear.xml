@@ -28,7 +28,7 @@
   <Item
   name="Oxygenite Tank"
   category="Equipment,Misc"
-  Tags="meditem,oxygensource"
+  Tags="smallitem,oxygensource"
   description="A Tank containing liquid Oxygenite.">
 
     <Deconstruct time="10">
