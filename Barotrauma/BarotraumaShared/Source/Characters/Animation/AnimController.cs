@@ -95,8 +95,13 @@ namespace Barotrauma
         public Vector2 AimSourcePos => ConvertUnits.ToDisplayUnits(AimSourceSimPos);
         public virtual Vector2 AimSourceSimPos => Collider.SimPosition;
 
-        protected float? GetValidOrNull(float v) => MathUtils.IsValid(v) ? new float?(v) : null;
-        protected float? GetValidOrNull(AnimationParams p, float? v) => p == null ? null : GetValidOrNull(v.Value);
+        protected float? GetValidOrNull(AnimationParams p, float? v)
+        {
+            if (p == null) { return null; }
+            if (v == null) { return null; }
+            if (!MathUtils.IsValid(v.Value)) { return null; }
+            return v.Value;
+        }
 
         protected override float? HeadPosition => GetValidOrNull(CurrentGroundedParams, CurrentGroundedParams?.HeadPosition * RagdollParams.JointScale);
         protected override float? TorsoPosition => GetValidOrNull(CurrentGroundedParams, CurrentGroundedParams?.TorsoPosition * RagdollParams.JointScale);
