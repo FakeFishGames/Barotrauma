@@ -585,6 +585,7 @@ namespace Barotrauma
                 {
                     contentHeight += child.Rect.Height + listBox.Spacing;
                     child.RectTransform.MaxSize = new Point(int.MaxValue, child.Rect.Height);
+                    child.RectTransform.MinSize = new Point(0, child.Rect.Height);
                 }
 
                 editingHUD.RectTransform.Resize(

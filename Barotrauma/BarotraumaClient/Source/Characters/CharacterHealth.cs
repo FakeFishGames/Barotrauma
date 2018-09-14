@@ -638,27 +638,27 @@ namespace Barotrauma
             Rectangle interactArea = healthBar.Rect;
             if (openHealthWindow != this)
             {
-                List<Pair<Sprite, string>> statusIcons = new List<Pair<Sprite, string>>();
+                List<Pair<AfflictionPrefab, string>> statusIcons = new List<Pair<AfflictionPrefab, string>>();
                 if (character.CurrentHull == null || character.CurrentHull.LethalPressure > 5.0f)
-                    statusIcons.Add(new Pair<Sprite, string>(AfflictionPrefab.Pressure.Icon, TextManager.Get("PressureHUDWarning")));
+                    statusIcons.Add(new Pair<AfflictionPrefab, string>(AfflictionPrefab.Pressure, TextManager.Get("PressureHUDWarning")));
                 if (character.CurrentHull != null && character.OxygenAvailable < LowOxygenThreshold && oxygenLowAffliction.Strength < oxygenLowAffliction.Prefab.ShowIconThreshold)
-                    statusIcons.Add(new Pair<Sprite, string>(AfflictionPrefab.OxygenLow.Icon, TextManager.Get("OxygenHUDWarning")));
+                    statusIcons.Add(new Pair<AfflictionPrefab, string>(AfflictionPrefab.OxygenLow, TextManager.Get("OxygenHUDWarning")));
 
                 var allAfflictions = GetAllAfflictions(true);
                 foreach (Affliction affliction in allAfflictions)
                 {
                     if (affliction.Strength < affliction.Prefab.ShowIconThreshold || affliction.Prefab.Icon == null) continue;
-                    statusIcons.Add(new Pair<Sprite, string>(affliction.Prefab.Icon, affliction.Prefab.Name));
+                    statusIcons.Add(new Pair<AfflictionPrefab, string>(affliction.Prefab, affliction.Prefab.Name));
                 }
 
-                Pair<Sprite, string> highlightedIcon = null;
+                Pair<AfflictionPrefab, string> highlightedIcon = null;
                 Vector2 highlightedIconPos = Vector2.Zero;
                 Rectangle afflictionArea =  alignment == Alignment.Left ? HUDLayoutSettings.AfflictionAreaLeft : HUDLayoutSettings.AfflictionAreaRight;
                 Point pos = afflictionArea.Location;
 
                 bool horizontal = afflictionArea.Width > afflictionArea.Height;
                 int iconSize = horizontal ? afflictionArea.Height : afflictionArea.Width;
-                foreach (Pair<Sprite, string> statusIcon in statusIcons)
+                foreach (Pair<AfflictionPrefab, string> statusIcon in statusIcons)
                 {
                     Rectangle afflictionIconRect = new Rectangle(pos, new Point(iconSize));
                     interactArea = Rectangle.Union(interactArea, afflictionIconRect);
@@ -674,9 +674,13 @@ namespace Barotrauma
                 }
 
                 pos = afflictionArea.Location;
-                foreach (Pair<Sprite, string> statusIcon in statusIcons)
+                foreach (Pair<AfflictionPrefab, string> statusIcon in statusIcons)
                 {
-                    statusIcon.First.Draw(spriteBatch, pos.ToVector2(), highlightedIcon == statusIcon ? Color.White : Color.White * 0.8f, 0, iconSize / statusIcon.First.size.X);
+                    statusIcon.First.Icon?.Draw(spriteBatch, 
+                        pos.ToVector2(), 
+                        highlightedIcon == statusIcon ? statusIcon.First.IconColor : statusIcon.First.IconColor * 0.8f,
+                        rotate: 0, 
+                        scale: iconSize / statusIcon.First.Icon.size.X);
                     if (horizontal)
                         pos.X += iconSize + (int)(5 * GUI.Scale);
                     else
@@ -746,9 +750,9 @@ namespace Barotrauma
                 var icon = new GUIImage(new RectTransform(new Point(afflictionContainer.Rect.Height), afflictionContainer.RectTransform), affliction.Prefab.Icon)
                 {
                     UserData = affliction,
-                    Color = Color.White * 0.8f,
-                    HoverColor = Color.White * 0.9f,
-                    SelectedColor = Color.White,
+                    Color = affliction.Prefab.IconColor * 0.8f,
+                    HoverColor = affliction.Prefab.IconColor * 0.9f,
+                    SelectedColor = affliction.Prefab.IconColor,
                     Scale = (afflictionContainer.Rect.Height / affliction.Prefab.Icon.size.X) * 0.8f
                 };
                 if (afflictionInfoContainer.FindChild(affliction) != null)
@@ -1191,7 +1195,7 @@ namespace Barotrauma
                 foreach (Affliction affliction in limbHealth.Afflictions)
                 {
                     if (affliction.Strength < affliction.Prefab.ShowIconThreshold) continue;
-                    affliction.Prefab.Icon.Draw(spriteBatch, iconPos, 0, iconScale);
+                    affliction.Prefab.Icon.Draw(spriteBatch, iconPos, affliction.Prefab.IconColor, 0, iconScale);
                     iconPos += new Vector2(10.0f, 20.0f) * iconScale;
                     iconScale *= 0.9f;
                 }
@@ -1202,7 +1206,7 @@ namespace Barotrauma
                     Limb indicatorLimb = character.AnimController.GetLimb(affliction.Prefab.IndicatorLimb);
                     if (indicatorLimb != null && indicatorLimb.HealthIndex == i)
                     {
-                        affliction.Prefab.Icon.Draw(spriteBatch, iconPos, 0, iconScale);
+                        affliction.Prefab.Icon.Draw(spriteBatch, iconPos, affliction.Prefab.IconColor, 0, iconScale);
                         iconPos += new Vector2(10.0f, 10.0f) * iconScale;
                         iconScale *= 0.9f;
                     }

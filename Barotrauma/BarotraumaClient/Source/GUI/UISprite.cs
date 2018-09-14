@@ -102,8 +102,8 @@ namespace Barotrauma
                 }
                 if (centerWidth == 0)
                 {
-                    scale.X = MathHelper.Clamp((float)rect.Height / (Slices[0].Height + Slices[1].Height + Slices[2].Height), 0, 1);
-                    centerWidth = rect.Width - (int)((Slices[0].Height + Slices[2].Height) * scale.Y);
+                    scale.X = MathHelper.Clamp((float)rect.Height / (Slices[0].Width + Slices[1].Width + Slices[2].Width), 0, 1);
+                    centerWidth = rect.Width - (int)((Slices[0].Width + Slices[2].Width) * scale.X);
                 }
                 else
                 {
@@ -122,7 +122,7 @@ namespace Barotrauma
                             new Rectangle((int)pos.X, (int)pos.Y, (int)width, (int)height),
                             Slices[x + y * 3],
                             color);
-
+                        
                         pos.Y += height;
                     }
                     pos.X += width;
