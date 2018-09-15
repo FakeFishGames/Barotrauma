@@ -970,7 +970,16 @@ namespace Barotrauma
             if (orderTargetFrame != null)
             {
                 Rectangle hoverArea = orderTargetFrame.Rect;
+                foreach (GUIComponent child in orderTargetFrame.Children.First().Children)
+                {
+                    if (!(child.UserData is Item)) continue;
+                    foreach (GUIComponent grandChild in child.Children)
+                    {
+                        hoverArea = Rectangle.Union(hoverArea, grandChild.Rect);
+                    }
+                }
                 hoverArea.Inflate(100, 100);
+
                 if (!hoverArea.Contains(PlayerInput.MousePosition)) orderTargetFrame = null;
             }
         }
