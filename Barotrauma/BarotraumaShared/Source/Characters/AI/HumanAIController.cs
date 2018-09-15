@@ -92,7 +92,7 @@ namespace Barotrauma
 
             objectiveManager.DoCurrentObjective(deltaTime);
          
-            float currObjectivePriority = objectiveManager.GetCurrentPriority(Character);
+            float currObjectivePriority = objectiveManager.GetCurrentPriority();
             //float moveSpeed = 1.0f;
 
             //if (currObjectivePriority > 30.0f)

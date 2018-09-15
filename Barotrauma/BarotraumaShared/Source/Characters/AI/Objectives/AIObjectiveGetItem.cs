@@ -77,6 +77,7 @@ namespace Barotrauma
                 if (itemIdentifiers.Any(id => character.Inventory.Items[i].Prefab.Identifier == id || character.Inventory.Items[i].HasTag(id)))
                 {
                     targetItem = character.Inventory.Items[i];
+                    moveToTarget = targetItem;
                     currItemPriority = 100.0f;
                     break;
                 }
@@ -90,6 +91,7 @@ namespace Barotrauma
                         if (itemIdentifiers.Any(id => containedItem.Prefab.Identifier == id || containedItem.HasTag(id)))
                         {
                             targetItem = containedItem;
+                            moveToTarget = character.Inventory.Items[i];
                             currItemPriority = 100.0f;
                             break;
                         }
