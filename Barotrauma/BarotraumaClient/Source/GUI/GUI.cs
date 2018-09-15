@@ -606,6 +606,8 @@ namespace Barotrauma
             Vector2 diff = worldPosition - cam.WorldViewCenter;
             float dist = diff.Length();
 
+            float symbolScale = 64.0f / sprite.size.X;
+
             if (dist > hideDist)
             {
                 float alpha = Math.Min((dist - hideDist) / 100.0f, 1.0f);
@@ -622,12 +624,12 @@ namespace Barotrauma
                     (float)-Math.Sin(angle) * Math.Min(GameMain.GraphicsHeight * 0.4f, screenDist));
 
                 Vector2 iconPos = cam.WorldToScreen(cam.WorldViewCenter) + iconDiff;
-                sprite.Draw(spriteBatch, iconPos, color * alpha);
+                sprite.Draw(spriteBatch, iconPos, color * alpha, rotate: 0.0f, scale: symbolScale);
 
                 if (unclampedDiff.Length() - 10 > iconDiff.Length())
                 {
                     Vector2 normalizedDiff = Vector2.Normalize(targetScreenPos - iconPos);
-                    Vector2 arrowOffset = normalizedDiff * sprite.size.X * 0.7f;
+                    Vector2 arrowOffset = normalizedDiff * sprite.size.X * symbolScale * 0.7f;
                     Arrow.Draw(spriteBatch, iconPos + arrowOffset, color * alpha, MathUtils.VectorToAngle(arrowOffset) + MathHelper.PiOver2);
                 }
             }
