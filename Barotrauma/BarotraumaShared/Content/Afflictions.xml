@@ -154,7 +154,8 @@
     <Effect minstrength="5" maxstrength="100" multiplybymaxvitality="true"
       minvitalitydecrease="0"
       maxvitalitydecrease="2"
-      strengthchange="-0.1"/>
+      strengthchange="-0.1"
+      dialogflag="Bloodloss"/>
     <icon texture="Content/UI/IconAtlas.png" sourcerect="0,768,128,128" color="139,60,42,255" origin="0,0"/>
   </Bloodloss>
 
@@ -247,7 +248,8 @@
       maxscreenblur="1.0"
       strengthchange="-0.2"
       minradialdistort="0.0"
-      maxradialdistort="5.0">
+      maxradialdistort="5.0"
+      dialogflag="DrunkMedium">
       <StatusEffect target="Character" SpeedMultiplier="0.7" setvalue="true"/>
     </Effect>
 
@@ -261,7 +263,8 @@
       maxscreenblur="3.0"
       strengthchange="-0.2"
       minradialdistort="5.0"
-      maxradialdistort="10.0">
+      maxradialdistort="10.0"
+      dialogflag="DrunkHigh">
       <StatusEffect target="Character" SpeedMultiplier="0.5" setvalue="true"/>
     </Effect>
     
@@ -288,7 +291,8 @@
       maxvitalitydecrease="20"
       strengthchange="-0.05"
       minchromaticaberration="0.0"
-      maxchromaticaberration="1.0">
+      maxchromaticaberration="1.0"
+      dialogflag="OpiateWithdrawalLow">
       <StatusEffect target="Character" SpeedMultiplier="0.8" setvalue="true"/>
     </Effect>
 
@@ -299,7 +303,8 @@
       maxvitalitydecrease="50"
       strengthchange="-0.1"
       minchromaticaberration="1.0"
-      maxchromaticaberration="5.0">
+      maxchromaticaberration="5.0"
+      dialogflag="OpiateWithdrawalMedium">
       <StatusEffect target="Character" SpeedMultiplier="0.7" setvalue="true"/>
     </Effect>
 
@@ -313,11 +318,13 @@
       minchromaticaberration="5.0"
       maxchromaticaberration="10.0"
       minradialdistort="0.0"
-      maxradialdistort="10.0">
+      maxradialdistort="10.0"
+      dialogflag="OpiateWithdrawalHigh">
       <StatusEffect target="Character" SpeedMultiplier="0.5" color="195,136,60,255" setvalue="true"/>
     </Effect>
 
-    <icon texture="Content/UI/IconAtlas.png" sourcerect="195,126,60,128" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="512,640,128,128" color="209,121,84,255" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="512,126,60,128" origin="0,0"/>
   </Affliction>
 
   <Affliction
@@ -411,7 +418,8 @@
     <SuitableTreatment identifier="morbusine" suitability="-100"/>
     <Effect minstrength="0" maxstrength="100"
       minvitalitydecrease="0"
-      maxvitalitydecrease="10"/>
+      maxvitalitydecrease="10"
+      dialogflag="GunshotWound"/>
     <icon texture="Content/UI/IconAtlas.png" sourcerect="256,768,128,128" color="195,60,60,255" origin="0,0"/>
   </AfflictionBleeding>
 

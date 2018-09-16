@@ -410,5 +410,76 @@
     <Conversation line="We'll make it. She's been deeper." speakertags="tough" speaker="1"/>
     <Conversation line="It should be fine. Keep the welders ready though." speaker="1"/>
   </Conversation>
+  
+  <!-- Afflictions -->
+  <Conversation line="I'm feeling faint." flags="Bloodloss"/>
+  <Conversation line="I'm not feeling too good." flags="Bloodloss"/>
+  <Conversation line="I think I need some blood plasma." flags="Bloodloss"/>
 
+  <Conversation line="Burp" flags="DrunkMedium"/>
+  <Conversation line="I don't say this too often, but you guysss are the best." flags="DrunkMedium" speaker="0">
+    <Conversation line="Couldn't ask for a better crew!" flags="DrunkMedium" speaker="0">
+      <Conversation line="Are you drunk?" flags="DrunkMedium" speaker="1">
+        <Conversation line="Calm down man iss all good!" flags="DrunkMedium" speaker="2"/>
+        <Conversation line="Not really, I just had a few sips." flags="DrunkMedium" speaker="0"/>
+        <Conversation line="What, I just wanned to tell how much I appreciate all of ya!" flags="DrunkMedium" speaker="0"/>
+      </Conversation>
+    </Conversation>
+  </Conversation>
+
+  <Conversation line="Hehe..." flags="DrunkMedium" speaker="0"/>
+
+  <Conversation line="You lissen to me... Werr gonna make it out of this!" flags="DrunkMedium" minintensity="0.5"/>
+
+  <Conversation line="I think I sshould lay down for a bit..." flags="DrunkHigh">
+    <Conversation line="Oh for fuck's sake. Stay out of the way until you sober up." speakertags="professional,tough,rude" speaker="1"/>
+    <Conversation line=""/>    
+  </Conversation>
+  
+  <Conversation line="Whatsshall we do with the drunkenn sailor, what shall we do wit' the drunken sailor..." flags="DrunkHigh">
+    <Conversation line="Earley in the mornin'!" flags="DrunkHigh">
+      <Conversation line="You're in no condition to do your duties, sailor. When you sober up, we're going to have a serious talk." allowedjobs="captain" speakertags="professional,tough,rude" speaker="1">
+        <Conversation line="Nah I can handle thhis!" flags="DrunkHigh"/>
+      </Conversation>
+      <Conversation line="Someone's in a good mood!" speakertags="joker" speaker="1"/>
+      <Conversation line="Oh for fuck's sake. Stay out of the way until you sober up." speakertags="professional,tough,rude" speaker="1"/>
+    </Conversation>
+  </Conversation>
+
+  <Conversation line="Why's the boat rockin' thhis bad?" flags="DrunkHigh">
+    <Conversation line="I'm pretty sure it's just you." speaker="1"/>
+    <Conversation line="Get your act together!" speaker="1"/>
+    <Conversation line=""/>
+  </Conversation>
+
+  <Conversation line="I don't feel too good." flags="OpiateWithdrawalLow"/>
+  <Conversation line="I feel nauseous..." flags="OpiateWithdrawalLow"/>
+  
+  <Conversation line="My leg is killing me, could I get some morphine?" flags="OpiateWithdrawalMedium">
+    <Conversation line="There's nothing wrong with your leg. I think you should cut back on the morphine for a while." allowedjobs="medicaldoctor" speaker="1"/>
+    <Conversation line="There's nothing wrong with your leg, you junkie." speakertags="rude" speaker="1"/>
+  </Conversation>
+  <Conversation line="I can't do this." flags="OpiateWithdrawalMedium"/>
+  <Conversation line="I think I'm going to throw up." flags="OpiateWithdrawalMedium"/>
+  <Conversation line="I shouldn't be here. I wan't to go home." flags="OpiateWithdrawalMedium"/>
+
+  <Conversation line="I feel like I'm dying, I can't do this!" flags="OpiateWithdrawalHigh">
+    <Conversation line="I think you could use a shot of Naloxone." allowedjobs="medicaldoctor" speaker="1"/>
+    <Conversation line="Cut it out." speakertags="rude" speaker="1"/>
+    <Conversation line=""/>
+  </Conversation>
+  
+  <Conversation line="Where's the fuck is the morphine?" flags="OpiateWithdrawalHigh">
+    <Conversation line="You don't need any more of that. We need to get you some naloxone." allowedjobs="medicaldoctor" speaker="1"/>
+    <Conversation line="Somewhere you can't reach, I hope." speakertags="rude" speaker="1"/>
+    <Conversation line="What's going on? Are you hurt?" speaker="1">
+      <Conversation line="I feel like I'm fucking dying, I can't do this if I don't get some." speaker="0"/>
+      <Conversation line="My muscles are cramping and my heart is about to blow up, I can't take this!" speaker="0"/>
+    </Conversation>
+  </Conversation>
+
+  <Conversation line="I've been shot, get me some bandages!" flags="GunshotWound"/>
+  <Conversation line="Help, I've been shot!" flags="GunshotWound"/>  
+  
+  <!-- /Afflictions -->
 </Conversations>

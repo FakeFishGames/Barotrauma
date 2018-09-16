@@ -196,16 +196,14 @@ namespace Barotrauma
                 //if the item is inside a character's inventory, don't steal it unless the character is dead
                 if (item.ParentInventory is CharacterInventory)
                 {
-                    Character owner = item.ParentInventory.Owner as Character;
-                    if (owner != null && !owner.IsDead) continue;
+                    if (item.ParentInventory.Owner is Character owner && !owner.IsDead) continue;
                 }
 
                 //if the item is inside an item, which is inside a character's inventory, don't steal it
                 Item rootContainer = item.GetRootContainer();
                 if (rootContainer != null && rootContainer.ParentInventory is CharacterInventory)
                 {
-                    Character owner = rootContainer.ParentInventory.Owner as Character;
-                    if (owner != null && !owner.IsDead) continue;
+                    if (rootContainer.ParentInventory.Owner is Character owner && !owner.IsDead) continue;
                 }
 
                 float itemPriority = 0.0f;

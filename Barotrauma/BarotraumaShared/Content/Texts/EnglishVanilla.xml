@@ -745,6 +745,9 @@
   <DialogFireTurret>Fire in the hole!</DialogFireTurret>
   <DialogChargeBatteries>Charging [itemname] at [rate] %!</DialogChargeBatteries>
   <DialogChargeBatteries>[itemname] now charging at [rate] %!</DialogChargeBatteries>
+  <DialogNoBatteries>What batteries?</DialogNoBatteries>
+  <DialogNoBatteries>There aren't any batteries on this boat!</DialogNoBatteries>
+  <DialogNoBatteries>Can't find any batteries!</DialogNoBatteries>
   <StopChargingBatteries>Stopped charging [itemname]!</StopChargingBatteries>
   <DialogLeakFixed>One leak fixed in [roomname]!</DialogLeakFixed>
   <DialogLeakFixed>Repairing [roomname], a few more holes to go!</DialogLeakFixed>
@@ -771,6 +774,9 @@
   <DialogFindExtinguisher>Got to find an extinguisher!</DialogFindExtinguisher>
   <DialogPutOutFire>Put out a fire in [roomname]!</DialogPutOutFire>
   <DialogPutOutFire>Extinguished a fire in [roomname]!</DialogPutOutFire>
+  <DialogNoFire>What fire?</DialogNoFire>
+  <DialogNoFire>Can't see any fires!</DialogNoFire>
+  <DialogNoFire>I don't think there's any fire to put out!</DialogNoFire>
   <DialogSonarTarget>A target on the sonar at [direction]!</DialogSonarTarget>
   <DialogSonarTarget>A blip on the sonar at [direction]!</DialogSonarTarget>
   <DialogSonarTarget>Something on the sonar at [direction]!</DialogSonarTarget>
