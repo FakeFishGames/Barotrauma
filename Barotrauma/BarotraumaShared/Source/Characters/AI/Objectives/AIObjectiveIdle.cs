@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FarseerPhysics;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -159,7 +160,18 @@ namespace Barotrauma
                 List<Hull> targetHulls = new List<Hull>(Hull.hullList);
                 //ignore all hulls with fires or water in them
                 targetHulls.RemoveAll(h => h.FireSources.Any() || h.WaterVolume / h.Volume > 0.1f);
+
+                //ignore hulls that are too low to stand inside
+                if (character.AnimController is HumanoidAnimController animController)
+                {
+                    float minHeight = ConvertUnits.ToDisplayUnits(animController.HumanWalkParams.HeadPosition);
+                    targetHulls.RemoveAll(h => h.CeilingHeight < minHeight);
+                }
                 if (!targetHulls.Any()) return null;
+                
+                //prefer larger hulls
+                var targetHull = ToolBox.SelectWeightedRandom(targetHulls, targetHulls.Select(h => h.Volume).ToList(), Rand.RandSync.Unsynced);
+                return targetHull?.AiTarget;
 
                 return targetHulls[Rand.Range(0, targetHulls.Count)].AiTarget;
             }
