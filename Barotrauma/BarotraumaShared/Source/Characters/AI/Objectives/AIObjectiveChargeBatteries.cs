@@ -1,7 +1,5 @@
 ﻿using Barotrauma.Items.Components;
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Barotrauma
 {
@@ -10,16 +8,12 @@ namespace Barotrauma
         private List<PowerContainer> availableBatteries;
 
         private string orderOption;
-
-        private Character character;
-
+        
         public AIObjectiveChargeBatteries(Character character, string option)
             : base(character, option)
         {
             orderOption = option;
-
-            this.character = character;
-
+            
             availableBatteries = new List<PowerContainer>();
             foreach (Item item in Item.ItemList)
             {
@@ -28,6 +22,11 @@ namespace Barotrauma
 
                 var powerContainer = item.GetComponent<PowerContainer>();
                 availableBatteries.Add(powerContainer);
+            }
+
+            if (availableBatteries.Count == 0)
+            {
+                character?.Speak(TextManager.Get("DialogNoBatteries"), null, 4.0f, "nobatteries", 10.0f);
             }
         }
 

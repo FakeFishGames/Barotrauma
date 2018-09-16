@@ -44,7 +44,7 @@ namespace Barotrauma
 
         private float prevUIScale;
         
-        private GUIComponent orderTargetFrame;
+        private GUIComponent orderTargetFrame, orderTargetFrameShadow;
 
         public bool ToggleCrewAreaOpen
         {
@@ -779,7 +779,6 @@ namespace Barotrauma
                     //width depends on the dimensions of the sub
                     frameSize.X = (int)(frameSize.Y * (subBorders.Width / (float)subBorders.Height));
                 }
-
                 orderTargetFrame = new GUIFrame(new RectTransform(frameSize, GUI.Canvas)
                     { AbsoluteOffset = new Point(orderButton.Rect.Center.X, orderButton.Rect.Bottom) },
                     style: "InnerFrame")
@@ -837,6 +836,7 @@ namespace Barotrauma
             //only one target (or an order with no particular targets), just show options
             else
             {
+
                 orderTargetFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.2f + order.Options.Length * 0.1f, 0.18f), GUI.Canvas)
                     { AbsoluteOffset = new Point(orderButton.Rect.Center.X, orderButton.Rect.Bottom) },
                     isHorizontal: true, childAnchor: Anchor.BottomLeft)
@@ -844,7 +844,6 @@ namespace Barotrauma
                     UserData = character,
                     Stretch = true
                 };
-
                 //line connecting the order button to the option buttons
                 //TODO: sprite
                 new GUIFrame(new RectTransform(new Vector2(0.5f, 1.0f), orderTargetFrame.RectTransform), style: null);
@@ -872,7 +871,10 @@ namespace Barotrauma
                         new GUIFrame(new RectTransform(new Vector2(0.1f, 1.0f), orderTargetFrame.RectTransform), style: null);
                     }
                 }
-            }            
+            }
+            int shadowSize = (int)(200 * GUI.Scale);
+            orderTargetFrameShadow = new GUIFrame(new RectTransform(orderTargetFrame.Rect.Size + new Point(shadowSize * 2), GUI.Canvas)
+                { AbsoluteOffset = orderTargetFrame.Rect.Location - new Point(shadowSize) }, style: "OuterGlow", color: Color.Black * 0.65f);
         }
 
         #region Updating and drawing the UI
@@ -896,7 +898,11 @@ namespace Barotrauma
             }
 
             guiFrame.AddToGUIUpdateList();
-            orderTargetFrame?.AddToGUIUpdateList();
+            if (orderTargetFrame != null)
+            {
+                orderTargetFrameShadow?.AddToGUIUpdateList();
+                orderTargetFrame?.AddToGUIUpdateList();
+            }
         }
 
         partial void UpdateProjectSpecific(float deltaTime)
