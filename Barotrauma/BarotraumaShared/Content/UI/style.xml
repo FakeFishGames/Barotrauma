@@ -652,6 +652,15 @@
     </GUIButtonVertical>
   </GUISlider>
 
+  <SonarFrame
+    padding="40.0, 40.0, 40.0, 40.0"
+    color="1.0,1.0,1.0,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0"  
+    textcolor="0.0, 0.0, 0.0, 1.0">
+    <Sprite texture="Content/UI/UI_Atlas2.png" size="0.0, 0.0" sourcerect="96,199,273,166" slice="136,219,326,350"/>
+  </SonarFrame>
+
   <InventorySlotSmall
     color="0.9,0.9,0.9,1.0"
     hovercolor="1.0,1.0,1.0,1.0"
