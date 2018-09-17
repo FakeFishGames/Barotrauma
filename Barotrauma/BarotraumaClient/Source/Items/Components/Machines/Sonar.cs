@@ -45,15 +45,20 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element)
         {
-            displayBorderSize = element.GetAttributeFloat("displaybordersize", 0.0f);
-
             sonarBlips = new List<SonarBlip>();
-            var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center), style: null)
-            {
-                CanBeFocused = false
-            };
+            
+            int viewSize = (int)Math.Min(GuiFrame.Rect.Width - 150, GuiFrame.Rect.Height * 0.9f);
+            new GUICustomComponent(new RectTransform(new Point(viewSize), GuiFrame.RectTransform, Anchor.CenterLeft),
+                (spriteBatch, guiCustomComponent) => { DrawSonar(spriteBatch, guiCustomComponent.Rect); }, null);
 
-            isActiveTickBox = new GUITickBox(new RectTransform(new Point(20, 20), paddedFrame.RectTransform), TextManager.Get("SonarActive"))
+            var controlContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.3f), GuiFrame.RectTransform, Anchor.TopLeft)
+                { MinSize = new Point(150, 0), AbsoluteOffset = new Point((int)(viewSize * 0.85f), 0) }, "SonarFrame");
+
+            controlContainer.RectTransform.SetAsFirstChild();
+
+            var paddedControlContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.8f), controlContainer.RectTransform, Anchor.Center), style: null);
+
+            isActiveTickBox = new GUITickBox(new RectTransform(new Point(20, 20), paddedControlContainer.RectTransform), TextManager.Get("SonarActive"))
             {
                 ToolTip = TextManager.Get("SonarTipActive"),
                 OnSelected = (GUITickBox box) =>
@@ -72,10 +77,6 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
-
-            int viewSize = Math.Min(GuiFrame.Rect.Width - 150, GuiFrame.Rect.Height);
-            new GUICustomComponent(new RectTransform(new Point(viewSize), GuiFrame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(10, 0) },
-                (spriteBatch, guiCustomComponent) => { DrawSonar(spriteBatch, guiCustomComponent.Rect); }, null);
 
             GuiFrame.CanBeFocused = false;
         }
@@ -186,6 +187,11 @@ namespace Barotrauma.Items.Components
                center = new Vector2(rect.X + rect.Width * 0.5f, rect.Center.Y);
             displayRadius = (rect.Width / 2.0f) * (1.0f - displayBorderSize);
             displayScale = displayRadius / range;
+
+            if (screenBackground != null)
+            {
+                screenBackground.Draw(spriteBatch, center, 0.0f, rect.Width / screenBackground.size.X);
+            }
 
             if (IsActive)
             {

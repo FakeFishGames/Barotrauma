@@ -242,7 +242,8 @@ namespace Barotrauma.Items.Components
 
                     Color? color = null;
                     if (subElement.Attribute("color") != null) color = subElement.GetAttributeColor("color", Color.White);
-                    string style = subElement.GetAttributeString("style", "");
+                    string style = subElement.Attribute("style") == null ?
+                        null : subElement.GetAttributeString("style", "");
 
                     guiFrame = new GUIFrame(RectTransform.Load(subElement, GUI.Canvas), style, color);
                     break;
