@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Globalization;
 using System.Linq;
@@ -76,11 +75,12 @@ namespace Barotrauma
                     floatValue = Math.Min(floatValue, MaxValueFloat.Value);
                     PlusButton.Enabled = floatValue < MaxValueFloat;
                 }
-                TextBox.Text = floatValue.ToString("G", CultureInfo.InvariantCulture);
-
+                UpdateText();
                 OnValueChanged?.Invoke(this);
             }
         }
+
+        public int decimalsToDisplay = 1;
 
         public int? MinValueInt, MaxValueInt;
 
@@ -103,8 +103,7 @@ namespace Barotrauma
                     intValue = Math.Min(intValue, MaxValueInt.Value);
                     PlusButton.Enabled = intValue < MaxValueInt;
                 }
-                TextBox.Text = this.intValue.ToString();
-
+                UpdateText();
                 OnValueChanged?.Invoke(this);
             }
         }
@@ -134,7 +133,19 @@ namespace Barotrauma
                 pressedTimer = pressedDelay;
                 return true;
             };
-            PlusButton.OnClicked += PlusButtonClicked;
+            PlusButton.OnClicked += (button, data) =>
+            {
+                if (inputType == NumberType.Int)
+                {
+                    IntValue++;
+                }
+                else if (inputType == NumberType.Float)
+                {
+                    if (!maxValueFloat.HasValue || !minValueFloat.HasValue) return false;
+                    FloatValue += (MaxValueFloat.Value - minValueFloat.Value) / 10.0f;
+                }
+                return false;
+            };
             PlusButton.OnPressed += () =>
             {
                 if (!IsPressedTimerRunning)
@@ -158,7 +169,19 @@ namespace Barotrauma
                 pressedTimer = pressedDelay;
                 return true;
             };
-            MinusButton.OnClicked += MinusButtonClicked;
+            MinusButton.OnClicked += (button, data) =>
+            {
+                if (inputType == NumberType.Int)
+                {
+                    IntValue--;
+                }
+                else if (inputType == NumberType.Float)
+                {
+                    if (!maxValueFloat.HasValue || !minValueFloat.HasValue) return false;
+                    FloatValue -= (MaxValueFloat.Value - minValueFloat.Value) / 10.0f;
+                }
+                return false;
+            };
             MinusButton.OnPressed += () =>
             {
                 if (!IsPressedTimerRunning)
@@ -168,7 +191,7 @@ namespace Barotrauma
                         IntValue--;
                     }
                     else if (maxValueFloat.HasValue && minValueFloat.HasValue)
-                    {                        
+                    {
                         FloatValue -= (MaxValueFloat.Value - minValueFloat.Value) / 100.0f;
                     }
                 }
@@ -178,63 +201,28 @@ namespace Barotrauma
 
             if (inputType == NumberType.Int)
             {
-                TextBox.Text = "0";
+                UpdateText();
                 TextBox.OnEnterPressed += (txtBox, txt) =>
                 {
-                    TextBox.Text = IntValue.ToString();
+                    UpdateText();
                     TextBox.Deselect();
                     return true;
                 };
-                TextBox.OnDeselected += (txtBox, key) =>
-                {
-                    TextBox.Text = IntValue.ToString();
-                };
+                TextBox.OnDeselected += (txtBox, key) => UpdateText();
             }
             else if (inputType == NumberType.Float)
             {
-                TextBox.Text = "0.0";
-                TextBox.OnDeselected += (txtBox, key) =>
-                {
-                    TextBox.Text = FloatValue.ToString("G", CultureInfo.InvariantCulture);
-                };
+                UpdateText();
+                TextBox.OnDeselected += (txtBox, key) => UpdateText();
                 TextBox.OnEnterPressed += (txtBox, txt) =>
                 {
-                    TextBox.Text = FloatValue.ToString("G", CultureInfo.InvariantCulture);
+                    UpdateText();
                     TextBox.Deselect();
                     return true;
                 };
             }
 
             InputType = inputType;
-        }
-
-        private bool PlusButtonClicked(GUIButton button, object userData)
-        {
-            if (inputType == NumberType.Int)
-            {
-                IntValue++;
-            }
-            else if (inputType == NumberType.Float)
-            {
-                if (!maxValueFloat.HasValue || !minValueFloat.HasValue) return false;
-                FloatValue += (MaxValueFloat.Value - minValueFloat.Value) / 10.0f;
-            }
-            return false;
-        }
-
-        private bool MinusButtonClicked(GUIButton button, object userData)
-        {
-            if (inputType == NumberType.Int)
-            {
-                IntValue--;
-            }
-            else if (inputType == NumberType.Float)
-            {
-                if (!maxValueFloat.HasValue || !minValueFloat.HasValue) return false;
-                FloatValue -= (MaxValueFloat.Value - minValueFloat.Value) / 10.0f;
-            }
-
-            return false;
         }
 
         private bool TextChanged(GUITextBox textBox, string text)
@@ -272,14 +260,23 @@ namespace Barotrauma
                         FloatValue = newFloatValue;
                         textBox.Text = text;
                     }
-                    /*else
-                    {
-                        textBox.Text = FloatValue.ToString("G", CultureInfo.InvariantCulture);
-                    }*/
                     break;
             }
 
             return true;
+        }
+
+        private void UpdateText()
+        {
+            switch (InputType)
+            {
+                case NumberType.Float:
+                    TextBox.Text = FloatValue.Format(decimalsToDisplay);
+                    break;
+                case NumberType.Int:
+                    TextBox.Text = IntValue.ToString();
+                    break;
+            }
         }
 
         protected override void Update(float deltaTime)
