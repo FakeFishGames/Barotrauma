@@ -12,7 +12,8 @@
     <Price locationtype="Research" buyprice="140"/>
     <Price locationtype="Military" buyprice="140"/>
     <Price locationtype="Outpost" buyprice="200"/>
-    
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,64,64,64"/>
     <Sprite texture ="tools.png" sourcerect="0,17,41,17" depth="0.55"/>
 
     <!-- the item takes 10 seconds to break down in a deconstructor and turns into a polycarbonate bar, steel bar and aluminium -->
@@ -87,7 +88,8 @@
       <Item identifier="steelbar"/>
       <Item identifier="aluminium"/>
     </Deconstruct>
-    
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,0,64,64"/>
     <Sprite texture ="tools.png" sourcerect="0,0,41,16" depth="0.55"/>
 
     <Body width="41" height="16" density="40"/>
@@ -144,6 +146,7 @@
       <Item identifier="steelbar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,0,64,64"/>
     <Sprite texture ="tools.png" sourcerect="52,31,12,33" depth="0.55"/>
 
     <Body width="12" height="33" density="5"/>
@@ -179,6 +182,7 @@
       <Item identifier="chlorine" copycondition="true" mincondition="0.1"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,0,64,64"/>
     <Sprite texture="extinguisher.png" depth="0.55" sourcerect="0,0,34,64" origin="0.4,0.5"/>
 
     <Body radius="10" height="45" density="5"/>
@@ -212,6 +216,7 @@
       <Item identifier="steelbar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,0,64,64"/>
     <Sprite texture ="tools.png" sourcerect="0,58,31,6" depth="0.55"/>
 
     <Body width="31" height="6" density="50"/>
@@ -236,6 +241,7 @@
       <Item identifier="steelbar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,0,64,64"/>
     <Sprite texture ="tools.png" sourcerect="0,50,26,7" depth="0.55"/>
 
     <Body width="30" height="7" density="50"/>
@@ -262,6 +268,7 @@
       <Item identifier="steelbar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,0,64,64"/>
     <Sprite texture ="tools.png" sourcerect="0,65,64,12" depth="0.55"/>
 
     <Body width="60" height="10" density="50"/>
@@ -289,6 +296,7 @@
       <Item identifier="polycarbonatebar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,0,64,64"/>
     <Sprite texture ="tools.png" sourcerect="42,0,22,9" depth="0.55"/>
 
     <Body width="31" height="6" density="40"/>
@@ -409,6 +417,7 @@
       <Item identifier="aluminium" mincondition="0.5" maxcondition="0.9" outcondition="0.1"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,0,64,64"/>
     <Sprite texture ="tools.png" sourcerect="0,38,21,7" depth="0.55"/>
 
     <Body width="21" height="7" density="12"/>

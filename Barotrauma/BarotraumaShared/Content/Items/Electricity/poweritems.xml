@@ -120,6 +120,7 @@
       <Item identifier="sulphuricacid" mincondition="0.9" outcondition="0.25"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,0,64,64"/>
     <Sprite texture="Content/Items/Weapons/weapons.png" sourcerect="0,0,20,9" depth="0.8"/>
 
     <Body width="20" height="9" density="30"/>

@@ -8,6 +8,7 @@
     description="An old acoustic guitar."
     price="300">
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,256,64,64"/>
     <Sprite texture="Misc.png" sourcerect="0,0,53,128" depth="0.5"/>
 
     <Body radius="20" height="83" density="12"/>
@@ -27,6 +28,7 @@
     description="An old hand-made harmonica."
     price="300">
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,256,64,64"/>
     <Sprite texture="Misc.png" sourcerect="57,1,23,7" depth="0.5"/>
     <InventoryIcon texture="Misc.png" sourcerect="84,2,44,121"/>
     

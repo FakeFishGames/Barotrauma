@@ -164,6 +164,7 @@
       <Item identifier="polycarbonatebar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,128,64,64"/>
     <Sprite texture="weapons.png" sourcerect="0,58,88,20" depth ="0.55"/>
 
     <Body width="87" height="18" density="30"/>
@@ -204,6 +205,7 @@
       <Item identifier="polycarbonatebar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,128,64,64"/>
     <Sprite texture="weapons.png" sourcerect="0,77,88,20" depth ="0.55"/>
 
     <Body width="87" height="18" density="35"/>

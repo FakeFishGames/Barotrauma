@@ -46,7 +46,8 @@
       <Item identifier="polycarbonatebar"/>
       <Item identifier="polycarbonatebar"/>
     </Deconstruct>
-    
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,0,64,64"/>
     <Sprite texture ="securitygear.png" sourcerect="40,32,34,25" depth="0.6"/>
 
     <Body radius="12" density="50"/>
@@ -68,7 +69,8 @@
     <Price locationtype="Military" buyprice="50"/>
     <Price locationtype="City" buyprice="100"/>
     <Price locationtype="Outpost" buyprice="100"/>
-    
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,0,64,64"/>
     <Sprite texture = "securitygear.png" sourcerect="0,63,32,14" depth="0.6"/>
 
     <Body width="30" height="12" density="30"/>
