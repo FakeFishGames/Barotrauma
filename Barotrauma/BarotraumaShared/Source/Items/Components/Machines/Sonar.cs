@@ -27,7 +27,7 @@ namespace Barotrauma.Items.Components
 
         private float pingState;
 
-        private readonly Sprite pingCircle, screenOverlay;
+        private readonly Sprite pingCircle, screenOverlay, screenBackground;
 
         private readonly Sprite sonarBlip;
 
@@ -93,6 +93,9 @@ namespace Barotrauma.Items.Components
                     case "screenoverlay":
                         screenOverlay = new Sprite(subElement);
                         break;
+                    case "screenbackground":
+                        screenBackground = new Sprite(subElement);
+                        break;
                     case "blip":
                         sonarBlip = new Sprite(subElement);
                         break;
@@ -149,8 +152,10 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
-            if (pingCircle != null) pingCircle.Remove();
-            if (screenOverlay != null) screenOverlay.Remove();
+            sonarBlip?.Remove();
+            pingCircle?.Remove();
+            screenOverlay?.Remove();
+            screenBackground?.Remove();
         }
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)

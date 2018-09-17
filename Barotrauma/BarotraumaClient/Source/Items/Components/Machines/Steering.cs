@@ -42,13 +42,19 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific()
         {
-            var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center), style: null)
+            int viewSize = (int)Math.Min(GuiFrame.Rect.Width - 150, GuiFrame.Rect.Height * 0.9f);
+            var controlContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.3f), GuiFrame.RectTransform, Anchor.CenterLeft)
+                { MinSize = new Point(150, 0), AbsoluteOffset = new Point((int)(viewSize * 0.99f), 0) }, "SonarFrame");
+            var paddedControlContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.8f), controlContainer.RectTransform, Anchor.Center), style: null);
+
+            var statusContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GuiFrame.RectTransform, Anchor.BottomLeft)
+                { MinSize = new Point(150, 0), AbsoluteOffset = new Point((int)(viewSize * 0.8f), 0) }, "SonarFrame");
+            var paddedStatusContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.85f), statusContainer.RectTransform, Anchor.Center), style: null);
+            
+            var tickBoxContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.15f, 1.0f), paddedControlContainer.RectTransform))
             {
-                CanBeFocused = false
-            };
-            var tickBoxContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.15f, 1.0f), paddedFrame.RectTransform) { AbsoluteOffset = new Point(0, 30) })
-            {
-                AbsoluteSpacing = 5
+                RelativeSpacing = 0.03f,
+                Stretch = true
             };
 
             autopilotTickBox = new GUITickBox(new RectTransform(new Point(20, 20), tickBoxContainer.RectTransform),
@@ -154,15 +160,16 @@ namespace Barotrauma.Items.Components
                 }
             };
 
-            var textContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.15f, 0.5f), paddedFrame.RectTransform, Anchor.BottomLeft), childAnchor: Anchor.BottomLeft)
+            var textContainer = new GUILayoutGroup(new RectTransform(Vector2.One, paddedStatusContainer.RectTransform))
             {
-                AbsoluteSpacing = 5
+                RelativeSpacing = 0.03f,
+                Stretch = true
             };
 
             string steeringVelX = TextManager.Get("SteeringVelocityX");
             string steeringVelY = TextManager.Get("SteeringVelocityY");
             string steeringDepth = TextManager.Get("SteeringDepth");
-            new GUITextBlock(new RectTransform(new Point(100, 15), textContainer.RectTransform), "")
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), textContainer.RectTransform), "")
             {
                 TextGetter = () =>
                 {
@@ -171,7 +178,7 @@ namespace Barotrauma.Items.Components
                     return steeringVelY.Replace("[kph]", ((int)-realWorldVel).ToString());
                 }
             };
-            new GUITextBlock(new RectTransform(new Point(100, 15), textContainer.RectTransform), "")
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), textContainer.RectTransform), "")
             {
                 TextGetter = () =>
                 {
@@ -180,7 +187,7 @@ namespace Barotrauma.Items.Components
                     return steeringVelX.Replace("[kph]", ((int)realWorldVel).ToString());
                 }
             };
-            new GUITextBlock(new RectTransform(new Point(100, 15), textContainer.RectTransform), "")
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), textContainer.RectTransform), "")
             {
                 TextGetter = () =>
                 {
@@ -189,14 +196,25 @@ namespace Barotrauma.Items.Components
                     return steeringDepth.Replace("[m]", ((int)realWorldDepth).ToString());
                 }
             };
-            pressureWarningText = new GUITextBlock(new RectTransform(new Point(100, 15), textContainer.RectTransform), TextManager.Get("SteeringDepthWarning"), Color.Red)
+            pressureWarningText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), textContainer.RectTransform), TextManager.Get("SteeringDepthWarning"), Color.Red)
             {
                 Visible = false
             };
 
-            int viewSize = Math.Min(GuiFrame.Rect.Width - 150, GuiFrame.Rect.Height);
-            steerArea = new GUICustomComponent(new RectTransform(new Point(viewSize), GuiFrame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(10, 0) },
+            steerArea = new GUICustomComponent(new RectTransform(new Point(viewSize), GuiFrame.RectTransform, Anchor.CenterLeft),
                 (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); }, null);
+
+            textContainer.Recalculate();
+
+            foreach (GUITextBlock text in textContainer.Children)
+            {
+                float circleRight = 
+                    steerArea.Center.X + 
+                    (float)Math.Abs(Math.Sin((text.Rect.Center.Y - steerArea.Rect.Center.Y) / (viewSize * 0.5f) * MathHelper.Pi)) * viewSize * 0.5f;
+
+                text.RectTransform.ScreenSpaceOffset += new Point((int)Math.Max(circleRight - text.Rect.X, 0.0f), 0);
+            }
+            
         }
 
         public void DrawHUD(SpriteBatch spriteBatch, Rectangle rect)
