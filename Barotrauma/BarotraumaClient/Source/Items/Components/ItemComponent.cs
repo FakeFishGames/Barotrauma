@@ -67,6 +67,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(-1, false)]
+        public int LinkUIToComponent
+        {
+            get;
+            set;
+        }
+
         [Serialize(0, false)]
         public int HudPriority
         {
