@@ -315,6 +315,7 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
+                    float steeringMaxLength = 100;
                     float s = SteeringInput.Length() / steeringMaxLength * deltaTime * keyboardInputSpeed;
                     SteeringInput = Vector2.Lerp(SteeringInput, SteeringInput + keyboardInput, MathHelper.Clamp(s, 0.2f, 10));
                 }
