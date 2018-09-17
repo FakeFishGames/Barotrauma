@@ -337,12 +337,28 @@ namespace Barotrauma
 
             foreach (ItemComponent ic in activeHUDs)
             {
-                if (ic.GuiFrame == null || ic.AllowUIOverlap) continue;
+                if (ic.GuiFrame == null || ic.AllowUIOverlap || ic.LinkUIToComponent > -1) continue;
                 ic.GuiFrame.RectTransform.ScreenSpaceOffset = Point.Zero;
                 elementsToMove.Add(ic.GuiFrame);
             }
 
-            GUI.PreventElementOverlap(elementsToMove, new Rectangle(20, 20, GameMain.GraphicsWidth - 40, GameMain.GraphicsHeight - 80));
+            List<Rectangle> disallowedAreas = new List<Rectangle>();
+            if (GameMain.GameSession?.CrewManager != null)
+            {
+                disallowedAreas.Add(GameMain.GameSession.CrewManager.GetCharacterListArea());
+            }
+
+            GUI.PreventElementOverlap(elementsToMove, disallowedAreas,
+                new Rectangle(20, 20, GameMain.GraphicsWidth - 40, GameMain.GraphicsHeight - 80));
+
+            foreach (ItemComponent ic in activeHUDs)
+            {
+                if (ic.GuiFrame == null) continue;
+                if (ic.LinkUIToComponent < 0 || ic.LinkUIToComponent >= components.Count) continue;
+
+                ItemComponent linkedComponent = components[ic.LinkUIToComponent];
+                ic.GuiFrame.RectTransform.ScreenSpaceOffset = linkedComponent.GuiFrame.RectTransform.ScreenSpaceOffset;
+            }
         }
 
         public virtual void UpdateHUD(Camera cam, Character character, float deltaTime)

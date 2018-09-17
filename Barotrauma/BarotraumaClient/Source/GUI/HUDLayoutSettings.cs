@@ -103,7 +103,7 @@ namespace Barotrauma
             //slice from the top of the screen for misc buttons (info, end round, server controls)
             ButtonAreaTop = new Rectangle(Padding, Padding, GameMain.GraphicsWidth - Padding * 2, (int)(50 * GUI.Scale));
 
-            int crewAreaHeight = (int)Math.Max(GameMain.GraphicsHeight * 0.3f, 150);
+            int crewAreaHeight = (int)Math.Max(GameMain.GraphicsHeight * 0.22f, 150);
             CrewArea = new Rectangle(Padding, ButtonAreaTop.Bottom + Padding, GameMain.GraphicsWidth - InventoryAreaUpper.Width - Padding * 3, crewAreaHeight);
 
             //horizontal slices at the corners of the screen for health bar and affliction icons
