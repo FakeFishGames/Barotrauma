@@ -401,15 +401,19 @@ namespace Barotrauma
 
             foreach (MapEntityPrefab ep in MapEntityPrefab.List)
             {
+                bool legacy = ep.Category == MapEntityCategory.Legacy;
+
                 float relWidth = 1.0f / entitiesPerRow;
                 GUIFrame frame = new GUIFrame(new RectTransform(
-                    new Vector2(relWidth, relWidth * ((float)entityList.Content.Rect.Width / entityList.Content.Rect.Height)), 
+                    new Vector2(relWidth, relWidth * ((float)entityList.Content.Rect.Width / entityList.Content.Rect.Height)),
                     entityList.Content.RectTransform) { MinSize = new Point(0, 50) },
                     style: "GUITextBox")
                 {
                     UserData = ep,
-                    ToolTip = string.IsNullOrEmpty(ep.Description) ? ep.Name : ep.Name + '\n' + ep.Description
                 };
+
+                string name = legacy ? ep.Name + " (legacy)" : ep.Name;
+                frame.ToolTip = string.IsNullOrEmpty(ep.Description) ? name : name + '\n' + ep.Description;
 
                 GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.8f), frame.RectTransform, Anchor.Center), style: null)
                 {
@@ -421,15 +425,30 @@ namespace Barotrauma
                 {
                     CanBeFocused = false
                 };
+                if (legacy) textBlock.TextColor *= 0.6f;
                 textBlock.Text = ToolBox.LimitString(textBlock.Text, textBlock.Font, textBlock.Rect.Width);
 
+                Sprite icon = ep.sprite;
+                Color iconColor = Color.White;
+                if (ep is ItemPrefab itemPrefab)
+                {
+                    if (itemPrefab.InventoryIcon != null)
+                    {
+                        icon = itemPrefab.InventoryIcon;
+                        iconColor = itemPrefab.InventoryIconColor;
+                    }
+                    else
+                    {
+                        iconColor = itemPrefab.SpriteColor;
+                    }
+                }
                 if (ep.sprite != null)
                 {
                     GUIImage img = new GUIImage(new RectTransform(new Point(paddedFrame.Rect.Height, paddedFrame.Rect.Height - textBlock.Rect.Height),
-                        paddedFrame.RectTransform, Anchor.TopCenter), ep.sprite)
+                        paddedFrame.RectTransform, Anchor.TopCenter), icon)
                     {
                         CanBeFocused = false,
-                        Color = ep.SpriteColor
+                        Color = legacy ? iconColor * 0.6f : iconColor
                     };
                     img.Scale = Math.Min(img.Rect.Width / img.Sprite.size.X, img.Rect.Height / img.Sprite.size.Y);
                     img.RectTransform.NonScaledSize = new Point((int)(img.Sprite.size.X * img.Scale), img.Rect.Height);

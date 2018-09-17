@@ -25,7 +25,14 @@ namespace Barotrauma
         public List<BrokenItemSprite> BrokenSprites = new List<BrokenItemSprite>();
 
         public Sprite InventoryIcon;
-        
+
+        [Serialize("1.0,1.0,1.0,1.0", false)]
+        public Color InventoryIconColor
+        {
+            get;
+            protected set;
+        }
+
         public override void DrawPlacing(SpriteBatch spriteBatch, Camera cam, Rectangle? placeRect = null)
         {
             Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
