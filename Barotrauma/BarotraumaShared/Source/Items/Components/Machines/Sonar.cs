@@ -73,7 +73,7 @@ namespace Barotrauma.Items.Components
             {
                 base.IsActive = value;
 #if CLIENT
-                if (isActiveTickBox != null) isActiveTickBox.Selected = value;
+                if (activeTickBox != null) activeTickBox.Selected = value;
 #endif
             }
         }
@@ -254,7 +254,7 @@ namespace Barotrauma.Items.Components
 
             IsActive = isActive;
 #if CLIENT
-            isActiveTickBox.Selected = IsActive;
+            activeTickBox.Selected = IsActive;
 #endif
 
             item.CreateServerEvent(this);
