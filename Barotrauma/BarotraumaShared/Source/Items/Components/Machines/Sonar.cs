@@ -23,9 +23,20 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private const float DirectionalPingSector = 30.0f;
+        private static readonly float DirectionalPingDotProduct;
+
+        static Sonar()
+        {
+            DirectionalPingDotProduct = (float)Math.Cos(MathHelper.ToRadians(DirectionalPingSector));
+        }
+
         private float range;
 
         private float pingState;
+
+        private bool useDirectionalPing = true;
+        private Vector2 pingDirection = new Vector2(1.0f, 0.0f);
 
         private readonly Sprite pingCircle, screenOverlay, screenBackground;
 
@@ -129,6 +140,7 @@ namespace Barotrauma.Items.Components
                 pingState = pingState + deltaTime * 0.5f;
                 if (pingState > 1.0f)
                 {
+                    //TODO: take ping direction and zoom into account in sound range
                     if (item.CurrentHull != null) item.CurrentHull.AiTarget.SoundRange = Math.Max(Range * pingState, item.CurrentHull.AiTarget.SoundRange);
                     if (item.AiTarget != null) item.AiTarget.SoundRange = Math.Max(Range * pingState, item.AiTarget.SoundRange);
                     aiPingCheckPending = true;

@@ -14,7 +14,7 @@ namespace Barotrauma.Items.Components
         private GUITickBox activeTickBox, passiveTickBox;
         private GUITextBlock signalWarningText;
 
-        private GUIComponent sonarView;
+        private GUICustomComponent sonarView;
 
         private float displayBorderSize;
 
@@ -115,6 +115,12 @@ namespace Barotrauma.Items.Components
         public override void AddToGUIUpdateList()
         {
             GuiFrame.AddToGUIUpdateList();
+        }
+
+        public override void OnItemLoaded()
+        {
+            //make the sonarView customcomponent render the steering view so it gets drawn in front of the sonar
+            item.GetComponent<Steering>()?.AttachToSonarHUD(sonarView);
         }
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
@@ -673,11 +679,21 @@ namespace Barotrauma.Items.Components
             Vector2 pos = (blip.Position - transducerPos) * displayScale * zoom;
             pos.Y = -pos.Y;
 
-            float posDist = pos.Length();
-            if (posDist > displayRadius)
+            float posDistSqr = pos.LengthSquared();
+            if (posDistSqr > displayRadius * displayRadius)
             {
                 blip.FadeTimer = 0.0f;
                 return;
+            }
+
+            Vector2 dir = pos / (float)Math.Sqrt(posDistSqr);
+            if (useDirectionalPing)
+            {
+                if (Vector2.Dot(pingDirection, dir) < DirectionalPingDotProduct)
+                {
+                    blip.FadeTimer = 0.0f;
+                    return;
+                }
             }
 
             if (sonarBlip == null)
@@ -685,8 +701,6 @@ namespace Barotrauma.Items.Components
                 GUI.DrawRectangle(spriteBatch, center + pos, Vector2.One * 4, Color.Magenta, true);
                 return;
             }
-
-            Vector2 dir = pos / posDist;
 
             Vector2 normal = new Vector2(dir.Y, -dir.X);
             float scale = (strength + 3.0f) * blip.Scale * zoom;
