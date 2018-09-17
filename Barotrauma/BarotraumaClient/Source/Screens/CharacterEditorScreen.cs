@@ -292,9 +292,9 @@ namespace Barotrauma
             ragdollControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupRagdoll = new GUILayoutGroup(new RectTransform(Vector2.One, ragdollControls.RectTransform)) { CanBeFocused = false };
             var jointScaleElement = new GUIFrame(new RectTransform(elementSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
-            var jointScaleText = new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), jointScaleElement.RectTransform), $"Joint Scale: {RagdollParams.JointScale.FormatAsDoubleDecimal()}", Color.WhiteSmoke, textAlignment: Alignment.Center);
+            var jointScaleText = new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), jointScaleElement.RectTransform), $"Joint Scale: {RagdollParams.JointScale.FormatDoubleDecimal()}", Color.WhiteSmoke, textAlignment: Alignment.Center);
             var limbScaleElement = new GUIFrame(new RectTransform(elementSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
-            var limbScaleText = new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), limbScaleElement.RectTransform), $"Limb Scale: {RagdollParams.LimbScale.FormatAsDoubleDecimal()}", Color.WhiteSmoke, textAlignment: Alignment.Center);
+            var limbScaleText = new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), limbScaleElement.RectTransform), $"Limb Scale: {RagdollParams.LimbScale.FormatDoubleDecimal()}", Color.WhiteSmoke, textAlignment: Alignment.Center);
             jointScaleBar = new GUIScrollBar(new RectTransform(elementSize, jointScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.2f)
             {
                 BarScroll = RagdollParams.JointScale / 2,
@@ -332,13 +332,13 @@ namespace Barotrauma
             void UpdateJointScale(float value)
             {
                 TryUpdateRagdollParam("jointscale", value * 2);
-                jointScaleText.Text = $"Joint Scale: {RagdollParams.JointScale.FormatAsDoubleDecimal()}";
+                jointScaleText.Text = $"Joint Scale: {RagdollParams.JointScale.FormatDoubleDecimal()}";
                 character.AnimController.ResetJoints();
             }
             void UpdateLimbScale(float value)
             {
                 TryUpdateRagdollParam("limbscale", value * 2);
-                limbScaleText.Text = $"Limb Scale: {RagdollParams.LimbScale.FormatAsDoubleDecimal()}";
+                limbScaleText.Text = $"Limb Scale: {RagdollParams.LimbScale.FormatDoubleDecimal()}";
             }
             // TODO: doesn't trigger if the mouse is released while the cursor is outside the button rect
             limbScaleBar.Bar.OnClicked += (button, data) =>
@@ -1333,7 +1333,7 @@ namespace Barotrauma
                     DrawCircularWidget(spriteBatch, drawPos, humanGroundedParams.LegCorrectionTorque * multiplier, "Leg Angle", Color.LightBlue, angle =>
                     {
                         TryUpdateAnimParam("legcorrectiontorque", angle / multiplier);
-                        GUI.DrawString(spriteBatch, drawPos, humanGroundedParams.LegCorrectionTorque.FormatAsSingleDecimal(), Color.Black, Color.LightBlue, font: GUI.SmallFont);
+                        GUI.DrawString(spriteBatch, drawPos, humanGroundedParams.LegCorrectionTorque.FormatSingleDecimal(), Color.Black, Color.LightBlue, font: GUI.SmallFont);
                     }, circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0, displayAngle: false);
                 }
                 if (hand != null || arm != null)
@@ -1586,7 +1586,7 @@ namespace Barotrauma
                             //GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + up * 20, Color.White, width: 3);
                             GUI.DrawLine(spriteBatch, limbScreenPos, tformedJointPos, Color.Yellow, width: 3);
                             GUI.DrawRectangle(spriteBatch, inputRect, Color.Red);
-                            GUI.DrawString(spriteBatch, tformedJointPos + new Vector2(widgetSize.X, -widgetSize.Y) * 2, jointPos.FormatAsZeroDecimal(), Color.White, Color.Black * 0.5f);
+                            GUI.DrawString(spriteBatch, tformedJointPos + new Vector2(widgetSize.X, -widgetSize.Y) * 2, jointPos.FormatZeroDecimal(), Color.White, Color.Black * 0.5f);
                             if (PlayerInput.LeftButtonHeld())
                             {
                                 if (autoFreeze)
@@ -1805,7 +1805,7 @@ namespace Barotrauma
                                 var relativeOrigin = new Vector2(origin.X / newRect.Width, origin.Y / newRect.Height);
                                 TryUpdateLimbParam(limb, "origin", relativeOrigin);
                                 TryUpdateLimbParam(limb, "sourcerect", newRect);
-                                GUI.DrawString(spriteBatch, bottomRight + stringOffset, limb.ActiveSprite.size.FormatAsZeroDecimal(), Color.White, Color.Black * 0.5f);
+                                GUI.DrawString(spriteBatch, bottomRight + stringOffset, limb.ActiveSprite.size.FormatZeroDecimal(), Color.White, Color.Black * 0.5f);
                             }, autoFreeze: false);
                         }
                         if (PlayerInput.LeftButtonHeld() && selectedWidget == null)
@@ -1830,7 +1830,7 @@ namespace Barotrauma
                                 }
                                 var relativeOrigin = new Vector2(origin.X / sourceRect.Width, origin.Y / sourceRect.Height);
                                 TryUpdateLimbParam(limb, "origin", relativeOrigin);
-                                GUI.DrawString(spriteBatch, limbBodyPos + new Vector2(10, -10), relativeOrigin.FormatAsDoubleDecimal(), Color.White, Color.Black * 0.5f);
+                                GUI.DrawString(spriteBatch, limbBodyPos + new Vector2(10, -10), relativeOrigin.FormatDoubleDecimal(), Color.White, Color.Black * 0.5f);
                             }
                         }
                     }
@@ -1893,7 +1893,7 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, rect, color, isFilled: true);
                     if (inputRect.Contains(PlayerInput.MousePosition))
                     {          
-                        GUI.DrawString(spriteBatch, tformedJointPos + Vector2.One * 10.0f, $"{jointPos.FormatAsZeroDecimal()}", Color.White, Color.Black * 0.5f);
+                        GUI.DrawString(spriteBatch, tformedJointPos + Vector2.One * 10.0f, $"{jointPos.FormatZeroDecimal()}", Color.White, Color.Black * 0.5f);
                         GUI.DrawRectangle(spriteBatch, inputRect, color);
                         if (PlayerInput.LeftButtonHeld())
                         {
@@ -2058,7 +2058,7 @@ namespace Barotrauma
                 }
                 if (displayAngle)
                 {
-                    GUI.DrawString(spriteBatch, drawPos, angle.FormatAsInt(), Color.Black, backgroundColor: color, font: GUI.SmallFont);
+                    GUI.DrawString(spriteBatch, drawPos, angle.FormatZeroDecimal(), Color.Black, backgroundColor: color, font: GUI.SmallFont);
                 }
                 onClick(angle);
             }, autoFreeze);
