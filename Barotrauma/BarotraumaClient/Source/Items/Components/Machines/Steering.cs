@@ -4,13 +4,14 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 
 namespace Barotrauma.Items.Components
 {
     partial class Steering : Powered, IServerSerializable, IClientSerializable
     {
-        private GUITickBox autopilotTickBox, maintainPosTickBox;
-        private GUITickBox levelEndTickBox, levelStartTickBox;
+        private GUITickBox autopilotTickBox, manualTickBox;
+        private GUITickBox maintainPosTickBox, levelEndTickBox, levelStartTickBox;
 
         private GUIComponent steerArea;
 
@@ -19,21 +20,21 @@ namespace Barotrauma.Items.Components
         private Vector2 keyboardInput;
         private float keyboardInputSpeed = 200;
 
-        private bool _levelStartSelected;
+        private bool levelStartSelected;
         public bool LevelStartSelected
         {
             get { return levelStartTickBox.Selected; }
             set { levelStartTickBox.Selected = value; }
         }
 
-        private bool _levelEndSelected;
+        private bool levelEndSelected;
         public bool LevelEndSelected
         {
             get { return levelEndTickBox.Selected; }
             set { levelEndTickBox.Selected = value; }
         }
 
-        private bool _maintainPos;
+        private bool maintainPos;
         public bool MaintainPos
         {
             get { return maintainPosTickBox.Selected; }
@@ -43,13 +44,13 @@ namespace Barotrauma.Items.Components
         partial void InitProjSpecific()
         {
             int viewSize = (int)Math.Min(GuiFrame.Rect.Width - 150, GuiFrame.Rect.Height * 0.9f);
-            var controlContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.3f), GuiFrame.RectTransform, Anchor.CenterLeft)
+            var controlContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.4f), GuiFrame.RectTransform, Anchor.CenterLeft)
                 { MinSize = new Point(150, 0), AbsoluteOffset = new Point((int)(viewSize * 0.99f), 0) }, "SonarFrame");
             var paddedControlContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.8f), controlContainer.RectTransform, Anchor.Center), style: null);
 
             var statusContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GuiFrame.RectTransform, Anchor.BottomLeft)
-                { MinSize = new Point(150, 0), AbsoluteOffset = new Point((int)(viewSize * 0.8f), 0) }, "SonarFrame");
-            var paddedStatusContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.85f), statusContainer.RectTransform, Anchor.Center), style: null);
+                { MinSize = new Point(150, 0), AbsoluteOffset = new Point((int)(viewSize * 0.9f), 0) }, "SonarFrame");
+            var paddedStatusContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), statusContainer.RectTransform, Anchor.Center), style: null);
             
             var tickBoxContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.15f, 1.0f), paddedControlContainer.RectTransform))
             {
@@ -57,8 +58,20 @@ namespace Barotrauma.Items.Components
                 Stretch = true
             };
 
-            autopilotTickBox = new GUITickBox(new RectTransform(new Point(20, 20), tickBoxContainer.RectTransform),
-                TextManager.Get("SteeringAutoPilot"))
+            manualTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), tickBoxContainer.RectTransform),
+                TextManager.Get("SteeringManual"), style: "GUIRadioButton")
+            {
+                Selected = true,
+                OnSelected = (GUITickBox box) =>
+                {
+                    AutoPilot = !box.Selected;
+                    unsentChanges = true;
+
+                    return true;
+                }
+            };
+            autopilotTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), tickBoxContainer.RectTransform),
+                TextManager.Get("SteeringAutoPilot"), style: "GUIRadioButton")
             {
                 OnSelected = (GUITickBox box) =>
                 {
@@ -69,21 +82,21 @@ namespace Barotrauma.Items.Components
                 }
             };
 
-            maintainPosTickBox = new GUITickBox(new RectTransform(new Point(20, 20), tickBoxContainer.RectTransform),
+            GUITickBox.CreateRadioButtonGroup(new List<GUITickBox> { manualTickBox, autopilotTickBox });
+
+            maintainPosTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), tickBoxContainer.RectTransform) { AbsoluteOffset = new Point(10, 0) },
                 TextManager.Get("SteeringMaintainPos"), font: GUI.SmallFont)
             {
                 Enabled = false,
-                Selected = _maintainPos,
+                Selected = maintainPos,
                 OnSelected = tickBox =>
                 {
-                    if (_maintainPos != tickBox.Selected)
+                    if (maintainPos != tickBox.Selected)
                     {
                         unsentChanges = true;
-                        _maintainPos = tickBox.Selected;
-                        if (_maintainPos)
+                        maintainPos = tickBox.Selected;
+                        if (maintainPos)
                         {
-                            LevelStartSelected = false;
-                            LevelEndSelected = false;
                             if (controlledSub == null)
                             {
                                 posToMaintain = null;
@@ -97,7 +110,7 @@ namespace Barotrauma.Items.Components
                         {
                             AutoPilot = false;
                         }
-                        if (!_maintainPos)
+                        if (!maintainPos)
                         {
                             posToMaintain = null;
                         }
@@ -106,22 +119,20 @@ namespace Barotrauma.Items.Components
                 }
             };
 
-            levelStartTickBox = new GUITickBox(new RectTransform(new Point(20, 20), tickBoxContainer.RectTransform),
+            levelStartTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), tickBoxContainer.RectTransform) { AbsoluteOffset = new Point(10, 0) },
                 GameMain.GameSession?.StartLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.Name, 20),
                 font: GUI.SmallFont)
             {
                 Enabled = false,
-                Selected = _levelStartSelected,
+                Selected = levelStartSelected,
                 OnSelected = tickBox =>
                 {
-                    if (_levelStartSelected != tickBox.Selected)
+                    if (levelStartSelected != tickBox.Selected)
                     {
                         unsentChanges = true;
-                        _levelStartSelected = tickBox.Selected;
-                        if (_levelStartSelected)
+                        levelStartSelected = tickBox.Selected;
+                        if (levelStartSelected)
                         {
-                            LevelEndSelected = false;
-                            MaintainPos = false;
                             UpdatePath();
                         }
                         else if (!MaintainPos && !LevelEndSelected)
@@ -133,22 +144,20 @@ namespace Barotrauma.Items.Components
                 }
             };
 
-            levelEndTickBox = new GUITickBox(new RectTransform(new Point(20, 20), tickBoxContainer.RectTransform),
+            levelEndTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), tickBoxContainer.RectTransform) { AbsoluteOffset = new Point(10, 0) },
                 GameMain.GameSession?.EndLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.EndLocation.Name, 20),
                 font: GUI.SmallFont)
             {
                 Enabled = false,
-                Selected = _levelEndSelected,
+                Selected = levelEndSelected,
                 OnSelected = tickBox =>
                 {
-                    if (_levelEndSelected != tickBox.Selected)
+                    if (levelEndSelected != tickBox.Selected)
                     {
                         unsentChanges = true;
-                        _levelEndSelected = tickBox.Selected;
-                        if (_levelEndSelected)
+                        levelEndSelected = tickBox.Selected;
+                        if (levelEndSelected)
                         {
-                            LevelStartSelected = false;
-                            MaintainPos = false;
                             UpdatePath();
                         }
                         else if (!MaintainPos && !LevelStartSelected)
@@ -159,6 +168,8 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
+
+            GUITickBox.CreateRadioButtonGroup(new List<GUITickBox> { maintainPosTickBox, levelStartTickBox, levelEndTickBox });
 
             var textContainer = new GUILayoutGroup(new RectTransform(Vector2.One, paddedStatusContainer.RectTransform))
             {
@@ -204,7 +215,7 @@ namespace Barotrauma.Items.Components
             steerArea = new GUICustomComponent(new RectTransform(new Point(viewSize), GuiFrame.RectTransform, Anchor.CenterLeft),
                 (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); }, null);
 
-            textContainer.Recalculate();
+            /*textContainer.Recalculate();
 
             foreach (GUITextBlock text in textContainer.Children)
             {
@@ -213,7 +224,7 @@ namespace Barotrauma.Items.Components
                     (float)Math.Abs(Math.Sin((text.Rect.Center.Y - steerArea.Rect.Center.Y) / (viewSize * 0.5f) * MathHelper.Pi)) * viewSize * 0.5f;
 
                 text.RectTransform.ScreenSpaceOffset += new Point((int)Math.Max(circleRight - text.Rect.X, 0.0f), 0);
-            }
+            }*/
             
         }
 

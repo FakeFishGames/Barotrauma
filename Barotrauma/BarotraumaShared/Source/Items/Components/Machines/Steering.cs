@@ -52,6 +52,7 @@ namespace Barotrauma.Items.Components
                 autoPilot = value;
 #if CLIENT
                 autopilotTickBox.Selected = autoPilot;
+                manualTickBox.Selected = !autoPilot;
                 maintainPosTickBox.Enabled = autoPilot;
                 levelEndTickBox.Enabled = autoPilot;
                 levelStartTickBox.Enabled = autoPilot;

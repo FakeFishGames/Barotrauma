@@ -347,6 +347,91 @@ namespace Barotrauma
             return intersections;
         }
 
+
+        /// <summary>
+        /// Get the intersections between a line (either infinite or a line segment) and a circle
+        /// </summary>
+        /// <param name="circlePos">Center of the circle</param>
+        /// <param name="radius">Radius of the circle</param>
+        /// <param name="point1">1st point on the line</param>
+        /// <param name="point2">2nd point on the line</param>
+        /// <param name="isLineSegment">Is the line a segment or infinite</param>
+        /// <returns>The number of intersections</returns>
+        public static int GetLineCircleIntersections(Vector2 circlePos, float radius,
+            Vector2 point1, Vector2 point2, bool isLineSegment, out Vector2? intersection1, out Vector2? intersection2)
+        {
+            float dx, dy, A, B, C, det;
+
+            dx = point2.X - point1.X;
+            dy = point2.Y - point1.Y;
+
+            A = dx * dx + dy * dy;
+            B = 2 * (dx * (point1.X - circlePos.X) + dy * (point1.Y - circlePos.Y));
+            C = (point1.X - circlePos.X) * (point1.X - circlePos.X) + (point1.Y - circlePos.Y) * (point1.Y - circlePos.Y) - radius * radius;
+
+            det = B * B - 4 * A * C;
+            if ((A <= 0.0000001) || (det < 0))
+            {
+                // No real solutions.
+                intersection1 = null;
+                intersection2 = null;
+                return 0;
+            }
+            else if (det == 0)
+            {
+                // One solution.
+                float t = -B / (2 * A);
+                intersection1 = new Vector2(point1.X + t * dx, point1.Y + t * dy);
+                intersection2 = null;
+                return 1;
+            }
+            else
+            {
+                // Two solutions.
+                float t1 = (float)((-B + Math.Sqrt(det)) / (2 * A));
+                float t2 = (float)((-B - Math.Sqrt(det)) / (2 * A));
+
+                //if the line is not infinite, we need to check if the intersections are on the segment
+                if (isLineSegment)
+                {
+                    if (t1 >= 0 && t1 <= 1.0f)
+                    {
+                        intersection1 = point1 + new Vector2(dx, dy) * t1;
+                        if (t2 >= 0 && t2 <= 1.0f)
+                        {
+                            //both intersections on the segment
+                            intersection2 = point1 + new Vector2(dx, dy) * t2;
+                            return 2;
+
+                        }
+                        //only the first intersection is on the segment
+                        intersection2 = null;
+                        return 1;
+                    }
+                    else if (t2 >= 0 && t2 <= 1.0f)
+                    {
+                        //only the second intersection is on the segment
+                        intersection1 = point1 + new Vector2(dx, dy) * t2;
+                        intersection2 = null;
+                        return 1;
+                    }
+                    else
+                    {
+                        //neither is on the segment
+                        intersection1 = null;
+                        intersection2 = null;
+                        return 0;
+                    }
+                }
+                else
+                {
+                    intersection1 = point1 + new Vector2(dx, dy) * t1;
+                    intersection2 = point1 + new Vector2(dx, dy) * t2;
+                    return 2;
+                }
+            }
+        }
+
         public static float LineToPointDistance(Vector2 lineA, Vector2 lineB, Vector2 point)
         {
             float xDiff = lineB.X - lineA.X;

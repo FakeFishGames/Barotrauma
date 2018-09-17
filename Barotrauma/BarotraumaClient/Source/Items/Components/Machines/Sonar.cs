@@ -11,7 +11,10 @@ namespace Barotrauma.Items.Components
 {
     partial class Sonar : Powered, IServerSerializable, IClientSerializable
     {
-        private GUITickBox isActiveTickBox;
+        private GUITickBox activeTickBox, passiveTickBox;
+        private GUITextBlock signalWarningText;
+
+        private GUIComponent sonarView;
 
         private float displayBorderSize;
 
@@ -25,10 +28,13 @@ namespace Barotrauma.Items.Components
         private float displayRadius;
         private float displayScale;
 
+        private float zoom = 1.0f;
+        private const float MinZoom = 1.0f, MaxZoom = 5.0f;
+
         //Vector2 = vector from the ping source to the position of the disruption
         //float = strength of the disruption, between 0-1
         List<Pair<Vector2, float>> disruptedDirections = new List<Pair<Vector2, float>>();
-
+        
         private static Color[] blipColorGradient =
         {
             Color.TransparentBlack,
@@ -48,7 +54,7 @@ namespace Barotrauma.Items.Components
             sonarBlips = new List<SonarBlip>();
             
             int viewSize = (int)Math.Min(GuiFrame.Rect.Width - 150, GuiFrame.Rect.Height * 0.9f);
-            new GUICustomComponent(new RectTransform(new Point(viewSize), GuiFrame.RectTransform, Anchor.CenterLeft),
+            sonarView = new GUICustomComponent(new RectTransform(new Point(viewSize), GuiFrame.RectTransform, Anchor.CenterLeft),
                 (spriteBatch, guiCustomComponent) => { DrawSonar(spriteBatch, guiCustomComponent.Rect); }, null);
 
             var controlContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.3f), GuiFrame.RectTransform, Anchor.TopLeft)
@@ -56,9 +62,19 @@ namespace Barotrauma.Items.Components
 
             controlContainer.RectTransform.SetAsFirstChild();
 
-            var paddedControlContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.8f), controlContainer.RectTransform, Anchor.Center), style: null);
+            var paddedControlContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), controlContainer.RectTransform, Anchor.Center))
+            {
+                RelativeSpacing = 0.03f,
+                Stretch = true
+            };
 
-            isActiveTickBox = new GUITickBox(new RectTransform(new Point(20, 20), paddedControlContainer.RectTransform), TextManager.Get("SonarActive"))
+            passiveTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), paddedControlContainer.RectTransform), TextManager.Get("SonarPassive"), style: "GUIRadioButton")
+            {
+                ToolTip = TextManager.Get("SonarTipPassive"),
+                Selected = true
+            };
+
+            activeTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), paddedControlContainer.RectTransform), TextManager.Get("SonarActive"), style: "GUIRadioButton")
             {
                 ToolTip = TextManager.Get("SonarTipActive"),
                 OnSelected = (GUITickBox box) =>
@@ -78,6 +94,21 @@ namespace Barotrauma.Items.Components
                 }
             };
 
+            var zoomContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), paddedControlContainer.RectTransform), isHorizontal: true);
+            new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), zoomContainer.RectTransform), TextManager.Get("SonarZoom"), font: GUI.SmallFont);
+            new GUIScrollBar(new RectTransform(new Vector2(0.7f, 1.0f), zoomContainer.RectTransform), barSize: 0.1f, isHorizontal: true)
+            {
+                OnMoved = (scrollbar, scroll) =>
+                {
+                    zoom = MathHelper.Lerp(MinZoom, MaxZoom, scroll);
+                    return true;
+                }
+            };
+
+            signalWarningText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), paddedControlContainer.RectTransform), "", Color.Orange);
+
+            GUITickBox.CreateRadioButtonGroup(new List<GUITickBox>() { activeTickBox, passiveTickBox });
+
             GuiFrame.CanBeFocused = false;
         }
 
@@ -95,7 +126,12 @@ namespace Barotrauma.Items.Components
 
                 if (sonarBlips[i].FadeTimer <= 0.0f) sonarBlips.RemoveAt(i);
             }
-            
+
+            //sonar view can only get focus when the cursor is inside the circle
+            sonarView.CanBeFocused = 
+                Vector2.DistanceSquared(sonarView.Rect.Center.ToVector2(), PlayerInput.MousePosition) <
+                (sonarView.Rect.Width / 2 * sonarView.Rect.Width / 2);
+
             if (UseTransducers && connectedTransducers.Count == 0)
             {
                 return;
@@ -106,7 +142,7 @@ namespace Barotrauma.Items.Components
             if (Level.Loaded != null)
             {
                 Dictionary<LevelTrigger, Vector2> levelTriggerFlows = new Dictionary<LevelTrigger, Vector2>();
-                foreach (LevelObject levelObject in Level.Loaded.LevelObjectManager.GetAllObjects(transducerCenter, range * pingState))
+                foreach (LevelObject levelObject in Level.Loaded.LevelObjectManager.GetAllObjects(transducerCenter, range * pingState / zoom))
                 {
                     //gather all nearby triggers that are causing the water to flow into the dictionary
                     foreach (LevelTrigger trigger in levelObject.Triggers)
@@ -154,10 +190,10 @@ namespace Barotrauma.Items.Components
             
             if (IsActive)
             {
-                float pingRadius = displayRadius * pingState;
+                float pingRadius = displayRadius * pingState / zoom;
                 UpdateDisruptions(transducerCenter, pingRadius / displayScale, prevPingRadius / displayScale);
                 Ping(transducerCenter, transducerCenter, 
-                    pingRadius, prevPingRadius, displayScale, range, 2.0f);
+                    pingRadius, prevPingRadius, displayScale, range / zoom, 2.0f);
                 prevPingRadius = pingRadius;
                 return;
             }
@@ -186,7 +222,7 @@ namespace Barotrauma.Items.Components
             displayBorderSize = 0.2f;
                center = new Vector2(rect.X + rect.Width * 0.5f, rect.Center.Y);
             displayRadius = (rect.Width / 2.0f) * (1.0f - displayBorderSize);
-            displayScale = displayRadius / range;
+            displayScale = displayRadius / range * zoom;
 
             if (screenBackground != null)
             {
@@ -212,7 +248,7 @@ namespace Barotrauma.Items.Components
 
             if (item.Submarine != null && !DetectSubmarineWalls)
             {
-                float simScale = displayScale * Physics.DisplayToSimRation;
+                float simScale = displayScale * Physics.DisplayToSimRation * zoom;
 
                 foreach (Submarine submarine in Submarine.Loaded)
                 {
@@ -230,10 +266,30 @@ namespace Barotrauma.Items.Components
                         Vector2 end = (submarine.HullVertices[(i + 1) % submarine.HullVertices.Count] + offset) * simScale;
                         end.Y = -end.Y;
 
-                        if (start.LengthSquared() > displayRadius * displayRadius ||
-                            end.LengthSquared() > displayRadius * displayRadius) continue;
-
-                        GUI.DrawLine(spriteBatch, center + start, center + end, Color.LightBlue * signalStrength, width: 3);
+                        bool startOutside = start.LengthSquared() > displayRadius * displayRadius;
+                        bool endOutside = end.LengthSquared() > displayRadius * displayRadius;
+                        if (startOutside && endOutside)
+                        {
+                            continue;
+                        }
+                        else if (startOutside)
+                        {
+                            if (MathUtils.GetLineCircleIntersections(Vector2.Zero, DisplayRadius, end, start, true, out Vector2? intersection1, out Vector2? intersection2)==1)
+                            {
+                                GUI.DrawLine(spriteBatch, center + intersection1.Value, center + end, Color.LightBlue * signalStrength, width: 3);
+                            }
+                        }
+                        else if (endOutside)
+                        {
+                            if (MathUtils.GetLineCircleIntersections(Vector2.Zero, DisplayRadius, start, end, true, out Vector2? intersection1, out Vector2? intersection2) == 1)
+                            {
+                                GUI.DrawLine(spriteBatch, center + start, center + intersection1.Value, Color.LightBlue * signalStrength, width: 3);
+                            }
+                        }
+                        else
+                        {
+                            GUI.DrawLine(spriteBatch, center + start, center + end, Color.LightBlue * signalStrength, width: 3);
+                        }
                     }
                 }
             }
@@ -264,10 +320,13 @@ namespace Barotrauma.Items.Components
 
             if (signalStrength <= 0.5f)
             {
-                string signalWeakText = TextManager.Get(signalStrength <= 0.0f ? "SonarNoSignal" : "SonarSignalWeak");
-                GUI.DrawString(spriteBatch, 
-                    new Vector2(rect.Center.X, rect.Center.Y + rect.Height * 0.25f) - GUI.Font.MeasureString(signalWeakText) * 0.5f,
-                    signalWeakText, Color.Red, Color.Black * 0.8f);
+                signalWarningText.Text = TextManager.Get(signalStrength <= 0.0f ? "SonarNoSignal" : "SonarSignalWeak");
+                signalWarningText.Color = signalStrength <= 0.0f ? Color.Red : Color.Orange;
+                signalWarningText.Visible = true;
+            }
+            else
+            {
+                signalWarningText.Visible = false;
             }
 
             if (GameMain.GameSession == null) return;
@@ -611,7 +670,7 @@ namespace Barotrauma.Items.Components
             float scaledT = strength * (blipColorGradient.Length - 1);
             Color color = Color.Lerp(blipColorGradient[(int)scaledT], blipColorGradient[(int)Math.Min(scaledT + 1, blipColorGradient.Length - 1)], (scaledT - (int)scaledT));
 
-            Vector2 pos = (blip.Position - transducerPos) * displayScale;
+            Vector2 pos = (blip.Position - transducerPos) * displayScale * zoom;
             pos.Y = -pos.Y;
 
             float posDist = pos.Length();
@@ -630,7 +689,7 @@ namespace Barotrauma.Items.Components
             Vector2 dir = pos / posDist;
 
             Vector2 normal = new Vector2(dir.Y, -dir.X);
-            float scale = (strength + 3.0f) * blip.Scale;
+            float scale = (strength + 3.0f) * blip.Scale * zoom;
 
             sonarBlip.Draw(spriteBatch, center + pos, color, sonarBlip.Origin, blip.Rotation ?? MathUtils.VectorToAngle(pos),
                 blip.Size * scale * 0.04f, SpriteEffects.None, 0);
@@ -694,7 +753,14 @@ namespace Barotrauma.Items.Components
             }
 
             IsActive = msg.ReadBoolean();
-            isActiveTickBox.Selected = IsActive;
+            if (IsActive)
+            {
+                activeTickBox.Selected = true;
+            }
+            else
+            {
+                passiveTickBox.Selected = true;
+            }
         }
     }
 
