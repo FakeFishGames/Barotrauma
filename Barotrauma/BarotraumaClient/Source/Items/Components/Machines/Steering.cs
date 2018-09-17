@@ -213,19 +213,16 @@ namespace Barotrauma.Items.Components
             };
 
             steerArea = new GUICustomComponent(new RectTransform(new Point(viewSize), GuiFrame.RectTransform, Anchor.CenterLeft),
-                (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); }, null);
+                (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); }, null);           
+        }
 
-            /*textContainer.Recalculate();
-
-            foreach (GUITextBlock text in textContainer.Children)
-            {
-                float circleRight = 
-                    steerArea.Center.X + 
-                    (float)Math.Abs(Math.Sin((text.Rect.Center.Y - steerArea.Rect.Center.Y) / (viewSize * 0.5f) * MathHelper.Pi)) * viewSize * 0.5f;
-
-                text.RectTransform.ScreenSpaceOffset += new Point((int)Math.Max(circleRight - text.Rect.X, 0.0f), 0);
-            }*/
-            
+        /// <summary>
+        /// Makes the sonar view CustomComponent render the steering HUD, preventing it from being drawn behing the sonar
+        /// </summary>
+        public void AttachToSonarHUD(GUICustomComponent sonarView)
+        {
+            steerArea.Visible = false;
+            sonarView.OnDraw += (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); };
         }
 
         public void DrawHUD(SpriteBatch spriteBatch, Rectangle rect)
