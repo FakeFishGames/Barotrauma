@@ -491,6 +491,10 @@ namespace Barotrauma
 
         public void ReceiveTextInput(char inputChar)
         {
+            if (selectedCharacters > 0)
+            {
+                RemoveSelectedText();
+            }
             int prevCaretIndex = CaretIndex;
             Text = Text.Insert(CaretIndex, inputChar.ToString());
             CaretIndex = Math.Min(Text.Length, ++prevCaretIndex);
@@ -499,6 +503,10 @@ namespace Barotrauma
 
         public void ReceiveTextInput(string text)
         {
+            if (selectedCharacters > 0)
+            {
+                RemoveSelectedText();
+            }
             int prevCaretIndex = CaretIndex;
             Text = Text.Insert(CaretIndex, text);
             CaretIndex = Math.Min(Text.Length, prevCaretIndex + text.Length);
