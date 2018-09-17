@@ -143,19 +143,7 @@ namespace Barotrauma
             TopPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.04f), GUI.Canvas) { MinSize = new Point(0, 35) }, "GUIFrameTop");
             GUIFrame paddedTopPanel = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.55f), TopPanel.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.1f) },
                 style: null);
-
-            saveAssemblyFrame = new GUIFrame(new RectTransform(new Vector2(0.08f, 0.5f), TopPanel.RectTransform, Anchor.BottomRight, Pivot.TopRight) { MinSize = new Point(170, 30) }, "InnerFrame")
-            {
-                Visible = false
-            };
-            var saveAssemblyButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.8f), saveAssemblyFrame.RectTransform, Anchor.Center), TextManager.Get("SaveItemAssembly"));
-            saveAssemblyFrame.Font = GUI.SmallFont;
-            saveAssemblyButton.OnClicked += (btn, userdata) =>
-            {
-                CreateSaveAssemblyScreen();
-                return true;
-            };
-
+            
             var button = new GUIButton(new RectTransform(new Vector2(0.07f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft), TextManager.Get("OpenSubButton"))
             {
                 OnClicked = (GUIButton btn, object data) =>
@@ -232,6 +220,20 @@ namespace Barotrauma
             GUITextBlock selectedHullVolume = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), hullVolumeFrame.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.5f) }, "", font: GUI.SmallFont)
             {
                 TextGetter = GetSelectedHullVolume
+            };
+
+
+            saveAssemblyFrame = new GUIFrame(new RectTransform(new Vector2(0.08f, 0.5f), TopPanel.RectTransform, Anchor.BottomLeft, Pivot.TopLeft)
+            { MinSize = new Point(180, 40), AbsoluteOffset = new Point(LeftPanel.Rect.Width + hullVolumeFrame.Rect.Width, 0) }, "InnerFrame")
+            {
+                Visible = false
+            };
+            var saveAssemblyButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.8f), saveAssemblyFrame.RectTransform, Anchor.Center), TextManager.Get("SaveItemAssembly"));
+            saveAssemblyFrame.Font = GUI.SmallFont;
+            saveAssemblyButton.OnClicked += (btn, userdata) =>
+            {
+                CreateSaveAssemblyScreen();
+                return true;
             };
 
 
@@ -401,15 +403,19 @@ namespace Barotrauma
 
             foreach (MapEntityPrefab ep in MapEntityPrefab.List)
             {
+                bool legacy = ep.Category == MapEntityCategory.Legacy;
+
                 float relWidth = 1.0f / entitiesPerRow;
                 GUIFrame frame = new GUIFrame(new RectTransform(
-                    new Vector2(relWidth, relWidth * ((float)entityList.Content.Rect.Width / entityList.Content.Rect.Height)), 
+                    new Vector2(relWidth, relWidth * ((float)entityList.Content.Rect.Width / entityList.Content.Rect.Height)),
                     entityList.Content.RectTransform) { MinSize = new Point(0, 50) },
                     style: "GUITextBox")
                 {
                     UserData = ep,
-                    ToolTip = string.IsNullOrEmpty(ep.Description) ? ep.Name : ep.Name + '\n' + ep.Description
                 };
+
+                string name = legacy ? ep.Name + " (legacy)" : ep.Name;
+                frame.ToolTip = string.IsNullOrEmpty(ep.Description) ? name : name + '\n' + ep.Description;
 
                 GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.8f), frame.RectTransform, Anchor.Center), style: null)
                 {
@@ -421,15 +427,30 @@ namespace Barotrauma
                 {
                     CanBeFocused = false
                 };
+                if (legacy) textBlock.TextColor *= 0.6f;
                 textBlock.Text = ToolBox.LimitString(textBlock.Text, textBlock.Font, textBlock.Rect.Width);
 
+                Sprite icon = ep.sprite;
+                Color iconColor = Color.White;
+                if (ep is ItemPrefab itemPrefab)
+                {
+                    if (itemPrefab.InventoryIcon != null)
+                    {
+                        icon = itemPrefab.InventoryIcon;
+                        iconColor = itemPrefab.InventoryIconColor;
+                    }
+                    else
+                    {
+                        iconColor = itemPrefab.SpriteColor;
+                    }
+                }
                 if (ep.sprite != null)
                 {
                     GUIImage img = new GUIImage(new RectTransform(new Point(paddedFrame.Rect.Height, paddedFrame.Rect.Height - textBlock.Rect.Height),
-                        paddedFrame.RectTransform, Anchor.TopCenter), ep.sprite)
+                        paddedFrame.RectTransform, Anchor.TopCenter), icon)
                     {
                         CanBeFocused = false,
-                        Color = ep.SpriteColor
+                        Color = legacy ? iconColor * 0.6f : iconColor
                     };
                     img.Scale = Math.Min(img.Rect.Width / img.Sprite.size.X, img.Rect.Height / img.Sprite.size.Y);
                     img.RectTransform.NonScaledSize = new Point((int)(img.Sprite.size.X * img.Scale), img.Rect.Height);
@@ -1166,8 +1187,8 @@ namespace Barotrauma
 
         private GUIFrame CreateWiringPanel()
         {
-            GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(0.03f, 0.35f), GUI.Canvas, Anchor.CenterRight)
-                { MinSize = new Point(120, 300), RelativeOffset = new Vector2(0.0f, -0.1f) },
+            GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(0.03f, 0.35f), GUI.Canvas, Anchor.TopLeft, Pivot.CenterLeft)
+                { MinSize = new Point(120, 300), AbsoluteOffset = new Point(LeftPanel.Rect.Right, LeftPanel.Rect.Center.Y) },
                 style: "GUIFrameRight");
 
             GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.8f, 0.85f), frame.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.1f, 0.0f) })

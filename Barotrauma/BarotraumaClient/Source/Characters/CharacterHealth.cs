@@ -789,7 +789,7 @@ namespace Barotrauma
             {
                 Affliction affliction1 = c1.GUIComponent.UserData as Affliction;
                 Affliction affliction2 = c2.GUIComponent.UserData as Affliction;
-                return (int)(affliction2.Strength - affliction1.Strength);
+                return (int)(affliction2.GetVitalityDecrease(this) - affliction1.GetVitalityDecrease(this));
             });
 
             if (afflictionInfoContainer.CountChildren == 0 && currentChildren.Count > 0)
@@ -1198,14 +1198,20 @@ namespace Barotrauma
                            Color.LightBlue * 0.3f, 0, 4);
                     }
                 }
+                
+                var slot = GUI.Style.GetComponentStyle("AfflictionIconSlot");
 
-                float iconScale = 0.4f * scale;
+                float iconScale = 0.3f * scale;
                 Vector2 iconPos = highlightArea.Center.ToVector2() - new Vector2(24.0f, 24.0f) * iconScale;
                 foreach (Affliction affliction in limbHealth.Afflictions)
                 {
                     if (affliction.Strength < affliction.Prefab.ShowIconThreshold) continue;
+                    slot.Sprites[GUIComponent.ComponentState.None][0].Draw(
+                        spriteBatch, 
+                        new Rectangle(iconPos.ToPoint(), (affliction.Prefab.Icon.size * iconScale).ToPoint()), 
+                        slot.Color);
                     affliction.Prefab.Icon.Draw(spriteBatch, iconPos, affliction.Prefab.IconColor, 0, iconScale);
-                    iconPos += new Vector2(10.0f, 20.0f) * iconScale;
+                    iconPos += new Vector2(30.0f, 40.0f) * iconScale;
                     iconScale *= 0.9f;
                 }
 
@@ -1215,8 +1221,12 @@ namespace Barotrauma
                     Limb indicatorLimb = character.AnimController.GetLimb(affliction.Prefab.IndicatorLimb);
                     if (indicatorLimb != null && indicatorLimb.HealthIndex == i)
                     {
+                        slot.Sprites[GUIComponent.ComponentState.None][0].Draw(
+                            spriteBatch,
+                            new Rectangle(iconPos.ToPoint(), (affliction.Prefab.Icon.size * iconScale).ToPoint()),
+                            slot.Color);
                         affliction.Prefab.Icon.Draw(spriteBatch, iconPos, affliction.Prefab.IconColor, 0, iconScale);
-                        iconPos += new Vector2(10.0f, 10.0f) * iconScale;
+                        iconPos += new Vector2(30.0f, 40.0f) * iconScale;
                         iconScale *= 0.9f;
                     }
                 }

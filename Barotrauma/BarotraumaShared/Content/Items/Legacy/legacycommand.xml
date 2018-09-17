@@ -13,13 +13,13 @@
       <RequiredItem identifier="screwdriver" type="equipped"/>
     </Repairable>
 
-    <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10" allowuioverlap="true">
-      <GuiFrame relativesize="0.5,0.7" anchor="Center" style="ItemUI"/>
+    <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10" linkuitocomponent="2">
+      <GuiFrame relativesize="0.5,0.5" anchor="Center" style="ItemUI"/>
       <StatusEffect type="InWater" target="This" condition="-1.0"/>
     </Steering>
 
-    <Sonar canbeselected = "true" powerconsumption="100" displaybordersize="0.2" allowuioverlap="true">
-      <GuiFrame relativesize="0.5,0.7" anchor="Center" style="ItemUI" color="0,0,0,0"/>
+    <Sonar canbeselected = "true" powerconsumption="100" displaybordersize="0.2">
+      <GuiFrame relativesize="0.5,0.5" anchor="Center" style="ItemUI" color="0,0,0,0"/>
       <sound file="Content/Items/Command/sonarPing.ogg" type="OnUse" range="4000.0"/>
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5"/>
       <ScreenOverlay texture="Content/Items/Command/sonarOverlay.png" origin="0.5,0.5"/>

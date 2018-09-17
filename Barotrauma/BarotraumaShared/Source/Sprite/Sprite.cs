@@ -7,13 +7,19 @@ namespace Barotrauma
 {
     public partial class Sprite
     {
-        static List<Sprite> list = new List<Sprite>();
+        public static IEnumerable<Sprite> LoadedSprites
+        {
+            get { return list; }
+        }
+
+        private static List<Sprite> list = new List<Sprite>();
+
         //the file from which the texture is loaded
         //if two sprites use the same file, they share the same texture
-        string file;
+        private string file;
 
         //the area in the texture that is supposed to be drawn
-        Rectangle sourceRect;
+        private Rectangle sourceRect;
 
         //the offset used when drawing the sprite
         protected Vector2 offset;
