@@ -87,9 +87,8 @@ namespace Barotrauma.Items.Components
             set 
             {
                 if (!MathUtils.IsValid(value)) return;
-                //targetVelocity.X = MathHelper.Clamp(value.X, -100, 100);
-                //targetVelocity.Y = MathHelper.Clamp(value.Y, -100, 100);
-                targetVelocity = value.ClampLength(steeringMaxLength);
+                targetVelocity.X = MathHelper.Clamp(value.X, -100.0f, 100.0f);
+                targetVelocity.Y = MathHelper.Clamp(value.Y, -100.0f, 100.0f);
             }
         }
 
@@ -99,13 +98,10 @@ namespace Barotrauma.Items.Components
             set
             {
                 if (!MathUtils.IsValid(value)) return;
-                //steeringInput.X = MathHelper.Clamp(value.X, -100, 100);
-                //steeringInput.Y = MathHelper.Clamp(value.Y, -100, 100);
-                steeringInput = value.ClampLength(steeringMaxLength);
+                steeringInput.X = MathHelper.Clamp(value.X, -100.0f, 100.0f);
+                steeringInput.Y = MathHelper.Clamp(value.Y, -100.0f, 100.0f);
             }
         }
-
-        private float steeringMaxLength = 200f;
 
         public SteeringPath SteeringPath
         {
