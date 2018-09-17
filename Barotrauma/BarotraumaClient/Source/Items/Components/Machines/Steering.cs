@@ -242,7 +242,8 @@ namespace Barotrauma.Items.Components
 
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)steeringInputPos.X - 5, (int)steeringInputPos.Y - 5, 10, 10), Color.White);
 
-                if (keyboardInput.Length() > 0 || Vector2.Distance(PlayerInput.MousePosition, new Vector2(velRect.Center.X, velRect.Center.Y)) < 200.0f)
+                //if (keyboardInput.Length() > 0 || Vector2.Distance(PlayerInput.MousePosition, new Vector2(velRect.Center.X, velRect.Center.Y)) < 200.0f)
+                if (velRect.Contains(PlayerInput.MousePosition))
                 {
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)steeringInputPos.X - 10, (int)steeringInputPos.Y - 10, 20, 20), Color.Red);
                 }
@@ -307,7 +308,7 @@ namespace Barotrauma.Items.Components
                 }
             }
             keyboardInput = Vector2.Zero;
-            if (!AutoPilot)
+            if (!AutoPilot && Character.DisableControls)
             {
                 steeringAdjustSpeed = character == null ? 0.2f : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("helm") / 100.0f);
                 if (PlayerInput.KeyDown(InputType.Left))
@@ -332,6 +333,7 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
+                    float steeringMaxLength = 100;
                     float s = SteeringInput.Length() / steeringMaxLength * deltaTime * keyboardInputSpeed;
                     SteeringInput = Vector2.Lerp(SteeringInput, SteeringInput + keyboardInput, MathHelper.Clamp(s, 0.2f, 10));
                 }
