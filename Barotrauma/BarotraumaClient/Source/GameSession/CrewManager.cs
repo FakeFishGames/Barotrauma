@@ -130,6 +130,11 @@ namespace Barotrauma
 
         #region Character list management
 
+        public Rectangle GetCharacterListArea()
+        {
+            return characterListBox.Rect;
+        }
+
         public List<Character> GetCharacters()
         {
             return new List<Character>(characters);
@@ -831,7 +836,7 @@ namespace Barotrauma
                     }
                 }
 
-                GUI.PreventElementOverlap(optionFrames, new Rectangle(10, 10, GameMain.GraphicsWidth - 20, GameMain.GraphicsHeight - 20));
+                GUI.PreventElementOverlap(optionFrames, null, new Rectangle(10, 10, GameMain.GraphicsWidth - 20, GameMain.GraphicsHeight - 20));
             }
             //only one target (or an order with no particular targets), just show options
             else

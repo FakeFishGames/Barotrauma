@@ -172,8 +172,6 @@ namespace Barotrauma
                 //prefer larger hulls
                 var targetHull = ToolBox.SelectWeightedRandom(targetHulls, targetHulls.Select(h => h.Volume).ToList(), Rand.RandSync.Unsynced);
                 return targetHull?.AiTarget;
-
-                return targetHulls[Rand.Range(0, targetHulls.Count)].AiTarget;
             }
 
             return null;
