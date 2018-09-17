@@ -5,53 +5,44 @@ namespace Barotrauma
 {
     public static class StringFormatter
     {
-        /// <summary>
-        /// Formats the value with one decimal.
-        /// </summary>
-        public static string FormatAsSingleDecimal(this float value)
+        public static string FormatSingleDecimal(this float value)
         {
-            return value.ToString("0.#", CultureInfo.InvariantCulture);
+            return value.ToString("F1", CultureInfo.InvariantCulture);
         }
 
-        /// <summary>
-        /// Formats the value with two decimals.
-        /// </summary>
-        public static string FormatAsDoubleDecimal(this float value)
+        public static string FormatDoubleDecimal(this float value)
         {
-            return value.ToString("0.##", CultureInfo.InvariantCulture);
+            return value.ToString("F2", CultureInfo.InvariantCulture);
         }
 
-        /// <summary>
-        /// Converts first to int, then to string.
-        /// </summary>
-        public static string FormatAsInt(this float value)
+        public static string FormatZeroDecimal(this float value)
         {
-            int v = (int)value;
-            return v.ToString();
+            return value.ToString("F0", CultureInfo.InvariantCulture);
         }
 
-        /// <summary>
-        /// Formats the value with one decimal.
-        /// </summary>
-        public static string FormatAsSingleDecimal(this Vector2 value)
+        public static string Format(this float value, int decimalCount)
         {
-            return $"({value.X.FormatAsSingleDecimal()}, {value.Y.FormatAsSingleDecimal()})";
+            return value.ToString($"F{decimalCount.ToString()}", CultureInfo.InvariantCulture);
         }
 
-        /// <summary>
-        /// Formats the value with two decimals.
-        /// </summary>
-        public static string FormatAsDoubleDecimal(this Vector2 value)
+        public static string FormatSingleDecimal(this Vector2 value)
         {
-            return $"({value.X.FormatAsDoubleDecimal()}, {value.Y.FormatAsDoubleDecimal()})";
+            return $"({value.X.FormatSingleDecimal()}, {value.Y.FormatSingleDecimal()})";
         }
 
-        /// <summary>
-        /// Formats the value with no decimals.
-        /// </summary>
-        public static string FormatAsZeroDecimal(this Vector2 value)
+        public static string FormatDoubleDecimal(this Vector2 value)
         {
-            return $"({value.X.FormatAsInt()}, {value.Y.FormatAsInt()})";
+            return $"({value.X.FormatDoubleDecimal()}, {value.Y.FormatDoubleDecimal()})";
+        }
+
+        public static string FormatZeroDecimal(this Vector2 value)
+        {
+            return $"({value.X.FormatZeroDecimal()}, {value.Y.FormatZeroDecimal()})";
+        }
+
+        public static string Format(this Vector2 value, int decimalCount)
+        {
+            return $"({value.X.Format(decimalCount)}, {value.Y.Format(decimalCount)})";
         }
 
         /// <summary>
