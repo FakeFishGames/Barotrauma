@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Extensions;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -94,13 +95,20 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            float scale = 1.0f;
+            HashSet<Submarine> subs = new HashSet<Submarine>();
             foreach (Hull hull in Hull.hullList)
             {
                 var hullFrame = submarineContainer.Children.First().FindChild(hull);
                 if (hullFrame == null) continue;
 
                 hullDatas.TryGetValue(hull, out HullData hullData);
-
+                
+                subs.Add(hull.Submarine);
+                scale = Math.Min(
+                    hullFrame.Parent.Rect.Width / (float)hull.Submarine.Borders.Width, 
+                    hullFrame.Parent.Rect.Height / (float)hull.Submarine.Borders.Height);
+                
                 Color borderColor = Color.DarkCyan;
                 
                 float? gapOpenSum = 0.0f;
@@ -158,6 +166,29 @@ namespace Barotrauma.Items.Components
                     hullFrame.Children.First().Color = Color.DarkCyan * 0.8f;
                 }
                 hullFrame.Color = borderColor;
+            }
+
+            foreach (Submarine sub in subs)
+            {
+                float displayScale = ConvertUnits.ToDisplayUnits(scale);
+                Vector2 offset = Vector2.Zero;
+                Vector2 center = container.Rect.Center.ToVector2();
+
+                if (sub != item.Submarine && item.Submarine != null)
+                {
+                    offset = ConvertUnits.ToSimUnits(sub.WorldPosition - item.Submarine.WorldPosition);
+                }
+
+                for (int i = 0; i < sub.HullVertices.Count; i++)
+                {
+                    Vector2 start = (sub.HullVertices[i] + offset) * displayScale;
+                    start += Vector2.Normalize(start) * 0;
+                    start.Y = -start.Y;
+                    Vector2 end = (sub.HullVertices[(i + 1) % sub.HullVertices.Count] + offset) * displayScale;
+                    end += Vector2.Normalize(end) * 0;
+                    end.Y = -end.Y;
+                    GUI.DrawLine(spriteBatch, center + start, center + end, Color.DarkCyan * Rand.Range(0.3f, 0.35f), width: 10);
+                }
             }
         }
     }

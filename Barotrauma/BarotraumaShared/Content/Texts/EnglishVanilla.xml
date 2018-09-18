@@ -658,6 +658,7 @@
   <SonarActive>Active Sonar</SonarActive>
   <SonarPassive>Passive Sonar</SonarPassive>
   <SonarZoom>Zoom</SonarZoom>
+  <SonarDirectionalPing>Directional ping</SonarDirectionalPing>
   <SonarSignalWeak>Signal weak</SonarSignalWeak>
   <SonarNoSignal>No signal</SonarNoSignal>
   <SonarTipActive>When active sonar is on, the transponders send out pings that reflect from nearby obstacles. The pings may also be heard by hostile creatures or enemy submarines.</SonarTipActive>

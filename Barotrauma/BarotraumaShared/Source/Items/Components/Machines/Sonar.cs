@@ -28,17 +28,18 @@ namespace Barotrauma.Items.Components
 
         static Sonar()
         {
-            DirectionalPingDotProduct = (float)Math.Cos(MathHelper.ToRadians(DirectionalPingSector));
+            DirectionalPingDotProduct = (float)Math.Cos(MathHelper.ToRadians(DirectionalPingSector) * 0.5f);
         }
 
         private float range;
 
         private float pingState;
 
-        private bool useDirectionalPing = true;
+        private bool useDirectionalPing = false;
+        private Vector2 lastPingDirection = new Vector2(1.0f, 0.0f);
         private Vector2 pingDirection = new Vector2(1.0f, 0.0f);
 
-        private readonly Sprite pingCircle, screenOverlay, screenBackground;
+        private readonly Sprite pingCircle, directionalPingCircle, screenOverlay, screenBackground;
 
         private readonly Sprite sonarBlip;
 
@@ -101,6 +102,9 @@ namespace Barotrauma.Items.Components
                     case "pingcircle":
                         pingCircle = new Sprite(subElement);
                         break;
+                    case "directionalpingcircle":
+                        directionalPingCircle = new Sprite(subElement);
+                        break;
                     case "screenoverlay":
                         screenOverlay = new Sprite(subElement);
                         break;
@@ -145,6 +149,7 @@ namespace Barotrauma.Items.Components
                     if (item.AiTarget != null) item.AiTarget.SoundRange = Math.Max(Range * pingState, item.AiTarget.SoundRange);
                     aiPingCheckPending = true;
                     item.Use(deltaTime);
+                    lastPingDirection = pingDirection;
                     pingState = 0.0f;
                 }
             }
@@ -166,6 +171,7 @@ namespace Barotrauma.Items.Components
         {
             sonarBlip?.Remove();
             pingCircle?.Remove();
+            directionalPingCircle?.Remove();
             screenOverlay?.Remove();
             screenBackground?.Remove();
         }
