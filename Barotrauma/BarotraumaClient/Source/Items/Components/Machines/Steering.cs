@@ -19,8 +19,8 @@ namespace Barotrauma.Items.Components
 
         private GUITextBlock pressureWarningText;
 
-        private Vector2 keyboardInput;
-        private float keyboardInputSpeed = 200;
+        private Vector2 keyboardInput = Vector2.Zero;
+        private float inputCumulation;
 
         private bool levelStartSelected;
         public bool LevelStartSelected
@@ -326,40 +326,64 @@ namespace Barotrauma.Items.Components
                     unsentChanges = true;
                 }
             }
-            keyboardInput = Vector2.Zero;
             if (!AutoPilot && Character.DisableControls)
             {
                 steeringAdjustSpeed = character == null ? 0.2f : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("helm") / 100.0f);
+                Vector2 input = Vector2.Zero;
                 if (PlayerInput.KeyDown(InputType.Left))
                 {
-                    keyboardInput -= Vector2.UnitX;
+                    input -= Vector2.UnitX;
                 }
                 if (PlayerInput.KeyDown(InputType.Right))
                 {
-                    keyboardInput += Vector2.UnitX;
+                    input += Vector2.UnitX;
                 }
                 if (PlayerInput.KeyDown(InputType.Up))
                 {
-                    keyboardInput += Vector2.UnitY;
+                    input += Vector2.UnitY;
                 }
                 if (PlayerInput.KeyDown(InputType.Down))
                 {
-                    keyboardInput -= Vector2.UnitY;
+                    input -= Vector2.UnitY;
                 }
                 if (PlayerInput.KeyDown(Keys.LeftShift))
                 {
-                    SteeringInput += keyboardInput * deltaTime * keyboardInputSpeed;
+                    SteeringInput += input * deltaTime * 200;
+                    inputCumulation = 0;
+                    keyboardInput = Vector2.Zero;
+                    unsentChanges = true;
                 }
                 else
                 {
-                    float steeringMaxLength = 100;
-                    float s = SteeringInput.Length() / steeringMaxLength * deltaTime * keyboardInputSpeed;
-                    SteeringInput = Vector2.Lerp(SteeringInput, SteeringInput + keyboardInput, MathHelper.Clamp(s, 0.2f, 10));
+                    float step = deltaTime * 5;
+                    if (input.Length() > 0)
+                    {
+                        inputCumulation += step;
+                    }
+                    else
+                    {
+                        inputCumulation -= step;
+                    }
+                    float maxCumulation = 1;
+                    inputCumulation = MathHelper.Clamp(inputCumulation, 0, maxCumulation);
+                    float length = MathHelper.Lerp(0, 0.2f, MathUtils.InverseLerp(0, maxCumulation, inputCumulation));
+                    var normalizedInput = Vector2.Normalize(input);
+                    if (MathUtils.IsValid(normalizedInput))
+                    {
+                        keyboardInput += normalizedInput * length;
+                    }
+                    if (keyboardInput.Length() > 0)
+                    {
+                        SteeringInput += keyboardInput;
+                        unsentChanges = true;
+                        keyboardInput *= MathHelper.Clamp(1 - step, 0, 1);
+                    }
                 }
-                if (keyboardInput.Length() > 0)
-                {
-                    unsentChanges = true;
-                }
+            }
+            else
+            {
+                inputCumulation = 0;
+                keyboardInput = Vector2.Zero;
             }
         }
 
