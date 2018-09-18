@@ -141,10 +141,9 @@ namespace Barotrauma
                 }
                 else if (inputType == NumberType.Float)
                 {
-                    if (!maxValueFloat.HasValue || !minValueFloat.HasValue) return false;
-                    FloatValue += (MaxValueFloat.Value - minValueFloat.Value) / 10.0f;
+                    FloatValue += Round();
                 }
-                return false;
+                return true;
             };
             PlusButton.OnPressed += () =>
             {
@@ -177,10 +176,9 @@ namespace Barotrauma
                 }
                 else if (inputType == NumberType.Float)
                 {
-                    if (!maxValueFloat.HasValue || !minValueFloat.HasValue) return false;
-                    FloatValue -= (MaxValueFloat.Value - minValueFloat.Value) / 10.0f;
+                    FloatValue -= Round();
                 }
-                return false;
+                return true;
             };
             MinusButton.OnPressed += () =>
             {
@@ -223,6 +221,20 @@ namespace Barotrauma
             }
 
             InputType = inputType;
+        }
+
+        /// <summary>
+        /// Calculates one tent between the range as the increment/decrement.
+        /// This value is rounded so that the bigger it is, the less decimals are used (min 0, max 3).
+        /// Return value is clamped between 0.1f and 1000.
+        /// </summary>
+        private float Round()
+        {
+            if (!maxValueFloat.HasValue || !minValueFloat.HasValue) return 0;
+            float tenPercent = MathHelper.Lerp(minValueFloat.Value, maxValueFloat.Value, 0.1f);
+            float diff = maxValueFloat.Value - minValueFloat.Value;
+            int decimals = (int)MathHelper.Lerp(3, 0, MathUtils.InverseLerp(10, 1000, diff));
+            return MathHelper.Clamp((float)Math.Round(tenPercent / 100, decimals) * 100, 0.1f, 1000);
         }
 
         private bool TextChanged(GUITextBox textBox, string text)
