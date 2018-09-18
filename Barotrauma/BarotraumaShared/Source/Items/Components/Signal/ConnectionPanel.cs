@@ -178,7 +178,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Wire wire in connection.Wires)
                 {
-                    msg.Write(wire.Item == null ? (ushort)0 : wire.Item.ID);
+                    msg.Write(wire?.Item == null ? (ushort)0 : wire.Item.ID);
                 }
             }
         }
