@@ -248,7 +248,7 @@
 
     <MeleeWeapon slots="Any,RightHand,LeftHand"
           aimpos="50,0" handle1="-5,0" holdangle="30" reload="1.0">
-      <Attack damage="5" structuredamage="5" stun="0.2" sound="Content/Items/Weapons/smack.ogg"/>
+      <Attack damage="5" structuredamage="5" stun="0.2" sound="Content/Items/Weapons/smack2.ogg"/>
     </MeleeWeapon>
   </Item>
 
@@ -275,7 +275,7 @@
 
     <MeleeWeapon slots="RightHand+LeftHand,Any"
           controlpose="true" aimpos="50,0" handle1="-5,0" handle2="-3,5" holdangle="30" reload="1.7">
-      <Attack bluntdamage="20" structuredamage="10" stun="0.6" sound="Content/Items/Weapons/smack.ogg"/>
+      <Attack bluntdamage="20" structuredamage="10" stun="0.6" sound="Content/Items/Weapons/smack2.ogg"/>
     </MeleeWeapon>
   </Item>
 
