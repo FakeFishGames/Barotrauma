@@ -32,10 +32,7 @@ namespace Barotrauma.Items.Components
         private Vector2 center;
         private float displayRadius;
         private float displayScale;
-
-        private float zoom = 1.0f;
-        private const float MinZoom = 1.0f, MaxZoom = 5.0f;
-
+        
         //Vector2 = vector from the ping source to the position of the disruption
         //float = strength of the disruption, between 0-1
         List<Pair<Vector2, float>> disruptedDirections = new List<Pair<Vector2, float>>();
