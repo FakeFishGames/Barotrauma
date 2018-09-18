@@ -797,6 +797,17 @@ namespace Barotrauma
             // Check if the point is in triangle
             return u >= 0 && v >= 0 && (u + v) < 1;
         }
+
+        /// <summary>
+        /// Returns a scalar t from a value v between a range from min to max. Clamped between 0 and 1.
+        /// </summary>
+        public static float InverseLerp(float min, float max, float v)
+        {
+            float diff = max - min;
+            // Ensure that we don't get division by zero exceptions.
+            if (diff == 0) { return v >= max ? 1f : 0f; }
+            return MathHelper.Clamp((v - min) / diff, 0f, 1f);
+        }
     }
 
     class CompareCCW : IComparer<Vector2>

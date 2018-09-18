@@ -890,6 +890,7 @@ namespace Barotrauma
 
                 //ignore target if it's too far to see or hear
                 if (dist > target.SightRange * sight && dist > target.SoundRange * hearing) continue;
+                if (!target.IsWithinSector(WorldPosition)) continue;
 
                 AITargetMemory targetMemory = FindTargetMemory(target);
                 valueModifier = valueModifier * targetMemory.Priority / dist;
