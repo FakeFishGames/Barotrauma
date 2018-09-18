@@ -14,6 +14,8 @@ namespace Barotrauma.Items.Components
         private GUITickBox activeTickBox, passiveTickBox;
         private GUITextBlock signalWarningText;
 
+        private GUIScrollBar zoomSlider;
+
         private GUITickBox directionalTickBox;
         private GUIScrollBar directionalSlider;
 
@@ -105,11 +107,20 @@ namespace Barotrauma.Items.Components
 
             var zoomContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), paddedActiveControls.RectTransform), isHorizontal: true);
             new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), zoomContainer.RectTransform), TextManager.Get("SonarZoom"), font: GUI.SmallFont);
-            new GUIScrollBar(new RectTransform(new Vector2(0.7f, 1.0f), zoomContainer.RectTransform), barSize: 0.1f, isHorizontal: true)
+            zoomSlider = new GUIScrollBar(new RectTransform(new Vector2(0.7f, 1.0f), zoomContainer.RectTransform), barSize: 0.1f, isHorizontal: true)
             {
                 OnMoved = (scrollbar, scroll) =>
                 {
                     zoom = MathHelper.Lerp(MinZoom, MaxZoom, scroll);
+                    if (GameMain.Server != null)
+                    {
+                        item.CreateServerEvent(this);
+                    }
+                    else if (GameMain.Client != null)
+                    {
+                        item.CreateClientEvent(this);
+                        correctionTimer = CorrectionDelay;
+                    }
                     return true;
                 }
             };
@@ -120,6 +131,15 @@ namespace Barotrauma.Items.Components
                 {
                     useDirectionalPing = tickBox.Selected;
                     directionalSlider.Enabled = useDirectionalPing;
+                    if (GameMain.Server != null)
+                    {
+                        item.CreateServerEvent(this);
+                    }
+                    else if (GameMain.Client != null)
+                    {
+                        item.CreateClientEvent(this);
+                        correctionTimer = CorrectionDelay;
+                    }
                     return true;
                 }
             };
@@ -130,6 +150,15 @@ namespace Barotrauma.Items.Components
                 {
                     float pingAngle = MathHelper.Lerp(0.0f, MathHelper.TwoPi, scroll);
                     pingDirection = new Vector2((float)Math.Cos(pingAngle), (float)Math.Sin(pingAngle));
+                    if (GameMain.Server != null)
+                    {
+                        item.CreateServerEvent(this);
+                    }
+                    else if (GameMain.Client != null)
+                    {
+                        item.CreateClientEvent(this);
+                        correctionTimer = CorrectionDelay;
+                    }
                     return true;
                 }
             };
@@ -836,20 +865,56 @@ namespace Barotrauma.Items.Components
         public void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)
         {
             msg.Write(IsActive);
+            if (IsActive)
+            {
+                msg.WriteRangedSingle(zoom, MinZoom, MaxZoom, 8);
+                msg.Write(useDirectionalPing);
+                if (useDirectionalPing)
+                {
+                    msg.WriteRangedSingle(directionalSlider.BarScroll, 0.0f, 1.0f, 8);
+                }
+            }
         }
         
         public void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer msg, float sendingTime)
         {
-            if (correctionTimer > 0.0f)
+            long msgStartPos = msg.Position;
+
+            bool isActive           = msg.ReadBoolean();
+            float zoomT             = 1.0f;
+            bool directionalPing    = useDirectionalPing;
+            float directionT        = 0.0f;
+            if (isActive)
             {
-                StartDelayedCorrection(type, msg.ExtractBits(1), sendingTime);
-                return;
+                zoomT = msg.ReadRangedSingle(0.0f, 1.0f, 8);
+                directionalPing = msg.ReadBoolean();
+                if (directionalPing)
+                {
+                    directionT = msg.ReadRangedSingle(0.0f, 1.0f, 8);
+                }
             }
 
-            IsActive = msg.ReadBoolean();
-            if (IsActive)
+            if (correctionTimer > 0.0f)
+            {
+                int msgLength = (int)(msg.Position - msgStartPos);
+                msg.Position = msgStartPos;
+                StartDelayedCorrection(type, msg.ExtractBits(msgLength), sendingTime);
+                return;
+            }
+            
+            IsActive = isActive;
+            if (isActive)
             {
                 activeTickBox.Selected = true;
+                zoomSlider.BarScroll = zoomT;
+                zoom = MathHelper.Lerp(MinZoom, MaxZoom, zoomT);
+                if (directionalPing)
+                {
+                    directionalSlider.BarScroll = directionT;
+                    float pingAngle = MathHelper.Lerp(0.0f, MathHelper.TwoPi, directionalSlider.BarScroll);
+                    pingDirection = new Vector2((float)Math.Cos(pingAngle), (float)Math.Sin(pingAngle));
+                }
+                useDirectionalPing = directionalTickBox.Selected = directionalPing;
             }
             else
             {
