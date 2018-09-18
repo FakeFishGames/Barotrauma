@@ -92,7 +92,7 @@ namespace Barotrauma.Items.Components
                 }
 #if CLIENT
                 if (activeTickBox != null) activeTickBox.Selected = value;
-                if (passiveTickBox != null) activeTickBox.Selected = !value;
+                if (passiveTickBox != null) passiveTickBox.Selected = !value;
 #endif
             }
         }
@@ -164,8 +164,8 @@ namespace Barotrauma.Items.Components
                         item.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
                     }
                     aiPingCheckPending = true;
-                    item.Use(deltaTime);
                     lastPingDirection = pingDirection;
+                    item.Use(deltaTime);
                     pingState = 0.0f;
                 }
             }
