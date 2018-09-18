@@ -92,6 +92,7 @@ namespace Barotrauma.Items.Components
                 }
 #if CLIENT
                 if (activeTickBox != null) activeTickBox.Selected = value;
+                if (passiveTickBox != null) activeTickBox.Selected = !value;
 #endif
             }
         }
@@ -286,6 +287,17 @@ namespace Barotrauma.Items.Components
         public void ServerRead(ClientNetObject type, Lidgren.Network.NetBuffer msg, Client c)
         {
             bool isActive = msg.ReadBoolean();
+            bool directionalPing = useDirectionalPing;
+            float zoomT = zoom, pingDirectionT = 0.0f;
+            if (isActive)
+            {
+                zoomT = msg.ReadRangedSingle(0.0f, 1.0f, 8);
+                directionalPing = msg.ReadBoolean();
+                if (directionalPing)
+                {
+                    pingDirectionT = msg.ReadRangedSingle(0.0f, 1.0f, 8);
+                }
+            }
 
             if (!item.CanClientAccess(c)) return; 
 
@@ -293,6 +305,21 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             activeTickBox.Selected = IsActive;
 #endif
+            if (isActive)
+            {
+                zoom = MathHelper.Lerp(MinZoom, MaxZoom, zoomT);
+                useDirectionalPing = directionalPing;
+                if (useDirectionalPing)
+                {
+                    float pingAngle = MathHelper.Lerp(0.0f, MathHelper.TwoPi, pingDirectionT);
+                    pingDirection = new Vector2((float)Math.Cos(pingAngle), (float)Math.Sin(pingAngle));
+                }
+#if CLIENT
+                zoomSlider.BarScroll = zoomT;
+                directionalTickBox.Selected = useDirectionalPing;
+                directionalSlider.BarScroll = pingDirectionT;
+#endif
+            }
 
             item.CreateServerEvent(this);
         }
@@ -300,6 +327,16 @@ namespace Barotrauma.Items.Components
         public void ServerWrite(Lidgren.Network.NetBuffer msg, Client c, object[] extraData = null)
         {
             msg.Write(IsActive);
+            if (IsActive)
+            {
+                msg.WriteRangedSingle(zoom, MinZoom, MaxZoom, 8);
+                msg.Write(useDirectionalPing);
+                if (useDirectionalPing)
+                {
+                    float pingAngle = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(pingDirection));
+                    msg.WriteRangedSingle(MathUtils.InverseLerp(0.0f, MathHelper.TwoPi, pingAngle), 0.0f, 1.0f, 8);
+                }
+            }
         }
     }
 }
