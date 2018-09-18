@@ -35,12 +35,14 @@ namespace Barotrauma.Items.Components
 
         private float pingState;
 
+        private const float MinZoom = 1.0f, MaxZoom = 5.0f;
+        private float zoom = 1.0f;
+
         private bool useDirectionalPing = false;
         private Vector2 lastPingDirection = new Vector2(1.0f, 0.0f);
         private Vector2 pingDirection = new Vector2(1.0f, 0.0f);
 
         private readonly Sprite pingCircle, directionalPingCircle, screenOverlay, screenBackground;
-
         private readonly Sprite sonarBlip;
 
         private bool aiPingCheckPending;
@@ -84,6 +86,10 @@ namespace Barotrauma.Items.Components
             set
             {
                 base.IsActive = value;
+                if (!value && item.CurrentHull != null)
+                {
+                    item.CurrentHull.AiTarget.SectorDegrees = 360.0f;
+                }
 #if CLIENT
                 if (activeTickBox != null) activeTickBox.Selected = value;
 #endif
@@ -144,9 +150,18 @@ namespace Barotrauma.Items.Components
                 pingState = pingState + deltaTime * 0.5f;
                 if (pingState > 1.0f)
                 {
-                    //TODO: take ping direction and zoom into account in sound range
-                    if (item.CurrentHull != null) item.CurrentHull.AiTarget.SoundRange = Math.Max(Range * pingState, item.CurrentHull.AiTarget.SoundRange);
-                    if (item.AiTarget != null) item.AiTarget.SoundRange = Math.Max(Range * pingState, item.AiTarget.SoundRange);
+                    if (item.CurrentHull != null)
+                    {
+                        item.CurrentHull.AiTarget.SoundRange = Math.Max(Range * pingState / zoom, item.CurrentHull.AiTarget.SoundRange);
+                        item.CurrentHull.AiTarget.SectorDegrees = useDirectionalPing ? DirectionalPingSector : 360.0f;
+                        item.CurrentHull.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
+                    }
+                    if (item.AiTarget != null)
+                    {
+                        item.AiTarget.SoundRange = Math.Max(Range * pingState / zoom, item.AiTarget.SoundRange);
+                        item.AiTarget.SectorDegrees = useDirectionalPing ? DirectionalPingSector : 360.0f;
+                        item.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
+                    }
                     aiPingCheckPending = true;
                     item.Use(deltaTime);
                     lastPingDirection = pingDirection;
@@ -155,6 +170,10 @@ namespace Barotrauma.Items.Components
             }
             else
             {
+                if (item.CurrentHull != null)
+                {
+                    item.CurrentHull.AiTarget.SectorDegrees = 360.0f;
+                }
                 aiPingCheckPending = false;
                 pingState = 0.0f;
             }
