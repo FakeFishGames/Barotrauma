@@ -78,6 +78,8 @@ namespace Barotrauma
 
         private readonly Character character;
 
+        private float crushDepth;
+
         private float vitality;
         protected float minVitality, maxVitality;
 
@@ -100,6 +102,11 @@ namespace Barotrauma
         public bool IsUnconscious
         {
             get { return vitality <= 0.0f; }
+        }
+
+        public float ChrushDepth 
+        {
+            get { return crushDepth; }
         }
 
         public float Vitality
@@ -195,6 +202,8 @@ namespace Barotrauma
         public CharacterHealth(XElement element, Character character)
             : this(character) 
         {
+            crushDepth = element.GetAttributeFloat("crushdepth", float.NegativeInfinity);
+
             maxVitality = element.GetAttributeFloat("vitality", 100.0f);
             vitality    = maxVitality;
 
