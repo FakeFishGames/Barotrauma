@@ -83,11 +83,19 @@ namespace Barotrauma
             if (string.IsNullOrEmpty(stringValue)) return defaultValue;
 
             string[] splitValue = stringValue.Split(',');
+
+            if (convertToLowerInvariant)
+            {
+                for (int i = 0; i < splitValue.Length; i++)
+                {
+                    splitValue[i] = splitValue[i].ToLowerInvariant();
+                }
+            }
             if (trim)
             {
                 for (int i = 0; i < splitValue.Length; i++)
                 {
-                    splitValue[i] = splitValue[i].ToLowerInvariant().Trim();
+                    splitValue[i] = splitValue[i].Trim();
                 }
             }
 
