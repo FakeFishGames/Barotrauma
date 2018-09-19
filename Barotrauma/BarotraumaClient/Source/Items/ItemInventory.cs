@@ -12,14 +12,15 @@ namespace Barotrauma
             if (BackgroundFrame.Contains(PlayerInput.MousePosition))
             {
                 cam.OffsetAmount = 0;
-                Character.DisableControls = true;
+                //if this is used, we need to implement syncing this inventory with the server
+                /*Character.DisableControls = true;
                 if (Character.Controlled != null)
                 {
                     if (PlayerInput.KeyHit(InputType.Select))
                     {
                         Character.Controlled.SelectedConstruction = null;
                     }
-                }
+                }*/
             }
         }
 
