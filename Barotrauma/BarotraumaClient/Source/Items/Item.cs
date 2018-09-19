@@ -203,10 +203,8 @@ namespace Barotrauma
 
             foreach (MapEntity e in linkedTo)
             {
-                GUI.DrawLine(spriteBatch,
-                    new Vector2(WorldPosition.X, -WorldPosition.Y),
-                     new Vector2(e.WorldPosition.X, -e.WorldPosition.Y),
-                    Color.Red * 0.3f);
+                GUI.DrawLine(spriteBatch, new Vector2(WorldPosition.X, -WorldPosition.Y), new Vector2(e.WorldPosition.X, -e.WorldPosition.Y), Color.LightGreen * 0.5f, width: 2);
+                GUI.DrawLine(spriteBatch, new Vector2(WorldPosition.X, -WorldPosition.Y), new Vector2(e.WorldPosition.X, -e.WorldPosition.Y), Color.White * 0.1f, width: 4);
             }
         }
 
@@ -227,29 +225,18 @@ namespace Barotrauma
             if (!lClick && !rClick) return;
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
-
-            if (lClick)
+            var otherEntity = mapEntityList.FirstOrDefault(e => e != this && e.IsHighlighted && e.IsMouseOn(position));
+            if (otherEntity != null)
             {
-                foreach (MapEntity entity in mapEntityList)
+                if (linkedTo.Contains(otherEntity))
                 {
-                    if (entity == this || !entity.IsHighlighted) continue;
-                    if (linkedTo.Contains(entity)) continue;
-                    if (!entity.IsMouseOn(position)) continue;
-
-                    linkedTo.Add(entity);
-                    if (entity.Linkable && entity.linkedTo != null) entity.linkedTo.Add(this);
+                    linkedTo.Remove(otherEntity);
+                    if (otherEntity.linkedTo != null && otherEntity.linkedTo.Contains(this)) otherEntity.linkedTo.Remove(this);
                 }
-            }
-            else
-            {
-                foreach (MapEntity entity in mapEntityList)
+                else
                 {
-                    if (entity == this || !entity.IsHighlighted) continue;
-                    if (!linkedTo.Contains(entity)) continue;
-                    if (!entity.IsMouseOn(position)) continue;
-
-                    linkedTo.Remove(entity);
-                    if (entity.linkedTo != null && entity.linkedTo.Contains(this)) entity.linkedTo.Remove(this);
+                    linkedTo.Add(otherEntity);
+                    if (otherEntity.Linkable && otherEntity.linkedTo != null) otherEntity.linkedTo.Add(this);
                 }
             }
         }
