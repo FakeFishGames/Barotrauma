@@ -18,6 +18,11 @@ namespace Barotrauma
 
         protected string name;
         protected string identifier;
+
+        /// <summary>
+        /// Links defined to identifiers.
+        /// </summary>
+        public List<string> AllowedLinks { get; protected set; } = new List<string>();
         
         public Sprite sprite;
 
