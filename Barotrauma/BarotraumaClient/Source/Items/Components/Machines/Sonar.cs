@@ -386,7 +386,7 @@ namespace Barotrauma.Items.Components
                 spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
             }
 
-            if (useDirectionalPing)
+            if (useDirectionalPing && IsActive)
             {
                 Vector2 sector1 = MathUtils.RotatePointAroundTarget(pingDirection * displayRadius, Vector2.Zero, DirectionalPingSector * 0.5f);
                 Vector2 sector2 = MathUtils.RotatePointAroundTarget(pingDirection * displayRadius, Vector2.Zero, -DirectionalPingSector * 0.5f);

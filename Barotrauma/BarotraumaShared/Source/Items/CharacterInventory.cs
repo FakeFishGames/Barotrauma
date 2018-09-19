@@ -55,7 +55,7 @@ namespace Barotrauma
                 SlotTypes[i] = parsedSlotType;
                 switch (SlotTypes[i])
                 {
-                    case InvSlotType.Head:
+                    //case InvSlotType.Head:
                     case InvSlotType.OuterClothes:
                     case InvSlotType.LeftHand:
                     case InvSlotType.RightHand:
