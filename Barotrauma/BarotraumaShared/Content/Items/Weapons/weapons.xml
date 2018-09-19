@@ -84,7 +84,7 @@
       <Item identifier="polycarbonatebar"/>
     </Deconstruct>
 
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,64,64,64"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,64,64,64"/>
     <Sprite texture="weapons.png" sourcerect="62,97,44,24" depth="0.55"/>
 
     <Body width="40" height="25" density="50"/>
@@ -145,7 +145,8 @@
       <Item identifier="aluminium"/>
       <Item identifier="polycarbonatebar"/>
     </Deconstruct>
-    
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,64,64,64"/>
     <Sprite texture="weapons.png" sourcerect="26,97,25,19" depth="0.55"/>
 
     <Body width="25" height="15" density="50"/>
@@ -223,6 +224,7 @@
       <Item identifier="incendiumbar" mincondition="0.9"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,320,64,64"/>
     <Sprite texture="weapons.png" sourcerect="98,0,11,24" depth="0.55"/>
 
     <Body width="11" height="24" density="30"/>

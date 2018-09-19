@@ -7,8 +7,7 @@
     focusonselected="true"
     offsetonselected="700"
     linkable="true">
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,128,64,64"/>
+    
     <Sprite texture ="railgunetc.png" depth="0.01" sourcerect="64,180,47,76"/>
 
     <Turret canbeselected="false" linkable="true" characterusable="false" 
@@ -51,6 +50,7 @@
       <Item identifier="steelbar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,128,64,64"/>
     <Sprite texture="railgunetc.png" sourcerect="114,210,68,47" depth ="0.55"/>
 
     <Body width="68" height="47" density="30"/>
