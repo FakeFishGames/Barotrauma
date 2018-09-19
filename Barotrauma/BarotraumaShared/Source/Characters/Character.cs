@@ -1706,12 +1706,14 @@ namespace Barotrauma
             }
             speechImpedimentSet = false;
             
+
+
             if (needsAir)
             {
-                bool protectedFromPressure = PressureProtection > 0.0f;
-                
-                protectedFromPressure = protectedFromPressure && WorldPosition.Y < CharacterHealth.ChrushDepth;
-                           
+                bool protectedFromPressure = PressureProtection > 0.0f;            
+                //cannot be protected from pressure when below crush depth
+                protectedFromPressure = protectedFromPressure && WorldPosition.Y > CharacterHealth.ChrushDepth;
+                //implode if not protected from pressure, and either outside or in a high-pressure hull
                 if (!protectedFromPressure && 
                     (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 80.0f))
                 {
@@ -1733,9 +1735,10 @@ namespace Barotrauma
                     PressureTimer = 0.0f;
                 }
             }
-            else
+            else if (GameMain.Client == null && WorldPosition.Y < CharacterHealth.ChrushDepth)
             {
-                if (WorldPosition.Y < CharacterHealth.ChrushDepth)
+                //implode if below crush depth, and either outside or in a high-pressure hull                
+                if (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 80.0f)
                 {
                     Implode();
                     return;
