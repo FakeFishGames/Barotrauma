@@ -1710,7 +1710,7 @@ namespace Barotrauma
             {
                 bool protectedFromPressure = PressureProtection > 0.0f;
                 
-                protectedFromPressure = protectedFromPressure && WorldPosition.Y > SubmarineBody.DamageDepth;
+                protectedFromPressure = protectedFromPressure && WorldPosition.Y < CharacterHealth.ChrushDepth;
                            
                 if (!protectedFromPressure && 
                     (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 80.0f))
@@ -1731,6 +1731,14 @@ namespace Barotrauma
                 else
                 {
                     PressureTimer = 0.0f;
+                }
+            }
+            else
+            {
+                if (WorldPosition.Y < CharacterHealth.ChrushDepth)
+                {
+                    Implode();
+                    return;
                 }
             }
 
