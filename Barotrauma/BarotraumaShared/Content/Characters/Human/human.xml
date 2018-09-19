@@ -9,6 +9,7 @@
   <health
     usehealthwindow="true"
     vitality="100"
+    crushdepth="-30000.0"
     doesbleed="true">
     <Limb>
       <Sprite texture="Content/UI/Health/HealthIndicatorHead.png" sourcerect="69,0,118,256" highlightarea="112,0,30,36"/>
