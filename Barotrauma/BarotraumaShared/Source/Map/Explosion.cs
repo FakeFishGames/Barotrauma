@@ -63,9 +63,10 @@ namespace Barotrauma
             float displayRange = attack.Range;
             if (displayRange < 0.1f) return;
 
-            float cameraDist = Vector2.Distance(GameMain.GameScreen.Cam.Position, worldPosition) / 2.0f;
+            Vector2 cameraPos = Character.Controlled != null ? Character.Controlled.WorldPosition : GameMain.GameScreen.Cam.Position;
+            float cameraDist = Vector2.Distance(cameraPos, worldPosition) / 2.0f;
             GameMain.GameScreen.Cam.Shake = CameraShake * Math.Max((displayRange - cameraDist) / displayRange, 0.0f);
-
+            
             if (attack.GetStructureDamage(1.0f) > 0.0f)
             {
                 RangedStructureDamage(worldPosition, displayRange, attack.GetStructureDamage(1.0f));
