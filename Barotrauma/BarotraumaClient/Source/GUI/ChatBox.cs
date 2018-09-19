@@ -107,9 +107,19 @@ namespace Barotrauma
             guiFrame = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ChatBoxArea, parent.RectTransform), style: null);
             chatBox = new GUIListBox(new RectTransform(new Vector2(1.0f, isSinglePlayer ? 1.0f : 0.9f), guiFrame.RectTransform), style: "ChatBox");
 
-            toggleButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.2f), guiFrame.RectTransform, Anchor.TopRight, Pivot.TopLeft)
-                { RelativeOffset = new Vector2(-0.01f, 0.0f) },
-                style: "GUIButtonHorizontalArrow");
+            int toggleButtonWidth = (int)(30 * GUI.Scale);
+            if (HUDLayoutSettings.ChatBoxAlignment == Alignment.Left)
+            {
+                toggleButton = new GUIButton(new RectTransform(new Point(toggleButtonWidth, HUDLayoutSettings.ChatBoxArea.Height), parent.RectTransform)
+                { AbsoluteOffset = new Point(HUDLayoutSettings.ChatBoxArea.X, HUDLayoutSettings.ChatBoxArea.Y) },
+                    style: "GUIButtonHorizontalArrow");
+            }
+            else
+            {
+                toggleButton = new GUIButton(new RectTransform(new Point(toggleButtonWidth, HUDLayoutSettings.ChatBoxArea.Height), parent.RectTransform)
+                { AbsoluteOffset = new Point(HUDLayoutSettings.ChatBoxArea.Right - toggleButtonWidth, HUDLayoutSettings.ChatBoxArea.Y) },
+                    style: "GUIButtonHorizontalArrow");
+            }
             toggleButton.OnClicked += (GUIButton btn, object userdata) =>
             {
                 toggleOpen = !toggleOpen;
@@ -257,7 +267,8 @@ namespace Barotrauma
                 openState -= deltaTime * 5.0f;
             }
             openState = MathHelper.Clamp(openState, 0.0f, 1.0f);
-            guiFrame.RectTransform.AbsoluteOffset = new Point((int)MathHelper.SmoothStep(-guiFrame.Rect.Width, 0, openState), 0);
+            guiFrame.RectTransform.AbsoluteOffset = 
+                new Point((int)MathHelper.SmoothStep(HUDLayoutSettings.ChatBoxAlignment == Alignment.Left ? -guiFrame.Rect.Width : guiFrame.Rect.Width, 0, openState), 0);
         }
     }
 }
