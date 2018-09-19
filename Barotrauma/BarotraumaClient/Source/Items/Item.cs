@@ -116,8 +116,8 @@ namespace Barotrauma
                     }
                     else
                     {
-                        activeSprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, 0.0f, 1.0f, SpriteEffects.None, depth);
-                        fadeInBrokenSprite?.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color * fadeInBrokenSpriteAlpha, 0.0f, 1.0f, SpriteEffects.None, depth - 0.000001f);
+                        activeSprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, 0.0f, SpriteScale, SpriteEffects.None, depth);
+                        fadeInBrokenSprite?.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color * fadeInBrokenSpriteAlpha, 0.0f, SpriteScale, SpriteEffects.None, depth - 0.000001f);
                     }
 
                 }
@@ -145,8 +145,8 @@ namespace Barotrauma
                             }
                         }
                     }
-                    body.Draw(spriteBatch, activeSprite, color, depth);
-                    if (fadeInBrokenSprite != null) body.Draw(spriteBatch, fadeInBrokenSprite.Sprite, color * fadeInBrokenSpriteAlpha, depth - 0.000001f);
+                    body.Draw(spriteBatch, activeSprite, color, depth, SpriteScale);
+                    if (fadeInBrokenSprite != null) body.Draw(spriteBatch, fadeInBrokenSprite.Sprite, color * fadeInBrokenSpriteAlpha, depth - 0.000001f, SpriteScale);
                 }
 
                 activeSprite.effects = oldEffects;
