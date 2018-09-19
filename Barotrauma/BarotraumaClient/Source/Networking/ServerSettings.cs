@@ -123,7 +123,7 @@ namespace Barotrauma.Networking
         }
 
         //GUI stuff
-        private GUIButton settingsFrame;
+        private GUIFrame settingsFrame;
         private GUIFrame[] settingsTabs;
         private int settingsTabIndex;
 
@@ -142,9 +142,11 @@ namespace Barotrauma.Networking
 
         private void CreateSettingsFrame()
         {
-            settingsFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.5f)
+            settingsFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.5f);
+            new GUIButton(new RectTransform(Vector2.One, settingsFrame.RectTransform), "", style: null).OnClicked += (btn, userData) =>
             {
-                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) ToggleSettingsFrame(btn, userdata); return true; }
+                if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) ToggleSettingsFrame(btn, userData);
+                return true;
             };
             new GUIButton(new RectTransform(Vector2.One, settingsFrame.RectTransform), "", style: null)
             {
