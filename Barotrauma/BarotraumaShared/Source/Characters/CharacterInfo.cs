@@ -77,6 +77,7 @@ namespace Barotrauma
 
         private int headSpriteId;
         private Sprite headSprite;
+        private Sprite portrait;
 
         public bool StartItemsGiven;
 
@@ -101,6 +102,14 @@ namespace Barotrauma
             {
                 if (headSprite == null) LoadHeadSprite();
                 return headSprite;
+            }
+        }
+        public Sprite Portrait
+        {
+            get
+            {
+                if (portrait == null) LoadPortrait();
+                return portrait;
             }
         }
 
@@ -339,7 +348,22 @@ namespace Barotrauma
                 break;
             }
         }
-        
+
+        private void LoadPortrait()
+        {
+            string headSpriteDir = Path.GetDirectoryName(HeadSprite.FilePath);
+
+            string portraitPath = Path.Combine(headSpriteDir, (gender == Gender.Male ? "portrait" + headSpriteId : "fportrait" + headSpriteId) + ".png");
+            if (System.IO.File.Exists(portraitPath))
+            {
+                portrait = new Sprite(portraitPath, Vector2.Zero);
+            }
+            else
+            {
+                portrait = new Sprite("Content/Characters/Human/defaultportrait.png", Vector2.Zero);
+            }
+        }
+
         public void UpdateCharacterItems()
         {
             pickedItems.Clear();
@@ -508,11 +532,16 @@ namespace Barotrauma
         public void Remove()
         {
             Character = null;
-            //if (headSprite != null)
-            //{
-            //    headSprite.Remove();
-            //    headSprite = null;
-            //}
+            if (headSprite != null)
+            {
+                headSprite.Remove();
+                headSprite = null;
+            }
+            if (portrait != null)
+            {
+                portrait.Remove();
+                portrait = null;
+            }
         }
     }
 }
