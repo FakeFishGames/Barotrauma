@@ -308,11 +308,7 @@ namespace Barotrauma
 
             DebugConsole.Log("    " + name);
 
-            string aliases = element.GetAttributeString("aliases", "");
-            if (!string.IsNullOrWhiteSpace(aliases))
-            {
-                Aliases = aliases.RemoveWhitespace().ToLowerInvariant().Split(',');
-            }
+            Aliases = element.GetAttributeStringArray("aliases", new string[0], convertToLowerInvariant: true);
 
             if (!Enum.TryParse(element.GetAttributeString("category", "Misc"), true, out MapEntityCategory category))
             {
@@ -324,11 +320,12 @@ namespace Barotrauma
             DeconstructItems    = new List<DeconstructItem>();
             DeconstructTime     = 1.0f;
 
-            string joinedTags = element.GetAttributeString("tags", "");
-            if (string.IsNullOrEmpty(joinedTags)) joinedTags = element.GetAttributeString("Tags", "");
-            if (!string.IsNullOrWhiteSpace(joinedTags))
+            //string joinedTags = element.GetAttributeString("tags", "");
+            //if (string.IsNullOrEmpty(joinedTags)) joinedTags = element.GetAttributeString("Tags", "");
+            Tags = element.GetAttributeStringArray("tags", new string[0], convertToLowerInvariant: true).ToHashSet();
+            if (Tags.None())
             {
-                Tags = joinedTags.RemoveWhitespace().ToLowerInvariant().Split(',').ToHashSet();
+                Tags = element.GetAttributeStringArray("Tags", new string[0], convertToLowerInvariant: true).ToHashSet();
             }
             //Tags = new HashSet<string>();
             //foreach (string tag in joinedTags.Split(','))
@@ -446,11 +443,7 @@ namespace Barotrauma
                 }
             }
 
-            string allowedLinks = element.GetAttributeString("allowedlinks", "");
-            if (!string.IsNullOrWhiteSpace(allowedLinks))
-            {
-                AllowedLinks = allowedLinks.RemoveWhitespace().ToLowerInvariant().Split(',').ToList();
-            }
+            AllowedLinks = element.GetAttributeStringArray("allowedlinks", new string[0], convertToLowerInvariant: true).ToList();
 
             List.Add(this);
         }
