@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
+using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -309,7 +311,7 @@ namespace Barotrauma
             string aliases = element.GetAttributeString("aliases", "");
             if (!string.IsNullOrWhiteSpace(aliases))
             {
-                Aliases = aliases.Split(',');
+                Aliases = aliases.RemoveWhitespace().ToLowerInvariant().Split(',');
             }
 
             if (!Enum.TryParse(element.GetAttributeString("category", "Misc"), true, out MapEntityCategory category))
@@ -322,13 +324,17 @@ namespace Barotrauma
             DeconstructItems    = new List<DeconstructItem>();
             DeconstructTime     = 1.0f;
 
-            Tags = new HashSet<string>();
             string joinedTags = element.GetAttributeString("tags", "");
             if (string.IsNullOrEmpty(joinedTags)) joinedTags = element.GetAttributeString("Tags", "");
-            foreach (string tag in joinedTags.Split(','))
+            if (!string.IsNullOrWhiteSpace(joinedTags))
             {
-                Tags.Add(tag.Trim().ToLowerInvariant());
+                Tags = joinedTags.RemoveWhitespace().ToLowerInvariant().Split(',').ToHashSet();
             }
+            //Tags = new HashSet<string>();
+            //foreach (string tag in joinedTags.Split(','))
+            //{
+            //    Tags.Add(tag.Trim().ToLowerInvariant());
+            //}
 
             if (element.Attribute("cargocontainername") != null)
             {
@@ -439,6 +445,13 @@ namespace Barotrauma
                         "Map entity prefabs \"" + name + "\" and \"" + existingPrefab.Name + "\" have the same identifier!");
                 }
             }
+
+            string allowedLinks = element.GetAttributeString("allowedlinks", "");
+            if (!string.IsNullOrWhiteSpace(allowedLinks))
+            {
+                AllowedLinks = allowedLinks.RemoveWhitespace().ToLowerInvariant().Split(',').ToList();
+            }
+
             List.Add(this);
         }
 
