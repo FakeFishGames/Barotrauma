@@ -82,7 +82,7 @@ namespace Barotrauma
             };
             toggleCrewButton = new GUIButton(new RectTransform(new Point((int)(30 * GUI.Scale), HUDLayoutSettings.CrewArea.Height), guiFrame.RectTransform)
             { AbsoluteOffset = HUDLayoutSettings.CrewArea.Location },
-                "", style: "GUIButtonHorizontalArrow");
+                "", style: "UIToggleButton");
             toggleCrewButton.OnClicked += (GUIButton btn, object userdata) =>
             {
                 toggleCrewAreaOpen = !toggleCrewAreaOpen;
@@ -392,7 +392,7 @@ namespace Barotrauma
             }
 
             var toggleWrongOrderBtn = new GUIButton(new RectTransform(new Point((int)(30 * GUI.Scale), wrongOrderList.Rect.Height), wrongOrderList.Content.RectTransform),
-                "", style: "GUIButtonHorizontalArrow")
+                "", style: "UIToggleButton")
             {
                 CanBeFocused = false
             };

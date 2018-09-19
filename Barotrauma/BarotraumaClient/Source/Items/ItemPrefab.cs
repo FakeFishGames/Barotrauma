@@ -26,7 +26,7 @@ namespace Barotrauma
 
         public Sprite InventoryIcon;
 
-        [Serialize("1.0,1.0,1.0,1.0", false)]
+        [Serialize("1.0,1.0,1.0,1.0", false), Editable]
         public Color InventoryIconColor
         {
             get;
