@@ -15,7 +15,7 @@ namespace Barotrauma
     {
         public static List<MapEntity> mapEntityList = new List<MapEntity>();
 
-        private MapEntityPrefab prefab;
+        public readonly MapEntityPrefab prefab;
 
         protected List<ushort> linkedToID;
 
@@ -84,6 +84,8 @@ namespace Barotrauma
         {
             get { return false; }
         }
+
+        public List<string> AllowedLinks => prefab == null ? new List<string>() : prefab.AllowedLinks;
 
         public bool ResizeHorizontal
         {

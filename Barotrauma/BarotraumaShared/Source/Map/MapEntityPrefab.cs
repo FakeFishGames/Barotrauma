@@ -18,11 +18,6 @@ namespace Barotrauma
 
         protected string name;
         protected string identifier;
-
-        /// <summary>
-        /// Links defined to identifiers.
-        /// </summary>
-        public List<string> AllowedLinks { get; protected set; } = new List<string>();
         
         public Sprite sprite;
 
@@ -56,7 +51,7 @@ namespace Barotrauma
         {
             get;
             protected set;
-        }
+        } = new HashSet<string>();
 
         public static MapEntityPrefab Selected
         {
@@ -77,7 +72,12 @@ namespace Barotrauma
             get;
             private set;
         }
-                
+
+        /// <summary>
+        /// Links defined to identifiers.
+        /// </summary>
+        public List<string> AllowedLinks { get; protected set; } = new List<string>();
+
         public MapEntityCategory Category
         {
             get;
@@ -264,11 +264,17 @@ namespace Barotrauma
             return false;
         }
 
+        public bool IsLinkAllowed(MapEntityPrefab target)
+        {
+            if (target == null) { return false; }
+            return AllowedLinks.Contains(target.Identifier) || target.AllowedLinks.Contains(identifier)
+                || target.Tags.Any(t => AllowedLinks.Contains(t)) || Tags.Any(t => target.AllowedLinks.Contains(t));
+        }
+
         //a method that allows the GUIListBoxes to check through a delegate if the entityprefab is still selected
         public static object GetSelected()
         {
             return (object)selected;            
-        }
-        
+        }      
     }
 }
