@@ -1,10 +1,22 @@
 ﻿using System.Globalization;
 using Microsoft.Xna.Framework;
+using System.Linq;
+using System;
 
 namespace Barotrauma
 {
     public static class StringFormatter
     {
+        public static string Remove(this string s, Func<char, bool> predicate)
+        {
+            return new string(s.ToCharArray().Where(c => !predicate(c)).ToArray());
+        }
+
+        public static string RemoveWhitespace(this string s)
+        {
+            return s.Remove(c => char.IsWhiteSpace(c));
+        }
+
         public static string FormatSingleDecimal(this float value)
         {
             return value.ToString("F1", CultureInfo.InvariantCulture);
