@@ -75,7 +75,7 @@ namespace Barotrauma
             return String.IsNullOrEmpty(value) ? defaultValue : value;
         }
 
-        public static string[] GetAttributeStringArray(this XElement element, string name, string[] defaultValue, bool trim = true)
+        public static string[] GetAttributeStringArray(this XElement element, string name, string[] defaultValue, bool trim = true, bool convertToLowerInvariant = false)
         {
             if (element?.Attribute(name) == null) return defaultValue;
 
@@ -87,7 +87,7 @@ namespace Barotrauma
             {
                 for (int i = 0; i < splitValue.Length; i++)
                 {
-                    splitValue[i] = splitValue[i].Trim();
+                    splitValue[i] = splitValue[i].ToLowerInvariant().Trim();
                 }
             }
 
