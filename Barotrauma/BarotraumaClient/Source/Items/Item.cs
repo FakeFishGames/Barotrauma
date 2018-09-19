@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -34,7 +35,7 @@ namespace Barotrauma
         public Color GetSpriteColor()
         {
             Color color = spriteColor;
-            if (prefab.UseContainedSpriteColor && ownInventory != null)
+            if (Prefab.UseContainedSpriteColor && ownInventory != null)
             {
                 for (int i = 0; i < ownInventory.Items.Length; i++)
                 {
@@ -51,7 +52,7 @@ namespace Barotrauma
         partial void SetActiveSprite()
         {
             activeSprite = prefab.sprite;
-            foreach (BrokenItemSprite brokenSprite in prefab.BrokenSprites)
+            foreach (BrokenItemSprite brokenSprite in Prefab.BrokenSprites)
             {
                 if (condition <= brokenSprite.MaxCondition)
                 {
@@ -74,22 +75,22 @@ namespace Barotrauma
             float fadeInBrokenSpriteAlpha = 0.0f;
             if (condition < 100.0f)
             {
-                for (int i = 0; i < prefab.BrokenSprites.Count; i++)
+                for (int i = 0; i < Prefab.BrokenSprites.Count; i++)
                 {
-                    if (condition <= prefab.BrokenSprites[i].MaxCondition)
+                    if (condition <= Prefab.BrokenSprites[i].MaxCondition)
                     {
-                        activeSprite = prefab.BrokenSprites[i].Sprite;
+                        activeSprite = Prefab.BrokenSprites[i].Sprite;
                         break;
                     }
 
-                    if (prefab.BrokenSprites[i].FadeIn)
+                    if (Prefab.BrokenSprites[i].FadeIn)
                     {
-                        float min = i > 0 ? prefab.BrokenSprites[i].MaxCondition : 0.0f;
-                        float max = i < prefab.BrokenSprites.Count - 1 ? prefab.BrokenSprites[i + 1].MaxCondition : 100.0f;
+                        float min = i > 0 ? Prefab.BrokenSprites[i].MaxCondition : 0.0f;
+                        float max = i < Prefab.BrokenSprites.Count - 1 ? Prefab.BrokenSprites[i + 1].MaxCondition : 100.0f;
                         fadeInBrokenSpriteAlpha = 1.0f - ((condition - min) / (max - min));
                         if (fadeInBrokenSpriteAlpha > 0.0f && fadeInBrokenSpriteAlpha < 1.0f)
                         {
-                            fadeInBrokenSprite = prefab.BrokenSprites[i];
+                            fadeInBrokenSprite = Prefab.BrokenSprites[i];
                         }
                     }
                 }
@@ -177,11 +178,11 @@ namespace Barotrauma
                 return;
             }
 
-            if (IsSelected || isHighlighted)
+            if (IsSelected || IsHighlighted)
             {
                 GUI.DrawRectangle(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), Color.Green, false, 0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
 
-                foreach (Rectangle t in prefab.Triggers)
+                foreach (Rectangle t in Prefab.Triggers)
                 {
                     Rectangle transformedTrigger = TransformTrigger(t);
 
@@ -203,8 +204,24 @@ namespace Barotrauma
 
             foreach (MapEntity e in linkedTo)
             {
-                GUI.DrawLine(spriteBatch, new Vector2(WorldPosition.X, -WorldPosition.Y), new Vector2(e.WorldPosition.X, -e.WorldPosition.Y), Color.LightGreen * 0.5f, width: 2);
-                GUI.DrawLine(spriteBatch, new Vector2(WorldPosition.X, -WorldPosition.Y), new Vector2(e.WorldPosition.X, -e.WorldPosition.Y), Color.White * 0.1f, width: 4);
+                //if (IsSelected || IsHighlighted)
+                //{
+                //    float offset = 20;
+                //    if (AllowedLinks.Count == 0)
+                //    {
+                //        GUI.DrawString(spriteBatch, new Vector2(WorldPosition.X, -WorldPosition.Y), $"No allowed links for {Prefab.Name}", Color.LightBlue, Color.Black * 0.5f);
+                //    }
+                //    for (int i = 0; i < AllowedLinks.Count; i++)
+                //    {
+                //        GUI.DrawString(spriteBatch, new Vector2(WorldPosition.X, -WorldPosition.Y + offset * i), $"Allowed link to {AllowedLinks[i]}", Color.LightBlue, Color.Black * 0.5f);
+                //    }
+                //}
+                Color lineColor = prefab.IsLinkAllowed(e.prefab) ? Color.LightGreen * 0.5f : Color.Red;
+                Vector2 from = new Vector2(WorldPosition.X, -WorldPosition.Y);
+                Vector2 to = new Vector2(e.WorldPosition.X, -e.WorldPosition.Y);
+                GUI.DrawLine(spriteBatch, from, to, lineColor, width: 2);
+                GUI.DrawLine(spriteBatch, from, to, Color.White * 0.1f, width: 4);
+                //GUI.DrawString(spriteBatch, from, $"Linked to {e.Name}", lineColor, Color.Black * 0.5f);
             }
         }
 
@@ -248,11 +265,30 @@ namespace Barotrauma
             listBox.Spacing = 5;
             
             var itemEditor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true);
-            
+
             if (!inGame && Linkable)
             {
-                itemEditor.AddCustomContent(new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, 20)), 
-                    TextManager.Get("HoldToLink"), font: GUI.SmallFont), 1);
+                var linkText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, 20)), TextManager.Get("HoldToLink"), font: GUI.SmallFont);
+                var itemsText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, 20)), TextManager.Get("AllowedItems") + ": ", font: GUI.SmallFont);
+                if (AllowedLinks.None())
+                {
+                    itemsText.Text += TextManager.Get("None");
+                }
+                else
+                {
+                    for (int i = 0; i < AllowedLinks.Count; i++)
+                    {
+                        itemsText.Text += AllowedLinks[i];
+                        if (i < AllowedLinks.Count - 1)
+                        {
+                            itemsText.Text += ", ";
+                        }
+                    }
+                }
+                itemEditor.AddCustomContent(linkText, 1);
+                itemEditor.AddCustomContent(itemsText, 2);
+                linkText.TextColor = Color.Yellow;
+                itemsText.TextColor = Color.Yellow;
             }            
 
             foreach (ItemComponent ic in components)

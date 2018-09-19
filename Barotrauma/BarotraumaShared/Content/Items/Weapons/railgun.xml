@@ -100,7 +100,8 @@
     name="Railgun Loader"
     identifier="railgunloader"
     category="Machine"
-    linkable="true">
+    linkable="true"
+    allowedlinks="railgun">
 
     <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="0,0,177,128"/>
 
@@ -113,7 +114,8 @@
     name="Railgun Single Loader"
     identifier="railgunloadersingle"
     category="Machine"
-    linkable="true">
+    linkable="true"
+    allowedlinks="railgun">
 
     <Sprite texture ="railgunetc2.png" depth="0.8" sourcerect="131,2,46,128"/>
 
@@ -126,7 +128,8 @@
     name="Forward Railgun Loader"
     identifier="railgunloaderforward"
     category="Machine"
-    linkable="true">
+    linkable="true"
+    allowedlinks="railgun">
 
     <Sprite texture ="railgunetc2.png" depth="0.8" sourcerect="1,2,128,46"/>
 
@@ -139,7 +142,8 @@
     name="Rear Railgun Loader"
     identifier="railgunloaderrear"
     category="Machine"
-    linkable="true">
+    linkable="true"
+    allowedlinks="railgun">
 
     <Sprite texture ="railgunetc2.png" depth="0.8" sourcerect="1,50,128,46"/>
 
