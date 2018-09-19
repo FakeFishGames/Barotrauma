@@ -13,7 +13,7 @@
     <Price locationtype="Military" buyprice="140"/>
     <Price locationtype="Outpost" buyprice="200"/>
 
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,64,64,64"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,64,64,64"/>
     <Sprite texture ="tools.png" sourcerect="0,17,41,17" depth="0.55"/>
 
     <!-- the item takes 10 seconds to break down in a deconstructor and turns into a polycarbonate bar, steel bar and aluminium -->
@@ -183,7 +183,7 @@
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,0,64,64"/>
-    <Sprite texture="extinguisher.png" depth="0.55" sourcerect="0,0,34,64" origin="0.4,0.5"/>
+    <Sprite texture="Content/Items/InventoryIconAtlas.png" depth="0.55" sourcerect="0,0,64,64"/>
 
     <Body radius="10" height="45" density="5"/>
 
