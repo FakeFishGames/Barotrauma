@@ -231,14 +231,23 @@ namespace Barotrauma
                     }
                 }
             }
-            
-            if (character.Inventory != null && !character.LockHands && character.Stun <= 0.1f && !character.IsDead && 
-                (CharacterHealth.OpenHealthWindow == null || !CharacterHealth.HideNormalInventory))
+
+            if (character.Stun <= 0.1f && !character.IsDead)
             {
-                character.Inventory.DrawOwn(spriteBatch);
-                character.Inventory.CurrentLayout = CharacterInventory.Layout.Right;
+                if (character?.Info?.Portrait != null && CharacterHealth.OpenHealthWindow == null && character.SelectedCharacter == null)
+                {
+                    character.Info.Portrait.Draw(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(),
+                        scale: HUDLayoutSettings.PortraitArea.Width / character.Info.Portrait.size.X);
+                }
+                if (character.Inventory != null && !character.LockHands)
+                {
+                    character.Inventory.DrawOwn(spriteBatch);
+                    character.Inventory.CurrentLayout = CharacterHealth.OpenHealthWindow == null && character.SelectedCharacter == null ?
+                        CharacterInventory.Layout.Default :
+                        CharacterInventory.Layout.Right;
+                }
             }
-            
+
             if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
                 if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)

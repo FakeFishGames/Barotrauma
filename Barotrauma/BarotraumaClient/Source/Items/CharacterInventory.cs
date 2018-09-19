@@ -61,7 +61,7 @@ namespace Barotrauma
             hidden = true;
 
             SlotPositions = new Vector2[SlotTypes.Length];
-            CurrentLayout = Layout.Right;
+            CurrentLayout = Layout.Default;
             SetSlotPositions(layout);
         }
 
@@ -186,15 +186,29 @@ namespace Barotrauma
 
             if (slots == null) CreateSlots();
 
-            var upperSlots = InvSlotType.Card | InvSlotType.Headset | InvSlotType.InnerClothes;
+            var upperSlots = InvSlotType.Card | InvSlotType.Headset | InvSlotType.InnerClothes | InvSlotType.Head;
 
             switch (layout)
             {
                 case Layout.Default:
                     {
-                        int x = GameMain.GraphicsWidth - HUDLayoutSettings.Padding - (int)(SlotTypes.Count(s => s == InvSlotType.Any) * (slotSize.X + spacing));
+                        int x = GameMain.GraphicsWidth / 2 - (SlotTypes.Count(s => !upperSlots.HasFlag(s)) * (slotSize.X + spacing) / 2);
+                        int upperX = HUDLayoutSettings.PortraitArea.X - slotSize.X / 2;
+                        
                         for (int i = 0; i < SlotPositions.Length; i++)
                         {
+                            if (upperSlots.HasFlag(SlotTypes[i]))
+                            {
+                                SlotPositions[i] = new Vector2(upperX, GameMain.GraphicsHeight - bottomOffset);
+                                upperX -= slotSize.X + spacing;
+                            }
+                            else
+                            {
+                                SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset);
+                                x += slotSize.X + spacing;
+                            }
+                            continue;
+
                             switch (SlotTypes[i])
                             {
                                 case InvSlotType.Headset:

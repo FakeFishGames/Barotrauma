@@ -630,6 +630,19 @@ namespace Barotrauma
                     new Vector2(GameMain.GraphicsWidth / damageOverlay.size.X, GameMain.GraphicsHeight / damageOverlay.size.Y));
             }
 
+            if (character.Inventory.CurrentLayout == CharacterInventory.Layout.Right)
+            {
+                //move the healthbar on top of the inventory slots
+                healthBar.RectTransform.ScreenSpaceOffset = new Point(
+                    (GameMain.GraphicsWidth - HUDLayoutSettings.Padding) - HUDLayoutSettings.HealthBarAreaRight.Right,
+                    HUDLayoutSettings.HealthBarAreaRight.Y - (int)(character.Inventory.SlotPositions.Max(s => s.Y) + Inventory.EquipIndicator.size.Y * Inventory.UIScale * 2) - HUDLayoutSettings.HealthBarAreaRight.Height);
+                healthBarShadow.RectTransform.ScreenSpaceOffset = healthBar.RectTransform.ScreenSpaceOffset;
+            }
+            else
+            {
+                healthBar.RectTransform.ScreenSpaceOffset = healthBarShadow.RectTransform.ScreenSpaceOffset = Point.Zero;
+            }
+
             DrawStatusHUD(spriteBatch);
         }
 
@@ -654,7 +667,7 @@ namespace Barotrauma
                 Pair<AfflictionPrefab, string> highlightedIcon = null;
                 Vector2 highlightedIconPos = Vector2.Zero;
                 Rectangle afflictionArea =  alignment == Alignment.Left ? HUDLayoutSettings.AfflictionAreaLeft : HUDLayoutSettings.AfflictionAreaRight;
-                Point pos = afflictionArea.Location;
+                Point pos = afflictionArea.Location + healthBar.RectTransform.ScreenSpaceOffset;
 
                 bool horizontal = afflictionArea.Width > afflictionArea.Height;
                 int iconSize = horizontal ? afflictionArea.Height : afflictionArea.Width;

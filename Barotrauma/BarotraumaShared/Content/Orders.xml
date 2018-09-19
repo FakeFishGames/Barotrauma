@@ -14,7 +14,7 @@
          targetitemtype="Reactor"
          options="powerup, shutdown" optionnames="Power up, Shutdown"
          color="1.0,0.78,0.05,1.0"
-         appropriatejobs="mechanic,engineer">
+         appropriatejobs="mechanic">
     <Sprite texture="Content/UI/IconAtlas.png" sourcerect="384,0,128,128"/>
   </Order>
 
