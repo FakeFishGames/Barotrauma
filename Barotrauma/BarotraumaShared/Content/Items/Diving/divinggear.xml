@@ -212,6 +212,7 @@
       <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,128,64,64"/>
     <Sprite texture ="Scooter.png" depth="0.55" sourcerect="512,64,64,64"/>
 
     <Body width="55" height="30" density="15"/>

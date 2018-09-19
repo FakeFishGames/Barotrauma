@@ -5,6 +5,8 @@
     identifier="wire"
     category="Electrical"
     Tags="smallitem,wire"    
+    spritecolor="210,215,218,255"
+    InventoryIconColor="210,215,218,255"
     linkable="true"
     canbepicked="true"
     cargocontaineridentifier="metalcrate">
@@ -33,7 +35,8 @@
     identifier="redwire"
     category="Electrical"
     Tags="smallitem,wire"
-    spritecolor="0.7,0.06,0.06,1.0"
+    spritecolor="254,23,17,255"
+    InventoryIconColor="254,23,17,255"
     linkable="true"
     canbepicked="true"
     cargocontaineridentifier="metalcrate">
@@ -47,7 +50,7 @@
       <Item identifier="copperbar"/>
     </Deconstruct>
 
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,64,64,64"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64"/>
     <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
 
     <Body radius="7" width="25" density="30"/>
@@ -61,7 +64,8 @@
     identifier="bluewire"
     category="Electrical"
     Tags="smallitem,wire"
-    spritecolor="0.1,0.4,0.9,1.0"    
+    spritecolor="51,121,173,255"
+    InventoryIconColor="51,121,173,255"
     linkable="true"
     canbepicked="true"
     cargocontaineridentifier="metalcrate">
@@ -75,7 +79,7 @@
       <Item identifier="copperbar"/>
     </Deconstruct>
 
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,64,64,64"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64"/>
     <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
 
     <Body radius="7" width="25" density="30"/>
@@ -89,7 +93,8 @@
     identifier="orangewire"
     category="Electrical"
     Tags="smallitem,wire"
-    spritecolor="0.9,0.58,0.07,1.0"    
+    spritecolor="255,140,13,255"
+    InventoryIconColor="255,140,13,255"
     linkable="true"
     canbepicked="true"
     cargocontaineridentifier="metalcrate">
@@ -103,7 +108,7 @@
       <Item identifier="copperbar"/>
     </Deconstruct>
 
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,64,64,64"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64"/>
     <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
 
     <Body radius="7" width="25" density="30"/>
@@ -117,7 +122,8 @@
     identifier="greenwire"
     category="Electrical"
     Tags="smallitem,wire"
-    spritecolor="0.17,0.45,0.05,1.0"
+    spritecolor="56,143,111,255"
+    InventoryIconColor="56,143,111,255"
     linkable="true"
     canbepicked="true"
     cargocontaineridentifier="metalcrate"
@@ -132,8 +138,7 @@
       <Item identifier="copperbar"/>
     </Deconstruct>
 
-    <!-- TODO: color -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,64,64,64"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64"/>
     <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
 
     <Body radius="7" width="25" density="30"/>
@@ -143,11 +148,12 @@
   </Item>
   
   <Item
-    name="Black Wire"
-    identifier="blackwire"
+    name="Brown Wire"
+    identifier="brownwire"
     category="Electrical"
     Tags="smallitem,wire"
-    spritecolor="0.1,0.1,0.1,1.0"
+    spritecolor="123,77,62,255"
+    InventoryIconColor="123,77,62,255"
     linkable="true"
     canbepicked="true"
     cargocontaineridentifier="metalcrate"
@@ -162,8 +168,7 @@
       <Item identifier="copperbar"/>
     </Deconstruct>
 
-    <!-- TODO: color -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,64,64,64"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64"/>
     <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
 
     <Body radius="7" width="25" density="30"/>
@@ -466,6 +471,7 @@
       <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="959,128,64,64"/>
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="48,0,16,16"/>
 
     <LightComponent canbeselected="true" color="1.0,0.0,0.0,1.0" castshadows="false">
@@ -507,7 +513,8 @@
       <Item identifier="steelbar"/>
       <Item identifier="fpgacircuit"/>
     </Deconstruct>
-
+    
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,256,64,64"/>
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="97,0,31,24"/>
 
     <OxygenDetector canbeselected = "true"/>
@@ -544,7 +551,8 @@
       <Item identifier="steelbar"/>
       <Item identifier="fpgacircuit"/>
     </Deconstruct>
-
+    
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,256,64,64"/>
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="65,0,31,24"/>
 
     <WaterDetector canbeselected = "true"/>
@@ -619,6 +627,7 @@
       <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,256,64,64"/>
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="65,24,31,24"/>
 
     <MotionSensor range="100" canbeselected = "true"/>
