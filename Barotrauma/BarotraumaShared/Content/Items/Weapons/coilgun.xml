@@ -4,7 +4,9 @@
     name="Coilgun"
     identifier="coilgun"
     Tags="turret"
-    category="Machine"    
+    category="Machine" 
+    interactthroughwalls="true"
+    interactdistance="10"   
     spritecolor="1.0,0.0,0.0,1.0"
     focusonselected="true"
     offsetonselected="700"
@@ -14,7 +16,8 @@
 
     <StaticBody width="80" radius="80"/>
     
-    <Turret barrelsprite="railgunbarrel.png" canbeselected="true" linkable="true" origin="0.5, 0.85" barrelpos="128, 128" 
+    <Turret barrelsprite="railgunbarrel.png" canbeselected="false" characterusable="false" linkable="true" 
+      origin="0.5, 0.85" barrelpos="128, 128" 
       rotationlimits="180,360"
       powerconsumption="200.0"
       showchargeindicator="true"
@@ -23,8 +26,7 @@
       reload="0.25"
       springstiffnesslowskill="2" springstiffnesshighskill="50"
       springdampinglowskill="0.5" springdampinghighskill="10"
-      rotationspeedlowskill="1" rotationspeedhighskill="8"
-      hudtint="0.4,0.6,0.7,0.05">
+      rotationspeedlowskill="1" rotationspeedhighskill="8">
       <sound file="Content/Items/Weapons/coilgun.ogg" range="2000" type="OnUse"/>
       <Crosshair texture="crosshair.png"/>
       <CrosshairPointer texture="crosshairPointer.png"/>
@@ -77,7 +79,7 @@
       of the item, and when the condition is 0, the box is considered empty. -->      
       <!--  -0.5 per usage = 200 shots per box -->
       <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
-        <SpawnItem name="coilgunbolt" spawnposition="ThisInventory"/>
+        <SpawnItem identifiers="coilgunbolt" spawnposition="ThisInventory"/>
       </StatusEffect>
       <Containable identifiers="coilgunbolt"/>
     </ItemContainer>

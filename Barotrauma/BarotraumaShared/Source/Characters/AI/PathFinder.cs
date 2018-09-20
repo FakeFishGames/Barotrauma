@@ -93,7 +93,7 @@ namespace Barotrauma
 
         public PathFinder(List<WayPoint> wayPoints, bool insideSubmarine = false)
         {
-            nodes = PathNode.GenerateNodes(wayPoints.FindAll(w => w.MoveWithLevel != insideSubmarine));
+            nodes = PathNode.GenerateNodes(wayPoints.FindAll(w => (w.Submarine != null) == insideSubmarine));
 
             foreach (WayPoint wp in wayPoints)
             {
@@ -215,6 +215,8 @@ namespace Barotrauma
                 float dist = Vector2.Distance(end, nodePos);
                 //much higher cost to waypoints that are outside
                 if (node.Waypoint.CurrentHull == null) dist *= 10.0f;
+                //avoid stopping at a doorway
+                if (node.Waypoint.ConnectedDoor != null) dist *= 10.0f;
                 if (dist < closestDist || endNode == null)
                 {
                     //if searching for a path inside the sub, make sure the waypoint is visible

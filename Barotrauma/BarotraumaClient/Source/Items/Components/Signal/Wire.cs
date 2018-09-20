@@ -187,8 +187,7 @@ namespace Barotrauma.Items.Components
                     else
                     {
                         //check if close enough to a node
-                        float temp = 0.0f;
-                        int closestIndex = selectedWire.GetClosestNodeIndex(mousePos, nodeSelectDist, out temp);
+                        int closestIndex = selectedWire.GetClosestNodeIndex(mousePos, nodeSelectDist, out _);
                         if (closestIndex > -1)
                         {
                             highlightedNodeIndex = closestIndex;
@@ -209,37 +208,40 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            //check which wire is highlighted with the cursor
             Wire highlighted = null;
-            float closestDist = float.PositiveInfinity;
-            foreach (Wire w in wires)
+
+            //check which wire is highlighted with the cursor
+            if (GUI.MouseOn == null)
             {
-                Vector2 mousePos = GameMain.SubEditorScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
-                if (w.item.Submarine != null) mousePos -= (w.item.Submarine.Position + w.item.Submarine.HiddenSubPosition);
-
-                float dist = 0.0f;
-                int highlightedNode = w.GetClosestNodeIndex(mousePos, highlighted == null ? nodeSelectDist : closestDist, out dist);
-                if (highlightedNode > -1)
+                float closestDist = float.PositiveInfinity;
+                foreach (Wire w in wires)
                 {
-                    if (dist < closestDist)
+                    Vector2 mousePos = GameMain.SubEditorScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+                    if (w.item.Submarine != null) mousePos -= (w.item.Submarine.Position + w.item.Submarine.HiddenSubPosition);
+
+                    int highlightedNode = w.GetClosestNodeIndex(mousePos, highlighted == null ? nodeSelectDist : closestDist, out float dist);
+                    if (highlightedNode > -1)
                     {
-                        highlightedNodeIndex = highlightedNode;
-                        highlighted = w;
-                        closestDist = dist;
+                        if (dist < closestDist)
+                        {
+                            highlightedNodeIndex = highlightedNode;
+                            highlighted = w;
+                            closestDist = dist;
+                        }
+                    }
+
+                    if (w.GetClosestSectionIndex(mousePos, highlighted == null ? sectionSelectDist : closestDist, out dist) > -1)
+                    {
+                        //prefer nodes over sections
+                        if (dist + nodeSelectDist * 0.5f < closestDist)
+                        {
+                            highlightedNodeIndex = null;
+                            highlighted = w;
+                            closestDist = dist + nodeSelectDist * 0.5f;
+                        }
                     }
                 }
-
-                if (w.GetClosestSectionIndex(mousePos, highlighted == null ? sectionSelectDist : closestDist, out dist) > -1)
-                {
-                    //prefer nodes over sections
-                    if (dist + nodeSelectDist * 0.5f < closestDist)
-                    {
-                        highlightedNodeIndex = null;
-                        highlighted = w;
-                        closestDist = dist + nodeSelectDist * 0.5f;
-                    }
-                }
-            }
+            }            
 
             if (highlighted != null)
             {

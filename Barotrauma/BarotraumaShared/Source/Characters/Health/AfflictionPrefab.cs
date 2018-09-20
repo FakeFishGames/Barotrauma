@@ -54,6 +54,8 @@ namespace Barotrauma
             public float MinRadialDistortStrength, MaxRadialDistortStrength;
             public float MinChromaticAberrationStrength, MaxChromaticAberrationStrength;
 
+            public string DialogFlag;
+
             //statuseffects applied on the character when the affliction is active
             public readonly List<StatusEffect> StatusEffects = new List<StatusEffect>();
 
@@ -83,7 +85,9 @@ namespace Barotrauma
                 MinScreenBlurStrength = element.GetAttributeFloat("minscreenblur", 0.0f);
                 MaxScreenBlurStrength = element.GetAttributeFloat("maxscreenblur", 0.0f);
                 MaxScreenBlurStrength = Math.Max(MinScreenBlurStrength, MaxScreenBlurStrength);
-                
+
+                DialogFlag = element.GetAttributeString("dialogflag", "");
+
                 StrengthChange = element.GetAttributeFloat("strengthchange", 0.0f);
 
                 foreach (XElement subElement in element.Elements())
@@ -139,6 +143,7 @@ namespace Barotrauma
         public readonly string AchievementOnRemoved;
 
         public readonly Sprite Icon;
+        public readonly Color IconColor;
 
         private List<Effect> effects = new List<Effect>();
 
@@ -236,12 +241,14 @@ namespace Barotrauma
 
             AchievementOnRemoved = element.GetAttributeString("achievementonremoved", "");
 
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "icon":
                         Icon = new Sprite(subElement);
+                        IconColor = subElement.GetAttributeColor("color", Color.White);
                         break;
                     case "effect":
                         effects.Add(new Effect(subElement, Name));

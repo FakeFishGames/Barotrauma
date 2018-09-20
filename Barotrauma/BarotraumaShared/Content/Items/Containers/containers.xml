@@ -90,6 +90,7 @@
       <Item identifier="steelbar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,128,64,64"/>
     <Sprite texture ="crates.png" depth="0.54" sourcerect="0,0,79,35"/>
 
     <Body width="77" height="34" density="50"/>
@@ -136,6 +137,7 @@
       <Item identifier="steelbar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64"/>
     <Sprite texture ="crates.png" depth="0.54" sourcerect="81,0,47,42"/>
 
     <Body width="45" height="41" density="50"/>
@@ -158,6 +160,7 @@
       <Item identifier="steelbar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,128,64,64"/>
     <Sprite texture ="crates.png" depth="0.54" sourcerect="1,36,47,42"/>
 
     <Body width="45" height="41" density="50"/>

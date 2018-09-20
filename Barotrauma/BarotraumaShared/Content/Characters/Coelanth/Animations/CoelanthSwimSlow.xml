@@ -1,0 +1,9 @@
+﻿<CoelanthSwimSlow
+  AnimationType="SwimSlow"
+  waveamplitude="0.2"
+  wavelength="50"
+  steertorque="300"
+  speed="3"
+  flip="True"
+  mirror="False"
+  rotatetowardsmovement="True"/>

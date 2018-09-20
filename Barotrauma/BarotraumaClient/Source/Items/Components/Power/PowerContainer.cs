@@ -73,7 +73,7 @@ namespace Barotrauma.Items.Components
             };
         }
 
-        public override void UpdateHUD(Character character, float deltaTime)
+        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             float chargeRatio = charge / capacity;
             chargeIndicator.Color = chargeRatio < 0.5f ?

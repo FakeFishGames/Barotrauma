@@ -34,7 +34,7 @@ namespace Barotrauma
 
                     LastProcessedID = memInput[memInput.Count - 1].networkUpdateID;
                     dequeuedInput = memInput[memInput.Count - 1].states;
-                    
+
                     double aimAngle = ((double)memInput[memInput.Count - 1].intAim / 65535.0) * 2.0 * Math.PI;
                     cursorPosition = (ViewTarget == null ? AnimController.AimSourcePos : ViewTarget.Position)
                         + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 60.0f;
@@ -93,47 +93,7 @@ namespace Barotrauma
                 networkUpdateSent = false;
             }
         }
-
-        private void WriteStatus(NetBuffer msg)
-        {
-            msg.Write(IsDead);
-            if (IsDead)
-            {
-                msg.WriteRangedInteger(0, Enum.GetValues(typeof(CauseOfDeathType)).Length - 1, (int)CauseOfDeath.Type);
-                if (CauseOfDeath.Type == CauseOfDeathType.Affliction)
-                {
-                    msg.WriteRangedInteger(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(CauseOfDeath.Affliction));
-                }
-
-                if (AnimController?.LimbJoints == null)
-                {
-                    //0 limbs severed
-                    msg.Write((byte)0);
-                }
-                else
-                {
-                    List<int> severedJointIndices = new List<int>();
-                    for (int i = 0; i < AnimController.LimbJoints.Length; i++)
-                    {
-                        if (AnimController.LimbJoints[i] != null && AnimController.LimbJoints[i].IsSevered)
-                        {
-                            severedJointIndices.Add(i);
-                        }
-                    }
-                    msg.Write((byte)severedJointIndices.Count);
-                    foreach (int jointIndex in severedJointIndices)
-                    {
-                        msg.Write((byte)jointIndex);
-                    }
-                }
-            }
-            else
-            {
-                CharacterHealth.ServerWrite(msg);
-                msg.Write(IsRagdolled);
-            }
-        }
-
+        
         public virtual void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
             if (GameMain.Server == null) return;
@@ -249,17 +209,33 @@ namespace Barotrauma
                 switch ((NetEntityEvent.Type)extraData[0])
                 {
                     case NetEntityEvent.Type.InventoryState:
-                        msg.WriteRangedInteger(0, 2, 0);
+                        msg.WriteRangedInteger(0, 3, 0);
                         Inventory.ClientWrite(msg, extraData);
                         break;
                     case NetEntityEvent.Type.Control:
-                        msg.WriteRangedInteger(0, 2, 1);
+                        msg.WriteRangedInteger(0, 3, 1);
                         Client owner = ((Client)extraData[1]);
                         msg.Write(owner == null ? (byte)0 : owner.ID);
                         break;
                     case NetEntityEvent.Type.Status:
-                        msg.WriteRangedInteger(0, 2, 2);
+                        msg.WriteRangedInteger(0, 3, 2);
                         WriteStatus(msg);
+                        break;
+                    case NetEntityEvent.Type.UpdateSkills:
+                        msg.WriteRangedInteger(0, 3, 3);
+                        if (Info?.Job == null)
+                        {
+                            msg.Write((byte)0);
+                        }
+                        else
+                        {
+                            msg.Write((byte)Info.Job.Skills.Count);
+                            foreach (Skill skill in Info.Job.Skills)
+                            {
+                                msg.Write(skill.Identifier);
+                                msg.Write(skill.Level);
+                            }
+                        }
                         break;
                     default:
                         DebugConsole.ThrowError("Invalid NetworkEvent type for entity " + ToString() + " (" + (NetEntityEvent.Type)extraData[0] + ")");
@@ -358,6 +334,46 @@ namespace Barotrauma
             }
         }
 
+        private void WriteStatus(NetBuffer msg)
+        {
+            msg.Write(IsDead);
+            if (IsDead)
+            {
+                msg.WriteRangedInteger(0, Enum.GetValues(typeof(CauseOfDeathType)).Length - 1, (int)CauseOfDeath.Type);
+                if (CauseOfDeath.Type == CauseOfDeathType.Affliction)
+                {
+                    msg.WriteRangedInteger(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(CauseOfDeath.Affliction));
+                }
+
+                if (AnimController?.LimbJoints == null)
+                {
+                    //0 limbs severed
+                    msg.Write((byte)0);
+                }
+                else
+                {
+                    List<int> severedJointIndices = new List<int>();
+                    for (int i = 0; i < AnimController.LimbJoints.Length; i++)
+                    {
+                        if (AnimController.LimbJoints[i] != null && AnimController.LimbJoints[i].IsSevered)
+                        {
+                            severedJointIndices.Add(i);
+                        }
+                    }
+                    msg.Write((byte)severedJointIndices.Count);
+                    foreach (int jointIndex in severedJointIndices)
+                    {
+                        msg.Write((byte)jointIndex);
+                    }
+                }
+            }
+            else
+            {
+                CharacterHealth.ServerWrite(msg);
+                msg.Write(IsRagdolled);
+            }
+        }
+
         public void WriteSpawnData(NetBuffer msg)
         {
             if (GameMain.Server == null) return;
@@ -385,12 +401,6 @@ namespace Barotrauma
             {
                 msg.Write(false);
             }
-            
-            msg.Write(TeamID);
-
-            msg.Write(this is AICharacter);
-
-            info.ServerWrite(msg);
         }
     }
 }

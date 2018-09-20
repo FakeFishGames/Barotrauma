@@ -88,10 +88,10 @@ namespace Barotrauma
             LevelGenerationParams.LoadPresets();
             ScriptedEventSet.LoadPrefabs();
 
-            JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
-            NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
             StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
             ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
+            JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
+            NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
             LevelObjectPrefab.LoadAll();
             AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
 

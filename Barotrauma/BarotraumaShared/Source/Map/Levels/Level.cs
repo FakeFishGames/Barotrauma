@@ -386,10 +386,7 @@ namespace Barotrauma
                 WayPoint wayPoint = new WayPoint(
                     mirror ? new Vector2(borders.X - positionOfInterest.Position.X, positionOfInterest.Position.Y) : positionOfInterest.Position,
                     SpawnType.Enemy,
-                    submarine: null)
-                {
-                    MoveWithLevel = true
-                };
+                    submarine: null);
             }
 
             startPosition.X = pathCells[0].Center.X;
@@ -687,7 +684,6 @@ namespace Barotrauma
             List<WayPoint> wayPoints = new List<WayPoint>();
 
             var newWaypoint = new WayPoint(new Rectangle((int)pathCells[0].Center.X, borders.Height, 10, 10), null);
-            newWaypoint.MoveWithLevel = true;
             wayPoints.Add(newWaypoint);
             
             for (int i = 0; i < pathCells.Count; i++)
@@ -695,7 +691,6 @@ namespace Barotrauma
                 pathCells[i].CellType = CellType.Path;
 
                 newWaypoint = new WayPoint(new Rectangle((int)pathCells[i].Center.X, (int)pathCells[i].Center.Y, 10, 10), null);
-                newWaypoint.MoveWithLevel = true;
                 wayPoints.Add(newWaypoint);
                
                 wayPoints[wayPoints.Count-2].linkedTo.Add(newWaypoint);
@@ -713,7 +708,6 @@ namespace Barotrauma
             }
 
             newWaypoint = new WayPoint(new Rectangle((int)pathCells[pathCells.Count - 1].Center.X, borders.Height, 10, 10), null);
-            newWaypoint.MoveWithLevel = true;
             wayPoints.Add(newWaypoint);
 
             wayPoints[wayPoints.Count - 2].linkedTo.Add(newWaypoint);

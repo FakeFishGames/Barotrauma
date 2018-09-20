@@ -15,7 +15,15 @@ namespace Barotrauma
         public const int MaxDecalsPerHull = 10;
         
         private List<Decal> decals = new List<Decal>();
-        
+
+        public override bool SelectableInEditor
+        {
+            get
+            {
+                return ShowHulls;
+            }
+        }
+
         public override bool DrawBelowWater
         {
             get
@@ -56,27 +64,13 @@ namespace Barotrauma
         
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
-            int width = 600, height = 150;
-            int x = GameMain.GraphicsWidth / 2 - width / 2, y = 30;
-            
-            editingHUD = new GUIListBox(new RectTransform(new Point(width, height), GUI.Canvas) { ScreenSpaceOffset = new Point(x, y) })
-            {
-                UserData = this
-            };
-            
-            GUIListBox listBox = (GUIListBox)editingHUD;
+            editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) }) { UserData = this };
+            GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null);
             new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true);
 
-            editingHUD.RectTransform.NonScaledSize = new Point(
-                editingHUD.RectTransform.NonScaledSize.X,
-                MathHelper.Clamp(listBox.Content.Children.Sum(c => c.Rect.Height), 50, editingHUD.RectTransform.NonScaledSize.Y));
-            
-            return editingHUD;
-        }
+            PositionEditingHUD();
 
-        public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
-        {
-            if (editingHUD != null && editingHUD.UserData == this) editingHUD.DrawManually(spriteBatch);
+            return editingHUD;
         }
 
         public override void UpdateEditing(Camera cam)
@@ -85,9 +79,7 @@ namespace Barotrauma
             {
                 editingHUD = CreateEditingHUD(Screen.Selected != GameMain.SubEditorScreen);
             }
-
-            editingHUD.UpdateManually((float)Timing.Step);
-
+            
             if (!PlayerInput.KeyDown(Keys.Space)) return;
             bool lClick = PlayerInput.LeftButtonClicked();
             bool rClick = PlayerInput.RightButtonClicked();

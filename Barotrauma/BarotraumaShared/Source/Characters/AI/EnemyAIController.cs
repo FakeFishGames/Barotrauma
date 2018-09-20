@@ -336,15 +336,16 @@ namespace Barotrauma
                     throw new NotImplementedException();
             }
 
-            if (run)
-            {
-                steeringManager.Update(Character.AnimController.InWater ? 
-                    Character.AnimController.SwimSpeedMultiplier : Character.AnimController.RunSpeedMultiplier);                
-            }
-            else
-            {
-                steeringManager.Update();
-            }
+            steeringManager.Update(Character.AnimController.GetCurrentSpeed(run));
+            //if (run)
+            //{
+            //    steeringManager.Update(Character.AnimController.InWater ? Character.AnimController.SwimSpeedMultiplier : Character.AnimController.RunSpeedMultiplier);
+            //    
+            //}
+            //else
+            //{
+            //    steeringManager.Update();
+            //}
         }
 
         #region Idle
@@ -353,7 +354,7 @@ namespace Barotrauma
         {
             coolDownTimer -= deltaTime;
 
-            if (Character.Submarine == null && SimPosition.Y < ConvertUnits.ToSimUnits(SubmarineBody.DamageDepth * 0.5f))
+            if (Character.Submarine == null && SimPosition.Y < ConvertUnits.ToSimUnits(Character.CharacterHealth.ChrushDepth * 0.75f))
             {
                 //steer straight up if very deep
                 steeringManager.SteeringManual(deltaTime, Vector2.UnitY);
@@ -889,6 +890,7 @@ namespace Barotrauma
 
                 //ignore target if it's too far to see or hear
                 if (dist > target.SightRange * sight && dist > target.SoundRange * hearing) continue;
+                if (!target.IsWithinSector(WorldPosition)) continue;
 
                 AITargetMemory targetMemory = FindTargetMemory(target);
                 valueModifier = valueModifier * targetMemory.Priority / dist;

@@ -41,6 +41,9 @@ namespace Barotrauma
                     string subName = inc.ReadString();
                     Submarine sub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
                     sender.SetVote(voteType, sub);
+#if CLIENT
+                    UpdateVoteTexts(GameMain.Server.ConnectedClients, voteType);
+#endif
                     break;
 
                 case VoteType.Mode:
@@ -49,6 +52,9 @@ namespace Barotrauma
                     if (!mode.Votable) break;
 
                     sender.SetVote(voteType, mode);
+#if CLIENT
+                    UpdateVoteTexts(GameMain.Server.ConnectedClients, voteType);
+#endif
                     break;
                 case VoteType.EndRound:
                     if (!sender.HasSpawned) return;
@@ -68,6 +74,18 @@ namespace Barotrauma
                         Client.UpdateKickVotes(GameMain.Server.ConnectedClients);
 
                         GameMain.Server.SendChatMessage(sender.Name + " has voted to kick " + kicked.Name, ChatMessageType.Server, null);
+                    }
+
+                    break;
+                case VoteType.StartRound:
+                    bool ready = inc.ReadBoolean();
+                    if (ready != sender.GetVote<bool>(VoteType.StartRound))
+                    {
+                        sender.SetVote(VoteType.StartRound, ready);
+                        GameServer.Log(sender.Name + (ready ? " is ready to start the game." : " is not ready to start the game."), ServerLog.MessageType.ServerMessage);
+#if CLIENT
+                        UpdateVoteTexts(GameMain.Server.ConnectedClients, voteType);
+#endif
                     }
 
                     break;
@@ -112,6 +130,13 @@ namespace Barotrauma
             }
 
             msg.Write(AllowVoteKick);
+
+            var readyClients = GameMain.Server.ConnectedClients.FindAll(c => c.GetVote<bool>(VoteType.StartRound));
+            msg.Write((byte)readyClients.Count);
+            foreach (Client c in readyClients)
+            {
+                msg.Write(c.ID);
+            }
 
             msg.WritePadBits();
         }

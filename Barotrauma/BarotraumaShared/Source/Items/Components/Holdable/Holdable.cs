@@ -290,12 +290,38 @@ namespace Barotrauma.Items.Components
             IsActive = false;
         }
 
+        public bool CanBeAttached()
+        {
+            if (!attachable) return false;
+
+            //can be attached anywhere in sub editor
+            if (Screen.Selected == GameMain.SubEditorScreen) return true;
+
+            //can be attached anywhere inside hulls
+            if (item.CurrentHull != null) return true;
+
+            return Structure.GetAttachTarget(item.WorldPosition) != null;
+        }
+        
+        public bool CanBeDeattached()
+        {
+            if (!attachable || !attached) return true;
+
+            //allow deattaching everywhere in sub editor
+            if (Screen.Selected == GameMain.SubEditorScreen) return true;
+
+            //don't allow deattaching if outside hulls
+            return item.CurrentHull != null;
+        }
+
         public override bool Pick(Character picker)
         {
             if (!attachable)
             {
                 return base.Pick(picker);
             }
+
+            if (!CanBeDeattached()) return false;
 
             if (Attached)
             {
@@ -333,6 +359,21 @@ namespace Barotrauma.Items.Components
         private void AttachToWall()
         {
             if (!attachable) return;
+
+            //outside hulls/subs -> we need to check if the item is being attached on a structure outside the sub
+            if (item.CurrentHull == null && item.Submarine == null)
+            {
+                Structure attachTarget = Structure.GetAttachTarget(item.WorldPosition);
+                if (attachTarget != null)
+                {
+                    if (attachTarget.Submarine != null)
+                    {
+                        //set to submarine-relative position
+                        item.SetTransform(ConvertUnits.ToSimUnits(item.WorldPosition - attachTarget.Submarine.Position), 0.0f, false);
+                    }
+                    item.Submarine = attachTarget.Submarine;
+                }
+            }
 
             var containedItems = item.ContainedItems;
             if (containedItems != null)
@@ -372,12 +413,12 @@ namespace Barotrauma.Items.Components
             if (character != null)
             {
                 if (!character.IsKeyDown(InputType.Aim)) return false;
-                if (character.CurrentHull == null) return false;
+                if (!CanBeAttached()) return false;
 #if SERVER
                 if (GameMain.Server != null)
                 {
                     item.CreateServerEvent(this);
-                    GameServer.Log(character.LogName + " attached " + item.Name+" to a wall", ServerLog.MessageType.ItemInteraction);
+                    GameServer.Log(character.LogName + " attached " + item.Name + " to a wall", ServerLog.MessageType.ItemInteraction);
                 }
 #endif
                 item.Drop();

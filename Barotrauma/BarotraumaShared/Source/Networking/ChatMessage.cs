@@ -148,7 +148,7 @@ namespace Barotrauma.Networking
                 case ChatMessageType.Default:
                     if (receiver != null && !receiver.IsDead)
                     {
-                        return ApplyDistanceEffect(receiver, sender, message, SpeakRange, 3.0f);
+                        return ApplyDistanceEffect(receiver, sender, message, SpeakRange * (1.0f - sender.SpeechImpediment / 100.0f), 3.0f);
                     }
                     break;
                 case ChatMessageType.Radio:
@@ -167,7 +167,13 @@ namespace Barotrauma.Networking
 
                         if (!receiverRadio.CanReceive(senderRadio)) return "";
 
-                        return ApplyDistanceEffect(receiverItem, senderItem, message, senderRadio.Range);
+                        string msg = ApplyDistanceEffect(receiverItem, senderItem, message, senderRadio.Range);
+                        if (sender.SpeechImpediment > 0.0f)
+                        {
+                            //speech impediment doesn't reduce the range when using a radio, but adds extra garbling
+                            msg = ApplyDistanceEffect(msg, sender.SpeechImpediment / 100.0f);
+                        }
+                        return msg;
                     }
 
                     break;
@@ -175,7 +181,7 @@ namespace Barotrauma.Networking
 
             return message;
         }
-
+        
         public int EstimateLengthBytesClient()
         {
             int length =    1 + //(byte)ServerNetObject.CHAT_MESSAGE

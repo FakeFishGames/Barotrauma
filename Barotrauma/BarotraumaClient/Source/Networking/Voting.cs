@@ -51,21 +51,54 @@ namespace Barotrauma
 
         public void UpdateVoteTexts(List<Client> clients, VoteType voteType)
         {
-            GUIListBox listBox = (voteType == VoteType.Sub) ?
-                GameMain.NetLobbyScreen.SubList : GameMain.NetLobbyScreen.ModeList;
-
-            foreach (GUIComponent comp in listBox.Content.Children)
+            switch (voteType)
             {
-                if (comp.FindChild("votes") is GUITextBlock voteText) comp.RemoveChild(voteText);
-            }
+                case VoteType.Sub:
+                case VoteType.Mode:
+                    GUIListBox listBox = (voteType == VoteType.Sub) ?
+                        GameMain.NetLobbyScreen.SubList : GameMain.NetLobbyScreen.ModeList;
 
-            if (clients != null)
-            {
-                List<Pair<object, int>> voteList = GetVoteList(voteType, clients);
-                foreach (Pair<object, int> votable in voteList)
-                {
-                    SetVoteText(listBox, votable.First, votable.Second);
-                }
+                    foreach (GUIComponent comp in listBox.Content.Children)
+                    {
+                        if (comp.FindChild("votes") is GUITextBlock voteText) comp.RemoveChild(voteText);
+                    }
+
+                    if (clients == null) return;
+                    
+                    List<Pair<object, int>> voteList = GetVoteList(voteType, clients);
+                    foreach (Pair<object, int> votable in voteList)
+                    {
+                        SetVoteText(listBox, votable.First, votable.Second);
+                    }                    
+                    break;
+                case VoteType.StartRound:
+                    if (clients == null) return;
+                    foreach (Client client in clients)
+                    {
+                        var clientNameBox = GameMain.NetLobbyScreen.PlayerList.Content.FindChild(client.Name);
+                        if (clientNameBox == null) continue;
+
+                        var clientReady = clientNameBox.FindChild("clientready");
+                        if (!client.GetVote<bool>(VoteType.StartRound))
+                        {
+                            if (clientReady != null) clientReady.Parent.RemoveChild(clientReady);
+                        }
+                        else
+                        {
+                            if (clientReady == null)
+                            {
+                                new GUITickBox(new RectTransform(new Vector2(0.05f, 0.6f), clientNameBox.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.05f, 0.0f) }, "")
+                                {
+                                    Selected = true,
+                                    Enabled = false,
+                                    ToolTip = "Ready to start",
+                                    UserData = "clientready"
+                                };
+                            }
+                        }
+
+                    }
+                    break;
             }
         }
 
@@ -104,12 +137,10 @@ namespace Barotrauma
                 case VoteType.Mode:
                     GameModePreset gameMode = data as GameModePreset;
                     if (gameMode == null) return;
-
                     msg.Write(gameMode.Name);
                     break;
                 case VoteType.EndRound:
                     if (!(data is bool)) return;
-
                     msg.Write((bool)data);
                     break;
                 case VoteType.Kick:
@@ -117,6 +148,10 @@ namespace Barotrauma
                     if (votedClient == null) return;
 
                     msg.Write(votedClient.ID);
+                    break;
+                case VoteType.StartRound:
+                    if (!(data is bool)) return;
+                    msg.Write((bool)data);
                     break;
             }
 
@@ -163,6 +198,16 @@ namespace Barotrauma
                 GameMain.NetworkMember.EndVoteMax = inc.ReadByte();
             }
             AllowVoteKick = inc.ReadBoolean();
+
+            GameMain.NetworkMember.ConnectedClients.ForEach(c => c.SetVote(VoteType.StartRound, false));
+            byte readyClientCount = inc.ReadByte();
+            for (int i = 0; i < readyClientCount; i++)
+            {
+                byte clientID = inc.ReadByte();
+                var matchingClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == clientID);
+                matchingClient?.SetVote(VoteType.StartRound, true);
+            }
+            UpdateVoteTexts(GameMain.NetworkMember.ConnectedClients, VoteType.StartRound);
 
             inc.ReadPadBits();
         }

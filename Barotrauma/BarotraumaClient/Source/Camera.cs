@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
-using Barotrauma.Sounds;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -21,13 +21,16 @@ namespace Barotrauma
         private Vector2 position;
         private float rotation;
 
+        private float angularVelocity;
+        private float angularDamping;
+        private float angularSpring;
+
         private Vector2 prevPosition;
         private float prevZoom;
 
         public float Shake;
         private Vector2 shakePosition;
         private float shakeTimer;
-        private Vector2 shakeTargetPosition;
         
         //the area of the world inside the camera view
         private Rectangle worldView;
@@ -60,7 +63,21 @@ namespace Barotrauma
         public float Rotation
         {
             get { return rotation; }
-            set { rotation = value; }
+            set
+            {
+                if (!MathUtils.IsValid(value)) return;
+                rotation = value;
+            }
+        }
+
+        public float AngularVelocity
+        {
+            get { return angularVelocity; }
+            set
+            {
+                if (!MathUtils.IsValid(value)) return;
+                angularVelocity = value;
+            }
         }
 
         public float OffsetAmount
@@ -142,14 +159,15 @@ namespace Barotrauma
             transform = Matrix.CreateTranslation(
                 new Vector3(-interpolatedPosition.X, interpolatedPosition.Y, 0)) *
                 Matrix.CreateScale(new Vector3(interpolatedZoom, interpolatedZoom, 1)) *
-                viewMatrix;
+                Matrix.CreateRotationZ(rotation) * viewMatrix;
 
             shaderTransform = Matrix.CreateTranslation(
                 new Vector3(
                     -interpolatedPosition.X - resolution.X / interpolatedZoom / 2.0f,
                     -interpolatedPosition.Y - resolution.Y / interpolatedZoom / 2.0f, 0)) *
                 Matrix.CreateScale(new Vector3(interpolatedZoom, interpolatedZoom, 1)) *
-                viewMatrix;
+
+                viewMatrix * Matrix.CreateRotationZ(-rotation);
 
             if (Character.Controlled == null)
             {
@@ -168,8 +186,15 @@ namespace Barotrauma
             }
         }
 
+        private Vector2 previousOffset;
+        
+        /// <summary>
+        /// Resets to false each time the MoveCamera method is called.
+        /// </summary>
+        public bool Freeze { get; set; }
+
         public void MoveCamera(float deltaTime, bool allowMove = true, bool allowZoom = true)
-        {            
+        {
             prevPosition = position;
             prevZoom = zoom;
 
@@ -209,26 +234,47 @@ namespace Barotrauma
                     if (!PlayerInput.KeyDown(Keys.F)) Position = mouseInWorld - (diffViewCenter / Zoom);
                 }
             }
-            else
+            else if (allowMove)
             {
                 Vector2 mousePos = PlayerInput.MousePosition;
-
-                Vector2 offset = mousePos - new Vector2(resolution.X / 2.0f, resolution.Y / 2.0f);
-
+                Vector2 offset = mousePos - resolution.ToVector2() / 2;
                 offset.X = offset.X / (resolution.X * 0.4f);
                 offset.Y = -offset.Y / (resolution.Y * 0.3f);
-
                 if (offset.Length() > 1.0f) offset.Normalize();
+                offset *= offsetAmount;
+                // Freeze the camera movement by default, when the cursor is on top of an ui element.
+                // Setting a positive value to the OffsetAmount, will override this behaviour.
+                if (GUI.MouseOn != null && offsetAmount > 0)
+                {
+                    Freeze = true;
+                }
+                if (CharacterHealth.OpenHealthWindow != null)
+                {
+                    offset *= 0;
+                    Freeze = false;
+                }
+                if (Freeze)
+                {
+                    offset = previousOffset;
+                }
+                else
+                {
+                    previousOffset = offset;
+                }
 
-                offset = offset * offsetAmount;
-
-                float newZoom = Math.Min(DefaultZoom - Math.Min(offset.Length() / resolution.Y, 1.0f),1.0f);
+                float newZoom = Math.Min(DefaultZoom - Math.Min(offset.Length() / resolution.Y, 1.0f), 1.0f);
                 Zoom += (newZoom - zoom) / ZoomSmoothness;
 
                 Vector2 diff = (targetPos + offset) - position;
 
                 moveCam = diff / MoveSmoothness;
             }
+            rotation += angularVelocity * deltaTime;
+            angularVelocity *= (1.0f - angularDamping);
+            angularVelocity += -rotation * angularSpring;
+
+            angularDamping = 0.05f;
+            angularSpring = 0.2f;
 
             if (Shake < 0.01f)
             {
@@ -245,6 +291,7 @@ namespace Barotrauma
             }
 
             Translate(moveCam + shakePosition);
+            Freeze = false;
         }
         
         public Vector2 Position

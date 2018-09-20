@@ -11,14 +11,15 @@
     <Price locationtype="Military" buyprice="100"/>
     <Price locationtype="City" buyprice="100"/>
     <Price locationtype="Outpost" buyprice="100"/>
-    
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,256,64,64"/>
     <Sprite texture ="doctorgear.png" sourcerect="0,120,20,8" depth="0.6"/>
 
     <Body width="18" height="6" density="30"/>
 
     <Wearable limbtype="Head" slots="Any,Head">
       <sprite texture ="doctorgear.png" sourcerect="0,120,20,8" limb="Head" origin="0.45,0.9"/>
-    </Wearable>
+    </Wearable>U
 
     <StatusHUD drawhudwhenequipped="true"/>
   </Item>

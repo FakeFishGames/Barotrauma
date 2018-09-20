@@ -5,19 +5,22 @@
     identifier="wire"
     category="Electrical"
     Tags="smallitem,wire"    
+    spritecolor="210,215,218,255"
+    InventoryIconColor="210,215,218,255"
     linkable="true"
     canbepicked="true"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="City" buyprice="10"/>
-    <Price locationtype="Outpost" buyprice="10"/>
-    <Price locationtype="Research" buyprice="10"/>
-    <Price locationtype="Military" buyprice="10"/>
+    <Price locationtype="City" buyprice="80"/>
+    <Price locationtype="Outpost" buyprice="80"/>
+    <Price locationtype="Research" buyprice="80"/>
+    <Price locationtype="Military" buyprice="80"/>
 
     <Deconstruct time="5">
       <Item identifier="copperbar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64"/>
     <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
 
     <Body radius="7" width="25" density="30"/>
@@ -32,20 +35,22 @@
     identifier="redwire"
     category="Electrical"
     Tags="smallitem,wire"
-    spritecolor="0.7,0.06,0.06,1.0"
+    spritecolor="254,23,17,255"
+    InventoryIconColor="254,23,17,255"
     linkable="true"
     canbepicked="true"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="City" buyprice="10"/>
-    <Price locationtype="Outpost" buyprice="10"/>
-    <Price locationtype="Research" buyprice="10"/>
-    <Price locationtype="Military" buyprice="10"/>
+    <Price locationtype="City" buyprice="5"/>
+    <Price locationtype="Outpost" buyprice="5"/>
+    <Price locationtype="Research" buyprice="5"/>
+    <Price locationtype="Military" buyprice="5"/>
 
     <Deconstruct time="5">
       <Item identifier="copperbar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64"/>
     <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
 
     <Body radius="7" width="25" density="30"/>
@@ -59,20 +64,22 @@
     identifier="bluewire"
     category="Electrical"
     Tags="smallitem,wire"
-    spritecolor="0.1,0.4,0.9,1.0"    
+    spritecolor="51,121,173,255"
+    InventoryIconColor="51,121,173,255"
     linkable="true"
     canbepicked="true"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="City" buyprice="10"/>
-    <Price locationtype="Outpost" buyprice="10"/>
-    <Price locationtype="Research" buyprice="10"/>
-    <Price locationtype="Military" buyprice="10"/>
+    <Price locationtype="City" buyprice="5"/>
+    <Price locationtype="Outpost" buyprice="5"/>
+    <Price locationtype="Research" buyprice="5"/>
+    <Price locationtype="Military" buyprice="5"/>
 
     <Deconstruct time="5">
       <Item identifier="copperbar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64"/>
     <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
 
     <Body radius="7" width="25" density="30"/>
@@ -86,20 +93,22 @@
     identifier="orangewire"
     category="Electrical"
     Tags="smallitem,wire"
-    spritecolor="0.9,0.58,0.07,1.0"    
+    spritecolor="255,140,13,255"
+    InventoryIconColor="255,140,13,255"
     linkable="true"
     canbepicked="true"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="City" buyprice="10"/>
-    <Price locationtype="Outpost" buyprice="10"/>
-    <Price locationtype="Research" buyprice="10"/>
-    <Price locationtype="Military" buyprice="10"/>
+    <Price locationtype="City" buyprice="5"/>
+    <Price locationtype="Outpost" buyprice="5"/>
+    <Price locationtype="Research" buyprice="5"/>
+    <Price locationtype="Military" buyprice="5"/>
 
     <Deconstruct time="5">
       <Item identifier="copperbar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64"/>
     <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
 
     <Body radius="7" width="25" density="30"/>
@@ -113,16 +122,23 @@
     identifier="greenwire"
     category="Electrical"
     Tags="smallitem,wire"
-    spritecolor="0.17,0.45,0.05,1.0"
+    spritecolor="56,143,111,255"
+    InventoryIconColor="56,143,111,255"
     linkable="true"
     canbepicked="true"
     cargocontaineridentifier="metalcrate"
     price="10">
 
+    <Price locationtype="City" buyprice="5"/>
+    <Price locationtype="Outpost" buyprice="5"/>
+    <Price locationtype="Research" buyprice="5"/>
+    <Price locationtype="Military" buyprice="5"/>
+    
     <Deconstruct time="5">
       <Item identifier="copperbar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64"/>
     <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
 
     <Body radius="7" width="25" density="30"/>
@@ -132,20 +148,27 @@
   </Item>
   
   <Item
-    name="Black Wire"
-    identifier="blackwire"
+    name="Brown Wire"
+    identifier="brownwire"
     category="Electrical"
     Tags="smallitem,wire"
-    spritecolor="0.1,0.1,0.1,1.0"
+    spritecolor="123,77,62,255"
+    InventoryIconColor="123,77,62,255"
     linkable="true"
     canbepicked="true"
     cargocontaineridentifier="metalcrate"
     price="10">
 
+    <Price locationtype="City" buyprice="5"/>
+    <Price locationtype="Outpost" buyprice="5"/>
+    <Price locationtype="Research" buyprice="5"/>
+    <Price locationtype="Military" buyprice="5"/>
+    
     <Deconstruct time="5">
       <Item identifier="copperbar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64"/>
     <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
 
     <Body radius="7" width="25" density="30"/>
@@ -163,16 +186,17 @@
     cargocontaineridentifier="metalcrate"
     description="Field-programmable gate array - a multi-purpose circuit which can be reconfigured for use in a large variety of electrical devices.">
 
-    <Price locationtype="Research" buyprice="80"/>
-    <Price locationtype="City" buyprice="100"/>
-    <Price locationtype="Outpost" buyprice="100"/>
-    <Price locationtype="Military" buyprice="100"/>
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="City" buyprice="25"/>
+    <Price locationtype="Outpost" buyprice="25"/>
+    <Price locationtype="Military" buyprice="25"/>
     
     <Deconstruct time="5">
       <Item identifier="copperbar"/>
       <Item identifier="copperbar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,64,64,64"/>
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,16,16,16"/>
 
     <Body width="16" height="16" density="30"/>
@@ -189,10 +213,10 @@
     cargocontaineridentifier="metalcrate"
     description="Sends a signal when both inputs receive a signal within a set period of each other.">
 
-    <Price locationtype="Research" buyprice="10"/>
-    <Price locationtype="City" buyprice="20"/>
-    <Price locationtype="Outpost" buyprice="20"/>
-    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="City" buyprice="80"/>
+    <Price locationtype="Outpost" buyprice="80"/>
+    <Price locationtype="Military" buyprice="80"/>
     
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
@@ -230,6 +254,11 @@
     price="10"
     description="Outputs the sum of the received signals.">
 
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="City" buyprice="80"/>
+    <Price locationtype="Outpost" buyprice="80"/>
+    <Price locationtype="Military" buyprice="80"/>
+    
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
       <Item identifier="fpgacircuit"/>
@@ -263,10 +292,10 @@
     cargocontaineridentifier="metalcrate"
     description="Sends a signal if either of the inputs receive a signal.">
 
-    <Price locationtype="Research" buyprice="10"/>
-    <Price locationtype="City" buyprice="20"/>
-    <Price locationtype="Outpost" buyprice="20"/>
-    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="City" buyprice="80"/>
+    <Price locationtype="Outpost" buyprice="80"/>
+    <Price locationtype="Military" buyprice="80"/>
     
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
@@ -303,10 +332,10 @@
     cargocontaineridentifier="metalcrate"
     description="Sends a signal when the input is NOT receiving a signal.">
 
-    <Price locationtype="Research" buyprice="10"/>
-    <Price locationtype="City" buyprice="20"/>
-    <Price locationtype="Outpost" buyprice="20"/>
-    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="City" buyprice="80"/>
+    <Price locationtype="Outpost" buyprice="80"/>
+    <Price locationtype="Military" buyprice="80"/>
     
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
@@ -341,10 +370,10 @@
     cargocontaineridentifier="metalcrate"
     description="When switched on, forwards all received signals from the input connections to the outputs.">
 
-    <Price locationtype="Research" buyprice="10"/>
-    <Price locationtype="City" buyprice="20"/>
-    <Price locationtype="Outpost" buyprice="20"/>
-    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="City" buyprice="80"/>
+    <Price locationtype="Outpost" buyprice="80"/>
+    <Price locationtype="Military" buyprice="80"/>
 
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
@@ -395,10 +424,10 @@
     cargocontaineridentifier="metalcrate"
     description="Delays all received signals for a specific amount of time.">
 
-    <Price locationtype="Research" buyprice="10"/>
-    <Price locationtype="City" buyprice="20"/>
-    <Price locationtype="Outpost" buyprice="20"/>
-    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="City" buyprice="80"/>
+    <Price locationtype="Outpost" buyprice="80"/>
+    <Price locationtype="Military" buyprice="80"/>
     
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
@@ -432,16 +461,17 @@
     linkable="true"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="Research" buyprice="20"/>
-    <Price locationtype="City" buyprice="40"/>
-    <Price locationtype="Outpost" buyprice="40"/>
-    <Price locationtype="Military" buyprice="40"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="City" buyprice="80"/>
+    <Price locationtype="Outpost" buyprice="80"/>
+    <Price locationtype="Military" buyprice="80"/>
     
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
       <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="959,128,64,64"/>
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="48,0,16,16"/>
 
     <LightComponent canbeselected="true" color="1.0,0.0,0.0,1.0" castshadows="false">
@@ -474,16 +504,17 @@
     cargocontaineridentifier="metalcrate"
     description="Sends out a value between 0-100 depending on the quality of the surrounding air.">
 
-    <Price locationtype="Research" buyprice="20"/>
-    <Price locationtype="City" buyprice="40"/>
-    <Price locationtype="Outpost" buyprice="40"/>
-    <Price locationtype="Military" buyprice="40"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="City" buyprice="80"/>
+    <Price locationtype="Outpost" buyprice="80"/>
+    <Price locationtype="Military" buyprice="80"/>
 
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
       <Item identifier="fpgacircuit"/>
     </Deconstruct>
-
+    
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,256,64,64"/>
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="97,0,31,24"/>
 
     <OxygenDetector canbeselected = "true"/>
@@ -511,11 +542,49 @@
     cargocontaineridentifier="metalcrate"
     description="Sends out a signal when the detector is submerged.">
 
-    <Price locationtype="Research" buyprice="20"/>
-    <Price locationtype="City" buyprice="40"/>
-    <Price locationtype="Outpost" buyprice="40"/>
-    <Price locationtype="Military" buyprice="40"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="City" buyprice="80"/>
+    <Price locationtype="Outpost" buyprice="80"/>
+    <Price locationtype="Military" buyprice="80"/>
     
+    <Deconstruct time="10">
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
+    </Deconstruct>
+    
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,256,64,64"/>
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="65,0,31,24"/>
+
+    <WaterDetector canbeselected = "true"/>
+
+    <Body width="31" height="24" density="30"/>
+
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0"
+              aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+      <RequiredItem identifier="wrench" type="Equipped"/>
+    </Holdable>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
+      <output name="signal_out"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item
+    name="Smoke Detector"
+    identifier="smokedetector"
+    category="Electrical"
+    Tags="smallitem"
+    spritecolor="1.0,0.1,0.1,1.0"
+    cargocontaineridentifier="metalcrate"
+    description="Sends out a signal when it senses smoke.">
+
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="City" buyprice="80"/>
+    <Price locationtype="Outpost" buyprice="80"/>
+    <Price locationtype="Military" buyprice="80"/>
+
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
       <Item identifier="fpgacircuit"/>
@@ -523,7 +592,7 @@
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="65,0,31,24"/>
 
-    <WaterDetector canbeselected = "true"/>
+    <SmokeDetector FireSizeThreshold="50"/>
 
     <Body width="31" height="24" density="30"/>
 
@@ -548,16 +617,17 @@
     cargocontaineridentifier="metalcrate"
     description="Sends out a signal when it detects movement.">
 
-    <Price locationtype="Research" buyprice="20"/>
-    <Price locationtype="City" buyprice="40"/>
-    <Price locationtype="Outpost" buyprice="40"/>
-    <Price locationtype="Military" buyprice="40"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="City" buyprice="80"/>
+    <Price locationtype="Outpost" buyprice="80"/>
+    <Price locationtype="Military" buyprice="80"/>
     
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
       <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,256,64,64"/>
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="65,24,31,24"/>
 
     <MotionSensor range="100" canbeselected = "true"/>
@@ -585,10 +655,10 @@
     cargocontaineridentifier="metalcrate"
     description="Sends a signal when a signal matching a specific value is received.">
 
-    <Price locationtype="Research" buyprice="10"/>
-    <Price locationtype="City" buyprice="20"/>
-    <Price locationtype="Outpost" buyprice="20"/>
-    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="City" buyprice="80"/>
+    <Price locationtype="Outpost" buyprice="80"/>
+    <Price locationtype="Military" buyprice="80"/>
     
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
@@ -625,10 +695,10 @@
     cargocontaineridentifier="metalcrate"
     description="Sends a signal if the received signal matches a specific regular expression pattern.">
 
-    <Price locationtype="Research" buyprice="10"/>
-    <Price locationtype="City" buyprice="20"/>
-    <Price locationtype="Outpost" buyprice="20"/>
-    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="City" buyprice="80"/>
+    <Price locationtype="Outpost" buyprice="80"/>
+    <Price locationtype="Military" buyprice="80"/>
     
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
@@ -664,10 +734,10 @@
     cargocontaineridentifier="metalcrate"
     description="Sends out a periodic, oscillating signal.">
 
-    <Price locationtype="Research" buyprice="10"/>
-    <Price locationtype="City" buyprice="20"/>
-    <Price locationtype="Outpost" buyprice="20"/>
-    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="City" buyprice="80"/>
+    <Price locationtype="Outpost" buyprice="80"/>
+    <Price locationtype="Military" buyprice="80"/>
     
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
@@ -703,10 +773,10 @@
     cargocontaineridentifier="metalcrate"
     description="Allows remote communication between other Wifi Components that are using the same channel.">
 
-    <Price locationtype="Research" buyprice="20"/>
-    <Price locationtype="City" buyprice="40"/>
-    <Price locationtype="Outpost" buyprice="40"/>
-    <Price locationtype="Military" buyprice="40"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="City" buyprice="80"/>
+    <Price locationtype="Outpost" buyprice="80"/>
+    <Price locationtype="Military" buyprice="80"/>
     
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
@@ -740,16 +810,17 @@
     linkable="true"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="Research" buyprice="20"/>
-    <Price locationtype="City" buyprice="40"/>
-    <Price locationtype="Outpost" buyprice="40"/>
-    <Price locationtype="Military" buyprice="40"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="City" buyprice="80"/>
+    <Price locationtype="Outpost" buyprice="80"/>
+    <Price locationtype="Military" buyprice="80"/>
 
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
       <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,128,64,64"/>
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,32,32,32"/>
 
     <Body width="32" height="30" density="30"/>
@@ -779,16 +850,17 @@
     linkable="true"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="Research" buyprice="20"/>
-    <Price locationtype="City" buyprice="40"/>
-    <Price locationtype="Outpost" buyprice="40"/>
-    <Price locationtype="Military" buyprice="40"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="City" buyprice="80"/>
+    <Price locationtype="Outpost" buyprice="80"/>
+    <Price locationtype="Military" buyprice="80"/>
 
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
       <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,128,64,64"/>
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="34,64,23,16"/>
 
     <Body width="20" height="16" density="20"/>

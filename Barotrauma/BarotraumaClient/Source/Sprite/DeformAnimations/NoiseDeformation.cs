@@ -11,15 +11,11 @@ namespace Barotrauma.SpriteDeformations
 
         private float phase;
 
-        private Vector2[,] deformation;
-
         public NoiseDeformation(XElement element) : base(element)
         {
             frequency = element.GetAttributeFloat("frequency", 0.0f);
             amplitude = element.GetAttributeFloat("amplitude", 1.0f);
             changeSpeed = element.GetAttributeFloat("changespeed", 0.0f);
-
-            deformation = new Vector2[resolution.X, resolution.Y];
 
             phase = Rand.Range(0.0f, 255.0f);
 
@@ -28,14 +24,14 @@ namespace Barotrauma.SpriteDeformations
 
         private void UpdateNoise()
         {
-            for (int x = 0; x < resolution.X; x++)
+            for (int x = 0; x < Resolution.X; x++)
             {
-                float normalizedX = x / (float)(resolution.X - 1);
-                for (int y = 0; y < resolution.Y; y++)
+                float normalizedX = x / (float)(Resolution.X - 1);
+                for (int y = 0; y < Resolution.Y; y++)
                 {
-                    float normalizedY = y / (float)(resolution.X - 1);
+                    float normalizedY = y / (float)(Resolution.X - 1);
                     
-                    deformation[x, y] = new Vector2(
+                    Deformation[x, y] = new Vector2(
                         (float)PerlinNoise.Perlin(normalizedX * frequency, normalizedY * frequency, phase) - 0.5f,
                         (float)PerlinNoise.Perlin(normalizedX * frequency, normalizedY * frequency, phase + 0.5f) - 0.5f);
                 }
@@ -44,7 +40,7 @@ namespace Barotrauma.SpriteDeformations
 
         protected override void GetDeformation(out Vector2[,] deformation, out float multiplier)
         {
-            deformation = this.deformation;
+            deformation = Deformation;
             multiplier = amplitude;
         }
 

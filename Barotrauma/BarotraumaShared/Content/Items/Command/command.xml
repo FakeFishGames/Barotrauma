@@ -6,7 +6,7 @@
     linkable="true"
     category="Machine">
 
-    <Sprite texture="Content/Items/Command/navigator.png" depth="0.8" sourcerect="0,0,133,224"/>
+    <Sprite texture="Content/Items/Command/navigator.png" depth="0.8" sourcerect="0,0,188,194"/>
 
     <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="10" fixDurationLowSkill="20" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
@@ -14,27 +14,30 @@
       <RequiredItem identifier="screwdriver" type="equipped"/>
     </Repairable>
 
-    <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10">
-      <GuiFrame relativesize="0.5,0.7" anchor="Center" style="ItemUI"/>
+    <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10" linkuitocomponent="4">
+      <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" style="OuterGlow" color="0,0,0,0.8" absoluteoffset="30,0"/>
       <StatusEffect type="InWater" target="This" condition="-1.0"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap1.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap2.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap3.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap4.ogg" range="500" loop="false"/>
-      <LightComponent range="10.0" lightcolor="1.0,1.0,1.0,0.1" powerconsumption="5" IsOn="true" castshadows="false">
+      <LightComponent range="10.0" lightcolor="1.0,1.0,1.0,0.2" powerconsumption="5" IsOn="true" castshadows="false">
         <sprite texture="Content/Items/Command/navigatorLights.png" depth="0.025" origin="0.5,0.5" alpha="1.0"/>
       </LightComponent>
-      <LightComponent range="10.0" lightcolor="1.0,1.0,1.0,0.1" powerconsumption="5" IsOn="true" castshadows="false" blinkfrequency="1">
+      <LightComponent range="10.0" lightcolor="1.0,1.0,1.0,0.5" powerconsumption="5" IsOn="true" castshadows="false" blinkfrequency="1">
         <sprite texture="Content/Items/Command/navigatorLightsBlinking.png" depth="0.025" origin="0.5,0.5" alpha="1.0"/>
       </LightComponent>
     </Steering>
 
     <Sonar canbeselected = "true" powerconsumption="100" displaybordersize="-0.1">
-      <GuiFrame relativesize="0.5,0.7" anchor="Center" style="ItemUI" color="0,0,0,0"/>
-      <sound file="sonarPing.ogg" type="OnUse" range="4000.0"/>
+      <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" absoluteoffset="30,0"/>
+      <sound file="Content/Items/Command/sonarPing.ogg" type="OnUse" range="4000.0"/>
+      <sound file="Content/Items/Command/sonarPing2.ogg" type="OnUse" range="4000.0"/>
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5"/>
+      <DirectionalPingCircle texture="Content/Items/Command/directionalPingCircle.png" origin="0.0,0.5"/>
       <ScreenOverlay texture="Content/Items/Command/sonarOverlay.png" origin="0.5,0.5"/>
+      <ScreenBackground texture="Content/Items/Command/sonarBackground.png" origin="0.5,0.5"/>
       <Blip texture="Content/Items/Command/sonarBlip.png" origin="0.5,0.5"/>
     </Sonar>
 
@@ -55,8 +58,8 @@
     linkable="true"
     category="Machine">
 
-    <Sprite texture="Content/Items/Command/navigator.png" depth="0.8" sourcerect="0,0,133,224"/>
-
+    <Sprite texture="Content/Items/Command/navigator.png" depth="0.8" sourcerect="0,0,188,194"/>
+    
     <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="10" fixDurationLowSkill="20" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
       <RequiredSkill identifier="electrical" level="40"/>
@@ -64,7 +67,7 @@
     </Repairable>
 
     <Sonar canbeselected = "true" powerconsumption="100" displaybordersize="-0.1">
-      <GuiFrame relativesize="0.5,0.7" anchor="Center" style="ItemUI" color="0,0,0,0"/>
+      <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" absoluteoffset="30,0"/>
       <StatusEffect type="InWater" target="This" condition="-1.0"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap1.ogg" range="500" loop="false"/>
@@ -72,6 +75,7 @@
       <sparksound file="Content/Items/Electricity/zap3.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap4.ogg" range="500" loop="false"/>
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5"/>
+      <DirectionalPingCircle texture="Content/Items/Command/directionalPingCircle.png" origin="0.0,0.5"/>
       <ScreenOverlay texture="Content/Items/Command/sonarOverlay.png" origin="0.5,0.5"/>
       <Blip texture="Content/Items/Command/sonarBlip.png" origin="0.5,0.5"/>
     </Sonar>
@@ -90,7 +94,7 @@
     category="Machine"
     linkable="true">
 
-    <Sprite texture="Content/Items/Command/statusMonitor.png" sourcerect="0,0,266,224" depth="0.8"/>
+    <Sprite texture="Content/Items/Command/statusMonitor.png" sourcerect="0,0,113,193" depth="0.8"/>
 
     <MiniMap MinVoltage="0.5" PowerConsumption="100" canbeselected = "true">
       <GuiFrame relativesize="0.5,0.5" anchor="Center" style="ItemUI"/>

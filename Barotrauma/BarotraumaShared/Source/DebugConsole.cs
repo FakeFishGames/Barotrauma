@@ -151,6 +151,79 @@ namespace Barotrauma
                 };
             }));
 
+            commands.Add(new Command("clientlist", "clientlist: List all the clients connected to the server.", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                NewMessage("***************", Color.Cyan);
+                foreach (Client c in GameMain.Server.ConnectedClients)
+                {
+                    NewMessage("- " + c.ID.ToString() + ": " + c.Name + (c.Character != null ? " playing " + c.Character.LogName : "") + ", " + c.Connection.RemoteEndPoint.Address.ToString(), Color.Cyan);
+                }
+                NewMessage("***************", Color.Cyan);
+            }, null,
+            (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                GameMain.Server.SendConsoleMessage("***************", client);
+                foreach (Client c in GameMain.Server.ConnectedClients)
+                {
+                    GameMain.Server.SendConsoleMessage("- " + c.ID.ToString() + ": " + c.Name + ", " + c.Connection.RemoteEndPoint.Address.ToString(), client);
+                }
+                GameMain.Server.SendConsoleMessage("***************", client);
+            }));
+
+            commands.Add(new Command("enablecheats", "enablecheats: Enables cheat commands and disables Steam achievements during this play session.", (string[] args) =>
+            {
+                CheatsEnabled = true;
+                SteamAchievementManager.CheatsEnabled = true;
+                NewMessage("Enabled cheat commands.", Color.Red);
+                if (GameMain.Config.UseSteam)
+                {
+                    NewMessage("Steam achievements have been disabled during this play session.", Color.Red);
+                    GameMain.Server?.SendChatMessage("Cheat commands have been enabled by the server. You cannot unlock Steam achievements until you restart the game.", ChatMessageType.MessageBox);
+                }
+                else
+                {
+                    GameMain.Server?.SendChatMessage("Cheat commands have been enabled by the server.", ChatMessageType.MessageBox);
+                }
+            }, null,
+            (client, cursorPos, args) =>
+            {
+                CheatsEnabled = true;
+                SteamAchievementManager.CheatsEnabled = true;
+                NewMessage("Cheat commands have been enabled by \"" + client.Name + "\".", Color.Red);
+                if (GameMain.Config.UseSteam)
+                {
+                    NewMessage("Steam achievements have been disabled during this play session.", Color.Red);
+                    GameMain.Server.SendChatMessage("Cheat commands have been enabled by the server. You cannot unlock Steam achievements until you restart the game.", ChatMessageType.MessageBox);
+                }
+                else
+                {
+                    GameMain.Server.SendChatMessage("Cheat commands have been enabled by the server.", ChatMessageType.MessageBox);
+                }
+            }));
+
+            commands.Add(new Command("traitorlist", "traitorlist: List all the traitors and their targets.", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                TraitorManager traitorManager = GameMain.Server.TraitorManager;
+                if (traitorManager == null) return;
+                foreach (Traitor t in traitorManager.TraitorList)
+                {
+                    NewMessage("- Traitor " + t.Character.Name + "'s target is " + t.TargetCharacter.Name + ".", Color.Cyan);
+                }
+                NewMessage("The code words are: " + traitorManager.codeWords + ", response: " + traitorManager.codeResponse + ".", Color.Cyan);
+            },
+            null,
+            (Client client, Vector2 cursorPos, string[] args) =>
+            {
+                TraitorManager traitorManager = GameMain.Server.TraitorManager;
+                if (traitorManager == null) return;
+                foreach (Traitor t in traitorManager.TraitorList)
+                {
+                    GameMain.Server.SendConsoleMessage("- Traitor " + t.Character.Name + "'s target is " + t.TargetCharacter.Name + ".", client);
+                }
+                GameMain.Server.SendConsoleMessage("The code words are: " + traitorManager.codeWords + ", response: " + traitorManager.codeResponse + ".", client);
+            }));
 
             commands.Add(new Command("itemlist", "itemlist: List all the item prefabs available for spawning.", (string[] args) =>
             {
@@ -209,8 +282,7 @@ namespace Barotrauma
                     if (prefab is ItemPrefab itemPrefab) itemNames.Add(itemPrefab.Name);
                 }
 
-                List<string> spawnPosParams = new List<string>() { "cursor", "inventory" };
-#if SERVER
+                List<string> spawnPosParams = new List<string>() { "cursor", "inventory", "cargo" };
                 if (GameMain.Server != null) spawnPosParams.AddRange(GameMain.Server.ConnectedClients.Select(c => c.Name));
 #endif
                 spawnPosParams.AddRange(Character.CharacterList.Where(c => c.Inventory != null).Select(c => c.Name).Distinct());
@@ -426,6 +498,18 @@ namespace Barotrauma
                 }
             }));
 
+#if CLIENT && WINDOWS
+            commands.Add(new Command("copyitemnames", "", (string[] args) =>
+            {
+                StringBuilder sb = new StringBuilder();
+                foreach (MapEntityPrefab mp in MapEntityPrefab.List)
+                {
+                    if (!(mp is ItemPrefab)) continue;
+                    sb.AppendLine(mp.Name);
+                }
+                System.Windows.Clipboard.SetText(sb.ToString());
+            }));
+
             commands.Add(new Command("findentityids", "findentityids [entityname]", (string[] args) =>
             {
                 if (args.Length == 0) return;
@@ -471,6 +555,30 @@ namespace Barotrauma
                     targetCharacter.CharacterHealth.ApplyAffliction(targetCharacter.AnimController.MainLimb, afflictionPrefab.Instantiate(afflictionStrength));
                 }
             },
+            null,
+            (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (args.Length < 2) return;
+
+                AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.Find(a => a.Name.ToLowerInvariant() == args[0].ToLowerInvariant());
+                if (afflictionPrefab == null)
+                {
+                    GameMain.Server.SendConsoleMessage("Affliction \"" + args[0] + "\" not found.", client);
+                    return;
+                }
+
+                if (!float.TryParse(args[1], out float afflictionStrength))
+                {
+                    GameMain.Server.SendConsoleMessage("\"" + args[1] + "\" is not a valid affliction strength.", client);
+                    return;
+                }
+
+                Character targetCharacter = (args.Length <= 2) ? client.Character : FindMatchingCharacter(args.Skip(2).ToArray());
+                if (targetCharacter != null)
+                {
+                    targetCharacter.CharacterHealth.ApplyAffliction(targetCharacter.AnimController.MainLimb, afflictionPrefab.Instantiate(afflictionStrength));
+                }
+            },
             () =>
             {
                 return new string[][]
@@ -499,7 +607,7 @@ namespace Barotrauma
                     Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
                 };
             }, isCheat: true));
-
+            
             commands.Add(new Command("revive", "revive [character name]: Bring the specified character back from the dead. If the name parameter is omitted, the controlled character will be revived.", (string[] args) =>
             {
                 Character revivedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args);
@@ -525,6 +633,65 @@ namespace Barotrauma
                 return new string[][]
                 {
         Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                };
+            }, isCheat: true));
+
+            commands.Add(new Command("setskill", "setskill [character name] [skill name] [level]: Set the specified skill level to the given value.", (string[] args) =>
+            {
+                if (args.Length < 3) return;
+                Character character = FindMatchingCharacter(args.Take(1).ToArray());
+                if (character?.Info?.Job == null) return;
+
+                var skill = character.Info.Job.Skills.Find(s =>
+                    s.Identifier.ToLowerInvariant() == args[1].ToLowerInvariant() ||
+                    TextManager.Get("SkillName." + s.Identifier, true)?.ToLowerInvariant() == args[0].ToLowerInvariant());
+
+                if (skill == null)
+                {
+                    ThrowError("Skill \"" + args[1] + "\" not found.");
+                    return;
+                }
+
+                if (!int.TryParse(args[2], out int skillLevel))
+                {
+                    ThrowError("\"" + args[2] + "\" is not a valid skill level.");
+                }
+
+                skill.Level = skillLevel;
+                GameMain.Server?.CreateEntityEvent(character, new object[] { NetEntityEvent.Type.UpdateSkills });
+            },
+            null,
+            (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (args.Length < 3) return;
+                Character character = FindMatchingCharacter(args.Take(1).ToArray());
+                if (character?.Info?.Job == null) return;
+
+                var skill = character.Info.Job.Skills.Find(s =>
+                    s.Identifier.ToLowerInvariant() == args[1].ToLowerInvariant() ||
+                    TextManager.Get("SkillName." + s.Identifier, true)?.ToLowerInvariant() == args[0].ToLowerInvariant());
+
+                if (skill == null)
+                {
+                    GameMain.Server.SendConsoleMessage("Skill \"" + args[1] + "\" not found.", client);
+                    return;
+                }
+
+                if (!int.TryParse(args[2], out int skillLevel))
+                {
+                    GameMain.Server.SendConsoleMessage("\"" + args[2] + "\" is not a valid skill level.", client);
+                }
+
+                NewMessage("Client \"" + client.Name + "\" set the \"" + skill.Identifier + "\" skill of " + character.Name + " to " + skillLevel, Color.White);
+                skill.Level = skillLevel;
+                GameMain.Server.CreateEntityEvent(character, new object[] { NetEntityEvent.Type.UpdateSkills });
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray(),
+                    Character.CharacterList.FirstOrDefault(c => c.Info?.Job != null)?.Info?.Job?.Skills.Select(s => s.Identifier).ToArray()
                 };
             }, isCheat: true));
 
@@ -659,7 +826,13 @@ namespace Barotrauma
             commands.Add(new Command("kill", "kill [character]: Immediately kills the specified character.", (string[] args) =>
             {
                 Character killedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args);
-                killedCharacter.SetAllDamage(killedCharacter.MaxVitality * 2, 0.0f, 0.0f);
+                killedCharacter?.SetAllDamage(killedCharacter.MaxVitality * 2, 0.0f, 0.0f);
+            },
+            null,
+            (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                Character killedCharacter = (args.Length == 0) ? client.Character : FindMatchingCharacter(args);
+                killedCharacter?.SetAllDamage(killedCharacter.MaxVitality * 2, 0.0f, 0.0f);          
             },
             () =>
             {
@@ -1003,7 +1176,51 @@ namespace Barotrauma
                 ThrowError("Command \"" + splitCommand[0] + "\" not found.");
             }
         }
-        
+
+        public static void ExecuteClientCommand(Client client, Vector2 cursorWorldPos, string command)
+        {
+            if (GameMain.Server == null) return;
+            if (string.IsNullOrWhiteSpace(command)) return;
+            if (!client.HasPermission(ClientPermissions.ConsoleCommands))
+            {
+                GameMain.Server.SendConsoleMessage("You are not permitted to use console commands!", client);
+                GameServer.Log(client.Name + " attempted to execute the console command \"" + command + "\" without a permission to use console commands.", ServerLog.MessageType.ConsoleUsage);
+                return;
+            }
+
+            string[] splitCommand = SplitCommand(command);
+            Command matchingCommand = commands.Find(c => c.names.Contains(splitCommand[0].ToLowerInvariant()));
+            if (matchingCommand != null && !client.PermittedConsoleCommands.Contains(matchingCommand))
+            {
+                GameMain.Server.SendConsoleMessage("You are not permitted to use the command\"" + matchingCommand.names[0] + "\"!", client);
+                GameServer.Log(client.Name + " attempted to execute the console command \"" + command + "\" without a permission to use the command.", ServerLog.MessageType.ConsoleUsage);
+                return;
+            }
+            else if (matchingCommand == null)
+            {
+                GameMain.Server.SendConsoleMessage("Command \"" + splitCommand[0] + "\" not found.", client);
+                return;
+            }
+
+            if (!MathUtils.IsValid(cursorWorldPos))
+            {
+                GameMain.Server.SendConsoleMessage("Could not execute command \"" + command + "\" - invalid cursor position.", client);
+                NewMessage(client.Name + " attempted to execute the console command \"" + command + "\" with invalid cursor position.", Color.White);
+                return;
+            }
+
+            try
+            {
+                matchingCommand.ServerExecuteOnClientRequest(client, cursorWorldPos, splitCommand.Skip(1).ToArray());
+                GameServer.Log("Console command \"" + command + "\" executed by " + client.Name + ".", ServerLog.MessageType.ConsoleUsage);
+            }
+            catch (Exception e)
+            {
+                ThrowError("Executing the command \"" + matchingCommand.names[0] + "\" by request from \"" + client.Name + "\" failed.", e);
+            }
+        }
+
+
         private static Character FindMatchingCharacter(string[] args, bool ignoreRemotePlayers = false)
         {
             if (args.Length == 0) return null;
@@ -1151,58 +1368,63 @@ namespace Barotrauma
 
             Vector2? spawnPos = null;
             Inventory spawnInventory = null;
-            
-            int extraParams = 0;
-            switch (args.Last().ToLowerInvariant())
-            {
-                case "cursor":
-                    extraParams = 1;
-                    spawnPos = cursorPos;
-                    break;
-                case "inventory":
-                    extraParams = 1;
-                    spawnInventory = controlledCharacter?.Inventory;
-                    break;
-                case "cargo":
-                    var wp = WayPoint.GetRandom(SpawnType.Cargo, null, Submarine.MainSub);
-                    spawnPos = wp == null ? Vector2.Zero : wp.WorldPosition;
-                    break;
-                //Dont do a thing, random is basically Human points anyways - its in the help description.
-                case "random":
-                    extraParams = 1;
-                    return;
-                default:
-                    extraParams = 0;
-                    break;
-            }
 
-            string itemName = string.Join(" ", args.Take(args.Length - extraParams)).ToLowerInvariant();
-
-            ItemPrefab itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
-            if (itemPrefab == null && extraParams == 0)
+            if (args.Length > 1)
             {
-#if SERVER
-                if (GameMain.Server != null)
+                switch (args[1])
                 {
-                    var client = GameMain.Server.ConnectedClients.Find(c => c.Name.ToLower() == args.Last().ToLower());
-                    if (client != null)
-                    {
-                        extraParams += 1;
-                        itemName = string.Join(" ", args.Take(args.Length - extraParams)).ToLowerInvariant();
-                        if (client.Character != null && client.Character.Name == args.Last().ToLower()) spawnInventory = client.Character.Inventory;
-                        itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
-                    }
+                    case "cursor":
+                        spawnPos = cursorPos;
+                        break;
+                    case "inventory":
+                        spawnInventory = controlledCharacter?.Inventory;
+                        break;
+                    case "cargo":
+                        var wp = WayPoint.GetRandom(SpawnType.Cargo, null, Submarine.MainSub);
+                        spawnPos = wp == null ? Vector2.Zero : wp.WorldPosition;
+                        break;
+                    default:
+                        //Check if last arg matches the name of an in-game player
+                        if (GameMain.Server != null)
+                        {
+                            var client = GameMain.Server.ConnectedClients.Find(c => c.Name.ToLower() == args.Last().ToLower());
+                            if (client == null)
+                            {
+                                NewMessage("No player found with the name \"" + args.Last() + "\".  Spawning item at random location. If the player you want to give the item to has a space in their name, try surrounding their name with quotes (\").", Color.Red);
+                                break;
+                            }
+                            else if (client.Character == null)
+                            {
+                                errorMsg = "The player \"" + args.Last() + "\" is connected, but hasn't spawned yet.";
+                                return;
+                            }
+                            else
+                            {
+                                //If the last arg matches the name of an in-game player, set the destination to their inventory.
+                                spawnInventory = client.Character.Inventory;
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            var matchingCharacter = FindMatchingCharacter(args.Skip(1).ToArray());
+                            if (matchingCharacter?.Inventory != null) spawnInventory = matchingCharacter.Inventory;
+                        }
+                        break;
                 }
 #endif
             }
-            //Check again if the item can be found again after having checked for a character
+
+            string itemName = args[0];
+
+            var itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
             if (itemPrefab == null)
             {
                 errorMsg = "Item \"" + itemName + "\" not found!";
                 return;
             }
 
-            if ((spawnPos == null || spawnPos == Vector2.Zero) && spawnInventory == null)
+            if (spawnPos == null && spawnInventory == null)
             {
                 var wp = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
                 spawnPos = wp == null ? Vector2.Zero : wp.WorldPosition;
@@ -1211,7 +1433,6 @@ namespace Barotrauma
             if (spawnPos != null)
             {
                 Entity.Spawner.AddToSpawnQueue(itemPrefab, (Vector2)spawnPos);
-
             }
             else if (spawnInventory != null)
             {

@@ -57,11 +57,11 @@ namespace Barotrauma
         
         private GUIFrame playerInfoContainer;
         private GUIImage playerHeadSprite;
-        private GUIFrame jobInfoFrame;
-        private GUIFrame playerFrame;
+        private GUIButton jobInfoFrame;
+        private GUIButton playerFrame;
 
         private GUITickBox autoRestartBox;
-        
+                
         private GUIDropDown shuttleList;
         private GUITickBox shuttleTickBox;
 
@@ -313,7 +313,7 @@ namespace Barotrauma
             var midInfoColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.35f, 1.0f), infoColumnContainer.RectTransform, Anchor.BottomLeft))
                 { RelativeSpacing = 0.02f, Stretch = true };
 
-            var rightInfoColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.9f), defaultModeContainer.RectTransform, Anchor.TopRight))
+            var rightInfoColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.85f), defaultModeContainer.RectTransform, Anchor.TopRight))
                 { RelativeSpacing = 0.02f, Stretch = true };
             
             var topButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), rightInfoColumn.RectTransform), isHorizontal: true, childAnchor: Anchor.TopRight)
@@ -392,7 +392,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            shuttleList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform));
+            shuttleList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform), elementCount: 10);
 
             //gamemode ------------------------------------------------------------------
 
@@ -484,9 +484,7 @@ namespace Barotrauma
             clientDisabledElements.AddRange(traitorProbabilityButtons);
 
             //bot count ------------------------------------------------------------------
-
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.03f), rightInfoColumn.RectTransform), style: null); //spacing
-
+            
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), TextManager.Get("BotCount"));
             var botCountContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), isHorizontal: true);
             botCountButtons = new GUIButton[2];
@@ -535,8 +533,14 @@ namespace Barotrauma
                 OnClicked = (btn, obj) => { GameMain.Client.RequestStartRound(); return true; }
             };
             clientHiddenElements.Add(StartButton);
-            
-            campaignViewButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), defaultModeContainer.RectTransform, Anchor.BottomRight),
+
+            ReadyToStartBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.06f), defaultModeContainer.RectTransform, Anchor.BottomRight),
+                TextManager.Get("ReadyToStartTickBox"), GUI.SmallFont)
+            {
+                Visible = false
+            };
+
+            campaignViewButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), defaultModeContainer.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.0f, 0.06f) },
                 TextManager.Get("CampaignView"), style: "GUIButtonLarge")
             {
                 OnClicked = (btn, obj) => { ToggleCampaignView(true); return true; },
@@ -586,16 +590,25 @@ namespace Barotrauma
             ShowLogButton.Visible =
                 (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.ServerLog));
 
-            spectateButton.Visible = GameMain.Client != null && GameMain.Client.GameStarted;
-            if (GameMain.Client.CharacterInfo != null)
+            if (GameMain.Client != null)
             {
-                TogglePlayYourself(playYourself);
+                spectateButton.Visible = GameMain.Client.GameStarted;
+                ReadyToStartBox.Visible = !GameMain.Client.GameStarted;
+                ReadyToStartBox.Selected = false;
+                GameMain.Client.SetReadyToStart(ReadyToStartBox);
             }
+            else
+            {
+                spectateButton.Visible = false;
+                ReadyToStartBox.Visible = false;
+            }
+            SetPlayYourself(playYourself.Selected);            
 
             /*if (IsServer && GameMain.Server != null)
             {
                 List<Submarine> subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus)).ToList();
 
+                ReadyToStartBox.Visible = false;
                 StartButton.OnClicked = GameMain.Server.StartGameClicked;
                 settingsButton.OnClicked = GameMain.Server.ToggleSettingsFrame;
 
@@ -650,6 +663,7 @@ namespace Barotrauma
                     TogglePlayYourself(playYourself);
                 }
                 spectateButton.OnClicked = GameMain.Client.SpectateClicked;
+                ReadyToStartBox.OnSelected = GameMain.Client.SetReadyToStart;
             }
 
             GameMain.NetworkMember.EndVoteCount = 0;
@@ -1190,8 +1204,12 @@ namespace Barotrauma
                 }
             }
 
-            playerFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.6f);
-            var playerFrameInner = new GUIFrame(new RectTransform(/*GameMain.Server != null ? new Point(450, 370) : */new Point(450, 150), playerFrame.RectTransform, Anchor.Center));
+            playerFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
+            {
+                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) ClosePlayerFrame(btn, userdata); return true; }
+            };
+        
+            var playerFrameInner = new GUIFrame(new RectTransform(/*GameMain.Server != null ? new Point(450, 370) :*/new Point(450, 150), playerFrame.RectTransform, Anchor.Center));
             var paddedPlayerFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), playerFrameInner.RectTransform, Anchor.Center))
             {
                 Stretch = true,
@@ -1656,11 +1674,13 @@ namespace Barotrauma
             if (jobPrefab == null) return false;
 
             jobInfoFrame = jobPrefab.CreateInfoFrame();
-            GUIButton closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), jobInfoFrame.GetChild(0).GetChild(0).RectTransform, Anchor.BottomRight),
+            GUIButton closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), jobInfoFrame.GetChild(2).GetChild(0).RectTransform, Anchor.BottomRight),
                 TextManager.Get("Close"))
             {
                 OnClicked = CloseJobInfo
             };
+            jobInfoFrame.OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) CloseJobInfo(btn, userdata); return true; };
+            
             return true;
         }
 

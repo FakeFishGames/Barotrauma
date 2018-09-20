@@ -20,7 +20,7 @@ namespace Barotrauma
             if (Job != null)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x + 60, y) }, 
-                    Job.Name, font: font);
+                    Job.Name, textColor: Job.Prefab.UIColor, font: font);
                 y += 25;
             }
 
@@ -69,5 +69,34 @@ namespace Barotrauma
             return frame;
         }
 
+        partial void OnSkillChanged(string skillIdentifier, float prevLevel, float newLevel, Vector2 textPopupPos)
+        {
+            if (newLevel - prevLevel > 0.1f)
+            {
+                GUI.AddMessage(
+                    "+" + ((int)((newLevel - prevLevel) * 100.0f)).ToString() + " XP",
+                    Color.Green,
+                    textPopupPos,
+                    Vector2.UnitY * 10.0f);
+            }
+            else if (prevLevel % 0.1f > 0.05f && newLevel % 0.1f < 0.05f)
+            {
+                GUI.AddMessage(
+                    "+10 XP",
+                    Color.Green,
+                    textPopupPos,
+                    Vector2.UnitY * 10.0f);
+            }
+
+            if ((int)newLevel > (int)prevLevel)
+            {
+                GUI.AddMessage(
+                    TextManager.Get("SkillIncreased")
+                        .Replace("[name]", Name)
+                        .Replace("[skillname]", TextManager.Get("SkillName." + skillIdentifier))
+                        .Replace("[newlevel]", ((int)newLevel).ToString()),
+                    Color.Green);
+            }
+        }
     }
 }

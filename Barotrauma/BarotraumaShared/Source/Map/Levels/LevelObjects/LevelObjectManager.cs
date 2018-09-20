@@ -389,11 +389,14 @@ namespace Barotrauma
 
         public override void Remove()
         {
-            foreach (LevelObject obj in objects)
+            if (objects != null)
             {
-                obj.Remove();
+                foreach (LevelObject obj in objects)
+                {
+                    obj.Remove();
+                }
+                objects.Clear();
             }
-            objects.Clear();
             RemoveProjSpecific();
 
             base.Remove();

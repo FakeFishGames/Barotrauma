@@ -1,15 +1,103 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Lights;
 using FarseerPhysics;
+using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.SpriteDeformations;
 
 namespace Barotrauma
 {
+    partial class LimbJoint : RevoluteJoint
+    {
+        public void UpdateDeformations(float deltaTime)
+        {
+            #region Experimental
+            //var start = LimbA.WorldPosition;
+            //var end = LimbB.WorldPosition;
+            //var jointAPos = ConvertUnits.ToDisplayUnits(LocalAnchorA);
+            //var control = start + Vector2.Transform(jointAPos, Matrix.CreateRotationZ(LimbA.Rotation));
+            #endregion
+
+            void UpdateBezier(Limb limb)
+            {
+                if (limb.DeformSprite == null) { return; }
+
+                #region Experimental
+                //var origin = limb.DeformSprite.Origin;
+                //var rotation = limb.Rotation;
+                ////rotation = -rotation;
+                //var pos = limb.WorldPosition;
+                //Matrix matrix = Matrix.CreateTranslation(-origin.X, -origin.Y, 0)
+                //    * Matrix.CreateScale(new Vector3(1, -1, 1))
+                //    * Matrix.CreateRotationZ(rotation)
+                //    * Matrix.CreateTranslation(new Vector3(pos, MathHelper.Clamp(limb.DeformSprite.Sprite.Depth, 0, 1)));
+                #endregion
+
+                foreach (var deformation in limb.Deformations)
+                {
+                    if (deformation is BezierDeformation bezierDeformation)
+                    {
+                        bezierDeformation.flipX = limb.character.AnimController.IsFlipped;
+
+                        #region Sine wave
+                        if ((limb.character.AnimController is FishAnimController fishController))
+                        {
+                            var waveLength = fishController.CurrentSwimParams.WaveLength;
+                            var waveAmplitude = fishController.CurrentSwimParams.WaveAmplitude;
+                            if (waveLength > 0 && waveAmplitude > 0)
+                            {
+                                float waveRotation = (float)Math.Sin(fishController.WalkPos / waveLength);
+                                float v = waveRotation * waveAmplitude;
+                                bezierDeformation.start.X = v;
+                                bezierDeformation.start.Y = v;
+                                bezierDeformation.end.X = v;
+                                bezierDeformation.end.Y = v;
+                                bezierDeformation.control.X = v;
+                                bezierDeformation.control.Y = v;
+                            }
+                        }
+                        #endregion
+
+                        #region Experimental
+                        //matrix = Matrix.Invert(matrix);
+                        //matrix = matrix * Matrix.CreateScale(1.0f / limb.DeformSprite.Size.X, 1.0f / limb.DeformSprite.Size.Y, 1);
+                        //bezierDeformation.start = Vector2.Transform(start, matrix) * 1;
+                        //bezierDeformation.end = Vector2.Transform(end, matrix) * 1;
+                        //bezierDeformation.control = Vector2.Transform(control, matrix) * 1;
+                        #endregion
+                    }
+                }
+            }
+            UpdateBezier(LimbA);
+            UpdateBezier(LimbB);
+        }
+
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            return;
+            // A debug visualisation on the bezier curve between limbs.
+            var start = LimbA.WorldPosition;
+            var end = LimbB.WorldPosition;
+            var jointAPos = ConvertUnits.ToDisplayUnits(LocalAnchorA);
+            var control = start + Vector2.Transform(jointAPos, Matrix.CreateRotationZ(LimbA.Rotation));
+            start.Y = -start.Y;
+            end.Y = -end.Y;
+            control.Y = -control.Y;
+            //GUI.DrawRectangle(spriteBatch, start, Vector2.One * 5, Color.White, true);
+            //GUI.DrawRectangle(spriteBatch, end, Vector2.One * 5, Color.Black, true);
+            //GUI.DrawRectangle(spriteBatch, control, Vector2.One * 5, Color.Black, true);
+            //GUI.DrawLine(spriteBatch, start, end, Color.White);
+            //GUI.DrawLine(spriteBatch, start, control, Color.Black);
+            //GUI.DrawLine(spriteBatch, control, end, Color.Black);
+            GUI.DrawBezierWithDots(spriteBatch, start, end, control, 1000, Color.Red);
+        }
+    }
+
     partial class Limb
     {
         //minimum duration between hit/attack sounds
@@ -18,6 +106,12 @@ namespace Barotrauma
 
         private float wetTimer;
         private float dripParticleTimer;
+
+        /// <summary>
+        /// Note that different limbs can share the same deformations.
+        /// Use ragdoll.SpriteDeformations for a collection that cannot have duplicates.
+        /// </summary>
+        public List<SpriteDeformation> Deformations { get; private set; } = new List<SpriteDeformation>();
         
         public LightSource LightSource
         {
@@ -47,6 +141,30 @@ namespace Barotrauma
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
+                    case "deformablesprite":
+                        DeformSprite = new DeformableSprite(subElement);
+                        foreach (XElement animationElement in subElement.Elements())
+                        {
+                            int sync = animationElement.GetAttributeInt("sync", -1);
+                            SpriteDeformation deformation = null;
+                            if (sync > -1)
+                            {
+                                // if the element is marked with the sync attribute, use a deformation of the same type with the same sync value, if there is one already.
+                                string typeName = animationElement.GetAttributeString("type", "").ToLowerInvariant();
+                                deformation = ragdoll.Limbs
+                                    .Where(l => l != null)
+                                    .SelectMany(l => l.Deformations)
+                                    .Where(d => d.typeName == typeName && d.sync == sync)
+                                    .FirstOrDefault();
+                            }
+                            if (deformation == null)
+                            {
+                                deformation = SpriteDeformation.Load(animationElement);
+                                ragdoll.SpriteDeformations.Add(deformation);
+                            }
+                            if (deformation != null) Deformations.Add(deformation);
+                        }
+                        break;
                     case "lightsource":
                         LightSource = new LightSource(subElement);
                         break;
@@ -144,7 +262,7 @@ namespace Barotrauma
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Draw(SpriteBatch spriteBatch, Camera cam)
         {
             float brightness = 1.0f - (burnOverLayStrength / 100.0f) * 0.5f;
             Color color = new Color(brightness, brightness, brightness);
@@ -168,7 +286,23 @@ namespace Barotrauma
 
             if (!hideLimb)
             {
-                body.Draw(spriteBatch, sprite, color, null, Scale);
+                if (DeformSprite != null)
+                {
+                    if (Deformations != null && Deformations.Any())
+                    {
+                        var deformation = SpriteDeformation.GetDeformation(Deformations, DeformSprite.Size);
+                        DeformSprite.Deform(deformation);
+                    }
+                    else
+                    {
+                        DeformSprite.Reset();
+                    }
+                    body.Draw(DeformSprite, cam, Vector2.One * Scale);
+                }
+                else
+                {
+                    body.Draw(spriteBatch, Sprite, color, null, Scale);
+                }
             }
 
             if (LightSource != null)
@@ -176,7 +310,7 @@ namespace Barotrauma
                 LightSource.Position = body.DrawPosition;
                 LightSource.LightSpriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipVertically;
             }
-            
+            float depthStep = 0.000001f;
             WearableSprite onlyDrawable = wearingItems.Find(w => w.HideOtherWearables);
             foreach (WearableSprite wearable in WearingItems)
             {
@@ -191,15 +325,20 @@ namespace Barotrauma
 
                 if (wearable.InheritLimbDepth)
                 {
-                    depth = sprite.Depth - 0.000001f;
+                    depth = ActiveSprite.Depth - depthStep;
                     if (wearable.DepthLimb != LimbType.None)
                     {
                         Limb depthLimb = character.AnimController.GetLimb(wearable.DepthLimb);
                         if (depthLimb != null)
                         {
-                            depth = depthLimb.sprite.Depth - 0.000001f;
+                            depth = depthLimb.ActiveSprite.Depth - depthStep;
                         }
                     }
+                }
+                // Draw outer cloths on top of inner cloths.
+                if (wearable.WearableComponent.AllowedSlots.Contains(InvSlotType.OuterClothes))
+                {
+                    depth -= depthStep;
                 }
 
                 Color wearableColor = wearable.WearableComponent.Item.GetSpriteColor();
@@ -210,25 +349,26 @@ namespace Barotrauma
                     Scale, spriteEffect, depth);
             }
 
-            if (damageOverlayStrength > 0.0f && damagedSprite != null && !hideLimb)
+            if (damageOverlayStrength > 0.0f && DamagedSprite != null && !hideLimb)
             {
                 SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
-                float depth = sprite.Depth - 0.0000015f;
+                float depth = ActiveSprite.Depth - 0.0000015f;
 
-                damagedSprite.Draw(spriteBatch,
+                DamagedSprite.Draw(spriteBatch,
                     new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
-                    color * Math.Min(damageOverlayStrength / 50.0f, 1.0f), sprite.Origin,
+                    color * Math.Min(damageOverlayStrength / 50.0f, 1.0f), ActiveSprite.Origin,
                     -body.DrawRotation,
                     1.0f, spriteEffect, depth);
             }
 
-            if (!GameMain.DebugDraw) return;
-
-            if (pullJoint != null)
+            if (GameMain.DebugDraw)
             {
-                Vector2 pos = ConvertUnits.ToDisplayUnits(pullJoint.WorldAnchorB);
-                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.Red, true);
+                if (pullJoint != null)
+                {
+                    Vector2 pos = ConvertUnits.ToDisplayUnits(pullJoint.WorldAnchorB);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.Red, true);
+                }
             }
         }
 

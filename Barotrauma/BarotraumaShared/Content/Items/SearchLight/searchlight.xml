@@ -17,8 +17,7 @@
       showprojectileindicator="false"            
       springstiffnesslowskill="25" springstiffnesshighskill="25"
       springdampinglowskill="5" springdampinghighskill="5"
-      rotationspeedlowskill="0.5" rotationspeedhighskill="0.5"
-      hudtint="0.4,0.6,0.7,0.05">
+      rotationspeedlowskill="0.5" rotationspeedhighskill="0.5">
 
       <LightComponent LightColor="1.0,1.0,1.0,1.0" Flicker="0.0" range="2500" IsOn="true">
         <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="2.0,1.0"/>

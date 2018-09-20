@@ -156,7 +156,7 @@ namespace Barotrauma
             if (character.Info == null || character.Info.Job == null) return false;
             for (int i = 0; i < AppropriateJobs.Length; i++)
             {
-                if (character.Info.Job.Name.ToLowerInvariant() == AppropriateJobs[i].ToLowerInvariant()) return true;
+                if (character.Info.Job.Prefab.Identifier.ToLowerInvariant() == AppropriateJobs[i].ToLowerInvariant()) return true;
             }
             return false;
         }

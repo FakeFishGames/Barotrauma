@@ -60,6 +60,20 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        [Serialize(false, false)]
+        public bool AllowUIOverlap
+        {
+            get;
+            set;
+        }
+
+        [Serialize(-1, false)]
+        public int LinkUIToComponent
+        {
+            get;
+            set;
+        }
+
         [Serialize(0, false)]
         public int HudPriority
         {
@@ -213,7 +227,7 @@ namespace Barotrauma.Items.Components
 
         public virtual void AddToGUIUpdateList() { }
 
-        public virtual void UpdateHUD(Character character, float deltaTime) { }
+        public virtual void UpdateHUD(Character character, float deltaTime, Camera cam) { }
 
         private bool LoadElemProjSpecific(XElement subElement)
         {
@@ -228,7 +242,8 @@ namespace Barotrauma.Items.Components
 
                     Color? color = null;
                     if (subElement.Attribute("color") != null) color = subElement.GetAttributeColor("color", Color.White);
-                    string style = subElement.GetAttributeString("style", "");
+                    string style = subElement.Attribute("style") == null ?
+                        null : subElement.GetAttributeString("style", "");
 
                     guiFrame = new GUIFrame(RectTransform.Load(subElement, GUI.Canvas), style, color);
                     break;

@@ -17,6 +17,7 @@
       <Item identifier="polycarbonatebar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="690,256,64,64"/>
     <Sprite texture ="securitygear.png" sourcerect="68,0,60,31" depth="0.6"/>
 
     <Body width="52" height="17" density="40"/>
@@ -25,7 +26,7 @@
       <damagemodifier damagetype="Burn" armorsector="0.0,360.0" damagemultiplier="0.9"/>
       <damagemodifier damagetype="Blunt" armorsector="0.0,360.0" damagemultiplier="0.3" bleedingmultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="true"/>
       <damagemodifier damagetype="Slash" armorsector="0.0,360.0" damagemultiplier="0.1" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true"/>
-      <sprite texture="securitygear.png" limb="Torso" sourcerect="0,0,38,58" origin="0.52,0.48"/>
+      <sprite texture="securitygear.png" limb="Torso" sourcerect="0,0,38,58" origin="0.52,0.48" depthlimb="Head"/>
       <sprite texture="securitygear.png" limb="RightArm" sourcerect="41,0,21,21" origin="0.5,1.1"/>
     </Wearable>
   </Item>
@@ -46,7 +47,8 @@
       <Item identifier="polycarbonatebar"/>
       <Item identifier="polycarbonatebar"/>
     </Deconstruct>
-    
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,0,64,64"/>
     <Sprite texture ="securitygear.png" sourcerect="40,32,34,25" depth="0.6"/>
 
     <Body radius="12" density="50"/>
@@ -68,7 +70,8 @@
     <Price locationtype="Military" buyprice="50"/>
     <Price locationtype="City" buyprice="100"/>
     <Price locationtype="Outpost" buyprice="100"/>
-    
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,0,64,64"/>
     <Sprite texture = "securitygear.png" sourcerect="0,63,32,14" depth="0.6"/>
 
     <Body width="30" height="12" density="30"/>

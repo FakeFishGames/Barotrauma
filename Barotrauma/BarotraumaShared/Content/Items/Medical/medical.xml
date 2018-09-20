@@ -15,7 +15,8 @@
     <Price locationtype="Military" buyprice="70"/>
     <Price locationtype="City" buyprice="100"/>
     <Price locationtype="Outpost" buyprice="100"/>
-    
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,0,64,64"/>
     <Sprite texture ="med.png" sourcerect="0,0,25,5" depth="0.6"/>
 
     <Body width="25" height="5" density="20"/>
@@ -30,6 +31,7 @@
     </MeleeWeapon>
 
     <ItemContainer capacity="1" hideitems="true">
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,29,120,35"/>
       <Containable identifiers="chem"/>
     </ItemContainer>
 
@@ -89,7 +91,8 @@
     <Price locationtype="Military" buyprice="20"/>
     <Price locationtype="City" buyprice="30"/>
     <Price locationtype="Outpost" buyprice="30"/>
-    
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="639,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" color="0.2,0.2,0.2,1.0"/>
 
     <Body width="8" height="16" density="40"/>
@@ -116,10 +119,11 @@
     description="A mild stimulant which is used as an ingredient in the manufacture of various medicines."
     canuseonself="true">
     
-    <Price locationtype="Research" buyprice="20"/>
-    <Price locationtype="Military" buyprice="30"/>
-    <Price locationtype="City" buyprice="40"/>
-    
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="City" buyprice="30"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,256,64,64"/>
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6" />
 
     <Body width="8" height="17" density="20"/>
@@ -153,10 +157,11 @@
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical">
     
-    <Price locationtype="Research" buyprice="20"/>
-    <Price locationtype="Military" buyprice="30"/>
-    <Price locationtype="City" buyprice="40"/>
-    
+    <Price locationtype="Research" buyprice="15"/>
+    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="City" buyprice="25"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
     <Body width="8" height="17" density="10"/>
@@ -182,9 +187,9 @@
     Tags="smallitem,chem,medical"
     canuseonself="true">
     
-    <Price locationtype="Research" buyprice="20"/>
-    <Price locationtype="Military" buyprice="30"/>
-    <Price locationtype="City" buyprice="40"/>
+    <Price locationtype="Research" buyprice="15"/>
+    <Price locationtype="Military" buyprice="15"/>
+    <Price locationtype="City" buyprice="20"/>
     <Price locationtype="Outpost" buyprice="50"/>
     
     <ItemComponent>
@@ -194,6 +199,7 @@
       </StatusEffect>
     </ItemComponent>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,256,64,64"/>
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
     <Body width="8" height="7" density="10"/>
@@ -220,8 +226,9 @@
     
     <Price locationtype="Research" buyprice="20"/>
     <Price locationtype="Military" buyprice="30"/>
-    <Price locationtype="City" buyprice="40"/>
-    
+    <Price locationtype="City" buyprice="30"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="10"/>
@@ -250,6 +257,8 @@
     <Price locationtype="Military" buyprice="30"/>
     <Price locationtype="City" buyprice="40"/>
     
+    <!-- TODO: color -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="10"/>
@@ -284,7 +293,9 @@
     <Price locationtype="Research" buyprice="20"/>
     <Price locationtype="Military" buyprice="30"/>
     <Price locationtype="City" buyprice="40"/>
-    
+
+    <!-- TODO: color -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="10"/>
@@ -311,10 +322,11 @@
     Tags="smallitem,chem,medical"     
     description="A strong synaptic stimulant and cardiostimulant which is used as a preventative measure against critical condition. Should only be injected once every 30 seconds.">
     
-    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Research" buyprice="70"/>
     <Price locationtype="Military" buyprice="80"/>
     <Price locationtype="City" buyprice="100"/>
-    
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,256,64,64"/>
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6" />
 
     <Body width="8" height="16" density="20"/>
@@ -345,11 +357,12 @@
     Tags="smallitem,chem,medical"     
     description="Most commonly used for treating oxygen deprivation.">
     
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="80"/>
-    <Price locationtype="City" buyprice="100"/>
-    <Price locationtype="Outpost" buyprice="120"/>
-    
+    <Price locationtype="Research" buyprice="25"/>
+    <Price locationtype="Military" buyprice="25"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="100"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" />
 
     <Body width="8" height="16" density="20"/>
@@ -384,7 +397,8 @@
 
     <Price locationtype="Research" buyprice="150"/>
     <Price locationtype="Military" buyprice="200"/>
-    
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
@@ -412,15 +426,16 @@
     Tags="smallitem,chem,medical"   
     description="A potent muscle stimulant.">
 
-    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Research" buyprice="60"/>
     <Price locationtype="Military" buyprice="80"/>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,192,64,64"/>
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="15"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect tags="medical" type="OnUse" target="Character" SpeedMultiplier="1.5" setvalue="true" duration="60.0">
+      <StatusEffect tags="medical" type="OnUse" target="Character" SpeedMultiplier="1.3" setvalue="true" duration="60.0">
         <RequiredItem identifier="medicalsyringe" type="Container"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
@@ -439,10 +454,11 @@
     Tags="smallitem,chem,medical"   
     description="An antiparasitic drug used in the treatment of husk parasite infections. Might require higher dosage to cure the infection at later stages.">
 
-    <Price locationtype="Research" buyprice="300"/>
-    <Price locationtype="Military" buyprice="40"/>
+    <Price locationtype="Research" buyprice="375"/>
+    <Price locationtype="Military" buyprice="350"/>
     <Price locationtype="City" buyprice="500"/>
-    
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,256,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="10"/>
@@ -484,6 +500,7 @@
     Tags="smallitem,chem,medical"   
     description="A morbusine antidote.">
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="10"/>
@@ -510,6 +527,7 @@
     impacttolerance="8"
     description="A mildy toxic solution that slowly releases oxygen into the bloodstream when injected.">
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" />
 
     <Body width="8" height="16" density="20"/>
@@ -550,8 +568,8 @@
     <Price locationtype="City" buyprice="100"/>
     <Price locationtype="Outpost" buyprice="120"/>
 
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
     <InventoryIcon texture="Morphine_1.png"/>
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
 
@@ -597,8 +615,8 @@
     <Price locationtype="City" buyprice="100"/>
     <Price locationtype="Outpost" buyprice="120"/>
 
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
     <InventoryIcon texture="Fentanyl_Temp_01.png"/>
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
 
@@ -647,7 +665,8 @@
     <Price locationtype="City" buyprice="100"/>
     <Price locationtype="Outpost" buyprice="120"/>
 
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,256,64,64"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
 
@@ -688,8 +707,8 @@
     <Price locationtype="City" buyprice="100"/>
     <Price locationtype="Outpost" buyprice="120"/>
 
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
     <InventoryIcon texture="Saline_temp_01.png"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
 
@@ -727,8 +746,8 @@
     <Price locationtype="City" buyprice="100"/>
     <Price locationtype="Outpost" buyprice="120"/>
     
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
     <InventoryIcon texture="AntiNarc_temp_01.png"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
 
@@ -764,9 +783,10 @@
     Tags="smallitem,chem,explosive"
     impacttolerance="8">
     
-    <Price locationtype="Research" buyprice="30"/>
-    <Price locationtype="Military" buyprice="40"/>
-    
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="10"/>
@@ -803,11 +823,12 @@
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical">
 
-    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="Research" buyprice="30"/>
     <Price locationtype="Military" buyprice="30"/>
     <Price locationtype="City" buyprice="50"/>
     <Price locationtype="Outpost" buyprice="80"/>
-    
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
     <Body width="8" height="17" density="10"/>
@@ -833,9 +854,10 @@
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical">
     
-    <Price locationtype="Research" buyprice="30"/>
-    <Price locationtype="Military" buyprice="40"/>
-    
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="60"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
     <Body width="8" height="17" density="10"/>
@@ -863,6 +885,7 @@
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="Military" buyprice="80"/>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="25"/>
@@ -889,7 +912,7 @@
     Tags="smallitem,chem,medical"   
     description="Dormant eggs of the Europan lifeform colloquially referred to as 'husk parasite'.">
 
-    <Price locationtype="Research" buyprice="1000"/>
+    <Price locationtype="Research" buyprice="1200"/>
     
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
@@ -917,9 +940,10 @@
     Tags="smallitem,chem,medical"   
     description="A highly potent neurotoxin.">
     
-    <Price locationtype="Research" buyprice="500"/>
+    <Price locationtype="Research" buyprice="450"/>
     <Price locationtype="Military" buyprice="1000"/>
-    
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="10"/>
@@ -946,6 +970,7 @@
     Tags="smallitem,chem,medical"    
     impacttolerance="4">
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,256,64,64"/>
     <Sprite texture ="Content/Items/Medical/med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="25" height="5" density="10"/>
@@ -980,13 +1005,16 @@
     description="A devious poison with a delayed effect.">
     <!-- Can only be crafted. Direct counter to Sufforin is Liquid Oxygenite, though it's not strictly an antidote.
         Two injections to choke slightly faster than welding fuel. -->
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,256,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="10"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="Character" Health="-5.0">
+      <StatusEffect type="OnUse" target="Character">
         <RequiredItem identifier="medicalsyringe" type="Container"/>
+        <Affliction identifier="internaldamage" amount="0.5"/>
       </StatusEffect>
       <!-- Did You Know? If OxygenAvailable is too low, character will take -5 Oxygen loss per tick, otherwise they restore +10 oxygen. -->
       <StatusEffect tags="poison,sufforin" type="OnUse" target="Character" OxygenAvailable="-10000.0" duration="60.0" delay="20.0">

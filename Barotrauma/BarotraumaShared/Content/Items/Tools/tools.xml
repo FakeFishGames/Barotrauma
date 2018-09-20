@@ -8,11 +8,12 @@
     cargocontaineridentifier="metalcrate"
     description="One of the most crucial tools on board the submarine. Also works underwater.">
 
-    <Price locationtype="City" buyprice="100"/>
-    <Price locationtype="Research" buyprice="100"/>
-    <Price locationtype="Military" buyprice="100"/>
+    <Price locationtype="City" buyprice="140"/>
+    <Price locationtype="Research" buyprice="140"/>
+    <Price locationtype="Military" buyprice="140"/>
     <Price locationtype="Outpost" buyprice="200"/>
-    
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,64,64,64"/>
     <Sprite texture ="tools.png" sourcerect="0,17,41,17" depth="0.55"/>
 
     <!-- the item takes 10 seconds to break down in a deconstructor and turns into a polycarbonate bar, steel bar and aluminium -->
@@ -64,6 +65,7 @@
 
     <!-- one welding fuel or oxygen tank can be contained inside the welding tool -->    
     <ItemContainer capacity="1" hideitems="false" itempos="-17,-21">
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27"/>
       <Containable identifiers="weldingfueltank,oxygentank,oxygenitetank"/>
     </ItemContainer>
   </Item>
@@ -76,9 +78,9 @@
     cargocontaineridentifier="metalcrate"
     description="Cuts through various materials using a jet of ionized oxygen.">
 
-    <Price locationtype="City" buyprice="100"/>
-    <Price locationtype="Research" buyprice="100"/>
-    <Price locationtype="Military" buyprice="100"/>
+    <Price locationtype="City" buyprice="140"/>
+    <Price locationtype="Research" buyprice="140"/>
+    <Price locationtype="Military" buyprice="140"/>
     <Price locationtype="Outpost" buyprice="200"/>
     
     <Deconstruct time="10">
@@ -86,7 +88,8 @@
       <Item identifier="steelbar"/>
       <Item identifier="aluminium"/>
     </Deconstruct>
-    
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,0,64,64"/>
     <Sprite texture ="tools.png" sourcerect="0,0,41,16" depth="0.55"/>
 
     <Body width="41" height="16" density="40"/>
@@ -122,6 +125,7 @@
     </RepairTool>
 
     <ItemContainer capacity="1" hideitems="false" itempos="9,-15">
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27"/>
       <Containable identifiers="weldingfueltank,oxygentank,oxygenitetank"/>
     </ItemContainer>
   </Item>
@@ -142,6 +146,7 @@
       <Item identifier="steelbar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,0,64,64"/>
     <Sprite texture ="tools.png" sourcerect="52,31,12,33" depth="0.55"/>
 
     <Body width="12" height="33" density="5"/>
@@ -165,17 +170,20 @@
     cargocontaineridentifier="metalcrate"
     description="A handheld carbon dioxide extinguisher.">
 
-    <Price locationtype="City" buyprice="100"/>
-    <Price locationtype="Research" buyprice="100"/>
-    <Price locationtype="Military" buyprice="100"/>
+    <Price locationtype="City" buyprice="140"/>
+    <Price locationtype="Research" buyprice="140"/>
+    <Price locationtype="Military" buyprice="150"/>
     <Price locationtype="Outpost" buyprice="200"/>
 
     <Deconstruct time="10">
       <Item identifier="polycarbonatebar"/>
       <Item identifier="steelbar"/>
+      <Item identifier="potassium" copycondition="true" mincondition="0.1"/>
+      <Item identifier="chlorine" copycondition="true" mincondition="0.1"/>
     </Deconstruct>
 
-    <Sprite texture ="extinguisher.png" depth="0.55" sourcerect="0,0,34,64" origin="0.4,0.5"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,0,64,64"/>
+    <Sprite texture="Content/Items/InventoryIconAtlas.png" depth="0.55" sourcerect="0,0,64,64"/>
 
     <Body radius="10" height="45" density="5"/>
 
@@ -199,15 +207,16 @@
     Tags="smallitem"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="City" buyprice="10"/>
-    <Price locationtype="Research" buyprice="10"/>
-    <Price locationtype="Military" buyprice="10"/>
-    <Price locationtype="Outpost" buyprice="20"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="100"/>
 
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,0,64,64"/>
     <Sprite texture ="tools.png" sourcerect="0,58,31,6" depth="0.55"/>
 
     <Body width="31" height="6" density="50"/>
@@ -223,22 +232,23 @@
     Tags="smallitem"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="City" buyprice="10"/>
-    <Price locationtype="Research" buyprice="10"/>
-    <Price locationtype="Military" buyprice="10"/>
-    <Price locationtype="Outpost" buyprice="20"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="100"/>
 
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,0,64,64"/>
     <Sprite texture ="tools.png" sourcerect="0,50,26,7" depth="0.55"/>
 
     <Body width="30" height="7" density="50"/>
 
     <MeleeWeapon slots="Any,RightHand,LeftHand"
           aimpos="50,0" handle1="-5,0" holdangle="30" reload="1.0">
-      <Attack damage="5" structuredamage="5" stun="0.2" sound="Content/Items/Weapons/smack.ogg"/>
+      <Attack damage="5" structuredamage="5" stun="0.2" sound="Content/Items/Weapons/smack2.ogg"/>
     </MeleeWeapon>
   </Item>
 
@@ -249,22 +259,23 @@
     Tags="smallitem"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="City" buyprice="15"/>
-    <Price locationtype="Research" buyprice="15"/>
-    <Price locationtype="Military" buyprice="15"/>
-    <Price locationtype="Outpost" buyprice="20"/>
+    <Price locationtype="City" buyprice="80"/>
+    <Price locationtype="Research" buyprice="80"/>
+    <Price locationtype="Military" buyprice="80"/>
+    <Price locationtype="Outpost" buyprice="100"/>
 
     <Deconstruct time="10">
       <Item identifier="steelbar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,0,64,64"/>
     <Sprite texture ="tools.png" sourcerect="0,65,64,12" depth="0.55"/>
 
     <Body width="60" height="10" density="50"/>
 
     <MeleeWeapon slots="RightHand+LeftHand,Any"
           controlpose="true" aimpos="50,0" handle1="-5,0" handle2="-3,5" holdangle="30" reload="1.7">
-      <Attack bluntdamage="20" structuredamage="10" stun="0.6" sound="Content/Items/Weapons/smack.ogg"/>
+      <Attack bluntdamage="20" structuredamage="10" stun="0.6" sound="Content/Items/Weapons/smack2.ogg"/>
     </MeleeWeapon>
   </Item>
 
@@ -275,16 +286,17 @@
     Tags="smallitem,sonar"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="City" buyprice="50"/>
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="50"/>
-    <Price locationtype="Outpost" buyprice="100"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Research" buyprice="100"/>
+    <Price locationtype="Military" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="150"/>
 
     <Deconstruct time="15">
       <Item identifier="copperbar"/>
       <Item identifier="polycarbonatebar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,0,64,64"/>
     <Sprite texture ="tools.png" sourcerect="42,0,22,9" depth="0.55"/>
 
     <Body width="31" height="6" density="40"/>
@@ -304,6 +316,7 @@
     </Sonar>
 
     <ItemContainer capacity="1" hideitems="true">
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31"/>
       <Containable identifiers="batterycell,fulguriumbatterycell">
         <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true"/>
       </Containable>
@@ -317,10 +330,10 @@
     Tags="smallitem,sonar"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="City" buyprice="50"/>
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="50"/>
-    <Price locationtype="Outpost" buyprice="100"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Research" buyprice="100"/>
+    <Price locationtype="Military" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="150"/>
 
     <Deconstruct time="15">
       <Item identifier="copperbar"/>
@@ -340,6 +353,7 @@
     </LightComponent>
 
     <ItemContainer capacity="1" hideitems="true">
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31"/>
       <Containable identifiers="batterycell,fulguriumbatterycell">
         <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true"/>
       </Containable>
@@ -353,10 +367,10 @@
     Tags="smallitem"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="City" buyprice="20"/>
-    <Price locationtype="Research" buyprice="20"/>
-    <Price locationtype="Military" buyprice="20"/>
-    <Price locationtype="Outpost" buyprice="40"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="80"/>
 
     <Deconstruct time="15">
       <Item identifier="copperbar"/>
@@ -369,13 +383,14 @@
 
     <Holdable slots="Any,RightHand,LeftHand,Head" holdpos="30,-15" aimpos="100,0" handle1="-13,0" handle2="-13,0">
       <StatusEffect type="OnActive" target="Contained" Condition="-0.2"/>
+      <!-- the child LightComponent is only active when the Holdable is active, i.e. when the item is being held -->
+      <LightComponent LightColor="1.0,1.0,1.0,1.0" Flicker="0.1" range="800" powerconsumption="10" IsOn="true">
+        <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="2.0,1.0"/>
+      </LightComponent>
     </Holdable>
-
-    <LightComponent LightColor="1.0,1.0,1.0,1.0" Flicker="0.1" range="800" powerconsumption="10" IsOn="true">
-      <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="2.0,1.0"/>
-    </LightComponent>
     
     <ItemContainer capacity="1" hideitems="true">
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31"/>
       <Containable identifiers="batterycell,fulguriumbatterycell">
         <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true"/>
       </Containable>
@@ -402,6 +417,7 @@
       <Item identifier="aluminium" mincondition="0.5" maxcondition="0.9" outcondition="0.1"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,0,64,64"/>
     <Sprite texture ="tools.png" sourcerect="0,38,21,7" depth="0.55"/>
 
     <Body width="21" height="7" density="12"/>

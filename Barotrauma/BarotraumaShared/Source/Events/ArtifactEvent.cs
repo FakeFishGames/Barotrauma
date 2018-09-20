@@ -63,11 +63,10 @@ namespace Barotrauma
 
             spawnPending = true;
         }
-
+        
         private void SpawnItem()
         {
             item = new Item(itemPrefab, spawnPos, null);
-            item.MoveWithLevel = true;
             item.body.FarseerBody.IsKinematic = true;
 
             //try to find a nearby artifact holder (or any alien itemcontainer) and place the artifact inside it
@@ -109,7 +108,7 @@ namespace Barotrauma
             switch (state)
             {
                 case 0:
-                    if (item.ParentInventory!=null) item.body.FarseerBody.IsKinematic = false;
+                    if (item.ParentInventory != null) item.body.FarseerBody.IsKinematic = false;                    
                     if (item.CurrentHull == null) return;
 
                     state = 1;

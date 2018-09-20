@@ -342,21 +342,15 @@ namespace Barotrauma
                 GameMain.SubEditorScreen.Select();
             }));
 
-            commands.Add(new Command("editcharacter", "", (string[] args) =>
-            {
-                GameMain.CharacterEditorScreen.Select();
-            }));
-
             commands.Add(new Command("editparticles", "", (string[] args) =>
             {
                 GameMain.ParticleEditorScreen.Select();
             }));
 
-            commands.Add(new Command("editanimations|animedit|animationeditor|animeditor|animationedit", "animationeditor: Edit animations.", (string[] args) =>
+            commands.Add(new Command("charactereditor|editcharacter|editanimations|animedit|animationeditor|animeditor|animationedit", "charactereditor: Edit characters, animations, ragdolls....", (string[] args) =>
             {
-                GameMain.AnimationEditorScreen.Select();
+                GameMain.CharacterEditorScreen.Select();
             }));
-
 
             commands.Add(new Command("control|controlcharacter", "control [character name]: Start controlling the specified character.", (string[] args) =>
             {
@@ -461,9 +455,9 @@ namespace Barotrauma
                         NewMessage("Removed " + me.Name + " (simposition " + me.SimPosition + ")", Color.Orange);
                         MapEntity.mapEntityList.RemoveAt(i);
                     }
-                    else if (me.MoveWithLevel)
+                    else if (!me.ShouldBeSaved)
                     {
-                        NewMessage("Removed " + me.Name + " (MoveWithLevel==true)", Color.Orange);
+                        NewMessage("Removed " + me.Name + " (!ShouldBeSaved)", Color.Orange);
                         MapEntity.mapEntityList.RemoveAt(i);
                     }
                     else if (me is Item)

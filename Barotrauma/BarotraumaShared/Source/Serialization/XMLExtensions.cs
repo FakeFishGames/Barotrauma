@@ -75,7 +75,7 @@ namespace Barotrauma
             return String.IsNullOrEmpty(value) ? defaultValue : value;
         }
 
-        public static string[] GetAttributeStringArray(this XElement element, string name, string[] defaultValue, bool trim = true)
+        public static string[] GetAttributeStringArray(this XElement element, string name, string[] defaultValue, bool trim = true, bool convertToLowerInvariant = false)
         {
             if (element?.Attribute(name) == null) return defaultValue;
 
@@ -83,6 +83,14 @@ namespace Barotrauma
             if (string.IsNullOrEmpty(stringValue)) return defaultValue;
 
             string[] splitValue = stringValue.Split(',');
+
+            if (convertToLowerInvariant)
+            {
+                for (int i = 0; i < splitValue.Length; i++)
+                {
+                    splitValue[i] = splitValue[i].ToLowerInvariant();
+                }
+            }
             if (trim)
             {
                 for (int i = 0; i < splitValue.Length; i++)
@@ -429,6 +437,14 @@ namespace Barotrauma
             for (int i = 0; i < 4 && i < strComponents.Length; i++)
             {
                 float.TryParse(strComponents[i], NumberStyles.Float, CultureInfo.InvariantCulture, out components[i]);
+            }
+
+            if (components.Any(c => c > 1.0f))
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    components[i] = components[i] / 255.0f;
+                }
             }
 
             return new Color(components[0], components[1], components[2], components[3]);

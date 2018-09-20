@@ -204,22 +204,16 @@ namespace Barotrauma.Items.Components
                 Math.Sign(dockingTarget.item.WorldPosition.X - item.WorldPosition.X) :
                 Math.Sign(dockingTarget.item.WorldPosition.Y - item.WorldPosition.Y);
             dockingTarget.dockingDir = -dockingDir;
-            
 
-            foreach (WayPoint wp in WayPoint.WayPointList)
+            if (door != null && dockingTarget.door != null)
             {
-                if (wp.Submarine != item.Submarine || wp.SpawnType != SpawnType.Path) continue;
+                WayPoint myWayPoint = WayPoint.WayPointList.Find(wp => door.LinkedGap == wp.ConnectedGap);
+                WayPoint targetWayPoint = WayPoint.WayPointList.Find(wp => dockingTarget.door.LinkedGap == wp.ConnectedGap);
 
-                if (!Submarine.RectContains(item.Rect, wp.Position)) continue;
-
-                foreach (WayPoint wp2 in WayPoint.WayPointList)
+                if (myWayPoint != null && targetWayPoint != null)
                 {
-                    if (wp2.Submarine != dockingTarget.item.Submarine || wp2.SpawnType != SpawnType.Path) continue;
-
-                    if (!Submarine.RectContains(dockingTarget.item.Rect, wp2.Position)) continue;
-
-                    wp.linkedTo.Add(wp2);
-                    wp2.linkedTo.Add(wp);
+                    myWayPoint.linkedTo.Add(targetWayPoint);
+                    targetWayPoint.linkedTo.Add(myWayPoint);
                 }
             }
             
@@ -507,29 +501,31 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0; i < 2; i++)
             {
-                Gap gap = i == 0 ? door?.LinkedGap : dockingTarget?.door?.LinkedGap;
-                if (gap == null || gap.linkedTo.Count == 2) continue;
-                
+                Gap doorGap = i == 0 ? door?.LinkedGap : dockingTarget?.door?.LinkedGap;
+                if (doorGap == null) continue;
+                doorGap.DisableHullRechecks = true;
+                if (doorGap.linkedTo.Count >= 2) continue;
+
                 if (IsHorizontal)
                 {
                     if (item.WorldPosition.X < dockingTarget.item.WorldPosition.X)
                     {
-                        if (!gap.linkedTo.Contains(hulls[0])) gap.linkedTo.Add(hulls[0]);
+                        if (!doorGap.linkedTo.Contains(hulls[0])) doorGap.linkedTo.Add(hulls[0]);
                     }
                     else
                     {
-                        if (!gap.linkedTo.Contains(hulls[1])) gap.linkedTo.Add(hulls[1]);
+                        if (!doorGap.linkedTo.Contains(hulls[1])) doorGap.linkedTo.Add(hulls[1]);
                     }
                 }
                 else
                 {
                     if (item.WorldPosition.Y < dockingTarget.item.WorldPosition.Y)
                     {
-                        if (!gap.linkedTo.Contains(hulls[0])) gap.linkedTo.Add(hulls[0]);
+                        if (!doorGap.linkedTo.Contains(hulls[0])) doorGap.linkedTo.Add(hulls[0]);
                     }
                     else
                     {
-                        if (!gap.linkedTo.Contains(hulls[1])) gap.linkedTo.Add(hulls[1]);
+                        if (!doorGap.linkedTo.Contains(hulls[1])) doorGap.linkedTo.Add(hulls[1]);
                     }
                 }                
             }
@@ -545,25 +541,19 @@ namespace Barotrauma.Items.Components
 
             dockingTarget.item.Submarine.DockedTo.Remove(item.Submarine);
             item.Submarine.DockedTo.Remove(dockingTarget.item.Submarine);
-            
-            //remove all waypoint links between this sub and the dockingtarget
-            foreach (WayPoint wp in WayPoint.WayPointList)
+
+            if (door != null && dockingTarget.door != null)
             {
-                if (wp.Submarine != item.Submarine || wp.SpawnType != SpawnType.Path) continue;
+                WayPoint myWayPoint = WayPoint.WayPointList.Find(wp => door.LinkedGap == wp.ConnectedGap);
+                WayPoint targetWayPoint = WayPoint.WayPointList.Find(wp => dockingTarget.door.LinkedGap == wp.ConnectedGap);
 
-                for (int i = wp.linkedTo.Count - 1; i >= 0; i--)
+                if (myWayPoint != null && targetWayPoint != null)
                 {
-                    var wp2 = wp.linkedTo[i] as WayPoint;
-                    if (wp2 == null) continue;
-
-                    if (wp.Submarine == dockingTarget.item.Submarine)
-                    {
-                        wp.linkedTo.RemoveAt(i);
-                        wp2.linkedTo.Remove(wp);
-                    }
+                    myWayPoint.linkedTo.Remove(targetWayPoint);
+                    targetWayPoint.linkedTo.Remove(myWayPoint);
                 }
             }
-
+            
             item.linkedTo.Clear();
 
             docked = false;

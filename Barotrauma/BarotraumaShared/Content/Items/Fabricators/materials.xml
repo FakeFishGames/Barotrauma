@@ -18,6 +18,7 @@
       <Item identifier="ironpowder"/>     
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>
@@ -34,15 +35,16 @@
     canbepicked="true"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="Research" buyprice="100"/>
-    <Price locationtype="Military" buyprice="100"/>
-    <Price locationtype="City" buyprice="500"/>
+    <Price locationtype="Research" buyprice="110"/>
+    <Price locationtype="Military" buyprice="115"/>
+    <Price locationtype="City" buyprice="200"/>
 
     <Deconstruct time="5">
       <Item identifier="uraniumpowder"/>
       <Item identifier="uraniumpowder"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,128,64,64"/>
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="60"/>
@@ -59,11 +61,12 @@
     canbepicked="true"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="50"/>
-    <Price locationtype="City" buyprice="50"/>
-    <Price locationtype="Outpost" buyprice="100"/>
-    
+    <Price locationtype="Research" buyprice="5"/>
+    <Price locationtype="Military" buyprice="5"/>
+    <Price locationtype="City" buyprice="5"/>
+    <Price locationtype="Outpost" buyprice="10"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,128,64,64"/>
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>
@@ -80,11 +83,13 @@
     canbepicked="true"
     cargocontaineridentifier="metalcrate">
 
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="50"/>
-    <Price locationtype="City" buyprice="50"/>
-    <Price locationtype="Outpost" buyprice="100"/>
-    
+    <Price locationtype="Research" buyprice="40"/>
+    <Price locationtype="Military" buyprice="40"/>
+    <Price locationtype="City" buyprice="40"/>
+    <Price locationtype="Outpost" buyprice="60"/>
+
+    <!-- TODO: color-->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="895,128,64,64"/>
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="20"/>
@@ -103,6 +108,7 @@
 
     <Price locationtype="Research" buyprice="200"/>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,320,64,64"/>
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="60"/>
@@ -129,7 +135,8 @@
     canbepicked="true">
 
     <Price locationtype="Research" buyprice="200"/>
-    
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,128,64,64"/>
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>

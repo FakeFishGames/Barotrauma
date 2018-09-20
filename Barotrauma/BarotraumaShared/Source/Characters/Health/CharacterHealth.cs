@@ -78,6 +78,8 @@ namespace Barotrauma
 
         private readonly Character character;
 
+        private float crushDepth;
+
         private float vitality;
         protected float minVitality, maxVitality;
 
@@ -100,6 +102,11 @@ namespace Barotrauma
         public bool IsUnconscious
         {
             get { return vitality <= 0.0f; }
+        }
+
+        public float ChrushDepth 
+        {
+            get { return crushDepth; }
         }
 
         public float Vitality
@@ -195,11 +202,13 @@ namespace Barotrauma
         public CharacterHealth(XElement element, Character character)
             : this(character) 
         {
+            crushDepth = element.GetAttributeFloat("crushdepth", float.NegativeInfinity);
+
             maxVitality = element.GetAttributeFloat("vitality", 100.0f);
             vitality    = maxVitality;
 
             DoesBleed               = element.GetAttributeBool("doesbleed", true);
-            UseBloodParticles       = element.GetAttributeBool("usebloodparticles", true);
+            UseBloodParticles       = element.GetAttributeBool("usebloodparticles", DoesBleed);
             UseHealthWindow         = element.GetAttributeBool("usehealthwindow", false);
 
             minVitality = (character.ConfigPath == Character.HumanConfigFile) ? -100.0f : 0.0f;
@@ -217,6 +226,11 @@ namespace Barotrauma
         }
 
         partial void InitProjSpecific(Character character);
+
+        public IEnumerable<Affliction> GetAllAfflictions()
+        {
+            return afflictions.Concat(limbHealths.SelectMany(lh => lh.Afflictions).ToList());
+        }
 
         public Affliction GetAffliction(string afflictionType, bool allowLimbAfflictions = true)
         {

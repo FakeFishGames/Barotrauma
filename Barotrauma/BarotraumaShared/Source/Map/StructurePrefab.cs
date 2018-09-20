@@ -54,6 +54,13 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(false, false)]
+        public bool AllowAttachItems
+        {
+            get;
+            private set;
+        }
+
         [Serialize(100.0f, false)]
         public float Health
         {

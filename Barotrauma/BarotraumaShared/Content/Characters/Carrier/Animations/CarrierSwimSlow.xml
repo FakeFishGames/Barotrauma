@@ -1,0 +1,13 @@
+﻿<CarrierSwimSlow
+  AnimationType="SwimSlow"
+  speed="4"
+  waveamplitude="0"
+  wavelength="0"
+  steertorque="25"
+  flip="True"
+  mirror="True"
+  rotatetowardsmovement="False"
+  footangle="NaN"
+  headangle="270"
+  torsoangle="NaN"
+  animationtype="SwimSlow" />

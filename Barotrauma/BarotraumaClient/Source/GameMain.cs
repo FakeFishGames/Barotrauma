@@ -13,6 +13,7 @@ using System.Linq;
 using System.Reflection;
 using GameAnalyticsSDK.Net;
 using System.IO;
+using System.Threading;
 
 namespace Barotrauma
 {
@@ -35,9 +36,8 @@ namespace Barotrauma
         public static SteamWorkshopScreen SteamWorkshopScreen;
 
         public static SubEditorScreen         SubEditorScreen;
-        public static CharacterEditorScreen   CharacterEditorScreen;
         public static ParticleEditorScreen  ParticleEditorScreen;
-        public static AnimationEditorScreen AnimationEditorScreen;
+        public static CharacterEditorScreen CharacterEditorScreen;
 
         public static Lights.LightManager LightManager;
 
@@ -82,6 +82,8 @@ namespace Barotrauma
             get;
             private set;
         }
+
+        private static bool FullscreenOnTabIn;
 
         public static WindowMode WindowMode
         {
@@ -244,7 +246,36 @@ namespace Barotrauma
             TitleScreen = new LoadingScreen(GraphicsDevice);
 
             loadingCoroutine = CoroutineManager.StartCoroutine(Load());
+
+            var myForm = (System.Windows.Forms.Form)System.Windows.Forms.Form.FromHandle(Window.Handle);
+            myForm.Deactivate += new EventHandler(HandleDefocus);
+            myForm.Activated += new EventHandler(HandleFocus);
         }
+
+        private void HandleDefocus(object sender, EventArgs e)
+        {
+            if (GraphicsDeviceManager.IsFullScreen && GraphicsDeviceManager.HardwareModeSwitch)
+            {
+                GraphicsDeviceManager.IsFullScreen = false;
+                GraphicsDeviceManager.ApplyChanges();
+                FullscreenOnTabIn = true;
+                Thread.Sleep(500);
+            }
+        }
+
+        private void HandleFocus(object sender, EventArgs e)
+        {
+            if (FullscreenOnTabIn)
+            {
+                GraphicsDeviceManager.HardwareModeSwitch = true;
+                GraphicsDeviceManager.IsFullScreen = true;
+                GraphicsDeviceManager.ApplyChanges();
+                FullscreenOnTabIn = false;
+                Thread.Sleep(500);
+            }
+        }
+
+
 
         private void InitUserStats()
         {
@@ -328,6 +359,14 @@ namespace Barotrauma
             TitleScreen.LoadState = 10.0f;
         yield return CoroutineStatus.Running;
 
+            StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
+            TitleScreen.LoadState = 15.0f;
+        yield return CoroutineStatus.Running;
+
+            ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
+            TitleScreen.LoadState = 30.0f;
+        yield return CoroutineStatus.Running;
+
             JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
             // Add any missing jobs from the prefab into Config.JobNamePreferences.
             foreach (JobPrefab job in JobPrefab.List)
@@ -336,14 +375,6 @@ namespace Barotrauma
             }
 
             NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
-
-            StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
-            TitleScreen.LoadState = 20.0f;
-        yield return CoroutineStatus.Running;
-
-            ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
-            TitleScreen.LoadState = 30.0f;
-        yield return CoroutineStatus.Running;
 
             ItemAssemblyPrefab.LoadAll();
             TitleScreen.LoadState = 35.0f;
@@ -386,9 +417,8 @@ namespace Barotrauma
             }
 
             SubEditorScreen         =   new SubEditorScreen(Content);
-            CharacterEditorScreen   =   new CharacterEditorScreen();
             ParticleEditorScreen    =   new ParticleEditorScreen();
-            AnimationEditorScreen   =   new AnimationEditorScreen();
+            CharacterEditorScreen   =   new CharacterEditorScreen();
 
         yield return CoroutineStatus.Running;
 

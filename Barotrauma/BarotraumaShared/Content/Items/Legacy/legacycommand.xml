@@ -13,16 +13,24 @@
       <RequiredItem identifier="screwdriver" type="equipped"/>
     </Repairable>
 
-    <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10">
-      <GuiFrame relativesize="0.5,0.7" anchor="Center" style="ItemUI"/>
+    <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10" linkuitocomponent="2">
+      <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" style="OuterGlow" color="0,0,0,0.8" absoluteoffset="30,0"/>
       <StatusEffect type="InWater" target="This" condition="-1.0"/>
+      <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap1.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap2.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap3.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap4.ogg" range="500" loop="false"/>
     </Steering>
 
-    <Sonar canbeselected = "true" powerconsumption="100" displaybordersize="0.2">
-      <GuiFrame relativesize="0.5,0.7" anchor="Center" style="ItemUI" color="0,0,0,0"/>
+    <Sonar canbeselected="true" powerconsumption="100" displaybordersize="-0.1">
+      <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" absoluteoffset="30,0"/>
       <sound file="Content/Items/Command/sonarPing.ogg" type="OnUse" range="4000.0"/>
+      <sound file="Content/Items/Command/sonarPing2.ogg" type="OnUse" range="4000.0"/>
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5"/>
+      <DirectionalPingCircle texture="Content/Items/Command/directionalPingCircle.png" origin="0.0,0.5"/>
       <ScreenOverlay texture="Content/Items/Command/sonarOverlay.png" origin="0.5,0.5"/>
+      <ScreenBackground texture="Content/Items/Command/sonarBackground.png" origin="0.5,0.5"/>
       <Blip texture="Content/Items/Command/sonarBlip.png" origin="0.5,0.5"/>
     </Sonar>
 
@@ -49,11 +57,18 @@
       <RequiredItem identifier="screwdriver" type="equipped"/>
     </Repairable>
 
-    <Sonar canbeselected = "true" powerconsumption="100" displaybordersize="0.2">
-      <GuiFrame relativesize="0.5,0.7" anchor="Center" style="ItemUI" color="0,0,0,0"/>
-      <StatusEffect type="InWater" target="This" condition="-1.0"/>
+    <Sonar canbeselected="true" powerconsumption="100" displaybordersize="-0.1">
+      <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" absoluteoffset="30,0"/>
+      <sound file="Content/Items/Command/sonarPing.ogg" type="OnUse" range="4000.0"/>
+      <sound file="Content/Items/Command/sonarPing2.ogg" type="OnUse" range="4000.0"/>
+      <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap1.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap2.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap3.ogg" range="500" loop="false"/>
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5"/>
+      <DirectionalPingCircle texture="Content/Items/Command/directionalPingCircle.png" origin="0.0,0.5"/>
       <ScreenOverlay texture="Content/Items/Command/sonarOverlay.png" origin="0.5,0.5"/>
+      <ScreenBackground texture="Content/Items/Command/sonarBackground.png" origin="0.5,0.5"/>
       <Blip texture="Content/Items/Command/sonarBlip.png" origin="0.5,0.5"/>
     </Sonar>
 

@@ -10,6 +10,10 @@ namespace Barotrauma
 {
     abstract partial class MapEntity : Entity
     {
+        // TODO: Remove from the release.
+        [Serialize(1f, false), Editable(0.1f, 10f, ToolTip = "Development feature. Not saved. Does not scale the colliders or anything. Only the sprite.")]
+        public float SpriteScale { get; set; } = 1;
+
         protected static Vector2 selectionPos = Vector2.Zero;
         protected static Vector2 selectionSize = Vector2.Zero;
 
@@ -65,6 +69,11 @@ namespace Barotrauma
                     selectionPos = Vector2.Zero;
                 }
             }
+        }
+
+        public virtual bool SelectableInEditor
+        {
+            get { return true; }
         }
 
         public static bool SelectedAny
@@ -187,7 +196,7 @@ namespace Barotrauma
                             int i = 0;
                             while (i < highlightedEntities.Count &&
                                 e.Sprite != null &&
-                                (highlightedEntities[i].Sprite == null || highlightedEntities[i].Sprite.Depth < e.Sprite.Depth))
+                                (highlightedEntities[i].Sprite == null || highlightedEntities[i].SpriteDepth < e.SpriteDepth))
                             {
                                 i++;
                             }
@@ -554,6 +563,42 @@ namespace Barotrauma
         }
 
         public virtual void UpdateEditing(Camera cam) { }
+
+        protected static void PositionEditingHUD()
+        {
+            int maxHeight = 100;
+            if (Screen.Selected == GameMain.SubEditorScreen)
+            {
+                editingHUD.RectTransform.SetPosition(Anchor.TopRight);
+                editingHUD.RectTransform.AbsoluteOffset = new Point(0, GameMain.SubEditorScreen.TopPanel.Rect.Bottom);
+                maxHeight = (GameMain.GraphicsHeight - GameMain.SubEditorScreen.EntityMenu.Rect.Height) - GameMain.SubEditorScreen.TopPanel.Rect.Bottom * 2 - 20;
+            }
+            else
+            {
+                editingHUD.RectTransform.SetPosition(Anchor.TopRight);
+                editingHUD.RectTransform.RelativeOffset = new Vector2(0.0f, (HUDLayoutSettings.InventoryAreaUpper.Bottom + 10.0f) / (editingHUD.RectTransform.Parent ?? GUI.Canvas).Rect.Height);
+                maxHeight = HUDLayoutSettings.InventoryAreaLower.Bottom - HUDLayoutSettings.InventoryAreaLower.Y - 10;
+            }
+
+            var listBox = editingHUD.GetChild<GUIListBox>();
+            if (listBox != null)
+            {
+                int padding = 20;
+                int contentHeight = 0;
+                foreach (GUIComponent child in listBox.Content.Children)
+                {
+                    contentHeight += child.Rect.Height + listBox.Spacing;
+                    child.RectTransform.MaxSize = new Point(int.MaxValue, child.Rect.Height);
+                    child.RectTransform.MinSize = new Point(0, child.Rect.Height);
+                }
+
+                editingHUD.RectTransform.Resize(
+                    new Point(
+                        editingHUD.RectTransform.NonScaledSize.X, 
+                        MathHelper.Clamp(contentHeight + padding * 2, 50, maxHeight)), resizeChildren: false);
+                listBox.RectTransform.Resize(new Point(listBox.RectTransform.NonScaledSize.X, editingHUD.RectTransform.NonScaledSize.Y - padding * 2), resizeChildren: false);
+            }
+        }
 
         public virtual void DrawEditing(SpriteBatch spriteBatch, Camera cam) { }
 

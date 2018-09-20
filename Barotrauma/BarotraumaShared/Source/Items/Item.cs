@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -29,7 +30,7 @@ namespace Barotrauma
         const float MaxVel = 64.0f;
 
         public static List<Item> ItemList = new List<Item>();
-        private ItemPrefab prefab;
+        public ItemPrefab Prefab => prefab as ItemPrefab;
 
         public static bool ShowLinks = true;
         
@@ -47,7 +48,7 @@ namespace Barotrauma
 
         public PhysicsBody body;
 
-        public readonly XElement staticBodyConfig;
+        public readonly XElement StaticBodyConfig;
         
         private Vector2 lastSentPos;
         private bool prevBodyAwake;
@@ -108,15 +109,7 @@ namespace Barotrauma
             get;
             private set;
         }
-
-        public override bool SelectableInEditor
-        {
-            get
-            {
-                return parentInventory == null && (body == null || body.Enabled);
-            }
-        }
-        
+                
         public override string Name
         {
             get { return prefab.Name; }
@@ -132,17 +125,17 @@ namespace Barotrauma
 
         public float ImpactTolerance
         {
-            get { return prefab.ImpactTolerance; }
+            get { return Prefab.ImpactTolerance; }
         }
         
         public float InteractDistance
         {
-            get { return prefab.InteractDistance; }
+            get { return Prefab.InteractDistance; }
         }
 
         public float InteractPriority
         {
-            get { return prefab.InteractPriority; }
+            get { return Prefab.InteractPriority; }
         }
 
         public override Vector2 Position
@@ -204,10 +197,10 @@ namespace Barotrauma
                 if (GameMain.Client != null) return;
 #endif
                 if (!MathUtils.IsValid(value)) return;
-                if (prefab.Indestructible) return;
+                if (Prefab.Indestructible) return;
 
                 float prev = condition;
-                condition = MathHelper.Clamp(value, 0.0f, prefab.Health);
+                condition = MathHelper.Clamp(value, 0.0f, Prefab.Health);
                 if (condition == 0.0f && prev > 0.0f)
                 {
                     ApplyStatusEffects(ActionType.OnBroken, 1.0f, null);
@@ -217,9 +210,11 @@ namespace Barotrauma
                     }
                 }
                 
+                SetActiveSprite();
+
                 if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && lastSentCondition != condition)
                 {
-                    if (Math.Abs(lastSentCondition - condition) > 1.0f || condition == 0.0f || condition == prefab.Health)
+                    if (Math.Abs(lastSentCondition - condition) > 1.0f || condition == 0.0f || condition == Prefab.Health)
                     {
                         GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
                         lastSentCondition = condition;
@@ -253,17 +248,17 @@ namespace Barotrauma
 
         public bool FireProof
         {
-            get { return prefab.FireProof; }
+            get { return Prefab.FireProof; }
         }
 
         public bool WaterProof
         {
-            get { return prefab.WaterProof; }
+            get { return Prefab.WaterProof; }
         }
 
         public bool CanUseOnSelf
         {
-            get { return prefab.CanUseOnSelf; }
+            get { return Prefab.CanUseOnSelf; }
         }
 
         public bool InWater
@@ -287,14 +282,9 @@ namespace Barotrauma
             private set;
         } = new List<Item>();
 
-        public ItemPrefab Prefab
-        {
-            get { return prefab; }
-        }
-
         public string ConfigFile
         {
-            get { return prefab.ConfigFile; }
+            get { return Prefab.ConfigFile; }
         }
         
         //which type of inventory slots (head, torso, any, etc) the item can be placed in
@@ -337,7 +327,7 @@ namespace Barotrauma
 
         public override bool Linkable
         {
-            get { return prefab.Linkable; }
+            get { return Prefab.Linkable; }
         }
 
         public override string ToString()
@@ -377,8 +367,6 @@ namespace Barotrauma
         public Item(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine)
             : base(itemPrefab, submarine)
         {
-            prefab = itemPrefab;
-
             spriteColor = prefab.SpriteColor;
 
             linkedTo            = new ObservableCollection<MapEntity>();
@@ -389,15 +377,17 @@ namespace Barotrauma
                        
             rect = newRect;
                         
-            condition = prefab.Health;
+            condition = itemPrefab.Health;
             lastSentCondition = condition;
 
-            XElement element = prefab.ConfigElement;
+            XElement element = itemPrefab.ConfigElement;
             if (element == null) return;
             
             properties = SerializableProperty.DeserializeProperties(this, element);
 
             if (submarine == null || !submarine.Loading) FindHull();
+
+            SetActiveSprite();
 
             foreach (XElement subElement in element.Elements())
             {
@@ -416,13 +406,13 @@ namespace Barotrauma
                     case "price":
                         break;
                     case "staticbody":
-                        staticBodyConfig = subElement;
+                        StaticBodyConfig = subElement;
                         break;
                     case "aitarget":
                         aiTarget = new AITarget(this, subElement);
                         break;
                     default:
-                        ItemComponent ic = ItemComponent.Load(subElement, this, prefab.ConfigFile);
+                        ItemComponent ic = ItemComponent.Load(subElement, this, itemPrefab.ConfigFile);
                         if (ic == null) break;
 
                         components.Add(ic);
@@ -486,7 +476,7 @@ namespace Barotrauma
             {
                 ownInventory = itemContainer.Inventory;
             }
-            
+                        
             InsertToList();
             ItemList.Add(this);
 
@@ -498,13 +488,23 @@ namespace Barotrauma
 
         public override MapEntity Clone()
         {
-            Item clone = new Item(rect, prefab, Submarine);
+            Item clone = new Item(rect, Prefab, Submarine);
             foreach (KeyValuePair<string, SerializableProperty> property in properties)
             {
                 if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
                 clone.properties[property.Key].TrySetValue(property.Value.GetValue());
             }
-            for (int i = 0; i < components.Count; i++)
+
+            if (components.Count != clone.components.Count)
+            {
+                string errorMsg = "Error while cloning item \"" + Name + "\" - clone does not have the same number of components. ";
+                errorMsg += "Original components: " + string.Join(", ", components.Select(c => c.GetType().ToString()));
+                errorMsg += ", cloned components: " + string.Join(", ", clone.components.Select(c => c.GetType().ToString()));
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Item.Clone:" + Name, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+            }
+
+            for (int i = 0; i < components.Count && i < clone.components.Count; i++)
             {
                 foreach (KeyValuePair<string, SerializableProperty> property in components[i].properties)
                 {
@@ -517,6 +517,12 @@ namespace Barotrauma
                 {
                     for (int j = 0; j < kvp.Value.Count; j++)
                     {
+                        if (!clone.components[i].requiredItems.ContainsKey(kvp.Key) ||
+                            clone.components[i].requiredItems[kvp.Key].Count <= j)
+                        {
+                            continue;
+                        }
+
                         clone.components[i].requiredItems[kvp.Key][j].JoinedIdentifiers = 
                             kvp.Value[j].JoinedIdentifiers;
                     }
@@ -615,6 +621,8 @@ namespace Barotrauma
 
             if (findNewHull) FindHull();
         }
+
+        partial void SetActiveSprite();
 
         public override void Move(Vector2 amount)
         {
@@ -813,7 +821,7 @@ namespace Barotrauma
 
         public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = true)
         {
-            if (prefab.Indestructible) return new AttackResult();
+            if (Prefab.Indestructible) return new AttackResult();
 
             float damageAmount = attack.GetItemDamage(deltaTime);
             Condition -= damageAmount;
@@ -884,7 +892,7 @@ namespace Barotrauma
                 if (isFixed)
                 {
                     GameMain.Server?.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
-                    condition = prefab.Health;
+                    condition = Prefab.Health;
                 }
             }*/
             
@@ -1012,7 +1020,7 @@ namespace Barotrauma
         {
             base.FlipX(relativeToSub);
             
-            if (prefab.CanSpriteFlipX)
+            if (Prefab.CanSpriteFlipX)
             {
                 SpriteEffects ^= SpriteEffects.FlipHorizontally;
             }
@@ -1027,7 +1035,7 @@ namespace Barotrauma
         {
             base.FlipY(relativeToSub);
 
-            if (prefab.CanSpriteFlipY)
+            if (Prefab.CanSpriteFlipY)
             {
                 SpriteEffects ^= SpriteEffects.FlipVertically;
             }
@@ -1160,12 +1168,12 @@ namespace Barotrauma
 
         public float GetDrawDepth()
         {
-            return Sprite.Depth + ((ID % 255) * 0.000001f);
+            return SpriteDepth + ((ID % 255) * 0.000001f);
         }
 
         public bool IsInsideTrigger(Vector2 worldPosition)
         {
-            foreach (Rectangle trigger in prefab.Triggers)
+            foreach (Rectangle trigger in Prefab.Triggers)
             {
                 Rectangle transformedTrigger = TransformTrigger(trigger, true);
 
@@ -1355,6 +1363,7 @@ namespace Barotrauma
             {
                 if (string.IsNullOrEmpty(ic.Msg)) continue;
                 if (!ic.CanBePicked && !ic.CanBeSelected) continue;
+                if (ic is Holdable holdable && !holdable.CanBeDeattached()) continue;
                
                 Color color = Color.Red;
                 if (ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false)) color = Color.Orange;
@@ -1706,6 +1715,9 @@ namespace Barotrauma
             if (element.GetAttributeBool("flippedx", false)) item.FlipX(false);
             if (element.GetAttributeBool("flippedy", false)) item.FlipY(false);
 
+            item.condition = element.GetAttributeFloat("condition", item.Prefab.Health);
+            item.SetActiveSprite();
+
             return item;
         }
 
@@ -1721,22 +1733,26 @@ namespace Barotrauma
             if (FlippedX) element.Add(new XAttribute("flippedx", true));
             if (FlippedY) element.Add(new XAttribute("flippedy", true));
 
+            if (condition < Prefab.Health)
+            {
+                element.Add(new XAttribute("condition", condition.ToString("G", CultureInfo.InvariantCulture)));
+            }
+
             System.Diagnostics.Debug.Assert(Submarine != null);
 
             element.Add(new XAttribute("rect",
                 (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
                 (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
                 rect.Width + "," + rect.Height));
-
+            
             if (linkedTo != null && linkedTo.Count > 0)
             {
-                string[] linkedToIDs = new string[linkedTo.Count];
-
-                for (int i = 0; i < linkedTo.Count; i++)
+                var saveableLinked = linkedTo.Where(l => l.ShouldBeSaved).ToList();
+                string[] linkedToIDs = new string[saveableLinked.Count];
+                for (int i = 0; i < saveableLinked.Count; i++)
                 {
-                    linkedToIDs[i] = linkedTo[i].ID.ToString();
+                    linkedToIDs[i] = saveableLinked[i].ID.ToString();
                 }
-
                 element.Add(new XAttribute("linked", string.Join(",", linkedToIDs)));
             }
 

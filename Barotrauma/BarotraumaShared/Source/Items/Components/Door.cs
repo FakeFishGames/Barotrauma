@@ -484,9 +484,11 @@ namespace Barotrauma.Items.Components
 
         public void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage = false)
         {
-            if (isStuck || (predictedState == null && isOpen == open) || (predictedState != null && isOpen == predictedState.Value)) return;
-
 #if CLIENT
+            if (isStuck || 
+                (predictedState == null && isOpen == open) || 
+                (predictedState != null && isOpen == predictedState.Value && isOpen == open)) return;
+
             if (GameMain.Client != null && !isNetworkMessage)
             {
                 bool stateChanged = open != predictedState;

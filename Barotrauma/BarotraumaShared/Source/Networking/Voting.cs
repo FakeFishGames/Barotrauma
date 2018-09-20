@@ -72,6 +72,5 @@ namespace Barotrauma
             UpdateVoteTexts(connectedClients, VoteType.Sub);
 #endif
         }
-
     }
 }

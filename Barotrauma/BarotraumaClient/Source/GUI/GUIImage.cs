@@ -57,7 +57,17 @@ namespace Barotrauma
             }
         }
 
-        public GUIImage(RectTransform rectT, Sprite sprite, Rectangle? sourceRect = null, bool scaleToFit = false) : base(null, rectT)
+        public GUIImage(RectTransform rectT, string style)
+            : this(rectT, null, null, false, style)
+        {
+        }
+
+        public GUIImage(RectTransform rectT, Sprite sprite, Rectangle? sourceRect = null, bool scaleToFit = false) 
+            : this(rectT, sprite, sourceRect, scaleToFit, null)
+        {
+        }
+
+        private GUIImage(RectTransform rectT, Sprite sprite, Rectangle? sourceRect, bool scaleToFit, string style) : base(style, rectT)
         {
             this.scaleToFit = scaleToFit;
             Sprite = sprite;
@@ -69,9 +79,12 @@ namespace Barotrauma
             {
                 this.sourceRect = sprite == null ? Rectangle.Empty : sprite.SourceRect;
             }
-            color = Color.White;
-            hoverColor = Color.White;
-            selectedColor = Color.White;
+            if (style == null)
+            {
+                color = Color.White;
+                hoverColor = Color.White;
+                selectedColor = Color.White;
+            }
             if (!scaleToFit)
             {
                 Scale = 1.0f;
@@ -86,15 +99,29 @@ namespace Barotrauma
         {
             if (!Visible) return;
 
-            Color currColor = color;
-            if (state == ComponentState.Hover) currColor = hoverColor;
-            if (state == ComponentState.Selected) currColor = selectedColor;
+            Color currColor = GetCurrentColor(state);
 
-            if (sprite != null && sprite.Texture != null)
+            if (style != null)
+            {
+                foreach (UISprite uiSprite in style.Sprites[state])
+                {
+                    if (Math.Abs(Rotation) > float.Epsilon)
+                    {
+                        float scale = Math.Min(Rect.Width / uiSprite.Sprite.size.X, Rect.Height / uiSprite.Sprite.size.Y);
+                        spriteBatch.Draw(uiSprite.Sprite.Texture, Rect.Center.ToVector2(), uiSprite.Sprite.SourceRect, currColor * (currColor.A / 255.0f), Rotation, uiSprite.Sprite.size / 2,
+                            Scale * scale, SpriteEffects.None, 0.0f);
+                    }
+                    else
+                    {
+                        uiSprite.Draw(spriteBatch, Rect, currColor * (currColor.A / 255.0f), SpriteEffects.None);
+                    }
+                }
+            }
+            else if (sprite?.Texture != null)
             {
                 spriteBatch.Draw(sprite.Texture, Rect.Center.ToVector2(), sourceRect, currColor * (currColor.A / 255.0f), Rotation, sprite.size / 2,
                     Scale, SpriteEffects.None, 0.0f);
-            }          
+            }
         }
 
         private void RecalculateScale()

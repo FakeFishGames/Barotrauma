@@ -1,4 +1,6 @@
 ﻿using Barotrauma.Networking;
+using FarseerPhysics;
+using FarseerPhysics.Dynamics;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
@@ -104,15 +106,7 @@ namespace Barotrauma
                 Pressure = surface;
             }
         }
-
-        public override bool SelectableInEditor
-        {
-            get
-            {
-                return ShowHulls;
-            }
-        }
-
+        
         public override bool Linkable
         {
             get { return true; }
@@ -127,6 +121,12 @@ namespace Barotrauma
         public Vector2 Size
         {
             get { return new Vector2(rect.Width, rect.Height); }
+        }
+
+        public float CeilingHeight
+        {
+            get;
+            private set;
         }
 
         public float Surface
@@ -276,6 +276,24 @@ namespace Barotrauma
                 if (hull.Submarine == submarine) newGrid.InsertEntity(hull);
             }
             return newGrid;
+        }
+
+        public override void OnMapLoaded()
+        {
+            CeilingHeight = Rect.Height;
+
+            Body lowerPickedBody = Submarine.PickBody(SimPosition, SimPosition - new Vector2(0.0f, ConvertUnits.ToSimUnits(rect.Height / 2.0f + 0.1f)), null, Physics.CollisionWall);
+            if (lowerPickedBody != null)
+            {
+                Vector2 lowerPickedPos = Submarine.LastPickedPosition;
+
+                if (Submarine.PickBody(SimPosition, SimPosition + new Vector2(0.0f, ConvertUnits.ToSimUnits(rect.Height / 2.0f + 0.1f)), null, Physics.CollisionWall) != null)
+                {
+                    Vector2 upperPickedPos = Submarine.LastPickedPosition;
+
+                    CeilingHeight = ConvertUnits.ToDisplayUnits(upperPickedPos.Y - lowerPickedPos.Y);
+                }
+            }
         }
 
         public void AddToGrid(Submarine submarine)

@@ -13,7 +13,7 @@ namespace Barotrauma.Networking
         public ulong SteamID;
 
         public UInt16 LastRecvGeneralUpdate = 0;
-        
+
         public UInt16 LastSentChatMsgID = 0; //last msg this client said
         public UInt16 LastRecvChatMsgID = 0; //last msg this client knows about
 
@@ -22,11 +22,25 @@ namespace Barotrauma.Networking
 
         public UInt16 LastRecvCampaignUpdate = 0;
         public UInt16 LastRecvCampaignSave = 0;
-        
+
+        public readonly List<ChatMessage> ChatMsgQueue = new List<ChatMessage>();
+        public UInt16 LastChatMsgQueueID;
+
+        //latest chat messages sent by this client
+        public readonly List<string> LastSentChatMessages = new List<string>();
+        public float ChatSpamSpeed;
+        public float ChatSpamTimer;
+        public int ChatSpamCount;
+
+        public float KickAFKTimer;
+
+        public double MidRoundSyncTimeOut;
+
         public bool NeedsMidRoundSync;
         //how many unique events the client missed before joining the server
         public UInt16 UnreceivedEntityEventCount;
         public UInt16 FirstNewEventID;
+
 
         //when was a specific entity event last sent to the client
         //  key = event id, value = NetTime.Now when sending
@@ -45,18 +59,7 @@ namespace Barotrauma.Networking
         public NetConnection Connection { get; set; }
 
         public bool SpectateOnly;
-
-        public readonly List<ChatMessage> ChatMsgQueue = new List<ChatMessage>();
-        public UInt16 LastChatMsgQueueID;
-
-        //latest chat messages sent by this client
-        public readonly List<string> LastSentChatMessages = new List<string>();
-        public float ChatSpamSpeed;
-        public float ChatSpamTimer;
-        public int ChatSpamCount;
-
-        public double MidRoundSyncTimeOut;
-
+        
         private float karma = 1.0f;
         public float Karma
         {

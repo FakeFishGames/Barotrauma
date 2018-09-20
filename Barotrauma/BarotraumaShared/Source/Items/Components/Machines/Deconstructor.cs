@@ -57,18 +57,22 @@ namespace Barotrauma.Items.Components
                     var itemPrefab = MapEntityPrefab.Find(null, deconstructProduct.ItemIdentifier) as ItemPrefab;
                     if (itemPrefab == null)
                     {
-                        DebugConsole.ThrowError("Tried to deconstruct item \"" + targetItem.Name + "\" but couldn't find item prefab \"" + deconstructProduct + "\"!");
+                        DebugConsole.ThrowError("Tried to deconstruct item \"" + targetItem.Name + "\" but couldn't find item prefab \"" + deconstructProduct.ItemIdentifier + "\"!");
                         continue;
                     }
 
+                    float condition = deconstructProduct.CopyCondition ?
+                        percentageHealth * itemPrefab.Health :
+                        itemPrefab.Health * deconstructProduct.OutCondition;
+                    
                     //container full, drop the items outside the deconstructor
                     if (containers[1].Inventory.Items.All(i => i != null))
                     {
-                        Entity.Spawner.AddToSpawnQueue(itemPrefab, item.Position, item.Submarine, itemPrefab.Health * deconstructProduct.OutCondition);
+                        Entity.Spawner.AddToSpawnQueue(itemPrefab, item.Position, item.Submarine, condition);
                     }
                     else
                     {
-                        Entity.Spawner.AddToSpawnQueue(itemPrefab, containers[1].Inventory, itemPrefab.Health * deconstructProduct.OutCondition);
+                        Entity.Spawner.AddToSpawnQueue(itemPrefab, containers[1].Inventory, condition);
                     }
                 }
 

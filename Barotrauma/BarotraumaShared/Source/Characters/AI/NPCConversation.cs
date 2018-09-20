@@ -16,21 +16,11 @@ namespace Barotrauma
 
         public readonly List<JobPrefab> AllowedJobs;
 
-        public readonly List<ConversationFlag> Flags;
+        public readonly List<string> Flags;
 
         //The line can only be selected when eventmanager intensity is between these values
         //null = no restriction
         public float? maxIntensity, minIntensity;
-
-        public enum ConversationFlag
-        {
-            Initial,
-            Casual,
-            Underwater,
-            Inside,
-            Outside,
-            SubmarineDeep,
-        }
 
         public readonly List<NPCConversation> Responses;
         private readonly int speakerIndex;
@@ -114,16 +104,7 @@ namespace Barotrauma
                 if (jobPrefab != null) AllowedJobs.Add(jobPrefab);
             }
 
-            Flags = new List<ConversationFlag>();
-            string flagsStr = element.GetAttributeString("flags", "");
-            foreach (string flag in flagsStr.Split(','))
-            {
-                ConversationFlag parsedFlag;
-                if (Enum.TryParse(flag.Trim(), true, out parsedFlag))
-                {
-                    Flags.Add(parsedFlag);
-                }
-            }
+            Flags = new List<string>(element.GetAttributeStringArray("flags", new string[0]));
 
             allowedSpeakerTags = new List<string>();
             string allowedSpeakerTagsStr = element.GetAttributeString("speakertags", "");
@@ -143,15 +124,25 @@ namespace Barotrauma
             }
         }
 
-        private static List<ConversationFlag> GetCurrentFlags(Character speaker)
+        private static List<string> GetCurrentFlags(Character speaker)
         {
-            var currentFlags = new List<ConversationFlag>();
-            if (Submarine.MainSub != null && Submarine.MainSub.AtDamageDepth) currentFlags.Add(ConversationFlag.SubmarineDeep);
-            if (GameMain.GameSession != null && Timing.TotalTime < GameMain.GameSession.RoundStartTime + 30.0f) currentFlags.Add(ConversationFlag.Initial);
+            var currentFlags = new List<string>();
+            if (Submarine.MainSub != null && Submarine.MainSub.AtDamageDepth) currentFlags.Add("SubmarineDeep");
+            if (GameMain.GameSession != null && Timing.TotalTime < GameMain.GameSession.RoundStartTime + 30.0f) currentFlags.Add("Initial");
             if (speaker != null)
             {
-                if (speaker.AnimController.InWater) currentFlags.Add(ConversationFlag.Underwater);
-                currentFlags.Add(speaker.CurrentHull == null ? ConversationFlag.Outside : ConversationFlag.Inside);
+                if (speaker.AnimController.InWater) currentFlags.Add("Underwater");
+                currentFlags.Add(speaker.CurrentHull == null ? "Outside" : "Inside");
+
+                var afflictions = speaker.CharacterHealth.GetAllAfflictions();
+                foreach (Affliction affliction in afflictions)
+                {
+                    var currentEffect = affliction.Prefab.GetActiveEffect(affliction.Strength);
+                    if (currentEffect != null && !string.IsNullOrEmpty(currentEffect.DialogFlag) && !currentFlags.Contains(currentEffect.DialogFlag))
+                    {
+                        currentFlags.Add(currentEffect.DialogFlag);
+                    }
+                }
             }
 
             return currentFlags;

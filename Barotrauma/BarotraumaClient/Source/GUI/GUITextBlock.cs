@@ -41,6 +41,20 @@ namespace Barotrauma
             }
         }
 
+        public override ScalableFont Font
+        {
+            get
+            {
+                return base.Font;
+            }
+            set
+            {
+                if (base.Font == value) return;
+                base.Font = value;
+                SetTextPos();
+            }
+        }
+
         public string Text
         {
             get { return text; }
@@ -92,6 +106,17 @@ namespace Barotrauma
         {
             get { return textColor; }
             set { textColor = value; }
+        }
+
+        public Alignment TextAlignment
+        {
+            get { return textAlignment; }
+            set
+            {
+                if (textAlignment == value) return;
+                textAlignment = value;
+                SetTextPos();
+            }
         }
                 
         /// <summary>
@@ -154,7 +179,7 @@ namespace Barotrauma
             {
                 overflowClipActive = size.X > rect.Width - padding.X - padding.Z;
             }
-                     
+
             textPos = new Vector2(rect.Width / 2.0f, rect.Height / 2.0f);
             origin = size * 0.5f;
 
@@ -201,9 +226,7 @@ namespace Barotrauma
         {
             if (!Visible) return;
 
-            Color currColor = color;
-            if (state == ComponentState.Hover) currColor = hoverColor;
-            if (state == ComponentState.Selected) currColor = selectedColor;
+            Color currColor = GetCurrentColor(state);
 
             var rect = Rect;
 

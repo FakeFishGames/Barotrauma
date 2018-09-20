@@ -8,12 +8,12 @@ namespace Barotrauma
     {
         partial void InitProjSpecific()
         {
-            if (GameMain.GameSession != null && GameMain.GameSession.CrewManager != null)
+            /*if (GameMain.GameSession != null && GameMain.GameSession.CrewManager != null)
             {
                 CurrentOrder = Order.PrefabList.Find(o => o.AITag == "dismissed");
                 objectiveManager.SetOrder(CurrentOrder, "", null);
                 GameMain.GameSession.CrewManager.SetCharacterOrder(Character, CurrentOrder, null, null);
-            }
+            }*/
         }
 
         partial void SetOrderProjSpecific(Order order)

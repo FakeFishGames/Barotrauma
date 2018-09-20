@@ -25,16 +25,20 @@ namespace Barotrauma
 
         private Camera cam;
 
+        private Point screenResolution;
+
         private bool lightingEnabled;
 
-        public GUIComponent topPanel, leftPanel;
+        public GUIComponent TopPanel, LeftPanel;
 
-        private bool entityMenuOpen, entityMenuOpened;
-        private GUIComponent entityMenu;
+        private bool entityMenuOpen = true, entityMenuOpened;
+        private float entityMenuOpenState = 1.0f;
+        public GUIComponent EntityMenu;
         private GUITextBox entityFilterBox;
         private GUIListBox entityList;
+        private GUIButton toggleEntityMenuButton;
 
-        private GUIFrame loadFrame, saveFrame;
+        private GUIComponent loadFrame, saveFrame;
 
         private GUITextBox nameBox;
 
@@ -128,60 +132,38 @@ namespace Barotrauma
             get { return wiringMode; }
         }
 
-
         public SubEditorScreen(ContentManager content)
         {
             cam = new Camera();
-            
-            topPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.04f), GUI.Canvas) { MinSize = new Point(0, 35) }, "GUIFrameTop");
-            GUIFrame paddedTopPanel = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.55f), topPanel.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.1f) }, 
+            CreateUI();
+        }
+
+        private void CreateUI()
+        {
+            TopPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.04f), GUI.Canvas) { MinSize = new Point(0, 35) }, "GUIFrameTop");
+            GUIFrame paddedTopPanel = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.55f), TopPanel.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.1f) },
                 style: null);
-
-            hullVolumeFrame = new GUIFrame(new RectTransform(new Vector2(0.15f, 0.8f), topPanel.RectTransform, Anchor.BottomLeft, Pivot.TopLeft) { RelativeOffset = new Vector2(0.08f, 0.0f) }, "InnerFrame")
+            
+            var button = new GUIButton(new RectTransform(new Vector2(0.07f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft), TextManager.Get("OpenSubButton"))
             {
-                Visible = false
+                OnClicked = (GUIButton btn, object data) =>
+                {
+                    saveFrame = null;
+                    CreateLoadScreen();
+
+                    return true;
+                }
             };
 
-            GUITextBlock totalHullVolume = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), hullVolumeFrame.RectTransform), "", font: GUI.SmallFont)
+            button = new GUIButton(new RectTransform(new Vector2(0.07f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.08f, 0.0f) }, TextManager.Get("SaveSubButton"))
             {
-                TextGetter = GetTotalHullVolume
-            };
+                OnClicked = (GUIButton btn, object data) =>
+                {
+                    loadFrame = null;
+                    CreateSaveScreen();
 
-            GUITextBlock selectedHullVolume = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), hullVolumeFrame.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.15f) }, "", font: GUI.SmallFont)
-            {
-                TextGetter = GetSelectedHullVolume
-            };
-
-            saveAssemblyFrame = new GUIFrame(new RectTransform(new Vector2(0.08f, 0.5f), topPanel.RectTransform, Anchor.BottomRight, Pivot.TopRight) { MinSize = new Point(170, 30) }, "InnerFrame")
-            {
-                Visible = false
-            };
-            var saveAssemblyButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.8f), saveAssemblyFrame.RectTransform, Anchor.Center), TextManager.Get("SaveItemAssembly"));
-            saveAssemblyFrame.Font = GUI.SmallFont;
-            saveAssemblyButton.OnClicked += (btn, userdata) =>
-            {
-                CreateSaveAssemblyScreen();
-                return true;
-            };
-
-            var button = new GUIButton(new RectTransform(new Vector2(0.07f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft), TextManager.Get("OpenSubButton"));
-            button.OnClicked = (GUIButton btn, object data) =>
-            {
-                saveFrame = null;
-                entityMenuOpen = false;
-                CreateLoadScreen();
-
-                return true;
-            };
-
-            button = new GUIButton(new RectTransform(new Vector2(0.07f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.08f, 0.0f) }, TextManager.Get("SaveSubButton"));
-            button.OnClicked = (GUIButton btn, object data) =>
-            {
-                loadFrame = null;
-                entityMenuOpen = false;
-                CreateSaveScreen();
-
-                return true;
+                    return true;
+                }
             };
 
             var nameLabel = new GUITextBlock(new RectTransform(new Vector2(0.1f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.15f, 0.0f) },
@@ -207,10 +189,15 @@ namespace Barotrauma
                 return true;
             };
 
-            leftPanel = new GUIFrame(new RectTransform(new Vector2(0.08f, 1.0f), GUI.Canvas) { MinSize = new Point(170, 0) }, "GUIFrameLeft");
+            LeftPanel = new GUIFrame(new RectTransform(new Vector2(0.08f, 1.0f), GUI.Canvas) { MinSize = new Point(170, 0) }, "GUIFrameLeft");
             GUILayoutGroup paddedLeftPanel = new GUILayoutGroup(new RectTransform(
-                new Point((int)(leftPanel.Rect.Width * 0.8f), (int)(GameMain.GraphicsHeight - topPanel.Rect.Height * 0.95f)),
-                leftPanel.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, topPanel.Rect.Height) }) { AbsoluteSpacing = 5 };
+                new Point((int)(LeftPanel.Rect.Width * 0.8f), (int)(GameMain.GraphicsHeight - TopPanel.Rect.Height * 0.95f)),
+                LeftPanel.RectTransform, Anchor.Center)
+            { AbsoluteOffset = new Point(0, TopPanel.Rect.Height) })
+            {
+                RelativeSpacing = 0.01f,
+                Stretch = true
+            };
 
             GUITextBlock itemCount = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedLeftPanel.RectTransform), "ItemCount")
             {
@@ -221,43 +208,101 @@ namespace Barotrauma
             {
                 TextGetter = GetStructureCount
             };
-
-
-            foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
+            
+            hullVolumeFrame = new GUIFrame(new RectTransform(new Vector2(0.15f, 2.0f), TopPanel.RectTransform, Anchor.BottomLeft, Pivot.TopLeft, minSize: new Point(300, 85)) { AbsoluteOffset = new Point(LeftPanel.Rect.Width, 0) }, "GUIToolTip")
             {
-                var catButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform),
-                    TextManager.Get("MapEntityCategory." + category.ToString()))
-                {
-                    UserData = category,
-                    OnClicked = (btn, userdata) => { entityMenuOpen = true; OpenEntityMenu((MapEntityCategory)userdata); return true; }
-                };
-            }
+                Visible = false
+            };
+            GUITextBlock totalHullVolume = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), hullVolumeFrame.RectTransform), "", font: GUI.SmallFont)
+            {
+                TextGetter = GetTotalHullVolume
+            };
+            GUITextBlock selectedHullVolume = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), hullVolumeFrame.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.5f) }, "", font: GUI.SmallFont)
+            {
+                TextGetter = GetSelectedHullVolume
+            };
+
+
+            saveAssemblyFrame = new GUIFrame(new RectTransform(new Vector2(0.08f, 0.5f), TopPanel.RectTransform, Anchor.BottomLeft, Pivot.TopLeft)
+            { MinSize = new Point(180, 40), AbsoluteOffset = new Point(LeftPanel.Rect.Width + hullVolumeFrame.Rect.Width, 0) }, "InnerFrame")
+            {
+                Visible = false
+            };
+            var saveAssemblyButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.8f), saveAssemblyFrame.RectTransform, Anchor.Center), TextManager.Get("SaveItemAssembly"));
+            saveAssemblyFrame.Font = GUI.SmallFont;
+            saveAssemblyButton.OnClicked += (btn, userdata) =>
+            {
+                CreateSaveAssemblyScreen();
+                return true;
+            };
+
 
             //Entity menu
             //------------------------------------------------
 
-            entityMenu = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.4f), GUI.Canvas, Anchor.Center) { MinSize = new Point(400, 400) });
-            var paddedTab = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), entityMenu.RectTransform, Anchor.Center), style: null);
-            var filterArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedTab.RectTransform), isHorizontal: true)
+            EntityMenu = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth - LeftPanel.Rect.Width + 20, (int)(300 * GUI.Scale)), GUI.Canvas, Anchor.BottomRight),
+                style: "GUIFrameBottom");
+
+            toggleEntityMenuButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.1f), EntityMenu.RectTransform, Anchor.TopCenter, Pivot.BottomCenter) { RelativeOffset = new Vector2(0.0f, -0.12f) },
+                style: "GUIButtonVerticalArrow")
+            {
+                OnClicked = (btn, userdata) =>
+                {
+                    entityMenuOpen = !entityMenuOpen;
+                    if (characterMode) SetCharacterMode(false);
+                    if (wiringMode) SetWiringMode(false);
+                    foreach (GUIComponent child in btn.Children)
+                    {
+                        child.SpriteEffects = entityMenuOpen ? SpriteEffects.None : SpriteEffects.FlipVertically;
+                    }
+                    return true;
+                }
+            };
+
+            var tabButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.1f), EntityMenu.RectTransform, Anchor.TopRight, Pivot.BottomRight),
+                isHorizontal: true)
+            {
+                RelativeSpacing = 0.01f,
+                Stretch = true
+            };
+            foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
+            {
+                var catButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), tabButtonHolder.RectTransform),
+                    TextManager.Get("MapEntityCategory." + category.ToString()))
+                {
+                    UserData = category,
+                    OnClicked = (btn, userdata) =>
+                    {
+                        entityMenuOpen = true;
+                        OpenEntityMenu((MapEntityCategory)userdata);
+                        return true;
+                    }
+                };
+            }
+
+            var paddedTab = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.8f), EntityMenu.RectTransform, Anchor.Center), style: null);
+            var filterArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), paddedTab.RectTransform), isHorizontal: true)
             {
                 AbsoluteSpacing = 5,
+                Stretch = true,
                 UserData = "filterarea"
             };
-            new GUITextBlock(new RectTransform(new Vector2(0.25f, 1.0f), filterArea.RectTransform), TextManager.Get("FilterMapEntities"), font: GUI.SmallFont);
-            entityFilterBox = new GUITextBox(new RectTransform(new Vector2(0.7f, 1.0f), filterArea.RectTransform), font: GUI.SmallFont)
+            new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), filterArea.RectTransform), TextManager.Get("FilterMapEntities"), font: GUI.SmallFont);
+            entityFilterBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUI.SmallFont)
             {
                 OnTextChanged = (textBox, text) => { FilterEntities(text); return true; }
             };
             var clearButton = new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), filterArea.RectTransform), "x")
             {
-                OnClicked = (btn, userdata) => { ClearFilter(); return true; }
+                OnClicked = (btn, userdata) => { ClearFilter(); entityFilterBox.Flash(Color.White); return true; }
             };
-            entityList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.95f), paddedTab.RectTransform, Anchor.BottomCenter))
+            entityList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.85f), paddedTab.RectTransform, Anchor.BottomCenter))
             {
                 OnSelected = SelectPrefab,
+                UseGridLayout = true,
                 CheckSelected = MapEntityPrefab.GetSelected
             };
-            UpdateEntityList();                       
+            UpdateEntityList();
 
             //empty guiframe as a separator
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), paddedLeftPanel.RectTransform), style: null);
@@ -290,82 +335,130 @@ namespace Barotrauma
                 OnClicked = GenerateWaypoints
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedLeftPanel.RectTransform), TextManager.Get("ShowEntitiesLabel"));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowEntitiesLabel"));
 
             var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowLighting"))
             {
-                OnSelected = (GUITickBox obj) => 
-                {
-                    lightingEnabled = !lightingEnabled;
-                    return true;
-                }
+                Selected = lightingEnabled,
+                OnSelected = (GUITickBox obj) => { lightingEnabled = obj.Selected; return true; }
+            };
+            tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowWalls"))
+            {
+                Selected = Structure.ShowWalls,
+                OnSelected = (GUITickBox obj) => { Structure.ShowWalls = obj.Selected; return true; }
+            };
+            tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowStructures"))
+            {
+                Selected = Structure.ShowStructures,
+                OnSelected = (GUITickBox obj) => { Structure.ShowStructures = obj.Selected; return true; }
+            };
+            tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowItems"))
+            {
+                Selected = Item.ShowItems,
+                OnSelected = (GUITickBox obj) => { Item.ShowItems = obj.Selected; return true; }
             };
             tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowWaypoints"))
             {
-                OnSelected = (GUITickBox obj) => { WayPoint.ShowWayPoints = !WayPoint.ShowWayPoints; return true; },
-                Selected = true
+                Selected = WayPoint.ShowWayPoints,
+                OnSelected = (GUITickBox obj) => { WayPoint.ShowWayPoints = obj.Selected; return true; }
             };
             tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowSpawnpoints"))
             {
-                OnSelected = (GUITickBox obj) => { WayPoint.ShowSpawnPoints = !WayPoint.ShowSpawnPoints; return true; },
-                Selected = true
+                Selected = WayPoint.ShowSpawnPoints,
+                OnSelected = (GUITickBox obj) => { WayPoint.ShowSpawnPoints = obj.Selected; return true; }
             };
             tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowLinks"))
             {
-                OnSelected = (GUITickBox obj) => { Item.ShowLinks = !Item.ShowLinks; return true; },
-                Selected = true
+                Selected = Item.ShowLinks,
+                OnSelected = (GUITickBox obj) => { Item.ShowLinks = obj.Selected; return true; }
             };
             tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowHulls"))
             {
-                OnSelected = (GUITickBox obj) => { Hull.ShowHulls = !Hull.ShowHulls; return true; },
-                Selected = true
+                Selected = Hull.ShowHulls,
+                OnSelected = (GUITickBox obj) => { Hull.ShowHulls = obj.Selected; return true; }
             };
             tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowGaps"))
             {
-                OnSelected = (GUITickBox obj) => { Gap.ShowGaps = !Gap.ShowGaps; return true; },
-                Selected = true
+                Selected = Gap.ShowGaps,
+                OnSelected = (GUITickBox obj) => { Gap.ShowGaps = obj.Selected; return true; },
             };
 
             //empty guiframe as a separator
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform), style: null);
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform), TextManager.Get("PreviouslyUsedLabel"));
-            previouslyUsedList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), paddedLeftPanel.RectTransform))
+            previouslyUsedList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.25f), paddedLeftPanel.RectTransform))
             {
                 OnSelected = SelectPrefab
             };
-        }
 
+            screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+        }
+        
         private void UpdateEntityList()
         {
             entityList.Content.ClearChildren();
 
+            int entitiesPerRow = (int)Math.Ceiling(entityList.Content.Rect.Width / Math.Max(150 * GUI.Scale, 100));
+
             foreach (MapEntityPrefab ep in MapEntityPrefab.List)
             {
-                GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), entityList.Content.RectTransform) { MinSize = new Point(0, 50) },
-                    style: "ListBoxElement")
+                bool legacy = ep.Category == MapEntityCategory.Legacy;
+
+                float relWidth = 1.0f / entitiesPerRow;
+                GUIFrame frame = new GUIFrame(new RectTransform(
+                    new Vector2(relWidth, relWidth * ((float)entityList.Content.Rect.Width / entityList.Content.Rect.Height)),
+                    entityList.Content.RectTransform) { MinSize = new Point(0, 50) },
+                    style: "GUITextBox")
                 {
                     UserData = ep,
-                    ToolTip = ep.Description
                 };
 
-                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(0.1f, 0.0f), frame.RectTransform) { AbsoluteOffset = new Point(frame.Rect.Height + 5, 0) }, 
-                    text: ep.Name, textAlignment: Alignment.CenterLeft);
-                if (!string.IsNullOrWhiteSpace(ep.Description))
-                {
-                    textBlock.ToolTip = ep.Description;
-                }
+                string name = legacy ? ep.Name + " (legacy)" : ep.Name;
+                frame.ToolTip = string.IsNullOrEmpty(ep.Description) ? name : name + '\n' + ep.Description;
 
+                GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.8f), frame.RectTransform, Anchor.Center), style: null)
+                {
+                    CanBeFocused = false
+                };
+
+                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform, Anchor.BottomCenter),
+                    text: ep.Name, textAlignment: Alignment.Center, font: GUI.SmallFont)
+                {
+                    CanBeFocused = false
+                };
+                if (legacy) textBlock.TextColor *= 0.6f;
+                textBlock.Text = ToolBox.LimitString(textBlock.Text, textBlock.Font, textBlock.Rect.Width);
+
+                Sprite icon = ep.sprite;
+                Color iconColor = Color.White;
+                if (ep is ItemPrefab itemPrefab)
+                {
+                    if (itemPrefab.InventoryIcon != null)
+                    {
+                        icon = itemPrefab.InventoryIcon;
+                        iconColor = itemPrefab.InventoryIconColor;
+                    }
+                    else
+                    {
+                        iconColor = itemPrefab.SpriteColor;
+                    }
+                }
                 if (ep.sprite != null)
                 {
-                    GUIImage img = new GUIImage(new RectTransform(new Point(frame.Rect.Height, frame.Rect.Height), frame.RectTransform), ep.sprite);
-                    img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
-                    img.Color = ep.SpriteColor;
+                    GUIImage img = new GUIImage(new RectTransform(new Point(paddedFrame.Rect.Height, paddedFrame.Rect.Height - textBlock.Rect.Height),
+                        paddedFrame.RectTransform, Anchor.TopCenter), icon)
+                    {
+                        CanBeFocused = false,
+                        Color = legacy ? iconColor * 0.6f : iconColor
+                    };
+                    img.Scale = Math.Min(img.Rect.Width / img.Sprite.size.X, img.Rect.Height / img.Sprite.size.Y);
+                    img.RectTransform.NonScaledSize = new Point((int)(img.Sprite.size.X * img.Scale), img.Rect.Height);
                 }
 
                 if (ep.Category == MapEntityCategory.ItemAssembly)
                 {
-                    var deleteButton = new GUIButton(new RectTransform(new Vector2(0.15f, 0.5f), frame.RectTransform, Anchor.CenterRight) { MinSize = new Point(100, 20) },
+                    var deleteButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.2f), paddedFrame.RectTransform, Anchor.Center) { MinSize = new Point(0, 20) },
                         TextManager.Get("Delete"))
                     {
                         UserData = ep,
@@ -449,10 +542,15 @@ namespace Barotrauma
 
             dummyCharacter = Character.Create(Character.HumanConfigFile, Vector2.Zero, "");
 
-            for (int i = 0; i<dummyCharacter.Inventory.SlotPositions.Length; i++)
+            //make space for the entity menu
+            for (int i = 0; i < dummyCharacter.Inventory.SlotPositions.Length; i++)
             {
-                dummyCharacter.Inventory.SlotPositions[i].X += leftPanel.Rect.Width+10;
+                if (dummyCharacter.Inventory.SlotPositions[i].Y > GameMain.GraphicsHeight / 2)
+                {
+                    dummyCharacter.Inventory.SlotPositions[i].Y -= 50 * GUI.Scale;
+                }
             }
+            dummyCharacter.Inventory.CreateSlots();
 
             Character.Controlled = dummyCharacter;
             GameMain.World.ProcessChanges();
@@ -517,9 +615,14 @@ namespace Barotrauma
         {
             if (characterMode) SetCharacterMode(false);
             if (wiringMode) SetWiringMode(false);
-            
-            saveFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.36f), GUI.Canvas, Anchor.Center) { MinSize = new Point(400, 400) });
-            GUILayoutGroup paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), saveFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
+
+            saveFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
+            {
+                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) saveFrame = null; return true; }
+            };
+
+            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.36f), saveFrame.RectTransform, Anchor.Center) { MinSize = new Point(400, 400) });
+            GUILayoutGroup paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
 
             var header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform), TextManager.Get("SaveSubDialogHeader"), font: GUI.LargeFont);
             
@@ -717,8 +820,13 @@ namespace Barotrauma
             if (characterMode) SetCharacterMode(false);
             if (wiringMode) SetWiringMode(false);
 
-            saveFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.2f), GUI.Canvas, Anchor.Center) { MinSize = new Point(400, 200) });
-            GUILayoutGroup paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), saveFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
+            saveFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
+            {
+                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) saveFrame = null; return true; }
+            };
+
+            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.2f), saveFrame.RectTransform, Anchor.Center) { MinSize = new Point(400, 200) });
+            GUILayoutGroup paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform),                 
                 TextManager.Get("SaveItemAssemblyDialogHeader"), font: GUI.LargeFont);
@@ -792,9 +900,14 @@ namespace Barotrauma
             if (wiringMode) SetWiringMode(false);
 
             Submarine.RefreshSavedSubs();
-            
-            loadFrame = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.36f), GUI.Canvas, Anchor.Center) { MinSize = new Point(300, 400) });
-            GUIFrame paddedLoadFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), loadFrame.RectTransform, Anchor.Center), style: null);
+
+            loadFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
+            {
+                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) loadFrame = null; return true; },
+            };
+
+            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.36f), loadFrame.RectTransform, Anchor.Center) { MinSize = new Point(300, 400) });
+            GUIFrame paddedLoadFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center), style: null);
 
             var subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.9f), paddedLoadFrame.RectTransform))
             {
@@ -853,10 +966,10 @@ namespace Barotrauma
                 TextManager.Get("Cancel"))
             {
                 OnClicked = (GUIButton btn, object userdata) =>
-                    {
-                        loadFrame = null;
-                        return true;
-                    }
+                {
+                    loadFrame = null;
+                    return true;
+                }
             };
 
             return true;
@@ -897,7 +1010,7 @@ namespace Barotrauma
                 if (lightComponent != null) lightComponent.Light.Enabled = item.ParentInventory == null;
             }
 
-            if (selectedSub.GameVersion < new Version("0.8.1.2"))
+            if (selectedSub.GameVersion < new Version("0.9.0.0"))
             {
                 var adjustLightsPrompt = new GUIMessageBox(TextManager.Get("Warning"), TextManager.Get("AdjustLightsPrompt"), 
                     new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
@@ -955,6 +1068,11 @@ namespace Barotrauma
 
             ClearFilter();
             entityMenuOpened = true;
+            
+            foreach (GUIComponent child in toggleEntityMenuButton.Children)
+            {
+                child.SpriteEffects = entityMenuOpen ? SpriteEffects.None : SpriteEffects.FlipVertically;
+            }
 
             foreach (GUIComponent child in entityList.Content.Children)
             {
@@ -997,15 +1115,18 @@ namespace Barotrauma
         {
             characterModeTickBox.Selected = enabled;
             characterMode = enabled;
-            wiringModeTickBox.Selected = false;
-            wiringMode = false;
-            entityMenuOpen = false;
+            if (characterMode)
+            {
+                entityMenuOpen = false;
+                wiringModeTickBox.Selected = false;
+                wiringMode = false;
+            }
 
             if (characterMode)
             {
                 CreateDummyCharacter();
             }
-            else if (dummyCharacter != null)
+            else if (dummyCharacter != null && !wiringMode)
             {
                 RemoveDummyCharacter();
             }
@@ -1024,8 +1145,12 @@ namespace Barotrauma
         {
             wiringModeTickBox.Selected = enabled;
             wiringMode = enabled;
-            characterModeTickBox.Selected = false;
-            characterMode = false;
+            if (wiringMode)
+            {
+                entityMenuOpen = false;
+                characterModeTickBox.Selected = false;
+                characterMode = false;
+            }
 
             if (wiringMode)
             {
@@ -1034,7 +1159,7 @@ namespace Barotrauma
                 dummyCharacter.Inventory.TryPutItem(item, null, new List<InvSlotType>() { InvSlotType.RightHand });
                 wiringToolPanel = CreateWiringPanel();
             }
-            else
+            else if (dummyCharacter != null && !characterMode)
             {
                 RemoveDummyCharacter();
             }
@@ -1062,7 +1187,8 @@ namespace Barotrauma
 
         private GUIFrame CreateWiringPanel()
         {
-            GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(0.03f, 0.35f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(120, 300) },
+            GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(0.03f, 0.35f), GUI.Canvas, Anchor.TopLeft, Pivot.CenterLeft)
+                { MinSize = new Point(120, 300), AbsoluteOffset = new Point(LeftPanel.Rect.Right, LeftPanel.Rect.Center.Y) },
                 style: "GUIFrameRight");
 
             GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.8f, 0.85f), frame.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.1f, 0.0f) })
@@ -1179,7 +1305,6 @@ namespace Barotrauma
             AddPreviouslyUsed(obj as MapEntityPrefab);
 
             MapEntityPrefab.SelectPrefab(obj);
-            entityMenuOpen = false;
             GUI.ForceMouseOn(null);
             return false;
         }
@@ -1535,8 +1660,9 @@ namespace Barotrauma
                 MapEntity.HighlightedListBox.AddToGUIUpdateList();
             }
 
-            leftPanel.AddToGUIUpdateList();
-            topPanel.AddToGUIUpdateList();
+            EntityMenu.AddToGUIUpdateList();  
+            LeftPanel.AddToGUIUpdateList();
+            TopPanel.AddToGUIUpdateList();
 
             if (wiringMode)
             {
@@ -1560,14 +1686,8 @@ namespace Barotrauma
                 else if (saveFrame != null)
                 {
                     saveFrame.AddToGUIUpdateList();
-                }
-                else if (entityMenuOpen)
-                {
-                    entityMenu.AddToGUIUpdateList();
-                }
+                }              
             }
-
-            //GUI.AddToGUIUpdateList();
         }
 
         /// <summary>
@@ -1576,12 +1696,19 @@ namespace Barotrauma
         /// </summary>
         public override void Update(double deltaTime)
         {
+            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
+            {
+                saveFrame = null;
+                loadFrame = null;
+                saveAssemblyFrame = null;
+                CreateUI();
+            }
+
             if (tutorial != null) tutorial.Update((float)deltaTime);
 
             if (entityMenuOpened)
             {
                 entityFilterBox.Text = "";
-                entityFilterBox.Select();
                 entityMenuOpened = false;
             }
 
@@ -1652,8 +1779,11 @@ namespace Barotrauma
                 MapEntity.UpdateEditor(cam);
             }
 
-            //leftPanel.Update((float)deltaTime);
-            //topPanel.Update((float)deltaTime);
+            entityMenuOpenState = entityMenuOpen ? 
+                (float)Math.Min(entityMenuOpenState + deltaTime * 5.0f, 1.0f) :
+                (float)Math.Max(entityMenuOpenState - deltaTime * 5.0f, 0.0f);
+
+            EntityMenu.RectTransform.ScreenSpaceOffset = Vector2.Lerp(new Vector2(0.0f, EntityMenu.Rect.Height - 10), Vector2.Zero, entityMenuOpenState).ToPoint();
 
             if (wiringMode)
             {
@@ -1663,22 +1793,20 @@ namespace Barotrauma
                 }
                 //wiringToolPanel.Update((float)deltaTime);
             }
-            
-            if (loadFrame!=null)
+
+            if (PlayerInput.LeftButtonClicked() && !GUI.IsMouseOn(entityFilterBox))
             {
-                //loadFrame.Update((float)deltaTime);
+                entityFilterBox.Deselect();
+            }
+
+            if (loadFrame != null)
+            {
                 if (PlayerInput.RightButtonClicked()) loadFrame = null;
             }
             else if (saveFrame != null)
             {
-                //saveFrame.Update((float)deltaTime);
-            }
-            else if (entityMenuOpen)
-            {
-                //GUItabs[selectedTab].Update((float)deltaTime);
-                if (PlayerInput.RightButtonClicked()) entityMenuOpen = false;
-            }
-
+                if (PlayerInput.RightButtonClicked()) saveFrame = null;
+            }            
 
             if ((characterMode || wiringMode) && dummyCharacter != null)
             {
@@ -1707,7 +1835,7 @@ namespace Barotrauma
                     if (PlayerInput.KeyHit(InputType.Select) && dummyCharacter.FocusedItem != dummyCharacter.SelectedConstruction) dummyCharacter.SelectedConstruction = null;
                 }
 
-                CharacterHUD.Update((float)deltaTime, dummyCharacter);
+                CharacterHUD.Update((float)deltaTime, dummyCharacter, cam);
             }
 
             //GUI.Update((float)deltaTime);
@@ -1764,30 +1892,13 @@ namespace Barotrauma
                     GUI.SubmarineIcon, Color.LightBlue * 0.5f);
             }
             
-            leftPanel.DrawManually(spriteBatch);
-            topPanel.DrawManually(spriteBatch);
-            
-            if ((characterMode || wiringMode) && dummyCharacter != null)                     
+            if ((characterMode || wiringMode) && dummyCharacter != null)
             {
                 dummyCharacter.DrawHUD(spriteBatch, cam, false);
-                
                 if (wiringMode) wiringToolPanel.DrawManually(spriteBatch);
             }
             else
             {
-                if (loadFrame != null)
-                {
-                    loadFrame.DrawManually(spriteBatch);
-                }
-                else if (saveFrame != null)
-                {
-                    saveFrame.DrawManually(spriteBatch);
-                }
-                else if (entityMenuOpen)
-                {
-                    entityMenu.DrawManually(spriteBatch);
-                }
-
                 MapEntity.DrawEditor(spriteBatch, cam);
             }
 

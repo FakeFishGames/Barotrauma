@@ -12,6 +12,7 @@
     <Price locationtype="City" buyprice="20"/>
     <Price locationtype="Outpost" buyprice="20"/>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,0,64,64"/>
     <Sprite texture="headset.png" depth="0.6" sourcerect="0,0,16,16"/>
 
     <Body width="12" height="8" density="10"/>
@@ -21,6 +22,7 @@
     </WifiComponent>
 
     <ItemContainer capacity="1" hideitems="true">
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31"/>
       <Containable identifiers="batterycell,fulguriumbatterycell"/>
     </ItemContainer>
 

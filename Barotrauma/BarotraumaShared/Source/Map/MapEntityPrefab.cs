@@ -51,7 +51,7 @@ namespace Barotrauma
         {
             get;
             protected set;
-        }
+        } = new HashSet<string>();
 
         public static MapEntityPrefab Selected
         {
@@ -72,7 +72,12 @@ namespace Barotrauma
             get;
             private set;
         }
-                
+
+        /// <summary>
+        /// Links defined to identifiers.
+        /// </summary>
+        public List<string> AllowedLinks { get; protected set; } = new List<string>();
+
         public MapEntityCategory Category
         {
             get;
@@ -85,14 +90,7 @@ namespace Barotrauma
             get;
             protected set;
         }
-
-        [Serialize("1.0,1.0,1.0,1.0", false)]
-        public Color InventoryIconColor
-        {
-            get;
-            protected set;
-        }
-
+        
         //If a matching prefab is not found when loading a sub, the game will attempt to find a prefab with a matching alias.
         //(allows changing names while keeping backwards compatibility with older sub files)
         public string[] Aliases
@@ -266,11 +264,17 @@ namespace Barotrauma
             return false;
         }
 
+        public bool IsLinkAllowed(MapEntityPrefab target)
+        {
+            if (target == null) { return false; }
+            return AllowedLinks.Contains(target.Identifier) || target.AllowedLinks.Contains(identifier)
+                || target.Tags.Any(t => AllowedLinks.Contains(t)) || Tags.Any(t => target.AllowedLinks.Contains(t));
+        }
+
         //a method that allows the GUIListBoxes to check through a delegate if the entityprefab is still selected
         public static object GetSelected()
         {
             return (object)selected;            
-        }
-        
+        }      
     }
 }

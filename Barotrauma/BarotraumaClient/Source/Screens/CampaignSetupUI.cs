@@ -180,7 +180,14 @@ namespace Barotrauma
                     };
                 }
             }
-            if (Submarine.SavedSubmarines.Any()) subList.Select(Submarine.SavedSubmarines.First());
+            if (Submarine.SavedSubmarines.Any())
+            {
+                var nonShuttles = subsToShow.Where(s => !s.HasTag(SubmarineTag.Shuttle)).ToList();
+                if (nonShuttles.Count > 0)
+                {
+                    subList.Select(nonShuttles[Rand.Int(nonShuttles.Count)]);
+                }
+            }
         }
 
         public void UpdateLoadMenu()

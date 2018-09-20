@@ -61,7 +61,7 @@ namespace Barotrauma
                     {
                         if (!character.Inventory.Items.Any(it => it != null && requiredItem.MatchesItem(it)))
                         {
-                            AddSubObjective(new AIObjectiveGetItem(character, requiredItem.Identifiers));
+                            AddSubObjective(new AIObjectiveGetItem(character, requiredItem.Identifiers, true));
                             return;
                         }
                     }

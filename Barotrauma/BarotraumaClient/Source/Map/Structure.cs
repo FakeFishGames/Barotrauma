@@ -15,7 +15,17 @@ namespace Barotrauma
 
     partial class Structure : MapEntity, IDamageable, IServerSerializable
     {
+        public static bool ShowWalls = true, ShowStructures = true;        
+
         private List<ConvexHull> convexHulls;
+
+        public override bool SelectableInEditor
+        {
+            get
+            {
+                return ShowStructures && (ShowWalls || !HasBody);
+            }
+        }
 
         protected Vector2 textureScale = Vector2.One;
         [Editable, Serialize("1.0, 1.0", true)]
@@ -115,20 +125,11 @@ namespace Barotrauma
 
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
-            int width = 600, height = 150;
-            int x = GameMain.GraphicsWidth / 2 - width / 2, y = 30;
-
-            editingHUD = new GUIListBox(new RectTransform(new Point(width, height), GUI.Canvas) { ScreenSpaceOffset = new Point(x, y) })
-            {
-                UserData = this
-            };
-
-            GUIListBox listBox = (GUIListBox)editingHUD;
+            editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) }) { UserData = this };
+            GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null);
             new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, elementHeight: 20);
 
-            int contentHeight = editingHUD.Children.Sum(c => c.Rect.Height) + (listBox.CountChildren - 1) * listBox.Spacing;
-            editingHUD.RectTransform.NonScaledSize =
-                new Point(editingHUD.RectTransform.NonScaledSize.X, MathHelper.Clamp(contentHeight, 50, editingHUD.RectTransform.NonScaledSize.Y));
+            PositionEditingHUD();
 
             return editingHUD;
         }
@@ -140,6 +141,11 @@ namespace Barotrauma
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (prefab.sprite == null) return;
+            if (editing)
+            {
+                if (!ShowStructures) return;
+                if (HasBody && !ShowWalls) return;
+            }
 
             Draw(spriteBatch, editing, back, null);
         }
@@ -152,6 +158,11 @@ namespace Barotrauma
         private void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Effect damageEffect = null)
         {
             if (prefab.sprite == null) return;
+            if (editing)
+            {
+                if (!ShowStructures) return;
+                if (HasBody && !ShowWalls) return;
+            }
 
             Color color = (isHighlighted) ? Color.Orange : spriteColor;
             if (IsSelected && editing)
@@ -163,7 +174,7 @@ namespace Barotrauma
 
             Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
 
-            float depth = prefab.sprite.Depth;
+            float depth = SpriteDepthOverrideIsSet ? SpriteOverrideDepth : prefab.sprite.Depth;
             depth -= (ID % 255) * 0.000001f;
 
             Vector2 textureOffset = this.textureOffset;
@@ -192,7 +203,7 @@ namespace Barotrauma
                     prefab.BackgroundSprite.effects = oldEffects;
                 }
             }
-
+            // TODO: use SpriteOverrideDepth if defined?
             if (back == prefab.sprite.Depth > 0.5f || editing)
             {
                 SpriteEffects oldEffects = prefab.sprite.effects;

@@ -17,9 +17,7 @@ namespace Barotrauma.Items.Components
         private const int GraphSize = 25;
         private float graphTimer;
         private int updateGraphInterval = 500;
-
-        private Point screenResolution;
-
+        
         private Sprite fissionRateMeter, turbineOutputMeter;
         private Sprite meterPointer;
         private Sprite sectorSprite;
@@ -38,6 +36,8 @@ namespace Barotrauma.Items.Components
         private GUITickBox criticalHeatWarning;
         private GUITickBox lowTemperatureWarning;
         private GUITickBox criticalOutputWarning;
+
+        private GUIFrame inventoryContainer;
 
         private GUIComponent leftHUDColumn;
 
@@ -102,7 +102,7 @@ namespace Barotrauma.Items.Components
             int buttonsPerRow = 2;
             int spacing = 5;
             int buttonWidth = columnLeft.Rect.Width / buttonsPerRow - (spacing * (buttonsPerRow - 1));
-            int buttonHeight = (int)(GuiFrame.Rect.Height * 0.35f) / 3;
+            int buttonHeight = (int)(columnLeft.Rect.Height * 0.5f) / 4;
             for (int i = 0; i < warningTexts.Length; i++)
             {
                 var warningBtn = new GUIButton(new RectTransform(new Point(buttonWidth, buttonHeight), columnLeft.RectTransform)
@@ -116,10 +116,43 @@ namespace Barotrauma.Items.Components
                 warningButtons.Add(warningTexts[i], warningBtn);
             }
 
+            inventoryContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.45f), columnLeft.RectTransform, Anchor.BottomLeft), style: null);
 
             //----------------------------------------------------------
             //mid column
             //----------------------------------------------------------
+            
+            criticalHeatWarning = new GUITickBox(new RectTransform(new Point(30, 30), columnMid.RectTransform),
+                TextManager.Get("ReactorWarningCriticalTemp"), font: GUI.SmallFont, style: "IndicatorLightRed")
+            {
+                CanBeFocused = false
+            };
+            lowTemperatureWarning = new GUITickBox(new RectTransform(new Point(30, 30), columnMid.RectTransform) { RelativeOffset = new Vector2(0.3f, 0.0f) },
+                TextManager.Get("ReactorWarningCriticalLowTemp"), font: GUI.SmallFont, style: "IndicatorLightRed")
+            {
+                CanBeFocused = false
+            };
+            criticalOutputWarning = new GUITickBox(new RectTransform(new Point(30, 30), columnMid.RectTransform) { RelativeOffset = new Vector2(0.75f, 0.0f) },
+                TextManager.Get("ReactorWarningCriticalOutput"), font: GUI.SmallFont, style: "IndicatorLightRed")
+            {
+                CanBeFocused = false
+            };
+            
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.05f), columnMid.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) },
+                TextManager.Get("ReactorFissionRate"));
+            new GUICustomComponent(new RectTransform(new Vector2(0.5f, 0.5f), columnMid.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.3f) },
+                DrawFissionRateMeter, null)
+            {
+                ToolTip = TextManager.Get("ReactorTipFissionRate")
+            };
+
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.05f), columnMid.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, 0.25f) },
+                TextManager.Get("ReactorTurbineOutput"));
+            new GUICustomComponent(new RectTransform(new Vector2(0.5f, 0.5f), columnMid.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, 0.3f) },
+                DrawTurbineOutputMeter, null)
+            {
+                ToolTip = TextManager.Get("ReactorTipTurbineOutput")
+            };
 
             new GUITextBlock(new RectTransform(new Point(0, 20), columnMid.RectTransform, Anchor.BottomLeft) { AbsoluteOffset = new Point(0, 90) },
                 TextManager.Get("ReactorFissionRate"));
@@ -160,47 +193,19 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
             };
-            
-            criticalHeatWarning = new GUITickBox(new RectTransform(new Point(30, 30), columnMid.RectTransform),
-                TextManager.Get("ReactorWarningCriticalTemp"), font: GUI.SmallFont, style: "IndicatorLightRed")
-            {
-                CanBeFocused = false
-            };
-            lowTemperatureWarning = new GUITickBox(new RectTransform(new Point(30, 30), columnMid.RectTransform) { RelativeOffset = new Vector2(0.3f, 0.0f) },
-                TextManager.Get("ReactorWarningCriticalLowTemp"), font: GUI.SmallFont, style: "IndicatorLightRed")
-            {
-                CanBeFocused = false
-            };
-            criticalOutputWarning = new GUITickBox(new RectTransform(new Point(30, 30), columnMid.RectTransform) { RelativeOffset = new Vector2(0.75f, 0.0f) },
-                TextManager.Get("ReactorWarningCriticalOutput"), font: GUI.SmallFont, style: "IndicatorLightRed")
-            {
-                CanBeFocused = false
-            };
-            
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.05f), columnMid.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) },
-                TextManager.Get("ReactorFissionRate"));
-            new GUICustomComponent(new RectTransform(new Vector2(0.5f, 0.5f), columnMid.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.3f) },
-                DrawFissionRateMeter, null)
-            {
-                CanBeFocused = false
-            };
-
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.05f), columnMid.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, 0.25f) },
-                TextManager.Get("ReactorTurbineOutput"));
-            new GUICustomComponent(new RectTransform(new Vector2(0.5f, 0.5f), columnMid.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, 0.3f) },
-                DrawTurbineOutputMeter, null)
-            {
-                CanBeFocused = false
-            };
 
             //----------------------------------------------------------
             //right column
             //----------------------------------------------------------
 
-            new GUITextBlock(new RectTransform(new Point(100,20), columnRight.RectTransform), TextManager.Get("ReactorAutoTemp"));
+            new GUITextBlock(new RectTransform(new Point(100, 20), columnRight.RectTransform), TextManager.Get("ReactorAutoTemp"))
+            {
+                ToolTip = TextManager.Get("ReactorTipAutoTemp")
+            };
             autoTempSlider = new GUIScrollBar(new RectTransform(new Point(100, 30), columnRight.RectTransform) { AbsoluteOffset = new Point(0, 30) },
                 barSize: 0.5f, style: "OnOffSlider")
             {
+                ToolTip = TextManager.Get("ReactorTipAutoTemp"),
                 IsBooleanSwitch = true,
                 BarScroll = 1.0f,
                 OnMoved = (scrollBar, scrollAmount) =>
@@ -239,30 +244,31 @@ namespace Barotrauma.Items.Components
             var graphArea = new GUICustomComponent(new RectTransform(new Vector2(1.0f, 0.5f), columnRight.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(0, 30) },
                 DrawGraph, null);
 
-            var loadText = new GUITextBlock(new RectTransform(new Point(100, 30), graphArea.RectTransform, Anchor.TopLeft, Pivot.BottomLeft), 
-                "Load", textColor: Color.LightBlue, textAlignment: Alignment.CenterLeft);
+            var loadText = new GUITextBlock(new RectTransform(new Point(100, 30), graphArea.RectTransform, Anchor.TopLeft, Pivot.BottomLeft),
+                "Load", textColor: Color.LightBlue, textAlignment: Alignment.CenterLeft)
+            {
+                ToolTip = TextManager.Get("ReactorTipLoad")
+            };
             string loadStr = TextManager.Get("ReactorLoad");
             loadText.TextGetter += () => { return loadStr.Replace("[kw]", ((int)load).ToString()); };
 
             var outputText = new GUITextBlock(new RectTransform(new Point(100, 30), graphArea.RectTransform, Anchor.BottomLeft, Pivot.TopLeft), 
-                "Output", textColor: Color.LightGreen, textAlignment: Alignment.CenterLeft);
+                "Output", textColor: Color.LightGreen, textAlignment: Alignment.CenterLeft)
+            {
+                ToolTip = TextManager.Get("ReactorTipPower")
+            };
             string outputStr = TextManager.Get("ReactorOutput");
             outputText.TextGetter += () => { return outputStr.Replace("[kw]", ((int)-currPowerConsumption).ToString()); };
         }
 
         public override void OnItemLoaded()
         {
-            SetInventoryPos();
-        }
-
-        private void SetInventoryPos()
-        {
-            Inventory inventory = item.GetComponent<ItemContainer>()?.Inventory;
-            inventory.CenterPos = new Vector2(
-                leftHUDColumn.Rect.Center.X / (float)GameMain.GraphicsWidth,
-                (leftHUDColumn.Rect.Y + leftHUDColumn.Rect.Height * 0.85f) / GameMain.GraphicsHeight);
-
-            screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            var itemContainer = item.GetComponent<ItemContainer>();
+            if (itemContainer != null)
+            {
+                itemContainer.AllowUIOverlap = true;
+                itemContainer.Inventory.RectTransform = inventoryContainer.RectTransform;
+            }
         }
 
         private void DrawGraph(SpriteBatch spriteBatch, GUICustomComponent container)
@@ -280,7 +286,7 @@ namespace Barotrauma.Items.Components
 
             tempMeterFrame.Draw(spriteBatch, new Vector2(graphArea.X - 30, graphArea.Y), Color.White, Vector2.Zero, 0.0f, new Vector2(1.0f, graphArea.Height / tempMeterFrame.size.Y));
             float tempFill = temperature / 100.0f;
-
+            
             int barPadding = 5;
             Vector2 meterBarPos = new Vector2(graphArea.X - 30 + tempMeterFrame.size.X / 2, graphArea.Bottom - tempMeterBar.size.Y);
             while (meterBarPos.Y > graphArea.Bottom - graphArea.Height * tempFill)
@@ -351,15 +357,10 @@ namespace Barotrauma.Items.Components
             GuiFrame.AddToGUIUpdateList();
         }
 
-        public override void UpdateHUD(Character character, float deltaTime)
+        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             IsActive = true;
-
-            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
-            {
-                SetInventoryPos();
-            }
-
+            
             bool lightOn = Timing.TotalTime % 0.5f < 0.25f && onOffSwitch.BarScroll < 0.5f;
 
             fissionRateScrollBar.Enabled = !autoTemp;
