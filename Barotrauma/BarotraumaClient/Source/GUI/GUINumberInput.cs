@@ -80,7 +80,16 @@ namespace Barotrauma
             }
         }
 
-        public int decimalsToDisplay = 1;
+        private int decimalsToDisplay = 1;
+        public int DecimalsToDisplay
+        {
+            get { return decimalsToDisplay; }
+            set
+            {
+                decimalsToDisplay = value;
+                UpdateText();
+            }
+        }
 
         public int? MinValueInt, MaxValueInt;
 
