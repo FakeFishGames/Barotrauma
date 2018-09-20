@@ -143,13 +143,13 @@
     <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" tile="false" maintainaspectratio="true" sourcerect="983,353,39,39"/>
   </GUIButtonRefresh>
 
-  <!-- TODO: separate the arrow from the toggle button-->
   <UIToggleButton
     color="0.9,0.9,0.9,0.8"
     hovercolor="1.0,1.0,1.0,1.0"
     selectedcolor="1.0,1.0,1.0,0.9"
     textcolor="0.0,0.0,0.0,1.0">
     <Sprite texture="Content/UI/UI_Atlas2.png" size="0.0, 0.0" sourcerect ="96,366,32,352" slice="101,371,123,713"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" tile="false" maintainaspectratio="true" sourcerect="128,399,32,37"/>
   </UIToggleButton>
 
   <GUIButtonHorizontalArrow
