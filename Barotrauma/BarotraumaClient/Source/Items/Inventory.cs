@@ -215,6 +215,8 @@ namespace Barotrauma
 
                 spacing *= scale;
                 rectSize *= scale;
+                padding.X *= scale.X; padding.Z *= scale.X;
+                padding.Y *= scale.Y; padding.W *= scale.Y;
 
                 topLeft = RectTransform.TopLeft.ToVector2() + new Vector2(padding.X, padding.Y);
                 prevRect = RectTransform.Rect;
