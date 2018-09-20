@@ -499,7 +499,7 @@ namespace Barotrauma
         public bool SpriteDepthOverrideIsSet { get; private set; }
         public float SpriteOverrideDepth => SpriteDepth;
         private float _spriteOverrideDepth = float.NaN;
-        [Editable(0.001f, 0.999f), Serialize(float.NaN, true)]
+        [Editable(0.001f, 0.999f, decimals: 3), Serialize(float.NaN, true)]
         public float SpriteDepth
         {
             get
