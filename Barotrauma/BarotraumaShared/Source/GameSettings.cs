@@ -204,10 +204,9 @@ namespace Barotrauma
             set { losMode = value; }
         }
 
-        private static float minUIScale = 0.5f;
-        private static float maxUIScale = 1.5f;
-
+        private const float MinHUDScale = 0.75f, MaxHUDScale = 1.25f;
         public static float HUDScale { get; set; } = 1.0f;
+        private const float MinInventoryScale = 0.75f, MaxInventoryScale = 1.25f;
         public static float InventoryScale { get; set; } = 1.0f;
 
         public List<string> CompletedTutorialNames { get; private set; }
