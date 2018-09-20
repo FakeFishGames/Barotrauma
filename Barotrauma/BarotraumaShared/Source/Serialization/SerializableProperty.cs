@@ -14,7 +14,7 @@ namespace Barotrauma
     public class Editable : Attribute
     {
         public int MaxLength;
-        public int DecimalCount;
+        public int DecimalCount = 1;
 
         public int MinValueInt = int.MinValue, MaxValueInt = int.MaxValue;
         public float MinValueFloat = float.MinValue, MaxValueFloat = float.MaxValue;
