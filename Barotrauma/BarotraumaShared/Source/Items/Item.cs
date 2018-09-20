@@ -12,6 +12,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -233,13 +234,12 @@ namespace Barotrauma
             set
             {
                 tags.Clear();
-                if (value == null) return;
-
-                string[] newTags = value.Split(',');
-                foreach (string tag in newTags)
+                // Always add prefab tags
+                prefab.Tags.ForEach(t => tags.Add(t));
+                if (!string.IsNullOrWhiteSpace(value))
                 {
-                    string newTag = tag.Trim();
-                    if (!tags.Contains(newTag)) tags.Add(newTag);
+                    // Process and add new tags
+                    value.Split(',').ForEach(t => tags.Add(t.ToLowerInvariant().Trim()));
                 }
             }
         }
