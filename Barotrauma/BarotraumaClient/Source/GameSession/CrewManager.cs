@@ -403,7 +403,7 @@ namespace Barotrauma
             wrongOrderList.RectTransform.SetAsLastChild();
 
             new GUIFrame(new RectTransform(new Point(
-                wrongOrderList.Rect.Width - toggleWrongOrderBtn.Rect.Width - wrongOrderList.Spacing, 
+                wrongOrderList.Rect.Width - toggleWrongOrderBtn.Rect.Width - wrongOrderList.Spacing * 2, 
                 wrongOrderList.Rect.Height), wrongOrderList.Content.RectTransform), 
                 style: null);
 
