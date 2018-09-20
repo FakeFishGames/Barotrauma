@@ -3,7 +3,9 @@
   <Item
     name="Navigation Terminal"
     category="Legacy"
-    linkable="true">
+    tags="command"
+    linkable="true"
+    allowedlinks="command">
 
     <Sprite texture="machines.png" depth="0.8" sourcerect="0,0,64,128"/>
 
@@ -46,7 +48,8 @@
 
   <Item
     name="Sonar Monitor"
-    category="Legacy"    
+    category="Legacy"
+    tags="command"
     linkable="true">
 
     <Sprite texture="machines.png" depth="0.8" sourcerect="64,0,64,128"/>
@@ -81,9 +84,11 @@
 
   <Item
     name="Status Monitor"
-    category="Legacy"    
+    category="Legacy"
+    tags="command"
     aliases="MiniMap"
-    linkable="true">
+    linkable="true"
+    allowedlinks="command">
 
     <Sprite texture="machines.png" sourcerect="64,0,64,128" depth="0.8"/>
 
