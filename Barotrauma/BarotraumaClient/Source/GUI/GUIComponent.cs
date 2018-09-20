@@ -458,6 +458,10 @@ namespace Barotrauma
             {
                 toolTipBlock.RectTransform.AbsoluteOffset -= new Point(toolTipBlock.Rect.Right - (GameMain.GraphicsWidth - 10), 0);
             }
+            if (toolTipBlock.Rect.Bottom > GameMain.GraphicsHeight - 10)
+            {
+                toolTipBlock.RectTransform.AbsoluteOffset -= new Point(0, toolTipBlock.Rect.Bottom - (GameMain.GraphicsHeight - 10));
+            }
             toolTipBlock.SetTextPos();
 
             toolTipBlock.DrawManually(spriteBatch);
