@@ -138,11 +138,15 @@ namespace Barotrauma
             {
                 if (MaintainAspectRatio)
                 {
-                    float scale = (float)(rect.Width) / Sprite.SourceRect.Width;
+                    float scale = Math.Min((float)rect.Width / Sprite.SourceRect.Width, (float)rect.Height / Sprite.SourceRect.Height);
 
-                    spriteBatch.Draw(Sprite.Texture, rect,
-                        new Rectangle(Sprite.SourceRect.X, Sprite.SourceRect.Y, (int)(Sprite.SourceRect.Width), (int)(rect.Height / scale)),
-                        color, 0.0f, Vector2.Zero, spriteEffects, 0.0f);
+                    spriteBatch.Draw(Sprite.Texture, rect.Center.ToVector2(),
+                        Sprite.SourceRect,
+                        color, 
+                        rotation: 0.0f, 
+                        origin: Sprite.size / 2.0f,
+                        scale: scale,
+                        effects: spriteEffects, layerDepth: 0.0f);
                 }
                 else
                 {
