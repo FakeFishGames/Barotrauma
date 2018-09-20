@@ -397,6 +397,7 @@ namespace Barotrauma
             numberInput.MinValueFloat = editableAttribute.MinValueFloat;
             numberInput.MaxValueFloat = editableAttribute.MaxValueFloat;
             numberInput.FloatValue = value;
+            numberInput.DecimalsToDisplay = editableAttribute.DecimalCount;
             numberInput.OnValueChanged += (numInput) =>
             {
                 if (property.TrySetValue(numInput.FloatValue))
