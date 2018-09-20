@@ -307,9 +307,27 @@ namespace Barotrauma
                 {
                     var itemPrefab = ep as ItemPrefab;
                     if (itemPrefab == null || itemPrefab.Name == null) continue;
-                    NewMessage("- " + itemPrefab.Name, Color.Cyan);
+                    string text = $"- {itemPrefab.Name}";
+                    if (itemPrefab.Tags.Any())
+                    {
+                        text += $" ({string.Join(", ", itemPrefab.Tags)})";
+                    }
+                    if (itemPrefab.AllowedLinks.Any())
+                    {
+                        text += $", Links: {string.Join(", ", itemPrefab.AllowedLinks)}";
+                    }
+                    NewMessage(text, Color.Cyan);
                 }
                 NewMessage("***************", Color.Cyan);
+            }));
+
+            commands.Add(new Command("tags", "tags: list all the tags used in the game", (string[] args) =>
+            {
+                var tagList = MapEntityPrefab.List.SelectMany(p => p.Tags.Select(t => t)).Distinct();
+                foreach (var tag in tagList)
+                {
+                    NewMessage(tag, Color.Yellow);
+                }
             }));
 
             commands.Add(new Command("setpassword|setserverpassword", "setpassword [password]: Changes the password of the server that's being hosted.", (string[] args) =>
