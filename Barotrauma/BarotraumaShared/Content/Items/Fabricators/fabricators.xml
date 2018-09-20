@@ -7,7 +7,7 @@
     category="Machine"
     description="A machine capable of manufacturing a wide range of items out of basic raw materials.">
 
-    <Sprite texture="Content/Items/Fabricators/FF_Fabricator.png" sourcerect="0,0,220,200" depth="0.5"/>
+    <Sprite texture="Content/Items/Fabricators/FF_Fabricator.png" sourcerect="0,0,192,208" depth="0.8"/>
 
     <Fabricator canbeselected = "true" powerconsumption="500.0">
       <GuiFrame relativesize="0.4,0.4" minsize="600,400" maxsize="900,600" anchor="Center" style="ItemUI"/>
@@ -374,7 +374,7 @@
     category="Machine"
     description="Disassembles and breaks down items to reusable components and material bars.">
 
-    <Sprite texture="Content/Items/Fabricators/FF_deconstructor.png" depth="0.8" sourcerect="0,0,264,164"/>
+    <Sprite texture="Content/Items/Fabricators/FF_deconstructor.png" depth="0.8" sourcerect="0,0,176,144"/>
 
     <Deconstructor canbeselected = "true" powerconsumption="500.0">
       <GuiFrame relativesize="0.15,0.35" minsize="300,400" maxsize="360,480" anchor="Center" style="ItemUI"/>

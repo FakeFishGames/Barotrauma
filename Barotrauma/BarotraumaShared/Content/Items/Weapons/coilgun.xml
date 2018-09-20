@@ -10,7 +10,8 @@
     spritecolor="1.0,0.0,0.0,1.0"
     focusonselected="true"
     offsetonselected="700"
-    linkable="true">
+    linkable="true"
+    allowedlinks="coligunequipment">
 
     <Sprite texture="railgunbase.png" depth="0.01" sourcerect="0,0,256,256"/>
 
@@ -48,8 +49,10 @@
   <Item
     name="Coilgun Loader"
     identifier="coilgunloader"
+    tags="coilgunequipment"
     category="Machine"
-    linkable="true">
+    linkable="true"
+    allowedlinks="coilgun">
 
     <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="0,0,177,128"/>
 
@@ -66,6 +69,7 @@
   <Item
     name="Coilgun Ammunition Box"
     identifier="coilgunammobox"
+    tags="coilgunequipment"
     category="Machine"
     linkable="true">
 

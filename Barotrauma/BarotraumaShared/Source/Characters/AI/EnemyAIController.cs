@@ -354,7 +354,7 @@ namespace Barotrauma
         {
             coolDownTimer -= deltaTime;
 
-            if (Character.Submarine == null && SimPosition.Y < ConvertUnits.ToSimUnits(Character.CharacterHealth.ChrushDepth * 0.75f))
+            if (Character.Submarine == null && SimPosition.Y < ConvertUnits.ToSimUnits(Character.CharacterHealth.CrushDepth * 0.75f))
             {
                 //steer straight up if very deep
                 steeringManager.SteeringManual(deltaTime, Vector2.UnitY);
