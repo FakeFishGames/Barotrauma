@@ -221,8 +221,18 @@ namespace Barotrauma.Items.Components
             if (GameMain.Client != null) return false;
 
             if (reload > 0.0f) return false;
-            
-            if (GetAvailablePower() < powerConsumption) return false;
+
+            if (GetAvailablePower() < powerConsumption)
+            {
+#if CLIENT
+                if (!flashLowPower)
+                {
+                    flashLowPower = true;
+                    GUI.PlayUISound(GUISoundType.PickItemFail);
+                }
+#endif
+                return false;
+            }
 
             foreach (MapEntity e in item.linkedTo)
             {
@@ -235,7 +245,17 @@ namespace Barotrauma.Items.Components
             }
 
             var projectiles = GetLoadedProjectiles(true);
-            if (projectiles.Count == 0) return false;
+            if (projectiles.Count == 0)
+            {
+#if CLIENT
+                if (!flashNoAmmo)
+                {
+                    flashNoAmmo = true;
+                    GUI.PlayUISound(GUISoundType.PickItemFail);
+                }
+#endif
+                return false;
+            }
 
             var batteries = item.GetConnectedComponents<PowerContainer>();
             float availablePower = 0.0f;
