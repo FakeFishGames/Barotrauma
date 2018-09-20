@@ -156,6 +156,11 @@ namespace Barotrauma
                     }
                 }
             }
+
+            new GUIImage(new RectTransform(Vector2.One * 0.2f, dropItemArea.RectTransform, Anchor.Center), "HealthCross")
+            {
+                CanBeFocused = false
+            };
             
             healthWindow = new GUIFrame(new RectTransform(new Point(100, 200), GUI.Canvas));
             if (HideNormalInventory)
@@ -508,8 +513,6 @@ namespace Barotrauma
 
                     img.State = GUI.MouseOn == dropItemArea ? GUIComponent.ComponentState.Hover : GUIComponent.ComponentState.None;
 
-                    img.Rotation = (img.Rotation + (rotationSpeed + dropItemAnimTimer * 10.0f) * deltaTime) % MathHelper.TwoPi;
-                    rotationSpeed = (rotationSpeed + 0.3f) % 1.0f;
 
                     byte alpha = img.Color.A;
                     byte hoverAlpha = img.HoverColor.A;
@@ -521,6 +524,11 @@ namespace Barotrauma
                     {
                         img.Scale = 1.0f - (float)Math.Sin(dropItemAnimTimer / dropItemAnimDuration * MathHelper.TwoPi) * 0.3f;
                     }
+
+                    if (dropItemIndicator == dropItemArea.Children.Last()) break;
+                    img.Rotation = (img.Rotation + (rotationSpeed + dropItemAnimTimer * 10.0f) * deltaTime) % MathHelper.TwoPi;
+                    rotationSpeed = (rotationSpeed + 0.3f) % 1.0f;
+
                     i++;
                 }
 
@@ -875,7 +883,9 @@ namespace Barotrauma
         public bool OnItemDropped(Item item, bool ignoreMousePos)
         {
             //items can be dropped outside the health window
-            if (!ignoreMousePos && !HUDLayoutSettings.HealthWindowAreaLeft.Contains(PlayerInput.MousePosition))
+            if (!ignoreMousePos && 
+                !healthWindow.Rect.Contains(PlayerInput.MousePosition) && 
+                !afflictionInfoContainer.Parent.Rect.Contains(PlayerInput.MousePosition))
             {
                 return false;
             }

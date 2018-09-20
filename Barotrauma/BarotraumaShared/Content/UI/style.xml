@@ -503,54 +503,60 @@
     <Sprite texture="Content/UI/UI_Atlas.png" sourcerect ="746, 704, 120, 120" slice="754, 711, 865, 816"/>
   </AfflictionIconSlot>
 
+  <HealthCross
+    color="1,1,1,0.6"
+    hovercolor="1,1,1,0.8">
+    <Sprite texture="Content/UI/UI_Atlas2.png" tile="false" sourcerect="179,370,26,27"/>
+  </HealthCross>
+  
+  <!--
   <HealthCircleInner1
     color="1,1,1,0.6"
     hovercolor="1,1,1,0.8">
-    <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect ="0, 0, 683, 683"/>
+    <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect="0,0,683,683"/>
   </HealthCircleInner1>
 
   <HealthCircleInner2
     color="1,1,1,0.6"
     hovercolor="1,1,1,0.8">
-    <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect ="1366, 1366, 682, 682"/>
+    <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect="1366, 1366, 682, 682"/>
   </HealthCircleInner2>
-
-  <!--
+  -->
   <HealthCircleInner3
     color="1,1,1,0.8"
     hovercolor="1,1,1,0.8">
-    <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect ="683, 1366, 683, 682"/>
+    <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect ="783, 1466, 483, 482"/>
   </HealthCircleInner3>
-  -->
+
 
   <HealthCircleMid1
     color="1,1,1,0.4"
     hovercolor="1,1,1,0.6">
-    <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect ="683, 0, 683, 683"/>
+    <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect="683, 0, 683, 683"/>
   </HealthCircleMid1>
 
   <HealthCircleMid2
     color="1,1,1,0.6"
     hovercolor="1,1,1,0.8">
-    <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect ="1366, 0, 682, 683"/>
+    <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect="1366, 0, 682, 683"/>
   </HealthCircleMid2>
 
   <HealthCircleOuter1
     color="1,1,1,0.3"
     hovercolor="1,1,1,0.3">
-    <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect ="683, 683, 683, 683"/>
+    <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect="683, 683, 683, 683"/>
   </HealthCircleOuter1>
 
   <HealthCircleOuter2
     color="1,1,1,0.8"
     hovercolor="1,1,1,0.8">
-    <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect ="1366, 683, 683, 683"/>
+    <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect="1366, 683, 683, 683"/>
   </HealthCircleOuter2>
 
   <HealthCircleOuter3
     color="1,1,1,0.3"
     hovercolor="1,1,1,0.3">
-    <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect ="0, 1366, 683, 682"/>
+    <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect="0, 1366, 683, 682"/>
   </HealthCircleOuter3>
   <!-- /health interface -->
   
