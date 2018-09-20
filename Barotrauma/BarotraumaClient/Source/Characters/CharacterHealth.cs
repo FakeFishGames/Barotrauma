@@ -874,9 +874,17 @@ namespace Barotrauma
 
                 var vitalityText = child.GetChildByUserData("vitality") as GUITextBlock;
                 int vitalityDecrease = (int)affliction.GetVitalityDecrease(this);
-                vitalityText.Text = TextManager.Get("Vitality") + " -" + vitalityDecrease;
-                vitalityText.TextColor = vitalityDecrease <= 0 ? Color.LightGreen :
-                Color.Lerp(Color.Orange, Color.Red, affliction.Strength / affliction.Prefab.MaxStrength);
+                if (vitalityDecrease == 0)
+                {
+                    vitalityText.Visible = false;
+                }
+                else
+                {
+                    vitalityText.Visible = true;
+                    vitalityText.Text = TextManager.Get("Vitality") + " -" + vitalityDecrease;
+                    vitalityText.TextColor = vitalityDecrease <= 0 ? Color.LightGreen :
+                    Color.Lerp(Color.Orange, Color.Red, affliction.Strength / affliction.Prefab.MaxStrength);
+                }
             }
         }
 
