@@ -155,7 +155,7 @@ namespace Barotrauma
             }
         }
 
-        const int MaxMessages = 200;
+        const int MaxMessages = 300;
 
         public static List<ColoredText> Messages = new List<ColoredText>();
 
@@ -303,17 +303,18 @@ namespace Barotrauma
             commands.Add(new Command("items|itemlist", "itemlist: List all the item prefabs available for spawning.", (string[] args) =>
             {
                 NewMessage("***************", Color.Cyan);
-                var items = MapEntityPrefab.List.Where(p => p != null && p is ItemPrefab && p.Name != null).OrderBy(p => p.Name);
-                foreach (MapEntityPrefab ep in items)
+                foreach (MapEntityPrefab ep in MapEntityPrefab.List)
                 {
-                    string text = $"- {ep.Name}";
-                    if (ep.Tags.Any())
+                    var itemPrefab = ep as ItemPrefab;
+                    if (itemPrefab == null || itemPrefab.Name == null) continue;
+                    string text = $"- {itemPrefab.Name}";
+                    if (itemPrefab.Tags.Any())
                     {
-                        text += $" (Tags: {string.Join(", ", ep.Tags)})";
+                        text += $" ({string.Join(", ", itemPrefab.Tags)})";
                     }
-                    if (ep.AllowedLinks.Any())
+                    if (itemPrefab.AllowedLinks.Any())
                     {
-                        text += $" [Links: {string.Join(", ", ep.AllowedLinks)}]";
+                        text += $", Links: {string.Join(", ", itemPrefab.AllowedLinks)}";
                     }
                     NewMessage(text, Color.Cyan);
                 }
@@ -322,17 +323,11 @@ namespace Barotrauma
 
             commands.Add(new Command("tags|taglist", "tags: list all the tags used in the game", (string[] args) =>
             {
-                NewMessage("***************", Color.Yellow);
-                var tagList = MapEntityPrefab.List
-                    .Where(p => p != null && p.Name != null).OrderBy(p => p.Name)
-                    .SelectMany(p => p.Tags.Select(t => t))
-                    .Distinct()
-                    .OrderBy(t => t);
+                var tagList = MapEntityPrefab.List.SelectMany(p => p.Tags.Select(t => t)).Distinct();
                 foreach (var tag in tagList)
                 {
                     NewMessage(tag, Color.Yellow);
                 }
-                NewMessage("***************", Color.Yellow);
             }));
 
             commands.Add(new Command("setpassword|setserverpassword", "setpassword [password]: Changes the password of the server that's being hosted.", (string[] args) =>
