@@ -424,7 +424,7 @@
   </AfflictionBleeding>
 
   <Affliction
-    name="morbusine poisoning"
+    name="Morbusine poisoning"
     identifier="morbusinepoisoning"
     description="Acute morbusine poisoning quickly leads to respiratory failure if left untreated."
     type="poison"
