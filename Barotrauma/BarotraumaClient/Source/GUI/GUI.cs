@@ -1,12 +1,12 @@
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content;
-using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Linq;
-using System.Collections.Generic;
-using EventInput;
 using Barotrauma.Extensions;
 using Barotrauma.Sounds;
+using EventInput;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -28,7 +28,7 @@ namespace Barotrauma
         // TODO: obsolate?
         public static float Scale
         {
-            get { return (GameMain.GraphicsWidth / 1920.0f + GameMain.GraphicsHeight / 1080.0f) / 2.0f; }
+            get { return (GameMain.GraphicsWidth / 1920.0f + GameMain.GraphicsHeight / 1080.0f) / 2.0f * GameSettings.HUDScale; }
         }
 
         public static GUIStyle Style;
@@ -37,6 +37,8 @@ namespace Barotrauma
 
         private static Sprite Cursor => Style.CursorSprite;
 
+        private static bool debugDrawSounds, debugDrawEvents;
+        
         private static GraphicsDevice graphicsDevice;
         public static GraphicsDevice GraphicsDevice
         {
@@ -50,7 +52,7 @@ namespace Barotrauma
         private static Sound[] sounds;
         private static bool pauseMenuOpen, settingsMenuOpen;
         private static GUIFrame pauseMenu;
-        private static Sprite submarineIcon, arrow, lockIcon, checkmarkIcon;
+        private static Sprite submarineIcon, arrow, lockIcon, checkmarkIcon, timerIcon;
 
         public static KeyboardDispatcher KeyboardDispatcher { get; private set; }
 
@@ -62,6 +64,8 @@ namespace Barotrauma
         public static ScalableFont Font => Style?.Font;
         public static ScalableFont SmallFont => Style?.SmallFont;
         public static ScalableFont LargeFont => Style?.LargeFont;
+
+        public static UISprite UIGlow => Style.UIGlow;
 
         public static Sprite SubmarineIcon
         {
@@ -88,6 +92,11 @@ namespace Barotrauma
         {
             get { return lockIcon; }
         }
+
+		public static Sprite TimerIcon 
+		{
+			get { return timerIcon; }
+		}
 
         public static bool SettingsMenuOpen
         {
@@ -156,7 +165,10 @@ namespace Barotrauma
 
             checkmarkIcon = new Sprite("Content/UI/UI_Atlas.png", new Rectangle(932, 398, 33, 28));
             checkmarkIcon.Origin = checkmarkIcon.size / 2;
-        }
+
+			timerIcon = new Sprite("Content/UI/UI_Atlas.png", new Rectangle(997, 653, 18, 21));
+			timerIcon.Origin = timerIcon.size / 2;
+		}
 
         /// <summary>
         /// By default, all the gui elements are drawn automatically in the same order they appear on the update list. 
@@ -248,62 +260,90 @@ namespace Barotrauma
                     "Particle count: " + GameMain.ParticleManager.ParticleCount + "/" + GameMain.ParticleManager.MaxParticles,
                     Color.Lerp(Color.Green, Color.Red, (GameMain.ParticleManager.ParticleCount / (float)GameMain.ParticleManager.MaxParticles)), Color.Black * 0.5f, 0, SmallFont);
 
-                /*var activeParticles = GameMain.ParticleManager.CountActiveParticles();
-                int y = 115;
-                foreach (KeyValuePair<Particles.ParticlePrefab, int> particleCount in activeParticles)
+                DrawString(spriteBatch, new Vector2(10, 115),
+                    "Loaded sprites: " + Sprite.LoadedSprites.Count() + "\n(" + Sprite.LoadedSprites.Select(s => s.FilePath).Distinct().Count() + " unique textures)",
+                    Color.White, Color.Black * 0.5f, 0, SmallFont);
+
+                if (debugDrawSounds)
                 {
-                    DrawString(spriteBatch, new Vector2(15, y),
-                        particleCount.Key.Name+": "+ particleCount.Value,
-                        Color.Lerp(Color.Green, Color.Red, (particleCount.Value / (float)GameMain.ParticleManager.MaxParticles)), Color.Black * 0.5f, 0, SmallFont);
+                    int y = 0;
+                    DrawString(spriteBatch, new Vector2(500, y),
+                        "Sounds (Ctrl+S to hide): ", Color.White, Color.Black * 0.5f, 0, SmallFont);
                     y += 15;
-                }*/
 
-                for (int i = 0; i < SoundManager.SOURCE_COUNT; i++)
-                {
-                    Color clr = Color.White;
-                    string soundStr = i + ": ";
-                    SoundChannel playingSoundChannel = GameMain.SoundManager.GetSoundChannelFromIndex(i);
-                    if (playingSoundChannel == null)
+
+                    for (int i = 0; i < SoundManager.SOURCE_COUNT; i++)
                     {
-                        soundStr += "none";
-                        clr *= 0.5f;
-                    }
-                    else
-                    {
-                        soundStr += System.IO.Path.GetFileNameWithoutExtension(playingSoundChannel.Sound.Filename);
-
-#if DEBUG
-                        if (PlayerInput.GetKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.G))
+                        Color clr = Color.White;
+                        string soundStr = i + ": ";
+                        SoundChannel playingSoundChannel = GameMain.SoundManager.GetSoundChannelFromIndex(i);
+                        if (playingSoundChannel == null)
                         {
-                            if (PlayerInput.MousePosition.Y>=i*15 && PlayerInput.MousePosition.Y<=i*15+12)
-                            {
-                                GameMain.SoundManager.DebugSource(i);
-                            }
-                        }
-#endif
-
-                        if (playingSoundChannel.Looping)
-                        {
-                            soundStr += " (looping)";
-                            clr = Color.Yellow;
-                        }
-
-                        if (playingSoundChannel.IsStream)
-                        {
-                            soundStr += " (streaming)";
-                            clr = Color.Lime;
-                        }
-
-                        if (!playingSoundChannel.IsPlaying)
-                        {
-                            soundStr += " (stopped)";
+                            soundStr += "none";
                             clr *= 0.5f;
                         }
+                        else
+                        {
+                            soundStr += System.IO.Path.GetFileNameWithoutExtension(playingSoundChannel.Sound.Filename);
 
-                        //if (playingSoundChannel.Position != null) soundStr += " " + Vector3.Distance(GameMain.SoundManager.ListenerPosition, playingSoundChannel.Position.Value) + " " + playingSoundChannel.Near;
+#if DEBUG
+                            if (PlayerInput.GetKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.G))
+                            {
+                                if (PlayerInput.MousePosition.Y >= y && PlayerInput.MousePosition.Y <= y + 12)
+                                {
+                                    GameMain.SoundManager.DebugSource(i);
+                                }
+                            }
+#endif
+
+                            if (playingSoundChannel.Looping)
+                            {
+                                soundStr += " (looping)";
+                                clr = Color.Yellow;
+                            }
+
+                            if (playingSoundChannel.IsStream)
+                            {
+                                soundStr += " (streaming)";
+                                clr = Color.Lime;
+                            }
+
+                            if (!playingSoundChannel.IsPlaying)
+                            {
+                                soundStr += " (stopped)";
+                                clr *= 0.5f;
+                            }
+                        }
+
+                        DrawString(spriteBatch, new Vector2(500, y), soundStr, clr, Color.Black * 0.5f, 0, SmallFont);
+                        y += 15;
                     }
+                }
+                else
+                {
+                    DrawString(spriteBatch, new Vector2(500, 0),
+                        "Ctrl+S to show sound debug info", Color.White, Color.Black * 0.5f, 0, SmallFont);
+                }
 
-                    DrawString(spriteBatch, new Vector2(500, i * 15), soundStr, clr, Color.Black * 0.5f, 0, GUI.SmallFont);
+                if (PlayerInput.KeyDown(Keys.LeftControl) && PlayerInput.KeyHit(Keys.S))
+                {
+                    debugDrawSounds = !debugDrawSounds;
+                }
+
+                if (debugDrawEvents)
+                {
+                    DrawString(spriteBatch, new Vector2(10, 300),
+                        "Ctrl+E to hide EventManager debug info", Color.White, Color.Black * 0.5f, 0, SmallFont);
+                    GameMain.GameSession?.EventManager?.DebugDrawHUD(spriteBatch, 315);
+                }
+                else
+                {
+                    DrawString(spriteBatch, new Vector2(10, 300),
+                        "Ctrl+E to show EventManager debug info", Color.White, Color.Black * 0.5f, 0, SmallFont);
+                }
+                if (PlayerInput.KeyDown(Keys.LeftControl) && PlayerInput.KeyHit(Keys.E))
+                {
+                    debugDrawEvents = !debugDrawEvents;
                 }
             }
 
@@ -313,25 +353,13 @@ namespace Barotrauma
 
             if (Character.Controlled?.Inventory != null)
             {
-                if (!Character.Controlled.LockHands && Character.Controlled.Stun >= -0.1f)
+                if (!Character.Controlled.LockHands && Character.Controlled.Stun >= -0.1f && !Character.Controlled.IsDead)
                 {
                     Inventory.DrawFront(spriteBatch);
                 }
             }
 
             DrawMessages(spriteBatch, cam);
-
-            if (GameMain.DebugDraw)
-            {
-                /*DrawString(spriteBatch, new Vector2(500, 0), "gui components: " + updateList.Count, Color.White, Color.Black * 0.5f, 0, SmallFont);
-                DrawString(spriteBatch, new Vector2(500, 20), "mouse on: " + (MouseOn == null ? "null" : MouseOn.ToString()), Color.White, Color.Black * 0.5f, 0, SmallFont);
-                DrawString(spriteBatch, new Vector2(500, 40), "scroll bar value: " + (GUIScrollBar.draggingBar == null ? "null" : GUIScrollBar.draggingBar.BarScroll.ToString()), Color.White, Color.Black * 0.5f, 0, SmallFont);
-                */
-                GameMain.GameSession?.EventManager?.DebugDrawHUD(spriteBatch);
-            }
-            
-            //TODO: move this somewhere else
-            //HumanoidAnimParams.DrawEditor(spriteBatch); 
 
             if (MouseOn != null && !string.IsNullOrWhiteSpace(MouseOn.ToolTip))
             {
@@ -502,8 +530,6 @@ namespace Barotrauma
 
         private static void HandlePersistingElements(float deltaTime)
         {
-            //TODO: move this somewhere else
-            //HumanoidAnimParams.UpdateEditor(deltaTime);
             GUIMessageBox.VisibleBox?.AddToGUIUpdateList();
             if (pauseMenuOpen)
             {
@@ -601,6 +627,8 @@ namespace Barotrauma
             Vector2 diff = worldPosition - cam.WorldViewCenter;
             float dist = diff.Length();
 
+            float symbolScale = 64.0f / sprite.size.X;
+
             if (dist > hideDist)
             {
                 float alpha = Math.Min((dist - hideDist) / 100.0f, 1.0f);
@@ -617,12 +645,12 @@ namespace Barotrauma
                     (float)-Math.Sin(angle) * Math.Min(GameMain.GraphicsHeight * 0.4f, screenDist));
 
                 Vector2 iconPos = cam.WorldToScreen(cam.WorldViewCenter) + iconDiff;
-                sprite.Draw(spriteBatch, iconPos, color * alpha);
+                sprite.Draw(spriteBatch, iconPos, color * alpha, rotate: 0.0f, scale: symbolScale);
 
                 if (unclampedDiff.Length() - 10 > iconDiff.Length())
                 {
                     Vector2 normalizedDiff = Vector2.Normalize(targetScreenPos - iconPos);
-                    Vector2 arrowOffset = normalizedDiff * sprite.size.X * 0.7f;
+                    Vector2 arrowOffset = normalizedDiff * sprite.size.X * symbolScale * 0.7f;
                     Arrow.Draw(spriteBatch, iconPos + arrowOffset, color * alpha, MathUtils.VectorToAngle(arrowOffset) + MathHelper.PiOver2);
                 }
             }
@@ -713,6 +741,18 @@ namespace Barotrauma
             DrawLine(sb, bottomLeft, topLeft, clr, depth, thickness);
         }
 
+        public static void DrawRectangle(SpriteBatch sb, Vector2[] corners, Color clr, float depth = 0.0f, int thickness = 1)
+        {
+            if (corners.Length != 4)
+            {
+                throw new Exception("Invalid length of the corners array! Must be 4");
+            }
+            DrawLine(sb, corners[0], corners[1], clr, depth, thickness);
+            DrawLine(sb, corners[1], corners[2], clr, depth, thickness);
+            DrawLine(sb, corners[2], corners[3], clr, depth, thickness);
+            DrawLine(sb, corners[3], corners[0], clr, depth, thickness);
+        }
+
         public static void DrawProgressBar(SpriteBatch sb, Vector2 start, Vector2 size, float progress, Color clr, float depth = 0.0f)
         {
             DrawProgressBar(sb, start, size, progress, clr, new Color(0.5f, 0.57f, 0.6f, 1.0f), depth);
@@ -798,6 +838,36 @@ namespace Barotrauma
             messages.RemoveAll(m => m.Timer <= 0.0f);
         }
 
+        /// <summary>
+        /// Draws a bezier curve with dots.
+        /// </summary>
+        public static void DrawBezierWithDots(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Vector2 control, int pointCount, Color color, int dotSize = 2)
+        {
+            for (int i = 0; i < pointCount; i++)
+            {
+                float t = (float)i / (pointCount - 1);
+                Vector2 pos = MathUtils.Bezier(start, control, end, t);
+                ShapeExtensions.DrawPoint(spriteBatch, pos, color, dotSize);
+            }
+        }
+
+        public static void DrawSineWithDots(SpriteBatch spriteBatch, Vector2 from, Vector2 dir, float amplitude, float length, float scale, int pointCount, Color color, int dotSize = 2)
+        {
+            Vector2 up = dir.Right();
+            //DrawLine(spriteBatch, from, from + dir, Color.Red);
+            //DrawLine(spriteBatch, from, from + up * dir.Length(), Color.Blue);
+            for (int i = 0; i < pointCount; i++)
+            {
+                Vector2 pos = from;
+                if (i > 0)
+                {
+                    float t = (float)i / (pointCount - 1);
+                    float sin = (float)Math.Sin(t / length * scale) * amplitude;
+                    pos += (up * sin) + (dir * t);
+                }
+                ShapeExtensions.DrawPoint(spriteBatch, pos, color, dotSize);
+            }
+        }
         #endregion
 
         #region Element creation
@@ -1052,6 +1122,90 @@ namespace Barotrauma
         {
             return startOffset + (spacing + size) * counter + extra;
         }
+
+        /// <summary>
+        /// Attempts to move a set of UI elements further from each other to prevent them from overlapping
+        /// </summary>
+        /// <param name="elements">UI elements to move</param>
+        /// <param name="disallowedAreas">Areas the UI elements are not allowed to overlap with (ignored if null)</param>
+        /// <param name="clampArea">The elements will not be moved outside this area. If the parameter is not given, the elements are kept inside the window.</param>
+        public static void PreventElementOverlap(IList<GUIComponent> elements, IList<Rectangle> disallowedAreas = null,  Rectangle? clampArea = null)
+        {
+            Rectangle area = clampArea ?? new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            
+            bool intersections = true;
+            int iterations = 0;
+            while (intersections && iterations < 100)
+            {
+                intersections = false;
+                for (int i = 0; i < elements.Count; i++)
+                {
+                    Rectangle rect1 = elements[i].Rect;
+                    for (int j = i + 1; j < elements.Count; j++)
+                    {
+                        Rectangle rect2 = elements[j].Rect;
+                        if (!rect1.Intersects(rect2)) continue;
+
+                        intersections = true;
+                        int rect1Area = rect1.Width * rect1.Height;
+                        int rect2Area = rect2.Width * rect2.Height;
+                        Point centerDiff = rect1.Center - rect2.Center;
+                        //move the interfaces away from each other, in a random direction if they're at the same position
+                        Vector2 moveAmount = centerDiff == Point.Zero ? Rand.Vector(1.0f) : Vector2.Normalize(centerDiff.ToVector2());
+
+                        //make sure we don't move the interfaces out of the screen
+                        Vector2 moveAmount1 = ClampMoveAmount(rect1, area, moveAmount * 10.0f * rect1Area / (rect1Area + rect2Area));
+                        Vector2 moveAmount2 = ClampMoveAmount(rect2, area, -moveAmount * 10.0f * rect1Area / (rect1Area + rect2Area));
+
+                        //move by 10 units in the desired direction and repeat until nothing overlaps
+                        //(or after 100 iterations, in which case we'll just give up and let them overlap)
+                        elements[i].RectTransform.ScreenSpaceOffset += (moveAmount1).ToPoint();
+                        elements[j].RectTransform.ScreenSpaceOffset += (moveAmount2).ToPoint();
+                    }
+
+                    if (disallowedAreas == null) continue;
+                    foreach (Rectangle rect2 in disallowedAreas)
+                    {
+                        if (!rect1.Intersects(rect2)) continue;
+                        intersections = true;
+
+                        Point centerDiff = rect1.Center - rect2.Center;
+                        //move the interface away from the disallowed area
+                        Vector2 moveAmount = centerDiff == Point.Zero ? Rand.Vector(1.0f) : Vector2.Normalize(centerDiff.ToVector2());
+
+                        //make sure we don't move the interface out of the screen
+                        Vector2 moveAmount1 = ClampMoveAmount(rect1, area, moveAmount * 10.0f);
+
+                        //move by 10 units in the desired direction and repeat until nothing overlaps
+                        //(or after 100 iterations, in which case we'll just give up and let them overlap)
+                        elements[i].RectTransform.ScreenSpaceOffset += (moveAmount1).ToPoint();
+                    }
+                }
+                iterations++;
+            }
+
+            Vector2 ClampMoveAmount(Rectangle Rect, Rectangle clampTo, Vector2 moveAmount)
+            {
+                if (Rect.Y < clampTo.Y)
+                {
+                    moveAmount.Y = Math.Max(moveAmount.Y, 0.0f);
+                }
+                else if (Rect.Bottom > clampTo.Bottom)
+                {
+                    moveAmount.Y = Math.Min(moveAmount.Y, 0.0f);
+                }
+                if (Rect.X < clampTo.X)
+                {
+                    moveAmount.X = Math.Max(moveAmount.X, 0.0f);
+                }
+                else if (Rect.Right > clampTo.Right)
+                {
+                    moveAmount.X = Math.Min(moveAmount.X, 0.0f);
+                }
+                return moveAmount;
+            }
+        }
+
         #endregion
 
         #region Misc
@@ -1165,14 +1319,10 @@ namespace Barotrauma
         /// <summary>
         /// Displays a message at the center of the screen, automatically preventing overlapping with other centered messages
         /// </summary>
-        public static void AddMessage(string message, Color color, float? lifeTime = null, bool playSound = true)
+        public static void AddMessage(string message, Color color, float? lifeTime = null, bool playSound = true, ScalableFont font = null)
         {
-            foreach (GUIMessage msg in messages)
-            {
-                if (msg.Text == message) return;
-            }
-            
-            messages.Add(new GUIMessage(message, color, lifeTime ?? MathHelper.Clamp(message.Length / 5.0f, 3.0f, 10.0f), LargeFont));
+            if (messages.Any(msg => msg.Text == message)) { return; }
+            messages.Add(new GUIMessage(message, color, lifeTime ?? MathHelper.Clamp(message.Length / 5.0f, 3.0f, 10.0f), font ?? LargeFont));
             if (playSound) PlayUISound(GUISoundType.Message);
         }
 

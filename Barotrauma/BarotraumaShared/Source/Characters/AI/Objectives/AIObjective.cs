@@ -66,6 +66,13 @@ namespace Barotrauma
             return currentSubObjective;
         }
 
+        public void SortSubObjectives(AIObjectiveManager objectiveManager)
+        {
+            if (!subObjectives.Any()) return;
+            subObjectives.Sort((x, y) => y.GetPriority(objectiveManager).CompareTo(x.GetPriority(objectiveManager)));
+            subObjectives[0].SortSubObjectives(objectiveManager);
+        }
+
         protected virtual bool ShouldInterruptSubObjective(AIObjective subObjective)
         {
             return false;

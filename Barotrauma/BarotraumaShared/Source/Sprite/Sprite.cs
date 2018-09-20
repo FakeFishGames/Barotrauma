@@ -7,13 +7,19 @@ namespace Barotrauma
 {
     public partial class Sprite
     {
-        static List<Sprite> list = new List<Sprite>();
+        public static IEnumerable<Sprite> LoadedSprites
+        {
+            get { return list; }
+        }
+
+        private static List<Sprite> list = new List<Sprite>();
+
         //the file from which the texture is loaded
         //if two sprites use the same file, they share the same texture
-        string file;
+        private string file;
 
         //the area in the texture that is supposed to be drawn
-        Rectangle sourceRect;
+        private Rectangle sourceRect;
 
         //the offset used when drawing the sprite
         protected Vector2 offset;
@@ -39,8 +45,10 @@ namespace Barotrauma
         public float Depth
         {
             get { return depth; }
-            set { depth = MathHelper.Clamp(value, 0.0f, 1.0f); }
+            set { depth = MathHelper.Clamp(value, 0.001f, 0.999f); }
         }
+
+        // TODO: use the limb sprite params directly?
 
         public Vector2 Origin
         {
@@ -100,9 +108,23 @@ namespace Barotrauma
             size.X *= sourceRect.Width;
             size.Y *= sourceRect.Height;
 
-            Depth = element.GetAttributeFloat("depth", 0.0f);
+            Depth = element.GetAttributeFloat("depth", 0.001f);
 
             list.Add(this);
+        }
+
+        internal void LoadParams(SpriteParams spriteParams, bool isFlipped)
+        {
+            sourceRect = spriteParams.SourceRect;
+            origin = spriteParams.Origin;
+            origin.X = origin.X * sourceRect.Width;
+            if (isFlipped)
+            {
+                origin.X = sourceRect.Width - origin.X;
+            }
+            origin.Y = origin.Y * sourceRect.Height;
+            depth = spriteParams.Depth;
+            // TODO: size?
         }
 
         public Sprite(string newFile, Vector2 newOrigin, bool preMultiplyAlpha = true)

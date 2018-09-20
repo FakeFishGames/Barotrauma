@@ -25,6 +25,12 @@ namespace Barotrauma.Items.Components
             get { return inventoryBottomSprite; }
         }
 
+        public Sprite ContainedStateIndicator
+        {
+            get;
+            private set;
+        }
+
         partial void InitProjSpecific(XElement element)
         {
             foreach (XElement subElement in element.Elements())
@@ -39,6 +45,9 @@ namespace Barotrauma.Items.Components
                         break;
                     case "bottomsprite":
                         inventoryBottomSprite = new Sprite(subElement);
+                        break;
+                    case "containedstateindicator":
+                        ContainedStateIndicator = new Sprite(subElement);
                         break;
                 }
             }
@@ -101,14 +110,14 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        public override void UpdateHUD(Character character, float deltaTime)
+        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             //if the item is in the character's inventory, no need to update the item's inventory 
             //because the player can see it by hovering the cursor over the item
             guiCustomComponent.Visible = item.ParentInventory?.Owner != character && DrawInventory;
             if (!guiCustomComponent.Visible) return;
 
-            Inventory.Update(deltaTime);
+            Inventory.Update(deltaTime, cam);
         }
 
         public override void AddToGUIUpdateList()

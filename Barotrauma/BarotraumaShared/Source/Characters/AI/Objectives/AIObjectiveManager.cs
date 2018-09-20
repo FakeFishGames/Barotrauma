@@ -48,15 +48,21 @@ namespace Barotrauma
             return null;
         }
 
-        public float GetCurrentPriority(Character character)
+        private AIObjective GetCurrentObjective()
         {
             if (CurrentOrder != null &&
                 (objectives.Count == 0 || currentOrder.GetPriority(this) > objectives[0].GetPriority(this)))
             {
-                return CurrentOrder.GetPriority(this);
+                return CurrentOrder;
             }
 
-            return objectives.Count == 0 ? 0.0f : objectives[0].GetPriority(this);
+            return objectives.Count == 0 ? null : objectives[0];
+        }
+
+        public float GetCurrentPriority()
+        {
+            var currentObjective = GetCurrentObjective();
+            return currentObjective == null ? 0.0f : currentObjective.GetPriority(this);
         }
 
         public void UpdateObjectives()
@@ -68,21 +74,14 @@ namespace Barotrauma
 
             //sort objectives according to priority
             objectives.Sort((x, y) => y.GetPriority(this).CompareTo(x.GetPriority(this)));
+            GetCurrentObjective()?.SortSubObjectives(this);
         }
 
+        
         public void DoCurrentObjective(float deltaTime)
         {
-            if (currentOrder != null && (!objectives.Any() || objectives[0].GetPriority(this) < currentOrder.GetPriority(this)))
-            {
-                CurrentObjective = currentOrder;
-                currentOrder.TryComplete(deltaTime);
-                return;
-            }
-
-            if (!objectives.Any()) return;
-            objectives[0].TryComplete(deltaTime);
-
-            CurrentObjective = objectives[0];
+            CurrentObjective = GetCurrentObjective();
+            CurrentObjective?.TryComplete(deltaTime);
         }
 
         public void SetOrder(Order order, string option, Character orderGiver)
@@ -93,7 +92,10 @@ namespace Barotrauma
             switch (order.AITag.ToLowerInvariant())
             {
                 case "follow":
-                    currentOrder = new AIObjectiveGoTo(orderGiver, character, true);
+                    currentOrder = new AIObjectiveGoTo(orderGiver, character, true)
+                    {
+                        CloseEnough = 1.5f
+                    };
                     break;
                 case "wait":
                     currentOrder = new AIObjectiveGoTo(character, character, true);

@@ -14,7 +14,8 @@ namespace Barotrauma.Networking
             CPR,
             ApplyStatusEffect,
             ChangeProperty,
-            Control
+            Control,
+            UpdateSkills
         }
 
         public readonly Entity Entity;

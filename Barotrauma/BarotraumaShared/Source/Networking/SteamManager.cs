@@ -66,7 +66,7 @@ namespace Barotrauma.Steam
             {
                 isInitialized = false;
 #if CLIENT
-                new Barotrauma.GUIMessageBox("Error", "Initializing Steam client failed (steam_api64.dll not found).");
+                new Barotrauma.GUIMessageBox(TextManager.Get("Error"), TextManager.Get("SteamDllNotFound"));
 #else
                 DebugConsole.ThrowError("Initializing Steam client failed (steam_api64.dll not found).", e);
 #endif
@@ -75,7 +75,7 @@ namespace Barotrauma.Steam
             {
                 isInitialized = false;
 #if CLIENT
-                new Barotrauma.GUIMessageBox("Error", "Initializing Steam client failed. Please make sure Steam is running and you are logged in to an account.");
+                new Barotrauma.GUIMessageBox(TextManager.Get("Error"), TextManager.Get("SteamClientInitFailed"));
 #else
                 DebugConsole.ThrowError("Initializing Steam client failed.", e);
 #endif
@@ -156,6 +156,8 @@ namespace Barotrauma.Steam
                     MaxPlayers = s.MaxPlayers,
                     HasPassword = s.Passworded,
                 };
+                serverInfo.PingChecked = true;
+                serverInfo.Ping = s.Ping;
                 s.FetchRules();
                 s.OnReceivedRules += (_) =>
                 {
@@ -178,8 +180,6 @@ namespace Barotrauma.Steam
                     {
                         if (Enum.TryParse(s.Rules["traitors"], out YesNoMaybe traitorsEnabled)) serverInfo.TraitorsEnabled = traitorsEnabled;
                     }
-
-
 
                     if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count)
                     {

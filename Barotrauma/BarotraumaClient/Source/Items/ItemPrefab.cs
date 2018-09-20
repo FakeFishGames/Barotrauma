@@ -25,19 +25,12 @@ namespace Barotrauma
         public List<BrokenItemSprite> BrokenSprites = new List<BrokenItemSprite>();
 
         public Sprite InventoryIcon;
-        
-        public Sprite GetActiveSprite(float condition)
+
+        [Serialize("1.0,1.0,1.0,1.0", false), Editable]
+        public Color InventoryIconColor
         {
-            Sprite activeSprite = sprite;
-            foreach (BrokenItemSprite brokenSprite in BrokenSprites)
-            {
-                if (condition <= brokenSprite.MaxCondition)
-                {
-                    activeSprite = brokenSprite.Sprite;
-                    break;
-                }
-            }
-            return activeSprite;
+            get;
+            protected set;
         }
 
         public override void DrawPlacing(SpriteBatch spriteBatch, Camera cam, Rectangle? placeRect = null)

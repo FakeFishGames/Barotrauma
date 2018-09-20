@@ -11,6 +11,8 @@ namespace Barotrauma.Networking
     {
         public static void ServerRead(NetIncomingMessage msg, Client c)
         {
+            c.KickAFKTimer = 0.0f;
+
             UInt16 ID = msg.ReadUInt16();
             ChatMessageType type = (ChatMessageType)msg.ReadByte();
             string txt = "";
@@ -103,7 +105,7 @@ namespace Barotrauma.Networking
 
             if (type == ChatMessageType.Order)
             {
-                if (!c.Character.CanSpeak || c.Character.IsDead) return;
+                if (c.Character.SpeechImpediment >= 100.0f || c.Character.IsDead) return;
 
                 ChatMessageType messageType = CanUseRadio(orderMsg.Sender) ? ChatMessageType.Radio : ChatMessageType.Default;
                 if (orderMsg.Order.TargetAllCharacters)

@@ -244,18 +244,27 @@ namespace Barotrauma
                         node = currentPath.PrevNode;
                         nextNode = currentPath.CurrentNode;
                     }
-                    if (node?.ConnectedDoor == null || nextNode == null) continue;
+                    if (node?.ConnectedDoor == null) continue;
 
-                    door = node.ConnectedGap.ConnectedDoor;
-                    if (door.LinkedGap.IsHorizontal)
+                    if (nextNode == null)
                     {
-                        int currentDir = Math.Sign(nextNode.WorldPosition.X - door.Item.WorldPosition.X);
-                        shouldBeOpen = (door.Item.WorldPosition.X - character.WorldPosition.X) * currentDir > -50.0f;
+                        //the node we're heading towards is the last one in the path, and at a door
+                        //the door needs to be open for the character to reach the node
+                        shouldBeOpen = true;
                     }
                     else
                     {
-                        int currentDir = Math.Sign(nextNode.WorldPosition.Y - door.Item.WorldPosition.Y);
-                        shouldBeOpen = (door.Item.WorldPosition.Y - character.WorldPosition.Y) * currentDir > -80.0f;
+                        door = node.ConnectedGap.ConnectedDoor;
+                        if (door.LinkedGap.IsHorizontal)
+                        {
+                            int currentDir = Math.Sign(nextNode.WorldPosition.X - door.Item.WorldPosition.X);
+                            shouldBeOpen = (door.Item.WorldPosition.X - character.WorldPosition.X) * currentDir > -50.0f;
+                        }
+                        else
+                        {
+                            int currentDir = Math.Sign(nextNode.WorldPosition.Y - door.Item.WorldPosition.Y);
+                            shouldBeOpen = (door.Item.WorldPosition.Y - character.WorldPosition.Y) * currentDir > -80.0f;
+                        }
                     }
                 }
 

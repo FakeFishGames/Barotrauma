@@ -49,11 +49,10 @@ namespace Barotrauma.Items.Components
             set
             {
                 if (value == autoPilot) return;
-
                 autoPilot = value;
 #if CLIENT
-                autopilotTickBox.Selected = value;
-
+                autopilotTickBox.Selected = autoPilot;
+                manualTickBox.Selected = !autoPilot;
                 maintainPosTickBox.Enabled = autoPilot;
                 levelEndTickBox.Enabled = autoPilot;
                 levelStartTickBox.Enabled = autoPilot;
@@ -61,20 +60,14 @@ namespace Barotrauma.Items.Components
                 if (autoPilot)
                 {
                     if (pathFinder == null) pathFinder = new PathFinder(WayPoint.WayPointList, false);
-#if CLIENT
-                    ToggleMaintainPosition(maintainPosTickBox);
-#endif
+                    MaintainPos = true;
                 }
-#if CLIENT
                 else
                 {
-                    maintainPosTickBox.Selected = false;
-                    levelEndTickBox.Selected    = false;
-                    levelStartTickBox.Selected  = false;
-
-                    posToMaintain = null;
+                    MaintainPos = false;
+                    LevelEndSelected = false;
+                    LevelStartSelected = false;
                 }
-#endif
             }
         }
         

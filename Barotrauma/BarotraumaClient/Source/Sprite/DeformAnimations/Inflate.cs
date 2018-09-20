@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.Xna.Framework;
 
@@ -22,13 +18,13 @@ namespace Barotrauma.SpriteDeformations
             frequency = element.GetAttributeFloat("frequency", 0.0f);
             scale = element.GetAttributeFloat("scale", 1.0f);
 
-            deformation = new Vector2[resolution.X, resolution.Y];
-            for (int x = 0; x < resolution.X; x++)
+            deformation = new Vector2[Resolution.X, Resolution.Y];
+            for (int x = 0; x < Resolution.X; x++)
             {
-                float normalizedX = x / (float)(resolution.X - 1);
-                for (int y = 0; y < resolution.Y; y++)
+                float normalizedX = x / (float)(Resolution.X - 1);
+                for (int y = 0; y < Resolution.Y; y++)
                 {
-                    float normalizedY = y / (float)(resolution.X - 1);
+                    float normalizedY = y / (float)(Resolution.X - 1);
 
                     Vector2 centerDiff = new Vector2(normalizedX - 0.5f, normalizedY - 0.5f);
                     float centerDist = centerDiff.Length() * 2.0f;

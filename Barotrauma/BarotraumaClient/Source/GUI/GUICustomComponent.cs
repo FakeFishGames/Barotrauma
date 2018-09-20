@@ -8,23 +8,23 @@ namespace Barotrauma
     /// </summary>
     class GUICustomComponent : GUIComponent
     {
-        private Action<SpriteBatch, GUICustomComponent> onDraw;
-        private Action<float, GUICustomComponent> onUpdate;
+        public Action<SpriteBatch, GUICustomComponent> OnDraw;
+        public Action<float, GUICustomComponent> OnUpdate;
 
         public GUICustomComponent(RectTransform rectT, Action<SpriteBatch, GUICustomComponent> onDraw, Action<float, GUICustomComponent> onUpdate) : base(null, rectT)
         {
-            this.onDraw = onDraw;
-            this.onUpdate = onUpdate;
+            OnDraw = onDraw;
+            OnUpdate = onUpdate;
         }
 
         protected override void Draw(SpriteBatch spriteBatch)
         {
-            if (Visible) onDraw?.Invoke(spriteBatch, this);
+            if (Visible) OnDraw?.Invoke(spriteBatch, this);
         }
 
         protected override void Update(float deltaTime)
         {
-            if (Visible) onUpdate?.Invoke(deltaTime, this);
+            if (Visible) OnUpdate?.Invoke(deltaTime, this);
         }
     }
 }

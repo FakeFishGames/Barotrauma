@@ -2,6 +2,7 @@
 using Barotrauma.Networking;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -19,7 +20,7 @@ namespace Barotrauma
         public bool Locked;
 
         private ushort[] receivedItemIDs;
-        private float syncItemsDelay;
+        protected float syncItemsDelay;
         private CoroutineHandle syncItemsCoroutine;
 
         public int Capacity
@@ -38,7 +39,6 @@ namespace Barotrauma
 
 #if CLIENT
             this.slotsPerRow = slotsPerRow;
-            CenterPos = (centerPos == null) ? new Vector2(0.5f, 0.5f) : (Vector2)centerPos;
 
             if (slotSpriteSmall == null)
             {
@@ -112,7 +112,20 @@ namespace Barotrauma
         public virtual bool TryPutItem(Item item, int i, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true)
         {
             if (Owner == null) return false;
-            if (CanBePut(item, i))
+            //there's already an item in the slot
+            if (Items[i] != null && allowCombine)
+            {
+                if (Items[i].Combine(item))
+                {
+                    System.Diagnostics.Debug.Assert(Items[i] != null);
+                    return true;
+                }
+            }
+            if (Items[i] != null && item.ParentInventory != null && allowSwapping)
+            {
+                return TrySwapping(i, item, user, createNetworkEvent);
+            }
+            else if (CanBePut(item, i))
             {
                 PutItem(item, i, user, true, createNetworkEvent);
                 return true;
@@ -129,6 +142,8 @@ namespace Barotrauma
         protected virtual void PutItem(Item item, int i, Character user, bool removeItem = true, bool createNetworkEvent = true)
         {
             if (Owner == null) return;
+
+            Inventory prevInventory = item.ParentInventory;
 
             if (removeItem)
             {
@@ -151,13 +166,106 @@ namespace Barotrauma
             if (createNetworkEvent)
             {
                 CreateNetworkEvent();
+                //also delay syncing the inventory the item was inside
+                if (prevInventory != null && prevInventory != this) prevInventory.syncItemsDelay = 1.0f;
             }
+        }
+
+        protected bool TrySwapping(int index, Item item, Character user, bool createNetworkEvent)
+        {
+            if (item?.ParentInventory == null || Items[index] == null) return false;
+
+            Inventory otherInventory = item.ParentInventory;
+            int otherIndex = Array.IndexOf(otherInventory.Items, item);
+            Item existingItem = Items[index];
+            
+            for (int j = 0; j < otherInventory.capacity; j++)
+            {
+                /*if (character.HasEquippedItem(existingItem) && existingItem.AllowedSlots.Contains(InvSlotType.Any))
+                {
+                    for (int i = 0; i < capacity; i++)
+                    {
+                        if (Items[i] == existingItem && SlotTypes[i] != InvSlotType.Any)
+                        {
+                            Items[i] = null;
+                        }
+                    }
+                }*/
+
+                if (otherInventory.Items[j] == item) otherInventory.Items[j] = null;
+            }
+            for (int j = 0; j < capacity; j++)
+            {
+                if (Items[j] == existingItem) Items[j] = null;
+            }
+
+            //if the item in the slot can be moved to the slot of the moved item
+            if (otherInventory.TryPutItem(existingItem, otherIndex, false, false, user, createNetworkEvent) &&
+                TryPutItem(item, index, false, false, user, createNetworkEvent))
+            {
+#if CLIENT
+                if (slots != null)
+                {
+                    for (int j = 0; j < capacity; j++)
+                    {
+                        if (Items[j] == item) slots[j].ShowBorderHighlight(Color.Green, 0.1f, 0.9f);                            
+                    }
+                    for (int j = 0; j < otherInventory.capacity; j++)
+                    {
+                        if (otherInventory.Items[j] == existingItem) otherInventory.slots[j].ShowBorderHighlight(Color.Green, 0.1f, 0.9f);                            
+                    }
+                }
+#endif
+                return true;
+            }
+            else
+            {
+                for (int j = 0; j < capacity; j++)
+                {
+                    if (Items[j] == item) Items[j] = null;
+                }
+                for (int j = 0; j < otherInventory.capacity; j++)
+                {
+                    if (otherInventory.Items[j] == existingItem) otherInventory.Items[j] = null;
+                }
+
+                //swapping the items failed -> move them back to where they were
+                otherInventory.TryPutItem(item, otherIndex, false, false, user, createNetworkEvent);
+                TryPutItem(existingItem, index, false, false, user, createNetworkEvent);
+#if CLIENT                
+                if (slots != null)
+                {
+                    for (int j = 0; j < capacity; j++)
+                    {
+                        if (Items[j] == existingItem)
+                        {
+                            slots[j].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
+                        }
+                    }
+                }
+#endif
+                return false;
+            }
+
+            /*
+                    if (character.HasEquippedItem(existingItem) && existingItem.AllowedSlots.Contains(InvSlotType.Any))
+                    {
+                        for (int i = 0; i < capacity; i++)
+                        {
+                            if (Items[i] == existingItem && SlotTypes[i] != InvSlotType.Any)
+                            {
+                                Items[i] = null;
+                            }
+                        }
+                    }*/
+
         }
 
         protected virtual void CreateNetworkEvent()
         {
             if (GameMain.NetworkMember != null)
             {
+                if (GameMain.NetworkMember.IsClient) syncItemsDelay = 1.0f;
                 GameMain.NetworkMember.CreateEntityEvent(Owner as INetSerializable, new object[] { NetEntityEvent.Type.InventoryState });
             }
         }

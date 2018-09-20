@@ -240,7 +240,7 @@ namespace Barotrauma
                     break;
                 case ServerNetObject.ENTITY_EVENT:
 
-                    int eventType = msg.ReadRangedInteger(0, 2);
+                    int eventType = msg.ReadRangedInteger(0, 3);
                     switch (eventType)
                     {
                         case 0:
@@ -271,7 +271,15 @@ namespace Barotrauma
                         case 2:
                             ReadStatus(msg);
                             break;
-
+                        case 3:
+                            int skillCount = msg.ReadByte();
+                            for (int i = 0; i < skillCount; i++)
+                            {
+                                string skillIdentifier = msg.ReadString();
+                                float skillLevel = msg.ReadSingle();
+                                info?.SetSkillLevel(skillIdentifier, skillLevel, WorldPosition + Vector2.UnitY * 150.0f);
+                            }
+                            break;
                     }
                     msg.ReadPadBits();
                     break;

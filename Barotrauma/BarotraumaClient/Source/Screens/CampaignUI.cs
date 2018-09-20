@@ -177,12 +177,12 @@ namespace Barotrauma
         
         private void DrawMap(SpriteBatch spriteBatch, GUICustomComponent mapContainer)
         {
-            GameMain.GameSession?.Map?.Draw(spriteBatch, mapContainer.Rect);
+            GameMain.GameSession?.Map?.Draw(spriteBatch, mapContainer);
         }
 
         private void UpdateMap(float deltaTime, GUICustomComponent mapContainer)
         {
-            GameMain.GameSession?.Map?.Update(deltaTime, mapContainer.Rect);
+            GameMain.GameSession?.Map?.Update(deltaTime, mapContainer);
         }
         
         public void UpdateCharacterLists()
@@ -224,7 +224,7 @@ namespace Barotrauma
 
             if (startButton != null) startButton.Enabled = true;
 
-            selectedLevel = connection.Level;
+            selectedLevel = connection?.Level;
 
             OnLocationSelected?.Invoke(location, connection);
         }
@@ -315,7 +315,7 @@ namespace Barotrauma
             }
             
             PriceInfo priceInfo = pi.ItemPrefab.GetPrice(campaign.Map.CurrentLocation);
-            if (priceInfo.BuyPrice > campaign.Money) return false;
+            if (priceInfo == null || priceInfo.BuyPrice > campaign.Money) return false;
             
             campaign.CargoManager.PurchaseItem(pi.ItemPrefab, 1);
             GameMain.Client?.SendCampaignState();
@@ -438,10 +438,34 @@ namespace Barotrauma
 
             if (component.Parent == hireList.Content)
             {
-                GUIButton hireButton = new GUIButton(new RectTransform(new Point(100, 20), characterPreviewFrame.RectTransform, Anchor.BottomCenter), TextManager.Get("HireButton"));
-                hireButton.Enabled = campaign.Money >= characterInfo.Salary;
-                hireButton.UserData = characterInfo;
-                hireButton.OnClicked = HireCharacter;
+                GUIButton hireButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.1f), characterPreviewFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) }, 
+                    TextManager.Get("HireButton"))
+                {
+                    Enabled = campaign.Money >= characterInfo.Salary,
+                    UserData = characterInfo,
+                    OnClicked = HireCharacter
+                };
+            }
+            else if (GameMain.GameSession.CrewManager.GetCharacterInfos().Count > 1)
+            {
+                GUIButton hireButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.1f), characterPreviewFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) }, 
+                    TextManager.Get("FireButton"))
+                {
+                    Color = Color.Red,
+                    UserData = characterInfo,
+                    OnClicked = (btn, obj) =>
+                    {
+                        var confirmDialog = new GUIMessageBox(
+                            TextManager.Get("FireWarningHeader"), 
+                            TextManager.Get("FireWarningText").Replace("[charactername]", ((CharacterInfo)obj).Name), 
+                            new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                        confirmDialog.Buttons[0].UserData = (CharacterInfo)obj;
+                        confirmDialog.Buttons[0].OnClicked = FireCharacter;
+                        confirmDialog.Buttons[0].OnClicked += confirmDialog.Close;
+                        confirmDialog.Buttons[1].OnClicked = confirmDialog.Close;
+                        return true;
+                    }
+                };
             }
 
             return true;
@@ -469,6 +493,24 @@ namespace Barotrauma
             return false;
         }
 
+        private bool FireCharacter(GUIButton button, object selection)
+        {
+            CharacterInfo characterInfo = selection as CharacterInfo;
+            if (characterInfo == null) return false;
+
+            SinglePlayerCampaign spCampaign = campaign as SinglePlayerCampaign;
+            if (spCampaign == null)
+            {
+                DebugConsole.ThrowError("Characters can only be fired in the single player campaign.\n" + Environment.StackTrace);
+                return false;
+            }
+
+            spCampaign.FireCharacter(characterInfo);
+            SelectCharacter(null, null);
+            UpdateCharacterLists();
+
+            return false;
+        }
 
     }
 }

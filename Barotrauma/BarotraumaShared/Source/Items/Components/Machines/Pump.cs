@@ -51,10 +51,10 @@ namespace Barotrauma.Items.Components
         {
             GetHull();
 
-            InitProjSpecific();
+            InitProjSpecific(element);
         }
 
-        partial void InitProjSpecific();
+        partial void InitProjSpecific(XElement element);
 
         public override void Move(Vector2 amount)
         {
@@ -86,6 +86,8 @@ namespace Barotrauma.Items.Components
 
             if (voltage < minVoltage) return;
 
+            UpdateProjSpecific(deltaTime);
+
             hasPower = true;
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
@@ -105,6 +107,8 @@ namespace Barotrauma.Items.Components
             
             voltage = 0.0f;
         }
+
+        partial void UpdateProjSpecific(float deltaTime);
 
         private void GetHull()
         {

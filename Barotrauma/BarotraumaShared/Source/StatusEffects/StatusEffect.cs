@@ -41,7 +41,7 @@ namespace Barotrauma
             public readonly float Speed;
             public readonly float Rotation;
 
-            public ItemSpawnInfo(XElement element)
+            public ItemSpawnInfo(XElement element, string parentDebugName)
             {
                 if (element.Attribute("name") != null)
                 {
@@ -51,19 +51,25 @@ namespace Barotrauma
                     ItemPrefab = MapEntityPrefab.List.Find(m => m is ItemPrefab && (m.NameMatches(itemPrefabName) || m.Tags.Contains(itemPrefabName))) as ItemPrefab;
                     if (ItemPrefab == null)
                     {
-                        DebugConsole.ThrowError("Error in StatusEffect config - item prefab \"" + itemPrefabName + "\" not found.");
+                        DebugConsole.ThrowError("Error in StatusEffect \""+ parentDebugName + "\" - item prefab \"" + itemPrefabName + "\" not found.");
                     }
                 }
                 else
                 {
                     string itemPrefabIdentifier = element.GetAttributeString("identifier", "");
+                    if (string.IsNullOrEmpty(itemPrefabIdentifier)) itemPrefabIdentifier = element.GetAttributeString("identifiers", "");
+                    if (string.IsNullOrEmpty(itemPrefabIdentifier))
+                    {
+                        DebugConsole.ThrowError("Invalid item spawn in StatusEffect \"" + parentDebugName + "\" - identifier not found in the element \"" + element.ToString() + "\"");
+                    }
                     ItemPrefab = MapEntityPrefab.List.Find(m => m is ItemPrefab && m.Identifier == itemPrefabIdentifier) as ItemPrefab;
                     if (ItemPrefab == null)
                     {
                         DebugConsole.ThrowError("Error in StatusEffect config - item prefab with the identifier \"" + itemPrefabIdentifier + "\" not found.");
+                        return;
                     }
                 }
-
+                
                 Speed = element.GetAttributeFloat("speed", 0.0f);
                 Rotation = MathHelper.ToRadians(element.GetAttributeFloat("rotation", 0.0f));
 
@@ -323,7 +329,7 @@ namespace Barotrauma
                         }
                         break;
                     case "spawnitem":
-                        var newSpawnItem = new ItemSpawnInfo(subElement);
+                        var newSpawnItem = new ItemSpawnInfo(subElement, parentDebugName);
                         if (newSpawnItem.ItemPrefab != null) spawnItems.Add(newSpawnItem);
                         break;
 #if CLIENT

@@ -11,7 +11,6 @@ namespace Barotrauma.Items.Components
 {
     partial class ConnectionPanel : ItemComponent, IServerSerializable, IClientSerializable
     {
-
         public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
             List<Wire>[] wires = new List<Wire>[Connections.Count];
@@ -34,6 +33,9 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
+
+            //don't allow rewiring locked panels
+            if (Locked) return;
 
             item.CreateServerEvent(this);
 

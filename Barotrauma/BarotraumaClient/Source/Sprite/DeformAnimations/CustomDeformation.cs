@@ -13,8 +13,6 @@ namespace Barotrauma.SpriteDeformations
 
         private float phase;
 
-        private Vector2[,] deformation;
-
         public CustomDeformation(XElement element) : base(element)
         {
             frequency = element.GetAttributeFloat("frequency", 0.0f);
@@ -53,14 +51,14 @@ namespace Barotrauma.SpriteDeformations
 
             //construct an array for the desired resolution, 
             //interpolating values if the resolution configured in the xml is smaller
-            deformation = new Vector2[resolution.X, resolution.Y];
-            float divX = 1.0f / resolution.X, divY = 1.0f / resolution.Y;            
-            for (int x = 0; x < resolution.X; x++)
+            //deformation = new Vector2[Resolution.X, Resolution.Y];
+            float divX = 1.0f / Resolution.X, divY = 1.0f / Resolution.Y;            
+            for (int x = 0; x < Resolution.X; x++)
             {
-                float normalizedX = x / (float)(resolution.X - 1);
-                for (int y = 0; y < resolution.Y; y++)
+                float normalizedX = x / (float)(Resolution.X - 1);
+                for (int y = 0; y < Resolution.Y; y++)
                 {
-                    float normalizedY = y / (float)(resolution.Y - 1);
+                    float normalizedY = y / (float)(Resolution.Y - 1);
 
                     Point indexTopLeft = new Point(
                         Math.Min((int)Math.Floor(normalizedX * (configDeformation.GetLength(0) - 1)), configDeformation.GetLength(0) - 1),
@@ -74,7 +72,7 @@ namespace Barotrauma.SpriteDeformations
                     Vector2 deformBottomLeft = configDeformation[indexTopLeft.X, indexBottomRight.Y];
                     Vector2 deformBottomRight = configDeformation[indexBottomRight.X, indexBottomRight.Y];
 
-                    deformation[x, y] = Vector2.Lerp(
+                    Deformation[x, y] = Vector2.Lerp(
                         Vector2.Lerp(deformTopLeft, deformTopRight, (normalizedX % divX) / divX),
                         Vector2.Lerp(deformBottomLeft, deformBottomRight, (normalizedX % divX) / divX),
                         (normalizedY % divY) / divY);
@@ -84,7 +82,7 @@ namespace Barotrauma.SpriteDeformations
 
         protected override void GetDeformation(out Vector2[,] deformation, out float multiplier)
         {
-            deformation = this.deformation;
+            deformation = Deformation;
             multiplier = frequency <= 0.0f ? amplitude : (float)Math.Sin(phase) * amplitude;
         }
 

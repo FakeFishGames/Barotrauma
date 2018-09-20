@@ -1,4 +1,5 @@
-﻿using Lidgren.Network;
+﻿using Barotrauma.Networking;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -54,6 +55,9 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Note: Can be null.
+        /// </summary>
         public Character Character;
 
         public readonly string File;
@@ -72,6 +76,7 @@ namespace Barotrauma
 
         private int headSpriteId;
         private Sprite headSprite;
+        private Sprite portrait;
 
         public bool StartItemsGiven;
 
@@ -96,6 +101,14 @@ namespace Barotrauma
             {
                 if (headSprite == null) LoadHeadSprite();
                 return headSprite;
+            }
+        }
+        public Sprite Portrait
+        {
+            get
+            {
+                if (portrait == null) LoadPortrait();
+                return portrait;
             }
         }
 
@@ -149,7 +162,21 @@ namespace Barotrauma
             }
         }
 
-        public CharacterInfo(string file, string name = "", Gender gender = Gender.None, JobPrefab jobPrefab = null)
+        private HumanRagdollParams ragdoll;
+        public HumanRagdollParams Ragdoll
+        {
+            get
+            {
+                if (ragdoll == null)
+                {
+                    ragdoll = HumanRagdollParams.GetDefaultRagdollParams(Character?.SpeciesName ?? "human");
+                }
+                return ragdoll;
+            }
+            set { ragdoll = value; }
+        }
+
+        public CharacterInfo(string file, string name = "", Gender gender = Gender.None, JobPrefab jobPrefab = null, HumanRagdollParams ragdoll = null)
         {
             ID = idCounter;
             idCounter++;
@@ -197,10 +224,10 @@ namespace Barotrauma
             int genderIndex = (this.gender == Gender.Female) ? 1 : 0;
             if (headSpriteRange[genderIndex] != Vector2.Zero)
             {
-                HeadSpriteId = Rand.Range((int)headSpriteRange[genderIndex].X, (int)headSpriteRange[genderIndex].Y + 1);
+                HeadSpriteId = Rand.Range((int)headSpriteRange[genderIndex].X, (int)headSpriteRange[genderIndex].Y + 1, Rand.RandSync.Server);
             }
 
-            this.Job = (jobPrefab == null) ? Job.Random() : new Job(jobPrefab);
+            this.Job = (jobPrefab == null) ? Job.Random(Rand.RandSync.Server) : new Job(jobPrefab);
 
             if (!string.IsNullOrEmpty(name))
             {
@@ -231,8 +258,11 @@ namespace Barotrauma
             personalityTrait = NPCPersonalityTrait.GetRandom(name + HeadSpriteId);
             
             Salary = CalculateSalary();
+            if (ragdoll != null)
+            {
+                this.ragdoll = ragdoll;
+            }
         }
-
 
         public CharacterInfo(XElement element)
         {
@@ -281,11 +311,7 @@ namespace Barotrauma
 
         private void LoadHeadSprite()
         {
-            XDocument doc = XMLExtensions.TryLoadXml(File);
-            if (doc == null) return;
-
-            XElement ragdollElement = doc.Root.Element("ragdoll");
-            foreach (XElement limbElement in ragdollElement.Elements())
+            foreach (XElement limbElement in XMLExtensions.TryLoadXml(Ragdoll.FullPath).Root.Elements())
             {
                 if (limbElement.GetAttributeString("type", "").ToLowerInvariant() != "head") continue;
 
@@ -304,7 +330,6 @@ namespace Barotrauma
                 {
                     string fileWithoutTags = Path.GetFileNameWithoutExtension(file);
                     fileWithoutTags = fileWithoutTags.Split('[', ']').First();
-
                     if (fileWithoutTags != fileName) continue;
                     
                     headSprite = new Sprite(spriteElement, "", file);
@@ -322,7 +347,22 @@ namespace Barotrauma
                 break;
             }
         }
-        
+
+        private void LoadPortrait()
+        {
+            string headSpriteDir = Path.GetDirectoryName(HeadSprite.FilePath);
+
+            string portraitPath = Path.Combine(headSpriteDir, (gender == Gender.Male ? "portrait" + headSpriteId : "fportrait" + headSpriteId) + ".png");
+            if (System.IO.File.Exists(portraitPath))
+            {
+                portrait = new Sprite(portraitPath, Vector2.Zero);
+            }
+            else
+            {
+                portrait = new Sprite("Content/Characters/Human/defaultportrait.png", Vector2.Zero);
+            }
+        }
+
         public void UpdateCharacterItems()
         {
             pickedItems.Clear();
@@ -348,41 +388,40 @@ namespace Barotrauma
 
         public void IncreaseSkillLevel(string skillIdentifier, float increase, Vector2 worldPos)
         {
-            if (Job == null) return;
+            if (Job == null || GameMain.Client != null) return;            
 
             float prevLevel = Job.GetSkillLevel(skillIdentifier);
             Job.IncreaseSkillLevel(skillIdentifier, increase);
 
             float newLevel = Job.GetSkillLevel(skillIdentifier);
-#if CLIENT
-            if (newLevel - prevLevel > 0.1f)
-            {
-                GUI.AddMessage(
-                    "+" + ((int)((newLevel - prevLevel) * 100.0f)).ToString() + " XP",
-                    Color.Green,
-                    worldPos,
-                    Vector2.UnitY * 10.0f);
-            }
-            else if (prevLevel % 0.1f > 0.05f && newLevel % 0.1f < 0.05f)
-            {
-                GUI.AddMessage(
-                    "+10 XP",
-                    Color.Green,
-                    worldPos,
-                    Vector2.UnitY * 10.0f);
-            }
 
-            if ((int)newLevel > (int)prevLevel)
+            OnSkillChanged(skillIdentifier, prevLevel, newLevel, worldPos);
+
+            if (GameMain.Server != null && (int)newLevel != (int)prevLevel)
             {
-                GUI.AddMessage(
-                    TextManager.Get("SkillIncreased")
-                        .Replace("[name]", Name)
-                        .Replace("[skillname]", TextManager.Get("SkillName." + skillIdentifier))
-                        .Replace("[newlevel]", ((int)newLevel).ToString()), 
-                    Color.Green);
+                GameMain.Server.CreateEntityEvent(Character, new object[] { NetEntityEvent.Type.UpdateSkills });                
             }
-#endif
         }
+
+        public void SetSkillLevel(string skillIdentifier, float level, Vector2 worldPos)
+        {
+            if (Job == null) return;
+
+            var skill = Job.Skills.Find(s => s.Identifier == skillIdentifier);
+            if (skill == null)
+            {
+                Job.Skills.Add(new Skill(skillIdentifier, level));
+                OnSkillChanged(skillIdentifier, 0.0f, skill.Level, worldPos);
+            }
+            else
+            {
+                float prevLevel = skill.Level;
+                skill.Level = level;
+                OnSkillChanged(skillIdentifier, prevLevel, skill.Level, worldPos);
+            }
+        }
+
+        partial void OnSkillChanged(string skillIdentifier, float prevLevel, float newLevel, Vector2 textPopupPos);
 
         public virtual XElement Save(XElement parentElement)
         {
@@ -492,11 +531,16 @@ namespace Barotrauma
         public void Remove()
         {
             Character = null;
-            //if (headSprite != null)
-            //{
-            //    headSprite.Remove();
-            //    headSprite = null;
-            //}
+            if (headSprite != null)
+            {
+                headSprite.Remove();
+                headSprite = null;
+            }
+            if (portrait != null)
+            {
+                portrait.Remove();
+                portrait = null;
+            }
         }
     }
 }

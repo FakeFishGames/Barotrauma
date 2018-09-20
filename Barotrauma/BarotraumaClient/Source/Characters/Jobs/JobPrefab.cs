@@ -4,11 +4,11 @@ namespace Barotrauma
 {
     partial class JobPrefab
     {
-        public GUIFrame CreateInfoFrame()
+        public GUIButton CreateInfoFrame()
         {
             int width = 500, height = 400;
 
-            GUIFrame backFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.5f);
+            GUIButton backFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
             GUIFrame frame = new GUIFrame(new RectTransform(new Point(width, height), backFrame.RectTransform, Anchor.Center));
             GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), frame.RectTransform, Anchor.Center), style: null);
 

@@ -22,12 +22,7 @@ namespace Barotrauma
         {
             get { return state; }
         }
-
-        public bool CanSpeak
-        {
-            get { return Strength < Prefab.MaxStrength * 0.5f; }
-        }
-
+        
         public AfflictionHusk(AfflictionPrefab prefab, float strength) : 
             base(prefab, strength)
         {
@@ -51,10 +46,12 @@ namespace Barotrauma
             }
             else if (Strength < Prefab.MaxStrength)
             {
+                characterHealth.Character.SpeechImpediment = 100.0f;
                 UpdateTransitionState(deltaTime, characterHealth.Character);
             }
             else
             {
+                characterHealth.Character.SpeechImpediment = 100.0f;
                 UpdateActiveState(deltaTime, characterHealth.Character);
             }
         }
@@ -135,10 +132,10 @@ namespace Barotrauma
 
             var torso = character.AnimController.GetLimb(LimbType.Torso);
             
-            huskAppendage = new Limb(character, limbElement);
+            huskAppendage = new Limb(character.AnimController, character, new LimbParams(limbElement, character.AnimController.RagdollParams));
             huskAppendage.body.Submarine = character.Submarine;
             huskAppendage.body.SetTransform(torso.SimPosition, torso.Rotation);
-            
+
             character.AnimController.AddLimb(huskAppendage);
             character.AnimController.AddJoint(jointElement);
         }
@@ -197,6 +194,7 @@ namespace Barotrauma
                 yield return CoroutineStatus.Success;
             }
 
+            character.Info.Ragdoll = null;
             var husk = Character.Create(configFile, character.WorldPosition, character.Info.Name, character.Info, false, true);
 
             foreach (Limb limb in husk.AnimController.Limbs)

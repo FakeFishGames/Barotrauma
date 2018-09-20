@@ -214,6 +214,20 @@ namespace Barotrauma.Networking
             set;
         }
 
+        [Serialize(false, true)]
+        public bool StartWhenClientsReady
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(0.8f, true)]
+        public float StartWhenClientsReadyRatio
+        {
+            get;
+            private set;
+        }
+
         [Serialize(true, true)]
         public bool AllowSpectating
         {

@@ -149,7 +149,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void UpdateHUD(Character character, float deltaTime)
+        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             if (crosshairSprite != null)
             {
@@ -192,7 +192,7 @@ namespace Barotrauma.Items.Components
                     drawPos + barrelPos - new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation)) * recoilOffset, 
                     Color.White,
                     rotation + MathHelper.PiOver2, 1.0f,
-                    SpriteEffects.None, item.Sprite.Depth + 0.01f);
+                    SpriteEffects.None, item.SpriteDepth + 0.01f);
             }
 
             if (!editing) return;

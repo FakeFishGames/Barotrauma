@@ -182,7 +182,6 @@ namespace Barotrauma.Lights
                 if (!light.IsBackground) continue;
                 if (light.Color.A < 1 || light.Range < 1.0f || !light.Enabled) continue;
                 if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.Range, viewRect)) continue;
-
                 light.Draw(spriteBatch, lightEffect, transform);
                 backgroundSpritesDrawn = true;
             }
@@ -216,7 +215,7 @@ namespace Barotrauma.Lights
                     GUI.DrawRectangle(spriteBatch,
                         new Vector2(drawRect.X, -drawRect.Y),
                         new Vector2(drawRect.Width, drawRect.Height),
-                        Color.White, true);
+                        AmbientLight, true);
                 }
                 spriteBatch.End();
                 graphics.BlendState = BlendState.Additive;
@@ -256,7 +255,7 @@ namespace Barotrauma.Lights
                 }
                 if (Character.Controlled.FocusedCharacter != null)
                 {
-                    Character.Controlled.FocusedCharacter.Draw(spriteBatch);
+                    Character.Controlled.FocusedCharacter.Draw(spriteBatch, cam);
                 }
 
                 foreach (Item item in Item.ItemList)

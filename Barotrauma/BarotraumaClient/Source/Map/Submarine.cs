@@ -180,19 +180,19 @@ namespace Barotrauma
 
         public void CreatePreviewWindow(GUIMessageBox messageBox)
         {
+            var background = new GUIButton(new RectTransform(Vector2.One, messageBox.RectTransform), style: "GUIBackgroundBlocker")
+            {
+                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) messageBox.Close(); return true; }
+            };
+            background.RectTransform.SetAsFirstChild();
+
             new GUITextBlock(new RectTransform(new Vector2(1, 0), messageBox.Content.RectTransform, Anchor.TopCenter), Name, textAlignment: Alignment.Center, font: GUI.LargeFont, wrap: true);
 
             var upperPart = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), messageBox.Content.RectTransform, Anchor.Center, Pivot.BottomCenter), color: Color.Transparent);
-            var descriptionBox = new GUIFrame(new RectTransform(new Vector2(1, 0.2f), messageBox.Content.RectTransform, Anchor.Center, Pivot.TopCenter)
-            {
-                RelativeOffset = new Vector2(0, 0.1f),
-            }, color: Color.Transparent);
+            var descriptionBox = new GUIListBox(new RectTransform(new Vector2(1, 0.35f), messageBox.Content.RectTransform, Anchor.Center, Pivot.TopCenter));
 
             if (PreviewImage == null)
             {
-                //var txtBlock = new GUITextBlock(new Rectangle(-20, 60, 256, 128), TextManager.Get("SubPreviewImageNotFound"), Color.Black * 0.5f, null, Alignment.Center, "", frame, true);
-                //var txtBlock = new GUITextBlock(new RectTransform())
-                //txtBlock.OutlineColor = txtBlock.TextColor;
                 new GUITextBlock(new RectTransform(new Vector2(0.45f, 1), upperPart.RectTransform), TextManager.Get("SubPreviewImageNotFound"));
             }
             else
@@ -222,11 +222,59 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
                 $"{TextManager.Get("RequiredContentPackages")}: {string.Join(", ", RequiredContentPackages)}", 
                 font: GUI.SmallFont, wrap: true);
-
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.RectTransform, Anchor.TopLeft), Description, font: GUI.SmallFont, wrap: true)
+            
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform, Anchor.TopLeft), Description, font: GUI.SmallFont, wrap: true)
             {
                 CanBeFocused = false
             };
+        }
+
+        public void CreateMiniMap(GUIComponent parent, IEnumerable<Entity> pointsOfInterest = null)
+        {
+            Rectangle worldBorders = GetDockedBorders();
+            worldBorders.Location += WorldPosition.ToPoint();
+
+            //create a container that has the same "aspect ratio" as the sub
+            float aspectRatio = worldBorders.Width / (float)worldBorders.Height;
+            float parentAspectRatio = parent.Rect.Width / (float)parent.Rect.Height;
+
+            float scale = 0.9f;
+
+            GUIFrame hullContainer = new GUIFrame(new RectTransform(
+                (parentAspectRatio > aspectRatio ? new Vector2(aspectRatio / parentAspectRatio, 1.0f) : new Vector2(1.0f, parentAspectRatio / aspectRatio)) * scale, 
+                parent.RectTransform, Anchor.Center), 
+                style: null);
+
+            foreach (Hull hull in Hull.hullList)
+            {
+                if (hull.Submarine != this && !DockedTo.Contains(hull.Submarine)) continue;
+
+                Vector2 relativeHullPos = new Vector2(
+                    (hull.WorldRect.X - worldBorders.X) / (float)Borders.Width, 
+                    (worldBorders.Y - hull.WorldRect.Y) / (float)Borders.Height);
+                Vector2 relativeHullSize = new Vector2(hull.Rect.Width / (float)worldBorders.Width, hull.Rect.Height / (float)worldBorders.Height);
+
+                var hullFrame = new GUIFrame(new RectTransform(relativeHullSize, hullContainer.RectTransform) { RelativeOffset = relativeHullPos }, style: "MiniMapRoom", color: Color.DarkCyan * 0.8f)
+                {
+                    UserData = hull
+                };
+                new GUIFrame(new RectTransform(Vector2.One, hullFrame.RectTransform), style: "ScanLines", color: Color.DarkCyan * 0.8f);
+            }
+
+            if (pointsOfInterest != null)
+            {
+                foreach (Entity entity in pointsOfInterest)
+                {
+                    Vector2 relativePos = new Vector2(
+                        (entity.WorldPosition.X - worldBorders.X) / Borders.Width,
+                        (worldBorders.Y - entity.WorldPosition.Y) / Borders.Height);
+                    new GUIFrame(new RectTransform(new Point(1, 1), hullContainer.RectTransform) { RelativeOffset = relativePos }, style: null)
+                    {
+                        CanBeFocused = false,
+                        UserData = entity
+                    };
+                }
+            }
         }
 
         public void CheckForErrors()
@@ -249,7 +297,7 @@ namespace Barotrauma
                 }
             }
 
-            if (WayPoint.WayPointList.Find(wp => !wp.MoveWithLevel && wp.SpawnType == SpawnType.Path) == null)
+            if (!WayPoint.WayPointList.Any(wp => wp.ShouldBeSaved && wp.SpawnType == SpawnType.Path))
             {
                 errorMsgs.Add(TextManager.Get("NoWaypointsWarning"));
             }

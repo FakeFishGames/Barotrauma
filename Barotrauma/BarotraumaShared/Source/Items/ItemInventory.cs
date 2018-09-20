@@ -17,9 +17,6 @@ namespace Barotrauma
             : base(owner, capacity, centerPos, slotsPerRow)
         {
             this.container = container;
-#if CLIENT
-            screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-#endif
         }
 
         public override int FindAllowedSlot(Item item)
@@ -103,6 +100,7 @@ namespace Barotrauma
             
             if (GameMain.NetworkMember != null)
             {
+                if (GameMain.NetworkMember.IsClient) syncItemsDelay = 1.0f;
                 GameMain.NetworkMember.CreateEntityEvent(Owner as INetSerializable, new object[] { NetEntityEvent.Type.InventoryState, componentIndex });
             }
         }    
