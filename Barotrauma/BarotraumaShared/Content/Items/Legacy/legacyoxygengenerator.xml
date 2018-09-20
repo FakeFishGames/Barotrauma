@@ -2,7 +2,8 @@
   <Item
     name="Oxygen Generator"
     category="Legacy"
-    linkable="true">
+    linkable="true"
+    allowedlinks="vent">
 
     <Sprite texture="oxygengenerator.png" depth="0.8" sourcerect="0,0,128,128"/>
 

@@ -3,6 +3,7 @@
     name="Pump"
     identifier="pump"
     linkable="true"
+    allowedlinks="hull"
     category="Machine">
 
     <Sprite texture ="FF_pump.png" depth="0.8" sourcerect="0,0,200,178"/>
