@@ -300,7 +300,7 @@ namespace Barotrauma
                 GameMain.Server.SendConsoleMessage("The code words are: " + traitorManager.codeWords + ", response: " + traitorManager.codeResponse + ".", client);
             }));
 
-            commands.Add(new Command("itemlist", "itemlist: List all the item prefabs available for spawning.", (string[] args) =>
+            commands.Add(new Command("items|itemlist", "itemlist: List all the item prefabs available for spawning.", (string[] args) =>
             {
                 NewMessage("***************", Color.Cyan);
                 foreach (MapEntityPrefab ep in MapEntityPrefab.List)
@@ -321,7 +321,7 @@ namespace Barotrauma
                 NewMessage("***************", Color.Cyan);
             }));
 
-            commands.Add(new Command("tags", "tags: list all the tags used in the game", (string[] args) =>
+            commands.Add(new Command("tags|taglist", "tags: list all the tags used in the game", (string[] args) =>
             {
                 var tagList = MapEntityPrefab.List.SelectMany(p => p.Tags.Select(t => t)).Distinct();
                 foreach (var tag in tagList)
