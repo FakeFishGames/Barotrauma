@@ -104,7 +104,7 @@ namespace Barotrauma
             get { return vitality <= 0.0f; }
         }
 
-        public float ChrushDepth 
+        public float CrushDepth 
         {
             get { return crushDepth; }
         }

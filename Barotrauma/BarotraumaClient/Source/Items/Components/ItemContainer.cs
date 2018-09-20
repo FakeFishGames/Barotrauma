@@ -51,16 +51,32 @@ namespace Barotrauma.Items.Components
                         break;
                 }
             }
-            guiFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
+            if (guiFrame == null)
             {
-                CanBeFocused = false
-            };
-            guiCustomComponent = new GUICustomComponent(new RectTransform(Vector2.One, GuiFrame.RectTransform),
-                onDraw: (SpriteBatch spriteBatch, GUICustomComponent component) => { Inventory.Draw(spriteBatch); },
-                onUpdate: null)
+                //if a GUIFrame is not defined in the xml, 
+                //we create a full-screen frame and let the inventory position itself on it
+                guiFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
+                {
+                    CanBeFocused = false
+                };
+                guiCustomComponent = new GUICustomComponent(new RectTransform(Vector2.One, GuiFrame.RectTransform),
+                    onDraw: (SpriteBatch spriteBatch, GUICustomComponent component) => { Inventory.Draw(spriteBatch); },
+                    onUpdate: null)
+                {
+                    CanBeFocused = false
+                };
+            }
+            else
             {
-                CanBeFocused = false
-            };
+                //if a GUIFrame has been defined, draw the inventory inside it
+                guiCustomComponent = new GUICustomComponent(new RectTransform(new Vector2(0.9f), GuiFrame.RectTransform, Anchor.Center),
+                    onDraw: (SpriteBatch spriteBatch, GUICustomComponent component) => { Inventory.Draw(spriteBatch); },
+                    onUpdate: null)
+                {
+                    CanBeFocused = false
+                };
+                Inventory.RectTransform = guiCustomComponent.RectTransform;
+            }
         }
 
         public void Draw(SpriteBatch spriteBatch, bool editing = false)

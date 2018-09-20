@@ -215,6 +215,8 @@ namespace Barotrauma
 
                 spacing *= scale;
                 rectSize *= scale;
+                padding.X *= scale.X; padding.Z *= scale.X;
+                padding.Y *= scale.Y; padding.W *= scale.Y;
 
                 topLeft = RectTransform.TopLeft.ToVector2() + new Vector2(padding.X, padding.Y);
                 prevRect = RectTransform.Rect;
@@ -284,7 +286,7 @@ namespace Barotrauma
             if (GUI.MouseOn != null)
             {
                 //block usage if the mouse is on a GUIComponent that's not related to this inventory
-                if (RectTransform == null || (RectTransform != GUI.MouseOn.RectTransform && !RectTransform.IsParentOf(GUI.MouseOn.RectTransform)))
+                if (RectTransform == null || (RectTransform != GUI.MouseOn.RectTransform && !GUI.MouseOn.IsParentOf(RectTransform.GUIComponent)))
                 {
                     mouseOnGUI = true;
                 }
@@ -580,12 +582,16 @@ namespace Barotrauma
             {
                 if (draggingSlot == null || (!draggingSlot.MouseOn()))
                 {
-                    Rectangle dragRect = new Rectangle(
-                        (int)(PlayerInput.MousePosition.X - 10 * UIScale),
-                        (int)(PlayerInput.MousePosition.Y - 10 * UIScale),
-                        (int)(80 * UIScale), (int)(80 * UIScale));
+                    Sprite sprite = draggingItem.Prefab.InventoryIcon ?? draggingItem.Sprite;
 
-                    DrawSlot(spriteBatch, null, new InventorySlot(dragRect), draggingItem);
+                    int iconSize = (int)(64 * GUI.Scale);
+                    float scale = Math.Min(Math.Min(iconSize / sprite.size.X, iconSize / sprite.size.Y), 1.5f);
+                    Vector2 itemPos = PlayerInput.MousePosition;
+                    sprite.Draw(spriteBatch, itemPos + Vector2.One * 2, Color.Black, scale: scale);
+                    sprite.Draw(spriteBatch, 
+                        itemPos, 
+                        sprite == draggingItem.Sprite ? draggingItem.GetSpriteColor() : draggingItem.Prefab.InventoryIconColor, 
+                        scale: scale);
                 }
             }
 
@@ -739,6 +745,7 @@ namespace Barotrauma
                     rotation = (float)Math.Sin(slot.HighlightTimer * MathHelper.TwoPi) * slot.HighlightTimer * 0.3f;
                 }
 
+                sprite.Draw(spriteBatch, itemPos + Vector2.One * 2, Color.Black * 0.6f, scale: scale);
                 sprite.Draw(spriteBatch, itemPos, sprite == item.Sprite ? item.GetSpriteColor() : item.Prefab.InventoryIconColor, rotation, scale);
                 
                 if (CharacterHealth.OpenHealthWindow != null)

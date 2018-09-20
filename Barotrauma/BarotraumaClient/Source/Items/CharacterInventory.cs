@@ -192,9 +192,15 @@ namespace Barotrauma
             {
                 case Layout.Default:
                     {
-                        int x = GameMain.GraphicsWidth / 2 - (SlotTypes.Count(s => !upperSlots.HasFlag(s)) * (slotSize.X + spacing) / 2);
+                        int personalSlotCount = SlotTypes.Count(s => upperSlots.HasFlag(s));
+                        int normalSlotCount = SlotTypes.Count(s => !upperSlots.HasFlag(s));
+
+                        int x = GameMain.GraphicsWidth / 2 - normalSlotCount * (slotSize.X + spacing) / 2;
                         int upperX = HUDLayoutSettings.PortraitArea.X - slotSize.X / 2;
-                        
+
+                        //make sure the rightmost normal slot doesn't overlap with the personal slots
+                        x -= Math.Max((x + normalSlotCount * (slotSize.X + spacing)) - (upperX - personalSlotCount * (slotSize.X + spacing)), 0);
+
                         for (int i = 0; i < SlotPositions.Length; i++)
                         {
                             if (upperSlots.HasFlag(SlotTypes[i]))

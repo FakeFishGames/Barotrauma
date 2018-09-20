@@ -155,7 +155,7 @@ namespace Barotrauma
             }
         }
 
-        const int MaxMessages = 200;
+        const int MaxMessages = 300;
 
         public static List<ColoredText> Messages = new List<ColoredText>();
 
@@ -300,16 +300,34 @@ namespace Barotrauma
                 GameMain.Server.SendConsoleMessage("The code words are: " + traitorManager.codeWords + ", response: " + traitorManager.codeResponse + ".", client);
             }));
 
-            commands.Add(new Command("itemlist", "itemlist: List all the item prefabs available for spawning.", (string[] args) =>
+            commands.Add(new Command("items|itemlist", "itemlist: List all the item prefabs available for spawning.", (string[] args) =>
             {
                 NewMessage("***************", Color.Cyan);
                 foreach (MapEntityPrefab ep in MapEntityPrefab.List)
                 {
                     var itemPrefab = ep as ItemPrefab;
                     if (itemPrefab == null || itemPrefab.Name == null) continue;
-                    NewMessage("- " + itemPrefab.Name, Color.Cyan);
+                    string text = $"- {itemPrefab.Name}";
+                    if (itemPrefab.Tags.Any())
+                    {
+                        text += $" ({string.Join(", ", itemPrefab.Tags)})";
+                    }
+                    if (itemPrefab.AllowedLinks.Any())
+                    {
+                        text += $", Links: {string.Join(", ", itemPrefab.AllowedLinks)}";
+                    }
+                    NewMessage(text, Color.Cyan);
                 }
                 NewMessage("***************", Color.Cyan);
+            }));
+
+            commands.Add(new Command("tags|taglist", "tags: list all the tags used in the game", (string[] args) =>
+            {
+                var tagList = MapEntityPrefab.List.SelectMany(p => p.Tags.Select(t => t)).Distinct();
+                foreach (var tag in tagList)
+                {
+                    NewMessage(tag, Color.Yellow);
+                }
             }));
 
             commands.Add(new Command("setpassword|setserverpassword", "setpassword [password]: Changes the password of the server that's being hosted.", (string[] args) =>
