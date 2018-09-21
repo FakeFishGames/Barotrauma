@@ -273,7 +273,7 @@ namespace Barotrauma
         /// <summary>
         /// Does not automatically calculate children.
         /// Note also that if you change the anchor point with this property, the pivot does not automatically match the anchor.
-        /// You can use SetPosition to change everything automatcally or MatchPivotToAnchor to match the pivot to anchor.
+        /// You can use SetPosition to change everything automatically or MatchPivotToAnchor to match the pivot to anchor.
         /// </summary>
         public Anchor Anchor
         {
