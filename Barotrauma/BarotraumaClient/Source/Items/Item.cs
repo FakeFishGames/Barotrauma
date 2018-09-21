@@ -442,6 +442,18 @@ namespace Barotrauma
             {
                 ic.UpdateHUD(character, deltaTime, cam);
             }
+
+            // Update linked huds
+            foreach (MapEntity entity in linkedTo)
+            {
+                if (entity is Item i)
+                {
+                    if (i.DisplaySideBySideWhenLinked)
+                    {
+                        i.UpdateHUD(cam, character, deltaTime);
+                    }
+                }
+            }
         }
 
         public virtual void DrawHUD(SpriteBatch spriteBatch, Camera cam, Character character)
@@ -450,11 +462,14 @@ namespace Barotrauma
             {
                 DrawEditing(spriteBatch, cam);
             }
-            
+
             foreach (ItemComponent ic in activeHUDs)
             {
-                if (ic.CanBeSelected) ic.DrawHUD(spriteBatch, character);
-            }            
+                if (ic.CanBeSelected)
+                {
+                    ic.DrawHUD(spriteBatch, character);
+                }
+            }           
         }
 
         public override void AddToGUIUpdateList()
@@ -475,12 +490,13 @@ namespace Barotrauma
             {
                 foreach (ItemComponent ic in activeHUDs)
                 {
-                    if (ic.CanBeSelected)
+                    if (!ic.CanBeSelected) { continue; }
+                    if (ic.Item == this)
                     {
                         ic.UseAlternativeLayout = false;
                         ic.AddToGUIUpdateList();
                     }
-                    // Display linked item components
+                    // Add linked item components to the update list
                     foreach (var entity in linkedTo)
                     {
                         if (entity is Item i)
