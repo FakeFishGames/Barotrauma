@@ -225,7 +225,7 @@ namespace Barotrauma.Items.Components
             if (GetAvailablePower() < powerConsumption)
             {
 #if CLIENT
-                if (!flashLowPower)
+                if (!flashLowPower && character != null && character == Character.Controlled)
                 {
                     flashLowPower = true;
                     GUI.PlayUISound(GUISoundType.PickItemFail);
@@ -248,7 +248,7 @@ namespace Barotrauma.Items.Components
             if (projectiles.Count == 0)
             {
 #if CLIENT
-                if (!flashNoAmmo)
+                if (!flashNoAmmo && character != null && character == Character.Controlled)
                 {
                     flashNoAmmo = true;
                     GUI.PlayUISound(GUISoundType.PickItemFail);
