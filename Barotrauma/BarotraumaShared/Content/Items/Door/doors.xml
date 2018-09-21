@@ -14,9 +14,8 @@
       <BrokenSprite texture ="door.png" sourcerect="133,0,58,208" depth="0.051" origin="0.5,0.0" scale="true"/>
       <sound file="Content/Items/Door/door.ogg" type="OnUse" range="500.0"/>
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0"/>
-      <StatusEffect type="OnBroken" target="This">
-        <sound file="Content/Items/Door/doorBreak2.ogg" range="3000"/>
-      </StatusEffect>
+      <sound file="Content/Items/Door/doorBreak1.ogg" type="OnBroken" selectionmode="Random" range="3000"/>
+      <sound file="Content/Items/Door/doorBreak2.ogg" type="OnBroken" range="3000"/>
     </Door>
 
     <AiTarget sightrange="1500.0"/>
@@ -51,9 +50,8 @@
       <BrokenSprite texture="door.png" sourcerect="192,0,40,208" depth="0.051" origin="0.5,0.0" scale="true"/>
       <sound file="Content/Items/Door/door.ogg" type="OnUse" range="500.0"/>
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0"/>
-      <StatusEffect type="OnBroken" target="This">
-        <sound file="Content/Items/Door/doorBreak1.ogg" range="3000"/>
-      </StatusEffect>
+      <sound file="Content/Items/Door/doorBreak1.ogg" type="OnBroken" selectionmode="Random" range="3000"/>
+      <sound file="Content/Items/Door/doorBreak2.ogg" type="OnBroken" range="3000"/>
     </Door>
 
     <AiTarget sightrange="1500.0"/>
@@ -89,9 +87,8 @@
       <BrokenSprite texture="hatch.png" sourcerect="128,21,128,58" depth="0.051" origin="0.0,0.5" scale="true"/>
       <sound file="Content/Items/Door/door.ogg" type="OnUse" range="500.0"/>
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0"/>
-      <StatusEffect type="OnBroken" target="This">
-        <sound file="Content/Items/Door/doorBreak1.ogg" range="3000"/>
-      </StatusEffect>
+      <sound file="Content/Items/Door/doorBreak1.ogg" type="OnBroken" selectionmode="Random" range="3000"/>
+      <sound file="Content/Items/Door/doorBreak2.ogg" type="OnBroken" range="3000"/>
     </Door>
 
     <AiTarget sightrange="500.0"/>
@@ -150,8 +147,7 @@
   <Item
    name="Docking Hatch"   
    identifier="dockinghatch"
-   linkable="true"
-   >
+   linkable="true">
 
     <Sprite texture ="dockingport2.png" sourcerect="0,0,128,112" depth="0.94" origin="0.5,0.5"/>
 
@@ -196,11 +192,10 @@
       <Sprite texture ="duct.png" sourcerect="66,0,19,19" depth="0.05" origin="-0.4,0.5"/>
       <WeldedSprite texture ="duct.png" sourcerect="33,0,33,33" depth="0.0" origin="0.5,0.5"/>
       <BrokenSprite texture="duct.png" sourcerect="0,34,52,52" depth="0.051" origin="0.2,0.5" scale="true"/>
-      <sound file="Content/Items/Door/duct.ogg" type="OnUse" range="300"/>
+      <sound file="Content/Items/Door/duct1.ogg" type="OnUse" selectionmode="Random" range="300"/>
+      <sound file="Content/Items/Door/duct2.ogg" type="OnUse" range="300"/>
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="500.0"/>
-      <StatusEffect type="OnBroken" target="This">
-        <sound file="Content/Items/Door/ductBreak.ogg" range="2000"/>
-      </StatusEffect>
+      <sound file="Content/Items/Door/ductBreak.ogg" type="OnBroken" range="2000"/>
     </Door>
 
     <AiTarget sightrange="500.0"/>

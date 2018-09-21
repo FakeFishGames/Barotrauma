@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace Barotrauma
@@ -107,6 +108,16 @@ namespace Barotrauma
             }
 
             return str;
+        }
+        
+        public static Color GradientLerp(float t, params Color[] gradient)
+        {
+            if (t <= 0.0f) return gradient[0];
+            if (t >= 1.0f) return gradient[gradient.Length - 1];
+
+            float scaledT = t * (gradient.Length - 1);
+
+            return Color.Lerp(gradient[(int)scaledT], gradient[(int)Math.Min(scaledT + 1, gradient.Length - 1)], (scaledT - (int)scaledT));
         }
 
         public static string WrapText(string text, float lineLength, ScalableFont font, float textScale = 1.0f) //TODO: could integrate this into the ScalableFont class directly

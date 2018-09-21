@@ -702,6 +702,11 @@ namespace Barotrauma
                                 containedIndicatorArea.Width / (float)indicatorSprite.SourceRect.Width,
                                 containedIndicatorArea.Height / (float)indicatorSprite.SourceRect.Height);
 
+                            if (containedState > 0.0f && containedState < 0.25f)
+                            {
+                                indicatorScale += ((float)Math.Sin(Timing.TotalTime * 5.0f) + 1.0f) * 0.1f;
+                            }
+
                             indicatorSprite.Draw(spriteBatch, containedIndicatorArea.Center.ToVector2(),
                                 Color.DarkGray * 0.6f, 
                                 origin: indicatorSprite.size / 2,
@@ -710,7 +715,7 @@ namespace Barotrauma
                      
                             spriteBatch.Draw(indicatorSprite.Texture, containedIndicatorArea.Center.ToVector2(),
                                 sourceRectangle: new Rectangle(indicatorSprite.SourceRect.Location, new Point((int)(indicatorSprite.SourceRect.Width * containedState), indicatorSprite.SourceRect.Height)),
-                                color: Color.Lerp(Color.Red, Color.Green, containedState) * 0.8f,
+                                color: ToolBox.GradientLerp(containedState, Color.Red, Color.Orange, Color.Green),
                                 rotation: 0.0f,
                                 origin: indicatorSprite.size / 2,
                                 scale: indicatorScale,
