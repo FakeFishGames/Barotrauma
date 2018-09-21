@@ -94,6 +94,7 @@
 
     <MiniMap MinVoltage="0.5" PowerConsumption="100" canbeselected = "true">
       <GuiFrame relativesize="0.5,0.5" anchor="Center" style="ItemUI"/>
+      <AlternativeLayout anchor="CenterRight"/>
     </MiniMap>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">

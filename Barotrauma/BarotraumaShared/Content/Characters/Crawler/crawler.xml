@@ -37,6 +37,8 @@
       attachtosub="true"
       mindeattachspeed="3.0"
       maxdeattachspeed="10.0"
+      damageondetach="1000"
+      detachstun="5.0"
       attachlimb="Head"/>
 
     <targetpriority tag="human" state="Attack" priority="500"/>

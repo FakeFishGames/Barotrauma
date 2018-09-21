@@ -17,7 +17,7 @@
       <Item identifier="polycarbonatebar"/>
     </Deconstruct>
 
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="690,256,64,64"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,256,64,64"/>
     <Sprite texture ="securitygear.png" sourcerect="68,0,60,31" depth="0.6"/>
 
     <Body width="52" height="17" density="40"/>
