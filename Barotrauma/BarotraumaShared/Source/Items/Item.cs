@@ -202,6 +202,12 @@ namespace Barotrauma
                 condition = MathHelper.Clamp(value, 0.0f, Prefab.Health);
                 if (condition == 0.0f && prev > 0.0f)
                 {
+#if CLIENT
+                    foreach (ItemComponent ic in components)
+                    {
+                        ic.PlaySound(ActionType.OnBroken, WorldPosition);
+                    }
+#endif
                     ApplyStatusEffects(ActionType.OnBroken, 1.0f, null);
                     foreach (Repairable repairable in GetComponents<Repairable>())
                     {
