@@ -1843,7 +1843,7 @@ namespace Barotrauma.Networking
                     senderName = senderCharacter == null ? senderClient.Name : senderCharacter.Name;
 
                     //sender doesn't have a character or the character can't speak -> only ChatMessageType.Dead allowed
-                    if (senderCharacter == null || senderCharacter.IsDead || !senderCharacter.CanSpeak)
+                    if (senderCharacter == null || senderCharacter.IsDead || senderCharacter.SpeechImpediment >= 100.0f)
                     {
                         type = ChatMessageType.Dead;
                     }
@@ -1894,7 +1894,7 @@ namespace Barotrauma.Networking
                     break;
                 case ChatMessageType.Dead:
                     //character still alive and capable of speaking -> dead chat not allowed
-                    if (senderClient != null && senderCharacter != null && !senderCharacter.IsDead && senderCharacter.CanSpeak)
+                    if (senderClient != null && senderCharacter != null && !senderCharacter.IsDead && senderCharacter.SpeechImpediment < 100.0f)
                     {
                         return;
                     }
@@ -1964,7 +1964,7 @@ namespace Barotrauma.Networking
 
         public void SendOrderChatMessage(OrderChatMessage message)
         {
-            if (message.Sender == null || !message.Sender.CanSpeak) return;
+            if (message.Sender == null || message.Sender.SpeechImpediment >= 100.0f) return;
             ChatMessageType messageType = ChatMessage.CanUseRadio(message.Sender) ? ChatMessageType.Radio : ChatMessageType.Default;
 
             //check which clients can receive the message and apply distance effects

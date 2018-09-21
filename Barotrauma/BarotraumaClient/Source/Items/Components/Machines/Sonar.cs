@@ -108,11 +108,7 @@ namespace Barotrauma.Items.Components
                 OnMoved = (scrollbar, scroll) =>
                 {
                     zoom = MathHelper.Lerp(MinZoom, MaxZoom, scroll);
-                    if (GameMain.Server != null)
-                    {
-                        item.CreateServerEvent(this);
-                    }
-                    else if (GameMain.Client != null)
+                    if (GameMain.Client != null)
                     {
                         item.CreateClientEvent(this);
                         correctionTimer = CorrectionDelay;
@@ -127,11 +123,7 @@ namespace Barotrauma.Items.Components
                 {
                     useDirectionalPing = tickBox.Selected;
                     directionalSlider.Enabled = useDirectionalPing;
-                    if (GameMain.Server != null)
-                    {
-                        item.CreateServerEvent(this);
-                    }
-                    else if (GameMain.Client != null)
+                    if (GameMain.Client != null)
                     {
                         item.CreateClientEvent(this);
                         correctionTimer = CorrectionDelay;
@@ -146,11 +138,7 @@ namespace Barotrauma.Items.Components
                 {
                     float pingAngle = MathHelper.Lerp(0.0f, MathHelper.TwoPi, scroll);
                     pingDirection = new Vector2((float)Math.Cos(pingAngle), (float)Math.Sin(pingAngle));
-                    if (GameMain.Server != null)
-                    {
-                        item.CreateServerEvent(this);
-                    }
-                    else if (GameMain.Client != null)
+                    if (GameMain.Client != null)
                     {
                         item.CreateClientEvent(this);
                         correctionTimer = CorrectionDelay;

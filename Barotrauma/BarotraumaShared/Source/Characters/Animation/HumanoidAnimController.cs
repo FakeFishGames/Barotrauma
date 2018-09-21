@@ -1354,7 +1354,7 @@ namespace Barotrauma
                 
                 Limb pullLimb = i == 0 ? leftHand : rightHand;
 
-                if (GameMain.Client == null)
+                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                 {
                     //stop dragging if there's something between the pull limb and the target limb
                     Vector2 sourceSimPos = pullLimb.SimPosition;
