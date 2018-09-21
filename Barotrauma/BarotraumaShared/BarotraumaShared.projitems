@@ -2116,6 +2116,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\FishAnimController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\HumanoidAnimController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\HumanoidAnimParams.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\Animation\AnimationParams.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\Animation\FishAnimations.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\Animation\HumanoidAnimations.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\EditableParams.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\Ragdoll\RagdollParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Ragdoll.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Attack.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CauseOfDeath.cs" />
@@ -2132,6 +2137,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\Missions\MissionPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\ScriptedEventPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\ScriptedEventSet.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\IEnumerableExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\PointExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\RectangleExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\StringFormatter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\VectorExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\CrewManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\CharacterCampaignData.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\SonarTransducer.cs" />

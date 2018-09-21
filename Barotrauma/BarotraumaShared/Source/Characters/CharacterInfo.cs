@@ -388,7 +388,7 @@ namespace Barotrauma
 
         public void IncreaseSkillLevel(string skillIdentifier, float increase, Vector2 worldPos)
         {
-            if (Job == null || GameMain.Client != null) return;            
+            if (Job == null || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)) return;            
 
             float prevLevel = Job.GetSkillLevel(skillIdentifier);
             Job.IncreaseSkillLevel(skillIdentifier, increase);
@@ -397,9 +397,9 @@ namespace Barotrauma
 
             OnSkillChanged(skillIdentifier, prevLevel, newLevel, worldPos);
 
-            if (GameMain.Server != null && (int)newLevel != (int)prevLevel)
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && (int)newLevel != (int)prevLevel)
             {
-                GameMain.Server.CreateEntityEvent(Character, new object[] { NetEntityEvent.Type.UpdateSkills });                
+                GameMain.NetworkMember.CreateEntityEvent(Character, new object[] { NetEntityEvent.Type.UpdateSkills });                
             }
         }
 

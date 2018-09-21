@@ -149,7 +149,13 @@ namespace Barotrauma
             get;
             private set;
         }
-        
+
+        public GUITickBox ReadyToStartBox
+        {
+            get;
+            private set;
+        }
+
         public GUIFrame MyCharacterFrame
         {
             get { return myCharacterFrame; }
@@ -890,6 +896,26 @@ namespace Barotrauma
                     textAlignment: Alignment.Center);
             }
             return false;
+        }
+
+        public void SetPlayYourself(bool playYourself)
+        {
+            this.playYourself.Selected = playYourself;
+            if (playYourself)
+            {
+                UpdatePlayerFrame(campaignCharacterInfo, allowEditing: campaignCharacterInfo == null);
+            }
+            else
+            {
+                playerInfoContainer.ClearChildren();
+
+                GameMain.Client.CharacterInfo = null;
+                GameMain.Client.Character = null;
+
+                new GUITextBlock(new RectTransform(Vector2.One, playerInfoContainer.RectTransform, Anchor.Center),
+                    TextManager.Get("PlayingAsSpectator"),
+                    textAlignment: Alignment.Center);
+            }
         }
 
         public void SetAllowSpectating(bool allowSpectating)

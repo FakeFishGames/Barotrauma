@@ -1836,7 +1836,7 @@ namespace Barotrauma.Networking
         
         protected void SetRadioButtonColor()
         {
-            if (Character.Controlled == null || !Character.Controlled.CanSpeak)
+            if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f)
             {
                 chatBox.RadioButton.GetChild<GUIImage>().Color = new Color(60, 60, 60, 255);
             }
@@ -1863,7 +1863,7 @@ namespace Barotrauma.Networking
                     textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Dead];
                     break;
                 default:
-                    if (Character.Controlled != null && (Character.Controlled.IsDead || !Character.Controlled.CanSpeak))
+                    if (Character.Controlled != null && (Character.Controlled.IsDead || Character.Controlled.SpeechImpediment >= 100.0f))
                     {
                         textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Dead];
                     }
@@ -1949,7 +1949,6 @@ namespace Barotrauma.Networking
             {
                 if (msgBox.Selected)
                 {
-                    if (msgBox == chatBox.InputBox) chatBox.HideTimer = 0.0f;
                     msgBox.Text = "";
                     msgBox.Deselect();
                 }
