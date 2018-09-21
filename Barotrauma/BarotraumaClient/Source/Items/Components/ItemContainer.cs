@@ -51,11 +51,11 @@ namespace Barotrauma.Items.Components
                         break;
                 }
             }
-            if (guiFrame == null)
+            if (GuiFrame == null)
             {
                 //if a GUIFrame is not defined in the xml, 
                 //we create a full-screen frame and let the inventory position itself on it
-                guiFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
+                GuiFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
                 {
                     CanBeFocused = false
                 };
