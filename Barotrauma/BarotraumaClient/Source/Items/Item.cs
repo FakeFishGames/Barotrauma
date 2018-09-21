@@ -216,11 +216,11 @@ namespace Barotrauma
                 //        GUI.DrawString(spriteBatch, new Vector2(WorldPosition.X, -WorldPosition.Y + offset * i), $"Allowed link to {AllowedLinks[i]}", Color.LightBlue, Color.Black * 0.5f);
                 //    }
                 //}
-                Color lineColor = prefab.IsLinkAllowed(e.prefab) ? Color.LightGreen * 0.5f : Color.Red;
+                Color lineColor = prefab.IsLinkAllowed(e.prefab) ? Color.LightGreen * 0.5f : Color.Red * 0.5f;
                 Vector2 from = new Vector2(WorldPosition.X, -WorldPosition.Y);
                 Vector2 to = new Vector2(e.WorldPosition.X, -e.WorldPosition.Y);
-                GUI.DrawLine(spriteBatch, from, to, lineColor, width: 2);
-                GUI.DrawLine(spriteBatch, from, to, Color.White * 0.1f, width: 4);
+                GUI.DrawLine(spriteBatch, from, to, lineColor * 0.25f, width: 3);
+                GUI.DrawLine(spriteBatch, from, to, lineColor, width: 1);
                 //GUI.DrawString(spriteBatch, from, $"Linked to {e.Name}", lineColor, Color.Black * 0.5f);
             }
         }
@@ -269,7 +269,7 @@ namespace Barotrauma
             if (!inGame && Linkable)
             {
                 var linkText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, 20)), TextManager.Get("HoldToLink"), font: GUI.SmallFont);
-                var itemsText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, 20)), TextManager.Get("AllowedItems") + ": ", font: GUI.SmallFont);
+                var itemsText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, 20)), TextManager.Get("AllowedLinks") + ": ", font: GUI.SmallFont);
                 if (AllowedLinks.None())
                 {
                     itemsText.Text += TextManager.Get("None");

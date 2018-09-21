@@ -42,7 +42,7 @@ namespace Barotrauma
         private bool ChangeHUDScale(GUIScrollBar scrollBar, float barScroll)
         {
             UnsavedSettings = true;
-            HUDScale = MathHelper.Lerp(minUIScale, maxUIScale, barScroll);
+            HUDScale = MathHelper.Lerp(MinHUDScale, MaxHUDScale, barScroll);
             OnHUDScaleChanged?.Invoke();
             return true;
         }
@@ -50,7 +50,7 @@ namespace Barotrauma
         private bool ChangeInventoryScale(GUIScrollBar scrollBar, float barScroll)
         {
             UnsavedSettings = true;
-            InventoryScale = MathHelper.Lerp(minUIScale, maxUIScale, barScroll);
+            InventoryScale = MathHelper.Lerp(MinInventoryScale, MaxInventoryScale, barScroll);
             return true;
         }
 
@@ -224,7 +224,7 @@ namespace Barotrauma
             new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
                 barSize: 0.1f)
             {
-                BarScroll = (HUDScale - minUIScale) / (maxUIScale - minUIScale),
+                BarScroll = (HUDScale - MinHUDScale) / (MaxHUDScale - MinHUDScale),
                 OnMoved = ChangeHUDScale,
                 Step = 0.05f
             };
@@ -236,7 +236,7 @@ namespace Barotrauma
             new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
                 barSize: 0.1f)
             {
-                BarScroll = (InventoryScale - minUIScale) / (maxUIScale - minUIScale),
+                BarScroll = (InventoryScale - MinInventoryScale) / (MaxInventoryScale - MinInventoryScale),
                 OnMoved = ChangeInventoryScale,
                 Step = 0.05f
             };
