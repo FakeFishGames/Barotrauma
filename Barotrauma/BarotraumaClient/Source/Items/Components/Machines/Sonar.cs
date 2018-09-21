@@ -461,29 +461,10 @@ namespace Barotrauma.Items.Components
                 DrawMarker(spriteBatch, sub.Name, sub.WorldPosition - transducerCenter, displayScale, center, (rect.Width * 0.45f));
             }
 
-            if (!GameMain.DebugDraw) return;
-
-            var steering = item.GetComponent<Steering>();
-            if (steering == null || steering.SteeringPath == null) return;
-
-            Vector2 prevPos = Vector2.Zero;
-
-            foreach (WayPoint wp in steering.SteeringPath.Nodes)
+            if (GameMain.DebugDraw)
             {
-                Vector2 pos = (wp.Position - transducerCenter) * displayScale;
-                if (pos.Length() > displayRadius) continue;
-
-                pos.Y = -pos.Y;
-                pos += center;
-
-                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - 3 / 2, (int)pos.Y - 3, 6, 6), (steering.SteeringPath.CurrentNode == wp) ? Color.LightGreen : Color.Green, false);
-
-                if (prevPos != Vector2.Zero)
-                {
-                    GUI.DrawLine(spriteBatch, pos, prevPos, Color.Green);
-                }
-
-                prevPos = pos;
+                var steering = item.GetComponent<Steering>();
+                steering?.DebugDrawHUD(spriteBatch, transducerCenter, displayScale, displayRadius, center);
             }
         }
 
