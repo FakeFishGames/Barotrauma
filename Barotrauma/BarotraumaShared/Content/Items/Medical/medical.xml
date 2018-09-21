@@ -68,7 +68,8 @@
               aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
       <StatusEffect type="OnUse" target="This, Limb" duration="5.0">
-        <Sound file="Content/Items/Medical/bandage.ogg" range="500"/>
+        <Sound file="Content/Items/Medical/bandage1.ogg" type="OnUse" range="500"/>
+        <Sound file="Content/Items/Medical/bandage2.ogg" type="OnUse" range="500"/>
         <ReduceAffliction identifier="bleeding" amount="2"/>
         <ReduceAffliction identifier="burn" amount="3"/>
       </StatusEffect>
