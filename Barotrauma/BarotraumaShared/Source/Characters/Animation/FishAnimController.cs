@@ -133,10 +133,14 @@ namespace Barotrauma
                 if (character.IsDead && deathAnimTimer < deathAnimDuration)
                 {
                     deathAnimTimer += deltaTime;
-                    UpdateDying(deltaTime);
+                    UpdateDying(deltaTime);                    
                 }
                 
                 return;
+            }
+            else
+            {
+                deathAnimTimer = 0.0f;
             }
 
             //re-enable collider
@@ -492,20 +496,28 @@ namespace Barotrauma
         
         void UpdateDying(float deltaTime)
         {
+            float animStrength = (1.0f - deathAnimTimer / deathAnimDuration);
+
             Limb head = GetLimb(LimbType.Head);
             Limb tail = GetLimb(LimbType.Tail);
 
-            if (head != null && !head.IsSevered) head.body.ApplyTorque((float)(Math.Sqrt(head.Mass) * Dir * Math.Sin(WalkPos)) * 10.0f);
-            if (tail != null && !tail.IsSevered) tail.body.ApplyTorque((float)(Math.Sqrt(tail.Mass) * -Dir * (float)Math.Sin(WalkPos)) * 10.0f);
+            if (head != null && !head.IsSevered) head.body.ApplyTorque((float)(Math.Sqrt(head.Mass) * Dir * Math.Sin(WalkPos)) * 30.0f * animStrength);
+            if (tail != null && !tail.IsSevered) tail.body.ApplyTorque((float)(Math.Sqrt(tail.Mass) * -Dir * Math.Sin(WalkPos)) * 30.0f * animStrength);
 
-            WalkPos += deltaTime * 5.0f;
+            WalkPos += deltaTime * 10.0f * animStrength;
 
             Vector2 centerOfMass = GetCenterOfMass();
 
             foreach (Limb limb in Limbs)
             {
+#if CLIENT
+                if (limb.LightSource != null)
+                {
+                    limb.LightSource.Color = Color.Lerp(limb.InitialLightSourceColor, Color.TransparentBlack, deathAnimTimer / deathAnimDuration);
+                }
+#endif
                 if (limb.type == LimbType.Head || limb.type == LimbType.Tail || limb.IsSevered) continue;
-                limb.body.ApplyForce((centerOfMass - limb.SimPosition) * (float)(Math.Sin(WalkPos) * Math.Sqrt(limb.Mass)) * 10.0f);
+                limb.body.ApplyForce((centerOfMass - limb.SimPosition) * (float)(Math.Sin(WalkPos) * Math.Sqrt(limb.Mass)) * 30.0f * animStrength);
             }
         }
 

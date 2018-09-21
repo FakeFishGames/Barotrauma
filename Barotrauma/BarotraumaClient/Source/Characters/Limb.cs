@@ -113,7 +113,13 @@ namespace Barotrauma
         /// Use ragdoll.SpriteDeformations for a collection that cannot have duplicates.
         /// </summary>
         public List<SpriteDeformation> Deformations { get; private set; } = new List<SpriteDeformation>();
-        
+
+        public Color InitialLightSourceColor
+        {
+            get;
+            private set;
+        }
+
         public LightSource LightSource
         {
             get;
@@ -168,6 +174,7 @@ namespace Barotrauma
                         break;
                     case "lightsource":
                         LightSource = new LightSource(subElement);
+                        InitialLightSourceColor = LightSource.Color;
                         break;
                     case "sound":
                         HitSoundTag = subElement.GetAttributeString("tag", "");

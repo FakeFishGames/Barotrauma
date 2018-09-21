@@ -2233,6 +2233,9 @@ namespace Barotrauma
 
             foreach (Limb limb in AnimController.Limbs)
             {
+#if CLIENT
+                if (limb.LightSource != null) limb.LightSource.Color = limb.InitialLightSourceColor;
+#endif
                 limb.body.Enabled = true;
                 limb.IsSevered = false;
             }
