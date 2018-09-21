@@ -2,7 +2,8 @@
   <Item
     name="Pump"
     category="Legacy"
-    linkable="true">
+    linkable="true"
+    allowedlinks="hull">
 
     <Sprite texture ="pump.png" depth="0.8" sourcerect="0,0,128,128"/>
 

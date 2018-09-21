@@ -3,7 +3,9 @@
   <Item
     name="Navigation Terminal"    
     identifier="navterminal"
+    tags="command"
     linkable="true"
+    allowedlinks="statusmonitor"
     category="Machine">
 
     <Sprite texture="Content/Items/Command/navigator.png" depth="0.8" sourcerect="0,0,188,194"/>
@@ -55,6 +57,7 @@
   <Item
     name="Sonar Monitor"    
     identifier="sonarmonitor"
+    tags="command"
     linkable="true"
     category="Machine">
 
@@ -90,9 +93,11 @@
   <Item
     name="Status Monitor"    
     identifier="statusmonitor"
+    tags="command"
     aliases="MiniMap"
     category="Machine"
-    linkable="true">
+    linkable="true"
+    allowedlinks="navterminal">
 
     <Sprite texture="Content/Items/Command/statusMonitor.png" sourcerect="0,0,113,193" depth="0.8"/>
 
@@ -117,6 +122,7 @@
   <Item
     name="Sonar Transducer"    
     identifier="sonartransducer"
+    tags="command"
     category="Machine"
     spritecolor="0,0,0,1">
 

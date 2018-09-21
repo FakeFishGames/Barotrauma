@@ -77,6 +77,7 @@
     name="Hatch"    
     identifier="hatch"
     linkable="true"
+    allowedlinks="gap, hull"
     tags="door">
 
     <Sprite texture="hatch.png" sourcerect="0,0,128,46" depth="0.01" origin="0.5,0.5"/>
@@ -149,7 +150,8 @@
   <Item
    name="Docking Hatch"   
    identifier="dockinghatch"
-   linkable="true">
+   linkable="true"
+   >
 
     <Sprite texture ="dockingport2.png" sourcerect="0,0,128,112" depth="0.94" origin="0.5,0.5"/>
 

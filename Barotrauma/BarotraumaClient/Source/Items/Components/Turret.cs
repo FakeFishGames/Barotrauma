@@ -25,6 +25,11 @@ namespace Barotrauma.Items.Components
 
         private Vector2 crosshairPos, crosshairPointerPos;
 
+        private bool flashLowPower;
+        private bool flashNoAmmo;
+        private float flashTimer;
+        private float flashLength = 1;
+
         [Editable, Serialize("0.0,0.0,0.0,0.0", true)]
         public Color HudTint
         {
@@ -147,6 +152,17 @@ namespace Barotrauma.Items.Components
             {
                 moveSoundChannel.Gain = MathHelper.Clamp(Math.Abs(angularVelocity), 0.5f, 1.0f);
             }
+
+            if (flashLowPower || flashNoAmmo)
+            {
+                flashTimer += deltaTime;
+                if (flashTimer >= flashLength)
+                {
+                    flashTimer = 0;
+                    flashLowPower = false;
+                    flashNoAmmo = false;
+                }
+            }
         }
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
@@ -239,12 +255,21 @@ namespace Barotrauma.Items.Components
             bool charged = batteryCharge * 3600.0f > powerConsumption;
             bool readyToFire = reload <= 0.0f && charged && availableAmmo.Any(p => p != null);
 
-            if (ShowChargeIndicator && PowerConsumption > 0.0f)
+            powerIndicator.Color = charged ? Color.Green : Color.Red;
+            if (flashLowPower)
+            {
+                powerIndicator.BarSize = 1;
+                powerIndicator.Color *= (float)Math.Sin(flashTimer * 12);
+                powerIndicator.RectTransform.ChangeScale(Vector2.Lerp(Vector2.One, Vector2.One * 1.01f, 2 * (float)Math.Sin(flashTimer * 15)));
+            }
+            else
             {
                 powerIndicator.BarSize = chargeRate;
-                powerIndicator.Color = charged ? Color.Green : Color.Red;
-                powerIndicator.DrawManually(spriteBatch, true);
+            }
+            powerIndicator.DrawManually(spriteBatch, true);
 
+            if (ShowChargeIndicator && PowerConsumption > 0.0f)
+            {
                 int requiredChargeIndicatorPos = (int)((powerConsumption / (batteryCapacity * 3600.0f)) * powerIndicator.Rect.Width);
                 GUI.DrawRectangle(spriteBatch,
                     new Rectangle(powerIndicator.Rect.X + requiredChargeIndicatorPos, powerIndicator.Rect.Y, 3, powerIndicator.Rect.Height),
@@ -260,9 +285,18 @@ namespace Barotrauma.Items.Components
                 Point invSlotPos = new Point(GameMain.GraphicsWidth / 2 - totalWidth / 2, 60);
                 for (int i = 0; i < availableAmmo.Count; i++)
                 {
+                    // TODO: Optimize? Creates multiple new classes per frame?
                     Inventory.DrawSlot(spriteBatch, null,
                         new InventorySlot(new Rectangle(invSlotPos + new Point((i % slotsPerRow) * (slotSize.X + spacing), (int)Math.Floor(i / (float)slotsPerRow) * (slotSize.Y + spacing)), slotSize)),
                         availableAmmo[i], true);
+                }
+                if (flashNoAmmo)
+                {
+                    Rectangle rect = new Rectangle(invSlotPos.X, invSlotPos.Y, totalWidth, slotSize.Y);
+                    float inflate = MathHelper.Lerp(3, 8, (float)Math.Abs(1 * Math.Sin(flashTimer * 5)));
+                    rect.Inflate(inflate, inflate);
+                    Color color = Color.Red * MathHelper.Max(0.5f, (float)Math.Sin(flashTimer * 12));
+                    GUI.DrawRectangle(spriteBatch, rect, color, thickness: 3);
                 }
             }
 

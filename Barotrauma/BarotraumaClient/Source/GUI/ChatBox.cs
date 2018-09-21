@@ -10,8 +10,6 @@ namespace Barotrauma
 {
     class ChatBox
     {
-        const float HideDelay = 5.0f;
-
         private static Sprite radioIcon;
         
         private GUIFrame guiFrame;
@@ -27,7 +25,7 @@ namespace Barotrauma
 
         private bool isSinglePlayer;
                
-        private bool toggleOpen;
+        private bool toggleOpen = true;
         private float openState;
 
         private float prevUIScale;
@@ -119,21 +117,7 @@ namespace Barotrauma
                 return true;
             };
             
-            if (isSinglePlayer)
-            {
-                radioButton = new GUIButton(new RectTransform(new Vector2(0.15f, 0.2f), guiFrame.RectTransform, Anchor.BottomRight, Pivot.BottomLeft),
-                    style: null);
-                new GUIImage(new RectTransform(Vector2.One, radioButton.RectTransform), radioIcon, scaleToFit: true)
-                {
-                    Color = Color.White * 0.8f
-                };
-                radioButton.OnClicked = (GUIButton btn, object userData) =>
-                {
-                    GameMain.GameSession.CrewManager.ToggleCrewAreaOpen = !GameMain.GameSession.CrewManager.ToggleCrewAreaOpen;
-                    return true;
-                };
-            }
-            else
+            if (!isSinglePlayer)
             {
                 inputBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), guiFrame.RectTransform, Anchor.BottomCenter),
                     style: "ChatTextBox")
@@ -142,7 +126,9 @@ namespace Barotrauma
                     MaxTextLength = ChatMessage.MaxLength
                 };
 
-                radioButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.2f), inputBox.RectTransform, Anchor.CenterRight, Pivot.Center),
+                radioButton = new GUIButton(new RectTransform(new Vector2(0.1f, 2.0f), inputBox.RectTransform,
+                    HUDLayoutSettings.ChatBoxAlignment == Alignment.Right ? Anchor.CenterLeft : Anchor.CenterRight, 
+                    HUDLayoutSettings.ChatBoxAlignment == Alignment.Right ? Pivot.CenterRight : Pivot.CenterLeft),
                     style: null);
                 new GUIImage(new RectTransform(Vector2.One, radioButton.RectTransform), radioIcon, scaleToFit: true);
                 radioButton.OnClicked = (GUIButton btn, object userData) =>
@@ -243,7 +229,6 @@ namespace Barotrauma
             }
 
             GUI.PlayUISound(soundType);
-            //hideTimer = HideDelay;
         }
 
         private void SetUILayout()
@@ -260,7 +245,7 @@ namespace Barotrauma
             {
                 guiFrame.RectTransform.AbsoluteOffset += new Point(toggleButtonWidth, 0);
             }
-            guiFrame.RectTransform.NonScaledSize -= new Point(toggleButtonWidth);
+            guiFrame.RectTransform.NonScaledSize -= new Point(toggleButtonWidth, 0);
 
             toggleButton.RectTransform.NonScaledSize = new Point(toggleButtonWidth, HUDLayoutSettings.ChatBoxArea.Height);
             toggleButton.RectTransform.AbsoluteOffset = HUDLayoutSettings.ChatBoxAlignment == Alignment.Left ?
@@ -320,6 +305,7 @@ namespace Barotrauma
             }
             openState = MathHelper.Clamp(openState, 0.0f, 1.0f);
             int hiddenBoxOffset = guiFrame.Rect.Width + toggleButton.Rect.Width;
+            if (radioButton != null) hiddenBoxOffset += (int)(radioButton.Rect.Width * 1.5f);
             guiFrame.RectTransform.AbsoluteOffset =
                 new Point((int)MathHelper.SmoothStep(hiddenBoxOffset * (HUDLayoutSettings.ChatBoxAlignment == Alignment.Left ? -1 : 1), 0, openState), 0);
         }

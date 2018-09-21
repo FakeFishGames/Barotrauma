@@ -1321,6 +1321,21 @@ namespace Barotrauma
                 }
             );
 
+            commands.Add(new Command("tags|taglist", "tags: list all the tags used in the game", (string[] args) =>
+            {
+                var tagList = MapEntityPrefab.List.SelectMany(p => p.Tags.Select(t => t)).Distinct();
+                foreach (var tag in tagList)
+                {
+                    NewMessage(tag, Color.Yellow);
+                }
+            }));
+
+            commands.Add(new Command("setpassword|setserverpassword", "setpassword [password]: Changes the password of the server that's being hosted.", (string[] args) =>
+            {
+                if (GameMain.Server == null || args.Length == 0) return;
+                GameMain.Server.ServerSettings.SetPassword(args[0]);
+            }));
+
 #if DEBUG
             commands.Add(new Command("spamevents", "A debug command that immediately creates entity events for all items, characters and structures.", (string[] args) =>
             {

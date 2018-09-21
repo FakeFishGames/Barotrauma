@@ -76,10 +76,10 @@ namespace Barotrauma
                 OnExecute(args);
             }
         }
-
+        
         static partial void AddHelpMessage(Command command);
-
-        const int MaxMessages = 200;
+        
+        const int MaxMessages = 300;
 
         public static List<ColoredText> Messages = new List<ColoredText>();
 
@@ -152,18 +152,27 @@ namespace Barotrauma
             }));
 
 
-            commands.Add(new Command("itemlist", "itemlist: List all the item prefabs available for spawning.", (string[] args) =>
+            commands.Add(new Command("items|itemlist", "itemlist: List all the item prefabs available for spawning.", (string[] args) =>
             {
                 NewMessage("***************", Color.Cyan);
                 foreach (MapEntityPrefab ep in MapEntityPrefab.List)
                 {
                     var itemPrefab = ep as ItemPrefab;
                     if (itemPrefab == null || itemPrefab.Name == null) continue;
-                    NewMessage("- " + itemPrefab.Name, Color.Cyan);
+                    string text = $"- {itemPrefab.Name}";
+                    if (itemPrefab.Tags.Any())
+                    {
+                        text += $" ({string.Join(", ", itemPrefab.Tags)})";
+                    }
+                    if (itemPrefab.AllowedLinks.Any())
+                    {
+                        text += $", Links: {string.Join(", ", itemPrefab.AllowedLinks)}";
+                    }
+                    NewMessage(text, Color.Cyan);
                 }
                 NewMessage("***************", Color.Cyan);
             }));
-
+            
             commands.Add(new Command("createfilelist", "", (string[] args) =>
             {
                 UpdaterUtil.SaveFileList("filelist.xml");

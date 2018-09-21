@@ -372,9 +372,12 @@ namespace Barotrauma
                     newPoint.ConnectTo(prevPoint);
                 }
                 
+                //connect ladder waypoints to hull points at the right and left side
                 foreach (WayPoint ladderPoint in ladderPoints)
                 {
                     ladderPoint.Ladders = ladders;
+                    //don't connect if the waypoint is at a gap (= at the boundary of hulls and/or at a hatch)
+                    if (ladderPoint.ConnectedGap != null) continue;
 
                     for (int dir = -1; dir <= 1; dir += 2)
                     {

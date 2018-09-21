@@ -27,7 +27,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [InGameEditable, Serialize(1.0f, true)]
+        [InGameEditable(DecimalCount = 2), Serialize(1.0f, true)]
         public float Frequency
         {
             get { return frequency; }
