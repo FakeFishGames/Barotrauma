@@ -475,7 +475,11 @@ namespace Barotrauma
             {
                 foreach (ItemComponent ic in activeHUDs)
                 {
-                    if (ic.CanBeSelected) ic.AddToGUIUpdateList();
+                    if (ic.CanBeSelected)
+                    {
+                        ic.UseAlternativeLayout = false;
+                        ic.AddToGUIUpdateList();
+                    }
                     // Display linked item components
                     foreach (var entity in linkedTo)
                     {
@@ -489,6 +493,7 @@ namespace Barotrauma
                                     if (iComp.CanBeSelected)
                                     {
                                         iComp.AddToGUIUpdateList();
+                                        iComp.UseAlternativeLayout = true;
                                     }
                                 }
                             }
