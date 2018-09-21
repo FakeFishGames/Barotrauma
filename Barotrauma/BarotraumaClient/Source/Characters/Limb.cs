@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.SpriteDeformations;
+using Barotrauma.Particles;
 
 namespace Barotrauma
 {
@@ -201,25 +202,20 @@ namespace Barotrauma
                 SoundPlayer.PlayDamageSound(damageSoundType, Math.Max(damage, bleedingDamage), position);
             }
 
-            if (character.UseBloodParticles)
+            float bloodParticleAmount = Math.Min(bleedingDamage / 5, 1.0f);
+            float bloodParticleSize = MathHelper.Clamp(bleedingDamage / 5, 0.1f, 1.0f);
+            foreach (ParticleEmitter emitter in character.BloodEmitters)
             {
-                float bloodParticleAmount = (int)Math.Min(bleedingDamage * 5, 10);
-                float bloodParticleSize = MathHelper.Clamp(bleedingDamage, 0.1f, 1.0f);
+                if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) continue;
+                if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) continue;
 
-                for (int i = 0; i < bloodParticleAmount; i++)
-                {
-                    var blood = GameMain.ParticleManager.CreateParticle(inWater ? "waterblood" : "blood", WorldPosition, Vector2.Zero, 0.0f, character.AnimController.CurrentHull);
-                    if (blood != null)
-                    {
-                        blood.Size *= bloodParticleSize;
-                    }
-                }
-
-                if (bloodParticleAmount > 0 && character.CurrentHull != null)
-                {
-                    character.CurrentHull.AddDecal("blood", WorldPosition, MathHelper.Clamp(bloodParticleSize, 0.5f, 1.0f));
-                }
+                emitter.Emit(1.0f, WorldPosition, character.CurrentHull, sizeMultiplier: bloodParticleAmount, amountMultiplier: bloodParticleAmount);                
             }
+            
+            if (bloodParticleAmount > 0 && character.CurrentHull != null && !string.IsNullOrEmpty(character.BloodDecalName))
+            {
+                character.CurrentHull.AddDecal(character.BloodDecalName, WorldPosition, MathHelper.Clamp(bloodParticleSize, 0.5f, 1.0f));
+            }            
         }
 
         partial void UpdateProjSpecific(float deltaTime)

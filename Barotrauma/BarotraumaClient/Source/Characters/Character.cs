@@ -78,6 +78,24 @@ namespace Barotrauma
             set { chromaticAberrationStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
 
+        public string BloodDecalName
+        {
+            get;
+            private set;
+        }
+                
+        private List<ParticleEmitter> bloodEmitters = new List<ParticleEmitter>();
+        public IEnumerable<ParticleEmitter> BloodEmitters
+        {
+            get { return bloodEmitters; }
+        }
+
+        private List<ParticleEmitter> gibEmitters = new List<ParticleEmitter>();
+        public IEnumerable<ParticleEmitter> GibEmitters
+        {
+            get { return gibEmitters; }
+        }
+
         partial void InitProjSpecific(XDocument doc)
         {
             soundInterval = doc.Root.GetAttributeFloat("soundinterval", 10.0f);
@@ -89,12 +107,23 @@ namespace Barotrauma
                 keys[i] = new Key((InputType)i);
             }
 
-            var soundElements = doc.Root.Elements("sound").ToList();
+            BloodDecalName = doc.Root.GetAttributeString("blooddecal", "");
 
             sounds = new List<CharacterSound>();
-            foreach (XElement soundElement in soundElements)
+            foreach (XElement subElement in doc.Root.Elements())
             {
-                sounds.Add(new CharacterSound(soundElement));
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "sound":
+                        sounds.Add(new CharacterSound(subElement));
+                        break;
+                    case "bloodemitter":
+                        bloodEmitters.Add(new ParticleEmitter(subElement));
+                        break;
+                    case "gibemitter":
+                        gibEmitters.Add(new ParticleEmitter(subElement));
+                        break;
+                }
             }
 
             hudProgressBars = new Dictionary<object, HUDProgressBar>();
