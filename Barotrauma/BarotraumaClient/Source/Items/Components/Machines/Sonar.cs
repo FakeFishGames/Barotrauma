@@ -762,9 +762,6 @@ namespace Barotrauma.Items.Components
         {
             strength = MathHelper.Clamp(strength, 0.0f, 1.0f);
             
-            float scaledT = strength * (blipColorGradient.Length - 1);
-            Color color = Color.Lerp(blipColorGradient[(int)scaledT], blipColorGradient[(int)Math.Min(scaledT + 1, blipColorGradient.Length - 1)], (scaledT - (int)scaledT));
-
             Vector2 pos = (blip.Position - transducerPos) * displayScale * zoom;
             pos.Y = -pos.Y;
 
@@ -774,17 +771,7 @@ namespace Barotrauma.Items.Components
                 blip.FadeTimer = 0.0f;
                 return;
             }
-
-            /*
-            if (useDirectionalPing)
-            {
-                if (Vector2.Dot(lastPingDirection, dir) < DirectionalPingDotProduct)
-                {
-                    blip.FadeTimer = 0.0f;
-                    return;
-                }
-            }*/
-
+            
             if (sonarBlip == null)
             {
                 GUI.DrawRectangle(spriteBatch, center + pos, Vector2.One * 4, Color.Magenta, true);
@@ -794,6 +781,7 @@ namespace Barotrauma.Items.Components
             Vector2 dir = pos / (float)Math.Sqrt(posDistSqr);
             Vector2 normal = new Vector2(dir.Y, -dir.X);
             float scale = (strength + 3.0f) * blip.Scale * zoom;
+            Color color = ToolBox.GradientLerp(strength, blipColorGradient);
 
             sonarBlip.Draw(spriteBatch, center + pos, color, sonarBlip.Origin, blip.Rotation ?? MathUtils.VectorToAngle(pos),
                 blip.Size * scale * 0.04f, SpriteEffects.None, 0);
