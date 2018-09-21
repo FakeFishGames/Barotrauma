@@ -4,6 +4,11 @@
   <ragdolls folder="default"/>
   <animations folder="default"/>
 
+  <bloodemitter particle="blood" particleamount="10" scalemin="2" scalemax="3"/>
+  <bloodemitter particle="waterblood" particleamount="2" scalemin="2" scalemax="3"/>
+  <gibemitter particle="gib" particleamount="50" velocitymin="200" velocitymax="1500" anglemin="0" anglemax="360" scalemin="2" scalemax="3"/>
+  <gibemitter particle="heavygib" particleamount="20" velocitymin="50" velocitymax="1000" anglemin="0" anglemax="360" scalemin="2" scalemax="3"/>
+
   <health
     vitality="1000"
     doesbleed="true"/>

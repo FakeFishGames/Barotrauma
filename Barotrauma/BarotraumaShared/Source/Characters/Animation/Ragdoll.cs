@@ -703,30 +703,15 @@ namespace Barotrauma
                 limb.IsSevered = true;                           
             }
 
-#if CLIENT
-            if (character.UseBloodParticles)
-            {
-                foreach (Limb limb in new Limb[] { limbJoint.LimbA, limbJoint.LimbB })
-                {
-                    for (int i = 0; i < MathHelper.Clamp(limb.Mass * 2.0f, 1.0f, 50.0f); i++)
-                    {
-                        GameMain.ParticleManager.CreateParticle("gib", limb.WorldPosition, Rand.Range(0.0f, MathHelper.TwoPi), Rand.Range(200.0f, 700.0f), character.CurrentHull);
-                    }
-                    
-                    for (int i = 0; i < MathHelper.Clamp(limb.Mass * 2.0f, 1.0f, 10.0f); i++)
-                    {
-                        GameMain.ParticleManager.CreateParticle("heavygib", limb.WorldPosition, Rand.Range(0.0f, MathHelper.TwoPi), Rand.Range(50.0f, 250.0f), character.CurrentHull);
-                    }
-                    character.CurrentHull?.AddDecal("blood", limb.WorldPosition, MathHelper.Clamp(limb.Mass, 0.5f, 2.0f));
-                }
-            }
-#endif
+            SeverLimbJointProjSpecific(limbJoint);
 
             if (GameMain.Server != null)
             {
                 GameMain.Server.CreateEntityEvent(character, new object[] { NetEntityEvent.Type.Status });
             }
         }
+
+        partial void SeverLimbJointProjSpecific(LimbJoint limbJoint);
 
         private void GetConnectedLimbs(List<Limb> connectedLimbs, List<LimbJoint> checkedJoints, Limb limb)
         {

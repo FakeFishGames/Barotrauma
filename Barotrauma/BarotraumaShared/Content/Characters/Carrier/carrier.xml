@@ -3,11 +3,12 @@
   
   <ragdolls folder="default"/>
   <animations folder="default"/>
-  
+
+  <gibemitter particle="shrapnel" particleamount="40" velocitymin="50" velocitymax="1000" anglemin="0" anglemax="360"/>
+
   <health
     vitality="1000"
-    doesbleed="false"
-    usebloodparticles="false"/>
+    doesbleed="false"/>
   
   <sound file="Content/Characters/Carrier/alarm1.ogg" state="Attack" range="2000"/>
   <sound file="Content/Characters/Carrier/carrier1.ogg" state="Attack" range="2000"/>

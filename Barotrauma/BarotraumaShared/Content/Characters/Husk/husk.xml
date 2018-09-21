@@ -1,9 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="husk" humanoid="true" needsair="false">
+<Character name="husk" humanoid="true" needsair="false" blooddecal="blackblood">
   
   <ragdolls folder="default"/>
   <animations folder="default"/>
 
+  <bloodemitter particle="blackblood" particleamount="5"/>
+  <bloodemitter particle="blackwaterblood" particleamount="1"/>
+  <gibemitter particle="heavygib" particleamount="10" velocitymin="50" velocitymax="500" anglemin="0" anglemax="360"/>
+  
   <health
     vitality="100"
     doesbleed="false"/>

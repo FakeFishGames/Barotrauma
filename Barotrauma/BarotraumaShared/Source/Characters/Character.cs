@@ -358,11 +358,6 @@ namespace Barotrauma
             }
         }
 
-        public bool UseBloodParticles
-        {
-            get { return CharacterHealth.UseBloodParticles; }
-        }
-
         public float Bleeding
         {
             get { return CharacterHealth.GetAfflictionStrength("bleeding", true); }

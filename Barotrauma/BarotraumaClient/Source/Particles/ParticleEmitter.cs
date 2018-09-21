@@ -21,27 +21,27 @@ namespace Barotrauma.Particles
             Prefab = prefab;
         }
 
-        public void Emit(float deltaTime, Vector2 position, Hull hullGuess = null, float angle = 0.0f, float particleRotation = 0.0f, float velocityMultiplier = 1.0f)
+        public void Emit(float deltaTime, Vector2 position, Hull hullGuess = null, float angle = 0.0f, float particleRotation = 0.0f, float velocityMultiplier = 1.0f, float sizeMultiplier = 1.0f, float amountMultiplier = 1.0f)
         {
-            emitTimer += deltaTime;
+            emitTimer += deltaTime * amountMultiplier;
 
             if (Prefab.ParticlesPerSecond > 0)
             {
                 float emitInterval = 1.0f / Prefab.ParticlesPerSecond;
                 while (emitTimer > emitInterval)
                 {
-                    Emit(position, hullGuess, angle, particleRotation, velocityMultiplier);
+                    Emit(position, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier);
                     emitTimer -= emitInterval;
                 }
             }
 
-            for (int i = 0; i < Prefab.ParticleAmount; i++)
+            for (int i = 0; i < Prefab.ParticleAmount * amountMultiplier; i++)
             {
-                Emit(position, hullGuess, angle, particleRotation, velocityMultiplier);
+                Emit(position, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier);
             }
         }
 
-        private void Emit(Vector2 position, Hull hullGuess = null, float angle = 0.0f, float particleRotation = 0.0f, float velocityMultiplier = 1.0f)
+        private void Emit(Vector2 position, Hull hullGuess, float angle, float particleRotation, float velocityMultiplier, float sizeMultiplier)
         {
             angle += Rand.Range(Prefab.AngleMin, Prefab.AngleMax);
             Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * Rand.Range(Prefab.VelocityMin, Prefab.VelocityMax) * velocityMultiplier;

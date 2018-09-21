@@ -4,6 +4,10 @@
   <ragdolls folder="default"/>
   <animations folder="default"/>
 
+  <bloodemitter particle="blackblood" particleamount="5"/>
+  <bloodemitter particle="blackwaterblood" particleamount="1"/>
+  <gibemitter particle="heavygib" particleamount="10" velocitymin="50" velocitymax="500" anglemin="0" anglemax="360"/>
+  
   <health
     usehealthwindow="false"
     vitality="100"
