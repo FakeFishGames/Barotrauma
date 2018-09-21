@@ -356,7 +356,7 @@ namespace Barotrauma
             foreach (InterestingPosition positionOfInterest in positionsOfInterest)
             {
                 WayPoint wayPoint = new WayPoint(
-                    mirror ? new Vector2(borders.X - positionOfInterest.Position.X, positionOfInterest.Position.Y) : positionOfInterest.Position,
+                    positionOfInterest.Position,
                     SpawnType.Enemy,
                     submarine: null);
             }
@@ -475,6 +475,11 @@ namespace Barotrauma
                     positionsOfInterest[i] = new InterestingPosition(
                         new Vector2(borders.Width - positionsOfInterest[i].Position.X, positionsOfInterest[i].Position.Y),
                         positionsOfInterest[i].PositionType);
+                }
+
+                foreach (WayPoint waypoint in WayPoint.WayPointList)
+                {
+                    waypoint.Move(new Vector2((borders.Width / 2 - waypoint.Position.X) * 2, 0.0f));
                 }
 
                 startPosition.X = borders.Width - startPosition.X;
