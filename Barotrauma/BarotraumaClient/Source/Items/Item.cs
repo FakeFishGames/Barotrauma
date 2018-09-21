@@ -494,10 +494,6 @@ namespace Barotrauma
                             }
                         }
                     }
-
-                    if (DisplaySideBySideWhenLinked)
-                    {
-                    }
                 }
             }
         }
