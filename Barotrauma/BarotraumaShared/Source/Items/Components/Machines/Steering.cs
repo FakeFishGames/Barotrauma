@@ -2,6 +2,7 @@
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
@@ -12,6 +13,7 @@ namespace Barotrauma.Items.Components
     partial class Steering : Powered, IServerSerializable, IClientSerializable
     {
         private const float AutopilotRayCastInterval = 0.5f;
+        private const float RecalculatePathInterval = 10.0f;
 
         private Vector2 currVelocity;
         private Vector2 targetVelocity;
@@ -30,6 +32,7 @@ namespace Barotrauma.Items.Components
         private bool unsentChanges;
 
         private float autopilotRayCastTimer;
+        private float autopilotRecalculatePathTimer;
 
         private Vector2 avoidStrength;
 
@@ -114,6 +117,30 @@ namespace Barotrauma.Items.Components
             get { return posToMaintain; }
             set { posToMaintain = value; }
         }
+
+        struct ObstacleDebugInfo
+        {
+            public Vector2 Point1;
+            public Vector2 Point2;
+
+            public Vector2? Intersection;
+
+            public float Dot;
+
+            public Vector2 AvoidStrength;
+
+            public ObstacleDebugInfo(GraphEdge edge, Vector2? intersection, float dot, Vector2 avoidStrength)
+            {
+                Point1 = edge.Point1;
+                Point2 = edge.Point2;
+                Intersection = intersection;
+                Dot = dot;
+                AvoidStrength = avoidStrength;
+            }
+        }
+
+        //edge point 1, edge point 2, avoid strength
+        private List<ObstacleDebugInfo> debugDrawObstacles = new List<ObstacleDebugInfo>();
 
         public Steering(Item item, XElement element)
             : base(item, element)
@@ -224,34 +251,53 @@ namespace Barotrauma.Items.Components
             }
 
             autopilotRayCastTimer -= deltaTime;
+            autopilotRecalculatePathTimer -= deltaTime;
+            if (autopilotRecalculatePathTimer <= 0.0f)
+            {
+                //periodically recalculate the path in case the sub ends up to a position 
+                //where it can't keep traversing the initially calculated path
+                UpdatePath();
+                autopilotRecalculatePathTimer = RecalculatePathInterval;
+            }
 
             steeringPath.CheckProgress(ConvertUnits.ToSimUnits(controlledSub.WorldPosition), 10.0f);
 
             if (autopilotRayCastTimer <= 0.0f && steeringPath.NextNode != null)
             {
-                Vector2 diff = Vector2.Normalize(ConvertUnits.ToSimUnits(steeringPath.NextNode.Position - controlledSub.WorldPosition));
+                Vector2 diff = ConvertUnits.ToSimUnits(steeringPath.NextNode.Position - controlledSub.WorldPosition);
 
-                bool nextVisible = true;
-                for (int x = -1; x < 2; x += 2)
+                //if the node is close enough, check if it's visible
+                float lengthSqr = diff.LengthSquared();
+                if (lengthSqr > 0.001f && lengthSqr < 500.0f)
                 {
-                    for (int y = -1; y < 2; y += 2)
+                    diff = Vector2.Normalize(diff);
+
+                    //check if the next waypoint is visible from all corners of the sub
+                    //(i.e. if we can navigate directly towards it or if there's obstacles in the way)
+                    bool nextVisible = true;
+                    for (int x = -1; x < 2; x += 2)
                     {
-                        Vector2 cornerPos =
-                            new Vector2(controlledSub.Borders.Width * x, controlledSub.Borders.Height * y) / 2.0f;
+                        for (int y = -1; y < 2; y += 2)
+                        {
+                            Vector2 cornerPos =
+                                new Vector2(controlledSub.Borders.Width * x, controlledSub.Borders.Height * y) / 2.0f;
 
-                        cornerPos = ConvertUnits.ToSimUnits(cornerPos * 1.2f + controlledSub.WorldPosition);
+                            cornerPos = ConvertUnits.ToSimUnits(cornerPos * 1.2f + controlledSub.WorldPosition);
 
-                        float dist = Vector2.Distance(cornerPos, steeringPath.NextNode.SimPosition);
+                            float dist = Vector2.Distance(cornerPos, steeringPath.NextNode.SimPosition);
 
-                        if (Submarine.PickBody(cornerPos, cornerPos + diff * dist, null, Physics.CollisionLevel) == null) continue;
+                            if (Submarine.PickBody(cornerPos, cornerPos + diff * dist, null, Physics.CollisionLevel) == null) continue;
 
-                        nextVisible = false;
-                        x = 2;
-                        y = 2;
+                            nextVisible = false;
+                            x = 2;
+                            y = 2;
+                        }
                     }
+
+                    if (nextVisible) steeringPath.SkipToNextNode();
                 }
 
-                if (nextVisible) steeringPath.SkipToNextNode();
+                
 
                 autopilotRayCastTimer = AutopilotRayCastInterval;
             }
@@ -268,7 +314,9 @@ namespace Barotrauma.Items.Components
             float avoidRadius = avoidDist.Length();
 
             Vector2 newAvoidStrength = Vector2.Zero;
-            
+
+            debugDrawObstacles.Clear();
+
             //steer away from nearby walls
             var closeCells = Level.Loaded.GetCells(controlledSub.WorldPosition, 4);
             foreach (VoronoiCell cell in closeCells)
@@ -279,20 +327,29 @@ namespace Barotrauma.Items.Components
                     if (intersection != null)
                     {
                         Vector2 diff = controlledSub.WorldPosition - (Vector2)intersection;
-                        
+
                         //far enough -> ignore
-                        if (Math.Abs(diff.X) > avoidDist.X && Math.Abs(diff.Y) > avoidDist.Y) continue;
+                        if (Math.Abs(diff.X) > avoidDist.X && Math.Abs(diff.Y) > avoidDist.Y)
+                        {
+                            debugDrawObstacles.Add(new ObstacleDebugInfo(edge, intersection, 0.0f, Vector2.Zero));
+                            continue;
+                        }
                         if (diff.LengthSquared() < 1.0f) diff = Vector2.UnitY;
 
+                        Vector2 normalizedDiff = Vector2.Normalize(diff);
                         float dot = controlledSub.Velocity == Vector2.Zero ?
-                            0.0f : Vector2.Dot(controlledSub.Velocity, -Vector2.Normalize(diff));
+                            0.0f : Vector2.Dot(controlledSub.Velocity, -normalizedDiff);
 
                         //not heading towards the wall -> ignore
-                        if (dot < 0.5) continue;
-
-                        Vector2 change = (Vector2.Normalize(diff) * Math.Max((avoidRadius - diff.Length()), 0.0f)) / avoidRadius;
-
+                        if (dot < 0.5)
+                        {
+                            debugDrawObstacles.Add(new ObstacleDebugInfo(edge, intersection, dot, Vector2.Zero));
+                            continue;
+                        }
+                        
+                        Vector2 change = (normalizedDiff * Math.Max((avoidRadius - diff.Length()), 0.0f)) / avoidRadius;                        
                         newAvoidStrength += change * dot;
+                        debugDrawObstacles.Add(new ObstacleDebugInfo(edge, intersection, dot, change * dot));
                     }
                 }
             }
@@ -332,7 +389,6 @@ namespace Barotrauma.Items.Components
             {
                 targetVelocity *= 100.0f / velMagnitude;
             }
-
         }
 
         private void UpdatePath()
@@ -348,8 +404,6 @@ namespace Barotrauma.Items.Components
             {
                 target = ConvertUnits.ToSimUnits(Level.Loaded.StartPosition);
             }
-            
-
             steeringPath = pathFinder.FindPath(ConvertUnits.ToSimUnits(controlledSub == null ? item.WorldPosition : controlledSub.WorldPosition), target);
         }
 
