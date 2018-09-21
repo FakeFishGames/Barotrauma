@@ -92,6 +92,8 @@ namespace Barotrauma.Items.Components
 
             Projectile projectile = null;
             Item[] containedItems = item.ContainedItems;
+            if (containedItems == null) return true;
+
             foreach (Item item in containedItems)
             {
                 projectile = item.GetComponent<Projectile>();
