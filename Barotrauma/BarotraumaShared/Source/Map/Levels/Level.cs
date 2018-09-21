@@ -516,6 +516,7 @@ namespace Barotrauma
 
                 foreach (WayPoint waypoint in WayPoint.WayPointList)
                 {
+                    if (waypoint.Submarine != null) continue;
                     waypoint.Move(new Vector2((borders.Width / 2 - waypoint.Position.X) * 2, 0.0f));
                 }
 
@@ -668,7 +669,7 @@ namespace Barotrauma
                 {
                     if (wp.SpawnType != SpawnType.Path) continue;
 
-                    float dist =Math.Abs(cell.Center.X - wp.WorldPosition.X);
+                    float dist = Math.Abs(cell.Center.X - wp.WorldPosition.X);
                     if (closestWayPoint == null || dist < closestDist)
                     {
                         closestDist = dist;
