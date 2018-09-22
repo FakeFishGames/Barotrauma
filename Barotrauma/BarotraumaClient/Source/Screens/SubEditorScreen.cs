@@ -132,7 +132,7 @@ namespace Barotrauma
             get { return wiringMode; }
         }
 
-        public SubEditorScreen(ContentManager content)
+        public SubEditorScreen()
         {
             cam = new Camera();
             CreateUI();
