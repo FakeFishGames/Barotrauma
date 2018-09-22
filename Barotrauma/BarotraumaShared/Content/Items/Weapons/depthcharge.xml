@@ -99,7 +99,7 @@
         <Affliction identifier="internaldamage" strength="10"/>
       </Attack>
       <StatusEffect type="OnImpact" Condition="-100.0" stun="10.0" disabledeltatime="true">
-        <sound file="Content/Items/Weapons/bigexplosion.ogg" range="10000"/>
+        <sound file="Content/Items/Weapons/bigexplosion.ogg" range="20000"/>
         <Explosion range="1000.0" structuredamage="1000" force="50.0">
           <Affliction identifier="burn" strength="500"/>
           <Affliction identifier="internaldamage" strength="500"/>

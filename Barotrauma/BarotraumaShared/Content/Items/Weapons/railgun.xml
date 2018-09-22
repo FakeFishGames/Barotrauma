@@ -230,7 +230,7 @@
         <Affliction identifier="bleeding" strength="10"/>
       </Attack>
       <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
-        <sound file="Content/Items/Weapons/bigexplosion.ogg"/>
+        <sound file="Content/Items/Weapons/bigexplosion.ogg" range="20000"/>
         <Explosion range="1000.0" structuredamage="1000" force="50.0" severlimbsprobability="1.0" decal="explosion" decalsize="1.0">
           <Affliction identifier="burn" strength="500"/>
           <Affliction identifier="internaldamage" strength="500"/>
