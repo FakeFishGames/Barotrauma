@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.IO;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -45,6 +46,19 @@ namespace Barotrauma
 
             if (sourceVector.Z == 0.0f) sourceVector.Z = texture.Width;
             if (sourceVector.W == 0.0f) sourceVector.W = texture.Height;
+        }
+
+        public void ReloadTexture()
+        {
+            var sprites = LoadedSprites.Where(s => s.Texture == texture).ToList();
+            texture.Dispose();
+            texture = null;
+
+            texture = TextureLoader.FromFile(file);
+            foreach (Sprite sprite in sprites)
+            {
+                sprite.texture = texture;
+            }
         }
 
         partial void CalculateSourceRect()
