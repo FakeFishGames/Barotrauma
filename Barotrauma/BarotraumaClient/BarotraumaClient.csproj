@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+﻿﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">ReleaseLinux</Configuration>
@@ -247,6 +247,7 @@
     <Compile Include="Source\Screens\CampaignSetupUI.cs" />
     <Compile Include="Source\Screens\CampaignUI.cs" />
     <Compile Include="Source\Screens\OldCharacterEditorScreen.cs" />
+    <Compile Include="Source\Screens\SpriteEditorScreen.cs" />
     <Compile Include="Source\Screens\SteamWorkshopScreen.cs" />
     <Compile Include="Source\Screens\SubEditorScreen.cs" />
     <Compile Include="Source\Screens\GameScreen.cs" />

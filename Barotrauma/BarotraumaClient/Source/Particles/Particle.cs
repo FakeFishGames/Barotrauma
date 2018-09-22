@@ -38,6 +38,8 @@ namespace Barotrauma.Particles
         private float totalLifeTime;
         private float lifeTime;
 
+        private float startDelay;
+
         private Vector2 velocityChange;
         private Vector2 velocityChangeWater;
 
@@ -64,6 +66,12 @@ namespace Barotrauma.Particles
         public ParticleBlendState BlendState
         {
             get { return prefab.BlendState; }
+        }
+
+        public float StartDelay
+        {
+            get { return startDelay; }
+            set { startDelay = MathHelper.Clamp(value, Prefab.StartDelayMin, prefab.StartDelayMax); }
         }
         
         public Vector2 Size
@@ -114,6 +122,7 @@ namespace Barotrauma.Particles
 
             totalLifeTime = prefab.LifeTime;
             lifeTime = prefab.LifeTime;
+            startDelay = Rand.Range(prefab.StartDelayMin, prefab.StartDelayMax);
             
             size = prefab.StartSizeMin + (prefab.StartSizeMax - prefab.StartSizeMin) * Rand.Range(0.0f, 1.0f);
 
@@ -151,6 +160,12 @@ namespace Barotrauma.Particles
         
         public bool Update(float deltaTime)
         {
+            if (startDelay > 0.0f)
+            {
+                startDelay -= deltaTime;
+                return true;
+            }
+
             prevPosition = position;
             prevRotation = rotation;
 

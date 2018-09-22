@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using Barotrauma.Particles;
 
 namespace Barotrauma
 {
@@ -314,6 +315,27 @@ namespace Barotrauma
         {
             LimbJoints.ForEach(j => j.UpdateDeformations(deltaTime));
             SpriteDeformations.ForEach(sd => sd.Update(deltaTime));
+        }
+
+
+        partial void SeverLimbJointProjSpecific(LimbJoint limbJoint)
+        {
+            foreach (Limb limb in new Limb[] { limbJoint.LimbA, limbJoint.LimbB })
+            {
+                float gibParticleAmount = MathHelper.Clamp(limb.Mass / character.AnimController.Mass, 0.1f, 1.0f);
+                foreach (ParticleEmitter emitter in character.GibEmitters)
+                {
+                    if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) continue;
+                    if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) continue;
+
+                    emitter.Emit(1.0f, limb.WorldPosition, character.CurrentHull, amountMultiplier: gibParticleAmount);
+                }
+
+                if (!string.IsNullOrEmpty(character.BloodDecalName))
+                {
+                    character.CurrentHull?.AddDecal(character.BloodDecalName, limb.WorldPosition, MathHelper.Clamp(limb.Mass, 0.5f, 2.0f));
+                }
+            }
         }
 
         public virtual void Draw(SpriteBatch spriteBatch, Camera cam)

@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<Character name="crawler" humanoid="false">
+<Character name="crawler" humanoid="false" blooddecal="blood">
   
   <ragdolls folder="default"/>
   <animations folder="default"/>
+
+  <bloodemitter particle="blood" particleamount="10"/>
+  <bloodemitter particle="waterblood" particleamount="1"/>
+  <gibemitter particle="gib" particleamount="20" velocitymin="200" velocitymax="700" anglemin="0" anglemax="360"/>
+  <gibemitter particle="heavygib" particleamount="10" velocitymin="50" velocitymax="500" anglemin="0" anglemax="360"/>
 
   <health
     vitality="70"
@@ -32,6 +37,8 @@
       attachtosub="true"
       mindeattachspeed="3.0"
       maxdeattachspeed="10.0"
+      damageondetach="1000"
+      detachstun="5.0"
       attachlimb="Head"/>
 
     <targetpriority tag="human" state="Attack" priority="500"/>

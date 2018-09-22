@@ -8,6 +8,14 @@
     <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="256,254,128,128"/>
     <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="384,128,128,128"/>  
   </blood>
+  <blackblood
+    color="0.08, 0.0, 0.0, 1.0"
+    lifetime="60"
+    fadeouttime="20">
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="256,128,128,128"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="256,254,128,128"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="384,128,128,128"/>
+  </blackblood>
   <explosion
     color="1.0, 1.0, 1.0, 1.0"
     lifetime="60"

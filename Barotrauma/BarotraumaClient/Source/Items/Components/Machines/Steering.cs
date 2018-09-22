@@ -142,6 +142,7 @@ namespace Barotrauma.Items.Components
                     {
                         unsentChanges = true;
                         levelStartSelected = tickBox.Selected;
+                        levelEndSelected = !levelStartSelected;
                         if (levelStartSelected)
                         {
                             UpdatePath();
@@ -167,6 +168,7 @@ namespace Barotrauma.Items.Components
                     {
                         unsentChanges = true;
                         levelEndSelected = tickBox.Selected;
+                        levelStartSelected = !levelEndSelected;
                         if (levelEndSelected)
                         {
                             UpdatePath();
@@ -284,7 +286,63 @@ namespace Barotrauma.Items.Components
             GUI.DrawLine(spriteBatch,
                 new Vector2(velRect.Center.X, velRect.Center.Y),
                 steeringPos,
-                Color.CadetBlue, 0, 2);
+                Color.CadetBlue, 0, 2);            
+        }
+
+        public void DebugDrawHUD(SpriteBatch spriteBatch, Vector2 transducerCenter, float displayScale, float displayRadius, Vector2 center)
+        {
+            if (SteeringPath == null) return;
+
+            Vector2 prevPos = Vector2.Zero;
+            foreach (WayPoint wp in SteeringPath.Nodes)
+            {
+                Vector2 pos = (wp.Position - transducerCenter) * displayScale;
+                if (pos.Length() > displayRadius) continue;
+
+                pos.Y = -pos.Y;
+                pos += center;
+
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - 3 / 2, (int)pos.Y - 3, 6, 6), (SteeringPath.CurrentNode == wp) ? Color.LightGreen : Color.Green, false);
+
+                if (prevPos != Vector2.Zero)
+                {
+                    GUI.DrawLine(spriteBatch, pos, prevPos, Color.Green);
+                }
+
+                prevPos = pos;
+            }
+
+            foreach (ObstacleDebugInfo obstacle in debugDrawObstacles)
+            {
+                Vector2 pos1 = (obstacle.Point1 - transducerCenter) * displayScale;
+                pos1.Y = -pos1.Y;
+                pos1 += center;
+                Vector2 pos2 = (obstacle.Point2 - transducerCenter) * displayScale;
+                pos2.Y = -pos2.Y;
+                pos2 += center;
+
+                GUI.DrawLine(spriteBatch, 
+                    pos1, 
+                    pos2,
+                    Color.Red * 0.6f, width: 3);
+
+                if (obstacle.Intersection.HasValue)
+                {
+                    Vector2 intersectionPos = (obstacle.Intersection.Value - transducerCenter) *displayScale;
+                    intersectionPos.Y = -intersectionPos.Y;
+                    intersectionPos += center;
+                    GUI.DrawRectangle(spriteBatch, intersectionPos - Vector2.One * 2, Vector2.One * 4, Color.Red);
+                }
+
+                Vector2 obstacleCenter = (pos1 + pos2) / 2;
+                if (obstacle.AvoidStrength.LengthSquared() > 0.01f)
+                {
+                    GUI.DrawLine(spriteBatch,
+                        obstacleCenter,
+                        obstacleCenter + new Vector2(obstacle.AvoidStrength.X, -obstacle.AvoidStrength.Y) * 100,
+                        Color.Lerp(Color.Green, Color.Orange, obstacle.Dot), width: 2);
+                }
+            }
         }
 
         public override void AddToGUIUpdateList()

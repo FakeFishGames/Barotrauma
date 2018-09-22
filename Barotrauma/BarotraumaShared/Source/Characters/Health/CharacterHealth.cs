@@ -85,7 +85,6 @@ namespace Barotrauma
 
         //bleeding settings
         public bool DoesBleed { get; private set; }
-        public bool UseBloodParticles { get; private set; }
 
         public bool UseHealthWindow { get; private set; }
 
@@ -181,7 +180,6 @@ namespace Barotrauma
             maxVitality = 100.0f;
 
             DoesBleed = true;
-            UseBloodParticles = true;
             UseHealthWindow = false;
 
             irremovableAfflictions.Add(bloodlossAffliction = new Affliction(AfflictionPrefab.Bloodloss, 0.0f));
@@ -208,7 +206,6 @@ namespace Barotrauma
             vitality    = maxVitality;
 
             DoesBleed               = element.GetAttributeBool("doesbleed", true);
-            UseBloodParticles       = element.GetAttributeBool("usebloodparticles", DoesBleed);
             UseHealthWindow         = element.GetAttributeBool("usehealthwindow", false);
 
             minVitality = (character.ConfigPath == Character.HumanConfigFile) ? -100.0f : 0.0f;

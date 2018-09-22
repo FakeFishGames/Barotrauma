@@ -1,10 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name ="human" humanoid="true" needsair="true" genders="true" maleheadid="1,8" femaleheadid="1,8" canspeak="true">
+<Character name ="human" humanoid="true" needsair="true" genders="true" maleheadid="1,8" femaleheadid="1,8" canspeak="true" blooddecal="blood">
 
   <name firstname="Content/Characters/Human/[GENDER]firstnames.txt" lastname="Content/Characters/Human/lastnames.txt" />
   
   <ragdolls folder="default"/>
   <animations folder="default"/>
+
+  <bloodemitter particle="blood" particleamount="10"/>
+  <bloodemitter particle="waterblood" particleamount="1"/>
+  <gibemitter particle="gib" particleamount="20" velocitymin="200" velocitymax="700" anglemin="0" anglemax="360"/>
+  <gibemitter particle="heavygib" particleamount="10" velocitymin="50" velocitymax="500" anglemin="0" anglemax="360"/>
 
   <health
     usehealthwindow="true"

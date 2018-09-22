@@ -108,6 +108,18 @@
     <animatedsprite texture="Content/Particles/Spatter3.png" sourcerect="0,0,1024,1024" columns="4" rows="8" origin="0.3,0.5"/>
   </blood>
 
+  <blackblood
+    startsizemin="0.5,0.5" startsizemax="1.0,1.0"
+    startrotationmin ="0.0" startrotationmax="360"
+    startcolor="0.08,0,0,0" startalpha="1.0"
+    lifetime="1"
+    growtime ="0.1"
+    velocitychange="0.0, -0.1">
+    <animatedsprite texture="Content/Particles/Spatter1.png" sourcerect="0,0,1024,1024" columns="4" rows="8" origin="0.2,0.5"/>
+    <animatedsprite texture="Content/Particles/Spatter2.png" sourcerect="0,0,1024,1024" columns="4" rows="8" origin="0.5,0.5"/>
+    <animatedsprite texture="Content/Particles/Spatter3.png" sourcerect="0,0,1024,1024" columns="4" rows="8" origin="0.3,0.5"/>
+  </blackblood>
+  
   <waterblood
     startsizemin="0.1,0.1" startsizemax="0.3,0.3"
     sizechangemin="0.1,0.1" sizechangemax="0.2,0.2"
@@ -122,6 +134,20 @@
     <animatedsprite texture="Content/Particles/Smoke.png" sourcerect="0,0,4096,4096" columns="8" rows="8" origin="0.5,0.5"/>
   </waterblood>
 
+  <blackwaterblood
+    startsizemin="0.1,0.1" startsizemax="0.3,0.3"
+    sizechangemin="0.1,0.1" sizechangemax="0.2,0.2"
+    startrotationmin ="0.0" startrotationmax="360"
+    startcolor="0.08,0,0,0" startalpha="1.0"
+    animduration="5"
+    colorchange="0.0, 0.0, 0.0, -0.2"
+    growtime ="0.1"
+    lifetime="5.0"
+    drawtarget="water"
+    velocitychange="0.0, 0.0">
+    <animatedsprite texture="Content/Particles/Smoke.png" sourcerect="0,0,4096,4096" columns="8" rows="8" origin="0.5,0.5"/>
+  </blackwaterblood>
+  
   <blooddrop
     lifetime="3"
     angularvelocitymin="0"
@@ -215,7 +241,7 @@
     growtime="0"
     startcolor="0.2980392,0,0,1"
     startalpha="1"
-    colorchange="0,0,0,-0.3"
+    colorchange="0,0,0,-0.2"
     drawtarget="Both"
     blendstate="AlphaBlend"
     animduration="1"
@@ -529,6 +555,72 @@
     loopanim="True">
     <animatedsprite texture="Content/Particles/Smoke.png" sourcerect="0,0,4096,4096" columns="8" rows="8" origin="0.5,0.5"/>
   </explosionsmoke>
+
+  <underwaterexplosion
+    lifetime="3"
+    startdelaymin="0"
+    startdelaymax="0.5"
+    angularvelocitymin="0"
+    angularvelocitymax="0"
+    startrotationmin="-20"
+    startrotationmax="20"
+    rotatetodirection="False"
+    drag="0"
+    waterdrag="0"
+    velocitychange="0,0"
+    velocitychangewater="0,0"
+    collisionradius="1"
+    usecollision="False"
+    deleteoncollision="False"
+    friction="0.5"
+    restitution="0.5"
+    startsizemin="1,1"
+    startsizemax="1.5,1.5"
+    sizechangemin="0.1,0.1"
+    sizechangemax="0.5,0.5"
+    growtime="0.2"
+    startcolor="1,1,1,1"
+    startalpha="1"
+    colorchange="0,0,0,-0.33"
+    drawtarget="Water"
+    blendstate="Additive"
+    animduration="3"
+    loopanim="False">
+    <animatedsprite texture="Content/Particles/UnderwaterExplosionSheet.png" sourcerect="0,0,2040,2040" columns="10" rows="10" origin="0.5,0.5"/>
+  </underwaterexplosion>
+
+  <risingbubbles
+    lifetime="4"
+    startdelaymin="0"
+    startdelaymax="1.5"
+    angularvelocitymin="0"
+    angularvelocitymax="0"
+    startrotationmin="-20"
+    startrotationmax="20"
+    rotatetodirection="False"
+    drag="0"
+    waterdrag="0"
+    velocitychange="0,0"
+    velocitychangewater="0,2"
+    collisionradius="1"
+    usecollision="False"
+    deleteoncollision="False"
+    friction="0.5"
+    restitution="0.5"
+    startsizemin="0.5,0.5"
+    startsizemax="1,1"
+    sizechangemin="0,0"
+    sizechangemax="0,0"
+    growtime="0.2"
+    startcolor="1,1,1,1"
+    startalpha="1"
+    colorchange="0,0,0,-0.2"
+    drawtarget="Water"
+    blendstate="Additive"
+    animduration="4"
+    loopanim="True">
+    <animatedsprite texture="Content/Particles/RisingBubbleSheet.png" sourcerect="0,0,1024,1024" columns="8" rows="8" origin="0.5,0.5"/>
+  </risingbubbles>
   
   <weld
     startsizemin="0.9,0.9" startsizemax="1.1,1.1"
@@ -844,4 +936,50 @@
     <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="192,96,32,32"/>
     <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="224,96,32,32"/>
   </iceshards>
+
+  <brownchunks
+    lifetime="10"
+    angularvelocitymin="0"
+    angularvelocitymax="0"
+    startrotationmin="0"
+    startrotationmax="360"
+    rotatetodirection="False"
+    drag="0"
+    waterdrag="0.3"
+    velocitychange="0,-1"
+    velocitychangewater="0,-1"
+    collisionradius="10"
+    usecollision="True"
+    deleteoncollision="True"
+    friction="0.5"
+    restitution="0.5"
+    startsizemin="1,1"
+    startsizemax="2,2"
+    sizechangemin="0,0"
+    sizechangemax="0,0"
+    growtime="0"
+    startcolor="0.454902,0.2313726,0.13,1"
+    startalpha="1"
+    colorchange="0,0,0,-0.3"
+    drawtarget="Water"
+    blendstate="AlphaBlend"
+    animduration="1"
+    loopanim="True" >    
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="0,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="32,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="64,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="96,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="128,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="160,64,48,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="208,64,48,32"/>
+    
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="0,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="32,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="64,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="96,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="128,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="160,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="192,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="224,96,32,32"/>
+  </brownchunks>
 </prefabs>

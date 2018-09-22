@@ -20,6 +20,10 @@ namespace Barotrauma.Particles
         [Editable(0.0f, float.MaxValue, ToolTip = "How many seconds the particle remains alive."), Serialize(5.0f, false)]
         public float LifeTime { get; private set; }
 
+        [Editable(ToolTip = "How long it takes for the particle to appear after spawning it."), Serialize(0.0f, false)]
+        public float StartDelayMin { get; private set; }
+        [Editable(ToolTip = "How long it takes for the particle to appear after spawning it."), Serialize(0.0f, false)]
+        public float StartDelayMax { get; private set; }
         //movement -----------------------------------------
 
         private float angularVelocityMin;
@@ -177,7 +181,7 @@ namespace Barotrauma.Particles
         public bool LoopAnim { get; private set; }
 
         //----------------------------------------------------
-
+        
         public readonly List<ParticleEmitterPrefab> SubEmitters = new List<ParticleEmitterPrefab>();
 
         public Dictionary<string, SerializableProperty> SerializableProperties

@@ -29,14 +29,22 @@ namespace Barotrauma
                 selected = value;
                 state = (selected) ? ComponentState.Selected : ComponentState.None;
                 box.State = state;
-                OnSelected?.Invoke(this);
                 if (radioButtonGroup != null)
                 {
                     foreach (GUITickBox tickBox in radioButtonGroup)
                     {
                         if (tickBox == this) continue;
                         tickBox.selected = false;
-                        tickBox.state = tickBox.box.State =  ComponentState.None;
+                        tickBox.state = tickBox.box.State = ComponentState.None;
+                    }
+                }
+
+                OnSelected?.Invoke(this);
+                if (radioButtonGroup != null)
+                {
+                    foreach (GUITickBox tickBox in radioButtonGroup)
+                    {
+                        if (tickBox == this) continue;
                         tickBox.OnSelected?.Invoke(tickBox);
                     }
                 }

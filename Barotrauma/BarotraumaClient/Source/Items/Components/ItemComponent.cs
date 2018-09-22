@@ -38,7 +38,85 @@ namespace Barotrauma.Items.Components
         private Dictionary<ActionType, List<ItemSound>> sounds;
         private Dictionary<ActionType, SoundSelectionMode> soundSelectionModes;
 
-        protected GUIFrame guiFrame;
+        public GUILayoutSettings DefaultLayout { get; protected set; }
+        public GUILayoutSettings AlternativeLayout { get; protected set; }
+
+        public class GUILayoutSettings
+        {
+            public Vector2? RelativeSize { get; private set; }
+            public Point? AbsoluteSize { get; private set; }
+            public Vector2? RelativeOffset { get; private set; }
+            public Point? AbsoluteOffset { get; private set; }
+            public Anchor? Anchor { get; private set; }
+            public Pivot? Pivot { get; private set; }
+
+            public static GUILayoutSettings Load(XElement element)
+            {
+                var layout = new GUILayoutSettings();
+                var relativeSize = XMLExtensions.GetAttributeVector2(element, "relativesize", Vector2.Zero);
+                var absoluteSize = XMLExtensions.GetAttributePoint(element, "absolutesize", new Point(-1000, -1000));
+                var relativeOffset = XMLExtensions.GetAttributeVector2(element, "relativeoffset", Vector2.Zero);
+                var absoluteOffset = XMLExtensions.GetAttributePoint(element, "absoluteoffset", new Point(-1000, -1000));
+                if (relativeSize.Length() > 0)
+                {
+                    layout.RelativeSize = relativeSize;
+                }
+                if (absoluteSize.X > 0 && absoluteSize.Y > 0)
+                {
+                    layout.AbsoluteSize = absoluteSize;
+                }
+                if (relativeOffset.Length() > 0)
+                {
+                    layout.RelativeOffset = relativeOffset;
+                }
+                if (absoluteOffset.X > -1000 && absoluteOffset.Y > -1000)
+                {
+                    layout.AbsoluteOffset = absoluteOffset;
+                }
+                if (Enum.TryParse(XMLExtensions.GetAttributeString(element, "anchor", ""), out Anchor a))
+                {
+                    layout.Anchor = a;
+                }
+                if (Enum.TryParse(XMLExtensions.GetAttributeString(element, "pivot", ""), out Pivot p))
+                {
+                    layout.Pivot = p;
+                }
+                return layout;
+            }
+
+            public void ApplyTo(RectTransform target)
+            {
+                if (RelativeOffset.HasValue)
+                {
+                    target.RelativeOffset = RelativeOffset.Value;
+                }
+                else if (AbsoluteOffset.HasValue)
+                {
+                    target.AbsoluteOffset = AbsoluteOffset.Value;
+                }
+                if (RelativeSize.HasValue)
+                {
+                    target.RelativeSize = RelativeSize.Value;
+                }
+                else if (AbsoluteSize.HasValue)
+                {
+                    target.NonScaledSize = AbsoluteSize.Value;
+                }
+                if (Anchor.HasValue)
+                {
+                    target.Anchor = Anchor.Value;
+                }
+                if (Pivot.HasValue)
+                {
+                    target.Pivot = Pivot.Value;
+                }
+                else
+                {
+                    target.Pivot = RectTransform.MatchPivotToAnchor(target.Anchor);
+                }
+                target.RecalculateChildren(true, true);
+            }
+        }
 
         enum SoundSelectionMode
         {
@@ -47,18 +125,7 @@ namespace Barotrauma.Items.Components
             ItemSpecific
         }
 
-        public GUIFrame GuiFrame
-        {
-            get
-            {
-                /*if (guiFrame == null)
-                {
-                    DebugConsole.ThrowError("Error: the component " + name + " in " + item.Name + " doesn't have a GuiFrame component");
-                    guiFrame = new GUIFrame(new Rectangle(0, 0, 100, 100), Color.Black);
-                }*/
-                return guiFrame;
-            }
-        }
+        public GUIFrame GuiFrame { get; protected set; }
 
         [Serialize(false, false)]
         public bool AllowUIOverlap
@@ -80,7 +147,29 @@ namespace Barotrauma.Items.Components
             get;
             private set;
         }
-        
+
+        private bool useAlternativeLayout;
+        public bool UseAlternativeLayout
+        {
+            get { return useAlternativeLayout; }
+            set
+            {
+                if (AlternativeLayout != null)
+                {
+                    if (value == useAlternativeLayout) { return; }
+                    useAlternativeLayout = value;
+                    if (useAlternativeLayout)
+                    {
+                        AlternativeLayout?.ApplyTo(GuiFrame.RectTransform);
+                    }
+                    else
+                    {
+                        DefaultLayout?.ApplyTo(GuiFrame.RectTransform);
+                    }
+                }
+            }
+        }
+
         private ItemSound loopingSound;
         private SoundChannel loopingSoundChannel;
         public void PlaySound(ActionType type, Vector2 position, Character user = null)
@@ -234,7 +323,7 @@ namespace Barotrauma.Items.Components
             switch (subElement.Name.ToString().ToLowerInvariant())
             {
                 case "guiframe":
-                    if (subElement.Attribute("rect") !=null)
+                    if (subElement.Attribute("rect") != null)
                     {
                         DebugConsole.ThrowError("Error in item config \"" + item.ConfigFile + "\" - GUIFrame defined as rect, use RectTransform instead.");
                         break;
@@ -245,7 +334,11 @@ namespace Barotrauma.Items.Components
                     string style = subElement.Attribute("style") == null ?
                         null : subElement.GetAttributeString("style", "");
 
-                    guiFrame = new GUIFrame(RectTransform.Load(subElement, GUI.Canvas), style, color);
+                    GuiFrame = new GUIFrame(RectTransform.Load(subElement, GUI.Canvas), style, color);
+                    DefaultLayout = GUILayoutSettings.Load(subElement);
+                    break;
+                case "alternativelayout":
+                    AlternativeLayout = GUILayoutSettings.Load(subElement);
                     break;
                 case "sound":
                     string filePath = subElement.GetAttributeString("file", "");

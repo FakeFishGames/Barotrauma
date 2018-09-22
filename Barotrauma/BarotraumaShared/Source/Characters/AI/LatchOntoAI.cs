@@ -22,6 +22,7 @@ namespace Barotrauma
         private bool attachToWalls;
 
         private float minDeattachSpeed = 3.0f, maxDeattachSpeed = 10.0f;
+        private float damageOnDetach = 0.0f, detachStun = 0.0f;
         private float deattachTimer;
 
         private Vector2 wallAttachPos;
@@ -54,6 +55,8 @@ namespace Barotrauma
             attachToSub = element.GetAttributeBool("attachtosub", false);
             minDeattachSpeed = element.GetAttributeFloat("mindeattachspeed", 3.0f);
             maxDeattachSpeed = Math.Max(minDeattachSpeed, element.GetAttributeFloat("maxdeattachspeed", 10.0f));
+            damageOnDetach = element.GetAttributeFloat("damageondetach", 0.0f);
+            detachStun = element.GetAttributeFloat("detachstun", 0.0f);
 
             LimbType attachLimbType;
             if (Enum.TryParse(element.GetAttributeString("attachlimb", "Head"), out attachLimbType))
@@ -178,6 +181,7 @@ namespace Barotrauma
                     if (Rand.Range(0.0f, 1.0f) < velocityFactor)
                     {
                         DeattachFromBody();
+                        character.AddDamage(character.WorldPosition, new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(damageOnDetach) }, detachStun, true);
                         attachCooldown = 5.0f;
                     }
                 }
