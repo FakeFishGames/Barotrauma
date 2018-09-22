@@ -69,9 +69,11 @@ namespace Barotrauma
 
         public static Texture2D LoadTexture(string file, bool preMultiplyAlpha = true)
         {
+            file = Path.GetFullPath(file);
             foreach (Sprite s in list)
             {
-                if (s.file == file) return s.texture;
+                if (string.IsNullOrEmpty(s.FilePath)) continue;
+                if (Path.GetFullPath(s.file) == file) return s.texture;
             }
 
             if (File.Exists(file))
