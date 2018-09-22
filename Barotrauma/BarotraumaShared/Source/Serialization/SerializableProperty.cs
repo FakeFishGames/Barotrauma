@@ -21,6 +21,8 @@ namespace Barotrauma
 
         public string ToolTip;
 
+        public string DisplayName;
+
         public Editable(int maxLength = 20)
         {
             MaxLength = maxLength;

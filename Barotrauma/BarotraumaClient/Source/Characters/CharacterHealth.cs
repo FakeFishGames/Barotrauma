@@ -252,15 +252,7 @@ namespace Barotrauma
                 return true;
             };
         }
-
-        private Color HealthColorLerp(Color fullHealthColor, Color midHealthColor, Color lowHealthColor, float t)
-        {
-            t = MathHelper.Clamp(t, 0.0f, 1.0f);
-            return t < 0.5f ?
-                Color.Lerp(lowHealthColor, midHealthColor, t * 2.0f) : 
-                Color.Lerp(midHealthColor, fullHealthColor, (t - 0.5f) * 2.0f);
-        }
-
+        
         private void OnAttacked(Character attacker, AttackResult attackResult)
         {
             if (Math.Abs(attackResult.Damage) < 0.01f && attackResult.Afflictions.Count == 0) return;
@@ -478,7 +470,7 @@ namespace Barotrauma
             }
             else
             {
-                healthBar.Color = healthWindowHealthBar.Color = HealthColorLerp(Color.Green, Color.Orange, Color.Red, vitality / MaxVitality);
+                healthBar.Color = healthWindowHealthBar.Color = ToolBox.GradientLerp(vitality / MaxVitality, Color.Red, Color.Orange, Color.Green );
                 healthBar.HoverColor = healthWindowHealthBar.HoverColor = healthBar.Color * 2.0f;
                 healthBar.BarSize = healthWindowHealthBar.BarSize = (vitality > 0.0f) ? vitality / MaxVitality : 1.0f - vitality / MinVitality;
 
@@ -516,7 +508,7 @@ namespace Barotrauma
 
                     byte alpha = img.Color.A;
                     byte hoverAlpha = img.HoverColor.A;
-                    img.Color = HealthColorLerp(Color.Green, Color.Orange, Color.Red, vitality / MaxVitality);
+                    img.Color = ToolBox.GradientLerp(vitality / MaxVitality, Color.Red, Color.Orange, Color.Green);
                     img.Color = new Color(img.Color.R, img.Color.G, img.Color.B, alpha);
                     img.HoverColor = new Color(img.Color.R, img.Color.G, img.Color.B, hoverAlpha);
 
@@ -1173,7 +1165,7 @@ namespace Barotrauma
                 float damageLerp = limbHealth.TotalDamage > 0.0f ? MathHelper.Lerp(0.2f, 1.0f, limbHealth.TotalDamage / 100.0f) : 0.0f;
                 Color color = character.IsDead ?
                     Color.Lerp(Color.Black, new Color(150, 100, 100), damageLerp) :
-                    HealthColorLerp(Color.Red, Color.Orange, Color.Green, damageLerp);
+                    ToolBox.GradientLerp(damageLerp, Color.Green, Color.Orange, Color.Red);
                 float scale = Math.Min(drawArea.Width / (float)limbHealth.IndicatorSprite.SourceRect.Width, drawArea.Height / (float)limbHealth.IndicatorSprite.SourceRect.Height);
 
                 if (((i == highlightedLimbIndex || i == selectedLimbIndex) && allowHighlight) || highlightAll)

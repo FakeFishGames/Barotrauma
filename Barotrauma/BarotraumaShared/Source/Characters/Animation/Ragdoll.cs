@@ -708,12 +708,15 @@ namespace Barotrauma
                 limb.IsSevered = true;                           
             }
 
-            SeverLimbJointParticles(limbJoint);
+            SeverLimbJointProjSpecific(limbJoint);
+
             if (GameMain.NetworkMember!=null && GameMain.NetworkMember.IsServer)
             {
                 GameMain.NetworkMember.CreateEntityEvent(character, new object[] { NetEntityEvent.Type.Status });
             }
         }
+
+        partial void SeverLimbJointProjSpecific(LimbJoint limbJoint);
 
         private void GetConnectedLimbs(List<Limb> connectedLimbs, List<LimbJoint> checkedJoints, Limb limb)
         {

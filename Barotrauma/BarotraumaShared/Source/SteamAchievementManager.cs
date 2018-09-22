@@ -148,7 +148,7 @@ namespace Barotrauma
         public static void OnCharacterKilled(Character character, CauseOfDeath causeOfDeath)
         {
 #if CLIENT
-            if (GameMain.Client != null) return;
+            if (GameMain.Client != null || GameMain.GameSession == null) return;
 #endif
 
             roundData.Casualties.Add(character);

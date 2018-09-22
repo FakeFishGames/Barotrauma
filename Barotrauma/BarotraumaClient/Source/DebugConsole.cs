@@ -347,6 +347,11 @@ namespace Barotrauma
                 GameMain.ParticleEditorScreen.Select();
             }));
 
+            commands.Add(new Command("editsprites", "", (string[] args) =>
+            {
+                GameMain.SpriteEditorScreen.Select();
+            }));
+
             commands.Add(new Command("charactereditor|editcharacter|editanimations|animedit|animationeditor|animeditor|animationedit", "charactereditor: Edit characters, animations, ragdolls....", (string[] args) =>
             {
                 GameMain.CharacterEditorScreen.Select();

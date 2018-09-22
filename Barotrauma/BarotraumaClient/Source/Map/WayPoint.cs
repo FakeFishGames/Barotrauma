@@ -45,7 +45,7 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch,
                     drawPos,
                     new Vector2(e.DrawPosition.X, -e.DrawPosition.Y),
-                    Color.Green);
+                    Color.Green, width: 5);
             }
         }
 

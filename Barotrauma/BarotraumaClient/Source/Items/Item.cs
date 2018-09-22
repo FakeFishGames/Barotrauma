@@ -32,6 +32,11 @@ namespace Barotrauma
             }
         }
 
+        [Serialize(false, true), Editable(ToolTip = 
+            "Enable if you want to display the item HUD side by side with another item's HUD, when linked together. " +
+            "Disclaimer: It's possible or even likely that the views block each other, if they were not designed to be viewed together!")]
+        public bool DisplaySideBySideWhenLinked { get; set; }
+
         public Color GetSpriteColor()
         {
             Color color = spriteColor;
@@ -216,7 +221,12 @@ namespace Barotrauma
                 //        GUI.DrawString(spriteBatch, new Vector2(WorldPosition.X, -WorldPosition.Y + offset * i), $"Allowed link to {AllowedLinks[i]}", Color.LightBlue, Color.Black * 0.5f);
                 //    }
                 //}
-                Color lineColor = prefab.IsLinkAllowed(e.prefab) ? Color.LightGreen * 0.5f : Color.Red * 0.5f;
+                bool isLinkAllowed = prefab.IsLinkAllowed(e.prefab);
+                Color lineColor = Color.Red * 0.5f;
+                if (isLinkAllowed)
+                {
+                    lineColor = e is Item i && (DisplaySideBySideWhenLinked || i.DisplaySideBySideWhenLinked) ? Color.Purple * 0.5f : Color.LightGreen * 0.5f;
+                }
                 Vector2 from = new Vector2(WorldPosition.X, -WorldPosition.Y);
                 Vector2 to = new Vector2(e.WorldPosition.X, -e.WorldPosition.Y);
                 GUI.DrawLine(spriteBatch, from, to, lineColor * 0.25f, width: 3);
@@ -432,6 +442,18 @@ namespace Barotrauma
             {
                 ic.UpdateHUD(character, deltaTime, cam);
             }
+
+            // Update linked huds
+            foreach (MapEntity entity in linkedTo)
+            {
+                if (entity is Item i)
+                {
+                    if (i.DisplaySideBySideWhenLinked)
+                    {
+                        i.UpdateHUD(cam, character, deltaTime);
+                    }
+                }
+            }
         }
 
         public virtual void DrawHUD(SpriteBatch spriteBatch, Camera cam, Character character)
@@ -440,11 +462,14 @@ namespace Barotrauma
             {
                 DrawEditing(spriteBatch, cam);
             }
-            
+
             foreach (ItemComponent ic in activeHUDs)
             {
-                if (ic.CanBeSelected) ic.DrawHUD(spriteBatch, character);
-            }            
+                if (ic.CanBeSelected)
+                {
+                    ic.DrawHUD(spriteBatch, character);
+                }
+            }           
         }
 
         public override void AddToGUIUpdateList()
@@ -465,7 +490,31 @@ namespace Barotrauma
             {
                 foreach (ItemComponent ic in activeHUDs)
                 {
-                    if (ic.CanBeSelected) ic.AddToGUIUpdateList();
+                    if (!ic.CanBeSelected) { continue; }
+                    if (ic.Item == this)
+                    {
+                        ic.UseAlternativeLayout = false;
+                        ic.AddToGUIUpdateList();
+                    }
+                    // Add linked item components to the update list
+                    foreach (var entity in linkedTo)
+                    {
+                        if (entity is Item i)
+                        {
+                            if (i.DisplaySideBySideWhenLinked)
+                            {
+                                i.AddToGUIUpdateList();
+                                foreach (var iComp in i.activeHUDs)
+                                {
+                                    if (iComp.CanBeSelected)
+                                    {
+                                        iComp.AddToGUIUpdateList();
+                                        iComp.UseAlternativeLayout = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

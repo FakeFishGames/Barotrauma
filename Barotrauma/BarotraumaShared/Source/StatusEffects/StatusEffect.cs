@@ -89,7 +89,7 @@ namespace Barotrauma
 #if CLIENT
         private List<ParticleEmitter> particleEmitters;
 
-        private Sound sound;
+        private List<Sound> sounds = new List<Sound>();
         private SoundChannel soundChannel;
         private bool loopSound;
 #endif
@@ -233,7 +233,7 @@ namespace Barotrauma
                     case "sound":
                         DebugConsole.ThrowError("Error in StatusEffect " + element.Parent.Name.ToString() +
                             " - sounds should be defined as child elements of the StatusEffect, not as attributes.");
-                        break;                    
+                        break;
                     default:
                         propertyAttributes.Add(attribute);
                         break;
@@ -337,8 +337,10 @@ namespace Barotrauma
                         particleEmitters.Add(new ParticleEmitter(subElement));
                         break;
                     case "sound":
-                        sound = Submarine.LoadRoundSound(subElement);
+                        var sound = Submarine.LoadRoundSound(subElement);
                         loopSound = subElement.GetAttributeBool("loop", false);
+
+                        sounds.Add(sound);
                         break;
 #endif
                 }
@@ -467,11 +469,12 @@ namespace Barotrauma
                 hull = ((Item)entity).CurrentHull;
             }
 #if CLIENT
-            if (sound != null && entity != null)
+            if (entity != null && sounds.Count > 0)
             {
                 if (soundChannel == null || !soundChannel.IsPlaying)
                 {
-                    soundChannel = SoundPlayer.PlaySound(sound, 1.0f, sound.BaseFar, entity.WorldPosition, hull);
+                    var selectedSound = sounds[Rand.Int(sounds.Count)];
+                    soundChannel = SoundPlayer.PlaySound(selectedSound, 1.0f, selectedSound.BaseFar, entity.WorldPosition, hull);
                     if (soundChannel != null) soundChannel.Looping = loopSound;
                 }
             }

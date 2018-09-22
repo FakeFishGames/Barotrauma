@@ -35,8 +35,9 @@ namespace Barotrauma
         public static ServerListScreen ServerListScreen;
         public static SteamWorkshopScreen SteamWorkshopScreen;
 
-        public static SubEditorScreen         SubEditorScreen;
+        public static SubEditorScreen       SubEditorScreen;
         public static ParticleEditorScreen  ParticleEditorScreen;
+        public static SpriteEditorScreen    SpriteEditorScreen;
         public static CharacterEditorScreen CharacterEditorScreen;
 
         public static Lights.LightManager LightManager;
@@ -402,23 +403,23 @@ namespace Barotrauma
             TitleScreen.LoadState = 80.0f;
         yield return CoroutineStatus.Running;
 
-            GameScreen          =   new GameScreen(GraphicsDeviceManager.GraphicsDevice, Content);
+            GameScreen  = new GameScreen(GraphicsDeviceManager.GraphicsDevice, Content);
             TitleScreen.LoadState = 90.0f;
         yield return CoroutineStatus.Running;
 
-            MainMenuScreen          =   new MainMenuScreen(this); 
-            LobbyScreen             =   new LobbyScreen();
-            
-            ServerListScreen        =   new ServerListScreen();
+            MainMenuScreen          = new MainMenuScreen(this); 
+            LobbyScreen             = new LobbyScreen();            
+            ServerListScreen        = new ServerListScreen();
 
             if (SteamManager.USE_STEAM)
             {
                 SteamWorkshopScreen     = new SteamWorkshopScreen();
             }
 
-            SubEditorScreen         =   new SubEditorScreen(Content);
-            ParticleEditorScreen    =   new ParticleEditorScreen();
-            CharacterEditorScreen   =   new CharacterEditorScreen();
+            SubEditorScreen         = new SubEditorScreen();
+            ParticleEditorScreen    = new ParticleEditorScreen();
+            SpriteEditorScreen      = new SpriteEditorScreen();
+            CharacterEditorScreen   = new CharacterEditorScreen();
 
         yield return CoroutineStatus.Running;
 
