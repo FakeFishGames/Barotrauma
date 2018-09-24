@@ -1233,7 +1233,7 @@ namespace Barotrauma
                 {
                     if (humanGroundedParams != null)
                     {
-                        drawPos = SimToScreen(head.SimPosition.X + humanGroundedParams.HeadLeanAmount * dir, head.pullJoint.WorldAnchorB.Y);
+                        drawPos = SimToScreen(head.SimPosition.X + humanGroundedParams.HeadLeanAmount * dir, head.PullJointWorldAnchorB.Y);
                         DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Head", () =>
                         {
                             var scaledInput = ConvertUnits.ToSimUnits(scaledMouseSpeed) / Cam.Zoom;
@@ -1246,7 +1246,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        drawPos = SimToScreen(head.SimPosition.X, head.pullJoint.WorldAnchorB.Y);
+                        drawPos = SimToScreen(head.SimPosition.X, head.PullJointWorldAnchorB.Y);
                         DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Head Position", () =>
                         {
                             float v = groundedParams.HeadPosition - ConvertUnits.ToSimUnits(scaledMouseSpeed.Y) / Cam.Zoom / RagdollParams.JointScale;
@@ -1272,7 +1272,7 @@ namespace Barotrauma
                     // Torso position and leaning
                     if (humanGroundedParams != null)
                     {
-                        drawPos = SimToScreen(torso.SimPosition.X + humanGroundedParams.TorsoLeanAmount * dir, torso.pullJoint.WorldAnchorB.Y);
+                        drawPos = SimToScreen(torso.SimPosition.X + humanGroundedParams.TorsoLeanAmount * dir, torso.PullJointWorldAnchorB.Y);
                         DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Torso", () =>
                         {
                             var scaledInput = ConvertUnits.ToSimUnits(scaledMouseSpeed) / Cam.Zoom;
@@ -1285,7 +1285,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        drawPos = SimToScreen(torso.SimPosition.X, torso.pullJoint.WorldAnchorB.Y);
+                        drawPos = SimToScreen(torso.SimPosition.X, torso.PullJointWorldAnchorB.Y);
                         DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Torso Position", () =>
                         {
                             float v = groundedParams.TorsoPosition - ConvertUnits.ToSimUnits(scaledMouseSpeed.Y) / Cam.Zoom / RagdollParams.JointScale;

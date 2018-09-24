@@ -1483,15 +1483,7 @@ namespace Barotrauma
         public void DeselectCharacter()
         {
             if (SelectedCharacter == null) return;
-
-            if (SelectedCharacter.AnimController != null)
-            {
-                foreach (Limb limb in SelectedCharacter.AnimController.Limbs)
-                {
-                    if (limb.pullJoint != null) limb.pullJoint.Enabled = false;
-                }
-            }
-
+            SelectedCharacter.AnimController?.ResetPullJoints();
             SelectedCharacter = null;
         }
 
@@ -2189,11 +2181,7 @@ namespace Barotrauma
                 if (selectedItems[i] != null) selectedItems[i].Drop(this);            
             }
             
-            foreach (Limb limb in AnimController.Limbs)
-            {
-                if (limb.pullJoint == null) continue;
-                limb.pullJoint.Enabled = false;
-            }
+            AnimController.ResetPullJoints();
 
             foreach (RevoluteJoint joint in AnimController.LimbJoints)
             {

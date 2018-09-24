@@ -213,10 +213,7 @@ namespace Barotrauma
                     Character.Controlled.AnimController.Anim = (Character.Controlled.AnimController.Anim == AnimController.Animation.CPR) ?
                         AnimController.Animation.None : AnimController.Animation.CPR;
 
-                    foreach (Limb limb in selectedCharacter.AnimController.Limbs)
-                    {
-                        limb.pullJoint.Enabled = false;
-                    }
+                    selectedCharacter.AnimController.ResetPullJoints();
 
                     if (GameMain.Client != null)
                     {
