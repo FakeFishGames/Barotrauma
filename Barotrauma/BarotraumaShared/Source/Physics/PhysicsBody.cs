@@ -389,6 +389,23 @@ namespace Barotrauma
                     throw new NotImplementedException();
             }
         }
+
+        public float GetMaxExtent()
+        {
+            switch (bodyShape)
+            {
+                case Shape.Capsule:
+                    return height / 2 + radius;
+                case Shape.HorizontalCapsule:
+                    return width / 2 + radius;
+                case Shape.Circle:
+                    return radius;
+                case Shape.Rectangle:
+                    return new Vector2(width * 0.5f, height * 0.5f).Length();
+                default:
+                    throw new NotImplementedException();
+            }
+        }
         
         public bool IsValidValue(float value, string valueName, float? minValue = null, float? maxValue = null)
         {
