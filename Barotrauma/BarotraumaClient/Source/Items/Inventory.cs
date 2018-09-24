@@ -145,6 +145,8 @@ namespace Barotrauma
 
             public SlotReference(Inventory parentInventory, InventorySlot slot, int slotIndex, bool isSubSlot, Inventory subInventory = null)
             {
+
+
                 ParentInventory = parentInventory;
                 Slot = slot;
                 SlotIndex = slotIndex;
@@ -167,7 +169,6 @@ namespace Barotrauma
         }
 
         protected static HashSet<SlotReference> highlightedSubInventorySlots = new HashSet<SlotReference>();
-        //protected static List<Inventory> highlightedSubInventories = new List<Inventory>();
 
         protected static SlotReference selectedSlot;
 
@@ -549,10 +550,17 @@ namespace Barotrauma
                     selectedInventory.HideTimer = 1.0f;
                     if (selectedSlot.ParentInventory?.Owner is Item parentItem && parentItem.ParentInventory != null)
                     {
-                        highlightedSubInventorySlots.Add(new SlotReference(
-                            parentItem.ParentInventory, parentItem.ParentInventory.slots[Array.IndexOf(parentItem.ParentInventory.Items, parentItem)],
-                            Array.IndexOf(parentItem.ParentInventory.Items, parentItem),
-                            false, selectedSlot.ParentInventory));
+                        for (int i = 0; i < parentItem.ParentInventory.capacity; i++)
+                        {
+                            if (parentItem.ParentInventory.HideSlot(i)) continue;
+                            if (parentItem.ParentInventory.Items[i] != parentItem) continue;
+
+                            highlightedSubInventorySlots.Add(new SlotReference(
+                                parentItem.ParentInventory, parentItem.ParentInventory.slots[i],
+                                i, false, selectedSlot.ParentInventory));
+                            break;
+                        }
+
                     }
                     draggingItem = null;
                     draggingSlot = null;
@@ -560,7 +568,7 @@ namespace Barotrauma
 
                 draggingItem = null;
             }
-            
+
             if (selectedSlot != null && !selectedSlot.Slot.MouseOn())
             {
                 selectedSlot = null;
@@ -622,7 +630,20 @@ namespace Barotrauma
                                     idJob = s[1];
                             }
                             if (idName != null)
-                                description = "This belongs to " + idName + (idJob != null ? ", the " + idJob + "." : ".") + description;
+                            {
+                                if (idJob == null)
+                                {
+                                    description = TextManager.Get("IDCardName").Replace("[name]", idName);
+                                }
+                                else
+                                {
+                                    description = TextManager.Get("IDCardNameJob").Replace("[name]", idName).Replace("[job]", idJob);
+                                }
+                                if (!string.IsNullOrEmpty(item.Description))
+                                {
+                                    description = description + " " + item.Description;
+                                }
+                            }
                         }
                         toolTip = string.IsNullOrEmpty(description) ?
                             item.Name :
@@ -750,9 +771,17 @@ namespace Barotrauma
                     rotation = (float)Math.Sin(slot.HighlightTimer * MathHelper.TwoPi) * slot.HighlightTimer * 0.3f;
                 }
 
-                sprite.Draw(spriteBatch, itemPos + Vector2.One * 2, Color.Black * 0.6f, scale: scale);
-                sprite.Draw(spriteBatch, itemPos, sprite == item.Sprite ? item.GetSpriteColor() : item.Prefab.InventoryIconColor, rotation, scale);
-                
+                Color spriteColor = sprite == item.Sprite ? item.GetSpriteColor() : item.Prefab.InventoryIconColor;
+                if (CharacterHealth.OpenHealthWindow != null && !item.UseInHealthInterface)
+                {
+                    spriteColor = Color.Lerp(spriteColor, Color.TransparentBlack, 0.5f);
+                }
+                else
+                {
+                    sprite.Draw(spriteBatch, itemPos + Vector2.One * 2, Color.Black * 0.6f, rotate: rotation, scale: scale);
+                }
+                sprite.Draw(spriteBatch, itemPos, spriteColor, rotation, scale);
+
                 if (CharacterHealth.OpenHealthWindow != null)
                 {
                     float treatmentSuitability = CharacterHealth.OpenHealthWindow.GetTreatmentSuitability(item);

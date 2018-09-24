@@ -67,11 +67,6 @@ namespace Barotrauma.Items.Components
                 }
             };
         }
-        
-        public override void AddToGUIUpdateList()
-        {
-            GuiFrame.AddToGUIUpdateList();
-        }
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {

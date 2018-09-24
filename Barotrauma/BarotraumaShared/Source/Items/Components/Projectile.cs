@@ -190,6 +190,7 @@ namespace Barotrauma.Items.Components
         private void DoHitscan(Vector2 dir)
         {
             float rotation = item.body.Rotation;
+            Vector2 simPositon = item.SimPosition;
             item.Drop();
 
             item.body.Enabled = true;
@@ -198,8 +199,8 @@ namespace Barotrauma.Items.Components
             item.body.LinearVelocity = dir;
             IsActive = true;
 
-            Vector2 rayStart = item.SimPosition;
-            Vector2 rayEnd = item.SimPosition + dir * 1000.0f;
+            Vector2 rayStart = simPositon;
+            Vector2 rayEnd = simPositon + dir * 1000.0f;
 
             List<HitscanResult> hits = new List<HitscanResult>();
 

@@ -154,7 +154,7 @@ namespace Barotrauma
         }
 
         [Serialize(false, false)]
-        public bool CanUseOnSelf
+        public bool UseInHealthInterface
         {
             get;
             private set;
