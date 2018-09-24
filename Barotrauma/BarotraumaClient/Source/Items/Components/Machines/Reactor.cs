@@ -351,11 +351,6 @@ namespace Barotrauma.Items.Components
             DrawMeter(spriteBatch, container.Rect,
                 turbineOutputMeter, TurbineOutput, new Vector2(0.0f, 100.0f), optimalTurbineOutput, allowedTurbineOutput);
         }
-        
-        public override void AddToGUIUpdateList()
-        {
-            GuiFrame.AddToGUIUpdateList();
-        }
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {

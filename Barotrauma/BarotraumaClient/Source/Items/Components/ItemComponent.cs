@@ -314,7 +314,10 @@ namespace Barotrauma.Items.Components
 
         public virtual void DrawHUD(SpriteBatch spriteBatch, Character character) { }
 
-        public virtual void AddToGUIUpdateList() { }
+        public virtual void AddToGUIUpdateList()
+        {
+            GuiFrame?.AddToGUIUpdateList();
+        }
 
         public virtual void UpdateHUD(Character character, float deltaTime, Camera cam) { }
 
