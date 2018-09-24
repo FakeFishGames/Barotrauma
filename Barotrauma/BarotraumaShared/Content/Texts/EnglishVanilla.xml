@@ -31,6 +31,15 @@
     <AfflictionCauseOfDeath.internaldamage>Died of interizzle injurizzle</AfflictionCauseOfDeath.internaldamage>
     <AfflictionCauseOfDeathSelf.internaldamage>You have succizzle to your interizzle injurizzle </AfflictionCauseOfDeathSelf.internaldamage>
     
+  - Mission texts can be translated using the identifier of the mission:
+    <MissionName.salvageskyholderartifactruins>Rescatar un artefacto</MissionName.salvageskyholderartifactruins>
+    <MissionDescription.salvageskyholderartifactruins>Los investigadores de [location1] han captado una señal infrasónica muy similar a las emitidas por artefactos alienígenas descubiertos previamente en Europa. Investigue la señal y recupere el artefacto potencial.</MissionDescription.salvageskyholderartifactruins>
+    <MissionSonarLabel.salvageskyholderartifactruins>Señal infrasónica</MissionSonarLabel.salvageskyholderartifactruins>
+    <MissionFailure.salvageskyholderartifactruins>Misión fallida.</MissionFailure.salvageskyholderartifactruins>
+    <MissionSuccess.salvageskyholderartifactruins>Artefacto rescatado con éxito.</MissionSuccess.salvageskyholderartifactruins>
+    <MissionHeader0.salvageskyholderartifactruins>Artefacto recolectado.</MissionHeader0.salvageskyholderartifactruins>
+    <MissionMessage0.salvageskyholderartifactruins>El artefacto está ahora a bordo. Navega el submarino fuera de la caverna para reclamar la recompensa...</MissionMessage0.salvageskyholderartifactruins>
+
   - AI order/report texts can be translated using the AITag of the order, as follows:
     <OrderName.operatereactor>Roperate eactor</OrderName.operatereactor>
     <OrderOptions.operatereactor>Ower Pup, Dut shown</OrderOptions.operatereactor>
