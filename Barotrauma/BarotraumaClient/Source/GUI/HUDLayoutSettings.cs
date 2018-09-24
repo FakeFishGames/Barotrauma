@@ -165,4 +165,14 @@ namespace Barotrauma
             GUI.DrawRectangle(spriteBatch, HealthWindowAreaRight, Color.Red * 0.5f);
         }
     }
+
+    public static class HUD
+    {
+        public static bool CloseHUD(Rectangle rect)
+        {
+            // Define the logic that closes open hud windows here
+            bool input = PlayerInput.LeftButtonClicked() || PlayerInput.RightButtonClicked();
+            return input && !rect.Contains(PlayerInput.MousePosition);
+        }
+    }
 }
