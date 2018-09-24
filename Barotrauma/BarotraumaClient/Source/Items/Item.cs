@@ -446,7 +446,7 @@ namespace Barotrauma
             // Update linked huds
             foreach (MapEntity entity in linkedTo)
             {
-                if (entity is Item i)
+                if (prefab.IsLinkAllowed(entity.prefab) && entity is Item i)
                 {
                     if (i.DisplaySideBySideWhenLinked)
                     {
@@ -499,7 +499,7 @@ namespace Barotrauma
                     // Add linked item components to the update list
                     foreach (var entity in linkedTo)
                     {
-                        if (entity is Item i)
+                        if (prefab.IsLinkAllowed(entity.prefab) && entity is Item i)
                         {
                             if (i.DisplaySideBySideWhenLinked)
                             {
