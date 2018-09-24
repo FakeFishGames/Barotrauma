@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -892,8 +893,9 @@ namespace Barotrauma
                         
             //can't apply treatment to dead characters
             if (character.IsDead) return true;
-            if (item == null) return true;
+            if (item == null || !item.UseInHealthInterface) return true;
             if (!ignoreMousePos && !dropItemArea.Rect.Contains(PlayerInput.MousePosition)) return true;
+
 
             Limb targetLimb = character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex);
 #if CLIENT
@@ -908,7 +910,22 @@ namespace Barotrauma
                 GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, character.ID, targetLimb });
             }
 
-            item.ApplyStatusEffects(ActionType.OnUse, 1.0f, character, targetLimb);
+            bool remove = false;
+            foreach (ItemComponent ic in item.components)
+            {
+                if (!ic.HasRequiredContainedItems(character == Character.Controlled)) continue;
+#if CLIENT
+                ic.PlaySound(ActionType.OnUse, character.WorldPosition, character);
+#endif
+                ic.WasUsed = true;
+                ic.ApplyStatusEffects(ActionType.OnUse, 1.0f, character, targetLimb);
+                if (ic.DeleteOnUse) remove = true;                
+            }
+
+            if (remove)
+            {
+                Entity.Spawner?.AddToRemoveQueue(item);
+            }
 
             dropItemAnimTimer = dropItemAnimDuration;
             droppedItem = item;

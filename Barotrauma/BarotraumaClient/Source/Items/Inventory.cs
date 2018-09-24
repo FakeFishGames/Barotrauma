@@ -771,9 +771,17 @@ namespace Barotrauma
                     rotation = (float)Math.Sin(slot.HighlightTimer * MathHelper.TwoPi) * slot.HighlightTimer * 0.3f;
                 }
 
-                sprite.Draw(spriteBatch, itemPos + Vector2.One * 2, Color.Black * 0.6f, scale: scale);
-                sprite.Draw(spriteBatch, itemPos, sprite == item.Sprite ? item.GetSpriteColor() : item.Prefab.InventoryIconColor, rotation, scale);
-                
+                Color spriteColor = sprite == item.Sprite ? item.GetSpriteColor() : item.Prefab.InventoryIconColor;
+                if (CharacterHealth.OpenHealthWindow != null && !item.UseInHealthInterface)
+                {
+                    spriteColor = Color.Lerp(spriteColor, Color.TransparentBlack, 0.5f);
+                }
+                else
+                {
+                    sprite.Draw(spriteBatch, itemPos + Vector2.One * 2, Color.Black * 0.6f, rotate: rotation, scale: scale);
+                }
+                sprite.Draw(spriteBatch, itemPos, spriteColor, rotation, scale);
+
                 if (CharacterHealth.OpenHealthWindow != null)
                 {
                     float treatmentSuitability = CharacterHealth.OpenHealthWindow.GetTreatmentSuitability(item);
