@@ -396,11 +396,6 @@ namespace Barotrauma
 
         public void UpdateHUD(Camera cam, Character character, float deltaTime)
         {
-            UpdateHUD(cam, character, deltaTime, updateLinkedHUDs: true);
-        }
-
-        private void UpdateHUD(Camera cam, Character character, float deltaTime, bool updateLinkedHUDs)
-        {
             bool editingHUDCreated = false;
             if (HasInGameEditableProperties ||
                 Screen.Selected == GameMain.SubEditorScreen)
@@ -410,12 +405,21 @@ namespace Barotrauma
             }
 
             List<ItemComponent> prevActiveHUDs = new List<ItemComponent>(activeHUDs);
+            List<ItemComponent> activeComponents = new List<ItemComponent>(components);
+            foreach (MapEntity entity in linkedTo)
+            {
+                if (prefab.IsLinkAllowed(entity.prefab) && entity is Item i)
+                {
+                    if (!i.DisplaySideBySideWhenLinked) continue;
+                    activeComponents.AddRange(i.components);
+                }
+            }
 
             activeHUDs.Clear();
             //the HUD of the component with the highest priority will be drawn
             //if all components have a priority of 0, all of them are drawn
             List<ItemComponent> maxPriorityHUDs = new List<ItemComponent>();
-            foreach (ItemComponent ic in components)
+            foreach (ItemComponent ic in activeComponents)
             {
                 if (ic.CanBeSelected && ic.HudPriority > 0 && ic.ShouldDrawHUD(character) &&
                     (maxPriorityHUDs.Count == 0 || ic.HudPriority >= maxPriorityHUDs[0].HudPriority))
@@ -431,7 +435,7 @@ namespace Barotrauma
             }
             else
             {
-                foreach (ItemComponent ic in components)
+                foreach (ItemComponent ic in activeComponents)
                 {
                     if (ic.CanBeSelected && ic.ShouldDrawHUD(character)) activeHUDs.Add(ic);
                 }
@@ -447,28 +451,9 @@ namespace Barotrauma
             {
                 ic.UpdateHUD(character, deltaTime, cam);
             }
-            
-            if (updateLinkedHUDs)
-            {
-                foreach (MapEntity entity in linkedTo)
-                {
-                    if (prefab.IsLinkAllowed(entity.prefab) && entity is Item i)
-                    {
-                        if (i.DisplaySideBySideWhenLinked)
-                        {
-                            i.UpdateHUD(cam, character, deltaTime, updateLinkedHUDs: false);
-                        }
-                    }
-                }
-            }
         }
         
         public void DrawHUD(SpriteBatch spriteBatch, Camera cam, Character character)
-        {
-            DrawHUD(spriteBatch, cam, character, drawLinkedHUDs: true);
-        }
-
-        private void DrawHUD(SpriteBatch spriteBatch, Camera cam, Character character, bool drawLinkedHUDs)
         {
             if (HasInGameEditableProperties)
             {
@@ -480,20 +465,6 @@ namespace Barotrauma
                 if (ic.CanBeSelected)
                 {
                     ic.DrawHUD(spriteBatch, character);
-                }
-            }
-
-            if (drawLinkedHUDs)
-            {
-                foreach (MapEntity entity in linkedTo)
-                {
-                    if (prefab.IsLinkAllowed(entity.prefab) && entity is Item i)
-                    {
-                        if (i.DisplaySideBySideWhenLinked)
-                        {
-                            i.DrawHUD(spriteBatch, cam, character, drawLinkedHUDs: false);
-                        }
-                    }
                 }
             }
         }
@@ -522,27 +493,9 @@ namespace Barotrauma
             foreach (ItemComponent ic in activeHUDs)
             {
                 if (!ic.CanBeSelected) { continue; }
-                if (ic.Item == this)
-                {
-                    ic.UseAlternativeLayout = false;
-                    ic.AddToGUIUpdateList();
-                }
-            }
 
-            if (!addLinkedHUDs) return;
-            // Add linked item components to the update list
-            foreach (var entity in linkedTo)
-            {
-                if (prefab.IsLinkAllowed(entity.prefab) && entity is Item i && i.DisplaySideBySideWhenLinked)
-                {
-                    i.AddToGUIUpdateList(addLinkedHUDs: false);
-                    foreach (var iComp in i.activeHUDs)
-                    {
-                        if (!iComp.CanBeSelected) { continue; }
-                        iComp.AddToGUIUpdateList();
-                        iComp.UseAlternativeLayout = true;
-                    }
-                }
+                ic.UseAlternativeLayout = ic.Item != this;
+                ic.AddToGUIUpdateList();
             }
         }
 
