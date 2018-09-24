@@ -1254,6 +1254,7 @@ namespace Barotrauma
                         {
                             TogglePauseMenu(btn, userData);
                             GameMain.GameSession.LoadPrevious();
+                            GameMain.LobbyScreen.Select();
                             return true;
                         };
                     }
