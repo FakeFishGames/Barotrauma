@@ -461,7 +461,10 @@ namespace Barotrauma
                 else
                     OpenHealthWindow = this;
             }
-            if (PlayerInput.RightButtonClicked()) OpenHealthWindow = null;
+            else if (HUD.CloseHUD(HUDLayoutSettings.HealthWindowAreaRight))
+            {
+                OpenHealthWindow = null;
+            }
             openedThisFrame = false;
             
             if (character.IsDead)
