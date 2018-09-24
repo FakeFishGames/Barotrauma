@@ -1099,8 +1099,10 @@ namespace Barotrauma
 
             if (SelectedConstruction != null)
             {
+#if CLIENT
                 // TODO: fix so that works with the server side
                 if (SelectedConstruction.ActiveHUDs.Any(ic => HUD.CloseHUD(ic.GuiFrame.Rect))) { SelectedConstruction = null; }
+#endif
                 if (IsKeyDown(InputType.Use)) SelectedConstruction.Use(deltaTime, this);
                 if (SelectedConstruction != null && IsKeyDown(InputType.Aim)) SelectedConstruction.SecondaryUse(deltaTime, this);
             }

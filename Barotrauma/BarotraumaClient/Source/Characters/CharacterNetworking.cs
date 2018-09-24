@@ -285,14 +285,17 @@ namespace Barotrauma
                     break;
             }
         }
+
         public static Character ReadSpawnData(NetBuffer inc, bool spawn = true)
         {
             DebugConsole.NewMessage("READING CHARACTER SPAWN DATA", Color.Cyan);
-            
-            bool noInfo         = inc.ReadBoolean();
-            ushort id           = inc.ReadUInt16();
-            string configPath   = inc.ReadString();
-            string seed         = inc.ReadString();
+
+            if (GameMain.Client == null) return null;
+
+            bool noInfo = inc.ReadBoolean();
+            ushort id = inc.ReadUInt16();
+            string configPath = inc.ReadString();
+            string seed = inc.ReadString();
 
             Vector2 position = new Vector2(inc.ReadFloat(), inc.ReadFloat());
 
@@ -310,11 +313,11 @@ namespace Barotrauma
             }
             else
             {
-                bool hasOwner       = inc.ReadBoolean();
-                int ownerId         = hasOwner ? inc.ReadByte() : -1;                
-                byte teamID         = inc.ReadByte();
-                bool hasAi          = inc.ReadBoolean();
-                
+                bool hasOwner = inc.ReadBoolean();
+                int ownerId = hasOwner ? inc.ReadByte() : -1;
+                byte teamID = inc.ReadByte();
+                bool hasAi = inc.ReadBoolean();
+
                 if (!spawn) return null;
 
                 CharacterInfo info = CharacterInfo.ClientRead(configPath, inc);
@@ -329,7 +332,7 @@ namespace Barotrauma
                     GameMain.GameSession.CrewManager.RemoveCharacterInfo(duplicateCharacterInfo);
                     GameMain.GameSession.CrewManager.AddCharacter(character);
                 }
-                
+
                 if (GameMain.Client.ID == ownerId)
                 {
                     GameMain.Client.HasSpawned = true;

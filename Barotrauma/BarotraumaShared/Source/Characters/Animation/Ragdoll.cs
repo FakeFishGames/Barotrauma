@@ -684,9 +684,7 @@ namespace Barotrauma
 
             ImpactProjSpecific(impact, f1.Body);
         }
-
-        partial void SeverLimbJointParticles(LimbJoint limbJoint);
-
+        
         public void SeverLimbJoint(LimbJoint limbJoint)
         {
             if (!limbJoint.CanBeSevered || limbJoint.IsSevered)
