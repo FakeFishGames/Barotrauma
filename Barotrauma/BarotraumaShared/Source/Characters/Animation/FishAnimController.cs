@@ -323,8 +323,8 @@ namespace Barotrauma
         {
             movement = TargetMovement;
             
-            MainLimb.pullJoint.Enabled = true;
-            MainLimb.pullJoint.WorldAnchorB = Collider.SimPosition;
+            MainLimb.PullJointEnabled = true;
+            MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
 
             if (movement.LengthSquared() < 0.00001f) return;
 
@@ -389,7 +389,7 @@ namespace Barotrauma
             {
                 if (Limbs[i].SteerForce <= 0.0f) continue;
 
-                Vector2 pullPos = Limbs[i].pullJoint == null ? Limbs[i].SimPosition : Limbs[i].pullJoint.WorldAnchorA;
+                Vector2 pullPos = Limbs[i].PullJointWorldAnchorA;
                 Limbs[i].body.ApplyForce(movement * Limbs[i].SteerForce * Limbs[i].Mass, pullPos);
             }
             
@@ -418,8 +418,8 @@ namespace Barotrauma
                         mainLimbHeight = TorsoPosition.Value;
 
                     torso.MoveToPos(pos, 10.0f);
-                    torso.pullJoint.Enabled = true;
-                    torso.pullJoint.WorldAnchorB = pos;
+                    torso.PullJointEnabled = true;
+                    torso.PullJointWorldAnchorB = pos;
                 }
             }
 
@@ -437,8 +437,8 @@ namespace Barotrauma
                         mainLimbHeight = HeadPosition.Value;
 
                     head.MoveToPos(pos, 10.0f);
-                    head.pullJoint.Enabled = true;
-                    head.pullJoint.WorldAnchorB = pos;
+                    head.PullJointEnabled = true;
+                    head.PullJointWorldAnchorB = pos;
                 }
             }
 

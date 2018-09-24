@@ -145,12 +145,10 @@ namespace Barotrauma.Items.Components
                 if (limb == null) continue;
 
                 limb.Disabled = true;
-
-                if (limb.pullJoint == null) continue;
-
+                
                 Vector2 position = ConvertUnits.ToSimUnits(lb.position + new Vector2(item.Rect.X, item.Rect.Y));
-                limb.pullJoint.Enabled = true;
-                limb.pullJoint.WorldAnchorB = position;
+                limb.PullJointEnabled = true;
+                limb.PullJointWorldAnchorB = position;
             }
             
         }
@@ -276,8 +274,7 @@ namespace Barotrauma.Items.Components
                 if (limb == null) continue;
 
                 limb.Disabled = false;
-
-                limb.pullJoint.Enabled = false;
+                limb.PullJointEnabled = false;
             }
 
             if (character.SelectedConstruction == this.item) character.SelectedConstruction = null;

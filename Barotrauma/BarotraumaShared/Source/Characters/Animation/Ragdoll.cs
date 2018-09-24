@@ -53,7 +53,7 @@ namespace Barotrauma
                 frozen = value;
                 
                 Collider.PhysEnabled = !frozen;
-                if (frozen && MainLimb != null) MainLimb.pullJoint.WorldAnchorB = MainLimb.SimPosition;                
+                if (frozen && MainLimb != null) MainLimb.PullJointWorldAnchorB = MainLimb.SimPosition;                
             }
         }
 
@@ -785,13 +785,7 @@ namespace Barotrauma
                         limb.MouthPos.Value.Y);
                 }
 
-                if (limb.pullJoint != null)
-                {
-                    limb.pullJoint.LocalAnchorA = 
-                        new Vector2(
-                            -limb.pullJoint.LocalAnchorA.X,
-                            limb.pullJoint.LocalAnchorA.Y);
-                }
+                limb.MirrorPullJoint();
             }            
         }
 
@@ -822,8 +816,8 @@ namespace Barotrauma
         {
             for (int i = 0; i < Limbs.Length; i++)
             {
-                if (Limbs[i] == null || Limbs[i].pullJoint == null) continue;
-                Limbs[i].pullJoint.Enabled = false;
+                if (Limbs[i] == null) continue;
+                Limbs[i].PullJointEnabled = false;
             }
         }
 
@@ -944,21 +938,21 @@ namespace Barotrauma
 
             outsideCollisionBlocker.Enabled = false;
         }
-        
+
         public void Teleport(Vector2 moveAmount, Vector2 velocityChange)
         {
             foreach (Limb limb in Limbs)
             {
                 if (limb.IsSevered) continue;
                 if (limb.body.FarseerBody.ContactList == null) continue;
-                
+
                 ContactEdge ce = limb.body.FarseerBody.ContactList;
                 while (ce != null && ce.Contact != null)
                 {
                     ce.Contact.Enabled = false;
                     ce = ce.Next;
-                }                
-            }    
+                }
+            }
 
             foreach (Limb limb in Limbs)
             {
@@ -966,13 +960,12 @@ namespace Barotrauma
                 limb.body.LinearVelocity += velocityChange;
             }
 
-            //character.Stun = 0.1f;
             character.DisableImpactDamageTimer = 0.25f;
 
             SetPosition(Collider.SimPosition + moveAmount);
             character.CursorPosition += moveAmount;
         }
-        
+
         private void UpdateCollisionCategories()
         {
             Category wall = currentHull == null ? 
@@ -1390,11 +1383,8 @@ namespace Barotrauma
             else
             {
                 limb.body.SetTransform(movePos, limb.Rotation);
-                if (limb.pullJoint != null)
-                {
-                    limb.pullJoint.WorldAnchorB = limb.pullJoint.WorldAnchorA;
-                    limb.pullJoint.Enabled = false;
-                }              
+                limb.PullJointWorldAnchorB = limb.PullJointWorldAnchorA;
+                limb.PullJointEnabled = false;
             }
         }
 
