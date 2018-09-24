@@ -401,7 +401,7 @@ namespace Barotrauma
                 case Shape.Circle:
                     return radius;
                 case Shape.Rectangle:
-                    return (width + height) * 0.5f * (float)Math.Sqrt(2);
+                    return new Vector2(width * 0.5f, height * 0.5f).Length();
                 default:
                     throw new NotImplementedException();
             }
