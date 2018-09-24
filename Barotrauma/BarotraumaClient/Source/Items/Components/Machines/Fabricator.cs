@@ -173,11 +173,6 @@ namespace Barotrauma.Items.Components
 
             return true;
         }
-        
-        public override void AddToGUIUpdateList()
-        {
-            GuiFrame.AddToGUIUpdateList();
-        }
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {

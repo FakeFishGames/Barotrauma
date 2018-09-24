@@ -158,11 +158,6 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        public override void AddToGUIUpdateList()
-        {
-            GuiFrame.AddToGUIUpdateList();
-        }
-        
         public void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)
         {
             //flowpercentage can only be adjusted at 10% intervals -> no need for more accuracy than this

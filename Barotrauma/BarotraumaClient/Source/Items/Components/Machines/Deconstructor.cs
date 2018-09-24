@@ -11,11 +11,6 @@ namespace Barotrauma.Items.Components
         private GUIButton activateButton;
         private GUIComponent inputInventoryHolder, outputInventoryHolder;
         
-        public override void AddToGUIUpdateList()
-        {
-            GuiFrame.AddToGUIUpdateList();
-        }
-        
         partial void InitProjSpecific(XElement element)
         {
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), GuiFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)

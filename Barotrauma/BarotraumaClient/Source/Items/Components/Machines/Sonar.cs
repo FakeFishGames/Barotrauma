@@ -172,11 +172,6 @@ namespace Barotrauma.Items.Components
             GuiFrame.CanBeFocused = false;
         }
 
-        public override void AddToGUIUpdateList()
-        {
-            GuiFrame.AddToGUIUpdateList();
-        }
-
         public override void OnItemLoaded()
         {
             //make the sonarView customcomponent render the steering view so it gets drawn in front of the sonar

@@ -100,11 +100,6 @@ namespace Barotrauma.Items.Components
                     new Vector2(6, 20 * (charge / capacity)), Color.Green, true);
         }
         
-        public override void AddToGUIUpdateList()
-        {
-            GuiFrame.AddToGUIUpdateList();
-        }
-        
         public void ClientWrite(NetBuffer msg, object[] extraData)
         {
             msg.WriteRangedInteger(0, 10, (int)(rechargeSpeed / MaxRechargeSpeed * 10));

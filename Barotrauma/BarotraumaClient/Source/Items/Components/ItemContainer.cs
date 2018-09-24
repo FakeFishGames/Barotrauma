@@ -136,11 +136,6 @@ namespace Barotrauma.Items.Components
             Inventory.Update(deltaTime, cam);
         }
 
-        public override void AddToGUIUpdateList()
-        {
-            GuiFrame?.AddToGUIUpdateList();
-        }
-
         /*public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             //if the item is in the character's inventory, no need to draw the item's inventory 
