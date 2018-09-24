@@ -78,6 +78,15 @@
   <SettingsButton>Settings</SettingsButton>
   <SteamWorkshopButton>Steam Workshop</SteamWorkshopButton>
   <QuitButton>Quit</QuitButton>
+  
+  <!-- Pause menu -->
+  <PauseMenuResume>Resume</PauseMenuResume>
+  <PauseMenuSettings>Settings</PauseMenuSettings>
+  <PauseMenuRetry>Retry</PauseMenuRetry>
+  <PauseMenuSaveQuit>Save and Quit</PauseMenuSaveQuit>
+  <PauseMenuQuit>Quit</PauseMenuQuit>
+  <PauseMenuQuitVerification>Are you sure you want to quit the game? All your unsaved progress will be lost.</PauseMenuQuitVerification>
+  <PauseMenuRetryVerification>Are you sure you want to stop the mission and load the previous save file? All your unsaved progress will be lost.</PauseMenuRetryVerification>
 
   <!-- Host server menu -->
   <ServerName>Server name</ServerName>
