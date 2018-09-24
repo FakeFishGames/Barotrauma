@@ -59,8 +59,8 @@ namespace Barotrauma
 
                 if (character.IsRemotePlayer)
                 {
-                    MainLimb.pullJoint.WorldAnchorB = Collider.SimPosition;
-                    MainLimb.pullJoint.Enabled = true;
+                    MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
+                    MainLimb.PullJointEnabled = true;
                 }
                 else
                 {
@@ -256,8 +256,8 @@ namespace Barotrauma
         {
             movement = TargetMovement*swimSpeed;
             
-            MainLimb.pullJoint.Enabled = true;
-            MainLimb.pullJoint.WorldAnchorB = Collider.SimPosition;
+            MainLimb.PullJointEnabled = true;
+            MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
 
             if (movement.LengthSquared() < 0.00001f) return;
 
@@ -289,7 +289,7 @@ namespace Barotrauma
             {
                 if (Limbs[i].SteerForce <= 0.0f) continue;
 
-                Vector2 pullPos = Limbs[i].pullJoint == null ? Limbs[i].SimPosition : Limbs[i].pullJoint.WorldAnchorA;
+                Vector2 pullPos = Limbs[i].PullJointWorldAnchorA;
                 Limbs[i].body.ApplyForce(movement * Limbs[i].SteerForce * Limbs[i].Mass, pullPos);
             }
             
@@ -322,8 +322,8 @@ namespace Barotrauma
 
             MainLimb.MoveToPos(GetColliderBottom() + Vector2.UnitY * mainLimbHeight, 10.0f);
             
-            MainLimb.pullJoint.Enabled = true;
-            MainLimb.pullJoint.WorldAnchorB = GetColliderBottom() + Vector2.UnitY * mainLimbHeight;
+            MainLimb.PullJointEnabled = true;
+            MainLimb.PullJointWorldAnchorB = GetColliderBottom() + Vector2.UnitY * mainLimbHeight;
 
             walkPos -= MainLimb.LinearVelocity.X * 0.05f;
 
