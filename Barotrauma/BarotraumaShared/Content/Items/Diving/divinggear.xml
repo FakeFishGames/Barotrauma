@@ -38,7 +38,7 @@
     name="Oxygenite Tank"
     identifier="oxygenitetank"
     category="Equipment,Misc"
-    Tags="meditem,oxygensource"
+    Tags="smallitem,oxygensource"
     description="A Tank containing liquid Oxygenite.">
 
     <Deconstruct time="10">
@@ -48,7 +48,7 @@
       <Item identifier="liquidoxygenite" mincondition="0.9"/>
     </Deconstruct>
 
-    <Sprite texture ="Content/Items/Tools/tools.png" sourcerect="39,31,12,33" depth="0.55"/>
+    <Sprite texture ="Content/Items/Tools/tools.png" sourcerect="0,77,12,33" depth="0.55"/>
 
     <Body width="12" height="33" density="9.9"/>
 

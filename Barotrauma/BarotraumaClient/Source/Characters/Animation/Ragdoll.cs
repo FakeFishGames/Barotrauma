@@ -83,8 +83,8 @@ namespace Barotrauma
                     if (!character.AllowInput)
                     {
                         Collider.LinearVelocity = overrideTargetMovement;
-                        MainLimb.pullJoint.WorldAnchorB = Collider.SimPosition;
-                        MainLimb.pullJoint.Enabled = true;
+                        MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
+                        MainLimb.PullJointEnabled = true;
                     }
                 }
                 character.MemLocalState.Clear();
@@ -352,9 +352,9 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
-                if (limb.pullJoint != null)
+                if (limb.PullJointEnabled)
                 {
-                    Vector2 pos = ConvertUnits.ToDisplayUnits(limb.pullJoint.WorldAnchorA);
+                    Vector2 pos = ConvertUnits.ToDisplayUnits(limb.PullJointWorldAnchorA);
                     if (currentHull != null) pos += currentHull.Submarine.DrawPosition;
                     pos.Y = -pos.Y;
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)pos.Y, 5, 5), Color.Red, true, 0.01f);
