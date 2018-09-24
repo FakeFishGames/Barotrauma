@@ -397,10 +397,19 @@ namespace Barotrauma
                 msg.Write(true);
                 msg.Write(ownerClient.ID);
             }
+            else if (GameMain.Server.Character == this)
+            {
+                msg.Write(true);
+                msg.Write((byte)0);
+            }
             else
             {
                 msg.Write(false);
             }
+
+            msg.Write(TeamID);
+            msg.Write(this is AICharacter);
+            info.ServerWrite(msg);
         }
     }
 }
