@@ -345,11 +345,6 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void AddToGUIUpdateList()
-        {
-            GuiFrame.AddToGUIUpdateList();
-        }
-
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             if (steerArea.Rect.Contains(PlayerInput.MousePosition))

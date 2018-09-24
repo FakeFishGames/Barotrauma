@@ -46,7 +46,7 @@ namespace Barotrauma.Items.Components
 
         public override void AddToGUIUpdateList()
         {
-            GuiFrame.AddToGUIUpdateList();
+            base.AddToGUIUpdateList();
             if (hasPower) hullInfoFrame.AddToGUIUpdateList();
         }
 

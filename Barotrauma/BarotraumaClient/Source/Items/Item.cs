@@ -18,6 +18,8 @@ namespace Barotrauma
 
         private List<ItemComponent> activeHUDs = new List<ItemComponent>();
 
+        public IEnumerable<ItemComponent> ActiveHUDs => activeHUDs;
+
         private Sprite activeSprite;
         public override Sprite Sprite
         {
@@ -394,10 +396,10 @@ namespace Barotrauma
             }
         }
 
-        public virtual void UpdateHUD(Camera cam, Character character, float deltaTime)
+        public void UpdateHUD(Camera cam, Character character, float deltaTime)
         {
             bool editingHUDCreated = false;
-            if (HasInGameEditableProperties || 
+            if (HasInGameEditableProperties ||
                 Screen.Selected == GameMain.SubEditorScreen)
             {
                 UpdateEditing(cam);
@@ -405,12 +407,21 @@ namespace Barotrauma
             }
 
             List<ItemComponent> prevActiveHUDs = new List<ItemComponent>(activeHUDs);
+            List<ItemComponent> activeComponents = new List<ItemComponent>(components);
+            foreach (MapEntity entity in linkedTo)
+            {
+                if (prefab.IsLinkAllowed(entity.prefab) && entity is Item i)
+                {
+                    if (!i.DisplaySideBySideWhenLinked) continue;
+                    activeComponents.AddRange(i.components);
+                }
+            }
 
             activeHUDs.Clear();
             //the HUD of the component with the highest priority will be drawn
             //if all components have a priority of 0, all of them are drawn
-            List<ItemComponent> maxPriorityHUDs = new List<ItemComponent>();            
-            foreach (ItemComponent ic in components)
+            List<ItemComponent> maxPriorityHUDs = new List<ItemComponent>();
+            foreach (ItemComponent ic in activeComponents)
             {
                 if (ic.CanBeSelected && ic.HudPriority > 0 && ic.ShouldDrawHUD(character) &&
                     (maxPriorityHUDs.Count == 0 || ic.HudPriority >= maxPriorityHUDs[0].HudPriority))
@@ -422,11 +433,11 @@ namespace Barotrauma
 
             if (maxPriorityHUDs.Count > 0)
             {
-                activeHUDs.AddRange(maxPriorityHUDs);                
+                activeHUDs.AddRange(maxPriorityHUDs);
             }
             else
             {
-                foreach (ItemComponent ic in components)
+                foreach (ItemComponent ic in activeComponents)
                 {
                     if (ic.CanBeSelected && ic.ShouldDrawHUD(character)) activeHUDs.Add(ic);
                 }
@@ -442,37 +453,30 @@ namespace Barotrauma
             {
                 ic.UpdateHUD(character, deltaTime, cam);
             }
-
-            // Update linked huds
-            foreach (MapEntity entity in linkedTo)
-            {
-                if (entity is Item i)
-                {
-                    if (i.DisplaySideBySideWhenLinked)
-                    {
-                        i.UpdateHUD(cam, character, deltaTime);
-                    }
-                }
-            }
         }
-
-        public virtual void DrawHUD(SpriteBatch spriteBatch, Camera cam, Character character)
+        
+        public void DrawHUD(SpriteBatch spriteBatch, Camera cam, Character character)
         {
             if (HasInGameEditableProperties)
             {
                 DrawEditing(spriteBatch, cam);
             }
-
+            
             foreach (ItemComponent ic in activeHUDs)
             {
                 if (ic.CanBeSelected)
                 {
                     ic.DrawHUD(spriteBatch, character);
                 }
-            }           
+            }
         }
 
         public override void AddToGUIUpdateList()
+        {
+            AddToGUIUpdateList(addLinkedHUDs: true);
+        }
+
+        private void AddToGUIUpdateList(bool addLinkedHUDs)
         {
             if (Screen.Selected is SubEditorScreen)
             {
@@ -486,39 +490,17 @@ namespace Barotrauma
                 }
             }
 
-            if (Character.Controlled != null && Character.Controlled.SelectedConstruction == this)
+            if (Character.Controlled != null && Character.Controlled?.SelectedConstruction != this) return;
+
+            foreach (ItemComponent ic in activeHUDs)
             {
-                foreach (ItemComponent ic in activeHUDs)
-                {
-                    if (!ic.CanBeSelected) { continue; }
-                    if (ic.Item == this)
-                    {
-                        ic.UseAlternativeLayout = false;
-                        ic.AddToGUIUpdateList();
-                    }
-                    // Add linked item components to the update list
-                    foreach (var entity in linkedTo)
-                    {
-                        if (entity is Item i)
-                        {
-                            if (i.DisplaySideBySideWhenLinked)
-                            {
-                                i.AddToGUIUpdateList();
-                                foreach (var iComp in i.activeHUDs)
-                                {
-                                    if (iComp.CanBeSelected)
-                                    {
-                                        iComp.AddToGUIUpdateList();
-                                        iComp.UseAlternativeLayout = true;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                if (!ic.CanBeSelected) { continue; }
+
+                ic.UseAlternativeLayout = ic.Item != this;
+                ic.AddToGUIUpdateList();
             }
         }
-        
+
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
             if (type == ServerNetObject.ENTITY_POSITION)

@@ -69,10 +69,5 @@ namespace Barotrauma.Items.Components
             highVoltageIndicator.Selected = Timing.TotalTime % 0.5f < 0.25f && powerIndicator.Selected && voltage > 1.2f;
             lowVoltageIndicator.Selected = Timing.TotalTime % 0.5f < 0.25f && powerIndicator.Selected && voltage < 0.8f;
         }
-
-        public override void AddToGUIUpdateList()
-        {
-            GuiFrame?.AddToGUIUpdateList();
-        }
     }
 }

@@ -204,7 +204,10 @@ namespace Barotrauma
                     {
                         free = false;
 #if CLIENT
-                        if (slots != null) slots[i].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
+                        for (int j = 0; j < capacity; j++)
+			            {
+                            if (slots != null && Items[j] == Items[i]) slots[j].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
+			            }
 #endif
                     }
                 }

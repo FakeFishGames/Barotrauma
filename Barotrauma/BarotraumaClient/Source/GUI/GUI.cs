@@ -530,7 +530,11 @@ namespace Barotrauma
 
         private static void HandlePersistingElements(float deltaTime)
         {
-            GUIMessageBox.VisibleBox?.AddToGUIUpdateList();
+            if (GUIMessageBox.VisibleBox != null && GUIMessageBox.VisibleBox.UserData as string != "verificationprompt")
+            {
+                GUIMessageBox.VisibleBox.AddToGUIUpdateList();
+            }
+
             if (pauseMenuOpen)
             {
                 pauseMenu.AddToGUIUpdateList();
@@ -538,6 +542,12 @@ namespace Barotrauma
             if (settingsMenuOpen)
             {
                 GameMain.Config.SettingsFrame.AddToGUIUpdateList();
+            }
+
+            //the "are you sure you want to quit" prompts are drawn on top of everything else
+            if (GUIMessageBox.VisibleBox?.UserData as string == "verificationprompt")
+            {
+                GUIMessageBox.VisibleBox.AddToGUIUpdateList();
             }
         }
         #endregion
@@ -1229,12 +1239,12 @@ namespace Barotrauma
                     RelativeSpacing = 0.05f
                 };
 
-                var button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Resume", style: "GUIButtonLarge")
+                var button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuResume"), style: "GUIButtonLarge")
                 {
                     OnClicked = TogglePauseMenu
                 };
 
-                button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Settings", style: "GUIButtonLarge")
+                button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuSettings"), style: "GUIButtonLarge")
                 {
                     OnClicked = (btn, userData) =>
                     {
@@ -1243,17 +1253,32 @@ namespace Barotrauma
                         return true;
                     }
                 };
-                
+
                 if (Screen.Selected == GameMain.GameScreen && GameMain.GameSession != null)
                 {
                     if (GameMain.GameSession.GameMode is SinglePlayerCampaign spMode)
                     {
-                        //TODO: communicate more clearly what this button does
-                        button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Load previous", style: "GUIButtonLarge");
+                        button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuRetry"), style: "GUIButtonLarge");
                         button.OnClicked += (btn, userData) =>
                         {
-                            TogglePauseMenu(btn, userData);
-                            GameMain.GameSession.LoadPrevious();
+                            var msgBox = new GUIMessageBox("", TextManager.Get("PauseMenuRetryVerification"), new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
+                            {
+                                UserData = "verificationprompt"
+                            };
+                            msgBox.Buttons[0].OnClicked = (_, userdata) =>
+                            {
+                                TogglePauseMenu(btn, userData);
+                                GameMain.GameSession.LoadPrevious();
+                                GameMain.LobbyScreen.Select();
+                                return true;
+                            };
+                            msgBox.Buttons[0].OnClicked += msgBox.Close;
+                            msgBox.Buttons[1].OnClicked = (_, userdata) =>
+                            {
+                                TogglePauseMenu(btn, userData);
+                                msgBox.Close();
+                                return true;
+                            };
                             return true;
                         };
                     }
@@ -1263,7 +1288,7 @@ namespace Barotrauma
                 {
                     if (GameMain.GameSession.GameMode is SinglePlayerCampaign spMode)
                     {
-                        button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Save & quit", style: "GUIButtonLarge")
+                        button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuSaveQuit"), style: "GUIButtonLarge")
                         {
                             UserData = "save"
                         };
@@ -1272,9 +1297,37 @@ namespace Barotrauma
                     }
                 }
                 
-                button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Quit", style: "GUIButtonLarge");
-                button.OnClicked += QuitClicked;
-                button.OnClicked += TogglePauseMenu;
+                button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuQuit"), style: "GUIButtonLarge");
+                button.OnClicked += (btn, userData) =>
+                {
+                    var quitButton = button;
+                    if (GameMain.GameSession != null)
+                    {
+                        var msgBox = new GUIMessageBox("", TextManager.Get("PauseMenuQuitVerification"), new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
+                        {
+                            UserData = "verificationprompt"
+                        };
+                        msgBox.Buttons[0].OnClicked = (yesBtn, userdata) =>
+                        {
+                            QuitClicked(quitButton, quitButton.UserData);
+                            pauseMenuOpen = false;
+                            return true;
+                        };
+                        msgBox.Buttons[0].OnClicked += msgBox.Close;
+                        msgBox.Buttons[1].OnClicked = (_, userdata) =>
+                        {
+                            TogglePauseMenu(btn, userData);
+                            msgBox.Close();
+                            return true;
+                        };
+                    }
+                    else
+                    {
+                        QuitClicked(quitButton, quitButton.UserData);
+                        pauseMenuOpen = false;
+                    }
+                    return true;
+                };
             }
         }
 
