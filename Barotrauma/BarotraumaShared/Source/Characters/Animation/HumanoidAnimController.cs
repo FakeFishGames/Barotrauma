@@ -757,7 +757,7 @@ namespace Barotrauma
                         //if the gap is above us and leads outside, there's no surface to limit the movement
                         if (!gap.IsRoomToRoom && gap.Position.Y > currentHull.Position.Y)
                         {
-                            surfacePos += 100.0f;
+                            surfacePos += 100000.0f;
                             continue;
                         }
 
