@@ -18,6 +18,8 @@ namespace Barotrauma
 
         private List<ItemComponent> activeHUDs = new List<ItemComponent>();
 
+        public IEnumerable<ItemComponent> ActiveHUDs => activeHUDs;
+
         private Sprite activeSprite;
         public override Sprite Sprite
         {
