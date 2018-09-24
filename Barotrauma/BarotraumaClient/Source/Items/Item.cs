@@ -394,10 +394,15 @@ namespace Barotrauma
             }
         }
 
-        public virtual void UpdateHUD(Camera cam, Character character, float deltaTime)
+        public void UpdateHUD(Camera cam, Character character, float deltaTime)
+        {
+            UpdateHUD(cam, character, deltaTime, updateLinkedHUDs: true);
+        }
+
+        private void UpdateHUD(Camera cam, Character character, float deltaTime, bool updateLinkedHUDs)
         {
             bool editingHUDCreated = false;
-            if (HasInGameEditableProperties || 
+            if (HasInGameEditableProperties ||
                 Screen.Selected == GameMain.SubEditorScreen)
             {
                 UpdateEditing(cam);
@@ -409,7 +414,7 @@ namespace Barotrauma
             activeHUDs.Clear();
             //the HUD of the component with the highest priority will be drawn
             //if all components have a priority of 0, all of them are drawn
-            List<ItemComponent> maxPriorityHUDs = new List<ItemComponent>();            
+            List<ItemComponent> maxPriorityHUDs = new List<ItemComponent>();
             foreach (ItemComponent ic in components)
             {
                 if (ic.CanBeSelected && ic.HudPriority > 0 && ic.ShouldDrawHUD(character) &&
@@ -422,7 +427,7 @@ namespace Barotrauma
 
             if (maxPriorityHUDs.Count > 0)
             {
-                activeHUDs.AddRange(maxPriorityHUDs);                
+                activeHUDs.AddRange(maxPriorityHUDs);
             }
             else
             {
@@ -442,37 +447,63 @@ namespace Barotrauma
             {
                 ic.UpdateHUD(character, deltaTime, cam);
             }
-
-            // Update linked huds
-            foreach (MapEntity entity in linkedTo)
+            
+            if (updateLinkedHUDs)
             {
-                if (prefab.IsLinkAllowed(entity.prefab) && entity is Item i)
+                foreach (MapEntity entity in linkedTo)
                 {
-                    if (i.DisplaySideBySideWhenLinked)
+                    if (prefab.IsLinkAllowed(entity.prefab) && entity is Item i)
                     {
-                        i.UpdateHUD(cam, character, deltaTime);
+                        if (i.DisplaySideBySideWhenLinked)
+                        {
+                            i.UpdateHUD(cam, character, deltaTime, updateLinkedHUDs: false);
+                        }
                     }
                 }
             }
         }
+        
+        public void DrawHUD(SpriteBatch spriteBatch, Camera cam, Character character)
+        {
+            DrawHUD(spriteBatch, cam, character, drawLinkedHUDs: true);
+        }
 
-        public virtual void DrawHUD(SpriteBatch spriteBatch, Camera cam, Character character)
+        private void DrawHUD(SpriteBatch spriteBatch, Camera cam, Character character, bool drawLinkedHUDs)
         {
             if (HasInGameEditableProperties)
             {
                 DrawEditing(spriteBatch, cam);
             }
-
+            
             foreach (ItemComponent ic in activeHUDs)
             {
                 if (ic.CanBeSelected)
                 {
                     ic.DrawHUD(spriteBatch, character);
                 }
-            }           
+            }
+
+            if (drawLinkedHUDs)
+            {
+                foreach (MapEntity entity in linkedTo)
+                {
+                    if (prefab.IsLinkAllowed(entity.prefab) && entity is Item i)
+                    {
+                        if (i.DisplaySideBySideWhenLinked)
+                        {
+                            i.DrawHUD(spriteBatch, cam, character, drawLinkedHUDs: false);
+                        }
+                    }
+                }
+            }
         }
 
         public override void AddToGUIUpdateList()
+        {
+            AddToGUIUpdateList(addLinkedHUDs: true);
+        }
+
+        private void AddToGUIUpdateList(bool addLinkedHUDs)
         {
             if (Screen.Selected is SubEditorScreen)
             {
@@ -486,39 +517,35 @@ namespace Barotrauma
                 }
             }
 
-            if (Character.Controlled != null && Character.Controlled.SelectedConstruction == this)
+            if (Character.Controlled != null && Character.Controlled?.SelectedConstruction != this) return;
+
+            foreach (ItemComponent ic in activeHUDs)
             {
-                foreach (ItemComponent ic in activeHUDs)
+                if (!ic.CanBeSelected) { continue; }
+                if (ic.Item == this)
                 {
-                    if (!ic.CanBeSelected) { continue; }
-                    if (ic.Item == this)
+                    ic.UseAlternativeLayout = false;
+                    ic.AddToGUIUpdateList();
+                }
+            }
+
+            if (!addLinkedHUDs) return;
+            // Add linked item components to the update list
+            foreach (var entity in linkedTo)
+            {
+                if (prefab.IsLinkAllowed(entity.prefab) && entity is Item i && i.DisplaySideBySideWhenLinked)
+                {
+                    i.AddToGUIUpdateList(addLinkedHUDs: false);
+                    foreach (var iComp in i.activeHUDs)
                     {
-                        ic.UseAlternativeLayout = false;
-                        ic.AddToGUIUpdateList();
-                    }
-                    // Add linked item components to the update list
-                    foreach (var entity in linkedTo)
-                    {
-                        if (prefab.IsLinkAllowed(entity.prefab) && entity is Item i)
-                        {
-                            if (i.DisplaySideBySideWhenLinked)
-                            {
-                                i.AddToGUIUpdateList();
-                                foreach (var iComp in i.activeHUDs)
-                                {
-                                    if (iComp.CanBeSelected)
-                                    {
-                                        iComp.AddToGUIUpdateList();
-                                        iComp.UseAlternativeLayout = true;
-                                    }
-                                }
-                            }
-                        }
+                        if (!iComp.CanBeSelected) { continue; }
+                        iComp.AddToGUIUpdateList();
+                        iComp.UseAlternativeLayout = true;
                     }
                 }
             }
         }
-        
+
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
             if (type == ServerNetObject.ENTITY_POSITION)
