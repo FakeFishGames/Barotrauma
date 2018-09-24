@@ -182,11 +182,8 @@ namespace Barotrauma
                             Character.Controlled.AnimController.Anim = (Character.Controlled.AnimController.Anim == AnimController.Animation.CPR) ?
                                 AnimController.Animation.None : AnimController.Animation.CPR;
 
-                            foreach (Limb limb in Character.Controlled.SelectedCharacter.AnimController.Limbs)
-                            {
-                                limb.pullJoint.Enabled = false;
-                            }
-                            
+                            Character.Controlled.SelectedCharacter.AnimController.ResetPullJoints();
+                                                        
                             if (GameMain.Client != null)
                             {
                                 GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Repair });
@@ -208,10 +205,7 @@ namespace Barotrauma
 
                             Character.Controlled.AnimController.GrabLimb = Character.Controlled.AnimController.GrabLimb == LimbType.None ? LimbType.Torso : LimbType.None;
 
-                            foreach (Limb limb in Character.Controlled.SelectedCharacter.AnimController.Limbs)
-                            {
-                                limb.pullJoint.Enabled = false;
-                            }
+                            Character.Controlled.SelectedCharacter.AnimController.ResetPullJoints();
 
                             if (GameMain.Client != null)
                             {
