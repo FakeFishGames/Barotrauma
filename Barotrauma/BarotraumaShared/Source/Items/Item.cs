@@ -260,9 +260,9 @@ namespace Barotrauma
             get { return Prefab.WaterProof; }
         }
 
-        public bool CanUseOnSelf
+        public bool UseInHealthInterface
         {
-            get { return Prefab.CanUseOnSelf; }
+            get { return Prefab.UseInHealthInterface; }
         }
 
         public bool InWater
