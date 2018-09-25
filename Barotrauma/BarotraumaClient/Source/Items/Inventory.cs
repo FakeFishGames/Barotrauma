@@ -123,10 +123,10 @@ namespace Barotrauma
         }
 
         protected float prevUIScale = UIScale;
-                
+
         protected static Sprite slotSpriteSmall, slotSpriteHorizontal, slotSpriteVertical, slotSpriteRound;
         public static Sprite EquipIndicator, EquipIndicatorOn;
-        
+
         public Rectangle BackgroundFrame { get; protected set; }
 
         public float HideTimer;
@@ -184,7 +184,7 @@ namespace Barotrauma
         {
             get { return selectedSlot; }
         }
-        
+                
         public virtual void CreateSlots()
         {
             slots = new InventorySlot[capacity];
@@ -445,6 +445,47 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Is the mouse on any inventory element (slot, equip button, subinventory...)
+        /// </summary>
+        /// <returns></returns>
+        public static bool IsMouseOnInventory()
+        {
+            if (Character.Controlled == null) return false;
+
+            if (draggingItem != null) return true;
+
+            if (Character.Controlled.Inventory != null)
+            {
+                foreach (InventorySlot slot in Character.Controlled.Inventory.slots)
+                {
+                    if (slot.InteractRect.Contains(PlayerInput.MousePosition) ||
+                        slot.EquipButtonRect.Contains(PlayerInput.MousePosition))
+                    {
+                        return true;
+                    }
+                }
+            }
+            if (Character.Controlled.SelectedCharacter?.Inventory != null)
+            {
+                foreach (InventorySlot slot in Character.Controlled.SelectedCharacter.Inventory.slots)
+                {
+                    if (slot.InteractRect.Contains(PlayerInput.MousePosition) ||
+                        slot.EquipButtonRect.Contains(PlayerInput.MousePosition))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            foreach (SlotReference highlightedSubInventorySlot in highlightedSubInventorySlots)
+            {
+                if (GetSubInventoryHoverArea(highlightedSubInventorySlot).Contains(PlayerInput.MousePosition)) return true;
+            }
+
+            return false;
+        }
+
         protected static void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Rectangle highlightedSlot)
         {
             int maxWidth = 300;
@@ -574,6 +615,34 @@ namespace Barotrauma
                 selectedSlot = null;
             }
         }
+        
+        protected static Rectangle GetSubInventoryHoverArea(SlotReference subSlot)
+        {
+            Rectangle hoverArea = subSlot.Slot.Rect;
+            hoverArea.Location += subSlot.Slot.DrawOffset.ToPoint();
+            hoverArea = Rectangle.Union(hoverArea, subSlot.Slot.EquipButtonRect);
+            if (subSlot.Inventory?.slots != null)
+            {
+                foreach (InventorySlot slot in subSlot.Inventory.slots)
+                {
+                    Rectangle subSlotRect = slot.InteractRect;
+                    subSlotRect.Location += slot.DrawOffset.ToPoint();
+                    hoverArea = Rectangle.Union(hoverArea, subSlotRect);
+                }
+                if (subSlot.Slot.SubInventoryDir < 0)
+                {
+                    hoverArea.Height -= hoverArea.Bottom - subSlot.Slot.Rect.Bottom;
+                }
+                else
+                {
+                    int over = subSlot.Slot.Rect.Y - hoverArea.Y;
+                    hoverArea.Y += over;
+                    hoverArea.Height -= over;
+                }
+            }
+            hoverArea.Inflate(10, 10);
+            return hoverArea;
+        }
 
         public static void DrawFront(SpriteBatch spriteBatch)
         {
@@ -655,7 +724,6 @@ namespace Barotrauma
                     DrawToolTip(spriteBatch, toolTip, slotRect);
                 }
             }
-
         }
 
         public static void DrawSlot(SpriteBatch spriteBatch, Inventory inventory, InventorySlot slot, Item item, bool drawItem = true)
