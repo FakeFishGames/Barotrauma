@@ -458,9 +458,15 @@ namespace Barotrauma
                 else
                     OpenHealthWindow = this;
             }
-            else if (HUD.CloseHUD(HUDLayoutSettings.HealthWindowAreaRight))
+            else if (openHealthWindow == this)
             {
-                OpenHealthWindow = null;
+                if (Alignment == Alignment.Right ?
+                    HUD.CloseHUD(HUDLayoutSettings.HealthWindowAreaRight) :
+                    HUD.CloseHUD(HUDLayoutSettings.HealthWindowAreaLeft))
+                {
+                    //TODO: make sure clicking on inventory, chatbox, crewmanager or other UI elements doesn't close the health interface
+                    //OpenHealthWindow = null;
+                }
             }
             openedThisFrame = false;
             

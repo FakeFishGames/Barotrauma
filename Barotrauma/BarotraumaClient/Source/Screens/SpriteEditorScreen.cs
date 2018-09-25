@@ -4,8 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -14,6 +13,9 @@ namespace Barotrauma
         private GUIListBox textureList, spriteList;
 
         private GUIComponent topPanelContents;
+        private GUITextBlock texturePathText;
+        private GUITextBlock xmlPathText;
+        private XDocument doc;
 
         private Camera cam;
         public override Camera Cam
@@ -25,28 +27,30 @@ namespace Barotrauma
         {
             cam = new Camera();
 
-            var topPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.04f), Frame.RectTransform) { MinSize = new Point(0, 35) }, "GUIFrameTop");
-            topPanelContents = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.55f), topPanel.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.1f) },
-                style: null);
+            var topPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.08f), Frame.RectTransform) { MinSize = new Point(0, 35) }, "GUIFrameTop");
+            topPanelContents = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.8f), topPanel.RectTransform, Anchor.Center), style: null);
 
-            new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), topPanelContents.RectTransform), "Reload")
+            new GUIButton(new RectTransform(new Vector2(0.1f, 0.4f), topPanelContents.RectTransform), "Reload")
             {
                 OnClicked = (button, userData) =>
                 {
                     var selectedTexture = textureList.SelectedData as Texture2D;
                     if (selectedTexture == null) return false;
 
-                    var selectedSprite = spriteList.SelectedData;
-                    var matchingSprite = Sprite.LoadedSprites.First(s => s.Texture == selectedTexture);
-                    matchingSprite?.ReloadTexture();
+                    object selectedSprite = spriteList.SelectedData;
+                    Sprite matchingSprite = Sprite.LoadedSprites.First(s => s.Texture == selectedTexture);
+                    matchingSprite.ReloadTexture();
 
                     RefreshLists();
                     textureList.Select(matchingSprite.Texture);
                     spriteList.Select(selectedSprite);
-
+                    texturePathText.Text = "Reloaded from " + matchingSprite.FilePath;
                     return true;
                 }
             };
+
+            texturePathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.BottomCenter), "");
+            xmlPathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.TopCenter), "");
 
             var leftPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f - topPanel.RectTransform.RelativeSize.Y), Frame.RectTransform, Anchor.BottomLeft)
                 { MinSize = new Point(150, 0) },
@@ -63,6 +67,20 @@ namespace Barotrauma
                     {
                         var textBlock = (GUITextBlock)child;
                         textBlock.TextColor = new Color(textBlock.TextColor, ((Sprite)textBlock.UserData).Texture == userData ? 1.0f : 0.4f);
+                    }
+                    Sprite matchingSprite = Sprite.LoadedSprites.First(s => s.Texture == userData);
+                    texturePathText.Text = matchingSprite.FilePath;
+                    doc = matchingSprite.doc;
+                    if (doc == null)
+                    {
+                        xmlPathText.Text = string.Empty;
+                    }
+                    else
+                    {
+                        string[] splitted = doc.BaseUri.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+                        IEnumerable<string> filtered = splitted.SkipWhile(part => part != "Content");
+                        string parsed = string.Join("/", filtered);
+                        xmlPathText.Text = parsed;
                     }
                     topPanelContents.Visible = true;
                     return true;
@@ -104,7 +122,7 @@ namespace Barotrauma
             spriteList.ClearChildren();
 
             HashSet<string> textures = new HashSet<string>();
-            foreach (Sprite sprite in Sprite.LoadedSprites)
+            foreach (Sprite sprite in Sprite.LoadedSprites.OrderBy(s => Path.GetFileNameWithoutExtension(s.FilePath)))
             {
                 //ignore sprites that don't have a file path (e.g. submarine pics)
                 if (string.IsNullOrEmpty(sprite.FilePath)) continue;
@@ -140,18 +158,15 @@ namespace Barotrauma
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
-
             graphics.Clear(new Color(0.051f, 0.149f, 0.271f, 1.0f));
-
-            GUI.Draw(Cam, spriteBatch);
+            spriteBatch.Begin(SpriteSortMode.Immediate, rasterizerState: GameMain.ScissorTestEnable);
 
             Rectangle viewArea = new Rectangle(textureList.Rect.Right + 50, 50, spriteList.Rect.X - textureList.Rect.Right - 80, Frame.Rect.Height - 100);
             Rectangle textureRect = Rectangle.Empty;
 
             if (textureList.SelectedData is Texture2D texture)
             {
-
+                // TODO: allow to adjust, toggle to snap to pixel perfect
                 float scale = Math.Min(viewArea.Width / (float)texture.Width, viewArea.Height / (float)texture.Height);
 
                 textureRect = new Rectangle(
@@ -183,10 +198,11 @@ namespace Barotrauma
                         (int)(sprite.SourceRect.Height * scale));
 
                     GUI.DrawRectangle(spriteBatch, sourceRect,
-                        spriteList.SelectedData == sprite ? Color.LightGreen : Color.White * 0.5f);
+                        spriteList.SelectedData == sprite ? Color.Red : Color.White * 0.5f);
                 }
             }
 
+            GUI.Draw(Cam, spriteBatch);
 
             spriteBatch.End();
         }

@@ -16,7 +16,7 @@ namespace Barotrauma
             try
             {
                 ToolBox.IsProperFilenameCase(filePath);
-                doc = XDocument.Load(filePath);
+                doc = XDocument.Load(filePath, LoadOptions.SetBaseUri);
             }
             catch (Exception e)
             {
