@@ -10,6 +10,7 @@ using System.Linq;
 using Barotrauma.Extensions;
 using System.Diagnostics;
 using Lidgren.Network;
+using System.Threading;
 
 namespace Barotrauma
 {
@@ -355,7 +356,9 @@ namespace Barotrauma
                     Arguments = arguments
                 };
                 GameMain.ServerChildProcess = Process.Start(processInfo);
-                
+
+                Thread.Sleep(1000); //wait until the server is ready before connecting
+
                 GameMain.Client = new GameClient(name, "127.0.0.1:" + port.ToString(),ownerKey);
             }
             catch (Exception e)
