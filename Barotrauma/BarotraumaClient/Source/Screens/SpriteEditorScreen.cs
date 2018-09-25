@@ -183,7 +183,7 @@ namespace Barotrauma
                         (int)(sprite.SourceRect.Height * scale));
 
                     GUI.DrawRectangle(spriteBatch, sourceRect,
-                        spriteList.SelectedData == sprite ? Color.LightGreen : Color.White * 0.5f);
+                        spriteList.SelectedData == sprite ? Color.Red : Color.White * 0.5f);
                 }
             }
 
