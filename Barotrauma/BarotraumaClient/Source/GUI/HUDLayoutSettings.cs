@@ -170,8 +170,13 @@ namespace Barotrauma
     {
         public static bool CloseHUD(Rectangle rect)
         {
-            // Define the logic that closes open hud windows here
-            bool input = PlayerInput.LeftButtonClicked() || PlayerInput.RightButtonClicked();
+            //don't close when the cursor is on a UI element
+            if (GUI.MouseOn != null) return false;
+
+            //don't close when hovering over an inventory element
+            if (Inventory.IsMouseOnInventory()) return false;
+            
+            bool input = PlayerInput.LeftButtonDown() || PlayerInput.RightButtonClicked();
             return input && !rect.Contains(PlayerInput.MousePosition);
         }
     }

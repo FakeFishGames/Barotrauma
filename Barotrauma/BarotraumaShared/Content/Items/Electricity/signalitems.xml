@@ -7,7 +7,6 @@
     Tags="smallitem,wire"    
     spritecolor="210,215,218,255"
     InventoryIconColor="210,215,218,255"
-    linkable="true"
     canbepicked="true"
     cargocontaineridentifier="metalcrate">
 
@@ -37,7 +36,6 @@
     Tags="smallitem,wire"
     spritecolor="254,23,17,255"
     InventoryIconColor="254,23,17,255"
-    linkable="true"
     canbepicked="true"
     cargocontaineridentifier="metalcrate">
 
@@ -66,7 +64,6 @@
     Tags="smallitem,wire"
     spritecolor="51,121,173,255"
     InventoryIconColor="51,121,173,255"
-    linkable="true"
     canbepicked="true"
     cargocontaineridentifier="metalcrate">
 
@@ -95,7 +92,6 @@
     Tags="smallitem,wire"
     spritecolor="255,140,13,255"
     InventoryIconColor="255,140,13,255"
-    linkable="true"
     canbepicked="true"
     cargocontaineridentifier="metalcrate">
 
@@ -124,7 +120,6 @@
     Tags="smallitem,wire"
     spritecolor="56,143,111,255"
     InventoryIconColor="56,143,111,255"
-    linkable="true"
     canbepicked="true"
     cargocontaineridentifier="metalcrate"
     price="10">
@@ -154,7 +149,6 @@
     Tags="smallitem,wire"
     spritecolor="123,77,62,255"
     InventoryIconColor="123,77,62,255"
-    linkable="true"
     canbepicked="true"
     cargocontaineridentifier="metalcrate"
     price="10">
@@ -181,8 +175,7 @@
     name="FPGA Circuit"
     identifier="fpgacircuit"
     category="Electrical"
-    Tags="smallitem"    
-    linkable="true"    
+    Tags="smallitem" 
     cargocontaineridentifier="metalcrate"
     description="Field-programmable gate array - a multi-purpose circuit which can be reconfigured for use in a large variety of electrical devices.">
 
@@ -209,7 +202,6 @@
     identifier="andcomponent"
     category="Electrical"
     Tags="smallitem"
-    linkable="true"
     cargocontaineridentifier="metalcrate"
     description="Sends a signal when both inputs receive a signal within a set period of each other.">
 
@@ -288,7 +280,6 @@
     identifier="orcomponent"
     category="Electrical"
     Tags="smallitem"
-    linkable="true"
     cargocontaineridentifier="metalcrate"
     description="Sends a signal if either of the inputs receive a signal.">
 
@@ -328,7 +319,6 @@
     identifier="notcomponent"
     category="Electrical"
     Tags="smallitem"
-    linkable="true"
     cargocontaineridentifier="metalcrate"
     description="Sends a signal when the input is NOT receiving a signal.">
 
@@ -366,7 +356,6 @@
     identifier="relaycomponent"
     category="Electrical"
     Tags="smallitem"
-    linkable="true"
     cargocontaineridentifier="metalcrate"
     description="When switched on, forwards all received signals from the input connections to the outputs.">
 
@@ -420,7 +409,6 @@
     identifier="delaycomponent"
     category="Electrical"
     Tags="smallitem"
-    linkable="true"
     cargocontaineridentifier="metalcrate"
     description="Delays all received signals for a specific amount of time.">
 
@@ -458,7 +446,6 @@
     identifier="lightcomponent"
     category="Electrical"
     Tags="smallitem"
-    linkable="true"
     cargocontaineridentifier="metalcrate">
 
     <Price locationtype="Research" buyprice="50"/>
@@ -500,7 +487,6 @@
     identifier="oxygendetector"
     category="Electrical"
     Tags="smallitem"
-    linkable="true"
     cargocontaineridentifier="metalcrate"
     description="Sends out a value between 0-100 depending on the quality of the surrounding air.">
 
@@ -538,7 +524,6 @@
     identifier="waterdetector"
     category="Electrical"
     Tags="smallitem"
-    linkable="true"
     cargocontaineridentifier="metalcrate"
     description="Sends out a signal when the detector is submerged.">
 
@@ -613,7 +598,6 @@
     identifier="motiondetector"
     category="Electrical"
     Tags="smallitem"
-    linkable="true"
     cargocontaineridentifier="metalcrate"
     description="Sends out a signal when it detects movement.">
 
@@ -651,7 +635,6 @@
     identifier="signalcheckcomponent"
     category="Electrical"
     Tags="smallitem"
-    linkable="true"
     cargocontaineridentifier="metalcrate"
     description="Sends a signal when a signal matching a specific value is received.">
 
@@ -691,7 +674,6 @@
     identifier="regexcomponent"
     category="Electrical"
     Tags="smallitem"
-    linkable="true"
     cargocontaineridentifier="metalcrate"
     description="Sends a signal if the received signal matches a specific regular expression pattern.">
 
@@ -730,7 +712,6 @@
     identifier="oscillator"
     category="Electrical"
     Tags="smallitem"
-    linkable="true"
     cargocontaineridentifier="metalcrate"
     description="Sends out a periodic, oscillating signal.">
 
@@ -769,7 +750,6 @@
     identifier="wificomponent"
     category="Electrical"
     Tags="smallitem"
-    linkable="true"
     cargocontaineridentifier="metalcrate"
     description="Allows remote communication between other Wifi Components that are using the same channel.">
 
@@ -807,7 +787,6 @@
     identifier="emergencysiren"
     category="Electrical"
     Tags="smallitem"
-    linkable="true"
     cargocontaineridentifier="metalcrate">
 
     <Price locationtype="Research" buyprice="50"/>
@@ -847,7 +826,6 @@
     identifier="alarmbuzzer"
     category="Electrical"
     Tags="smallitem"
-    linkable="true"
     cargocontaineridentifier="metalcrate">
 
     <Price locationtype="Research" buyprice="50"/>
@@ -889,7 +867,6 @@
     Tags="smallitem"    
     focusonselected="true"
     offsetonselected="500"
-    linkable="true"
     cargocontaineridentifier="metalcrate"
     description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub.">
 
