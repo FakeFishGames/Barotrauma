@@ -593,8 +593,10 @@ namespace Barotrauma
             clientDisabledElements.ForEach(c => c.Enabled = false);//GameMain.Server != null);
             clientHiddenElements.ForEach(c => c.Visible = false);//GameMain.Server != null);
 
-            ShowLogButton.Visible =
-                (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.ServerLog));
+            ShowLogButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
+
+            SettingsButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound);
 
             if (GameMain.Client != null)
             {
@@ -1628,9 +1630,7 @@ namespace Barotrauma
             seedBox.Enabled = false;//!enabled && GameMain.Server != null;
 
             if (campaignViewButton != null) campaignViewButton.Visible = enabled;
-            if (SettingsButton != null) SettingsButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            if (StartButton != null) StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound);//!enabled && GameMain.Server != null;            
-
+            
             if (enabled)
             {
                 if (campaignUI == null || campaignUI.Campaign != GameMain.GameSession.GameMode)

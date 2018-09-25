@@ -875,7 +875,6 @@ namespace Barotrauma.Networking
             }
 
             GameMain.NetLobbyScreen.SettingsButton.Visible = HasPermission(ClientPermissions.ManageSettings);
-            if (!HasPermission(ClientPermissions.ManageSettings)) DebugConsole.NewMessage("WONT REVEAL SETTINGS???", Color.Red);
             GameMain.NetLobbyScreen.SettingsButton.OnClicked = ServerSettings.ToggleSettingsFrame;
             GameMain.NetLobbyScreen.StartButton.Visible = HasPermission(ClientPermissions.ManageRound);
             GameMain.NetLobbyScreen.SubList.Enabled = serverSettings.Voting.AllowSubVoting || HasPermission(ClientPermissions.SelectSub);
