@@ -14,6 +14,7 @@ namespace Barotrauma
         private GUIListBox textureList, spriteList;
 
         private GUIComponent topPanelContents;
+        private GUITextBlock pathText;
 
         private Camera cam;
         public override Camera Cam
@@ -36,17 +37,18 @@ namespace Barotrauma
                     var selectedTexture = textureList.SelectedData as Texture2D;
                     if (selectedTexture == null) return false;
 
-                    var selectedSprite = spriteList.SelectedData;
-                    var matchingSprite = Sprite.LoadedSprites.First(s => s.Texture == selectedTexture);
+                    object selectedSprite = spriteList.SelectedData;
+                    Sprite matchingSprite = Sprite.LoadedSprites.First(s => s.Texture == selectedTexture);
                     matchingSprite?.ReloadTexture();
 
                     RefreshLists();
                     textureList.Select(matchingSprite.Texture);
                     spriteList.Select(selectedSprite);
-
+                    pathText.Text = "Reloaded from " + matchingSprite.FilePath;
                     return true;
                 }
             };
+            pathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.8f), topPanelContents.RectTransform, Anchor.Center), "");
 
             var leftPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f - topPanel.RectTransform.RelativeSize.Y), Frame.RectTransform, Anchor.BottomLeft)
                 { MinSize = new Point(150, 0) },
@@ -64,6 +66,7 @@ namespace Barotrauma
                         var textBlock = (GUITextBlock)child;
                         textBlock.TextColor = new Color(textBlock.TextColor, ((Sprite)textBlock.UserData).Texture == userData ? 1.0f : 0.4f);
                     }
+                    pathText.Text = listBox.ToolTip;
                     topPanelContents.Visible = true;
                     return true;
                 }
@@ -151,7 +154,7 @@ namespace Barotrauma
 
             if (textureList.SelectedData is Texture2D texture)
             {
-
+                // TODO: allow to adjust, toggle to snap to pixel perfect
                 float scale = Math.Min(viewArea.Width / (float)texture.Width, viewArea.Height / (float)texture.Height);
 
                 textureRect = new Rectangle(
@@ -186,7 +189,6 @@ namespace Barotrauma
                         spriteList.SelectedData == sprite ? Color.Red : Color.White * 0.5f);
                 }
             }
-
 
             spriteBatch.End();
         }
