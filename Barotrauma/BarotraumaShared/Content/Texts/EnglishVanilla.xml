@@ -477,6 +477,7 @@
   <ClientPermission.ManageCampaign>Manage campaign</ClientPermission.ManageCampaign>
   <ClientPermission.ConsoleCommands>Console commands</ClientPermission.ConsoleCommands>
   <ClientPermission.ServerLog>Server log</ClientPermission.ServerLog>
+  <ClientPermission.ManageSettings>Manage server settings</ClientPermission.ManageSettings>
   <ClientPermission.All>All</ClientPermission.All>
 
   <!-- Game modes -->
