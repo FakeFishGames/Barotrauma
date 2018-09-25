@@ -1107,6 +1107,8 @@ namespace Barotrauma
         public bool ClearFilter()
         {
             FilterEntities("");
+            entityList.UpdateScrollBarSize();
+            entityList.BarScroll = 0.0f;
             entityFilterBox.Text = "";
             return true;
         }
