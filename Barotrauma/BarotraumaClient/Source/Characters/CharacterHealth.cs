@@ -637,17 +637,20 @@ namespace Barotrauma
                     new Vector2(GameMain.GraphicsWidth / damageOverlay.size.X, GameMain.GraphicsHeight / damageOverlay.size.Y));
             }
 
-            if (character.Inventory.CurrentLayout == CharacterInventory.Layout.Right)
+            if (character.Inventory != null)
             {
-                //move the healthbar on top of the inventory slots
-                healthBar.RectTransform.ScreenSpaceOffset = new Point(
-                    (GameMain.GraphicsWidth - HUDLayoutSettings.Padding) - HUDLayoutSettings.HealthBarAreaRight.Right,
-                    HUDLayoutSettings.HealthBarAreaRight.Y - (int)(character.Inventory.SlotPositions.Max(s => s.Y) + Inventory.EquipIndicator.size.Y * Inventory.UIScale * 2) - HUDLayoutSettings.HealthBarAreaRight.Height);
-                healthBarShadow.RectTransform.ScreenSpaceOffset = healthBar.RectTransform.ScreenSpaceOffset;
-            }
-            else
-            {
-                healthBar.RectTransform.ScreenSpaceOffset = healthBarShadow.RectTransform.ScreenSpaceOffset = Point.Zero;
+                if (character.Inventory.CurrentLayout == CharacterInventory.Layout.Right)
+                {
+                    //move the healthbar on top of the inventory slots
+                    healthBar.RectTransform.ScreenSpaceOffset = new Point(
+                        (GameMain.GraphicsWidth - HUDLayoutSettings.Padding) - HUDLayoutSettings.HealthBarAreaRight.Right,
+                        HUDLayoutSettings.HealthBarAreaRight.Y - (int)(character.Inventory.SlotPositions.Max(s => s.Y) + Inventory.EquipIndicator.size.Y * Inventory.UIScale * 2) - HUDLayoutSettings.HealthBarAreaRight.Height);
+                    healthBarShadow.RectTransform.ScreenSpaceOffset = healthBar.RectTransform.ScreenSpaceOffset;
+                }
+                else
+                {
+                    healthBar.RectTransform.ScreenSpaceOffset = healthBarShadow.RectTransform.ScreenSpaceOffset = Point.Zero;
+                }
             }
 
             DrawStatusHUD(spriteBatch);
