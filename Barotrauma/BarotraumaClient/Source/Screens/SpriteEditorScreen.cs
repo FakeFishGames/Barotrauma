@@ -15,7 +15,7 @@ namespace Barotrauma
         private GUIComponent topPanelContents;
         private GUITextBlock texturePathText;
         private GUITextBlock xmlPathText;
-        private XDocument doc;
+        private XElement element;
 
         private Camera cam;
         public override Camera Cam
@@ -73,14 +73,14 @@ namespace Barotrauma
                     }
                     Sprite matchingSprite = Sprite.LoadedSprites.First(s => s.Texture == userData);
                     texturePathText.Text = matchingSprite.FilePath;
-                    doc = matchingSprite.doc;
-                    if (doc == null)
+                    element = matchingSprite.SourceElement;
+                    if (element == null)
                     {
                         xmlPathText.Text = string.Empty;
                     }
                     else
                     {
-                        string[] splitted = doc.BaseUri.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+                        string[] splitted = element.BaseUri.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
                         IEnumerable<string> filtered = splitted.SkipWhile(part => part != "Content");
                         string parsed = string.Join("/", filtered);
                         xmlPathText.Text = parsed;
@@ -130,8 +130,9 @@ namespace Barotrauma
                 //ignore sprites that don't have a file path (e.g. submarine pics)
                 if (string.IsNullOrEmpty(sprite.FilePath)) continue;
 
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), spriteList.Content.RectTransform) { MinSize = new Point(0, 20) },
-                    Path.GetFileName(sprite.FilePath) + " " + sprite.SourceRect)
+                string identifier = sprite.SourceElement == null ? null : sprite.SourceElement.Parent.GetAttributeString("identifier", string.Empty);
+                string name = string.IsNullOrEmpty(identifier) ? Path.GetFileNameWithoutExtension(sprite.FilePath) : identifier;
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), spriteList.Content.RectTransform) { MinSize = new Point(0, 20) }, name + " " + sprite.SourceRect)
                 {
                     Padding = Vector4.Zero,
                     UserData = sprite
