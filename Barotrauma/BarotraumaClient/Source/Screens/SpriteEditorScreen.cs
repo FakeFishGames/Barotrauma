@@ -143,11 +143,8 @@ namespace Barotrauma
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
-
             graphics.Clear(new Color(0.051f, 0.149f, 0.271f, 1.0f));
-
-            GUI.Draw(Cam, spriteBatch);
+            spriteBatch.Begin(SpriteSortMode.Immediate, rasterizerState: GameMain.ScissorTestEnable);
 
             Rectangle viewArea = new Rectangle(textureList.Rect.Right + 50, 50, spriteList.Rect.X - textureList.Rect.Right - 80, Frame.Rect.Height - 100);
             Rectangle textureRect = Rectangle.Empty;
@@ -189,6 +186,8 @@ namespace Barotrauma
                         spriteList.SelectedData == sprite ? Color.Red : Color.White * 0.5f);
                 }
             }
+
+            GUI.Draw(Cam, spriteBatch);
 
             spriteBatch.End();
         }
