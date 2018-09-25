@@ -1096,8 +1096,9 @@ namespace Barotrauma
 
             if (SelectedConstruction != null)
             {
-                // TODO: fix so that works with the server side
-                if (SelectedConstruction.ActiveHUDs.Any(ic => HUD.CloseHUD(ic.GuiFrame.Rect))) { SelectedConstruction = null; }
+                //TODO: make sure clicking on inventory, chatbox, crewmanager or other UI elements doesn't close the item interface
+                //if (SelectedConstruction.ActiveHUDs.Any(ic => HUD.CloseHUD(ic.GuiFrame.Rect))) { SelectedConstruction = null; }
+
                 if (IsKeyDown(InputType.Use)) SelectedConstruction.Use(deltaTime, this);
                 if (SelectedConstruction != null && IsKeyDown(InputType.Aim)) SelectedConstruction.SecondaryUse(deltaTime, this);
             }
