@@ -464,8 +464,7 @@ namespace Barotrauma
                     HUD.CloseHUD(HUDLayoutSettings.HealthWindowAreaRight) :
                     HUD.CloseHUD(HUDLayoutSettings.HealthWindowAreaLeft))
                 {
-                    //TODO: make sure clicking on inventory, chatbox, crewmanager or other UI elements doesn't close the health interface
-                    //OpenHealthWindow = null;
+                    OpenHealthWindow = null;
                 }
             }
             openedThisFrame = false;
