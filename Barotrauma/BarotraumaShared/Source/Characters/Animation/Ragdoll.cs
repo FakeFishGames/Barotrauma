@@ -1236,9 +1236,8 @@ namespace Barotrauma
                 }
                 , rayStart, rayEnd);
 
-                if (closestFraction < 1.0f && closestFixture!=null)
+                if (closestFraction < 1.0f && closestFixture != null)
                 {
-                    bool forceImmediate = false;
                     onGround = true;
 
                     switch (closestFixture.CollisionCategories)
@@ -1246,7 +1245,6 @@ namespace Barotrauma
                         case Physics.CollisionStairs:
                             Stairs = closestFixture.Body.UserData as Structure;
                             onStairs = true;
-                            forceImmediate = true;
                             break;
                     }
 
@@ -1255,10 +1253,10 @@ namespace Barotrauma
 
                     if (Math.Abs(Collider.SimPosition.Y - targetY) > 0.01f)
                     {
-                        if (forceImmediate)
+                        if (onStairs)
                         {
-                            Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X, 0);
-                            Collider.SetTransform(new Vector2(Collider.SimPosition.X, targetY), Collider.Rotation);
+                            Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X,
+                               (targetY < Collider.SimPosition.Y ? Math.Sign(targetY - Collider.SimPosition.Y) : (targetY - Collider.SimPosition.Y)) * 5.0f);
                         }
                         else
                         {

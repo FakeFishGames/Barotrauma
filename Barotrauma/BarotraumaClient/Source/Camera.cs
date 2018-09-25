@@ -13,6 +13,8 @@ namespace Barotrauma
         const float ZoomSmoothness = 8.0f;
         const float MoveSmoothness = 8.0f;
 
+        const float MinZoom = 0.1f, MaxZoom = 10.0f;
+
         private float zoom;
 
         private float offsetAmount;
@@ -35,6 +37,8 @@ namespace Barotrauma
         //the area of the world inside the camera view
         private Rectangle worldView;
 
+        private float globalZoomScale = 1.0f;
+
         private Point resolution;
 
         private Vector2 targetPos;
@@ -44,7 +48,7 @@ namespace Barotrauma
             get { return zoom; }
             set 
             {
-                zoom = Math.Max(value, GameMain.DebugDraw ? 0.01f : 0.1f);
+                zoom = MathHelper.Clamp(value, GameMain.DebugDraw ? 0.01f : MinZoom, MaxZoom);
                 
                 Vector2 center = WorldViewCenter;
                 float newWidth = resolution.X / zoom;
@@ -145,6 +149,8 @@ namespace Barotrauma
             resolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             worldView = new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             viewMatrix = Matrix.CreateTranslation(new Vector3(GameMain.GraphicsWidth / 2.0f, GameMain.GraphicsHeight / 2.0f, 0));
+            
+            globalZoomScale = new Vector2(resolution.X, resolution.Y).Length() / new Vector2(1920, 1080).Length();
         }
 
         public void UpdateTransform(bool interpolate = true)
@@ -240,7 +246,7 @@ namespace Barotrauma
                 Vector2 offset = mousePos - resolution.ToVector2() / 2;
                 offset.X = offset.X / (resolution.X * 0.4f);
                 offset.Y = -offset.Y / (resolution.Y * 0.3f);
-                if (offset.Length() > 1.0f) offset.Normalize();
+                if (offset.LengthSquared() > 1.0f) offset.Normalize();
                 offset *= offsetAmount;
                 // Freeze the camera movement by default, when the cursor is on top of an ui element.
                 // Setting a positive value to the OffsetAmount, will override this behaviour.
@@ -261,8 +267,19 @@ namespace Barotrauma
                 {
                     previousOffset = offset;
                 }
+                                
+                //how much to zoom out (zoom completely out when offset is 1000)
+                float zoomOutAmount = Math.Min(offset.Length() / 1000.0f, 1.0f);                
+                //zoom amount when resolution is not taken into account
+                float unscaledZoom = MathHelper.Lerp(DefaultZoom, MinZoom, zoomOutAmount);
+                //zoom with resolution taken into account (zoom further out on smaller resolutions)
+                float scaledZoom = unscaledZoom * globalZoomScale;
 
-                float newZoom = Math.Min(DefaultZoom - Math.Min(offset.Length() / resolution.Y, 1.0f), 1.0f);
+                //an ad-hoc way of allowing the players to have roughly the same maximum view distance regardless of the resolution,
+                //while still keeping the zoom around 1.0 when not looking further away (because otherwise we'd always be downsampling 
+                //on lower resolutions, which doesn't look that good)
+                float newZoom = MathHelper.Lerp(unscaledZoom, scaledZoom, (float)Math.Sqrt(zoomOutAmount));
+
                 Zoom += (newZoom - zoom) / ZoomSmoothness;
 
                 Vector2 diff = (targetPos + offset) - position;

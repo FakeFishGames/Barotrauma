@@ -18,6 +18,15 @@ namespace Barotrauma
         //if two sprites use the same file, they share the same texture
         private string file;
 
+        /// <summary>
+        /// Reference to the xml document from where the sprite was created. Can be null if the sprite was not defined in xml!
+        /// </summary>
+        public readonly XDocument doc;
+        /// <summary>
+        /// Reference to the xml element from where the sprite was created. Can be null if the sprite was not defined in xml!
+        /// </summary>
+        public readonly XElement element;
+
         //the area in the texture that is supposed to be drawn
         private Rectangle sourceRect;
 
@@ -72,6 +81,8 @@ namespace Barotrauma
         // TODO: use the Init method below?
         public Sprite(XElement element, string path = "", string file = "")
         {
+            this.element = element;
+            doc = element.Document;
             if (file == "")
             {
                 file = element.GetAttributeString("texture", "");
