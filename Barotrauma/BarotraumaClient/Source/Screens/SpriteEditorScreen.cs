@@ -104,7 +104,7 @@ namespace Barotrauma
             spriteList.ClearChildren();
 
             HashSet<string> textures = new HashSet<string>();
-            foreach (Sprite sprite in Sprite.LoadedSprites)
+            foreach (Sprite sprite in Sprite.LoadedSprites.OrderBy(s => Path.GetFileNameWithoutExtension(s.FilePath)))
             {
                 //ignore sprites that don't have a file path (e.g. submarine pics)
                 if (string.IsNullOrEmpty(sprite.FilePath)) continue;
