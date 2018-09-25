@@ -44,16 +44,26 @@ namespace Barotrauma
                     RefreshLists();
                     textureList.Select(matchingSprite.Texture);
                     spriteList.Select(selectedSprite);
-                    texturePathText.Text = "Reloaded from " + matchingSprite.FilePath;
+                    texturePathText.Text = "Texture reloaded from " + matchingSprite.FilePath;
+                    texturePathText.TextColor = Color.LightGreen;
                     return true;
                 }
             };
+            new GUIButton(new RectTransform(new Vector2(0.1f, 0.4f), topPanelContents.RectTransform) { RelativeOffset = new Vector2(0, 0.5f) }, "Save")
+            {
+                OnClicked = (button, userData) =>
+                {
+                    if (element == null) { return false; }
+                    var doc = element.Document;
+                    doc.Save(xmlPathText.Text);
+                    xmlPathText.Text = "Changes saved to " + xmlPathText.Text;
+                    xmlPathText.TextColor = Color.LightGreen;
                     return true;
                 }
             };
 
-            texturePathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.BottomCenter), "");
-            xmlPathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.TopCenter), "");
+            texturePathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.BottomCenter), "", Color.LightGray);
+            xmlPathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.TopCenter), "", Color.LightGray);
 
             var leftPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f - topPanel.RectTransform.RelativeSize.Y), Frame.RectTransform, Anchor.BottomLeft)
                 { MinSize = new Point(150, 0) },
@@ -73,6 +83,7 @@ namespace Barotrauma
                     }
                     Sprite matchingSprite = Sprite.LoadedSprites.First(s => s.Texture == userData);
                     texturePathText.Text = matchingSprite.FilePath;
+                    texturePathText.TextColor = Color.LightGray;
                     element = matchingSprite.SourceElement;
                     if (element == null)
                     {
@@ -84,6 +95,7 @@ namespace Barotrauma
                         IEnumerable<string> filtered = splitted.SkipWhile(part => part != "Content");
                         string parsed = string.Join("/", filtered);
                         xmlPathText.Text = parsed;
+                        xmlPathText.TextColor = Color.LightGray;
                     }
                     topPanelContents.Visible = true;
                     return true;
