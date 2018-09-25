@@ -12,20 +12,16 @@ namespace Barotrauma
             get { return list; }
         }
 
-        private static List<Sprite> list = new List<Sprite>();
+        private static HashSet<Sprite> list = new HashSet<Sprite>();
 
         //the file from which the texture is loaded
         //if two sprites use the same file, they share the same texture
         private string file;
 
         /// <summary>
-        /// Reference to the xml document from where the sprite was created. Can be null if the sprite was not defined in xml!
-        /// </summary>
-        public readonly XDocument doc;
-        /// <summary>
         /// Reference to the xml element from where the sprite was created. Can be null if the sprite was not defined in xml!
         /// </summary>
-        public readonly XElement element;
+        public XElement SourceElement { get; private set; }
 
         //the area in the texture that is supposed to be drawn
         private Rectangle sourceRect;
@@ -57,8 +53,6 @@ namespace Barotrauma
             set { depth = MathHelper.Clamp(value, 0.001f, 0.999f); }
         }
 
-        // TODO: use the limb sprite params directly?
-
         public Vector2 Origin
         {
             get { return origin; }
@@ -79,10 +73,9 @@ namespace Barotrauma
         partial void CalculateSourceRect();
 
         // TODO: use the Init method below?
-        public Sprite(XElement element, string path = "", string file = "")
+        public Sprite(XElement element, string path = "", string file = "", string identifier = null)
         {
-            this.element = element;
-            doc = element.Document;
+            this.SourceElement = element;
             if (file == "")
             {
                 file = element.GetAttributeString("texture", "");
@@ -126,6 +119,7 @@ namespace Barotrauma
 
         internal void LoadParams(SpriteParams spriteParams, bool isFlipped)
         {
+            SourceElement = spriteParams.Element;
             sourceRect = spriteParams.SourceRect;
             origin = spriteParams.Origin;
             origin.X = origin.X * sourceRect.Width;
