@@ -4,8 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -14,7 +13,9 @@ namespace Barotrauma
         private GUIListBox textureList, spriteList;
 
         private GUIComponent topPanelContents;
-        private GUITextBlock pathText;
+        private GUITextBlock texturePathText;
+        private GUITextBlock xmlPathText;
+        private XDocument doc;
 
         private Camera cam;
         public override Camera Cam
@@ -26,11 +27,10 @@ namespace Barotrauma
         {
             cam = new Camera();
 
-            var topPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.04f), Frame.RectTransform) { MinSize = new Point(0, 35) }, "GUIFrameTop");
-            topPanelContents = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.55f), topPanel.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.1f) },
-                style: null);
+            var topPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.08f), Frame.RectTransform) { MinSize = new Point(0, 35) }, "GUIFrameTop");
+            topPanelContents = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.8f), topPanel.RectTransform, Anchor.Center), style: null);
 
-            new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), topPanelContents.RectTransform), "Reload")
+            new GUIButton(new RectTransform(new Vector2(0.1f, 0.4f), topPanelContents.RectTransform), "Reload")
             {
                 OnClicked = (button, userData) =>
                 {
@@ -39,16 +39,21 @@ namespace Barotrauma
 
                     object selectedSprite = spriteList.SelectedData;
                     Sprite matchingSprite = Sprite.LoadedSprites.First(s => s.Texture == selectedTexture);
-                    matchingSprite?.ReloadTexture();
+                    matchingSprite.ReloadTexture();
 
                     RefreshLists();
                     textureList.Select(matchingSprite.Texture);
                     spriteList.Select(selectedSprite);
-                    pathText.Text = "Reloaded from " + matchingSprite.FilePath;
+                    texturePathText.Text = "Reloaded from " + matchingSprite.FilePath;
                     return true;
                 }
             };
-            pathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.8f), topPanelContents.RectTransform, Anchor.Center), "");
+                    return true;
+                }
+            };
+
+            texturePathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.BottomCenter), "");
+            xmlPathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.TopCenter), "");
 
             var leftPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f - topPanel.RectTransform.RelativeSize.Y), Frame.RectTransform, Anchor.BottomLeft)
                 { MinSize = new Point(150, 0) },
@@ -66,7 +71,20 @@ namespace Barotrauma
                         var textBlock = (GUITextBlock)child;
                         textBlock.TextColor = new Color(textBlock.TextColor, ((Sprite)textBlock.UserData).Texture == userData ? 1.0f : 0.4f);
                     }
-                    pathText.Text = listBox.ToolTip;
+                    Sprite matchingSprite = Sprite.LoadedSprites.First(s => s.Texture == userData);
+                    texturePathText.Text = matchingSprite.FilePath;
+                    doc = matchingSprite.doc;
+                    if (doc == null)
+                    {
+                        xmlPathText.Text = string.Empty;
+                    }
+                    else
+                    {
+                        string[] splitted = doc.BaseUri.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+                        IEnumerable<string> filtered = splitted.SkipWhile(part => part != "Content");
+                        string parsed = string.Join("/", filtered);
+                        xmlPathText.Text = parsed;
+                    }
                     topPanelContents.Visible = true;
                     return true;
                 }
