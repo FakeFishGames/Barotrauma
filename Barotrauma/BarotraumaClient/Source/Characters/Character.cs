@@ -224,15 +224,25 @@ namespace Barotrauma
             Lights.LightManager.ViewTarget = this;
             CharacterHUD.Update(deltaTime, this, cam);
 
+            bool removeProgressBars = false;
+
             foreach (HUDProgressBar progressBar in hudProgressBars.Values)
             {
+                if (progressBar.FadeTimer <= 0.0f)
+                {
+                    removeProgressBars = true;
+                    continue;
+                }
                 progressBar.Update(deltaTime);
             }
 
-            // TODO: this generates garbage each frame
-            foreach (var pb in hudProgressBars.Where(pb => pb.Value.FadeTimer <= 0.0f).ToList())
+            if (removeProgressBars)
             {
-                hudProgressBars.Remove(pb.Key);
+                // TODO: this generates garbage, can we fix anything here?
+                foreach (var pb in hudProgressBars.Where(pb => pb.Value.FadeTimer <= 0.0f).ToList())
+                {
+                    hudProgressBars.Remove(pb.Key);
+                }
             }
         }
         
