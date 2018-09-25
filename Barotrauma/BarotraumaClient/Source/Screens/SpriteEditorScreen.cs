@@ -48,9 +48,6 @@ namespace Barotrauma
                     return true;
                 }
             };
-                    return true;
-                }
-            };
 
             texturePathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.BottomCenter), "");
             xmlPathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.TopCenter), "");
