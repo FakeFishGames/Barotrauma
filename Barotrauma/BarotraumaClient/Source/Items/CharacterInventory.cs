@@ -467,35 +467,7 @@ namespace Barotrauma
 
             doubleClickedItem = null;
         }
-
-        private Rectangle GetSubInventoryHoverArea(SlotReference subSlot)
-        {
-            Rectangle hoverArea = subSlot.Slot.Rect;
-            hoverArea.Location += subSlot.Slot.DrawOffset.ToPoint();
-            hoverArea = Rectangle.Union(hoverArea, subSlot.Slot.EquipButtonRect);
-            if (subSlot.Inventory?.slots != null)
-            {
-                foreach (InventorySlot slot in subSlot.Inventory.slots)
-                {
-                    Rectangle subSlotRect = slot.InteractRect;
-                    subSlotRect.Location += slot.DrawOffset.ToPoint();
-                    hoverArea = Rectangle.Union(hoverArea, subSlotRect);
-                }
-                if (subSlot.Slot.SubInventoryDir < 0)
-                {
-                    hoverArea.Height -= hoverArea.Bottom - subSlot.Slot.Rect.Bottom;
-                }
-                else
-                {
-                    int over = subSlot.Slot.Rect.Y - hoverArea.Y;
-                    hoverArea.Y += over;
-                    hoverArea.Height -= over;
-                }
-            }
-            hoverArea.Inflate(10, 10);
-            return hoverArea;
-        }
-
+        
         private void AssignQuickUseNumKeys()
         {
             int num = 1;

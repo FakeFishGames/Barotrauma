@@ -1093,15 +1093,19 @@ namespace Barotrauma
                     if (i == 1 && selectedItems[0] == selectedItems[1]) continue;
 
                     if (IsKeyDown(InputType.Use)) selectedItems[i].Use(deltaTime, this);
-                    if (IsKeyDown(InputType.Aim) && selectedItems[i] != null) selectedItems[i].SecondaryUse(deltaTime, this);                
+                    if (IsKeyDown(InputType.Aim) && selectedItems[i] != null) selectedItems[i].SecondaryUse(deltaTime, this);
                 }
             }
 
+#if CLIENT
+            if (SelectedConstruction != null && SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null && HUD.CloseHUD(ic.GuiFrame.Rect))) 
+            { 
+                //TODO: make sure the server knows we deselected the item
+                SelectedConstruction = null;
+            }
+#endif
             if (SelectedConstruction != null)
             {
-                //TODO: make sure clicking on inventory, chatbox, crewmanager or other UI elements doesn't close the item interface
-                //if (SelectedConstruction.ActiveHUDs.Any(ic => HUD.CloseHUD(ic.GuiFrame.Rect))) { SelectedConstruction = null; }
-
                 if (IsKeyDown(InputType.Use)) SelectedConstruction.Use(deltaTime, this);
                 if (SelectedConstruction != null && IsKeyDown(InputType.Aim)) SelectedConstruction.SecondaryUse(deltaTime, this);
             }
