@@ -3,14 +3,16 @@
 	<Item
 		name="Fabricator"
     identifier="fabricator"
-		linkable="true"		
     category="Machine"
+		linkable="true"
+    allowedlinks="deconstructor"
     description="A machine capable of manufacturing a wide range of items out of basic raw materials.">
 
     <Sprite texture="Content/Items/Fabricators/FF_Fabricator.png" sourcerect="0,0,192,208" depth="0.8"/>
 
     <Fabricator canbeselected = "true" powerconsumption="500.0">
       <GuiFrame relativesize="0.4,0.4" minsize="600,400" maxsize="900,600" anchor="Center" style="ItemUI"/>
+      <AlternativeLayout anchor="CenterLeft"/>
 
       <sound file="Content/Items/Fabricators/fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="600" loop="false"/>
@@ -250,14 +252,16 @@
   <Item
     name="Medical Fabricator"
     identifier="medicalfabricator"
-    linkable="true"    
     category="Machine"
+		linkable="true"
+    allowedlinks="deconstructor"
     description="A machine that can be used to manufacture various medicines.">
 
     <Sprite texture="Content/Items/Fabricators/FF_medicalFabricator.png" depth="0.8" sourcerect="0,0,139,200"/>
     
     <Fabricator canbeselected = "true" powerconsumption="100.0">
       <GuiFrame relativesize="0.4,0.4" minsize="600,400" maxsize="900,600" anchor="Center" style="ItemUI"/>
+      <AlternativeLayout anchor="CenterLeft"/>
 
       <sound file="Content/Items/Fabricators/fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="600" loop="false"/>
@@ -370,14 +374,16 @@
   <Item
     name="Deconstructor"
     identifier="deconstructor"
-    linkable="true"    
     category="Machine"
+		linkable="true"
+    allowedlinks="fabricator,medicalfabricator"
     description="Disassembles and breaks down items to reusable components and material bars.">
 
     <Sprite texture="Content/Items/Fabricators/FF_deconstructor.png" depth="0.8" sourcerect="0,0,176,144"/>
 
     <Deconstructor canbeselected = "true" powerconsumption="500.0">
       <GuiFrame relativesize="0.15,0.35" minsize="300,400" maxsize="360,480" anchor="Center" style="ItemUI"/>
+      <AlternativeLayout anchor="CenterRight"/>
       <sound file="Content/Items/Fabricators/deconstructor.ogg" type="OnActive" range="1000.0" loop="true"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="600" loop="false"/>
     </Deconstructor>

@@ -3,7 +3,6 @@
   <Item
     name="Engine"
     identifier="engine"
-    linkable="true"
     category="Machine">
 
     <Sprite texture ="BTart_EngineDiesel_02.png" depth="0.8" sourcerect="0,0,590,464" canflipx="true"/>
@@ -43,7 +42,6 @@
   <Item
     name="Shuttle Engine"
     identifier="shuttleengine"
-    linkable="true"
     category="Machine">
 
     <Sprite texture="Content/Items/Legacy/engine.png" depth="0.8" sourcerect="0,115,224,73" canflipx="true"/>

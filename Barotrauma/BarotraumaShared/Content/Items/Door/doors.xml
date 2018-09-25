@@ -2,7 +2,6 @@
   <Item
     name="Door"    
     identifier="door"
-    linkable="true"
     tags="door">
 
     <Sprite texture="door.png" sourcerect="1,0,48,208" depth="0.01" origin="0.5,0.5"/>
@@ -38,7 +37,6 @@
   <Item
     name="Windowed Door"    
     identifier="windoweddoor"
-    linkable="true"
     tags="door">
 
     <Sprite texture="door.png" sourcerect="1,0,48,208" depth="0.01" origin="0.5,0.5"/>
@@ -74,7 +72,6 @@
   <Item
     name="Hatch"    
     identifier="hatch"
-    linkable="true"
     allowedlinks="gap, hull"
     tags="door">
 
@@ -111,6 +108,7 @@
   <Item
     name="Docking Port"    
     identifier="dockingport"
+    tags="dock"
     linkable="true">
 
     <Sprite texture ="dockingport.png" sourcerect="0,0,112,208" depth="0.94" origin="0.5,0.5"/>
@@ -145,9 +143,10 @@
   </Item>
 
   <Item
-   name="Docking Hatch"   
-   identifier="dockinghatch"
-   linkable="true">
+    name="Docking Hatch"
+    identifier="dockinghatch"
+    tags="dock"
+    linkable="true">
 
     <Sprite texture ="dockingport2.png" sourcerect="0,0,128,112" depth="0.94" origin="0.5,0.5"/>
 
@@ -182,8 +181,7 @@
   
   <Item
     name="Duct Block"    
-    identifier="ductblock"
-    linkable="true">
+    identifier="ductblock">
 
     <Sprite texture ="duct.png" sourcerect="0,0,33,33" depth="0.01" origin="0.5,0.5"/>
 

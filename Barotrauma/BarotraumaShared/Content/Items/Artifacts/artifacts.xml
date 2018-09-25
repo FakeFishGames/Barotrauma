@@ -227,8 +227,7 @@
     name="Alien Hatch"    
     identifier="alienhatch"
     category="Alien"
-    Tags="alien"
-    linkable="true">
+    Tags="alien">
 
     <Sprite texture="Content/Map/ruins.png" sourcerect="747,0,260,95" depth="0.8" origin="0.5,0.5"/>
 
@@ -249,7 +248,6 @@
    name="Alien Door"   
    identifier="aliendoor"
    category="Alien"
-   linkable="true"
    Tags="alien">
 
     <Sprite texture="Content/Map/ruins.png" sourcerect="746,101,93,259" depth="0.8" origin="0.5,0.5"/>
@@ -270,7 +268,6 @@
   <Item
    name="Alien Motion Sensor"   
    identifier="alienmotionsensor"
-   linkable="true"
    category="Alien"
    Tags="alien">
 
@@ -286,7 +283,6 @@
   <Item
    name="Artifact Holder"   
    identifier="artifactholder"
-   linkable="true"
    category="Alien"
    Tags="alien">
 

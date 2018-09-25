@@ -3,10 +3,12 @@
   <Item
     name="Depth Charge Tube"
     identifier="depthchargetube"
+    tags="depthchargelauncher"
     category="Machine"
     focusonselected="true"
     offsetonselected="700"
-    linkable="true">
+    linkable="true"
+    allowedlinks="depthchargeammosource">
     
     <Sprite texture ="railgunetc.png" depth="0.01" sourcerect="64,180,47,76"/>
 
@@ -25,19 +27,22 @@
   <Item
     name="Depth Charge Loader"
     identifier="depthchargeloader"
+    tags="depthchargeammosource"
     category="Machine"
-    linkable="true">
+    linkable="true"
+    allowedlinks="depthchargelauncher">
 
     <Sprite texture="railgunetc.png" depth="0.8" sourcerect="0,160,61,96"/>
 
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" itempos="30,-55" iteminterval="26,0" itemrotation="-90" canbeselected = "true">
-      <Containable identifiers="depthchargeshell,nucleardepthcharge"/>      
+      <Containable identifiers="depthchargeammo"/>      
     </ItemContainer>
   </Item>
 
   <Item
     name="Depth Charge Shell"
     identifier="depthchargeshell"
+    tags="depthchargeammo"
     category="Misc"
     sonarsize="5">
 
@@ -74,6 +79,7 @@
   <Item
     name="Nuclear Depth Charge"
     identifier="nucleardepthcharge"
+    tags="depthchargeammo"
     category="Misc"
     sonarsize="5">
 

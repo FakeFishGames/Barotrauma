@@ -9,7 +9,7 @@
     focusonselected="true"
     offsetonselected="700"
     linkable="true"
-    allowedlinks="railgunequipment">
+    allowedlinks="railgunammosource">
 
     <Sprite texture="railgunbase.png" depth="0.01" sourcerect="0,0,256,256"/>
 
@@ -52,7 +52,6 @@
     tags="railgunequipment"
     category="Machine"
     type="Controller"
-    linkable="true"
     disableitemusagewhenselected="true">
 
     <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="182,0,61,97"/>
@@ -79,7 +78,6 @@
     tags="railgunequipment"
     category="Machine"
     type="Controller"
-    linkable="true"
     disableitemusagewhenselected="true">
 
     <Sprite texture ="railgunetc2.png" depth="0.8" sourcerect="188,0,57,96"/>
@@ -102,7 +100,7 @@
   <Item
     name="Railgun Loader"
     identifier="railgunloader"
-    tags="railgunequipment"
+    tags="railgunequipment,railgunammosource"
     category="Machine"
     linkable="true"
     allowedlinks="railgun">
@@ -117,7 +115,7 @@
   <Item
     name="Railgun Single Loader"
     identifier="railgunloadersingle"
-    tags="railgunequipment"
+    tags="railgunequipment,railgunammosource"
     category="Machine"
     linkable="true"
     allowedlinks="railgun">
@@ -132,7 +130,7 @@
   <Item
     name="Forward Railgun Loader"
     identifier="railgunloaderforward"
-    tags="railgunequipment"
+    tags="railgunequipment,railgunammosource"
     category="Machine"
     linkable="true"
     allowedlinks="railgun">
@@ -147,7 +145,7 @@
   <Item
     name="Rear Railgun Loader"
     identifier="railgunloaderrear"
-    tags="railgunequipment"
+    tags="railgunequipment,railgunammosource"
     category="Machine"
     linkable="true"
     allowedlinks="railgun">
