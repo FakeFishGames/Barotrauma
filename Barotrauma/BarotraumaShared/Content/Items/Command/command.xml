@@ -59,6 +59,7 @@
     identifier="sonarmonitor"
     tags="command"
     linkable="true"
+    allowedlinks="statusmonitor"
     category="Machine">
 
     <Sprite texture="Content/Items/Command/navigator.png" depth="0.8" sourcerect="0,0,188,194"/>

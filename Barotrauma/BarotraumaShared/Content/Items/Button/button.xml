@@ -3,7 +3,6 @@
     name="Button"    
     identifier="button"
     category="Electrical"
-    linkable="true"
     tags="smallitem"
     cargocontaineridentifier="metalcrate">
     
@@ -42,7 +41,6 @@
     name="Switch"
     identifier="switch"
     category="Electrical"
-    linkable="true"
     tags="smallitem"
     cargocontaineridentifier="metalcrate">
 
