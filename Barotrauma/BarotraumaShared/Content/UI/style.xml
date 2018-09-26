@@ -331,23 +331,23 @@
     color="1.0,1.0,1.0,1.0"
     hovercolor="1.0,1.0,1.0,1.0"
     selectedcolor="1.0,1.0,1.0,1.0">
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect ="389, 166, 16, 16"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" tile="false" maintainaspectratio="true" sourcerect ="389, 166, 16, 16"/>
   </GUIServerListCompatibleTickBox>
 
   <GUIServerListPasswordTickBox
     color="0.2,0.2,0.2,1.0"
     hovercolor="1.0,1.0,1.0,1.0"
     selectedcolor="1.0,1.0,1.0,1.0" >
-    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="1001, 639, 10, 14"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect ="1001, 639, 10, 14"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect ="1001, 639, 10, 14"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" tile="false" maintainaspectratio="true" sourcerect ="1001, 639, 10, 14"/>
   </GUIServerListPasswordTickBox>
 
   <GUIServerListRoundStartedTickBox
     color="0.2,0.2,0.2,1.0"
     hovercolor="1.0,1.0,1.0,1.0"
     selectedcolor="1.0,1.0,1.0,1.0">
-    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="1001, 627, 10, 12"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect ="1001, 627, 10, 12"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect ="1001, 627, 10, 12"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" tile="false" maintainaspectratio="true" sourcerect ="1001, 627, 10, 12"/>
   </GUIServerListRoundStartedTickBox>
 
   <GUIMessageBox    
