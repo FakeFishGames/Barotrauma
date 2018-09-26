@@ -36,7 +36,7 @@ namespace Barotrauma
             topPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.08f), Frame.RectTransform) { MinSize = new Point(0, 35) }, "GUIFrameTop");
             topPanelContents = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.8f), topPanel.RectTransform, Anchor.Center), style: null);
 
-            new GUIButton(new RectTransform(new Vector2(0.1f, 0.4f), topPanelContents.RectTransform), "Reload Texture")
+            new GUIButton(new RectTransform(new Vector2(0.15f, 0.4f), topPanelContents.RectTransform), "Reload Texture")
             {
                 OnClicked = (button, userData) =>
                 {
@@ -55,7 +55,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            new GUIButton(new RectTransform(new Vector2(0.1f, 0.4f), topPanelContents.RectTransform) { RelativeOffset = new Vector2(0, 0.5f) }, "Save Source Rect")
+            new GUIButton(new RectTransform(new Vector2(0.15f, 0.4f), topPanelContents.RectTransform) { RelativeOffset = new Vector2(0, 0.5f) }, "Save Selected Source Rect")
             {
                 OnClicked = (button, userData) =>
                 {
@@ -91,6 +91,7 @@ namespace Barotrauma
                     if (selectedSprite == null || selectedSprite.Texture != userData)
                     {
                         selectedSprite = Sprite.LoadedSprites.First(s => s.Texture == userData);
+                        widgets.Clear();
                     }
                     texturePathText.Text = selectedSprite.FilePath;
                     texturePathText.TextColor = Color.LightGray;
@@ -253,7 +254,10 @@ namespace Barotrauma
                             {
                                 w.DrawPos = PlayerInput.MousePosition;
                                 sprite.SourceRect = new Rectangle(((w.DrawPos + halfSize - textureRect.Location.ToVector2()) / scale).ToPoint(), sprite.SourceRect.Size);
-                                GetWidget($"{identifier}_size").DrawPos = w.DrawPos + halfSize + sprite.SourceRect.Size.ToVector2() * scale;
+                                if (widgets.TryGetValue($"{identifier}_size", out Widget sizeW))
+                                {
+                                    sizeW.DrawPos = w.DrawPos + halfSize + sprite.SourceRect.Size.ToVector2() * scale;
+                                }
                             };
                             w.PostUpdate += dTime =>
                             {
