@@ -601,7 +601,7 @@ namespace Barotrauma
             if (GameMain.Client != null)
             {
                 spectateButton.Visible = GameMain.Client.GameStarted;
-                ReadyToStartBox.Visible = !GameMain.Client.GameStarted;
+                ReadyToStartBox.Visible = !GameMain.Client.GameStarted && !GameMain.Client.HasPermission(ClientPermissions.ManageRound);
                 ReadyToStartBox.Selected = false;
                 GameMain.Client.SetReadyToStart(ReadyToStartBox);
             }
