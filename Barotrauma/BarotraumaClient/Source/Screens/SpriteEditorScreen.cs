@@ -14,10 +14,14 @@ namespace Barotrauma
         private GUIListBox textureList, spriteList;
 
         private GUIFrame topPanel;
+        private GUIFrame leftPanel;
+        private GUIFrame rightPanel;
+
         private GUIFrame topPanelContents;
         private GUITextBlock texturePathText;
         private GUITextBlock xmlPathText;
         private XElement element;
+        private Sprite selectedSprite;
 
         private Camera cam;
         public override Camera Cam
@@ -32,7 +36,7 @@ namespace Barotrauma
             topPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.08f), Frame.RectTransform) { MinSize = new Point(0, 35) }, "GUIFrameTop");
             topPanelContents = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.8f), topPanel.RectTransform, Anchor.Center), style: null);
 
-            new GUIButton(new RectTransform(new Vector2(0.1f, 0.4f), topPanelContents.RectTransform), "Reload")
+            new GUIButton(new RectTransform(new Vector2(0.15f, 0.4f), topPanelContents.RectTransform), "Reload Texture")
             {
                 OnClicked = (button, userData) =>
                 {
@@ -46,18 +50,19 @@ namespace Barotrauma
                     RefreshLists();
                     textureList.Select(matchingSprite.Texture);
                     spriteList.Select(selectedSprite);
-                    texturePathText.Text = "Texture reloaded from " + matchingSprite.FilePath;
+                    texturePathText.Text = "Textures reloaded from " + matchingSprite.FilePath;
                     texturePathText.TextColor = Color.LightGreen;
                     return true;
                 }
             };
-            new GUIButton(new RectTransform(new Vector2(0.1f, 0.4f), topPanelContents.RectTransform) { RelativeOffset = new Vector2(0, 0.5f) }, "Save")
+            new GUIButton(new RectTransform(new Vector2(0.15f, 0.4f), topPanelContents.RectTransform) { RelativeOffset = new Vector2(0, 0.5f) }, "Save Selected Source Rect")
             {
                 OnClicked = (button, userData) =>
                 {
                     if (element == null) { return false; }
-                    var doc = element.Document;
-                    doc.Save(xmlPathText.Text);
+                    if (selectedSprite == null) { return false; }
+                    element.SetAttributeValue("sourcerect", XMLExtensions.RectToString(selectedSprite.SourceRect));
+                    element.Document.Save(xmlPathText.Text);
                     xmlPathText.Text = "Changes saved to " + xmlPathText.Text;
                     xmlPathText.TextColor = Color.LightGreen;
                     return true;
@@ -67,7 +72,7 @@ namespace Barotrauma
             texturePathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.BottomCenter), "", Color.LightGray);
             xmlPathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.TopCenter), "", Color.LightGray);
 
-            var leftPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f - topPanel.RectTransform.RelativeSize.Y), Frame.RectTransform, Anchor.BottomLeft)
+            leftPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f - topPanel.RectTransform.RelativeSize.Y), Frame.RectTransform, Anchor.BottomLeft)
                 { MinSize = new Point(150, 0) },
                 style: "GUIFrameLeft");
             var paddedLeftPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), leftPanel.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.02f, 0.0f) })
@@ -83,10 +88,14 @@ namespace Barotrauma
                         var textBlock = (GUITextBlock)child;
                         textBlock.TextColor = new Color(textBlock.TextColor, ((Sprite)textBlock.UserData).Texture == userData ? 1.0f : 0.4f);
                     }
-                    Sprite matchingSprite = Sprite.LoadedSprites.First(s => s.Texture == userData);
-                    texturePathText.Text = matchingSprite.FilePath;
+                    if (selectedSprite == null || selectedSprite.Texture != userData)
+                    {
+                        selectedSprite = Sprite.LoadedSprites.First(s => s.Texture == userData);
+                        widgets.Clear();
+                    }
+                    texturePathText.Text = selectedSprite.FilePath;
                     texturePathText.TextColor = Color.LightGray;
-                    element = matchingSprite.SourceElement;
+                    element = selectedSprite.SourceElement;
                     if (element == null)
                     {
                         xmlPathText.Text = string.Empty;
@@ -104,7 +113,7 @@ namespace Barotrauma
                 }
             };
             
-            var rightPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f - topPanel.RectTransform.RelativeSize.Y), Frame.RectTransform, Anchor.BottomRight)
+            rightPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f - topPanel.RectTransform.RelativeSize.Y), Frame.RectTransform, Anchor.BottomRight)
                 { MinSize = new Point(150, 0) },
                 style: "GUIFrameRight");
             var paddedRightPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), rightPanel.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.02f, 0.0f) })
@@ -118,12 +127,12 @@ namespace Barotrauma
                 {
                     Sprite sprite = userData as Sprite;
                     if (sprite == null) return false;
+                    selectedSprite = sprite;
                     textureList.Select(sprite.Texture);
                     return true;
                 }
             };
-            
-
+       
             RefreshLists();
         }
 
@@ -184,7 +193,8 @@ namespace Barotrauma
             graphics.Clear(new Color(0.051f, 0.149f, 0.271f, 1.0f));
             spriteBatch.Begin(SpriteSortMode.Immediate, rasterizerState: GameMain.ScissorTestEnable);
 
-            Rectangle viewArea = new Rectangle(textureList.Rect.Right + 50, 50, spriteList.Rect.X - textureList.Rect.Right - 80, Frame.Rect.Height - topPanel.Rect.Height);
+            int margin = 20;
+            Rectangle viewArea = new Rectangle(leftPanel.Rect.Right + margin, topPanel.Rect.Bottom + margin, rightPanel.Rect.Left - leftPanel.Rect.Right - margin * 2, Frame.Rect.Height - topPanel.Rect.Height - margin * 2);
             Rectangle textureRect = Rectangle.Empty;
 
             if (textureList.SelectedData is Texture2D texture)
@@ -193,8 +203,8 @@ namespace Barotrauma
                 float scale = Math.Min(viewArea.Width / (float)texture.Width, viewArea.Height / (float)texture.Height);
 
                 textureRect = new Rectangle(
-                    (int)(viewArea.Center.X - texture.Bounds.Width / 2 * scale),
-                    (int)(viewArea.Center.Y - texture.Bounds.Height / 2 * scale),
+                    (int)(viewArea.Center.X - texture.Bounds.Width / 2f * scale),
+                    (int)(viewArea.Center.Y - texture.Bounds.Height / 2f * scale),
                     (int)(texture.Bounds.Width * scale),
                     (int)(texture.Bounds.Height * scale));
 
@@ -208,7 +218,8 @@ namespace Barotrauma
                     effects: SpriteEffects.None, 
                     layerDepth: 0);
 
-                GUI.DrawRectangle(spriteBatch,textureRect, Color.White, isFilled: false);
+                //GUI.DrawRectangle(spriteBatch, viewArea, Color.Green, isFilled: false);
+                GUI.DrawRectangle(spriteBatch, textureRect, Color.Yellow, isFilled: false);
 
                 foreach (Sprite sprite in Sprite.LoadedSprites)
                 {
@@ -221,30 +232,55 @@ namespace Barotrauma
                         (int)(sprite.SourceRect.Height * scale));
 
                     GUI.DrawRectangle(spriteBatch, sourceRect,
-                        spriteList.SelectedData == sprite ? Color.Red : Color.White * 0.5f);
+                        selectedSprite == sprite ? Color.Red : Color.White * 0.5f);
 
                     string identifier = GetIdentifier(sprite);
                     if (!string.IsNullOrEmpty(identifier))
                     {
                         int widgetSize = 10;
-                        Vector2 stringOffset = new Vector2(5, 14);
+                        Vector2 halfSize = new Vector2(widgetSize) / 2;
+                        //Vector2 stringOffset = new Vector2(5, 14);
                         var rect = sprite.SourceRect;
                         var topLeft = rect.Location.ToVector2();
                         var topRight = new Vector2(topLeft.X + rect.Width, topLeft.Y);
                         var bottomRight = new Vector2(topRight.X, topRight.Y + rect.Height);
                         //var bottomLeft = new Vector2(topLeft.X, bottomRight.Y);
-                        var widget = GetWidget($"{identifier} topleft", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
+                        var positionWidget = GetWidget($"{identifier}_position", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                         {
-                            w.DrawPos = textureRect.Location.ToVector2() + topLeft * scale;
+                            w.DrawPos = textureRect.Location.ToVector2() + topLeft * scale - halfSize;
                             w.inputAreaMargin = new Point(widgetSize / 2);
                             w.MouseDown += () => spriteList.Select(sprite);
                             w.MouseHeld += () =>
                             {
                                 w.DrawPos = PlayerInput.MousePosition;
-                                sprite.SourceRect = new Rectangle(((w.DrawPos - textureRect.Location.ToVector2()) / scale).ToPoint(), sprite.SourceRect.Size);
+                                sprite.SourceRect = new Rectangle(((w.DrawPos + halfSize - textureRect.Location.ToVector2()) / scale).ToPoint(), sprite.SourceRect.Size);
+                                if (widgets.TryGetValue($"{identifier}_size", out Widget sizeW))
+                                {
+                                    sizeW.DrawPos = w.DrawPos + halfSize + sprite.SourceRect.Size.ToVector2() * scale;
+                                }
+                            };
+                            w.PostUpdate += dTime =>
+                            {
+                                w.color = selectedSprite == sprite ? Color.Red : Color.White;
                             };
                         });
-                        widget.Draw(spriteBatch, (float)deltaTime);
+                        var sizeWidget = GetWidget($"{identifier}_size", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
+                        {
+                            w.DrawPos = textureRect.Location.ToVector2() + bottomRight * scale + halfSize;
+                            w.inputAreaMargin = new Point(widgetSize / 2);
+                            w.MouseDown += () => spriteList.Select(sprite);
+                            w.MouseHeld += () =>
+                            {
+                                w.DrawPos = PlayerInput.MousePosition;
+                                sprite.SourceRect = new Rectangle(sprite.SourceRect.Location, ((w.DrawPos - halfSize - positionWidget.DrawPos) / scale).ToPoint());
+                            };
+                            w.PostUpdate += dTime =>
+                            {
+                                w.color = selectedSprite == sprite ? Color.Red : Color.White;
+                            };
+                        });
+                        positionWidget.Draw(spriteBatch, (float)deltaTime);
+                        sizeWidget.Draw(spriteBatch, (float)deltaTime);
                     }
                 }
             }
@@ -257,7 +293,7 @@ namespace Barotrauma
         #region Widgets
         private Dictionary<string, Widget> widgets = new Dictionary<string, Widget>();
 
-        private Widget GetWidget(string id, int size, Widget.Shape shape, Action<Widget> initMethod = null)
+        private Widget GetWidget(string id, int size = 5, Widget.Shape shape = Widget.Shape.Rectangle, Action<Widget> initMethod = null)
         {
             if (!widgets.TryGetValue(id, out Widget widget))
             {
