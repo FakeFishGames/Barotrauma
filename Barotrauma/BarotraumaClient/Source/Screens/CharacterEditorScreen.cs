@@ -1557,8 +1557,9 @@ namespace Barotrauma
                     GUI.DrawLine(spriteBatch, limbScreenPos, tformedJointPos, Color.White, width: 1);
                     if (editJointLimits)
                     {
-                        GetToggleWidget($"{joint.jointParams.Name} limits toggle ragdoll", $"{joint.jointParams.Name} limits toggle spritesheet", joint)
-                            .Draw(spriteBatch, deltaTime, tformedJointPos);
+                        var toggleWidget = GetToggleWidget($"{joint.jointParams.Name} limits toggle ragdoll", $"{joint.jointParams.Name} limits toggle spritesheet", joint);
+                        toggleWidget.DrawPos = tformedJointPos;
+                        toggleWidget.Draw(spriteBatch, deltaTime);
                         if (joint.LimitEnabled)
                         {
                             DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: true, allowPairEditing: true, rotationOffset: character.AnimController.Collider.Rotation);
@@ -1754,7 +1755,7 @@ namespace Barotrauma
                             GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitY * 5.0f, limbBodyPos - Vector2.UnitY * 5.0f, Color.Red);
                             GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.Red);
                         }
-                        // Draw the  source rect widgets
+                        // Draw the source rect widgets
                         int widgetSize = 5;
                         Vector2 stringOffset = new Vector2(5, 14);
                         var topLeft = rect.Location.ToVector2();
@@ -1875,8 +1876,9 @@ namespace Barotrauma
                     //}
                     if (joint.BodyA == limb.body.FarseerBody)
                     {
-                        GetToggleWidget($"{joint.jointParams.Name} limits toggle spritesheet", $"{joint.jointParams.Name} limits toggle ragdoll", joint)
-                            .Draw(spriteBatch, deltaTime, tformedJointPos);
+                        var toggleWidget = GetToggleWidget($"{joint.jointParams.Name} limits toggle spritesheet", $"{joint.jointParams.Name} limits toggle ragdoll", joint);
+                        toggleWidget.DrawPos = tformedJointPos;
+                        toggleWidget.Draw(spriteBatch, deltaTime);
                         if (joint.LimitEnabled)
                         {
                             DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: false, allowPairEditing: false);
@@ -2117,7 +2119,7 @@ namespace Barotrauma
             // Joint creation method
             Widget CreateJointLimitToggle(string ID, LimbJoint j)
             {
-                var widget = new Widget(ID, Widget.Shape.Circle) { size = 10 };
+                var widget = new Widget(ID, 10, Widget.Shape.Circle);
                 widget.refresh = () =>
                 {
                     if (j.LimitEnabled)
@@ -2170,139 +2172,6 @@ namespace Barotrauma
                 linkedWidget.linkedWidget = toggleWidget;
             }
             return toggleWidget;
-        }
-
-        private class Widget
-        {
-            public enum Shape
-            {
-                Rectangle,
-                Circle
-            }
-
-            public Shape shape;
-            public string tooltip;
-            public Rectangle DrawRect => new Rectangle((int)DrawPos.X - size / 2, (int)DrawPos.Y - size / 2, size, size);
-            public Rectangle InputRect
-            {
-                get
-                {
-                    var inputRect = DrawRect;
-                    inputRect.Inflate(inputAreaMargin.X, inputAreaMargin.Y);
-                    return inputRect;
-                }
-            }
-
-            public Vector2 DrawPos { get; private set; }
-            public int size = 10;
-            /// <summary>
-            /// Used only for circles.
-            /// </summary>
-            public int sides = 40;
-            /// <summary>
-            /// Currently used only for rectangles.
-            /// </summary>
-            public bool isFilled;
-            public Point inputAreaMargin;
-            public Color color = Color.Red;
-            public Color textColor = Color.White;
-            public Color textBackgroundColor = Color.Black * 0.5f;
-            public bool autoFreeze;
-            public readonly string id;
-
-            public event Action Hovered;
-            public event Action Clicked;
-            public event Action MouseDown;
-            public event Action MouseUp;
-            public event Action MouseHeld;
-            public event Action<SpriteBatch, float> PreDraw;
-            public event Action<SpriteBatch, float> PostDraw;
-
-            public Action refresh;
-
-            public bool IsSelected => selectedWidget == this;
-            public bool IsControlled => IsSelected && PlayerInput.LeftButtonHeld();
-            public bool IsMouseOver => GUI.MouseOn == null && InputRect.Contains(PlayerInput.MousePosition);
-            public Vector2? tooltipOffset;
-            
-            public Widget linkedWidget;
-
-            public static Widget selectedWidget;
-
-            public Widget(string id, Shape shape)
-            {
-                this.id = id;
-                this.shape = shape;
-            }
-
-            public virtual void Update(float deltaTime)
-            {
-                if (IsMouseOver)
-                {
-                    if (selectedWidget == null)
-                    {
-                        selectedWidget = this;
-                    }
-                    Hovered?.Invoke();
-                }
-                else if (selectedWidget == this)
-                {
-                    selectedWidget = null;
-                }
-                if (IsSelected)
-                {
-                    if (PlayerInput.LeftButtonHeld())
-                    {
-                        if (autoFreeze)
-                        {
-                            //freeze = true;
-                        }
-                        MouseHeld?.Invoke();
-                    }
-                    else
-                    {
-                        //freeze = freezeToggle.Selected;
-                    }
-                    if (PlayerInput.LeftButtonDown())
-                    {
-                        MouseDown?.Invoke();
-                    }
-                    if (PlayerInput.LeftButtonReleased())
-                    {
-                        MouseUp?.Invoke();
-                    }
-                    if (PlayerInput.LeftButtonClicked())
-                    {
-                        Clicked?.Invoke();
-                    }
-                }
-            }
-
-            public virtual void Draw(SpriteBatch spriteBatch, float deltaTime, Vector2 drawPos)
-            {
-                PreDraw?.Invoke(spriteBatch, deltaTime);
-                DrawPos = drawPos;
-                var drawRect = DrawRect;
-                switch (shape)
-                {
-                    case Shape.Rectangle:
-                        GUI.DrawRectangle(spriteBatch, drawRect, color, isFilled, thickness: IsSelected ? 3 : 1);
-                        break;
-                    case Shape.Circle:
-                        ShapeExtensions.DrawCircle(spriteBatch, drawPos, size / 2, sides, color, thickness: IsSelected ? 3 : 1);
-                        break;
-                    default: throw new NotImplementedException(shape.ToString());
-                }
-                if (IsSelected)
-                {
-                    if (!string.IsNullOrEmpty(tooltip))
-                    {
-                        var offset = tooltipOffset ?? new Vector2(size, -size / 2);
-                        GUI.DrawString(spriteBatch, drawPos + offset, tooltip, textColor, textBackgroundColor);
-                    }
-                }
-                PostDraw?.Invoke(spriteBatch, deltaTime);
-            }
         }
 
         //// TODO: test and fix

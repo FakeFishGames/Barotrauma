@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -12,10 +13,11 @@ namespace Barotrauma
     {
         private GUIListBox textureList, spriteList;
 
-        private GUIComponent topPanelContents;
+        private GUIFrame topPanel;
+        private GUIFrame topPanelContents;
         private GUITextBlock texturePathText;
         private GUITextBlock xmlPathText;
-        private XDocument doc;
+        private XElement element;
 
         private Camera cam;
         public override Camera Cam
@@ -27,7 +29,7 @@ namespace Barotrauma
         {
             cam = new Camera();
 
-            var topPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.08f), Frame.RectTransform) { MinSize = new Point(0, 35) }, "GUIFrameTop");
+            topPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.08f), Frame.RectTransform) { MinSize = new Point(0, 35) }, "GUIFrameTop");
             topPanelContents = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.8f), topPanel.RectTransform, Anchor.Center), style: null);
 
             new GUIButton(new RectTransform(new Vector2(0.1f, 0.4f), topPanelContents.RectTransform), "Reload")
@@ -44,13 +46,26 @@ namespace Barotrauma
                     RefreshLists();
                     textureList.Select(matchingSprite.Texture);
                     spriteList.Select(selectedSprite);
-                    texturePathText.Text = "Reloaded from " + matchingSprite.FilePath;
+                    texturePathText.Text = "Texture reloaded from " + matchingSprite.FilePath;
+                    texturePathText.TextColor = Color.LightGreen;
+                    return true;
+                }
+            };
+            new GUIButton(new RectTransform(new Vector2(0.1f, 0.4f), topPanelContents.RectTransform) { RelativeOffset = new Vector2(0, 0.5f) }, "Save")
+            {
+                OnClicked = (button, userData) =>
+                {
+                    if (element == null) { return false; }
+                    var doc = element.Document;
+                    doc.Save(xmlPathText.Text);
+                    xmlPathText.Text = "Changes saved to " + xmlPathText.Text;
+                    xmlPathText.TextColor = Color.LightGreen;
                     return true;
                 }
             };
 
-            texturePathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.BottomCenter), "");
-            xmlPathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.TopCenter), "");
+            texturePathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.BottomCenter), "", Color.LightGray);
+            xmlPathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.TopCenter), "", Color.LightGray);
 
             var leftPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f - topPanel.RectTransform.RelativeSize.Y), Frame.RectTransform, Anchor.BottomLeft)
                 { MinSize = new Point(150, 0) },
@@ -70,17 +85,19 @@ namespace Barotrauma
                     }
                     Sprite matchingSprite = Sprite.LoadedSprites.First(s => s.Texture == userData);
                     texturePathText.Text = matchingSprite.FilePath;
-                    doc = matchingSprite.doc;
-                    if (doc == null)
+                    texturePathText.TextColor = Color.LightGray;
+                    element = matchingSprite.SourceElement;
+                    if (element == null)
                     {
                         xmlPathText.Text = string.Empty;
                     }
                     else
                     {
-                        string[] splitted = doc.BaseUri.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+                        string[] splitted = element.BaseUri.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
                         IEnumerable<string> filtered = splitted.SkipWhile(part => part != "Content");
                         string parsed = string.Join("/", filtered);
                         xmlPathText.Text = parsed;
+                        xmlPathText.TextColor = Color.LightGray;
                     }
                     topPanelContents.Visible = true;
                     return true;
@@ -116,19 +133,24 @@ namespace Barotrauma
             RefreshLists();
         }
 
+        private string GetIdentifier(Sprite sprite)
+        {
+            return sprite.SourceElement?.Parent.GetAttributeString("identifier", string.Empty);
+        }
+
         private void RefreshLists()
         {
             textureList.ClearChildren();
             spriteList.ClearChildren();
-
+            widgets.Clear();
             HashSet<string> textures = new HashSet<string>();
             foreach (Sprite sprite in Sprite.LoadedSprites.OrderBy(s => Path.GetFileNameWithoutExtension(s.FilePath)))
             {
                 //ignore sprites that don't have a file path (e.g. submarine pics)
                 if (string.IsNullOrEmpty(sprite.FilePath)) continue;
-
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), spriteList.Content.RectTransform) { MinSize = new Point(0, 20) },
-                    Path.GetFileName(sprite.FilePath) + " " + sprite.SourceRect)
+                string identifier = GetIdentifier(sprite);
+                string name = string.IsNullOrEmpty(identifier) ? Path.GetFileNameWithoutExtension(sprite.FilePath) : identifier;
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), spriteList.Content.RectTransform) { MinSize = new Point(0, 20) }, name + " " + sprite.SourceRect)
                 {
                     Padding = Vector4.Zero,
                     UserData = sprite
@@ -154,6 +176,7 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
+            widgets.Values.ForEach(w => w.Update((float)deltaTime));
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -161,7 +184,7 @@ namespace Barotrauma
             graphics.Clear(new Color(0.051f, 0.149f, 0.271f, 1.0f));
             spriteBatch.Begin(SpriteSortMode.Immediate, rasterizerState: GameMain.ScissorTestEnable);
 
-            Rectangle viewArea = new Rectangle(textureList.Rect.Right + 50, 50, spriteList.Rect.X - textureList.Rect.Right - 80, Frame.Rect.Height - 100);
+            Rectangle viewArea = new Rectangle(textureList.Rect.Right + 50, 50, spriteList.Rect.X - textureList.Rect.Right - 80, Frame.Rect.Height - topPanel.Rect.Height);
             Rectangle textureRect = Rectangle.Empty;
 
             if (textureList.SelectedData is Texture2D texture)
@@ -199,6 +222,30 @@ namespace Barotrauma
 
                     GUI.DrawRectangle(spriteBatch, sourceRect,
                         spriteList.SelectedData == sprite ? Color.Red : Color.White * 0.5f);
+
+                    string identifier = GetIdentifier(sprite);
+                    if (!string.IsNullOrEmpty(identifier))
+                    {
+                        int widgetSize = 10;
+                        Vector2 stringOffset = new Vector2(5, 14);
+                        var rect = sprite.SourceRect;
+                        var topLeft = rect.Location.ToVector2();
+                        var topRight = new Vector2(topLeft.X + rect.Width, topLeft.Y);
+                        var bottomRight = new Vector2(topRight.X, topRight.Y + rect.Height);
+                        //var bottomLeft = new Vector2(topLeft.X, bottomRight.Y);
+                        var widget = GetWidget($"{identifier} topleft", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
+                        {
+                            w.DrawPos = textureRect.Location.ToVector2() + topLeft * scale;
+                            w.inputAreaMargin = new Point(widgetSize / 2);
+                            w.MouseDown += () => spriteList.Select(sprite);
+                            w.MouseHeld += () =>
+                            {
+                                w.DrawPos = PlayerInput.MousePosition;
+                                sprite.SourceRect = new Rectangle(((w.DrawPos - textureRect.Location.ToVector2()) / scale).ToPoint(), sprite.SourceRect.Size);
+                            };
+                        });
+                        widget.Draw(spriteBatch, (float)deltaTime);
+                    }
                 }
             }
 
@@ -206,5 +253,20 @@ namespace Barotrauma
 
             spriteBatch.End();
         }
+
+        #region Widgets
+        private Dictionary<string, Widget> widgets = new Dictionary<string, Widget>();
+
+        private Widget GetWidget(string id, int size, Widget.Shape shape, Action<Widget> initMethod = null)
+        {
+            if (!widgets.TryGetValue(id, out Widget widget))
+            {
+                widget = new Widget(id, size, shape);
+                initMethod?.Invoke(widget);
+                widgets.Add(id, widget);
+            }
+            return widget;
+        }
+        #endregion
     }
 }

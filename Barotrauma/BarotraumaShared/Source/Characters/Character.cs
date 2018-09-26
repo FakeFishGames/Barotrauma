@@ -1100,7 +1100,8 @@ namespace Barotrauma
 #if CLIENT
             if (SelectedConstruction != null && SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null && HUD.CloseHUD(ic.GuiFrame.Rect))) 
             { 
-                //TODO: make sure the server knows we deselected the item
+                //emulate a Select input to get the character to deselect the item server-side
+                keys[(int)InputType.Select].Hit = true;
                 SelectedConstruction = null;
             }
 #endif
