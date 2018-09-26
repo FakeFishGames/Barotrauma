@@ -92,6 +92,24 @@ namespace Barotrauma
             return q1;
         }
 
+        public static Color Add(this Color sourceColor, Color color)
+        {
+            return new Color(
+                sourceColor.R + color.R,
+                sourceColor.G + color.G,
+                sourceColor.B + color.B,
+                sourceColor.A + color.A);
+        }
+
+        public static Color Subtract(this Color sourceColor, Color color)
+        {
+            return new Color(
+                sourceColor.R - color.R,
+                sourceColor.G - color.G,
+                sourceColor.B - color.B,
+                sourceColor.A - color.A);
+        }
+
         public static string LimitString(string str, ScalableFont font, int maxWidth)
         {
             if (maxWidth <= 0 || string.IsNullOrWhiteSpace(str)) return "";
