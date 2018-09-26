@@ -47,7 +47,7 @@ namespace Barotrauma
                     RefreshLists();
                     textureList.Select(matchingSprite.Texture);
                     spriteList.Select(selectedSprite);
-                    texturePathText.Text = "Texture reloaded from " + matchingSprite.FilePath;
+                    texturePathText.Text = "Textures reloaded from " + matchingSprite.FilePath;
                     texturePathText.TextColor = Color.LightGreen;
                     return true;
                 }
@@ -128,8 +128,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            
-
+       
             RefreshLists();
         }
 
@@ -233,13 +232,13 @@ namespace Barotrauma
                     if (!string.IsNullOrEmpty(identifier))
                     {
                         int widgetSize = 10;
-                        Vector2 stringOffset = new Vector2(5, 14);
+                        //Vector2 stringOffset = new Vector2(5, 14);
                         var rect = sprite.SourceRect;
                         var topLeft = rect.Location.ToVector2();
                         var topRight = new Vector2(topLeft.X + rect.Width, topLeft.Y);
                         var bottomRight = new Vector2(topRight.X, topRight.Y + rect.Height);
                         //var bottomLeft = new Vector2(topLeft.X, bottomRight.Y);
-                        var widget = GetWidget($"{identifier} topleft", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
+                        var positionWidget = GetWidget($"{identifier}_position", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                         {
                             w.DrawPos = textureRect.Location.ToVector2() + topLeft * scale;
                             w.inputAreaMargin = new Point(widgetSize / 2);
@@ -250,7 +249,19 @@ namespace Barotrauma
                                 sprite.SourceRect = new Rectangle(((w.DrawPos - textureRect.Location.ToVector2()) / scale).ToPoint(), sprite.SourceRect.Size);
                             };
                         });
-                        widget.Draw(spriteBatch, (float)deltaTime);
+                        var sizeWidget = GetWidget($"{identifier}_size", widgetSize, Widget.Shape.Circle, initMethod: w =>
+                        {
+                            w.DrawPos = textureRect.Location.ToVector2() + bottomRight * scale;
+                            w.inputAreaMargin = new Point(widgetSize / 2);
+                            w.MouseDown += () => spriteList.Select(sprite);
+                            w.MouseHeld += () =>
+                            {
+                                w.DrawPos = PlayerInput.MousePosition;
+                                sprite.SourceRect = new Rectangle(sprite.SourceRect.Location, ((w.DrawPos - positionWidget.DrawPos) / scale).ToPoint());
+                            };
+                        });
+                        positionWidget.Draw(spriteBatch, (float)deltaTime);
+                        sizeWidget.Draw(spriteBatch, (float)deltaTime);
                     }
                 }
             }
