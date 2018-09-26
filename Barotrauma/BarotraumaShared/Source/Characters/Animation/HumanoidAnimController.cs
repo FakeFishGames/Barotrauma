@@ -544,7 +544,6 @@ namespace Barotrauma
             if (TargetMovement.X != 0.0f)
             {
                 //progress the walking animation
-                //walkPos -= (walkCycleSpeed / runningModifier) * 0.8f;
                 WalkPos -= MathHelper.ToRadians(CurrentGroundedParams.CycleSpeed) * walkCycleMultiplier * Math.Sign(movement.X);
 
                 for (int i = -1; i < 2; i += 2)
@@ -555,11 +554,11 @@ namespace Barotrauma
                     Vector2 footPos = stepSize * -i;
                     footPos += new Vector2(Math.Sign(movement.X) * CurrentGroundedParams.FootMoveOffset.X, CurrentGroundedParams.FootMoveOffset.Y);
 
-                    if (stepSize.Y < 0.0f) stepSize.Y = -0.15f;
+                    if (footPos.Y < 0.0f) footPos.Y = -0.15f;
 
                     //make the character limp if the feet are damaged
                     float footAfflictionStrength = character.CharacterHealth.GetAfflictionStrength("damage", foot, true);
-                    stepSize *= MathHelper.Lerp(1.0f, 0.5f, MathHelper.Clamp(footAfflictionStrength / 100.0f, 0.0f, 1.0f));
+                    footPos *= MathHelper.Lerp(1.0f, 0.5f, MathHelper.Clamp(footAfflictionStrength / 100.0f, 0.0f, 1.0f));
 
                     if (onSlope && Stairs == null)
                     {
