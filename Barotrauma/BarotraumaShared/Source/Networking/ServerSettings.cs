@@ -61,7 +61,7 @@ namespace Barotrauma.Networking
                 this.PermittedCommands = permittedCommands;
             }
         }
-        
+
         partial class NetPropertyData
         {
             SerializableProperty property;
@@ -75,6 +75,55 @@ namespace Barotrauma.Networking
             {
                 this.property = property;
                 this.typeString = typeString;
+            }
+
+
+            public void Write(NetBuffer msg)
+            {
+                switch (typeString)
+                {
+                    case "float":
+                        msg.WriteVariableUInt32(4);
+                        msg.Write((float)property.GetValue());
+                        break;
+                    case "vector2":
+                        msg.WriteVariableUInt32(8);
+                        msg.Write(((Vector2)property.GetValue()).X);
+                        msg.Write(((Vector2)property.GetValue()).Y);
+                        break;
+                    case "vector3":
+                        msg.WriteVariableUInt32(12);
+                        msg.Write(((Vector3)property.GetValue()).X);
+                        msg.Write(((Vector3)property.GetValue()).Y);
+                        msg.Write(((Vector3)property.GetValue()).Z);
+                        break;
+                    case "vector4":
+                        msg.WriteVariableUInt32(16);
+                        msg.Write(((Vector4)property.GetValue()).X);
+                        msg.Write(((Vector4)property.GetValue()).Y);
+                        msg.Write(((Vector4)property.GetValue()).Z);
+                        msg.Write(((Vector4)property.GetValue()).W);
+                        break;
+                    case "color":
+                        msg.WriteVariableUInt32(4);
+                        msg.Write(((Color)property.GetValue()).R);
+                        msg.Write(((Color)property.GetValue()).G);
+                        msg.Write(((Color)property.GetValue()).B);
+                        msg.Write(((Color)property.GetValue()).A);
+                        break;
+                    case "rectangle":
+                        msg.WriteVariableUInt32(16);
+                        msg.Write(((Rectangle)property.GetValue()).X);
+                        msg.Write(((Rectangle)property.GetValue()).Y);
+                        msg.Write(((Rectangle)property.GetValue()).Width);
+                        msg.Write(((Rectangle)property.GetValue()).Height);
+                        break;
+                    default:
+                        string strVal = property.GetValue().ToString();
+
+                        msg.Write(strVal);
+                        break;
+                }
             }
         };
 
@@ -468,6 +517,16 @@ namespace Barotrauma.Networking
             outMsg.Write((UInt16)maxPlayers);
             outMsg.Write(ServerName);
             outMsg.Write(ServerMessageText);
+        }
+
+        private void WriteNetProperties(NetBuffer outMsg)
+        {
+            outMsg.Write((UInt16)netProperties.Keys.Count);
+            foreach (UInt32 key in netProperties.Keys)
+            {
+                outMsg.Write(key);
+                netProperties[key].Write(outMsg);
+            }
         }
 
         private void SharedRead(NetBuffer incMsg)
