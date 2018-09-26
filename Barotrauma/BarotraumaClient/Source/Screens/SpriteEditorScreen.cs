@@ -14,6 +14,9 @@ namespace Barotrauma
         private GUIListBox textureList, spriteList;
 
         private GUIFrame topPanel;
+        private GUIFrame leftPanel;
+        private GUIFrame rightPanel;
+
         private GUIFrame topPanelContents;
         private GUITextBlock texturePathText;
         private GUITextBlock xmlPathText;
@@ -69,7 +72,7 @@ namespace Barotrauma
             texturePathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.BottomCenter), "", Color.LightGray);
             xmlPathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.TopCenter), "", Color.LightGray);
 
-            var leftPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f - topPanel.RectTransform.RelativeSize.Y), Frame.RectTransform, Anchor.BottomLeft)
+            leftPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f - topPanel.RectTransform.RelativeSize.Y), Frame.RectTransform, Anchor.BottomLeft)
                 { MinSize = new Point(150, 0) },
                 style: "GUIFrameLeft");
             var paddedLeftPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), leftPanel.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.02f, 0.0f) })
@@ -109,7 +112,7 @@ namespace Barotrauma
                 }
             };
             
-            var rightPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f - topPanel.RectTransform.RelativeSize.Y), Frame.RectTransform, Anchor.BottomRight)
+            rightPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f - topPanel.RectTransform.RelativeSize.Y), Frame.RectTransform, Anchor.BottomRight)
                 { MinSize = new Point(150, 0) },
                 style: "GUIFrameRight");
             var paddedRightPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), rightPanel.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.02f, 0.0f) })
@@ -189,7 +192,8 @@ namespace Barotrauma
             graphics.Clear(new Color(0.051f, 0.149f, 0.271f, 1.0f));
             spriteBatch.Begin(SpriteSortMode.Immediate, rasterizerState: GameMain.ScissorTestEnable);
 
-            Rectangle viewArea = new Rectangle(textureList.Rect.Right + 50, 50, spriteList.Rect.X - textureList.Rect.Right - 80, Frame.Rect.Height - topPanel.Rect.Height);
+            int margin = 20;
+            Rectangle viewArea = new Rectangle(leftPanel.Rect.Right + margin, topPanel.Rect.Bottom + margin, rightPanel.Rect.Left - leftPanel.Rect.Right - margin * 2, Frame.Rect.Height - topPanel.Rect.Height - margin * 2);
             Rectangle textureRect = Rectangle.Empty;
 
             if (textureList.SelectedData is Texture2D texture)
@@ -198,8 +202,8 @@ namespace Barotrauma
                 float scale = Math.Min(viewArea.Width / (float)texture.Width, viewArea.Height / (float)texture.Height);
 
                 textureRect = new Rectangle(
-                    (int)(viewArea.Center.X - texture.Bounds.Width / 2 * scale),
-                    (int)(viewArea.Center.Y - texture.Bounds.Height / 2 * scale),
+                    (int)(viewArea.Center.X - texture.Bounds.Width / 2f * scale),
+                    (int)(viewArea.Center.Y - texture.Bounds.Height / 2f * scale),
                     (int)(texture.Bounds.Width * scale),
                     (int)(texture.Bounds.Height * scale));
 
@@ -213,7 +217,8 @@ namespace Barotrauma
                     effects: SpriteEffects.None, 
                     layerDepth: 0);
 
-                GUI.DrawRectangle(spriteBatch,textureRect, Color.White, isFilled: false);
+                //GUI.DrawRectangle(spriteBatch, viewArea, Color.Green, isFilled: false);
+                GUI.DrawRectangle(spriteBatch, textureRect, Color.Yellow, isFilled: false);
 
                 foreach (Sprite sprite in Sprite.LoadedSprites)
                 {
@@ -226,12 +231,13 @@ namespace Barotrauma
                         (int)(sprite.SourceRect.Height * scale));
 
                     GUI.DrawRectangle(spriteBatch, sourceRect,
-                        spriteList.SelectedData == sprite ? Color.Red : Color.White * 0.5f);
+                        selectedSprite == sprite ? Color.Red : Color.White * 0.5f);
 
                     string identifier = GetIdentifier(sprite);
                     if (!string.IsNullOrEmpty(identifier))
                     {
                         int widgetSize = 10;
+                        Vector2 halfSize = new Vector2(widgetSize) / 2;
                         //Vector2 stringOffset = new Vector2(5, 14);
                         var rect = sprite.SourceRect;
                         var topLeft = rect.Location.ToVector2();
@@ -240,25 +246,33 @@ namespace Barotrauma
                         //var bottomLeft = new Vector2(topLeft.X, bottomRight.Y);
                         var positionWidget = GetWidget($"{identifier}_position", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                         {
-                            w.DrawPos = textureRect.Location.ToVector2() + topLeft * scale;
+                            w.DrawPos = textureRect.Location.ToVector2() + topLeft * scale - halfSize;
                             w.inputAreaMargin = new Point(widgetSize / 2);
                             w.MouseDown += () => spriteList.Select(sprite);
                             w.MouseHeld += () =>
                             {
                                 w.DrawPos = PlayerInput.MousePosition;
-                                sprite.SourceRect = new Rectangle(((w.DrawPos - textureRect.Location.ToVector2()) / scale).ToPoint(), sprite.SourceRect.Size);
-                                GetWidget($"{identifier}_size").DrawPos = w.DrawPos + sprite.SourceRect.Size.ToVector2() * scale;
+                                sprite.SourceRect = new Rectangle(((w.DrawPos + halfSize - textureRect.Location.ToVector2()) / scale).ToPoint(), sprite.SourceRect.Size);
+                                GetWidget($"{identifier}_size").DrawPos = w.DrawPos + halfSize + sprite.SourceRect.Size.ToVector2() * scale;
+                            };
+                            w.PostUpdate += dTime =>
+                            {
+                                w.color = selectedSprite == sprite ? Color.Red : Color.White;
                             };
                         });
-                        var sizeWidget = GetWidget($"{identifier}_size", widgetSize, Widget.Shape.Circle, initMethod: w =>
+                        var sizeWidget = GetWidget($"{identifier}_size", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                         {
-                            w.DrawPos = textureRect.Location.ToVector2() + bottomRight * scale;
+                            w.DrawPos = textureRect.Location.ToVector2() + bottomRight * scale + halfSize;
                             w.inputAreaMargin = new Point(widgetSize / 2);
                             w.MouseDown += () => spriteList.Select(sprite);
                             w.MouseHeld += () =>
                             {
                                 w.DrawPos = PlayerInput.MousePosition;
-                                sprite.SourceRect = new Rectangle(sprite.SourceRect.Location, ((w.DrawPos - positionWidget.DrawPos) / scale).ToPoint());
+                                sprite.SourceRect = new Rectangle(sprite.SourceRect.Location, ((w.DrawPos - halfSize - positionWidget.DrawPos) / scale).ToPoint());
+                            };
+                            w.PostUpdate += dTime =>
+                            {
+                                w.color = selectedSprite == sprite ? Color.Red : Color.White;
                             };
                         });
                         positionWidget.Draw(spriteBatch, (float)deltaTime);
