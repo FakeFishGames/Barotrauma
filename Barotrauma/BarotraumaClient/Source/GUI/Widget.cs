@@ -14,7 +14,7 @@ namespace Barotrauma
 
         public Shape shape;
         public string tooltip;
-        public Rectangle DrawRect => new Rectangle((int)DrawPos.X - size / 2, (int)DrawPos.Y - size / 2, size, size);
+        public Rectangle DrawRect => new Rectangle((int)(DrawPos.X - (float)size / 2), (int)(DrawPos.Y - (float)size / 2), size, size);
         public Rectangle InputRect
         {
             get
@@ -46,6 +46,8 @@ namespace Barotrauma
         public event Action MouseDown;
         public event Action MouseUp;
         public event Action MouseHeld;
+        public event Action<float> PreUpdate;
+        public event Action<float> PostUpdate;
         public event Action<SpriteBatch, float> PreDraw;
         public event Action<SpriteBatch, float> PostDraw;
 
@@ -69,6 +71,7 @@ namespace Barotrauma
 
         public virtual void Update(float deltaTime)
         {
+            PreUpdate?.Invoke(deltaTime);
             if (IsMouseOver)
             {
                 if (selectedWidget == null)
@@ -100,6 +103,7 @@ namespace Barotrauma
                     Clicked?.Invoke();
                 }
             }
+            PostUpdate?.Invoke(deltaTime);
         }
 
         public virtual void Draw(SpriteBatch spriteBatch, float deltaTime)
