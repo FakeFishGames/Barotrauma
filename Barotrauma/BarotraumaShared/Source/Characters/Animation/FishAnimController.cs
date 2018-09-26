@@ -384,7 +384,6 @@ namespace Barotrauma
                 }
             }
 
-
             for (int i = 0; i < Limbs.Length; i++)
             {
                 if (Limbs[i].SteerForce <= 0.0f) continue;
@@ -407,7 +406,7 @@ namespace Barotrauma
             Limb torso = GetLimb(LimbType.Torso);
             if (torso != null)
             {
-                if (TorsoAngle.HasValue) torso.body.SmoothRotate(TorsoAngle.Value * Dir, 50.0f);
+                if (TorsoAngle.HasValue) torso.body.SmoothRotate(TorsoAngle.Value * Dir, CurrentGroundedParams.TorsoTorque);
                 if (TorsoPosition.HasValue)
                 {
                     Vector2 pos = GetColliderBottom() + Vector2.UnitY * TorsoPosition.Value;
@@ -417,7 +416,7 @@ namespace Barotrauma
                     else
                         mainLimbHeight = TorsoPosition.Value;
 
-                    torso.MoveToPos(pos, 10.0f);
+                    torso.MoveToPos(pos, CurrentGroundedParams.TorsoMoveForce);
                     torso.PullJointEnabled = true;
                     torso.PullJointWorldAnchorB = pos;
                 }
@@ -426,7 +425,7 @@ namespace Barotrauma
             Limb head = GetLimb(LimbType.Head);
             if (head != null)
             {
-                if (HeadAngle.HasValue) head.body.SmoothRotate(HeadAngle.Value * Dir, 50.0f);
+                if (HeadAngle.HasValue) head.body.SmoothRotate(HeadAngle.Value * Dir, CurrentGroundedParams.HeadTorque);
                 if (HeadPosition.HasValue)
                 {
                     Vector2 pos = GetColliderBottom() + Vector2.UnitY * HeadPosition.Value;
@@ -436,7 +435,7 @@ namespace Barotrauma
                     else
                         mainLimbHeight = HeadPosition.Value;
 
-                    head.MoveToPos(pos, 10.0f);
+                    head.MoveToPos(pos, CurrentGroundedParams.HeadMoveForce);
                     head.PullJointEnabled = true;
                     head.PullJointWorldAnchorB = pos;
                 }
@@ -446,7 +445,7 @@ namespace Barotrauma
                 movement.X,
                 Collider.LinearVelocity.Y > 0.0f ? Collider.LinearVelocity.Y * 0.5f : Collider.LinearVelocity.Y);
             
-            WalkPos -= MainLimb.LinearVelocity.X * 0.05f;
+            WalkPos -= MainLimb.LinearVelocity.X * (CurrentGroundedParams.FootMoveForce / 100.0f);
 
             Vector2 transformedStepSize = new Vector2(
                 (float)Math.Cos(WalkPos) * CurrentGroundedParams.StepSize.X * RagdollParams.JointScale * 3.0f,
@@ -470,17 +469,17 @@ namespace Barotrauma
 
                         if (limb.type == LimbType.LeftFoot)
                         {
-                            limb.MoveToPos(footPos +new Vector2(
+                            limb.MoveToPos(footPos + new Vector2(
                                 transformedStepSize.X + movement.X * 0.1f,
                                 (transformedStepSize.Y > 0.0f) ? transformedStepSize.Y : 0.0f),
-                            8.0f);
+                            CurrentGroundedParams.FootMoveForce);
                         }
                         else if (limb.type == LimbType.RightFoot)
                         {
                             limb.MoveToPos(footPos + new Vector2(
                                 -transformedStepSize.X + movement.X * 0.1f,
                                 (-transformedStepSize.Y > 0.0f) ? -transformedStepSize.Y : 0.0f),
-                            8.0f);
+                            CurrentGroundedParams.FootMoveForce);
                         }
 
                         if (MathUtils.IsValid(CurrentGroundedParams.FootAngleInRadians)) limb.body.SmoothRotate(CurrentGroundedParams.FootAngleInRadians * Dir, 50.0f);
@@ -488,7 +487,7 @@ namespace Barotrauma
                         break;
                     case LimbType.LeftLeg:
                     case LimbType.RightLeg:
-                        if (CurrentGroundedParams.LegTorque != 0.0f) limb.body.ApplyTorque(limb.Mass * CurrentGroundedParams.LegTorque * Dir);
+                        if (Math.Abs(CurrentGroundedParams.LegTorque) > 0.001f) limb.body.ApplyTorque(limb.Mass * CurrentGroundedParams.LegTorque * Dir);
                         break;
                 }
             }

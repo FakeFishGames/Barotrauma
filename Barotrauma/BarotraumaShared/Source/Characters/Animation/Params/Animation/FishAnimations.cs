@@ -66,6 +66,24 @@ namespace Barotrauma
         [Serialize(0.0f, true), Editable]
         public float LegTorque { get; set; }
 
+        [Serialize(8.0f, true), Editable(ToolTip = "How much force is used to move the feet to the correct position.")]
+        public float FootMoveForce { get; set; }
+        
+        [Serialize(5.0f, true), Editable(ToolTip = "The speed of the \"walk cycle\", i.e. how fast the character takes steps.")]
+        public float CycleSpeed { get; set; }
+
+        [Serialize(10.0f, true), Editable(ToolTip = "How much force is used to move the torso to the correct position.")]
+        public float TorsoMoveForce { get; set; }
+
+        [Serialize(50.0f, true), Editable(ToolTip = "How much torque is used to rotate the torso to the correct orientation.")]
+        public float TorsoTorque { get; set; }
+
+        [Serialize(10.0f, true), Editable(ToolTip = "How much force is used to move the head to the correct position.")]
+        public float HeadMoveForce { get; set; }
+
+        [Serialize(50.0f, true), Editable(ToolTip = "How much torque is used to rotate the head to the correct orientation.")]
+        public float HeadTorque { get; set; }
+
         /// <summary>
         /// The angle of the collider when standing (i.e. out of water).
         /// In degrees.
