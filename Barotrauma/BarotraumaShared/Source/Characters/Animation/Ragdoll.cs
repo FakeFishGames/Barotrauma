@@ -1208,7 +1208,7 @@ namespace Barotrauma
                         case Physics.CollisionStairs:
                             Structure structure = fixture.Body.UserData as Structure;
                             if (inWater && targetMovement.Y < 0.5f) return -1;
-                            if (colliderBottomDisplay.Y < structure.Rect.Y - structure.Rect.Height + 30 && TargetMovement.Y < 0.5f) return -1;
+                            if (colliderBottomDisplay.Y < structure.Rect.Y - structure.Rect.Height + 30 && TargetMovement.Y < 0.5f && !onStairs) return -1;
                             if (character.SelectedBy != null) return -1;
                             break;
                         case Physics.CollisionPlatform:

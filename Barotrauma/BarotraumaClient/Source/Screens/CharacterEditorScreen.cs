@@ -1326,7 +1326,7 @@ namespace Barotrauma
             // Human grounded only -->
             if (humanGroundedParams != null)
             {
-                if (legs != null || foot != null)
+                /*if (legs != null || foot != null)
                 {
                     drawPos = SimToScreen(colliderBottom + simSpaceForward * 0.3f);
                     float multiplier = 10;
@@ -1335,7 +1335,7 @@ namespace Barotrauma
                         TryUpdateAnimParam("legcorrectiontorque", angle / multiplier);
                         GUI.DrawString(spriteBatch, drawPos, humanGroundedParams.LegCorrectionTorque.FormatSingleDecimal(), Color.Black, Color.LightBlue, font: GUI.SmallFont);
                     }, circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0, displayAngle: false);
-                }
+                }*/
                 if (hand != null || arm != null)
                 {
                     referencePoint = SimToScreen(collider.SimPosition + simSpaceForward * 0.2f);
