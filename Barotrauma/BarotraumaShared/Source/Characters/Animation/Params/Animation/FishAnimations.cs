@@ -60,10 +60,10 @@ namespace Barotrauma
             return true;
         }
 
-        [Serialize(true, true), Editable]
+        [Serialize(true, true), Editable(ToolTip = "Should the character be flipped depending on which direction it faces. Should usually be enabled on all characters that have distinctive upper and lower sides.")]
         public bool Flip { get; set; }
 
-        [Serialize(0.0f, true), Editable]
+        [Serialize(0.0f, true), Editable(ToolTip = "Optional torque that's constantly applied to legs.")]
         public float LegTorque { get; set; }
 
         [Serialize(8.0f, true), Editable(ToolTip = "How much force is used to move the feet to the correct position.")]
@@ -88,7 +88,7 @@ namespace Barotrauma
         /// The angle of the collider when standing (i.e. out of water).
         /// In degrees.
         /// </summary>
-        [Serialize(0f, true), Editable]
+        [Serialize(0f, true), Editable(ToolTip = "The angle of the character's collider when standing.")]
         public float ColliderStandAngle
         {
             get => MathHelper.ToDegrees(ColliderStandAngleInRadians);
@@ -116,10 +116,10 @@ namespace Barotrauma
 
     abstract class FishSwimParams : SwimParams, IFishAnimation
     {
-        [Serialize(true, true), Editable]
+        [Serialize(true, true), Editable(ToolTip = "Should the character be flipped depending on which direction it faces. Should usually be enabled on all characters that have distinctive upper and lower sides.")]
         public bool Flip { get; set; }
 
-        [Serialize(false, true), Editable]
+        [Serialize(false, true), Editable(ToolTip = "If enabled, the character will simply be mirrored horizontally when it wants to turn around. If disabled, it will rotate itself to face the other direction.")]
         public bool Mirror { get; set; }
 
         [Serialize(1f, true), Editable]
@@ -128,7 +128,7 @@ namespace Barotrauma
         [Serialize(1f, true), Editable]
         public float WaveLength { get; set; }
 
-        [Serialize(true, true), Editable]
+        [Serialize(true, true), Editable(ToolTip = "Should the character face towards the direction it's heading.")]
         public bool RotateTowardsMovement { get; set; }
 
         [Serialize(25.0f, true), Editable(ToolTip = "How much torque is used to rotate the torso to the correct orientation.")]
