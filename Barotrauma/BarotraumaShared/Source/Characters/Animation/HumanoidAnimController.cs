@@ -395,17 +395,21 @@ namespace Barotrauma
             Limb rightLeg = GetLimb(LimbType.RightLeg);
             
             float getUpForce = CurrentGroundedParams.GetUpForce;
-            //float walkCycleSpeed = movement.X * walkAnimSpeed;
+            float walkCycleMultiplier = 1.0f;
             if (Stairs != null)
             {
-                TargetMovement = new Vector2(MathHelper.Clamp(TargetMovement.X, -1.5f, 1.5f), TargetMovement.Y);
+                //TODO: allow editing these values in character editor?
+                bool running = Math.Abs(targetMovement.X) > 2.0f;
+                TargetMovement = new Vector2(MathHelper.Clamp(TargetMovement.X, -1.7f, 1.7f), TargetMovement.Y);
 
-                /*if ((TargetMovement.X > 0.0f && stairs.StairDirection == Direction.Right) ||
-                    TargetMovement.X < 0.0f && stairs.StairDirection == Direction.Left)
+                if (running)
                 {
                     TargetMovement *= 1.7f;
-                    //walkCycleSpeed *= 1.0f;
-                }*/
+                }
+                else
+                {
+                    walkCycleMultiplier *= 1.5f;
+                }
             }
 
             Vector2 colliderPos = GetColliderBottom();
@@ -494,7 +498,7 @@ namespace Barotrauma
                     MathHelper.SmoothStep(head.SimPosition.X, footMid + movement.X * CurrentGroundedParams.HeadLeanAmount, getUpForce * 0.8f),
                     MathHelper.SmoothStep(head.SimPosition.Y, colliderPos.Y + HeadPosition.Value - Math.Abs(walkPosX * 0.05f), getUpForce * 2.0f));
 
-                waist.PullJointWorldAnchorB = waist.SimPosition;
+                waist.PullJointWorldAnchorB = waist.SimPosition - movement * 0.06f;
             }
             else
             {
@@ -541,7 +545,7 @@ namespace Barotrauma
             {
                 //progress the walking animation
                 //walkPos -= (walkCycleSpeed / runningModifier) * 0.8f;
-                WalkPos -= MathHelper.ToRadians(CurrentGroundedParams.CycleSpeed) * Math.Sign(movement.X);
+                WalkPos -= MathHelper.ToRadians(CurrentGroundedParams.CycleSpeed) * walkCycleMultiplier * Math.Sign(movement.X);
 
                 for (int i = -1; i < 2; i += 2)
                 {
