@@ -394,18 +394,22 @@ namespace Barotrauma
             Limb leftLeg = GetLimb(LimbType.LeftLeg);
             Limb rightLeg = GetLimb(LimbType.RightLeg);
             
-            float getUpSpeed = CurrentGroundedParams.GetUpSpeed;
-            //float walkCycleSpeed = movement.X * walkAnimSpeed;
+            float getUpForce = CurrentGroundedParams.GetUpForce;
+            float walkCycleMultiplier = 1.0f;
             if (Stairs != null)
             {
-                TargetMovement = new Vector2(MathHelper.Clamp(TargetMovement.X, -1.5f, 1.5f), TargetMovement.Y);
+                //TODO: allow editing these values in character editor?
+                bool running = Math.Abs(targetMovement.X) > 2.0f;
+                TargetMovement = new Vector2(MathHelper.Clamp(TargetMovement.X, -1.7f, 1.7f), TargetMovement.Y);
 
-                /*if ((TargetMovement.X > 0.0f && stairs.StairDirection == Direction.Right) ||
-                    TargetMovement.X < 0.0f && stairs.StairDirection == Direction.Left)
+                if (running)
                 {
                     TargetMovement *= 1.7f;
-                    //walkCycleSpeed *= 1.0f;
-                }*/
+                }
+                else
+                {
+                    walkCycleMultiplier *= 1.5f;
+                }
             }
 
             Vector2 colliderPos = GetColliderBottom();
@@ -459,9 +463,9 @@ namespace Barotrauma
                 }
                 else
                 {
-                    leg.body.ApplyTorque(shortestAngle * CurrentGroundedParams.LegCorrectionTorque);
+                    leg.body.ApplyTorque(shortestAngle * CurrentGroundedParams.LegBendTorque);
                     leg = GetLimb((i == 0) ? LimbType.LeftLeg : LimbType.RightLeg);
-                    leg.body.ApplyTorque(-shortestAngle * CurrentGroundedParams.LegCorrectionTorque);
+                    leg.body.ApplyTorque(-shortestAngle * CurrentGroundedParams.LegBendTorque);
                 }
             }
 
@@ -475,7 +479,7 @@ namespace Barotrauma
                         Collider.LinearVelocity.Y > 0.0f ? Collider.LinearVelocity.Y * 0.5f : Collider.LinearVelocity.Y);
             }
 
-            getUpSpeed = getUpSpeed * Math.Max(head.SimPosition.Y - colliderPos.Y, 0.5f);
+            getUpForce = getUpForce * Math.Max(head.SimPosition.Y - colliderPos.Y, 0.5f);
 
             torso.PullJointEnabled = true;
             head.PullJointEnabled = true;
@@ -487,14 +491,14 @@ namespace Barotrauma
             if (Stairs != null || onSlope)
             {
                 torso.PullJointWorldAnchorB = new Vector2(
-                    MathHelper.SmoothStep(torso.SimPosition.X, footMid + movement.X * CurrentGroundedParams.TorsoLeanAmount, getUpSpeed * 0.8f),
-                    MathHelper.SmoothStep(torso.SimPosition.Y, colliderPos.Y + TorsoPosition.Value - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
+                    MathHelper.SmoothStep(torso.SimPosition.X, footMid + movement.X * CurrentGroundedParams.TorsoLeanAmount, getUpForce * 0.8f),
+                    MathHelper.SmoothStep(torso.SimPosition.Y, colliderPos.Y + TorsoPosition.Value - Math.Abs(walkPosX * 0.05f), getUpForce * 2.0f));
 
                 head.PullJointWorldAnchorB = new Vector2(
-                    MathHelper.SmoothStep(head.SimPosition.X, footMid + movement.X * CurrentGroundedParams.HeadLeanAmount, getUpSpeed * 0.8f),
-                    MathHelper.SmoothStep(head.SimPosition.Y, colliderPos.Y + HeadPosition.Value - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
+                    MathHelper.SmoothStep(head.SimPosition.X, footMid + movement.X * CurrentGroundedParams.HeadLeanAmount, getUpForce * 0.8f),
+                    MathHelper.SmoothStep(head.SimPosition.Y, colliderPos.Y + HeadPosition.Value - Math.Abs(walkPosX * 0.05f), getUpForce * 2.0f));
 
-                waist.PullJointWorldAnchorB = waist.SimPosition;
+                waist.PullJointWorldAnchorB = waist.SimPosition - movement * 0.06f;
             }
             else
             {
@@ -507,7 +511,7 @@ namespace Barotrauma
                 }
                 torso.PullJointWorldAnchorB =
                     MathUtils.SmoothStep(torso.SimPosition,
-                    new Vector2(footMid + movement.X * CurrentGroundedParams.TorsoLeanAmount, y), getUpSpeed);
+                    new Vector2(footMid + movement.X * CurrentGroundedParams.TorsoLeanAmount, y), getUpForce);
 
                 y = colliderPos.Y;
                 if (HeadPosition.HasValue)
@@ -516,7 +520,7 @@ namespace Barotrauma
                 }
                 head.PullJointWorldAnchorB =
                     MathUtils.SmoothStep(head.SimPosition,
-                    new Vector2(footMid + movement.X * CurrentGroundedParams.HeadLeanAmount, y), getUpSpeed * 1.2f);
+                    new Vector2(footMid + movement.X * CurrentGroundedParams.HeadLeanAmount, y), getUpForce * 1.2f);
 
                 waist.PullJointWorldAnchorB = waist.SimPosition + movement * 0.06f;
             }
@@ -541,7 +545,7 @@ namespace Barotrauma
             {
                 //progress the walking animation
                 //walkPos -= (walkCycleSpeed / runningModifier) * 0.8f;
-                WalkPos -= MathHelper.ToRadians(CurrentGroundedParams.CycleSpeed) * Math.Sign(movement.X);
+                WalkPos -= MathHelper.ToRadians(CurrentGroundedParams.CycleSpeed) * walkCycleMultiplier * Math.Sign(movement.X);
 
                 for (int i = -1; i < 2; i += 2)
                 {
@@ -570,15 +574,15 @@ namespace Barotrauma
                     }
                 }
 
-                if (CurrentGroundedParams.LegCorrectionTorque > 0.0f)
+                if (CurrentGroundedParams.LegBendTorque > 0.0f)
                 {
                     if (Math.Sign(walkPosX) != Math.Sign(movement.X))
                     {
-                        GetLimb(LimbType.LeftLeg).body.ApplyTorque(-walkPosY * Dir * Math.Abs(movement.X) * CurrentGroundedParams.LegCorrectionTorque);
+                        GetLimb(LimbType.LeftLeg).body.ApplyTorque(-walkPosY * Dir * Math.Abs(movement.X) * CurrentGroundedParams.LegBendTorque);
                     }
                     else
                     {
-                        GetLimb(LimbType.RightLeg).body.ApplyTorque(walkPosY * Dir * Math.Abs(movement.X) * CurrentGroundedParams.LegCorrectionTorque);
+                        GetLimb(LimbType.RightLeg).body.ApplyTorque(walkPosY * Dir * Math.Abs(movement.X) * CurrentGroundedParams.LegBendTorque);
                     }
                 }
 
