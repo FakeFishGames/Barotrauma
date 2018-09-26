@@ -247,6 +247,7 @@ namespace Barotrauma
                             {
                                 w.DrawPos = PlayerInput.MousePosition;
                                 sprite.SourceRect = new Rectangle(((w.DrawPos - textureRect.Location.ToVector2()) / scale).ToPoint(), sprite.SourceRect.Size);
+                                GetWidget($"{identifier}_size").DrawPos = w.DrawPos + sprite.SourceRect.Size.ToVector2() * scale;
                             };
                         });
                         var sizeWidget = GetWidget($"{identifier}_size", widgetSize, Widget.Shape.Circle, initMethod: w =>
@@ -274,7 +275,7 @@ namespace Barotrauma
         #region Widgets
         private Dictionary<string, Widget> widgets = new Dictionary<string, Widget>();
 
-        private Widget GetWidget(string id, int size, Widget.Shape shape, Action<Widget> initMethod = null)
+        private Widget GetWidget(string id, int size = 5, Widget.Shape shape = Widget.Shape.Rectangle, Action<Widget> initMethod = null)
         {
             if (!widgets.TryGetValue(id, out Widget widget))
             {
