@@ -612,7 +612,7 @@ namespace Barotrauma
             }
 
             Structure wall = closestBody.UserData as Structure;
-            if (wall == null)
+            if (wall?.Submarine == null)
             {
                 return;
                 /*if (selectedAiTarget.Entity.Submarine != null)
