@@ -18,6 +18,7 @@ namespace Barotrauma
         private GUITextBlock texturePathText;
         private GUITextBlock xmlPathText;
         private XElement element;
+        private Sprite selectedSprite;
 
         private Camera cam;
         public override Camera Cam
@@ -32,7 +33,7 @@ namespace Barotrauma
             topPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.08f), Frame.RectTransform) { MinSize = new Point(0, 35) }, "GUIFrameTop");
             topPanelContents = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.8f), topPanel.RectTransform, Anchor.Center), style: null);
 
-            new GUIButton(new RectTransform(new Vector2(0.1f, 0.4f), topPanelContents.RectTransform), "Reload")
+            new GUIButton(new RectTransform(new Vector2(0.1f, 0.4f), topPanelContents.RectTransform), "Reload Texture")
             {
                 OnClicked = (button, userData) =>
                 {
@@ -51,13 +52,14 @@ namespace Barotrauma
                     return true;
                 }
             };
-            new GUIButton(new RectTransform(new Vector2(0.1f, 0.4f), topPanelContents.RectTransform) { RelativeOffset = new Vector2(0, 0.5f) }, "Save")
+            new GUIButton(new RectTransform(new Vector2(0.1f, 0.4f), topPanelContents.RectTransform) { RelativeOffset = new Vector2(0, 0.5f) }, "Save Source Rect")
             {
                 OnClicked = (button, userData) =>
                 {
                     if (element == null) { return false; }
-                    var doc = element.Document;
-                    doc.Save(xmlPathText.Text);
+                    if (selectedSprite == null) { return false; }
+                    element.SetAttributeValue("sourcerect", XMLExtensions.RectToString(selectedSprite.SourceRect));
+                    element.Document.Save(xmlPathText.Text);
                     xmlPathText.Text = "Changes saved to " + xmlPathText.Text;
                     xmlPathText.TextColor = Color.LightGreen;
                     return true;
@@ -83,10 +85,13 @@ namespace Barotrauma
                         var textBlock = (GUITextBlock)child;
                         textBlock.TextColor = new Color(textBlock.TextColor, ((Sprite)textBlock.UserData).Texture == userData ? 1.0f : 0.4f);
                     }
-                    Sprite matchingSprite = Sprite.LoadedSprites.First(s => s.Texture == userData);
-                    texturePathText.Text = matchingSprite.FilePath;
+                    if (selectedSprite == null || selectedSprite.Texture != userData)
+                    {
+                        selectedSprite = Sprite.LoadedSprites.First(s => s.Texture == userData);
+                    }
+                    texturePathText.Text = selectedSprite.FilePath;
                     texturePathText.TextColor = Color.LightGray;
-                    element = matchingSprite.SourceElement;
+                    element = selectedSprite.SourceElement;
                     if (element == null)
                     {
                         xmlPathText.Text = string.Empty;
@@ -118,6 +123,7 @@ namespace Barotrauma
                 {
                     Sprite sprite = userData as Sprite;
                     if (sprite == null) return false;
+                    selectedSprite = sprite;
                     textureList.Select(sprite.Texture);
                     return true;
                 }
