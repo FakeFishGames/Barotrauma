@@ -268,7 +268,7 @@ namespace Barotrauma.Lights
             
             //draw characters to obstruct the highlighted items/characters and light sprites
             //---------------------------------------------------------------------------------------------------
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, transformMatrix: spriteBatchTransform);
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: spriteBatchTransform);
             foreach (Character character in Character.CharacterList)
             {
                 if (character.CurrentHull == null || !character.Enabled) continue;
@@ -282,6 +282,10 @@ namespace Barotrauma.Lights
 
                 foreach (Limb limb in character.AnimController.Limbs)
                 {
+                    //TODO: draw the limb using one solid color? 
+                    //Drawing a tinted version of the sprite makes it visible on the lightmap, 
+                    //making it possible to vaguely see the character through sprites in front of it 
+                    //(which is not necessarily a bad thing though)
                     limb.Draw(spriteBatch, cam, color);
                 }
             }
