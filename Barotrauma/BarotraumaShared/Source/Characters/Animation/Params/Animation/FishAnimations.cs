@@ -131,6 +131,18 @@ namespace Barotrauma
         [Serialize(true, true), Editable]
         public bool RotateTowardsMovement { get; set; }
 
+        [Serialize(25.0f, true), Editable(ToolTip = "How much torque is used to rotate the torso to the correct orientation.")]
+        public float TorsoTorque { get; set; }
+        
+        [Serialize(25.0f, true), Editable(ToolTip = "How much torque is used to rotate the head to the correct orientation.")]
+        public float HeadTorque { get; set; }
+
+        [Serialize(25.0f, true), Editable(ToolTip = "How much torque is used to rotate the feet to the correct orientation.")]
+        public float FootTorque { get; set; }
+
+        [Serialize(50.0f, true), Editable(ToolTip = "How much torque is used to rotate the tail to the correct orientation.")]
+        public float TailTorque { get; set; }
+
         /// <summary>
         /// In degrees.
         /// </summary>
