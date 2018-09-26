@@ -58,49 +58,49 @@ namespace Barotrauma
 
     abstract class HumanGroundedParams : GroundedMovementParams
     {
-        [Serialize(0.3f, true), Editable]
-        public float GetUpSpeed { get; set; }
+        [Serialize(0.3f, true), Editable(ToolTip = "How much force is used to force the character upright.")]
+        public float GetUpForce { get; set; }
         
-        [Serialize(0.65f, true), Editable]
+        [Serialize(0.65f, true), Editable(ToolTip = "Height of the torso when crouching.")]
         public float CrouchingTorsoPos { get; set; }
 
         /// <summary>
         /// In degrees
         /// </summary>
-        [Serialize(-10f, true), Editable]
+        [Serialize(-10f, true), Editable(ToolTip = "Angle of the torso when crouching.")]
         public float CrouchingTorsoAngle { get; set; }
 
-        [Serialize(0.25f, true), Editable]
+        [Serialize(0.25f, true), Editable(ToolTip = "How much the character's head leans forwards when moving.")]
         public float HeadLeanAmount { get; set; }
 
-        [Serialize(0.25f, true), Editable]
+        [Serialize(0.25f, true), Editable(ToolTip = "How much the character's torso leans forwards when moving.")]
         public float TorsoLeanAmount { get; set; }
 
-        [Serialize(5.0f, true), Editable]
+        [Serialize(5.0f, true), Editable(ToolTip = "The speed of the \"walk cycle\", i.e. how fast the character takes steps.")]
         public float CycleSpeed { get; set; }
 
-        [Serialize(15.0f, true), Editable]
+        [Serialize(15.0f, true), Editable(ToolTip = "How much force is used to move the feet to the correct position.")]
         public float FootMoveStrength { get; set; }
 
-        [Serialize(20.0f, true), Editable]
+        [Serialize(20.0f, true), Editable(ToolTip = "How much torque is used to rotate the feet to the correct orientation.")]
         public float FootRotateStrength { get; set; }
 
-        [Serialize("0.0, 0.0", true), Editable]
+        [Serialize("0.0, 0.0", true), Editable(ToolTip = "Added to the calculated foot positions, e.g. a value of {-1.0, 0.0f} would make the character \"drag\" their feet one unit behind them.")]
         public Vector2 FootMoveOffset { get; set; }
 
-        [Serialize(10.0f, true), Editable]
-        public float LegCorrectionTorque { get; set; }
+        [Serialize(10.0f, true), Editable(ToolTip = "How much torque is used to bend the characters legs when taking a step.")]
+        public float LegBendTorque { get; set; }
 
-        [Serialize("0.4, 0.15", true), Editable]
+        [Serialize("0.4, 0.15", true), Editable(ToolTip = "How much the hands move along each axis.")]
         public Vector2 HandMoveAmount { get; set; }
 
-        [Serialize("-0.15, 0.0", true), Editable]
+        [Serialize("-0.15, 0.0", true), Editable(ToolTip = "Added to the calculated hand positions, e.g. a value of {-1.0, 0.0f} would make the character \"drag\" their hands one unit behind them.")]
         public Vector2 HandMoveOffset { get; set; }
 
-        [Serialize(0.7f, true), Editable]
+        [Serialize(0.7f, true), Editable(ToolTip = "How much force is used to move the hands.")]
         public float HandMoveStrength { get; set; }
 
-        [Serialize(-1.0f, true), Editable]
+        [Serialize(-1.0f, true), Editable(ToolTip = "The position of the hands is clamped below this (relative to the position of the character's torso).")]
         public float HandClampY { get; set; }
     }
 }
