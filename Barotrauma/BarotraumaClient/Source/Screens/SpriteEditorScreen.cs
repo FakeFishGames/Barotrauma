@@ -199,17 +199,20 @@ namespace Barotrauma
                 widgets.ElementAt(i).Value.Update((float)deltaTime);
             }
             // Select rects with the mouse
-            if (textureList.SelectedData is Texture2D texture)
+            if (Widget.selectedWidget == null)
             {
-                foreach (Sprite sprite in Sprite.LoadedSprites)
+                if (textureList.SelectedData is Texture2D texture)
                 {
-                    if (sprite.Texture != texture) continue;
-                    if (PlayerInput.LeftButtonClicked())
+                    foreach (Sprite sprite in Sprite.LoadedSprites)
                     {
-                        var scaledRect = new Rectangle(textureRect.Location + sprite.SourceRect.Location.Multiply(scale), sprite.SourceRect.Size.Multiply(scale));
-                        if (scaledRect.Contains(PlayerInput.MousePosition))
+                        if (sprite.Texture != texture) continue;
+                        if (PlayerInput.LeftButtonClicked())
                         {
-                            spriteList.Select(sprite);
+                            var scaledRect = new Rectangle(textureRect.Location + sprite.SourceRect.Location.Multiply(scale), sprite.SourceRect.Size.Multiply(scale));
+                            if (scaledRect.Contains(PlayerInput.MousePosition))
+                            {
+                                spriteList.Select(sprite);
+                            }
                         }
                     }
                 }
@@ -315,8 +318,8 @@ namespace Barotrauma
 
             GUI.Draw(Cam, spriteBatch);
 
-            GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 200, 0), "widgets: " + widgets.Count, Color.White);
-            GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 200, 20), "sprites: " + spriteCount, Color.White);
+            GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 200, 0), "widgets: " + widgets.Count, Color.LightGreen);
+            GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 200, 20), "sprites: " + spriteCount, Color.LightGreen);
             spriteCount = 0;
 
             spriteBatch.End();
