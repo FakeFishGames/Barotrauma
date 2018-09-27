@@ -11,68 +11,8 @@ namespace Barotrauma.Networking
     {
         partial class NetPropertyData
         {
-            public void Read(NetBuffer msg)
-            {
-                long oldPos = msg.Position;
-                UInt32 size = msg.ReadVariableUInt32();
-
-                float x; float y; float z; float w;
-                byte r; byte g; byte b; byte a;
-                int ix; int iy; int width; int height;
-
-                switch (typeString)
-                {
-                    case "float":
-                        if (size != 4) break;
-                        property.SetValue(msg.ReadFloat());
-                        return;
-                    case "vector2":
-                        if (size != 8) break;
-                        x = msg.ReadFloat();
-                        y = msg.ReadFloat();
-                        property.SetValue(new Vector2(x, y));
-                        return;
-                    case "vector3":
-                        if (size != 12) break;
-                        x = msg.ReadFloat();
-                        y = msg.ReadFloat();
-                        z = msg.ReadFloat();
-                        property.SetValue(new Vector3(x, y, z));
-                        return;
-                    case "vector4":
-                        if (size != 16) break;
-                        x = msg.ReadFloat();
-                        y = msg.ReadFloat();
-                        z = msg.ReadFloat();
-                        w = msg.ReadFloat();
-                        property.SetValue(new Vector4(x, y, z, w));
-                        return;
-                    case "color":
-                        if (size != 4) break;
-                        r = msg.ReadByte();
-                        g = msg.ReadByte();
-                        b = msg.ReadByte();
-                        a = msg.ReadByte();
-                        property.SetValue(new Color(r, g, b, a));
-                        return;
-                    case "rectangle":
-                        if (size != 16) break;
-                        ix = msg.ReadInt32();
-                        iy = msg.ReadInt32();
-                        width = msg.ReadInt32();
-                        height = msg.ReadInt32();
-                        property.SetValue(new Rectangle(ix, iy, width, height));
-                        return;
-                    default:
-                        msg.Position = oldPos; //reset position to properly read the string
-                        string incVal = msg.ReadString();
-                        property.TrySetValue(incVal);
-                        return;
-                }
-
-                //size didn't match: skip this
-                msg.Position += 8 * size;
-            }
+            public GUIComponent component;
+            public object tempValue;
         }
 
         partial void InitProjSpecific()
@@ -126,7 +66,7 @@ namespace Barotrauma.Networking
         private GUIFrame settingsFrame;
         private GUIFrame[] settingsTabs;
         private int settingsTabIndex;
-
+        
         enum SettingsTab
         {
             Rounds,
@@ -258,10 +198,12 @@ namespace Barotrauma.Networking
 
             string endRoundLabel = sliderLabel.Text;
             slider.Step = 0.2f;
-            slider.BarScroll = (EndVoteRequiredRatio - 0.5f) * 2.0f;
+            slider.RangeStart = 0.5f;
+            slider.RangeEnd = 1.0f;
+            slider.BarScrollValue = EndVoteRequiredRatio;
             slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
-                EndVoteRequiredRatio = barScroll / 2.0f + 0.5f;
+                EndVoteRequiredRatio = scrollBar.BarScrollValue;
                 ((GUITextBlock)scrollBar.UserData).Text = endRoundLabel + (int)MathUtils.Round(EndVoteRequiredRatio * 100.0f, 10.0f) + " %";
                 return true;
             };
@@ -281,11 +223,13 @@ namespace Barotrauma.Networking
             CreateLabeledSlider(roundsTab, "ServerSettingsRespawnInterval", out slider, out sliderLabel);
             string intervalLabel = sliderLabel.Text;
             slider.Step = 0.05f;
-            slider.BarScroll = RespawnInterval / 600.0f;
+            slider.RangeStart = 0.0f;
+            slider.RangeEnd = 600.0f;
+            slider.BarScrollValue = RespawnInterval;
             slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
                 GUITextBlock text = scrollBar.UserData as GUITextBlock;
-                RespawnInterval = Math.Max(barScroll * 600.0f, 10.0f);
+                RespawnInterval = Math.Max(scrollBar.BarScrollValue, 10.0f);
                 text.Text = intervalLabel + ToolBox.SecondsToReadableTime(RespawnInterval);
                 return true;
             };

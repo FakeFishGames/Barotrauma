@@ -86,6 +86,30 @@ namespace Barotrauma
             }
         }
 
+        public float RangeStart
+        {
+            get;
+            set;
+        }
+
+        public float RangeEnd
+        {
+            get;
+            set;
+        }
+
+        public float BarScrollValue
+        {
+            get
+            {
+                return (BarScroll * (RangeEnd - RangeStart)) + RangeStart;
+            }
+            set
+            {
+                BarScroll = (value - RangeStart) / (RangeEnd - RangeStart);
+            }
+        }
+
         public float BarScroll
         {
             get { return step == 0.0f ? barScroll : MathUtils.RoundTowardsClosest(barScroll, step); }
