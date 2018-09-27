@@ -22,8 +22,12 @@ namespace Barotrauma
         private GUITextBlock xmlPathText;
         private XElement element;
         private Sprite selectedSprite;
+        private Rectangle viewArea;
+        private Rectangle textureRect;
+        private float scale;
+        private int spriteCount;
 
-        private Camera cam;
+        private readonly Camera cam;
         public override Camera Cam
         {
             get { return cam; }
@@ -144,6 +148,7 @@ namespace Barotrauma
 
         private string GetIdentifier(Sprite sprite)
         {
+            // TODO: cache?
             return sprite.SourceElement?.Parent.GetAttributeString("identifier", string.Empty);
         }
 
@@ -186,6 +191,22 @@ namespace Barotrauma
         {
             base.Update(deltaTime);
             widgets.Values.ForEach(w => w.Update((float)deltaTime));
+            // Select rects with the mouse
+            if (textureList.SelectedData is Texture2D texture)
+            {
+                foreach (Sprite sprite in Sprite.LoadedSprites)
+                {
+                    if (sprite.Texture != texture) continue;
+                    if (PlayerInput.LeftButtonClicked())
+                    {
+                        var scaledRect = new Rectangle(textureRect.Location + sprite.SourceRect.Location.Multiply(scale), sprite.SourceRect.Size.Multiply(scale));
+                        if (scaledRect.Contains(PlayerInput.MousePosition))
+                        {
+                            spriteList.Select(sprite);
+                        }
+                    }
+                }
+            }
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -194,13 +215,12 @@ namespace Barotrauma
             spriteBatch.Begin(SpriteSortMode.Immediate, rasterizerState: GameMain.ScissorTestEnable);
 
             int margin = 20;
-            Rectangle viewArea = new Rectangle(leftPanel.Rect.Right + margin, topPanel.Rect.Bottom + margin, rightPanel.Rect.Left - leftPanel.Rect.Right - margin * 2, Frame.Rect.Height - topPanel.Rect.Height - margin * 2);
-            Rectangle textureRect = Rectangle.Empty;
+            viewArea = new Rectangle(leftPanel.Rect.Right + margin, topPanel.Rect.Bottom + margin, rightPanel.Rect.Left - leftPanel.Rect.Right - margin * 2, Frame.Rect.Height - topPanel.Rect.Height - margin * 2);
 
             if (textureList.SelectedData is Texture2D texture)
             {
                 // TODO: allow to adjust, toggle to snap to pixel perfect
-                float scale = Math.Min(viewArea.Width / (float)texture.Width, viewArea.Height / (float)texture.Height);
+                scale = Math.Min(viewArea.Width / (float)texture.Width, viewArea.Height / (float)texture.Height);
 
                 textureRect = new Rectangle(
                     (int)(viewArea.Center.X - texture.Bounds.Width / 2f * scale),
@@ -224,6 +244,7 @@ namespace Barotrauma
                 foreach (Sprite sprite in Sprite.LoadedSprites)
                 {
                     if (sprite.Texture != texture) continue;
+                    spriteCount++;
 
                     Rectangle sourceRect = new Rectangle(
                         textureRect.X + (int)(sprite.SourceRect.X * scale),
@@ -286,6 +307,10 @@ namespace Barotrauma
             }
 
             GUI.Draw(Cam, spriteBatch);
+
+            GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 200, 0), "widgets: " + widgets.Count, Color.White);
+            GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 200, 20), "sprites: " + spriteCount, Color.White);
+            spriteCount = 0;
 
             spriteBatch.End();
         }
