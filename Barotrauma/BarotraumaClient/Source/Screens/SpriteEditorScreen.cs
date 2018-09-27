@@ -20,8 +20,9 @@ namespace Barotrauma
         private GUIFrame topPanelContents;
         private GUITextBlock texturePathText;
         private GUITextBlock xmlPathText;
-        private XElement element;
+        private string xmlPath;
         private Sprite selectedSprite;
+        private Texture2D selectedTexture;
         private Rectangle viewArea;
         private Rectangle textureRect;
         private float scale;
@@ -44,13 +45,10 @@ namespace Barotrauma
             {
                 OnClicked = (button, userData) =>
                 {
-                    var selectedTexture = textureList.SelectedData as Texture2D;
-                    if (selectedTexture == null) return false;
-
+                    if (!(textureList.SelectedData is Texture2D selectedTexture)) { return false; }
                     object selectedSprite = spriteList.SelectedData;
                     Sprite matchingSprite = Sprite.LoadedSprites.First(s => s.Texture == selectedTexture);
                     matchingSprite.ReloadTexture();
-
                     RefreshLists();
                     textureList.Select(matchingSprite.Texture);
                     spriteList.Select(selectedSprite);
@@ -63,43 +61,75 @@ namespace Barotrauma
             {
                 OnClicked = (button, userData) =>
                 {
-                    if (element == null) { return false; }
                     if (selectedSprite == null) { return false; }
+                    var element = selectedSprite.SourceElement;
                     element.SetAttributeValue("sourcerect", XMLExtensions.RectToString(selectedSprite.SourceRect));
-                    element.Document.Save(xmlPathText.Text);
-                    xmlPathText.Text = "Changes saved to " + xmlPathText.Text;
+                    element.Document.Save(xmlPath);
+                    string identifier = GetIdentifier(selectedSprite);
+                    xmlPathText.Text = string.IsNullOrEmpty(identifier) ? "Selected rect saved to " : $"{identifier} saved to ";
+                    xmlPathText.Text += xmlPath;
                     xmlPathText.TextColor = Color.LightGreen;
                     return true;
                 }
             };
+            new GUIButton(new RectTransform(new Vector2(0.15f, 0.4f), topPanelContents.RectTransform) { RelativeOffset = new Vector2(0.2f, 0.5f) }, "Save All Open Source Rects")
+            {
+                OnClicked = (button, userData) =>
+                {
+                    if (selectedTexture == null) { return false; }
+                    XDocument doc = null;
+                    foreach (Sprite sprite in Sprite.LoadedSprites)
+                    {
+                        if (sprite.Texture != selectedTexture) continue;
+                        var element = sprite.SourceElement;
+                        element.SetAttributeValue("sourcerect", XMLExtensions.RectToString(sprite.SourceRect));
+                        doc = element.Document;
+                    }
+                    if (doc != null)
+                    {
+                        doc.Save(xmlPath);
+                        xmlPathText.Text = "All changes saved to " + xmlPath;
+                        xmlPathText.TextColor = Color.LightGreen;
+                        return true;
+                    }
+                    else
+                    {
+                        xmlPathText.Text = "Failed to save to " + xmlPath;
+                        xmlPathText.TextColor = Color.Red;
+                        return false;
+                    }
+                }
+            };
 
-            texturePathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.BottomCenter), "", Color.LightGray);
-            xmlPathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.TopCenter), "", Color.LightGray);
+            texturePathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.BottomCenter)
+                { RelativeOffset = new Vector2(0.2f, 0) }, "", Color.LightGray);
+            xmlPathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.TopCenter)
+                { RelativeOffset = new Vector2(0.2f, 0) }, "", Color.LightGray);
 
             leftPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f - topPanel.RectTransform.RelativeSize.Y), Frame.RectTransform, Anchor.BottomLeft)
-                { MinSize = new Point(150, 0) },
-                style: "GUIFrameLeft");
-            var paddedLeftPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), leftPanel.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.02f, 0.0f) })
-            {
-                Stretch = true
-            };
+                { MinSize = new Point(150, 0) }, style: "GUIFrameLeft");
+            var paddedLeftPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), leftPanel.RectTransform, Anchor.CenterLeft)
+                { RelativeOffset = new Vector2(0.02f, 0.0f) })
+                    { Stretch = true };
             textureList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), paddedLeftPanel.RectTransform))
             {
                 OnSelected = (listBox, userData) =>
                 {
+                    selectedTexture = userData as Texture2D;
                     foreach (GUIComponent child in spriteList.Content.Children)
                     {
                         var textBlock = (GUITextBlock)child;
-                        textBlock.TextColor = new Color(textBlock.TextColor, ((Sprite)textBlock.UserData).Texture == userData ? 1.0f : 0.4f);
+                        var sprite = (Sprite)textBlock.UserData;
+                        textBlock.TextColor = new Color(textBlock.TextColor, sprite.Texture == selectedTexture ? 1.0f : 0.4f);
                     }
-                    if (selectedSprite == null || selectedSprite.Texture != userData)
+                    if (selectedSprite == null || selectedSprite.Texture != selectedTexture)
                     {
-                        selectedSprite = Sprite.LoadedSprites.First(s => s.Texture == userData);
+                        selectedSprite = Sprite.LoadedSprites.First(s => s.Texture == selectedTexture);
                         widgets.Clear();
                     }
                     texturePathText.Text = selectedSprite.FilePath;
                     texturePathText.TextColor = Color.LightGray;
-                    element = selectedSprite.SourceElement;
+                    var element = selectedSprite.SourceElement;
                     if (element == null)
                     {
                         xmlPathText.Text = string.Empty;
@@ -109,8 +139,8 @@ namespace Barotrauma
                         string[] splitted = element.BaseUri.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
                         IEnumerable<string> filtered = splitted.SkipWhile(part => part != "Content");
                         string parsed = string.Join("/", filtered);
-                        xmlPathText.Text = parsed;
-                        xmlPathText.TextColor = Color.LightGray;
+                        xmlPath = parsed;
+                        xmlPathText.Text = xmlPath;
                     }
                     topPanelContents.Visible = true;
                     return true;
@@ -201,11 +231,11 @@ namespace Barotrauma
             // Select rects with the mouse
             if (Widget.selectedWidget == null)
             {
-                if (textureList.SelectedData is Texture2D texture)
+                if (selectedTexture != null)
                 {
                     foreach (Sprite sprite in Sprite.LoadedSprites)
                     {
-                        if (sprite.Texture != texture) continue;
+                        if (sprite.Texture != selectedTexture) continue;
                         if (PlayerInput.LeftButtonClicked())
                         {
                             var scaledRect = new Rectangle(textureRect.Location + sprite.SourceRect.Location.Multiply(scale), sprite.SourceRect.Size.Multiply(scale));
@@ -227,23 +257,23 @@ namespace Barotrauma
             int margin = 20;
             viewArea = new Rectangle(leftPanel.Rect.Right + margin, topPanel.Rect.Bottom + margin, rightPanel.Rect.Left - leftPanel.Rect.Right - margin * 2, Frame.Rect.Height - topPanel.Rect.Height - margin * 2);
 
-            if (textureList.SelectedData is Texture2D texture)
+            if (selectedTexture != null)
             {
                 // TODO: allow to adjust, toggle to snap to pixel perfect
-                scale = Math.Min(viewArea.Width / (float)texture.Width, viewArea.Height / (float)texture.Height);
+                scale = Math.Min(viewArea.Width / (float)selectedTexture.Width, viewArea.Height / (float)selectedTexture.Height);
 
                 textureRect = new Rectangle(
-                    (int)(viewArea.Center.X - texture.Bounds.Width / 2f * scale),
-                    (int)(viewArea.Center.Y - texture.Bounds.Height / 2f * scale),
-                    (int)(texture.Bounds.Width * scale),
-                    (int)(texture.Bounds.Height * scale));
+                    (int)(viewArea.Center.X - selectedTexture.Bounds.Width / 2f * scale),
+                    (int)(viewArea.Center.Y - selectedTexture.Bounds.Height / 2f * scale),
+                    (int)(selectedTexture.Bounds.Width * scale),
+                    (int)(selectedTexture.Bounds.Height * scale));
 
-                spriteBatch.Draw(texture,
+                spriteBatch.Draw(selectedTexture,
                     viewArea.Center.ToVector2(), 
                     sourceRectangle: null, 
                     color: Color.White, 
                     rotation: 0.0f,
-                    origin: new Vector2(texture.Bounds.Width / 2.0f, texture.Bounds.Height / 2.0f), 
+                    origin: new Vector2(selectedTexture.Bounds.Width / 2.0f, selectedTexture.Bounds.Height / 2.0f), 
                     scale: scale, 
                     effects: SpriteEffects.None, 
                     layerDepth: 0);
@@ -253,7 +283,7 @@ namespace Barotrauma
 
                 foreach (Sprite sprite in Sprite.LoadedSprites)
                 {
-                    if (sprite.Texture != texture) continue;
+                    if (sprite.Texture != selectedTexture) continue;
                     spriteCount++;
 
                     Rectangle sourceRect = new Rectangle(
@@ -318,8 +348,8 @@ namespace Barotrauma
 
             GUI.Draw(Cam, spriteBatch);
 
-            GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 200, 0), "widgets: " + widgets.Count, Color.LightGreen);
-            GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 200, 20), "sprites: " + spriteCount, Color.LightGreen);
+            //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 100, 0), "widgets: " + widgets.Count, Color.LightGreen);
+            //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 100, 20), "sprites: " + spriteCount, Color.LightGreen);
             spriteCount = 0;
 
             spriteBatch.End();
