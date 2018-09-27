@@ -131,6 +131,10 @@ namespace Barotrauma
                 {
                     Sprite sprite = userData as Sprite;
                     if (sprite == null) return false;
+                    if (selectedSprite.Texture != sprite.Texture)
+                    {
+                        widgets.Clear();
+                    }
                     selectedSprite = sprite;
                     textureList.Select(sprite.Texture);
                     return true;
@@ -190,7 +194,10 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
-            widgets.Values.ForEach(w => w.Update((float)deltaTime));
+            for (int i = 0; i < widgets.Count; i++)
+            {
+                widgets.ElementAt(i).Value.Update((float)deltaTime);
+            }
             // Select rects with the mouse
             if (textureList.SelectedData is Texture2D texture)
             {
