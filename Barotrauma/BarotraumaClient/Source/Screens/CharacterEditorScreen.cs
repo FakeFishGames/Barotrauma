@@ -929,6 +929,15 @@ namespace Barotrauma
                 };
                 return true;
             };
+            var reloadTexturesButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Reload Textures");
+            reloadTexturesButton.OnClicked += (button, userData) =>
+            {
+                foreach (var limb in character.AnimController.Limbs)
+                {
+                    limb.ActiveSprite.ReloadTexture();
+                }
+                return true;
+            };
         }
         #endregion
 
