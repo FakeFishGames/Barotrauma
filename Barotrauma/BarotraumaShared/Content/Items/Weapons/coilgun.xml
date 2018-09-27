@@ -54,9 +54,9 @@
     linkable="true"
     allowedlinks="coilgun">
 
-    <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="0,0,177,128"/>
+    <Sprite texture ="coilgunloader.png" depth="0.8" sourcerect="0,0,80,128"/>
 
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="6" itempos="24,-75" iteminterval="26,0" itemrotation="90" canbeselected = "true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="6" itempos="90,-100" iteminterval="0,0" itemrotation="0" canbeselected = "true">
       <Containable identifiers="coilgunammobox"/>
       <!-- when the coilgun is fired, it triggers this statuseffect, causing contained ammunition boxes to spawn new ammo -->
       <StatusEffect type="OnUse" target="Contained">
@@ -73,7 +73,7 @@
     category="Machine"
     linkable="true">
 
-    <Sprite texture ="Content/Items/Containers/crates.png" depth="0.54" sourcerect="81,0,47,42"/>    
+    <Sprite texture ="Content/Items/Containers/crates.png" depth="0.54" sourcerect="80,0,48,48"/>
     <Body width="45" height="41" density="50"/>
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false"/>
     
@@ -88,7 +88,7 @@
       <Containable identifiers="coilgunbolt"/>
     </ItemContainer>
   </Item>
-
+  
   <Item
     name="Coilgun Bolt"
     identifier="coilgunbolt"
