@@ -57,7 +57,7 @@
   <InternalDamage
     name="Internal Damage"
     identifier="internaldamage"
-    description="Asdsdl kfsldk flsdkf sdasd lasdfk asdlfk give morphine or fentanyl"
+    description="Trauma to bones, organs or other internal systems. Treated by morphine or fentanyl or Xenogland Extract."
     type="damage"
     causeofdeathdescription="Died of internal injuries"
     selfcauseofdeathdescription="You have succumbed to your internal injuries."    
@@ -77,7 +77,7 @@
   <Bleeding
     name="Bleeding"
     identifier="bleeding"
-    description="Causes bloodloss, which may eventually lead to death. Treat with bandages or hemostatic agents."
+    description="Causes bloodloss, which may eventually lead to death. Treat with bandages or hemostatic agents such as hemostop."
     type="bleeding"
     causeofdeathdescription="Bled to death"
     selfcauseofdeathdescription="You have bled to death."
@@ -97,7 +97,7 @@
   <Burn
     name="Burn"
     identifier="burn"
-    description="Thermal, chemical, electrical or radiological damage."
+    description="Thermal, chemical, electrical or radiological damage. Best treated with Fentanyl and bandages."
     type="burn"
     causeofdeathdescription="Burned to death"
     selfcauseofdeathdescription="You have burned to death."
@@ -116,7 +116,7 @@
   <OxygenLow
     name="Oxygen low"
     identifier="oxygenlow"
-    description="Deprivation of oxygen to the brain and other organs. Initially results in unconciousness and then death if the blood supply cannot be reoxygenated by CPR or other means."
+    description="Deprivation of oxygen to the brain and other organs. Initially results in unconciousness and then death if the blood supply cannot be reoxygenated. Best treated by CPR or Oxygenic Acid."
     type="oxygenlow"
     causeofdeathdescription="Suffocated"
     selfcauseofdeathdescription="You have suffocated."
@@ -139,7 +139,7 @@
   <Bloodloss
     name="Bloodloss"
     identifier="bloodloss"
-    description="Uncontrolled loss of blood may eventually lead to a drop in blood pressure and oxygen starvation to the brain and other organs."
+    description="Uncontrolled loss of blood may eventually lead to a drop in blood pressure and oxygen starvation to the brain and other organs. Treat with plasma infusions or Oxygenated Synthacells."
     type="bloodloss"
     causeofdeathdescription="Bled to death"
     selfcauseofdeathdescription="You have bled to death."
@@ -196,7 +196,7 @@
   <AfflictionHusk
     name="Husk infection"
     identifier="huskinfection"
-    description="Lorem ipsum dolor sin amet. Aösld sdfl asmd dfg wqer gsdfg. Asdfel ösdfke!"
+    description="Infection by the husk parasite. Left untreated this will eventually take over the patient. Treat with calyxanide."
     type="huskinfection"
     causeofdeathdescription="Taken over by a husk parasite"
     selfcauseofdeathdescription="You have been taken over by the husk parasite."
@@ -274,7 +274,7 @@
   <Affliction
     name="Opiate withdrawal"
     identifier="opiatewithdrawal"
-    description="While suffering from an opiate addiction, withdrawal symptoms are possible if opiate use is stopped."
+    description="While suffering from an opiate addiction, withdrawal symptoms are possible if opiate use is stopped. Treat with any opiate, or naloxone."
     type="poison"
     causeofdeathdescription="Died of opiate withdrawal"
     selfcauseofdeathdescription="You have died of opiate withdrawal."
@@ -330,7 +330,7 @@
   <Affliction
     name="Opiate overdose"
     identifier="opiateoverdose"
-    description="Opiate overdose may lead to respiratory failure and death."
+    description="Opiate overdose may lead to respiratory failure and death. Treat promptly with naloxone"
     type="poison"
     causeofdeathdescription="Died of opiate overdose"
     selfcauseofdeathdescription="You have died of opiate overdose."
@@ -369,7 +369,7 @@
   <Affliction
     name="Opiate addiction"
     identifier="opiateaddiction"
-    description="The regular use of opiate based substances such as morphine will eventually lead to a state of addiction."
+    description="The regular use of opiate based substances such as morphine will eventually lead to a state of addiction. Treated by discontinuing use of opiates, followed by treatment with naloxone."
     type="poison"
     limbspecific="false"
     indicatorlimb="Head"    
@@ -405,7 +405,7 @@
   <AfflictionBleeding
     name="Gunshot wound"
     identifier="gunshotwound"
-    description="A penetrating wound caused by the passage of a projectile through the body. The most obvious and immedate effect will be a loss of blood."
+    description="A penetrating wound caused by the passage of a projectile through the body. The most obvious and immedate effect will be a loss of blood. Bandages, and hemostop are appropriate treatments."
     type="bleeding"
     causeofdeathdescription="Shot to death"
     selfcauseofdeathdescription="You have died of gunshot wounds."
