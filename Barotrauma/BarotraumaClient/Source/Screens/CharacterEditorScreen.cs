@@ -297,16 +297,15 @@ namespace Barotrauma
             var limbScaleText = new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), limbScaleElement.RectTransform), $"Limb Scale: {RagdollParams.LimbScale.FormatDoubleDecimal()}", Color.WhiteSmoke, textAlignment: Alignment.Center);
             jointScaleBar = new GUIScrollBar(new RectTransform(elementSize, jointScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.2f)
             {
-                BarScroll = RagdollParams.JointScale / 2,
-                MinValue = 0.25f,
-                MaxValue = 1f,
+                BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE, RagdollParams.JointScale)),
                 Step = 0.01f,
                 OnMoved = (scrollBar, value) =>
                 {
-                    UpdateJointScale(value);
+                    float v = MathHelper.Lerp(RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE, value);
+                    UpdateJointScale(v);
                     if (uniformScaling)
                     {
-                        UpdateLimbScale(value);
+                        UpdateLimbScale(v);
                         limbScaleBar.BarScroll = value;
                     }
                     return true;
@@ -314,16 +313,15 @@ namespace Barotrauma
             };
             limbScaleBar = new GUIScrollBar(new RectTransform(elementSize, limbScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.2f)
             {
-                BarScroll = RagdollParams.LimbScale / 2,
-                MinValue = 0.25f,
-                MaxValue = 1f,
+                BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE, RagdollParams.LimbScale)),
                 Step = 0.01f,
                 OnMoved = (scrollBar, value) =>
                 {
-                    UpdateLimbScale(value);
+                    float v = MathHelper.Lerp(RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE, value);
+                    UpdateLimbScale(v);
                     if (uniformScaling)
                     {
-                        UpdateJointScale(value);
+                        UpdateJointScale(v);
                         jointScaleBar.BarScroll = value;
                     }
                     return true;
@@ -331,13 +329,13 @@ namespace Barotrauma
             };
             void UpdateJointScale(float value)
             {
-                TryUpdateRagdollParam("jointscale", value * 2);
+                TryUpdateRagdollParam("jointscale", value);
                 jointScaleText.Text = $"Joint Scale: {RagdollParams.JointScale.FormatDoubleDecimal()}";
                 character.AnimController.ResetJoints();
             }
             void UpdateLimbScale(float value)
             {
-                TryUpdateRagdollParam("limbscale", value * 2);
+                TryUpdateRagdollParam("limbscale", value);
                 limbScaleText.Text = $"Limb Scale: {RagdollParams.LimbScale.FormatDoubleDecimal()}";
             }
             // TODO: doesn't trigger if the mouse is released while the cursor is outside the button rect
