@@ -24,6 +24,7 @@ namespace Barotrauma.Networking
     {
         END_OF_MESSAGE, //self-explanatory
         SYNC_IDS,       //ids of the last changes the client knows about
+        SERVER_SETTINGS,//self-explanatory
         CHAT_MESSAGE,   //also self-explanatory
         VOTE,           //you get the idea
         CHARACTER_INPUT,
