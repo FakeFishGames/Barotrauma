@@ -73,7 +73,7 @@ namespace Barotrauma
         partial void CalculateSourceRect();
 
         // TODO: use the Init method below?
-        public Sprite(XElement element, string path = "", string file = "", string identifier = null)
+        public Sprite(XElement element, string path = "", string file = "")
         {
             this.SourceElement = element;
             if (file == "")
