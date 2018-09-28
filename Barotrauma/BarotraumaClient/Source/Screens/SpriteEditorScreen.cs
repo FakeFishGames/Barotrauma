@@ -165,7 +165,12 @@ namespace Barotrauma
             {
                 OnSelected = (listBox, userData) =>
                 {
+                    var previousTexture = selectedTexture;
                     selectedTexture = userData as Texture2D;
+                    if (previousTexture != selectedTexture)
+                    {
+                        CalculateScale();
+                    }
                     foreach (GUIComponent child in spriteList.Content.Children)
                     {
                         var textBlock = (GUITextBlock)child;
@@ -192,7 +197,6 @@ namespace Barotrauma
                         xmlPathText.Text = xmlPath;
                     }
                     topPanelContents.Visible = true;
-                    CalculateScale();
                     return true;
                 }
             };
