@@ -641,7 +641,7 @@ namespace Barotrauma
                 botSpawnModeButtons[0].OnClicked = botSpawnModeButtons[1].OnClicked = ChangeBotSpawnMode;
                 missionTypeButtons[0].OnClicked = missionTypeButtons[1].OnClicked = ToggleMissionType;
                 
-                if (subList.Selected == null) subList.Select(Math.Max(0, prevSelectedSub));
+                if (subList.SelectedComponent == null) subList.Select(Math.Max(0, prevSelectedSub));
                 if (shuttleList.Selected == null)
                 {
                     var shuttles = shuttleList.GetChildren().Where(c => c.UserData is Submarine && ((Submarine)c.UserData).HasTag(SubmarineTag.Shuttle));
@@ -657,7 +657,7 @@ namespace Barotrauma
 
                 GameAnalyticsManager.SetCustomDimension01("multiplayer");
                 
-                if (GameModePreset.list.Count > 0 && modeList.Selected == null) modeList.Select(0);
+                if (GameModePreset.list.Count > 0 && modeList.SelectedComponent == null) modeList.Select(0);
                 GameMain.Server.Voting.ResetVotes(GameMain.Server.ConnectedClients);
             }
             else if (GameMain.Client != null)

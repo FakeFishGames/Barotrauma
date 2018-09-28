@@ -373,7 +373,7 @@ namespace Barotrauma
                                 {
                                     sizeW.DrawPos = w.DrawPos + new Vector2(widgetSize) + sprite.SourceRect.Size.ToVector2() * scale;
                                 }
-                                if (spriteList.Selected is GUITextBlock textBox)
+                                if (spriteList.SelectedComponent is GUITextBlock textBox)
                                 {
                                     textBox.Text = GetSpriteName(sprite) + " " + sprite.SourceRect;
                                 }
@@ -395,7 +395,7 @@ namespace Barotrauma
                             {
                                 w.DrawPos = PlayerInput.MousePosition;
                                 sprite.SourceRect = new Rectangle(sprite.SourceRect.Location, ((w.DrawPos - new Vector2(widgetSize) - positionWidget.DrawPos) / scale).ToPoint());
-                                if (spriteList.Selected is GUITextBlock textBox)
+                                if (spriteList.SelectedComponent is GUITextBlock textBox)
                                 {
                                     textBox.Text = GetSpriteName(sprite) + " " + sprite.SourceRect;
                                 }

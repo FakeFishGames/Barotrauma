@@ -22,8 +22,8 @@ namespace Barotrauma
         {
             get
             {
-                if (listBox.Selected == null) return null;
-                return listBox.Selected.UserData;
+                if (listBox.SelectedComponent == null) return null;
+                return listBox.SelectedComponent.UserData;
             }
         }
 
@@ -35,7 +35,7 @@ namespace Barotrauma
 
         public GUIComponent Selected
         {
-            get { return listBox.Selected; }
+            get { return listBox.SelectedComponent; }
         }
 
         public GUIListBox ListBox
@@ -47,7 +47,7 @@ namespace Barotrauma
         {
             get
             {
-                return (listBox.Selected == null) ? null : listBox.Selected.UserData;
+                return (listBox.SelectedComponent == null) ? null : listBox.SelectedComponent.UserData;
             }
         }
 
@@ -55,8 +55,8 @@ namespace Barotrauma
         {
             get
             {
-                if (listBox.Selected == null) return -1;
-                return listBox.Content.GetChildIndex(listBox.Selected);
+                if (listBox.SelectedComponent == null) return -1;
+                return listBox.Content.GetChildIndex(listBox.SelectedComponent);
             }
         }
 
