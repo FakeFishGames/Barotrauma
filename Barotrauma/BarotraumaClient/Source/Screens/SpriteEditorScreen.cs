@@ -234,7 +234,14 @@ namespace Barotrauma
         private string GetIdentifier(Sprite sprite)
         {
             // TODO: cache?
-            return sprite.SourceElement?.Parent.GetAttributeString("identifier", string.Empty);
+            var element = sprite.SourceElement;
+            if (element == null) { return string.Empty; }
+            string identifier = element.Parent.GetAttributeString("identifier", string.Empty);
+            if (string.IsNullOrEmpty(identifier))
+            {
+                return element.Parent.GetAttributeString("name", string.Empty);
+            }
+            return identifier;
         }
 
         private void RefreshLists()
