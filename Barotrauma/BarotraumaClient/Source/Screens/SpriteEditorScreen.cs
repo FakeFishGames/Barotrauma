@@ -412,7 +412,7 @@ namespace Barotrauma
                                 sprite.SourceRect = new Rectangle(((w.DrawPos + halfSize - textureRect.Location.ToVector2()) / scale).ToPoint(), sprite.SourceRect.Size);
                                 if (widgets.TryGetValue($"{identifier}_size", out Widget sizeW))
                                 {
-                                    sizeW.DrawPos = w.DrawPos + halfSize + sprite.SourceRect.Size.ToVector2() * scale;
+                                    sizeW.DrawPos = w.DrawPos + new Vector2(widgetSize) + sprite.SourceRect.Size.ToVector2() * scale;
                                 }
                                 if (spriteList.Selected is GUITextBlock textBox)
                                 {
@@ -435,7 +435,7 @@ namespace Barotrauma
                             w.MouseHeld += () =>
                             {
                                 w.DrawPos = PlayerInput.MousePosition;
-                                sprite.SourceRect = new Rectangle(sprite.SourceRect.Location, ((w.DrawPos - halfSize - positionWidget.DrawPos) / scale).ToPoint());
+                                sprite.SourceRect = new Rectangle(sprite.SourceRect.Location, ((w.DrawPos - new Vector2(widgetSize) - positionWidget.DrawPos) / scale).ToPoint());
                                 if (spriteList.Selected is GUITextBlock textBox)
                                 {
                                     textBox.Text = GetSpriteName(sprite) + " " + sprite.SourceRect;
