@@ -45,7 +45,10 @@ namespace Barotrauma
             topPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), Frame.RectTransform) { MinSize = new Point(0, 60) }, "GUIFrameTop");
             topPanelContents = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.8f), topPanel.RectTransform, Anchor.Center), style: null);
 
-            new GUIButton(new RectTransform(new Vector2(0.15f, 0.3f), topPanelContents.RectTransform), "Reload Texture")
+            new GUIButton(new RectTransform(new Vector2(0.12f, 0.4f), topPanelContents.RectTransform, Anchor.TopLeft)
+            {
+                RelativeOffset = new Vector2(0, 0.1f)
+            }, "Reload Texture")
             {
                 OnClicked = (button, userData) =>
                 {
@@ -61,7 +64,31 @@ namespace Barotrauma
                     return true;
                 }
             };
-            new GUIButton(new RectTransform(new Vector2(0.15f, 0.3f), topPanelContents.RectTransform) { RelativeOffset = new Vector2(0, 0.3f) }, "Save Selected Source Rect")
+            new GUIButton(new RectTransform(new Vector2(0.12f, 0.4f), topPanelContents.RectTransform, Anchor.BottomLeft)
+            {
+                RelativeOffset = new Vector2(0, 0.1f)
+            }, "Reset Changes")
+            {
+                OnClicked = (button, userData) =>
+                {
+                    if (selectedTexture == null) { return false; }
+                    foreach (Sprite sprite in Sprite.LoadedSprites)
+                    {
+                        if (sprite.Texture != selectedTexture) { continue; }
+                        var element = sprite.SourceElement;
+                        if (element == null) { continue; }
+                        sprite.SourceRect = element.GetAttributeRect("sourcerect", sprite.SourceRect);
+                    }
+                    widgets.Clear();
+                    xmlPathText.Text = "Changes successfully reset";
+                    xmlPathText.TextColor = Color.LightGreen;
+                    return true;
+                }
+            };
+            new GUIButton(new RectTransform(new Vector2(0.12f, 0.4f), topPanelContents.RectTransform, Anchor.TopLeft)
+            {
+                RelativeOffset = new Vector2(0.15f, 0.1f)
+            }, "Save Selected Source Rect")
             {
                 OnClicked = (button, userData) =>
                 {
@@ -89,7 +116,10 @@ namespace Barotrauma
                     return true;
                 }
             };
-            new GUIButton(new RectTransform(new Vector2(0.15f, 0.3f), topPanelContents.RectTransform) { RelativeOffset = new Vector2(0, 0.6f) }, "Save All Open Source Rects")
+            new GUIButton(new RectTransform(new Vector2(0.12f, 0.4f), topPanelContents.RectTransform, Anchor.BottomLeft)
+            {
+                RelativeOffset = new Vector2(0.15f, 0.1f)
+            }, "Save Open Source Rects")
             {
                 OnClicked = (button, userData) =>
                 {
@@ -140,7 +170,7 @@ namespace Barotrauma
                 };
             pixelPerfectToggle = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.35f), topPanelContents.RectTransform, Anchor.BottomCenter, Pivot.BottomRight)
             {
-                RelativeOffset = new Vector2(0, 0.2f) }, "Pixel Perfect")
+                RelativeOffset = new Vector2(0, 0.1f) }, "Pixel Perfect")
                 {
                     OnSelected = (tickBox) =>
                     {
