@@ -247,6 +247,12 @@ namespace Barotrauma
             return identifier;
         }
 
+        private string GetSpriteName(Sprite sprite)
+        {
+            string identifier = GetIdentifier(sprite);
+            return string.IsNullOrEmpty(identifier) ? Path.GetFileNameWithoutExtension(sprite.FilePath) : identifier;
+        }
+
         private void RefreshLists()
         {
             textureList.ClearChildren();
@@ -257,9 +263,7 @@ namespace Barotrauma
             {
                 //ignore sprites that don't have a file path (e.g. submarine pics)
                 if (string.IsNullOrEmpty(sprite.FilePath)) continue;
-                string identifier = GetIdentifier(sprite);
-                string name = string.IsNullOrEmpty(identifier) ? Path.GetFileNameWithoutExtension(sprite.FilePath) : identifier;
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), spriteList.Content.RectTransform) { MinSize = new Point(0, 20) }, name + " " + sprite.SourceRect)
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), spriteList.Content.RectTransform) { MinSize = new Point(0, 20) }, GetSpriteName(sprite) + " " + sprite.SourceRect)
                 {
                     Padding = Vector4.Zero,
                     UserData = sprite
@@ -377,6 +381,10 @@ namespace Barotrauma
                                 {
                                     sizeW.DrawPos = w.DrawPos + halfSize + sprite.SourceRect.Size.ToVector2() * scale;
                                 }
+                                if (spriteList.Selected is GUITextBlock textBox)
+                                {
+                                    textBox.Text = GetSpriteName(sprite) + " " + sprite.SourceRect;
+                                }
                             };
                             w.PostUpdate += dTime =>
                             {
@@ -392,6 +400,10 @@ namespace Barotrauma
                             {
                                 w.DrawPos = PlayerInput.MousePosition;
                                 sprite.SourceRect = new Rectangle(sprite.SourceRect.Location, ((w.DrawPos - halfSize - positionWidget.DrawPos) / scale).ToPoint());
+                                if (spriteList.Selected is GUITextBlock textBox)
+                                {
+                                    textBox.Text = GetSpriteName(sprite) + " " + sprite.SourceRect;
+                                }
                             };
                             w.PostUpdate += dTime =>
                             {
