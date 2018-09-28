@@ -97,7 +97,7 @@ namespace Barotrauma
                     if (element == null)
                     {
                         xmlPathText.Text = "No xml element defined for the sprite";
-                        xmlPathText.Color = Color.Red;
+                        xmlPathText.TextColor = Color.Red;
                         return false;
                     }
                     element.SetAttributeValue("sourcerect", XMLExtensions.RectToString(selectedSprite.SourceRect));
@@ -225,6 +225,7 @@ namespace Barotrauma
                         string parsed = string.Join("/", filtered);
                         xmlPath = parsed;
                         xmlPathText.Text = xmlPath;
+                        xmlPathText.TextColor = Color.LightGray;
                     }
                     topPanelContents.Visible = true;
                     return true;
