@@ -408,7 +408,7 @@ namespace Barotrauma
             float width = viewArea.Width / (float)selectedTexture.Width;
             float height = viewArea.Height / (float)selectedTexture.Height;
             maxScale = Math.Min(width, height);
-            scale = pixelPerfectToggle.Selected ? MathHelper.Min(maxScale, 1) : maxScale;
+            scale = pixelPerfectToggle.Selected ? 1 : maxScale;
             scaleBar.BarScroll = GetBarScrollValue();
         }
 
