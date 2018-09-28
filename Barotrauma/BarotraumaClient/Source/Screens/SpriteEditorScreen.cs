@@ -109,8 +109,8 @@ namespace Barotrauma
                         return false;
                     }
                     element.Document.Save(xmlPath);
-                    string identifier = GetIdentifier(selectedSprite);
-                    xmlPathText.Text = string.IsNullOrEmpty(identifier) ? "Selected rect saved to " : $"{identifier} saved to ";
+                    string name = GetSpriteName(selectedSprite);
+                    xmlPathText.Text = string.IsNullOrEmpty(name) ? "Selected rect saved to " : $"{name} saved to ";
                     xmlPathText.Text += xmlPath;
                     xmlPathText.TextColor = Color.LightGreen;
                     return true;
@@ -331,8 +331,10 @@ namespace Barotrauma
                 //GUI.DrawRectangle(spriteBatch, viewArea, Color.Green, isFilled: false);
                 GUI.DrawRectangle(spriteBatch, textureRect, Color.Yellow, isFilled: false);
 
-                foreach (Sprite sprite in Sprite.LoadedSprites)
+                foreach (GUIComponent element in spriteList.Content.Children)
                 {
+                    Sprite sprite = element.UserData as Sprite;
+                    if (sprite == null) { continue; }
                     if (sprite.Texture != selectedTexture) continue;
                     spriteCount++;
 
@@ -345,7 +347,7 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, sourceRect,
                         selectedSprite == sprite ? Color.Red : Color.White * 0.5f);
 
-                    string identifier = GetIdentifier(sprite);
+                    string identifier = sprite.SourceElement?.ToString();
                     if (!string.IsNullOrEmpty(identifier))
                     {
                         int widgetSize = 10;
@@ -432,7 +434,6 @@ namespace Barotrauma
 
         private string GetIdentifier(Sprite sprite)
         {
-            // TODO: cache?
             var element = sprite.SourceElement;
             if (element == null) { return string.Empty; }
             string identifier = element.Parent.GetAttributeString("identifier", string.Empty);
