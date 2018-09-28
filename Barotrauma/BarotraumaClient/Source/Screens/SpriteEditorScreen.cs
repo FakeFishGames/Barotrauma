@@ -174,8 +174,7 @@ namespace Barotrauma
                     }
                     if (selectedSprite == null || selectedSprite.Texture != selectedTexture)
                     {
-                        selectedSprite = Sprite.LoadedSprites.First(s => s.Texture == selectedTexture);
-                        widgets.Clear();
+                        spriteList.Select(Sprite.LoadedSprites.First(s => s.Texture == selectedTexture));
                     }
                     texturePathText.Text = selectedSprite.FilePath;
                     texturePathText.TextColor = Color.LightGray;
@@ -212,7 +211,7 @@ namespace Barotrauma
                 {
                     Sprite sprite = userData as Sprite;
                     if (sprite == null) return false;
-                    if (selectedSprite.Texture != sprite.Texture)
+                    if (selectedSprite != null && selectedSprite.Texture != sprite.Texture)
                     {
                         widgets.Clear();
                     }
