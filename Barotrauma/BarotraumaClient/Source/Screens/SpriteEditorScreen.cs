@@ -362,7 +362,7 @@ namespace Barotrauma
                     {
                         int widgetSize = 10;
                         Vector2 halfSize = new Vector2(widgetSize) / 2;
-                        //Vector2 stringOffset = new Vector2(5, 14);
+                        Vector2 tooltipOffset = new Vector2(15, -10);
                         var rect = sprite.SourceRect;
                         var topLeft = rect.Location.ToVector2();
                         var topRight = new Vector2(topLeft.X + rect.Width, topLeft.Y);
@@ -370,6 +370,8 @@ namespace Barotrauma
                         //var bottomLeft = new Vector2(topLeft.X, bottomRight.Y);
                         var positionWidget = GetWidget($"{identifier}_position", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                         {
+                            w.tooltipOffset = tooltipOffset;
+                            w.tooltip = $"Position: {sprite.SourceRect.Location}";
                             w.DrawPos = textureRect.Location.ToVector2() + topLeft * scale - halfSize;
                             w.inputAreaMargin = new Point(widgetSize / 2);
                             w.MouseDown += () => spriteList.Select(sprite);
@@ -385,6 +387,7 @@ namespace Barotrauma
                                 {
                                     textBox.Text = GetSpriteName(sprite) + " " + sprite.SourceRect;
                                 }
+                                w.tooltip = $"Position: {sprite.SourceRect.Location}";
                             };
                             w.PostUpdate += dTime =>
                             {
@@ -393,6 +396,8 @@ namespace Barotrauma
                         });
                         var sizeWidget = GetWidget($"{identifier}_size", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                         {
+                            w.tooltipOffset = tooltipOffset;
+                            w.tooltip = $"Size: {sprite.SourceRect.Size}";
                             w.DrawPos = textureRect.Location.ToVector2() + bottomRight * scale + halfSize;
                             w.inputAreaMargin = new Point(widgetSize / 2);
                             w.MouseDown += () => spriteList.Select(sprite);
@@ -404,6 +409,7 @@ namespace Barotrauma
                                 {
                                     textBox.Text = GetSpriteName(sprite) + " " + sprite.SourceRect;
                                 }
+                                w.tooltip = $"Size: {sprite.SourceRect.Size}";
                             };
                             w.PostUpdate += dTime =>
                             {
