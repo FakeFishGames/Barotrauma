@@ -20,12 +20,16 @@ namespace Barotrauma
         private GUIFrame topPanelContents;
         private GUITextBlock texturePathText;
         private GUITextBlock xmlPathText;
+        private GUITickBox pixelPerfectToggle;
+        private GUIScrollBar scaleBar;
         private string xmlPath;
         private Sprite selectedSprite;
         private Texture2D selectedTexture;
         private Rectangle viewArea;
         private Rectangle textureRect;
-        private float scale;
+        private float scale = 1;
+        private float minScale = 0.25f;
+        private float maxScale;
         private int spriteCount;
 
         private readonly Camera cam;
@@ -38,10 +42,10 @@ namespace Barotrauma
         {
             cam = new Camera();
 
-            topPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.08f), Frame.RectTransform) { MinSize = new Point(0, 35) }, "GUIFrameTop");
+            topPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), Frame.RectTransform) { MinSize = new Point(0, 60) }, "GUIFrameTop");
             topPanelContents = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.8f), topPanel.RectTransform, Anchor.Center), style: null);
 
-            new GUIButton(new RectTransform(new Vector2(0.15f, 0.4f), topPanelContents.RectTransform), "Reload Texture")
+            new GUIButton(new RectTransform(new Vector2(0.15f, 0.3f), topPanelContents.RectTransform), "Reload Texture")
             {
                 OnClicked = (button, userData) =>
                 {
@@ -57,13 +61,26 @@ namespace Barotrauma
                     return true;
                 }
             };
-            new GUIButton(new RectTransform(new Vector2(0.15f, 0.4f), topPanelContents.RectTransform) { RelativeOffset = new Vector2(0, 0.5f) }, "Save Selected Source Rect")
+            new GUIButton(new RectTransform(new Vector2(0.15f, 0.3f), topPanelContents.RectTransform) { RelativeOffset = new Vector2(0, 0.3f) }, "Save Selected Source Rect")
             {
                 OnClicked = (button, userData) =>
                 {
                     if (selectedSprite == null) { return false; }
                     var element = selectedSprite.SourceElement;
+                    if (element == null)
+                    {
+                        xmlPathText.Text = "No xml element defined for the sprite";
+                        xmlPathText.Color = Color.Red;
+                        return false;
+                    }
                     element.SetAttributeValue("sourcerect", XMLExtensions.RectToString(selectedSprite.SourceRect));
+                    var d = XMLExtensions.TryLoadXml(xmlPath);
+                    if (d == null || d.BaseUri != element.Document.BaseUri)
+                    {
+                        xmlPathText.Text = "Failed to save to " + xmlPath;
+                        xmlPathText.TextColor = Color.Red;
+                        return false;
+                    }
                     element.Document.Save(xmlPath);
                     string identifier = GetIdentifier(selectedSprite);
                     xmlPathText.Text = string.IsNullOrEmpty(identifier) ? "Selected rect saved to " : $"{identifier} saved to ";
@@ -72,7 +89,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            new GUIButton(new RectTransform(new Vector2(0.15f, 0.4f), topPanelContents.RectTransform) { RelativeOffset = new Vector2(0.2f, 0.5f) }, "Save All Open Source Rects")
+            new GUIButton(new RectTransform(new Vector2(0.15f, 0.3f), topPanelContents.RectTransform) { RelativeOffset = new Vector2(0, 0.6f) }, "Save All Open Source Rects")
             {
                 OnClicked = (button, userData) =>
                 {
@@ -80,13 +97,21 @@ namespace Barotrauma
                     XDocument doc = null;
                     foreach (Sprite sprite in Sprite.LoadedSprites)
                     {
-                        if (sprite.Texture != selectedTexture) continue;
+                        if (sprite.Texture != selectedTexture) { continue; }
                         var element = sprite.SourceElement;
+                        if (element == null) { continue; }
                         element.SetAttributeValue("sourcerect", XMLExtensions.RectToString(sprite.SourceRect));
                         doc = element.Document;
                     }
                     if (doc != null)
                     {
+                        var d = XMLExtensions.TryLoadXml(xmlPath);
+                        if (d == null || d.BaseUri != doc.BaseUri)
+                        {
+                            xmlPathText.Text = "Failed to save to " + xmlPath;
+                            xmlPathText.TextColor = Color.Red;
+                            return false;
+                        }
                         doc.Save(xmlPath);
                         xmlPathText.Text = "All changes saved to " + xmlPath;
                         xmlPathText.TextColor = Color.LightGreen;
@@ -100,11 +125,36 @@ namespace Barotrauma
                     }
                 }
             };
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 0.2f), topPanelContents.RectTransform, Anchor.TopCenter, Pivot.CenterRight) { RelativeOffset = new Vector2(0, 0.3f) }, "Scale: ");
+            scaleBar = new GUIScrollBar(new RectTransform(new Vector2(0.2f, 0.35f), topPanelContents.RectTransform, Anchor.TopCenter, Pivot.CenterRight)
+            { RelativeOffset = new Vector2(0.05f, 0.3f) }, barSize: 0.1f)
+                {
+                    BarScroll = GetBarScrollValue(),
+                    Step = 0.01f,
+                    OnMoved = (scrollBar, value) =>
+                    {
+                        scale = MathHelper.Lerp(minScale, maxScale, value);
+                        widgets.Clear();
+                        return true;
+                    }
+                };
+            pixelPerfectToggle = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.35f), topPanelContents.RectTransform, Anchor.BottomCenter, Pivot.BottomRight)
+            {
+                RelativeOffset = new Vector2(0, 0.2f) }, "Pixel Perfect")
+                {
+                    OnSelected = (tickBox) =>
+                    {
+                        scaleBar.Enabled = !tickBox.Selected;
+                        CalculateScale();
+                        widgets.Clear();
+                        return true;
+                    }
+                };
 
             texturePathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.BottomCenter)
-                { RelativeOffset = new Vector2(0.2f, 0) }, "", Color.LightGray);
+                { RelativeOffset = new Vector2(0.4f, 0) }, "", Color.LightGray);
             xmlPathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.TopCenter)
-                { RelativeOffset = new Vector2(0.2f, 0) }, "", Color.LightGray);
+                { RelativeOffset = new Vector2(0.4f, 0) }, "", Color.LightGray);
 
             leftPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f - topPanel.RectTransform.RelativeSize.Y), Frame.RectTransform, Anchor.BottomLeft)
                 { MinSize = new Point(150, 0) }, style: "GUIFrameLeft");
@@ -143,6 +193,7 @@ namespace Barotrauma
                         xmlPathText.Text = xmlPath;
                     }
                     topPanelContents.Visible = true;
+                    CalculateScale();
                     return true;
                 }
             };
@@ -259,9 +310,6 @@ namespace Barotrauma
 
             if (selectedTexture != null)
             {
-                // TODO: allow to adjust, toggle to snap to pixel perfect
-                scale = Math.Min(viewArea.Width / (float)selectedTexture.Width, viewArea.Height / (float)selectedTexture.Height);
-
                 textureRect = new Rectangle(
                     (int)(viewArea.Center.X - selectedTexture.Bounds.Width / 2f * scale),
                     (int)(viewArea.Center.Y - selectedTexture.Bounds.Height / 2f * scale),
@@ -354,6 +402,17 @@ namespace Barotrauma
 
             spriteBatch.End();
         }
+
+        private void CalculateScale()
+        {
+            float width = viewArea.Width / (float)selectedTexture.Width;
+            float height = viewArea.Height / (float)selectedTexture.Height;
+            maxScale = Math.Min(width, height);
+            scale = pixelPerfectToggle.Selected ? MathHelper.Min(maxScale, 1) : maxScale;
+            scaleBar.BarScroll = GetBarScrollValue();
+        }
+
+        private float GetBarScrollValue() => MathHelper.Lerp(0, 1, MathUtils.InverseLerp(minScale, maxScale, scale));
 
         #region Widgets
         private Dictionary<string, Widget> widgets = new Dictionary<string, Widget>();
