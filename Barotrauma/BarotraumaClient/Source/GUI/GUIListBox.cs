@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -416,6 +417,11 @@ namespace Barotrauma
             {
                 selected.Clear();
                 selected.Add(child);
+            }
+            // Ensure that the selected element is visible. This may not be the case, if the selection is run from code. (e.g. if we have two list boxes that are synced)
+            if (!MouseRect.Contains(child.Rect))
+            {
+                ScrollBar.BarScroll = MathHelper.Lerp(ScrollBar.MinValue, ScrollBar.MaxValue, MathUtils.InverseLerp(0, Content.CountChildren - 1, childIndex));
             }
         }
 
