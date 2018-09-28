@@ -293,7 +293,7 @@ namespace Barotrauma
                 GameMain.ParticleEditorScreen.Select();
             }));
 
-            commands.Add(new Command("editsprites", "", (string[] args) =>
+            commands.Add(new Command("editsprites|editsprite|spriteeditor|spriteedit", "", (string[] args) =>
             {
                 GameMain.SpriteEditorScreen.Select();
             }));
