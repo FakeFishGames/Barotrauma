@@ -59,7 +59,7 @@ namespace Barotrauma
                     RefreshLists();
                     textureList.Select(matchingSprite.Texture);
                     spriteList.Select(selectedSprite);
-                    texturePathText.Text = "Textures reloaded from " + matchingSprite.FilePath;
+                    texturePathText.Text = "Texture reloaded from " + matchingSprite.FilePath;
                     texturePathText.TextColor = Color.LightGreen;
                     return true;
                 }
@@ -265,58 +265,6 @@ namespace Barotrauma
             RefreshLists();
         }
 
-        private string GetIdentifier(Sprite sprite)
-        {
-            // TODO: cache?
-            var element = sprite.SourceElement;
-            if (element == null) { return string.Empty; }
-            string identifier = element.Parent.GetAttributeString("identifier", string.Empty);
-            if (string.IsNullOrEmpty(identifier))
-            {
-                return element.Parent.GetAttributeString("name", string.Empty);
-            }
-            return identifier;
-        }
-
-        private string GetSpriteName(Sprite sprite)
-        {
-            string identifier = GetIdentifier(sprite);
-            return string.IsNullOrEmpty(identifier) ? Path.GetFileNameWithoutExtension(sprite.FilePath) : identifier;
-        }
-
-        private void RefreshLists()
-        {
-            textureList.ClearChildren();
-            spriteList.ClearChildren();
-            widgets.Clear();
-            HashSet<string> textures = new HashSet<string>();
-            foreach (Sprite sprite in Sprite.LoadedSprites.OrderBy(s => Path.GetFileNameWithoutExtension(s.FilePath)))
-            {
-                //ignore sprites that don't have a file path (e.g. submarine pics)
-                if (string.IsNullOrEmpty(sprite.FilePath)) continue;
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), spriteList.Content.RectTransform) { MinSize = new Point(0, 20) }, GetSpriteName(sprite) + " " + sprite.SourceRect)
-                {
-                    Padding = Vector4.Zero,
-                    UserData = sprite
-                };
-
-                string normalizedFilePath = Path.GetFullPath(sprite.FilePath);
-                if (!textures.Contains(normalizedFilePath))
-                {
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), textureList.Content.RectTransform) { MinSize = new Point(0, 20) },
-                        Path.GetFileName(sprite.FilePath))
-                    {
-                        Padding = Vector4.Zero,
-                        ToolTip = sprite.FilePath,
-                        UserData = sprite.Texture
-                    };
-                    textures.Add(normalizedFilePath);
-                }
-            }
-
-            topPanelContents.Visible = false;
-        }
-
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
@@ -472,6 +420,58 @@ namespace Barotrauma
         }
 
         private float GetBarScrollValue() => MathHelper.Lerp(0, 1, MathUtils.InverseLerp(minScale, maxScale, scale));
+
+        private string GetIdentifier(Sprite sprite)
+        {
+            // TODO: cache?
+            var element = sprite.SourceElement;
+            if (element == null) { return string.Empty; }
+            string identifier = element.Parent.GetAttributeString("identifier", string.Empty);
+            if (string.IsNullOrEmpty(identifier))
+            {
+                return element.Parent.GetAttributeString("name", string.Empty);
+            }
+            return identifier;
+        }
+
+        private string GetSpriteName(Sprite sprite)
+        {
+            string identifier = GetIdentifier(sprite);
+            return string.IsNullOrEmpty(identifier) ? Path.GetFileNameWithoutExtension(sprite.FilePath) : identifier;
+        }
+
+        private void RefreshLists()
+        {
+            textureList.ClearChildren();
+            spriteList.ClearChildren();
+            widgets.Clear();
+            HashSet<string> textures = new HashSet<string>();
+            foreach (Sprite sprite in Sprite.LoadedSprites.OrderBy(s => Path.GetFileNameWithoutExtension(s.FilePath)))
+            {
+                //ignore sprites that don't have a file path (e.g. submarine pics)
+                if (string.IsNullOrEmpty(sprite.FilePath)) continue;
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), spriteList.Content.RectTransform) { MinSize = new Point(0, 20) }, GetSpriteName(sprite) + " " + sprite.SourceRect)
+                {
+                    Padding = Vector4.Zero,
+                    UserData = sprite
+                };
+
+                string normalizedFilePath = Path.GetFullPath(sprite.FilePath);
+                if (!textures.Contains(normalizedFilePath))
+                {
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), textureList.Content.RectTransform) { MinSize = new Point(0, 20) },
+                        Path.GetFileName(sprite.FilePath))
+                    {
+                        Padding = Vector4.Zero,
+                        ToolTip = sprite.FilePath,
+                        UserData = sprite.Texture
+                    };
+                    textures.Add(normalizedFilePath);
+                }
+            }
+
+            topPanelContents.Visible = false;
+        }
 
         #region Widgets
         private Dictionary<string, Widget> widgets = new Dictionary<string, Widget>();
