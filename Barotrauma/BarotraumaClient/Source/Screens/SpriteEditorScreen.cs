@@ -157,29 +157,32 @@ namespace Barotrauma
             };
             new GUITextBlock(new RectTransform(new Vector2(0.2f, 0.2f), topPanelContents.RectTransform, Anchor.TopCenter, Pivot.CenterRight) { RelativeOffset = new Vector2(0, 0.3f) }, "Scale: ");
             scaleBar = new GUIScrollBar(new RectTransform(new Vector2(0.2f, 0.35f), topPanelContents.RectTransform, Anchor.TopCenter, Pivot.CenterRight)
-            { RelativeOffset = new Vector2(0.05f, 0.3f) }, barSize: 0.1f)
+            {
+                RelativeOffset = new Vector2(0.05f, 0.3f)
+            }, barSize: 0.1f)
+            {
+                BarScroll = GetBarScrollValue(),
+                Step = 0.01f,
+                OnMoved = (scrollBar, value) =>
                 {
-                    BarScroll = GetBarScrollValue(),
-                    Step = 0.01f,
-                    OnMoved = (scrollBar, value) =>
-                    {
-                        scale = MathHelper.Lerp(minScale, maxScale, value);
-                        widgets.Clear();
-                        return true;
-                    }
-                };
+                    scale = MathHelper.Lerp(minScale, maxScale, value);
+                    widgets.Clear();
+                    return true;
+                }
+            };
             pixelPerfectToggle = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.35f), topPanelContents.RectTransform, Anchor.BottomCenter, Pivot.BottomRight)
             {
-                RelativeOffset = new Vector2(0, 0.1f) }, "Pixel Perfect")
+                RelativeOffset = new Vector2(0, 0.1f)
+            }, "Pixel Perfect")
+            {
+                OnSelected = (tickBox) =>
                 {
-                    OnSelected = (tickBox) =>
-                    {
-                        scaleBar.Enabled = !tickBox.Selected;
-                        CalculateScale();
-                        widgets.Clear();
-                        return true;
-                    }
-                };
+                    scaleBar.Enabled = !tickBox.Selected;
+                    CalculateScale();
+                    widgets.Clear();
+                    return true;
+                }
+            };
 
             texturePathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.BottomCenter)
                 { RelativeOffset = new Vector2(0.4f, 0) }, "", Color.LightGray);
@@ -290,6 +293,12 @@ namespace Barotrauma
                         }
                     }
                 }
+            }
+            if (!pixelPerfectToggle.Selected && PlayerInput.ScrollWheelSpeed != 0 && viewArea.Contains(PlayerInput.MousePosition))
+            {
+                scale = MathHelper.Clamp(scale + PlayerInput.ScrollWheelSpeed * (float)deltaTime * 0.05f * scale, minScale, maxScale);
+                scaleBar.BarScroll = GetBarScrollValue();
+                widgets.Clear();
             }
         }
 
