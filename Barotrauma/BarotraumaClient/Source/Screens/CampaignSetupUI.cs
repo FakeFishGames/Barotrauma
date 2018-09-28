@@ -74,8 +74,8 @@ namespace Barotrauma
                     
                     if (string.IsNullOrEmpty(selectedSub.MD5Hash.Hash))
                     {
-                        ((GUITextBlock)subList.Selected).TextColor = Color.DarkRed * 0.8f;
-                        subList.Selected.CanBeFocused = false;
+                        ((GUITextBlock)subList.SelectedComponent).TextColor = Color.DarkRed * 0.8f;
+                        subList.SelectedComponent.CanBeFocused = false;
                         subList.Deselect();
                         return false;
                     }
