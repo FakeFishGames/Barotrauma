@@ -24,6 +24,16 @@ namespace Barotrauma.Networking
             LoadClientPermissions();
         }
 
+        private void WriteNetProperties(NetBuffer outMsg)
+        {
+            outMsg.Write((UInt16)netProperties.Keys.Count);
+            foreach (UInt32 key in netProperties.Keys)
+            {
+                outMsg.Write(key);
+                netProperties[key].Write(outMsg);
+            }
+        }
+
         public void ServerWrite(NetBuffer outMsg,Client c)
         {
             SharedWrite(outMsg);

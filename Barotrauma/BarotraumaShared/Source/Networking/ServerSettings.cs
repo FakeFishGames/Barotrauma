@@ -70,6 +70,11 @@ namespace Barotrauma.Networking
             {
                 get { return property.Name; }
             }
+
+            public object Value
+            {
+                get { return property.GetValue(); }
+            }
             
             public NetPropertyData(SerializableProperty property,string typeString)
             {
@@ -199,8 +204,9 @@ namespace Barotrauma.Networking
 
         partial void InitProjSpecific();
 
-        public ServerSettings(string serverName, int port, int queryPort, int maxPlayers, bool isPublic, bool enableUPnP)
+        public ServerSettings(NetPeer peer, string serverName, int port, int queryPort, int maxPlayers, bool isPublic, bool enableUPnP)
         {
+            this.peer = peer;
             ServerName = serverName;
             Port = port;
             QueryPort = queryPort;
@@ -249,6 +255,8 @@ namespace Barotrauma.Networking
                 }
             }
         }
+
+        private NetPeer peer;
 
         public string ServerName;
 
@@ -579,16 +587,6 @@ namespace Barotrauma.Networking
             outMsg.Write((UInt16)maxPlayers);
             outMsg.Write(ServerName);
             outMsg.Write(ServerMessageText);
-        }
-
-        private void WriteNetProperties(NetBuffer outMsg)
-        {
-            outMsg.Write((UInt16)netProperties.Keys.Count);
-            foreach (UInt32 key in netProperties.Keys)
-            {
-                outMsg.Write(key);
-                netProperties[key].Write(outMsg);
-            }
         }
 
         private void SharedRead(NetBuffer incMsg)

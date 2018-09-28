@@ -11,8 +11,35 @@ namespace Barotrauma.Networking
     {
         partial class NetPropertyData
         {
-            public GUIComponent component;
-            public object tempValue;
+            public GUIComponent GUIComponent;
+
+            public object GUIComponentValue
+            {
+                get
+                {
+                    if (GUIComponent == null) return null;
+                    else if (GUIComponent is GUITickBox tickBox) return tickBox.Selected;
+                    else if (GUIComponent is GUITextBox textBox) return textBox.Text;
+                    else if (GUIComponent is GUIScrollBar scrollBar) return scrollBar.BarScrollValue;
+                    return null;
+                }
+                set
+                {
+                    if (GUIComponent == null) return;
+                    else if (GUIComponent is GUITickBox tickBox) tickBox.Selected = (bool)value;
+                    else if (GUIComponent is GUITextBox textBox) textBox.Text = (string)value;
+                    else if (GUIComponent is GUIScrollBar scrollBar) scrollBar.BarScrollValue = (float)value;
+                }
+            }
+
+            public bool ChangedLocally
+            {
+                get
+                {
+                    //TODO: implement
+                    return false;
+                }
+            }
         }
 
         partial void InitProjSpecific()
@@ -48,6 +75,14 @@ namespace Barotrauma.Networking
                     if (netProperties.ContainsKey(key))
                     {
                         netProperties[key].Read(incMsg);
+
+                        if (netProperties[key].GUIComponent!=null)
+                        {
+                            if (!netProperties[key].ChangedLocally)
+                            {
+                                netProperties[key].GUIComponentValue = netProperties[key].Value;
+                            }
+                        }
                     }
                     else
                     {
@@ -60,6 +95,26 @@ namespace Barotrauma.Networking
             {
                 incMsg.ReadPadBits();
             }
+        }
+
+        public void ClientWrite()
+        {
+            NetOutgoingMessage outMsg = peer.CreateMessage();
+
+            outMsg.Write((byte)ClientNetObject.SERVER_SETTINGS);
+
+            IEnumerable<KeyValuePair<UInt32, NetPropertyData>> changedProperties = netProperties.Where(kvp => kvp.Value.ChangedLocally);
+            UInt32 count = (UInt32)changedProperties.Count();
+            outMsg.Write(count);
+            foreach (KeyValuePair<UInt32,NetPropertyData> prop in changedProperties)
+            {
+                outMsg.Write(prop.Key);
+                prop.Value.Write(outMsg);
+            }
+
+            outMsg.Write((byte)ClientNetObject.END_OF_MESSAGE);
+
+            (peer as NetClient).SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
         }
 
         //GUI stuff
@@ -82,17 +137,20 @@ namespace Barotrauma.Networking
 
         private void CreateSettingsFrame()
         {
+            //background frame
             settingsFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.5f);
             new GUIButton(new RectTransform(Vector2.One, settingsFrame.RectTransform), "", style: null).OnClicked += (btn, userData) =>
             {
                 if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) ToggleSettingsFrame(btn, userData);
                 return true;
             };
+            
             new GUIButton(new RectTransform(Vector2.One, settingsFrame.RectTransform), "", style: null)
             {
                 OnClicked = ToggleSettingsFrame
             };
 
+            //center frames
             GUIFrame innerFrame = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.7f), settingsFrame.RectTransform, Anchor.Center) { MinSize = new Point(400, 430) });
             GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center), style: null);
 
@@ -104,6 +162,7 @@ namespace Barotrauma.Networking
                 RelativeSpacing = 0.01f
             };
 
+            //tabs
             var tabValues = Enum.GetValues(typeof(SettingsTab)).Cast<SettingsTab>().ToArray();
             string[] tabNames = new string[tabValues.Count()];
             for (int i = 0; i < tabNames.Length; i++)
@@ -125,6 +184,7 @@ namespace Barotrauma.Networking
 
             SelectSettingsTab(null, 0);
 
+            //"Close"
             var closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), paddedFrame.RectTransform, Anchor.BottomRight), TextManager.Get("Close"))
             {
                 OnClicked = ToggleSettingsFrame
@@ -139,13 +199,14 @@ namespace Barotrauma.Networking
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
-
+            
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsSubSelection"));
             var selectionFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
                 RelativeSpacing = 0.05f
             };
+            
             for (int i = 0; i < 3; i++)
             {
                 var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), ((SelectionMode)i).ToString(), font: GUI.SmallFont)
@@ -171,7 +232,7 @@ namespace Barotrauma.Networking
                     UserData = (SelectionMode)i
                 };
             }
-
+            
             var endBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform),
                 TextManager.Get("ServerSettingsEndRoundWhenDestReached"))
             {
@@ -625,7 +686,7 @@ namespace Barotrauma.Networking
                 tickBox.Selected = true;
                 return false;
             }
-            subSelectionMode = (SelectionMode)tickBox.UserData;
+            //subSelectionMode = (SelectionMode)tickBox.UserData;
 
             foreach (GUIComponent otherComponent in tickBox.Parent.Children)
             {
@@ -633,12 +694,12 @@ namespace Barotrauma.Networking
                 otherTickBox.Selected = otherTickBox == tickBox;
             }
 
-            Voting.AllowSubVoting = subSelectionMode == SelectionMode.Vote;
+            //Voting.AllowSubVoting = subSelectionMode == SelectionMode.Vote;
 
-            if (subSelectionMode == SelectionMode.Random)
+            /*if (subSelectionMode == SelectionMode.Random)
             {
                 GameMain.NetLobbyScreen.SubList.Select(Rand.Range(0, GameMain.NetLobbyScreen.SubList.CountChildren));
-            }
+            }*/
 
             return true;
         }
@@ -690,9 +751,12 @@ namespace Barotrauma.Networking
             }
             else
             {
+                foreach (NetPropertyData prop in netProperties.Values)
+                {
+                    prop.GUIComponent = null;
+                }
                 settingsFrame = null;
-                //TODO: sync settings
-                //SaveSettings();
+                ClientWrite();
             }
 
             return false;
