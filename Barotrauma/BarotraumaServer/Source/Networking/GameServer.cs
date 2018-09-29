@@ -110,8 +110,8 @@ namespace Barotrauma.Networking
                 config.EnableUPnP = true;
             }
 
-            serverSettings = new ServerSettings(server, name, port, queryPort, maxPlayers, isPublic, attemptUPnP);
-
+            serverSettings = new ServerSettings(name, port, queryPort, maxPlayers, isPublic, attemptUPnP);
+            
             config.MaximumConnections = maxPlayers * 2; //double the lidgren connections for unauthenticated players            
 
             config.DisableMessageType(NetIncomingMessageType.DebugMessage |
