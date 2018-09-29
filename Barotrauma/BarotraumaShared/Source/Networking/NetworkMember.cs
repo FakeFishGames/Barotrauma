@@ -15,6 +15,8 @@ namespace Barotrauma.Networking
         UPDATE_LOBBY,   //update state in lobby
         UPDATE_INGAME,  //update state ingame
 
+        SERVER_SETTINGS, //change server settings
+
         FILE_REQUEST,   //request a (submarine) file from the server
         
         RESPONSE_STARTGAME, //tell the server whether you're ready to start
@@ -24,7 +26,6 @@ namespace Barotrauma.Networking
     {
         END_OF_MESSAGE, //self-explanatory
         SYNC_IDS,       //ids of the last changes the client knows about
-        SERVER_SETTINGS,//self-explanatory
         CHAT_MESSAGE,   //also self-explanatory
         VOTE,           //you get the idea
         CHARACTER_INPUT,

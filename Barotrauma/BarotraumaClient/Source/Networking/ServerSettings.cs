@@ -130,24 +130,25 @@ namespace Barotrauma.Networking
 
         public void ClientWrite()
         {
-            NetOutgoingMessage outMsg = GameMain.NetworkMember.NetPeer.CreateMessage();
-
-            outMsg.Write((byte)ClientNetObject.SERVER_SETTINGS);
-
             IEnumerable<KeyValuePair<UInt32, NetPropertyData>> changedProperties = netProperties.Where(kvp => kvp.Value.ChangedLocally);
             UInt32 count = (UInt32)changedProperties.Count();
+
+            if (count == 0) return;
+
+            NetOutgoingMessage outMsg = GameMain.NetworkMember.NetPeer.CreateMessage();
+
+            outMsg.Write((byte)ClientPacketHeader.SERVER_SETTINGS);
+
             outMsg.Write(count);
             DebugConsole.NewMessage("COUNT: " + count.ToString(), Color.Yellow);
             foreach (KeyValuePair<UInt32,NetPropertyData> prop in changedProperties)
             {
                 DebugConsole.NewMessage(prop.Value.Name, Color.Lime);
                 outMsg.Write(prop.Key);
-                prop.Value.Write(outMsg);
+                prop.Value.Write(outMsg,prop.Value.GUIComponentValue);
             }
-
-            outMsg.Write((byte)ClientNetObject.END_OF_MESSAGE);
-
-            //(peer as NetClient).SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+            
+            (GameMain.NetworkMember.NetPeer as NetClient).SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
         }
 
         //GUI stuff
