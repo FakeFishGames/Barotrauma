@@ -204,9 +204,8 @@ namespace Barotrauma.Networking
 
         partial void InitProjSpecific();
 
-        public ServerSettings(NetPeer peer, string serverName, int port, int queryPort, int maxPlayers, bool isPublic, bool enableUPnP)
+        public ServerSettings(string serverName, int port, int queryPort, int maxPlayers, bool isPublic, bool enableUPnP)
         {
-            this.peer = peer;
             ServerName = serverName;
             Port = port;
             QueryPort = queryPort;
@@ -255,9 +254,7 @@ namespace Barotrauma.Networking
                 }
             }
         }
-
-        private NetPeer peer;
-
+        
         public string ServerName;
 
         public string ServerMessageText;

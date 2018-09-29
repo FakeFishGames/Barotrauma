@@ -12,6 +12,14 @@ namespace Barotrauma.Networking
         partial class NetPropertyData
         {
             public GUIComponent GUIComponent;
+            public object TempValue;
+
+            public void AssignGUIComponent(GUIComponent component)
+            {
+                GUIComponent = component;
+                GUIComponentValue = property.GetValue();
+                TempValue = GUIComponentValue;
+            }
 
             public object GUIComponentValue
             {
@@ -36,8 +44,29 @@ namespace Barotrauma.Networking
             {
                 get
                 {
-                    //TODO: implement
-                    return false;
+                    if (GUIComponent == null) return false;
+                    return !PropEquals(TempValue, GUIComponentValue);
+                }
+            }
+
+            public bool PropEquals(object a,object b)
+            {
+                switch (typeString)
+                {
+                    case "float":
+                        if (!(a is float?)) return false;
+                        if (!(b is float?)) return false;
+                        return (float)a == (float)b;
+                    case "int":
+                        if (!(a is int?)) return false;
+                        if (!(b is int?)) return false;
+                        return (int)a == (int)b;
+                    case "bool":
+                        if (!(a is bool?)) return false;
+                        if (!(b is bool?)) return false;
+                        return (bool)a == (bool)b;
+                    default:
+                        return false;
                 }
             }
         }
@@ -74,11 +103,13 @@ namespace Barotrauma.Networking
                     UInt32 key = incMsg.ReadUInt32();
                     if (netProperties.ContainsKey(key))
                     {
+                        bool changedLocally = netProperties[key].ChangedLocally;
                         netProperties[key].Read(incMsg);
+                        netProperties[key].TempValue = netProperties[key].Value;
 
                         if (netProperties[key].GUIComponent!=null)
                         {
-                            if (!netProperties[key].ChangedLocally)
+                            if (!changedLocally)
                             {
                                 netProperties[key].GUIComponentValue = netProperties[key].Value;
                             }
@@ -99,22 +130,24 @@ namespace Barotrauma.Networking
 
         public void ClientWrite()
         {
-            NetOutgoingMessage outMsg = peer.CreateMessage();
+            NetOutgoingMessage outMsg = GameMain.NetworkMember.NetPeer.CreateMessage();
 
             outMsg.Write((byte)ClientNetObject.SERVER_SETTINGS);
 
             IEnumerable<KeyValuePair<UInt32, NetPropertyData>> changedProperties = netProperties.Where(kvp => kvp.Value.ChangedLocally);
             UInt32 count = (UInt32)changedProperties.Count();
             outMsg.Write(count);
+            DebugConsole.NewMessage("COUNT: " + count.ToString(), Color.Yellow);
             foreach (KeyValuePair<UInt32,NetPropertyData> prop in changedProperties)
             {
+                DebugConsole.NewMessage(prop.Value.Name, Color.Lime);
                 outMsg.Write(prop.Key);
                 prop.Value.Write(outMsg);
             }
 
             outMsg.Write((byte)ClientNetObject.END_OF_MESSAGE);
 
-            (peer as NetClient).SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+            //(peer as NetClient).SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
         }
 
         //GUI stuff
@@ -130,6 +163,11 @@ namespace Barotrauma.Networking
             Whitelist
         }
 
+        private NetPropertyData GetPropertyData(string name)
+        {
+            return netProperties.First(p => p.Value.Name == name).Value;
+        }
+
         public void AddToGUIUpdateList()
         {
             settingsFrame?.AddToGUIUpdateList();
@@ -137,6 +175,11 @@ namespace Barotrauma.Networking
 
         private void CreateSettingsFrame()
         {
+            foreach (NetPropertyData prop in netProperties.Values)
+            {
+                prop.TempValue = prop.Value;
+            }
+
             //background frame
             settingsFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.5f);
             new GUIButton(new RectTransform(Vector2.One, settingsFrame.RectTransform), "", style: null).OnClicked += (btn, userData) =>
@@ -261,11 +304,10 @@ namespace Barotrauma.Networking
             slider.Step = 0.2f;
             slider.RangeStart = 0.5f;
             slider.RangeEnd = 1.0f;
-            slider.BarScrollValue = EndVoteRequiredRatio;
+            GetPropertyData("EndVoteRequiredRatio").AssignGUIComponent(slider);
             slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
-                EndVoteRequiredRatio = scrollBar.BarScrollValue;
-                ((GUITextBlock)scrollBar.UserData).Text = endRoundLabel + (int)MathUtils.Round(EndVoteRequiredRatio * 100.0f, 10.0f) + " %";
+                ((GUITextBlock)scrollBar.UserData).Text = endRoundLabel + (int)MathUtils.Round(scrollBar.BarScrollValue * 100.0f, 10.0f) + " %";
                 return true;
             };
             slider.OnMoved(slider, slider.BarScroll);
@@ -273,25 +315,23 @@ namespace Barotrauma.Networking
             var respawnBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform),
                 TextManager.Get("ServerSettingsAllowRespawning"))
             {
-                Selected = AllowRespawn,
                 OnSelected = (GUITickBox) =>
                 {
-                    AllowRespawn = !AllowRespawn;
                     return true;
                 }
             };
+            GetPropertyData("AllowRespawn").AssignGUIComponent(respawnBox);
 
             CreateLabeledSlider(roundsTab, "ServerSettingsRespawnInterval", out slider, out sliderLabel);
             string intervalLabel = sliderLabel.Text;
             slider.Step = 0.05f;
-            slider.RangeStart = 0.0f;
+            slider.RangeStart = 10.0f;
             slider.RangeEnd = 600.0f;
-            slider.BarScrollValue = RespawnInterval;
+            GetPropertyData("RespawnInterval").AssignGUIComponent(slider);
             slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
                 GUITextBlock text = scrollBar.UserData as GUITextBlock;
-                RespawnInterval = Math.Max(scrollBar.BarScrollValue, 10.0f);
-                text.Text = intervalLabel + ToolBox.SecondsToReadableTime(RespawnInterval);
+                text.Text = intervalLabel + ToolBox.SecondsToReadableTime(scrollBar.BarScrollValue);
                 return true;
             };
             slider.OnMoved(slider, slider.BarScroll);
@@ -751,12 +791,12 @@ namespace Barotrauma.Networking
             }
             else
             {
+                ClientWrite();
                 foreach (NetPropertyData prop in netProperties.Values)
                 {
                     prop.GUIComponent = null;
                 }
                 settingsFrame = null;
-                ClientWrite();
             }
 
             return false;
