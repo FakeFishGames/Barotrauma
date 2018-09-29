@@ -602,6 +602,9 @@ namespace Barotrauma.Networking
 
                     ClientReadIngame(inc);
                     break;
+                case ClientPacketHeader.SERVER_SETTINGS:
+                    serverSettings.ServerRead(inc, ConnectedClients.First(c=>c.Connection == inc.SenderConnection));
+                    break;
                 case ClientPacketHeader.SERVER_COMMAND:
                     ClientReadServerCommand(inc);
                     break;
@@ -1066,8 +1069,7 @@ namespace Barotrauma.Networking
             {
                 outmsg.Write(true);
                 outmsg.WritePadBits();
-
-                //TODO: use ServerSettings.ServerWrite
+                
                 outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
 
                 NetBuffer settingsBuf = new NetBuffer();

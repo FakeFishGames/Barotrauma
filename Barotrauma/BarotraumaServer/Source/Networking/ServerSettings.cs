@@ -57,6 +57,31 @@ namespace Barotrauma.Networking
             }
         }
 
+        public void ServerRead(NetIncomingMessage incMsg,Client c)
+        {
+            UInt32 count = incMsg.ReadUInt32();
+            bool changed = false;
+
+            for (int i=0;i<count;i++)
+            {
+                UInt32 key = incMsg.ReadUInt32();
+                
+                if (c.HasPermission(Networking.ClientPermissions.ManageSettings) && netProperties.ContainsKey(key))
+                {
+                    netProperties[key].Read(incMsg);
+                    GameServer.Log(c.Name + " changed " + netProperties[key].Name + " to " + netProperties[key].Value.ToString(),ServerLog.MessageType.ServerMessage);
+                    changed = true;
+                }
+                else
+                {
+                    UInt32 size = incMsg.ReadVariableUInt32();
+                    incMsg.Position += 8 * size;
+                }
+            }
+
+            if (changed) GameMain.NetLobbyScreen.LastUpdateID++;
+        }
+
         public void SaveSettings()
         {
             XDocument doc = new XDocument(new XElement("serversettings"));

@@ -145,48 +145,49 @@ namespace Barotrauma.Networking
                 msg.Position += 8 * size;
             }
 
-            public void Write(NetBuffer msg)
+            public void Write(NetBuffer msg,object overrideValue=null)
             {
+                if (overrideValue == null) overrideValue = property.GetValue();
                 switch (typeString)
                 {
                     case "float":
                         msg.WriteVariableUInt32(4);
-                        msg.Write((float)property.GetValue());
+                        msg.Write((float)overrideValue);
                         break;
                     case "vector2":
                         msg.WriteVariableUInt32(8);
-                        msg.Write(((Vector2)property.GetValue()).X);
-                        msg.Write(((Vector2)property.GetValue()).Y);
+                        msg.Write(((Vector2)overrideValue).X);
+                        msg.Write(((Vector2)overrideValue).Y);
                         break;
                     case "vector3":
                         msg.WriteVariableUInt32(12);
-                        msg.Write(((Vector3)property.GetValue()).X);
-                        msg.Write(((Vector3)property.GetValue()).Y);
-                        msg.Write(((Vector3)property.GetValue()).Z);
+                        msg.Write(((Vector3)overrideValue).X);
+                        msg.Write(((Vector3)overrideValue).Y);
+                        msg.Write(((Vector3)overrideValue).Z);
                         break;
                     case "vector4":
                         msg.WriteVariableUInt32(16);
-                        msg.Write(((Vector4)property.GetValue()).X);
-                        msg.Write(((Vector4)property.GetValue()).Y);
-                        msg.Write(((Vector4)property.GetValue()).Z);
-                        msg.Write(((Vector4)property.GetValue()).W);
+                        msg.Write(((Vector4)overrideValue).X);
+                        msg.Write(((Vector4)overrideValue).Y);
+                        msg.Write(((Vector4)overrideValue).Z);
+                        msg.Write(((Vector4)overrideValue).W);
                         break;
                     case "color":
                         msg.WriteVariableUInt32(4);
-                        msg.Write(((Color)property.GetValue()).R);
-                        msg.Write(((Color)property.GetValue()).G);
-                        msg.Write(((Color)property.GetValue()).B);
-                        msg.Write(((Color)property.GetValue()).A);
+                        msg.Write(((Color)overrideValue).R);
+                        msg.Write(((Color)overrideValue).G);
+                        msg.Write(((Color)overrideValue).B);
+                        msg.Write(((Color)overrideValue).A);
                         break;
                     case "rectangle":
                         msg.WriteVariableUInt32(16);
-                        msg.Write(((Rectangle)property.GetValue()).X);
-                        msg.Write(((Rectangle)property.GetValue()).Y);
-                        msg.Write(((Rectangle)property.GetValue()).Width);
-                        msg.Write(((Rectangle)property.GetValue()).Height);
+                        msg.Write(((Rectangle)overrideValue).X);
+                        msg.Write(((Rectangle)overrideValue).Y);
+                        msg.Write(((Rectangle)overrideValue).Width);
+                        msg.Write(((Rectangle)overrideValue).Height);
                         break;
                     default:
-                        string strVal = property.GetValue().ToString();
+                        string strVal = overrideValue.ToString();
 
                         msg.Write(strVal);
                         break;
