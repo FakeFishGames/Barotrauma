@@ -353,7 +353,8 @@ namespace Barotrauma
                 var processInfo = new ProcessStartInfo
                 {
                     FileName = "DedicatedServer.exe",
-                    Arguments = arguments
+                    Arguments = arguments,
+                    WindowStyle = ProcessWindowStyle.Hidden
                 };
                 GameMain.ServerChildProcess = Process.Start(processInfo);
 
