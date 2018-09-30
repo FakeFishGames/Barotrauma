@@ -18,26 +18,26 @@ namespace Barotrauma
 
     abstract class GroundedMovementParams : AnimationParams
     {
-        [Serialize("1.0, 1.0", true), Editable]
+        [Serialize("1.0, 1.0", true), Editable(ToolTip = "How big steps the character takes.")]
         public Vector2 StepSize
         {
             get;
             set;
         }
 
-        [Serialize(float.NaN, true), Editable]
+        [Serialize(float.NaN, true), Editable(ToolTip = "How high above the ground the character's head is positioned.")]
         public float HeadPosition { get; set; }
 
-        [Serialize(float.NaN, true), Editable]
+        [Serialize(float.NaN, true), Editable(ToolTip = "How high above the ground the character's torso is positioned.")]
         public float TorsoPosition { get; set; }
 
-        [Serialize(0.75f, true), Editable]
+        [Serialize(0.75f, true), Editable(ToolTip = "The character's movement speed is multiplied with this value when moving backwards.")]
         public float BackwardsMovementMultiplier { get; set; }
     }
 
     abstract class SwimParams : AnimationParams
     {
-        [Serialize(25.0f, true), Editable]
+        [Serialize(25.0f, true)]
         public float SteerTorque { get; set; }
     }
 

@@ -54,7 +54,7 @@
     type="Controller"
     disableitemusagewhenselected="true">
 
-    <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="182,0,61,97"/>
+    <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="192,0,64,96"/>
     
     <Controller UserPos="-35.0, -50.0" direction ="Right" canbeselected="true" requireaimtouse="true">
       <limbposition limb="Head" position="-5,-62"/>
@@ -105,7 +105,7 @@
     linkable="true"
     allowedlinks="railgun">
 
-    <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="0,0,177,128"/>
+    <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="0,0,192,128"/>
 
     <ItemContainer hideitems="false" drawinventory="true" capacity="6" slotsperrow="6" itempos="24,-75" iteminterval="26,0" itemrotation="90" canbeselected = "true">
       <Containable identifiers="railgunshell,nuclearshell,ancientweapon"/>

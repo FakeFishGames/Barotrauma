@@ -1,21 +1,74 @@
 ﻿<Items>
   <Item
-    name="Steel Cabinet"    
+    name="Small Windowed Steel Cabinet"
+    identifier="smallwindowedsteelcabinet"
+    linkable="true"
+    pickdistance="150">
+
+    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,48,80"/>
+
+    <ItemContainer capacity="5" canbeselected="true" hideitems="true">
+      <Containable identifiers="smallitem"/>
+    </ItemContainer>
+  </Item>
+  
+  <Item
+    name="Small Steel Cabinet"
+    identifier="smallsteelcabinet"
+    linkable="true"
+    pickdistance="150">
+
+    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,80,48,80"/>
+
+    <ItemContainer capacity="5" canbeselected="true" hideitems="true">
+      <Containable identifiers="smallitem"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
+    name="Medium Steel Cabinet"
+    identifier="mediumsteelcabinet"
+    linkable="true"
+    pickdistance="150">
+
+    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="48,0,48,160"/>
+
+    <ItemContainer capacity="10" canbeselected="true" hideitems="true">
+      <Containable identifiers="smallitem"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
+    name="Medium Windowed Steel Cabinet"
+    identifier="mediumwindowedsteelcabinet"
+    linkable="true"
+    pickdistance="150">
+
+    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="96,0,48,160"/>
+
+    <ItemContainer capacity="10" canbeselected="true" hideitems="true">
+      <Containable identifiers="smallitem"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
+    name="Large Steel Cabinet"    
     identifier="steelcabinet"
     linkable="true"
     pickdistance="150">
 
     <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,148,160"/>
 
-    <ItemContainer capacity="20" canbeselected="true" hideitems="true">
+    <ItemContainer capacity="30" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem"/>
     </ItemContainer>
   </Item>
-  
+
   <Item
     name="Secure Steel Cabinet"
     identifier="securesteelcabinet"
     linkable="true"
+    spritecolor="255,255,255,255"
     pickdistance="150">
 
     <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,148,160"/>

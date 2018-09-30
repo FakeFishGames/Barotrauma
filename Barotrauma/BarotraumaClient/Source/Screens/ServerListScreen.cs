@@ -26,7 +26,7 @@ namespace Barotrauma
 
         private GUIButton joinButton, directJoinButton;
 
-        private GUITextBox clientNameBox, ipBox, hiddenIpBox;
+        private GUITextBox clientNameBox, ipBox;
 
         private bool masterServerResponded;
         private IRestResponse masterServerResponse;
@@ -76,19 +76,19 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("ServerIP"));
             // TODO: Show IP on server info window
-            // TODO: Make server list more streamer friendly by not displaying the IP
             ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.045f), leftColumn.RectTransform), "")
             {
                 OnTextChanged = ManualConnectServer
             };
-
-            hiddenIpBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.045f), leftColumn.RectTransform), "")
+            ipBox.OnSelected += (sender, key) => 
             {
-                Visible = false
+                if (sender.UserData is ServerInfo)
+                {
+                    sender.Text = "";
+                    sender.UserData = null;
+                }
             };
-
-            //directJoinButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.045f), leftColumn.RectTransform), "Direct Connect");
-
+            
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.45f), leftColumn.RectTransform), style: null);
 
@@ -120,58 +120,12 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            //var columnHeaderContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.03f), rightColumn.RectTransform), isHorizontal: true);
-
 			serverList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.85f), rightColumn.RectTransform, Anchor.Center))
             {
                 OnSelected = SelectServer
             };
 
-            //columnHeaderContainer.RectTransform.NonScaledSize = new Point(serverList.Content.Rect.Width, columnHeaderContainer.Rect.Height);
-
             columnRelativeWidth = new float[] { 0.03f, 0.02f, 0.044f, 0.77f, 0.02f, 0.075f, 0.06f };
-            /*string[] columnHeaders = new string[]
-            {
-                TextManager.Get("ServerListCompatible"),
-                TextManager.Get("Password"),
-				"",
-				TextManager.Get("ServerListName"),
-				TextManager.Get("ServerListRoundStarted"),
-				TextManager.Get("ServerListPlayers"),
-				TextManager.Get("ServerListPing")
-			};
-            Sprite[] columnIcons = new Sprite[]
-            {
-                GUI.CheckmarkIcon,
-                GUI.LockIcon,
-				null,
-				null,
-				GUI.TimerIcon,
-				null,
-				null,
-			};
-
-            System.Diagnostics.Debug.Assert(columnRelativeWidth.Length == columnHeaders.Length);
-            System.Diagnostics.Debug.Assert(columnRelativeWidth.Length == columnIcons.Length);
-
-            for (int i = 0; i < columnHeaders.Length; i++)
-            {
-                if (columnIcons[i] != null)
-                {
-                    new GUIImage(new RectTransform(new Vector2(columnRelativeWidth[i], 1.0f), columnHeaderContainer.RectTransform),
-                        columnIcons[i], scaleToFit: true)
-                    {
-                        ToolTip = columnHeaders[i]
-                    };
-                    continue;
-                }
-
-                new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[i], 1.0f), columnHeaderContainer.RectTransform),
-                    columnHeaders[i], font: GUI.SmallFont, wrap: true)
-                {
-                    Padding = Vector4.Zero
-                };
-            }*/
 
             var buttonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.075f), rightColumn.RectTransform), style: null);
 
@@ -274,14 +228,14 @@ namespace Barotrauma
             try
             {
                 serverInfo = (ServerInfo)obj;
+                ipBox.UserData = serverInfo;
+                ipBox.Text = serverInfo.ServerName;
             }
             catch (InvalidCastException)
             {
                 return false;
             }
-
-            hiddenIpBox.Text = serverInfo.IP + ":" + serverInfo.Port;
-
+            
             return true;
         }
 
@@ -291,7 +245,6 @@ namespace Barotrauma
             serverList.ClearChildren();
 
             ipBox.Text = null;
-            hiddenIpBox.Text = null;
             joinButton.Enabled = false;
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverList.Content.RectTransform),
@@ -609,7 +562,6 @@ namespace Barotrauma
 
         private bool JoinServer(GUIButton button, object obj)
         {
-
             if (string.IsNullOrWhiteSpace(clientNameBox.Text))
             {
                 clientNameBox.Flash();
@@ -619,15 +571,14 @@ namespace Barotrauma
 
             GameMain.Config.DefaultPlayerName = clientNameBox.Text;
 
-            string ip;
-
-            if (!string.IsNullOrWhiteSpace(ipBox.Text))
+            string ip = null;
+            if (ipBox.UserData is ServerInfo serverInfo)
+            {
+                ip = serverInfo.IP + ":" + serverInfo.Port;
+            }
+            else if (!string.IsNullOrWhiteSpace(ipBox.Text))
             {
                 ip = ipBox.Text;
-            }
-            else
-            {
-                ip = hiddenIpBox.Text;
             }
 
             if (string.IsNullOrWhiteSpace(ip))
@@ -641,12 +592,7 @@ namespace Barotrauma
 
             return true;
         }
-
-        /*public void JoinServer(string ip, bool hasPassword, string msg = "Password required")
-        {
-            CoroutineManager.StartCoroutine(ConnectToServer(ip));
-        }*/
-
+        
         private IEnumerable<object> ConnectToServer(string ip)
         {
 #if !DEBUG

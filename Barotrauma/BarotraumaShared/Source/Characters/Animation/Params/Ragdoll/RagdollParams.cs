@@ -21,15 +21,18 @@ namespace Barotrauma
 
     class RagdollParams : EditableParams
     {
+        public const float MIN_SCALE = 0.2f;
+        public const float MAX_SCALE = 2;
+
         public string SpeciesName { get; private set; }
 
         [Serialize(45f, true), Editable(0f, 1000f)]
         public float ColliderHeightFromFloor { get; set; }
 
-        [Serialize(1.0f, true), Editable(0.5f, 2f)]
+        [Serialize(1.0f, true), Editable(MIN_SCALE, MAX_SCALE)]
         public float LimbScale { get; set; }
 
-        [Serialize(1.0f, true), Editable(0.5f, 2f)]
+        [Serialize(1.0f, true), Editable(MIN_SCALE, MAX_SCALE)]
         public float JointScale { get; set; }
 
         private static Dictionary<string, Dictionary<string, RagdollParams>> allRagdolls = new Dictionary<string, Dictionary<string, RagdollParams>>();

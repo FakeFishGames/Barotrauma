@@ -1,12 +1,15 @@
-﻿using Microsoft.Xna.Framework;
+﻿using EventInput;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
+using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
-    public class GUIListBox : GUIComponent
+    public class GUIListBox : GUIComponent, IKeyboardSubscriber
     {
         protected List<GUIComponent> selected;
 
@@ -44,13 +47,15 @@ namespace Barotrauma
             }
         }
 
-        public GUIComponent Selected
+        public GUIComponent SelectedComponent
         {
             get
             {
                 return selected.FirstOrDefault();
             }
         }
+
+        public bool Selected { get; set; }
 
         public List<GUIComponent> AllSelected
         {
@@ -61,7 +66,7 @@ namespace Barotrauma
         {
             get
             {
-                return Selected?.UserData;
+                return SelectedComponent?.UserData;
             }
         }
 
@@ -69,8 +74,8 @@ namespace Barotrauma
         {
             get
             {
-                if (Selected == null) return -1;
-                return Content.RectTransform.GetChildIndex(Selected.RectTransform);
+                if (SelectedComponent == null) return -1;
+                return Content.RectTransform.GetChildIndex(SelectedComponent.RectTransform);
             }
         }
 
@@ -384,7 +389,7 @@ namespace Barotrauma
                 ScrollBar.Visible = ScrollBar.BarSize < 1.0f;
             }
 
-            if ((GUI.IsMouseOn(this) || IsParentOf(GUI.MouseOn) || GUI.IsMouseOn(ScrollBar)) && PlayerInput.ScrollWheelSpeed != 0)
+            if ((GUI.IsMouseOn(this) || GUI.IsMouseOn(ScrollBar)) && PlayerInput.ScrollWheelSpeed != 0)
             {
                 ScrollBar.BarScroll -= (PlayerInput.ScrollWheelSpeed / 500.0f) * BarSize;
             }
@@ -417,10 +422,22 @@ namespace Barotrauma
                 selected.Clear();
                 selected.Add(child);
             }
+            // Ensure that the selected element is visible. This may not be the case, if the selection is run from code. (e.g. if we have two list boxes that are synced)
+            if (!MouseRect.Contains(child.Rect))
+            {
+                ScrollBar.BarScroll = MathHelper.Lerp(ScrollBar.MinValue, ScrollBar.MaxValue, MathUtils.InverseLerp(0, Content.CountChildren - 1, childIndex));
+            }
+            Selected = true;
+            GUI.KeyboardDispatcher.Subscriber = this;
         }
 
         public void Deselect()
         {
+            Selected = false;
+            if (GUI.KeyboardDispatcher.Subscriber == this)
+            {
+                GUI.KeyboardDispatcher.Subscriber = null;
+            }
             selected.Clear();
         }
 
@@ -543,6 +560,23 @@ namespace Barotrauma
             }
 
             return true;
+        }
+
+        public void ReceiveTextInput(char inputChar) { }
+        public void ReceiveTextInput(string text) { }
+        public void ReceiveCommandInput(char command) { }
+
+        public void ReceiveSpecialInput(Keys key)
+        {
+            switch (key)
+            {
+                case Keys.Down:
+                    Select(Math.Min(Content.CountChildren - 1, SelectedIndex + 1));
+                    break;
+                case Keys.Up:
+                    Select(Math.Max(0, SelectedIndex - 1));
+                    break;
+            }
         }
     }
 }

@@ -170,9 +170,9 @@ namespace Barotrauma.Items.Components
         {
             CheckFabricableItems(character);
 #if CLIENT
-            if (itemList.Selected != null)
+            if (itemList.SelectedComponent != null)
             {
-                SelectItem(itemList.Selected, itemList.Selected.UserData);                
+                SelectItem(itemList.SelectedComponent, itemList.SelectedComponent.UserData);                
             }
 #endif
             return base.Select(character);
