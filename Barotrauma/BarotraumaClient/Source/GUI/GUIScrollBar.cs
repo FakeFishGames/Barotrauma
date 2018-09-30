@@ -86,27 +86,36 @@ namespace Barotrauma
             }
         }
 
-        public float RangeStart
+        private Vector2 range;
+        public Vector2 Range
         {
-            get;
-            set;
+            get
+            {
+                return range;
+            }
+            set
+            {
+                float oldBarScrollValue = BarScrollValue;
+                range = value;
+                BarScrollValue = oldBarScrollValue;
+            }
         }
 
-        public float RangeEnd
-        {
-            get;
-            set;
-        }
+        public delegate float ScrollConversion(GUIScrollBar scrollBar, float f);
+        public ScrollConversion ScrollToValue = null;
+        public ScrollConversion ValueToScroll = null;
 
         public float BarScrollValue
         {
             get
             {
-                return (BarScroll * (RangeEnd - RangeStart)) + RangeStart;
+                if (ScrollToValue==null) return (BarScroll * (Range.Y - Range.X)) + Range.X;
+                return ScrollToValue(this, BarScroll);
             }
             set
             {
-                BarScroll = (value - RangeStart) / (RangeEnd - RangeStart);
+                if (ValueToScroll==null) BarScroll = (value - Range.X) / (Range.Y - Range.X);
+                else BarScroll = ValueToScroll(this, value);
             }
         }
 
