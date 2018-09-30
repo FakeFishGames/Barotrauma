@@ -691,30 +691,37 @@ namespace Barotrauma.Lights
             
             lightVolumeBuffer.SetData<VertexPositionColorTexture>(vertices.ToArray());
             lightVolumeIndexBuffer.SetData<short>(indices.ToArray());
-        }     
-
-        public void Draw(SpriteBatch spriteBatch, BasicEffect lightEffect, Matrix transform)
+        } 
+        
+        /// <summary>
+        /// Draws the optional "light sprite", just a simple sprite with no shadows
+        /// </summary>
+        /// <param name="spriteBatch"></param>
+        public void DrawSprite(SpriteBatch spriteBatch)
         {
-            if (CastShadows)
-            {
-                CheckHullsInRange();
-            }
-
-            Vector2 drawPos = position;
-            if (ParentSub != null) drawPos += ParentSub.DrawPosition;
-            drawPos.Y = -drawPos.Y;
-            
             if (LightSprite != null)
             {
                 Vector2 origin = LightSprite.Origin;
                 if (LightSpriteEffect == SpriteEffects.FlipHorizontally) origin.X = LightSprite.SourceRect.Width - origin.X;
                 if (LightSpriteEffect == SpriteEffects.FlipVertically) origin.Y = LightSprite.SourceRect.Height - origin.Y;
-                
+
+                Vector2 drawPos = position;
+                if (ParentSub != null) drawPos += ParentSub.DrawPosition;
+                drawPos.Y = -drawPos.Y;
+
                 LightSprite.Draw(
                     spriteBatch, drawPos, 
                     new Color(Color, OverrideLightSpriteAlpha ?? Color.A / 255.0f),
                     origin, -Rotation, 1, LightSpriteEffect);
             }
+        }
+
+        public void DrawLightVolume(SpriteBatch spriteBatch, BasicEffect lightEffect, Matrix transform)
+        {
+            if (CastShadows)
+            {
+                CheckHullsInRange();
+            }          
 
             //if the light doesn't cast shadows, we can simply render the texture without having to calculate the light volume
             if (!CastShadows)
@@ -724,6 +731,10 @@ namespace Barotrauma.Lights
 
                 Vector2 center = new Vector2(currentTexture.Width / 2, currentTexture.Height / 2);
                 float scale = range / (currentTexture.Width / 2.0f);
+
+                Vector2 drawPos = position;
+                if (ParentSub != null) drawPos += ParentSub.DrawPosition;
+                drawPos.Y = -drawPos.Y;  
 
                 spriteBatch.Draw(currentTexture, drawPos, null, color * (color.A / 255.0f), 0, center, scale, SpriteEffects.None, 1);
                 return;

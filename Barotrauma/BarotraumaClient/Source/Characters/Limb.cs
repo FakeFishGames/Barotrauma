@@ -265,10 +265,12 @@ namespace Barotrauma
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch, Camera cam)
+        public void Draw(SpriteBatch spriteBatch, Camera cam, Color? overrideColor = null)
         {
             float brightness = 1.0f - (burnOverLayStrength / 100.0f) * 0.5f;
             Color color = new Color(brightness, brightness, brightness);
+
+            color = overrideColor ?? color;
 
             if (isSevered)
             {

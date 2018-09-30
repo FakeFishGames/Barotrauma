@@ -946,9 +946,9 @@ namespace Barotrauma
             };
             deleteButton.OnClicked = (btn, userdata) =>
             {
-                if (subList.Selected != null)
+                if (subList.SelectedComponent != null)
                 {
-                    TryDeleteSub(subList.Selected.UserData as Submarine);
+                    TryDeleteSub(subList.SelectedComponent.UserData as Submarine);
                 }
 
                 deleteButton.Enabled = false;
@@ -990,9 +990,9 @@ namespace Barotrauma
                 return false;
             }
 
-            if (subList.Selected == null) return false;
+            if (subList.SelectedComponent == null) return false;
 
-            Submarine selectedSub = subList.Selected.UserData as Submarine;
+            Submarine selectedSub = subList.SelectedComponent.UserData as Submarine;
 
             if (selectedSub == null) return false;
 

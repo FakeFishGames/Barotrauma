@@ -180,8 +180,7 @@ namespace Barotrauma.Networking
             {
                 serverIP = address[0];
 
-                int port = 0;
-                if (!int.TryParse(address[1], out port))
+                if (!int.TryParse(address[1], out int port))
                 {
                     DebugConsole.ThrowError("Invalid port: " + address[1] + "!");
                     Port = NetConfig.DefaultPort;
@@ -289,6 +288,7 @@ namespace Barotrauma.Networking
             DateTime reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, 200);
 
             // Loop until we are approved
+            //TODO: show the name of the server instead of IP when connecting through the server list (more streamer-friendly)
             string connectingText = TextManager.Get("ConnectingTo").Replace("[serverip]", serverIP);
             while (!CanStart && !connectCancelled)
             {

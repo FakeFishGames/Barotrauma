@@ -38,16 +38,16 @@ namespace Barotrauma.Networking
         private void ReadClientSteamAuthRequest(NetIncomingMessage inc, out ulong clientSteamID)
         {
             clientSteamID = 0;
-            clientSteamID = inc.ReadUInt64();
-            int authTicketLength = inc.ReadInt32();
-            inc.ReadBytes(authTicketLength, out byte[] authTicketData);
-
             if (!Steam.SteamManager.USE_STEAM)
             {
                 //not using steam, handle auth normally
                 HandleClientAuthRequest(inc.SenderConnection, 0);
                 return;
             }
+
+            clientSteamID = inc.ReadUInt64();
+            int authTicketLength = inc.ReadInt32();
+            inc.ReadBytes(authTicketLength, out byte[] authTicketData);
 
             DebugConsole.Log("Received a Steam auth request");
             DebugConsole.Log("  Steam ID: "+ clientSteamID);
@@ -65,6 +65,8 @@ namespace Barotrauma.Networking
                 DebugConsole.Log("Duplicate request");
                 return;
             }
+            
+
 
             if (authTicketData == null)
             {
@@ -82,8 +84,17 @@ namespace Barotrauma.Networking
             
             if (!Steam.SteamManager.StartAuthSession(authTicketData, clientSteamID))
             {
-                unauthClient.Connection.Disconnect(DisconnectReason.SteamAuthenticationFailed.ToString());
                 unauthenticatedClients.Remove(unauthClient);
+                if (GameMain.Config.RequireSteamAuthentication)
+                {
+                    unauthClient.Connection.Disconnect(DisconnectReason.SteamAuthenticationFailed.ToString());
+                }
+                else
+                {
+                    DebugConsole.Log("Steam authentication failed, skipping to basic auth...");
+                    HandleClientAuthRequest(inc.SenderConnection);
+                    return;
+                }
             }
 
             return;
@@ -108,7 +119,16 @@ namespace Barotrauma.Networking
                         break;
                     default:
                         unauthenticatedClients.Remove(unauthClient);
-                        unauthClient.Connection.Disconnect(DisconnectReason.SteamAuthenticationFailed.ToString()+"; (" + status.ToString() + ")");
+                        if (GameMain.Config.RequireSteamAuthentication)
+                        {
+                            unauthClient.Connection.Disconnect(DisconnectReason.SteamAuthenticationFailed.ToString() + "; (" + status.ToString() + ")");
+                        }
+                        else
+                        {
+                            DebugConsole.Log("Steam authentication failed (" + status.ToString() + "), skipping to basic auth...");
+                            HandleClientAuthRequest(unauthClient.Connection);
+                            return;
+                        }
                         break;
                 }
                 return;
