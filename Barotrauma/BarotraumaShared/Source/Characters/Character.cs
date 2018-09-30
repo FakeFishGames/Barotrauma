@@ -1765,7 +1765,7 @@ namespace Barotrauma
             UpdateAIChatMessages(deltaTime);
 
             //Do ragdoll shenanigans before Stun because it's still technically a stun, innit? Less network updates for us!
-            bool allowRagdoll = GameMain.NetworkMember.ServerSettings.AllowRagdollButton;
+            bool allowRagdoll = GameMain.NetworkMember != null ? GameMain.NetworkMember.ServerSettings.AllowRagdollButton : true;
             if (IsForceRagdolled)
                 IsRagdolled = IsForceRagdolled;
             else if (allowRagdoll && (!IsRagdolled || AnimController.Collider.LinearVelocity.LengthSquared() < 1f)) //Keep us ragdolled if we were forced or we're too speedy to unragdoll
