@@ -491,7 +491,10 @@ namespace Barotrauma.Networking
                 c.ChatSpamSpeed = Math.Max(0.0f, c.ChatSpamSpeed - deltaTime);
 
                 //constantly increase AFK timer if the client is controlling a character (gets reset to zero every time an input is received)
-                if (gameStarted && c.Character != null) c.KickAFKTimer += deltaTime;
+                if (gameStarted && c.Character != null && !c.Character.IsDead && !c.Character.IsUnconscious)
+                {
+                    c.KickAFKTimer += deltaTime;
+                }
             }
 
             List<Client> kickAFK = connectedClients.FindAll(c => c.KickAFKTimer >= KickAFKTime);
