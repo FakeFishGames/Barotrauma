@@ -70,6 +70,9 @@ namespace Barotrauma
         private float healthShadowSize;
         private float healthShadowDelay;
 
+        // 0-1
+        private float damageIntensity;
+        private float damageIntensityDropdownRate = 0.1f;
         private float healthBarPulsateTimer;
         private float healthBarPulsatePhase;
 
@@ -259,6 +262,9 @@ namespace Barotrauma
 
             if (healthBarPulsateTimer <= 0.0f) healthBarPulsatePhase = 0.0f;
             healthBarPulsateTimer = 1.0f;
+
+            float additionalIntensity = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(0, 0.1f, attackResult.Damage / MaxVitality));
+            damageIntensity = MathHelper.Clamp(damageIntensity + additionalIntensity, 0, 1);
         }
 
         private void UpdateAlignment()
@@ -384,7 +390,18 @@ namespace Barotrauma
                 }
             }
 
-            if (damageOverlayTimer > 0.0f) damageOverlayTimer -= deltaTime;
+            if (damageOverlayTimer > 0.0f)
+            {
+                damageOverlayTimer -= deltaTime;
+            }
+            if (damageIntensity > 0)
+            {
+                damageIntensity -= deltaTime * damageIntensityDropdownRate;
+                if (damageIntensity < 0)
+                {
+                    damageIntensity = 0;
+                }
+            }
 
             if (healthShadowDelay > 0.0f)
             {
@@ -628,6 +645,11 @@ namespace Barotrauma
             if (vitality < MaxVitality * 0.1f)
             {
                 damageOverlayAlpha = Math.Max(1.0f - (vitality / maxVitality * 10.0f), damageOverlayAlpha);
+            }
+            else
+            {
+                float pulsateAmount = (float)(Math.Sin(healthBarPulsatePhase) + 1.0f) / 2.0f;
+                damageOverlayAlpha = pulsateAmount * healthBarPulsateTimer * damageIntensity;
             }
 
             if (damageOverlayAlpha > 0.0f)
