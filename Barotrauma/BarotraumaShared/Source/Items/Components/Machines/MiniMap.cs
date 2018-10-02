@@ -33,7 +33,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Editable(ToolTip = "Should damaged walls be displayed by the machine."), Serialize(false, true)]
+        [Editable(ToolTip = "Should damaged walls be displayed by the machine."), Serialize(true, true)]
         public bool ShowHullIntegrity
         {
             get;
