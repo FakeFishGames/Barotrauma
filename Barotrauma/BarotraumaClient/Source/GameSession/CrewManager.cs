@@ -910,8 +910,50 @@ namespace Barotrauma
             }
         }
 
+        public void SelectNextCharacter()
+        {
+            if (GameMain.IsMultiplier) { return; }
+            if (characters.None()) { return; }
+            Character.Controlled = characters[TryAdjustIndex(1)];
+        }
+
+        public void SelectPreviousCharacter()
+        {
+            if (GameMain.IsMultiplier) { return; }
+            if (characters.None()) { return; }
+            Character.Controlled = characters[TryAdjustIndex(-1)];
+        }
+
+        private int TryAdjustIndex(int amount)
+        {
+            int index = Character.Controlled == null ? 0 : characters.IndexOf(Character.Controlled) + amount;
+            int lastIndex = characters.Count - 1;
+            if (index > lastIndex)
+            {
+                index = 0;
+            }
+            if (index < 0)
+            {
+                index = lastIndex;
+            }
+            return index;
+        }
+
         partial void UpdateProjectSpecific(float deltaTime)
         {
+            // Quick selection
+            if (!GameMain.IsMultiplier)
+            {
+                if (PlayerInput.KeyHit(InputType.SelectNextCharacter))
+                {
+                    SelectNextCharacter();
+                }
+                if (PlayerInput.KeyHit(InputType.SelectPreviousCharacter))
+                {
+                    SelectPreviousCharacter();
+                }
+            }
+
             if (GUI.DisableHUD) return;
             if (chatBox != null) chatBox.Update(deltaTime);
 

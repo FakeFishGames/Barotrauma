@@ -984,16 +984,17 @@ namespace Barotrauma
                 AnimController.Anim != AnimController.Animation.CPR)
             {
                 //Limb head = AnimController.GetLimb(LimbType.Head);
-
+                // Values lower than this seem to cause constantious flipping when the mouse is near the player and the player is running, because the root collider moves after flipping.
+                float followMargin = 30;
                 if (dontFollowCursor)
                 {
                     AnimController.TargetDir = Direction.Left;
                 }
-                else if (cursorPosition.X < AnimController.Collider.Position.X - 10.0f)
+                else if (cursorPosition.X < AnimController.Collider.Position.X - followMargin)
                 {
                     AnimController.TargetDir = Direction.Left;
                 }
-                else if (cursorPosition.X > AnimController.Collider.Position.X + 10.0f)
+                else if (cursorPosition.X > AnimController.Collider.Position.X + followMargin)
                 {
                     AnimController.TargetDir = Direction.Right;
                 }
