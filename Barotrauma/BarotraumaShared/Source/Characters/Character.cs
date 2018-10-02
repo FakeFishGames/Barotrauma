@@ -786,9 +786,11 @@ namespace Barotrauma
                     case InputType.Crouch:
                         return !(dequeuedInput.HasFlag(InputNetFlags.Crouch)) && (prevDequeuedInput.HasFlag(InputNetFlags.Crouch));
                     case InputType.Select:
-                        return dequeuedInput.HasFlag(InputNetFlags.Select); //TODO: clean up the way this input is registered    
+                        return dequeuedInput.HasFlag(InputNetFlags.Select); //TODO: clean up the way this input is registered
                     case InputType.Health:
-                        return dequeuedInput.HasFlag(InputNetFlags.Health);                                                                      
+                        return dequeuedInput.HasFlag(InputNetFlags.Health);
+                    case InputType.Grab:
+                        return dequeuedInput.HasFlag(InputNetFlags.Grab);
                     case InputType.Use:
                         return !(dequeuedInput.HasFlag(InputNetFlags.Use)) && (prevDequeuedInput.HasFlag(InputNetFlags.Use));
                     case InputType.Ragdoll:
@@ -1519,7 +1521,7 @@ namespace Barotrauma
                 focusedCharacter = FindCharacterAtPosition(mouseSimPos);
                 focusedItem = CanInteract ? FindItemAtPosition(mouseSimPos, AnimController.InWater ? 0.5f : 0.25f) : null;
 
-                if (focusedCharacter != null && focusedItem != null)
+                /*if (focusedCharacter != null && focusedItem != null)
                 {
                     if (Vector2.DistanceSquared(mouseSimPos, focusedCharacter.SimPosition) > Vector2.DistanceSquared(mouseSimPos, focusedItem.SimPosition))
                     {
@@ -1529,7 +1531,7 @@ namespace Barotrauma
                     {
                         focusedItem = null;
                     }
-                }
+                }*/
                 findFocusedTimer = 0.05f;
             }
             else
@@ -1548,8 +1550,7 @@ namespace Barotrauma
                     float minDist = float.PositiveInfinity;
                     foreach (Ladder ladder in Ladder.List)
                     {
-                        float dist;
-                        if (CanInteractWith(ladder.Item, out dist) && dist < minDist)
+                        if (CanInteractWith(ladder.Item, out float dist) && dist < minDist)
                         {
                             minDist = dist;
                             nearbyLadder = ladder;
@@ -1565,11 +1566,11 @@ namespace Barotrauma
                 }
             }
             
-            if (SelectedCharacter != null && focusedItem == null && IsKeyHit(InputType.Select)) //Let people use ladders and buttons and stuff when dragging chars
+            if (SelectedCharacter != null && IsKeyHit(InputType.Grab)) //Let people use ladders and buttons and stuff when dragging chars
             {
                 DeselectCharacter();
             }
-            else if (focusedCharacter != null && IsKeyHit(InputType.Select) && FocusedCharacter.CanInventoryBeAccessed)
+            else if (focusedCharacter != null && IsKeyHit(InputType.Grab) && FocusedCharacter.CanInventoryBeAccessed)
             {
                 SelectCharacter(focusedCharacter);
             }
