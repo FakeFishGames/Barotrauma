@@ -736,7 +736,7 @@ namespace Barotrauma
                 loadBox.Buttons[1].OnClicked += (btn, data) =>
                 {
                     string fileName = Path.GetFileNameWithoutExtension(selectedFile);
-                    var ragdoll = character.IsHumanoid ? HumanRagdollParams.GetRagdollParams(fileName) as RagdollParams : RagdollParams.GetRagdollParams<FishRagdollParams>(character.SpeciesName, fileName);
+                    var ragdoll = character.IsHumanoid ? HumanRagdollParams.GetRagdollParams(character.SpeciesName, fileName) as RagdollParams : RagdollParams.GetRagdollParams<FishRagdollParams>(character.SpeciesName, fileName);
                     GUI.AddMessage($"Ragdoll loaded from {selectedFile}", Color.WhiteSmoke, font: GUI.Font);
                     character.AnimController.Recreate(ragdoll);
                     TeleportTo(spawnPosition);
