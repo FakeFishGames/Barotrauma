@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Items.Components;
-using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -163,12 +162,14 @@ namespace Barotrauma
                     textPos.Y += 20;
                     if (character.FocusedCharacter.CanInventoryBeAccessed)
                     {
+                        // TODO: (garbage colleciton optimization) use the string builder class, because Replace returns a new string and the draw function is called multiple times per frame
                         GUI.DrawString(spriteBatch, textPos, TextManager.Get("GrabHint").Replace("[key]", GameMain.Config.KeyBind(InputType.Select).ToString()), 
                             Color.LightGreen, Color.Black, 2, GUI.SmallFont);
                         textPos.Y += 15;
                     }
                     if (character.FocusedCharacter.CharacterHealth.UseHealthWindow)
                     {
+                        // TODO: (garbage colleciton optimization) use the string builder class, because Replace returns a new string and the draw function is called multiple times per frame
                         GUI.DrawString(spriteBatch, textPos, TextManager.Get("HealHint").Replace("[key]", GameMain.Config.KeyBind(InputType.Health).ToString()), Color.LightGreen, Color.Black, 2, GUI.SmallFont);
                         textPos.Y += 15;
                     }
