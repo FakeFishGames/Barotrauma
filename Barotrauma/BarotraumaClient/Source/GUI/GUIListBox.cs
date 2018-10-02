@@ -427,8 +427,12 @@ namespace Barotrauma
             {
                 ScrollBar.BarScroll = MathHelper.Lerp(ScrollBar.MinValue, ScrollBar.MaxValue, MathUtils.InverseLerp(0, Content.CountChildren - 1, childIndex));
             }
-            Selected = true;
-            GUI.KeyboardDispatcher.Subscriber = this;
+            // If one of the children is the subscriber, we don't want to register, because it will unregister the child.
+            if (RectTransform.GetAllChildren().None(rt => rt.GUIComponent == GUI.KeyboardDispatcher.Subscriber))
+            {
+                Selected = true;
+                GUI.KeyboardDispatcher.Subscriber = this;
+            }
         }
 
         public void Deselect()
