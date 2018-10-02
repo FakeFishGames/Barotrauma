@@ -70,6 +70,7 @@ namespace Barotrauma.Items.Components
                 {
                     AutoPilot = !box.Selected;
                     unsentChanges = true;
+                    user = Character.Controlled;
 
                     return true;
                 }
@@ -81,6 +82,7 @@ namespace Barotrauma.Items.Components
                 {
                     AutoPilot = box.Selected;
                     unsentChanges = true;
+                    user = Character.Controlled;
 
                     return true;
                 }
@@ -105,6 +107,7 @@ namespace Barotrauma.Items.Components
                     if (maintainPos != tickBox.Selected)
                     {
                         unsentChanges = true;
+                        user = Character.Controlled;
                         maintainPos = tickBox.Selected;
                         if (maintainPos)
                         {
@@ -141,6 +144,7 @@ namespace Barotrauma.Items.Components
                     if (levelStartSelected != tickBox.Selected)
                     {
                         unsentChanges = true;
+                        user = Character.Controlled;
                         levelStartSelected = tickBox.Selected;
                         levelEndSelected = !levelStartSelected;
                         if (levelStartSelected)
@@ -167,6 +171,7 @@ namespace Barotrauma.Items.Components
                     if (levelEndSelected != tickBox.Selected)
                     {
                         unsentChanges = true;
+                        user = Character.Controlled;
                         levelEndSelected = tickBox.Selected;
                         levelStartSelected = !levelEndSelected;
                         if (levelEndSelected)
@@ -374,9 +379,9 @@ namespace Barotrauma.Items.Components
                     else
                     {
                         SteeringInput = inputPos;
-                        //steeringAdjustSpeed = character == null ? 0.2f : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("helm") / 100.0f);
                     }
                     unsentChanges = true;
+                    user = Character.Controlled;
                 }
             }
             if (!AutoPilot && Character.DisableControls)
@@ -425,10 +430,11 @@ namespace Barotrauma.Items.Components
                     {
                         keyboardInput += normalizedInput * length;
                     }
-                    if (keyboardInput.Length() > 0)
+                    if (keyboardInput.LengthSquared() > 0.01f)
                     {
                         SteeringInput += keyboardInput;
                         unsentChanges = true;
+                        user = Character.Controlled;
                         keyboardInput *= MathHelper.Clamp(1 - step, 0, 1);
                     }
                 }
