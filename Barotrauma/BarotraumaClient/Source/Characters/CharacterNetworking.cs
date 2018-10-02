@@ -50,7 +50,8 @@ namespace Barotrauma
                     }
                     if (memInput[i].states.HasFlag(InputNetFlags.Select) || 
                         memInput[i].states.HasFlag(InputNetFlags.Use) || 
-                        memInput[i].states.HasFlag(InputNetFlags.Health))
+                        memInput[i].states.HasFlag(InputNetFlags.Health) ||
+                        memInput[i].states.HasFlag(InputNetFlags.Grab))
                     {
                         msg.Write(memInput[i].interact);
                     }
