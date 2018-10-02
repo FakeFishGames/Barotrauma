@@ -156,6 +156,8 @@
   <InputType.CrewOrders>Crew orders</InputType.CrewOrders>
   <InputType.Ragdoll>Ragdoll</InputType.Ragdoll>
   <InputType.Health>Health</InputType.Health>
+  <InputType.SelectNextCharacter>Next character</InputType.SelectNextCharacter>
+  <InputType.SelectPreviousCharacter>Previous character</InputType.SelectPreviousCharacter>
   
   <!-- Server settings menu -->
   <ServerSettingsRoundsTab>Rounds</ServerSettingsRoundsTab>
