@@ -272,6 +272,7 @@ namespace Barotrauma.Lights
             foreach (Character character in Character.CharacterList)
             {
                 if (character.CurrentHull == null || !character.Enabled) continue;
+                if (Character.Controlled?.FocusedCharacter == character) continue;
 
                 Color color = AmbientLight;
                 if (smoothedHullAmbientLights.ContainsKey(character.CurrentHull))

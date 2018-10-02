@@ -163,7 +163,7 @@ namespace Barotrauma
                     textPos.Y += 20;
                     if (character.FocusedCharacter.CanInventoryBeAccessed)
                     {
-                        GUI.DrawString(spriteBatch, textPos, TextManager.Get("GrabHint").Replace("[key]", GameMain.Config.KeyBind(InputType.Select).ToString()), 
+                        GUI.DrawString(spriteBatch, textPos, TextManager.Get("GrabHint").Replace("[key]", GameMain.Config.KeyBind(InputType.Grab).ToString()), 
                             Color.LightGreen, Color.Black, 2, GUI.SmallFont);
                         textPos.Y += 15;
                     }
@@ -173,7 +173,7 @@ namespace Barotrauma
                         textPos.Y += 15;
                     }
                 }
-                else if (character.SelectedCharacter == null && character.FocusedItem != null && character.SelectedConstruction == null)
+                if (character.FocusedItem != null && character.SelectedConstruction == null)
                 {
                     focusedItem = character.FocusedItem;
                 }
