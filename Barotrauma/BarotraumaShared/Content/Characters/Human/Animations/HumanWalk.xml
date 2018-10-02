@@ -4,9 +4,7 @@
   cyclespeed="5.5"
   footmovestrength="15"
   footrotatestrength="15"
-  stepsize="0.4100002,0.1099999"
-  legcorrectiontorque="15"
-  thighcorrectiontorque="5"
+  stepsize="0.4725362,0.181002"
   handmoveamount="0.5,0.19"
   handmoveoffset="0,0"
   handmovestrength="0.7"
@@ -18,4 +16,9 @@
   footmoveoffset="0.02,0"
   speed="1.6"
   headangle="-6"
-  torsoangle="-9" />
+  torsoangle="-9.198767"
+  crouchingtorsopos="0.65"
+  crouchingtorsoangle="-10"
+  legbendtorque="10"
+  backwardsmovementmultiplier="0.75"
+  animationtype="Walk" />
