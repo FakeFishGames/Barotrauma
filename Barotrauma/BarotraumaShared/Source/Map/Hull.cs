@@ -134,6 +134,11 @@ namespace Barotrauma
             get { return surface; }
         }
 
+        public float WorldSurface
+        {
+            get { return Submarine == null ? surface : surface + Submarine.Position.Y; }
+        }
+
         public float WaterVolume
         {
             get { return waterVolume; }

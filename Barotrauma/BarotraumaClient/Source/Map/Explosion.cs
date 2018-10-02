@@ -15,7 +15,7 @@ namespace Barotrauma
             }
 
             hull = hull ?? Hull.FindHull(worldPosition, useWorldCoordinates: true);
-            bool underwater = hull == null;
+            bool underwater = hull == null || worldPosition.Y < hull.WorldSurface;
 
             if (underwater)
             {
