@@ -396,10 +396,12 @@ namespace Barotrauma
                     SelectedContentPackages.Add(contentPackage);
                     foreach (GUITickBox otherTickBox in tickBox.Parent.Children)
                     {
-                        otherTickBox.Selected = SelectedContentPackages.Contains(otherTickBox.UserData as ContentPackage);
+                        ContentPackage otherContentPackage = otherTickBox.UserData as ContentPackage;
+                        if (otherContentPackage == contentPackage) continue;
+                        otherTickBox.Selected = SelectedContentPackages.Contains(otherContentPackage);
                     }
                 }
-                else
+                else if (SelectedContentPackages.Contains(contentPackage))
                 {
                     //core packages cannot be deselected, only switched by selecting another core package
                     new GUIMessageBox(TextManager.Get("Warning"), TextManager.Get("CorePackageRequiredWarning"));
