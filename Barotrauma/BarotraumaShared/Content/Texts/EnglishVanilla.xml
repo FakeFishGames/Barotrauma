@@ -764,6 +764,9 @@
   <DialogAffirmative>Aye!</DialogAffirmative>
   <DialogAffirmative>Got it!</DialogAffirmative>
   <DialogReactorFuel>Loading more fuel to the reactor!</DialogReactorFuel>
+  <DialogReactorTaken>Hey, I'm operating the reactor!</DialogReactorTaken>
+  <DialogReactorTaken>Hands off please, I've got this!</DialogReactorTaken>
+  <DialogReactorTaken>Hey, we don't need two people at the reactor!</DialogReactorTaken>
   <DialogLoadTurret>Loading ammunition to the [itemname]!</DialogLoadTurret>
   <DialogFireTurret>Firing!</DialogFireTurret>
   <DialogFireTurret>Fire in the hole!</DialogFireTurret>
@@ -801,6 +804,9 @@
   <DialogNoFire>What fire?</DialogNoFire>
   <DialogNoFire>Can't see any fires!</DialogNoFire>
   <DialogNoFire>I don't think there's any fire to put out!</DialogNoFire>
+  <DialogSteeringTaken>Hey, I'm at the helm now!</DialogSteeringTaken>
+  <DialogSteeringTaken>Hands off please, I'm steering now!</DialogSteeringTaken>
+  <DialogSteeringTaken>Hey, we don't need two people to steer!</DialogSteeringTaken>
   <DialogSonarTarget>A target on the sonar at [direction]!</DialogSonarTarget>
   <DialogSonarTarget>A blip on the sonar at [direction]!</DialogSonarTarget>
   <DialogSonarTarget>Something on the sonar at [direction]!</DialogSonarTarget>
