@@ -365,7 +365,7 @@ namespace Barotrauma
                             w.DrawPos = textureRect.Location.ToVector2() + topLeft * scale - halfSize;
                             w.inputAreaMargin = new Point(widgetSize / 2);
                             w.MouseDown += () => spriteList.Select(sprite);
-                            w.MouseHeld += () =>
+                            w.MouseHeld += dTime =>
                             {
                                 w.DrawPos = PlayerInput.MousePosition;
                                 sprite.SourceRect = new Rectangle(((w.DrawPos + halfSize - textureRect.Location.ToVector2()) / scale).ToPoint(), sprite.SourceRect.Size);
@@ -391,7 +391,7 @@ namespace Barotrauma
                             w.DrawPos = textureRect.Location.ToVector2() + bottomRight * scale + halfSize;
                             w.inputAreaMargin = new Point(widgetSize / 2);
                             w.MouseDown += () => spriteList.Select(sprite);
-                            w.MouseHeld += () =>
+                            w.MouseHeld += dTime =>
                             {
                                 w.DrawPos = PlayerInput.MousePosition;
                                 sprite.SourceRect = new Rectangle(sprite.SourceRect.Location, ((w.DrawPos - new Vector2(widgetSize) - positionWidget.DrawPos) / scale).ToPoint());

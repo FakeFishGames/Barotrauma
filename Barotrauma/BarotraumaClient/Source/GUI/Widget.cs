@@ -45,7 +45,7 @@ namespace Barotrauma
         public event Action Clicked;
         public event Action MouseDown;
         public event Action MouseUp;
-        public event Action MouseHeld;
+        public event Action<float> MouseHeld;
         public event Action<float> PreUpdate;
         public event Action<float> PostUpdate;
         public event Action<SpriteBatch, float> PreDraw;
@@ -88,7 +88,7 @@ namespace Barotrauma
             {
                 if (PlayerInput.LeftButtonHeld())
                 {
-                    MouseHeld?.Invoke();
+                    MouseHeld?.Invoke(deltaTime);
                 }
                 if (PlayerInput.LeftButtonDown())
                 {
