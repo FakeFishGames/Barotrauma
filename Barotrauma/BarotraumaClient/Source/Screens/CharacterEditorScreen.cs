@@ -354,7 +354,10 @@ namespace Barotrauma
                 }
                 return true;
             };
-            var uniformScalingToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), ragdollControls.RectTransform) { AbsoluteOffset = new Point(elementSize.X + 10, textAreaHeight) }, "Uniform Scale")
+            var uniformScalingToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), ragdollControls.RectTransform)
+            {
+                AbsoluteOffset = new Point(0, textAreaHeight * 4 + 10)
+            }, "Uniform Scale")
             {
                 Selected = uniformScaling,
                 OnSelected = (GUITickBox box) =>
@@ -364,6 +367,19 @@ namespace Barotrauma
                 }
             };
             uniformScalingToggle.TextColor = Color.White;
+            new GUIButton(new RectTransform(new Point(elementSize.X, textAreaHeight * 2), ragdollControls.RectTransform)
+            {
+                AbsoluteOffset = new Point(elementSize.X + 20, (int)(textAreaHeight * 1.5f))
+            }, "Recreate Ragdoll")
+            {
+                ToolTip = "Many of the parameters requires recreation of the ragdoll. If adjusting the parameter doesn't seem to have effect, click this button.",
+                OnClicked = (button, data) =>
+                {
+                    character.AnimController.Recreate(RagdollParams);
+                    TeleportTo(spawnPosition);
+                    return true;
+                }
+            };
             // Sprite dimensions
             spriteControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupSprite = new GUILayoutGroup(new RectTransform(Vector2.One, spriteControls.RectTransform)) { CanBeFocused = false };

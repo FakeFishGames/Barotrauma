@@ -215,10 +215,10 @@ namespace Barotrauma
             Name = $"Joint {element.Attribute("limb1").Value} - {element.Attribute("limb2").Value}";
         }
 
-        [Serialize(-1, true)]
+        [Serialize(-1, true), Editable]
         public int Limb1 { get; set; }
 
-        [Serialize(-1, true)]
+        [Serialize(-1, true), Editable]
         public int Limb2 { get; set; }
 
         /// <summary>
