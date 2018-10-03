@@ -394,7 +394,7 @@ namespace Barotrauma
                     foreach (Item item in debugInteractablesInRange)
                     {
                         GUI.DrawLine(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y),
-                            new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), Color.White * 0.3f, width: 4);
+                            new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), Color.White * 0.1f, width: 4);
                     }
                     foreach (Pair<Item, float> item in debugInteractablesNearCursor)
                     {

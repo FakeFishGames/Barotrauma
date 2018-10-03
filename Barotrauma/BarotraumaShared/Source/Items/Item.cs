@@ -1175,13 +1175,18 @@ namespace Barotrauma
 
         public bool IsInsideTrigger(Vector2 worldPosition)
         {
+            return IsInsideTrigger(worldPosition, out _);
+        }
+
+        public bool IsInsideTrigger(Vector2 worldPosition, out Rectangle transformedTrigger)
+        {
             foreach (Rectangle trigger in Prefab.Triggers)
             {
-                Rectangle transformedTrigger = TransformTrigger(trigger, true);
-
+                transformedTrigger = TransformTrigger(trigger, true);
                 if (Submarine.RectContains(transformedTrigger, worldPosition)) return true;
             }
 
+            transformedTrigger = Rectangle.Empty;
             return false;
         }
 
