@@ -46,6 +46,7 @@
     name="Vent"
     identifier="vent"
     category="Machine"
+    interactdistance="0"
     linkable="true"
     allowedlinks="oxygenerator">
 
