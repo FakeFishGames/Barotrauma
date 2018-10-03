@@ -1221,7 +1221,7 @@ namespace Barotrauma
             bool altDown = PlayerInput.KeyDown(Keys.LeftAlt);
             if (!altDown)
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 200, 20), "HOLD \"Left Alt\" TO ADJUST THE CYCLE SPEED", Color.White, Color.Black * 0.5f, 10, GUI.Font);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 100, 20), "HOLD \"Left Alt\" TO ADJUST THE CYCLE SPEED", Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
             // Widgets for all anims -->
             Vector2 referencePoint = SimToScreen(head != null ? head.SimPosition : collider.SimPosition);
