@@ -445,7 +445,7 @@ namespace Barotrauma
                 movement.X,
                 Collider.LinearVelocity.Y > 0.0f ? Collider.LinearVelocity.Y * 0.5f : Collider.LinearVelocity.Y);
             
-            WalkPos -= MainLimb.LinearVelocity.X * (CurrentGroundedParams.CycleSpeed / 100.0f);
+            WalkPos -= MainLimb.LinearVelocity.X * (CurrentAnimationParams.CycleSpeed / 100.0f);
 
             Vector2 transformedStepSize = new Vector2(
                 (float)Math.Cos(WalkPos) * CurrentGroundedParams.StepSize.X * RagdollParams.JointScale * 3.0f,

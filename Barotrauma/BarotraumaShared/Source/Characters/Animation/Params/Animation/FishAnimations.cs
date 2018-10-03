@@ -68,9 +68,6 @@ namespace Barotrauma
 
         [Serialize(8.0f, true), Editable(ToolTip = "How much force is used to move the feet to the correct position.")]
         public float FootMoveForce { get; set; }
-        
-        [Serialize(5.0f, true), Editable(ToolTip = "The speed of the \"walk cycle\", i.e. how fast the character takes steps.")]
-        public float CycleSpeed { get; set; }
 
         [Serialize(10.0f, true), Editable(ToolTip = "How much force is used to move the torso to the correct position.")]
         public float TorsoMoveForce { get; set; }
