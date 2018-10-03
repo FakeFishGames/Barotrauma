@@ -1369,6 +1369,10 @@ namespace Barotrauma
             return true;
         }
 
+        private List<Item> debugInteractablesInRange = new List<Item>();
+        private List<Item> debugInteractablesAtCursor = new List<Item>();
+        private List<Pair<Item,float>> debugInteractablesNearCursor = new List<Pair<Item, float>>();
+
         /// <summary>
         ///   Finds the front (lowest depth) interactable item at a position. "Interactable" in this case means that the character can "reach" the item.
         /// </summary>
@@ -1382,6 +1386,10 @@ namespace Barotrauma
             {
                 simPosition += Submarine.SimPosition;
             }
+
+            debugInteractablesInRange.Clear();
+            debugInteractablesAtCursor.Clear();
+            debugInteractablesNearCursor.Clear();
 
             Vector2 displayPosition = ConvertUnits.ToDisplayUnits(simPosition);
 
@@ -1398,7 +1406,15 @@ namespace Barotrauma
                 
                 if (CanInteractWith(item))
                 {
-                    if (item.IsMouseOn(displayPosition) && (highestPriorityItemAtPosition == null || 
+                    debugInteractablesInRange.Add(item);
+
+                    bool mouseOn = item.IsMouseOn(displayPosition);
+                    if (mouseOn)
+                    {
+                        debugInteractablesAtCursor.Add(item);
+                    }
+
+                    if (mouseOn && (highestPriorityItemAtPosition == null ||
                         ((highestPriorityItemAtPosition.InteractPriority < item.InteractPriority) ||
                         (highestPriorityItemAtPosition.InteractPriority == item.InteractPriority && highestPriorityItemAtPosition.GetDrawDepth() > item.GetDrawDepth()))))
                     {
@@ -1406,15 +1422,41 @@ namespace Barotrauma
                     }
                     else if (aimAssistModifier > 0.0f && SelectedConstruction == null)
                     {
-                        float distanceToItem = item.IsInsideTrigger(displayPosition) ? 0.0f : Vector2.Distance(item.WorldPosition, displayPosition);
+                        float distanceToItem = float.PositiveInfinity;
+                        
+                        if (item.IsInsideTrigger(displayPosition))
+                        {
+                            distanceToItem = 0.0f;
+                        }
+                        else
+                        {
+                            Rectangle itemDisplayRect = new Rectangle(item.InteractionRect.X, item.InteractionRect.Y - item.InteractionRect.Height, item.InteractionRect.Width, item.InteractionRect.Height);
+
+                            if (itemDisplayRect.Contains(displayPosition))
+                            {
+                                distanceToItem = 0.0f;
+                            }
+                            else
+                            {
+                                //get the point on the itemDisplayRect which is closest to the cursor
+                                Vector2 rectIntersectionPoint = new Vector2(
+                                    MathHelper.Clamp(displayPosition.X, itemDisplayRect.X, itemDisplayRect.Right),
+                                    MathHelper.Clamp(displayPosition.Y, itemDisplayRect.Y, itemDisplayRect.Bottom));
+                                distanceToItem = Vector2.Distance(rectIntersectionPoint, displayPosition);
+                            }
+                        }
 
                         //aim assist can only be used if no item has been selected 
                         //= can't switch selection to another item without deselecting the current one first UNLESS the cursor is directly on the item
                         //otherwise it would be too easy to accidentally switch the selected item when rewiring items
-                        if (distanceToItem < (100.0f * aimAssistModifier) && (closestItem == null || distanceToItem < closestItemDistance))
+                        if (distanceToItem < (100.0f * aimAssistModifier))
                         {
-                            closestItem = item;
-                            closestItemDistance = distanceToItem;
+                            debugInteractablesNearCursor.Add(new Pair<Item, float>(item, 1.0f - distanceToItem / (100.0f * aimAssistModifier)));
+                            if (closestItem == null || distanceToItem < closestItemDistance)
+                            {
+                                closestItem = item;
+                                closestItemDistance = distanceToItem;
+                            }
                         }
                     }
                 }
@@ -1519,19 +1561,9 @@ namespace Barotrauma
                 (isLocalPlayer && (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.SubEditorScreen)))
             {
                 focusedCharacter = FindCharacterAtPosition(mouseSimPos);
-                focusedItem = CanInteract ? FindItemAtPosition(mouseSimPos, AnimController.InWater ? 0.5f : 0.25f) : null;
-
-                /*if (focusedCharacter != null && focusedItem != null)
-                {
-                    if (Vector2.DistanceSquared(mouseSimPos, focusedCharacter.SimPosition) > Vector2.DistanceSquared(mouseSimPos, focusedItem.SimPosition))
-                    {
-                        focusedCharacter = null;
-                    }
-                    else
-                    {
-                        focusedItem = null;
-                    }
-                }*/
+                //TODO: allow players to change the amount of aim assist?
+                focusedItem = CanInteract ? FindItemAtPosition(mouseSimPos, AnimController.InWater ? 0.6f : 0.3f) : null;
+                
                 findFocusedTimer = 0.05f;
             }
             else

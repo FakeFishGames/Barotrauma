@@ -15,6 +15,8 @@ namespace Barotrauma
     {
         public static bool DisableControls;
 
+        public static bool DebugDrawInteract;
+
         protected float soundTimer;
         protected float soundInterval;
         protected float hudInfoTimer;
@@ -22,7 +24,7 @@ namespace Barotrauma
 
         protected float lastRecvPositionUpdateTime;
 
-        float hudInfoHeight;
+        private float hudInfoHeight;
 
         private List<CharacterSound> sounds;
 
@@ -378,7 +380,32 @@ namespace Barotrauma
                     Math.Min(speechBubbleTimer, 1.0f));
             }
 
-            if (this == controlled) return;
+            if (this == controlled)
+            {
+                if (DebugDrawInteract)
+                {
+                    Vector2 cursorPos = cam.ScreenToWorld(PlayerInput.MousePosition);
+                    cursorPos.Y = -cursorPos.Y;
+                    foreach (Item item in debugInteractablesAtCursor)
+                    {
+                        GUI.DrawLine(spriteBatch, cursorPos,
+                            new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), Color.LightGreen, width: 4);
+                    }
+                    foreach (Item item in debugInteractablesInRange)
+                    {
+                        GUI.DrawLine(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y),
+                            new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), Color.White * 0.3f, width: 4);
+                    }
+                    foreach (Pair<Item, float> item in debugInteractablesNearCursor)
+                    {
+                        GUI.DrawLine(spriteBatch,
+                            cursorPos,
+                            new Vector2(item.First.DrawPosition.X, -item.First.DrawPosition.Y),
+                            ToolBox.GradientLerp(item.Second, Color.Red, Color.Orange, Color.Green), width: 2);
+                    }
+                }
+                return;
+            }
 
             float hoverRange = 300.0f;
             float fadeOutRange = 200.0f;
