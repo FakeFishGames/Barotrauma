@@ -33,6 +33,11 @@ namespace Barotrauma.Networking
             get { return inGameHUD; }
         }
 
+        public ChatBox ChatBox
+        {
+            get { return chatBox; }
+        }
+
         private void InitProjSpecific()
         {
             inGameHUD = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)

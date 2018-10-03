@@ -232,13 +232,14 @@ namespace Barotrauma
                     }
                 }
             }
-
+            bool drawPortraitToolTip = false;
             if (character.Stun <= 0.1f && !character.IsDead)
             {
                 if (character?.Info?.Portrait != null && CharacterHealth.OpenHealthWindow == null && character.SelectedCharacter == null)
                 {
                     character.Info.Portrait.Draw(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(),
                         scale: HUDLayoutSettings.PortraitArea.Width / character.Info.Portrait.size.X);
+                    drawPortraitToolTip = HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition);
                 }
                 if (character.Inventory != null && !character.LockHands)
                 {
@@ -274,6 +275,14 @@ namespace Barotrauma
                 {
                     //character.Inventory.CurrentLayout = (CharacterHealth.OpenHealthWindow == null) ? Alignment.Center : Alignment.Left;
                 }
+            }
+
+            if (drawPortraitToolTip)
+            {
+                GUIComponent.DrawToolTip(
+                    spriteBatch,
+                    character.Info.Job == null ? character.Name : character.Name + " (" + character.Info.Job.Name + ")",
+                    HUDLayoutSettings.PortraitArea);
             }
         }
 
