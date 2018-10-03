@@ -78,6 +78,11 @@ namespace Barotrauma
                 inputBox.OnTextChanged = value;
             }
         }
+        
+        public GUIFrame GUIFrame
+        {
+            get { return guiFrame; }
+        }
 
         public GUIButton RadioButton
         {
@@ -87,6 +92,11 @@ namespace Barotrauma
         public GUITextBox InputBox
         {
             get { return inputBox; }
+        }
+
+        public GUIButton ToggleButton
+        {
+            get { return toggleButton; }
         }
 
         public ChatBox(GUIComponent parent, bool isSinglePlayer)
@@ -299,7 +309,7 @@ namespace Barotrauma
                     {
                         //move the message on the screen
                         popupMsg.RectTransform.ScreenSpaceOffset = new Point(
-                            (int)MathHelper.SmoothStep(0, -popupMsg.Rect.Width - toggleButton.Rect.Width * 2, popupMessageTimer * 5.0f), 0);
+                            (int)MathHelper.SmoothStep(0, -popupMsg.Rect.Width - toggleButton.Rect.Width * 2 - (int)(35 * GUI.Scale), popupMessageTimer * 5.0f), 0);
                     }
                 }
             }
