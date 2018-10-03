@@ -18,20 +18,20 @@ namespace Barotrauma
 
     abstract class GroundedMovementParams : AnimationParams
     {
-        [Serialize("1.0, 1.0", true), Editable(ToolTip = "How big steps the character takes.")]
+        [Serialize("1.0, 1.0", true), Editable(DecimalCount = 2, ToolTip = "How big steps the character takes.")]
         public Vector2 StepSize
         {
             get;
             set;
         }
 
-        [Serialize(float.NaN, true), Editable(ToolTip = "How high above the ground the character's head is positioned.")]
+        [Serialize(float.NaN, true), Editable(DecimalCount = 2, ToolTip = "How high above the ground the character's head is positioned.")]
         public float HeadPosition { get; set; }
 
-        [Serialize(float.NaN, true), Editable(ToolTip = "How high above the ground the character's torso is positioned.")]
+        [Serialize(float.NaN, true), Editable(DecimalCount = 2, ToolTip = "How high above the ground the character's torso is positioned.")]
         public float TorsoPosition { get; set; }
 
-        [Serialize(0.75f, true), Editable(ToolTip = "The character's movement speed is multiplied with this value when moving backwards.")]
+        [Serialize(0.75f, true), Editable(DecimalCount = 2, ToolTip = "The character's movement speed is multiplied with this value when moving backwards.")]
         public float BackwardsMovementMultiplier { get; set; }
     }
 
@@ -83,7 +83,7 @@ namespace Barotrauma
         }
         public float TorsoAngleInRadians { get; private set; } = float.NaN;
 
-        [Serialize(1.0f, true), Editable]
+        [Serialize(1.0f, true), Editable(DecimalCount = 2)]
         public float Speed { get; set; }
 
         [Serialize(AnimationType.NotDefined, true), Editable]
