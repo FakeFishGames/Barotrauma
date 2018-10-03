@@ -52,7 +52,6 @@ namespace Barotrauma
         [Serialize(1.0f, true), Editable(DecimalCount = 2)]
         public float MovementSpeed { get; set; }
 
-        // TODO: apply for fish animations
         [Serialize(5.0f, true), Editable(ToolTip = "The speed of the \"walk cycle\", i.e. how fast the character takes steps.")]
         public float CycleSpeed { get; set; }
 
