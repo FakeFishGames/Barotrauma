@@ -49,6 +49,13 @@ namespace Barotrauma
 
         protected static Dictionary<string, Dictionary<string, AnimationParams>> allAnimations = new Dictionary<string, Dictionary<string, AnimationParams>>();
 
+        [Serialize(1.0f, true), Editable(DecimalCount = 2)]
+        public float MovementSpeed { get; set; }
+
+        // TODO: apply for fish animations
+        [Serialize(5.0f, true), Editable(ToolTip = "The speed of the \"walk cycle\", i.e. how fast the character takes steps.")]
+        public float CycleSpeed { get; set; }
+
         /// <summary>
         /// In degrees.
         /// </summary>
@@ -82,9 +89,6 @@ namespace Barotrauma
             }
         }
         public float TorsoAngleInRadians { get; private set; } = float.NaN;
-
-        [Serialize(1.0f, true), Editable(DecimalCount = 2)]
-        public float Speed { get; set; }
 
         [Serialize(AnimationType.NotDefined, true), Editable]
         public virtual AnimationType AnimationType { get; protected set; }

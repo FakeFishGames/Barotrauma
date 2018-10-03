@@ -61,11 +61,11 @@ namespace Barotrauma
             {
                 if (InWater || !CanWalk)
                 {
-                    return TargetMovement.LengthSquared() > SwimSlowParams.Speed * SwimSlowParams.Speed;
+                    return TargetMovement.LengthSquared() > SwimSlowParams.MovementSpeed * SwimSlowParams.MovementSpeed;
                 }
                 else
                 {
-                    return Math.Abs(TargetMovement.X) > WalkParams.Speed;
+                    return Math.Abs(TargetMovement.X) > WalkParams.MovementSpeed;
                 }
             }
         }
@@ -144,13 +144,13 @@ namespace Barotrauma
                     movementParams = RunParams;
                     break;
                 case AnimationType.SwimSlow:
-                    return SwimSlowParams.Speed;
+                    return SwimSlowParams.MovementSpeed;
                 case AnimationType.SwimFast:
-                    return SwimFastParams.Speed;
+                    return SwimFastParams.MovementSpeed;
                 default:
                     throw new NotImplementedException(type.ToString());
             }
-            return IsMovingBackwards ? movementParams.Speed * movementParams.BackwardsMovementMultiplier : movementParams.Speed;
+            return IsMovingBackwards ? movementParams.MovementSpeed * movementParams.BackwardsMovementMultiplier : movementParams.MovementSpeed;
         }
 
         public float GetCurrentSpeed(bool useMaxSpeed)
