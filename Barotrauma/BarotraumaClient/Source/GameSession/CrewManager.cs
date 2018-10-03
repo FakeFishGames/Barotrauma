@@ -326,6 +326,7 @@ namespace Barotrauma
             {
                 ScrollBarEnabled = false,
                 ScrollBarVisible = false,
+                Enabled = false,
                 Spacing = spacing,
                 ClampMouseRectToParent = false
             };
