@@ -1218,18 +1218,41 @@ namespace Barotrauma
                 //GUI.DrawLine(spriteBatch, charDrawPos, charDrawPos + screenSpaceLeft * 40, Color.Red);
             }
 
+            bool altDown = PlayerInput.KeyDown(Keys.LeftAlt);
+            if (!altDown)
+            {
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 200, 20), "HOLD \"Left Alt\" TO ADJUST THE CYCLE SPEED", Color.White, Color.Black * 0.5f, 10, GUI.Font);
+            }
             // Widgets for all anims -->
-            // Movement speed
             Vector2 referencePoint = SimToScreen(head != null ? head.SimPosition : collider.SimPosition);
             Vector2 drawPos = referencePoint;
-            drawPos += forward * ConvertUnits.ToDisplayUnits(animParams.Speed) * Cam.Zoom;
-            DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 20, Color.Turquoise, "Movement Speed", () =>
+            if (altDown)
             {
-                float speed = animParams.Speed + ConvertUnits.ToSimUnits(Vector2.Multiply(scaledMouseSpeed, forward).Combine()) / Cam.Zoom;
-                TryUpdateAnimParam("speed", MathHelper.Clamp(speed, 0.1f, Ragdoll.MAX_SPEED));
-                GUI.DrawLine(spriteBatch, drawPos, referencePoint, Color.Turquoise);
-            });
-            GUI.DrawLine(spriteBatch, drawPos + forward * 10, drawPos + forward * 15, Color.Turquoise);
+                if (selectedWidget == "Movement Speed") { selectedWidget = null; }
+                // Cycle speed
+                drawPos += forward * ConvertUnits.ToDisplayUnits(animParams.CycleSpeed) * Cam.Zoom;
+                DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 20, Color.MediumPurple, "Cycle Speed", () =>
+                {
+                    float speed = animParams.CycleSpeed + ConvertUnits.ToSimUnits(Vector2.Multiply(scaledMouseSpeed, forward).Combine()) / Cam.Zoom;
+                    TryUpdateAnimParam("cyclespeed", speed);
+                    GUI.DrawLine(spriteBatch, drawPos, referencePoint, Color.MediumPurple);
+                });
+                GUI.DrawLine(spriteBatch, drawPos + forward * 10, drawPos + forward * 15, Color.MediumPurple);
+            }
+            else
+            {
+                if (selectedWidget == "Cycle Speed") { selectedWidget = null; }
+                // Movement speed
+                drawPos += forward * ConvertUnits.ToDisplayUnits(animParams.MovementSpeed) * Cam.Zoom;
+                DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 20, Color.Turquoise, "Movement Speed", () =>
+                {
+                    float speed = animParams.MovementSpeed + ConvertUnits.ToSimUnits(Vector2.Multiply(scaledMouseSpeed, forward).Combine()) / Cam.Zoom;
+                    TryUpdateAnimParam("movementspeed", MathHelper.Clamp(speed, 0.1f, Ragdoll.MAX_SPEED));
+                    GUI.DrawLine(spriteBatch, drawPos, referencePoint, Color.Turquoise);
+                });
+                GUI.DrawLine(spriteBatch, drawPos + forward * 10, drawPos + forward * 15, Color.Turquoise);
+            }
+
             if (head != null)
             {
                 // Head angle
