@@ -58,16 +58,16 @@ namespace Barotrauma
 
     abstract class HumanGroundedParams : GroundedMovementParams
     {
-        [Serialize(0.3f, true), Editable(DecimalCount = 2, ToolTip = "How much force is used to force the character upright.")]
+        [Serialize(0.3f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2, ToolTip = "How much force is used to force the character upright.")]
         public float GetUpForce { get; set; }
         
-        [Serialize(0.65f, true), Editable(DecimalCount = 2, ToolTip = "Height of the torso when crouching.")]
+        [Serialize(0.65f, true), Editable(MinValueFloat = 0, MaxValueFloat = 5, DecimalCount = 2, ToolTip = "Height of the torso when crouching.")]
         public float CrouchingTorsoPos { get; set; }
 
         /// <summary>
         /// In degrees
         /// </summary>
-        [Serialize(-10f, true), Editable(ToolTip = "Angle of the torso when crouching.")]
+        [Serialize(-10f, true), Editable(MinValueFloat = -360, MaxValueFloat = 360, ToolTip = "Angle of the torso when crouching.")]
         public float CrouchingTorsoAngle { get; set; }
 
         [Serialize(0.25f, true), Editable(DecimalCount = 2, ToolTip = "How much the character's head leans forwards when moving.")]
@@ -76,16 +76,16 @@ namespace Barotrauma
         [Serialize(0.25f, true), Editable(DecimalCount = 2, ToolTip = "How much the character's torso leans forwards when moving.")]
         public float TorsoLeanAmount { get; set; }
 
-        [Serialize(15.0f, true), Editable(ToolTip = "How much force is used to move the feet to the correct position.")]
+        [Serialize(15.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 100, ToolTip = "How much force is used to move the feet to the correct position.")]
         public float FootMoveStrength { get; set; }
 
-        [Serialize(20.0f, true), Editable(ToolTip = "How much torque is used to rotate the feet to the correct orientation.")]
+        [Serialize(20.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 100, ToolTip = "How much torque is used to rotate the feet to the correct orientation.")]
         public float FootRotateStrength { get; set; }
 
         [Serialize("0.0, 0.0", true), Editable(DecimalCount = 2, ToolTip = "Added to the calculated foot positions, e.g. a value of {-1.0, 0.0f} would make the character \"drag\" their feet one unit behind them.")]
         public Vector2 FootMoveOffset { get; set; }
 
-        [Serialize(10.0f, true), Editable(ToolTip = "How much torque is used to bend the characters legs when taking a step.")]
+        [Serialize(10.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 40, ToolTip = "How much torque is used to bend the characters legs when taking a step.")]
         public float LegBendTorque { get; set; }
 
         [Serialize("0.4, 0.15", true), Editable(DecimalCount = 2, ToolTip = "How much the hands move along each axis.")]
@@ -94,7 +94,7 @@ namespace Barotrauma
         [Serialize("-0.15, 0.0", true), Editable(DecimalCount = 2, ToolTip = "Added to the calculated hand positions, e.g. a value of {-1.0, 0.0f} would make the character \"drag\" their hands one unit behind them.")]
         public Vector2 HandMoveOffset { get; set; }
 
-        [Serialize(0.7f, true), Editable(DecimalCount = 2, ToolTip = "How much force is used to move the hands.")]
+        [Serialize(0.7f, true), Editable(MinValueFloat = 0, MaxValueFloat = 2, DecimalCount = 2, ToolTip = "How much force is used to move the hands.")]
         public float HandMoveStrength { get; set; }
 
         [Serialize(-1.0f, true), Editable(DecimalCount = 2, ToolTip = "The position of the hands is clamped below this (relative to the position of the character's torso).")]
