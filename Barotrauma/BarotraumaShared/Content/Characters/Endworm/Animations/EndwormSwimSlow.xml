@@ -1,6 +1,6 @@
 ﻿<EndwormSwimSlow
   AnimationType="SwimSlow"
-  speed ="2"
+  spemovementspeeded ="2"
   waveamplitude="1"
   wavelength="10"
   flip="false"/>

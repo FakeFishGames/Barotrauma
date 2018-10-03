@@ -1,6 +1,6 @@
 ﻿<CrawlerSwimSlow
   AnimationType="SwimSlow"
-  speed="2"
+  movementspeed="2"
   steertorque="20"
   waveamplitude="0.04"
   wavelength="30"

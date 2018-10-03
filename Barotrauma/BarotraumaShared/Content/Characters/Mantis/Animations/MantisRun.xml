@@ -1,6 +1,6 @@
 ﻿<MantisRun
   AnimationType="Run"
-  speed="6"
+  movementspeed="6"
   stepsize="0.25,0.4"
   legtorque="10"
   colliderstandangle="0"

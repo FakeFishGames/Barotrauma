@@ -1,6 +1,6 @@
 ﻿<CarrierSwimFast
   AnimationType="SwimFast"
-  speed="6"
+  movementspeed="6"
   waveamplitude="0"
   wavelength="0"
   steertorque="25"

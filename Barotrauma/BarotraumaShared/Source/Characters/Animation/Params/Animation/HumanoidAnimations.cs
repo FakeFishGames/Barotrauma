@@ -76,9 +76,6 @@ namespace Barotrauma
         [Serialize(0.25f, true), Editable(DecimalCount = 2, ToolTip = "How much the character's torso leans forwards when moving.")]
         public float TorsoLeanAmount { get; set; }
 
-        [Serialize(5.0f, true), Editable(ToolTip = "The speed of the \"walk cycle\", i.e. how fast the character takes steps.")]
-        public float CycleSpeed { get; set; }
-
         [Serialize(15.0f, true), Editable(ToolTip = "How much force is used to move the feet to the correct position.")]
         public float FootMoveStrength { get; set; }
 

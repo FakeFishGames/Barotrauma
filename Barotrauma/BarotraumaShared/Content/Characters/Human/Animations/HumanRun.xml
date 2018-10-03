@@ -16,7 +16,7 @@
   headleanamount="0.0995831"
   torsoleanamount="0.05120953"
   footmoveoffset="-0.2,0"
-  speed="5.5"
+  movementspeed="5.5"
   headangle="2.408676"
   torsoangle="-0.4414922"
   crouchingtorsopos="0.65"
