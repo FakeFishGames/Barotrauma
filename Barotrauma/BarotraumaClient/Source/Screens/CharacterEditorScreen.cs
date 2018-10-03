@@ -1230,10 +1230,11 @@ namespace Barotrauma
             {
                 if (selectedWidget == "Movement Speed") { selectedWidget = null; }
                 // Cycle speed
-                drawPos += forward * ConvertUnits.ToDisplayUnits(animParams.CycleSpeed) * Cam.Zoom;
+                float multiplier = 0.25f;
+                drawPos += forward * ConvertUnits.ToDisplayUnits(animParams.CycleSpeed * multiplier) * Cam.Zoom;
                 DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 20, Color.MediumPurple, "Cycle Speed", () =>
                 {
-                    float speed = animParams.CycleSpeed + ConvertUnits.ToSimUnits(Vector2.Multiply(scaledMouseSpeed, forward).Combine()) / Cam.Zoom;
+                    float speed = animParams.CycleSpeed + ConvertUnits.ToSimUnits(Vector2.Multiply(scaledMouseSpeed / multiplier, forward).Combine()) / Cam.Zoom;
                     TryUpdateAnimParam("cyclespeed", speed);
                     GUI.DrawLine(spriteBatch, drawPos, referencePoint, Color.MediumPurple);
                 });
@@ -1243,10 +1244,11 @@ namespace Barotrauma
             {
                 if (selectedWidget == "Cycle Speed") { selectedWidget = null; }
                 // Movement speed
-                drawPos += forward * ConvertUnits.ToDisplayUnits(animParams.MovementSpeed) * Cam.Zoom;
+                float multiplier = 0.5f;
+                drawPos += forward * ConvertUnits.ToDisplayUnits(animParams.MovementSpeed * multiplier) * Cam.Zoom;
                 DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 20, Color.Turquoise, "Movement Speed", () =>
                 {
-                    float speed = animParams.MovementSpeed + ConvertUnits.ToSimUnits(Vector2.Multiply(scaledMouseSpeed, forward).Combine()) / Cam.Zoom;
+                    float speed = animParams.MovementSpeed + ConvertUnits.ToSimUnits(Vector2.Multiply(scaledMouseSpeed / multiplier, forward).Combine()) / Cam.Zoom;
                     TryUpdateAnimParam("movementspeed", MathHelper.Clamp(speed, 0.1f, Ragdoll.MAX_SPEED));
                     GUI.DrawLine(spriteBatch, drawPos, referencePoint, Color.Turquoise);
                 });
