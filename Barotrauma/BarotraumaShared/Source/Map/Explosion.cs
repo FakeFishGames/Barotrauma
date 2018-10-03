@@ -19,7 +19,7 @@ namespace Barotrauma
         
         public float CameraShake;
 
-        private bool sparks, shockwave, flames, smoke, flash;
+        private bool sparks, shockwave, flames, smoke, flash, underwaterBubble;
 
         private float empStrength;
 
@@ -47,6 +47,7 @@ namespace Barotrauma
             sparks      = element.GetAttributeBool("sparks", true);
             shockwave   = element.GetAttributeBool("shockwave", true);
             flames      = element.GetAttributeBool("flames", true);
+            underwaterBubble = element.GetAttributeBool("underwaterbubble", true);
             smoke       = element.GetAttributeBool("smoke", true);
             flash       = element.GetAttributeBool("flash", true);
 

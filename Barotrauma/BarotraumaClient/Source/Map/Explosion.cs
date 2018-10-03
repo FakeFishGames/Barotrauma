@@ -17,7 +17,7 @@ namespace Barotrauma
             hull = hull ?? Hull.FindHull(worldPosition, useWorldCoordinates: true);
             bool underwater = hull == null || worldPosition.Y < hull.WorldSurface;
 
-            if (underwater)
+            if (underwater && underwaterBubble)
             {
                 var underwaterExplosion = GameMain.ParticleManager.CreateParticle("underwaterexplosion", worldPosition, Vector2.Zero, 0.0f, hull);
                 if (underwaterExplosion != null)
@@ -29,9 +29,30 @@ namespace Barotrauma
 
             for (int i = 0; i < attack.Range * 0.1f; i++)
             {
-                if (underwater)
+                if (!underwater)
+                {
+                    float particleSpeed = Rand.Range(0.0f, 1.0f);
+                    particleSpeed = particleSpeed * particleSpeed * attack.Range;
+
+                    if (flames)
+                    {
+                        float particleScale = MathHelper.Clamp(attack.Range * 0.0025f, 0.5f, 2.0f);
+                        var flameParticle = GameMain.ParticleManager.CreateParticle("explosionfire",
+                            ClampParticlePos(worldPosition + Rand.Vector((float)System.Math.Sqrt(Rand.Range(0.0f, attack.Range))), hull),
+                            Rand.Vector(Rand.Range(0.0f, particleSpeed)), 0.0f, hull);
+                        if (flameParticle != null) flameParticle.Size *= particleScale;
+                    }
+                    if (smoke)
+                    {
+                        var smokeParticle = GameMain.ParticleManager.CreateParticle(Rand.Range(0.0f, 1.0f) < 0.5f ? "explosionsmoke" : "smoke",
+                            ClampParticlePos(worldPosition + Rand.Vector((float)System.Math.Sqrt(Rand.Range(0.0f, attack.Range))), hull),
+                            Rand.Vector(Rand.Range(0.0f, particleSpeed)), 0.0f, hull);
+                    }
+                }
+                else if (underwaterBubble)
                 {
                     Vector2 bubblePos = Rand.Vector(Rand.Range(0.0f, attack.Range * 0.5f));
+
                     GameMain.ParticleManager.CreateParticle("risingbubbles", worldPosition + bubblePos,
                         Vector2.Zero, 0.0f, hull);
 
@@ -44,26 +65,7 @@ namespace Barotrauma
                             underwaterExplosion.Size *= MathHelper.Clamp(attack.Range / 300.0f, 0.5f, 2.0f) * Rand.Range(0.8f, 1.2f);
                         }
                     }
-                }
-                else
-                {
-                    float particleSpeed = Rand.Range(0.0f, 1.0f);
-                    particleSpeed = particleSpeed * particleSpeed * attack.Range;
-
-                    if (flames)
-                    {
-                        float particleScale = MathHelper.Clamp(attack.Range * 0.0025f, 0.5f, 2.0f);
-                        var flameParticle = GameMain.ParticleManager.CreateParticle("explosionfire", 
-                            ClampParticlePos(worldPosition + Rand.Vector((float)System.Math.Sqrt(Rand.Range(0.0f, attack.Range))), hull),
-                            Rand.Vector(Rand.Range(0.0f, particleSpeed)), 0.0f, hull);
-                        if (flameParticle != null) flameParticle.Size *= particleScale;
-                    }
-                    if (smoke)
-                    {
-                        var smokeParticle = GameMain.ParticleManager.CreateParticle(Rand.Range(0.0f, 1.0f) < 0.5f ? "explosionsmoke" : "smoke",
-                            ClampParticlePos(worldPosition + Rand.Vector((float)System.Math.Sqrt(Rand.Range(0.0f, attack.Range))), hull),
-                            Rand.Vector(Rand.Range(0.0f, particleSpeed)), 0.0f, hull);
-                    }
+                    
                 }
 
                 if (sparks)
