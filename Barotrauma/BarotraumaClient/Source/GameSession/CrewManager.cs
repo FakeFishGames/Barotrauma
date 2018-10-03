@@ -912,14 +912,14 @@ namespace Barotrauma
 
         public void SelectNextCharacter()
         {
-            if (GameMain.IsMultiplier) { return; }
+            if (GameMain.IsMultiplayer) { return; }
             if (characters.None()) { return; }
             Character.Controlled = characters[TryAdjustIndex(1)];
         }
 
         public void SelectPreviousCharacter()
         {
-            if (GameMain.IsMultiplier) { return; }
+            if (GameMain.IsMultiplayer) { return; }
             if (characters.None()) { return; }
             Character.Controlled = characters[TryAdjustIndex(-1)];
         }
@@ -942,7 +942,7 @@ namespace Barotrauma
         partial void UpdateProjectSpecific(float deltaTime)
         {
             // Quick selection
-            if (!GameMain.IsMultiplier)
+            if (!GameMain.IsMultiplayer)
             {
                 if (PlayerInput.KeyHit(InputType.SelectNextCharacter))
                 {
