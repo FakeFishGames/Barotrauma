@@ -340,7 +340,7 @@ namespace Barotrauma
         [Serialize("0.5, 0.5", true), Editable]
         public Vector2 Origin { get; set; }
 
-        [Serialize(0f, true), Editable]
+        [Serialize(0f, true), Editable(DecimalCount = 3)]
         public float Depth { get; set; }
 
         //[Serialize("", true)]
