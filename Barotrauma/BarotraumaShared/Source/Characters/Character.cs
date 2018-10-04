@@ -907,7 +907,7 @@ namespace Barotrauma
             }
 
             bool run = false;
-            if (IsKeyDown(InputType.Run) || ForceRun)
+            if ((IsKeyDown(InputType.Run) && AnimController.ForceSelectAnimationType == AnimationType.NotDefined) || ForceRun)
             {
                 //can't run if
                 //  - dragging someone
@@ -988,7 +988,7 @@ namespace Barotrauma
                 float followMargin = 30;
                 if (dontFollowCursor)
                 {
-                    AnimController.TargetDir = Direction.Left;
+                    AnimController.TargetDir = Direction.Right;
                 }
                 else if (cursorPosition.X < AnimController.Collider.Position.X - followMargin)
                 {

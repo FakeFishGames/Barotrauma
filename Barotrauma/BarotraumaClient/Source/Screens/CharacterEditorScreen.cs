@@ -162,8 +162,10 @@ namespace Barotrauma
             GameMain.World.ProcessChanges();
         }
 
+        private bool wallCollisionsEnabled;
         private void SetWallCollisions(bool enabled)
         {
+            wallCollisionsEnabled = enabled;
             var collisionCategory = enabled ? FarseerPhysics.Dynamics.Category.Cat1 : FarseerPhysics.Dynamics.Category.None;
             AllWalls.ForEach(w => w.SetCollisionCategory(collisionCategory));
             GameMain.World.ProcessChanges();
@@ -436,8 +438,11 @@ namespace Barotrauma
                     case AnimationType.Walk:
                         character.AnimController.forceStanding = true;
                         character.ForceRun = false;
-                        SetWallCollisions(true);
-                        if (previousAnim != AnimationType.Walk || previousAnim != AnimationType.Run)
+                        if (!wallCollisionsEnabled)
+                        {
+                            SetWallCollisions(true);
+                        }
+                        if (previousAnim != AnimationType.Walk && previousAnim != AnimationType.Run)
                         {
                             TeleportTo(spawnPosition);
                         }
@@ -445,8 +450,11 @@ namespace Barotrauma
                     case AnimationType.Run:
                         character.AnimController.forceStanding = true;
                         character.ForceRun = true;
-                        SetWallCollisions(true);
-                        if (previousAnim != AnimationType.Walk || previousAnim != AnimationType.Run)
+                        if (!wallCollisionsEnabled)
+                        {
+                            SetWallCollisions(true);
+                        }
+                        if (previousAnim != AnimationType.Walk && previousAnim != AnimationType.Run)
                         {
                             TeleportTo(spawnPosition);
                         }
@@ -454,12 +462,18 @@ namespace Barotrauma
                     case AnimationType.SwimSlow:
                         character.AnimController.forceStanding = false;
                         character.ForceRun = false;
-                        SetWallCollisions(false);
+                        if (wallCollisionsEnabled)
+                        {
+                            SetWallCollisions(false);
+                        }
                         break;
                     case AnimationType.SwimFast:
                         character.AnimController.forceStanding = false;
                         character.ForceRun = true;
-                        SetWallCollisions(false);
+                        if (wallCollisionsEnabled)
+                        {
+                            SetWallCollisions(false);
+                        }
                         break;
                     default:
                         throw new NotImplementedException();
@@ -609,7 +623,7 @@ namespace Barotrauma
             {
                 OnSelected = (GUITickBox box) =>
                 {
-                    character.OverrideMovement = box.Selected ? new Vector2(-1, 0) as Vector2? : null;
+                    character.OverrideMovement = box.Selected ? new Vector2(1, 0) as Vector2? : null;
                     return true;
                 }
             };
@@ -1041,14 +1055,49 @@ namespace Barotrauma
             {
                 animTestPoseToggle.Selected = !animTestPoseToggle.Selected;
             }
-            if (PlayerInput.KeyHit(Keys.E) && showAnimControls)
+            if (PlayerInput.KeyHit(InputType.Run))
             {
-                int nextIndex = animSelection.SelectedIndex + 1;
-                if (nextIndex > 3)
+                int index = 0;
+                bool isSwimming = character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast || character.AnimController.ForceSelectAnimationType == AnimationType.SwimSlow;
+                bool isMovingFast = character.AnimController.ForceSelectAnimationType == AnimationType.Run || character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast;
+                if (isMovingFast)
                 {
-                    nextIndex = 0;
+                    if (isSwimming || !character.AnimController.CanWalk)
+                    {
+                        index = (int)AnimationType.SwimSlow - 1;
+                    }
+                    else
+                    {
+                        index = (int)AnimationType.Walk - 1;
+                    }
                 }
-                animSelection.Select(nextIndex);
+                else
+                {
+                    if (isSwimming || !character.AnimController.CanWalk)
+                    {
+                        index = (int)AnimationType.SwimFast - 1;
+                    }
+                    else
+                    {
+                        index = (int)AnimationType.Run - 1;
+                    }
+                }
+                if (animSelection.SelectedIndex != index)
+                {
+                    animSelection.Select(index);
+                }
+            }
+            if (PlayerInput.KeyHit(Keys.E))
+            {
+                bool isSwimming = character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast || character.AnimController.ForceSelectAnimationType == AnimationType.SwimSlow;
+                if (isSwimming)
+                {
+                    animSelection.Select((int)AnimationType.Walk - 1);
+                }
+                else
+                {
+                    animSelection.Select((int)AnimationType.SwimSlow - 1);
+                }
             }
             if (PlayerInput.KeyHit(Keys.F))
             {
@@ -1635,7 +1684,7 @@ namespace Barotrauma
                             //GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + up * 20, Color.White, width: 3);
                             GUI.DrawLine(spriteBatch, limbScreenPos, tformedJointPos, Color.Yellow, width: 3);
                             GUI.DrawRectangle(spriteBatch, inputRect, Color.Red);
-                            GUI.DrawString(spriteBatch, tformedJointPos + new Vector2(widgetSize.X, -widgetSize.Y) * 2, jointPos.FormatZeroDecimal(), Color.White, Color.Black * 0.5f);
+                            GUI.DrawString(spriteBatch, tformedJointPos + new Vector2(widgetSize.X, -widgetSize.Y) * 2, $"{joint.jointParams.Name} {jointPos.FormatZeroDecimal()}", Color.White, Color.Black * 0.5f);
                             if (PlayerInput.LeftButtonHeld())
                             {
                                 if (autoFreeze)
@@ -1943,7 +1992,7 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, rect, color, isFilled: true);
                     if (inputRect.Contains(PlayerInput.MousePosition))
                     {          
-                        GUI.DrawString(spriteBatch, tformedJointPos + Vector2.One * 10.0f, $"{jointPos.FormatZeroDecimal()}", Color.White, Color.Black * 0.5f);
+                        GUI.DrawString(spriteBatch, tformedJointPos + Vector2.One * 10.0f, $"{joint.jointParams.Name} {jointPos.FormatZeroDecimal()}", Color.White, Color.Black * 0.5f);
                         GUI.DrawRectangle(spriteBatch, inputRect, color);
                         if (PlayerInput.LeftButtonHeld())
                         {
@@ -1972,7 +2021,7 @@ namespace Barotrauma
             // The joint limits are flipped and inversed when the character is flipped, so we have to handle it here, because we don't want it to affect the user interface.
             if (character.AnimController.IsFlipped)
             {
-                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.UpperLimit), "Upper Limit", Color.Cyan, angle =>
+                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.UpperLimit), $"{joint.jointParams.Name} Upper Limit", Color.Cyan, angle =>
                 {
                     joint.UpperLimit = MathHelper.ToRadians(-angle);
                     TryUpdateJointParam(joint, "upperlimit", -angle);
@@ -1988,7 +2037,7 @@ namespace Barotrauma
                         });
                     }
                 }, rotationOffset: rotationOffset);
-                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.LowerLimit), "Lower Limit", Color.Yellow, angle =>
+                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.LowerLimit), $"{joint.jointParams.Name} Lower Limit", Color.Yellow, angle =>
                 {
                     joint.LowerLimit = MathHelper.ToRadians(-angle);
                     TryUpdateJointParam(joint, "lowerlimit", -angle);
@@ -2007,7 +2056,7 @@ namespace Barotrauma
             }
             else
             {
-                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), "Upper Limit", Color.Yellow, angle =>
+                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), $"{joint.jointParams.Name} Upper Limit", Color.Yellow, angle =>
                 {
                     joint.UpperLimit = MathHelper.ToRadians(angle);
                     TryUpdateJointParam(joint, "upperlimit", angle);
@@ -2023,7 +2072,7 @@ namespace Barotrauma
                         });
                     }
                 }, rotationOffset: rotationOffset);
-                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), "Lower Limit", Color.Cyan, angle =>
+                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), $"{joint.jointParams.Name} Lower Limit", Color.Cyan, angle =>
                 {
                     joint.LowerLimit = MathHelper.ToRadians(angle);
                     TryUpdateJointParam(joint, "lowerlimit", angle);
