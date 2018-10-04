@@ -52,13 +52,13 @@ namespace Barotrauma
         [Serialize(1.0f, true), Editable(DecimalCount = 2)]
         public float MovementSpeed { get; set; }
 
-        [Serialize(5.0f, true), Editable(ToolTip = "The speed of the \"walk cycle\", i.e. how fast the character takes steps.")]
+        [Serialize(5.0f, true), Editable(DecimalCount = 2, ToolTip = "The speed of the \"walk cycle\", i.e. how fast the character takes steps.")]
         public float CycleSpeed { get; set; }
 
         /// <summary>
         /// In degrees.
         /// </summary>
-        [Serialize(float.NaN, true), Editable]
+        [Serialize(float.NaN, true), Editable(-360f, 360f)]
         public float HeadAngle
         {
             get => float.IsNaN(HeadAngleInRadians) ? float.NaN : MathHelper.ToDegrees(HeadAngleInRadians);
@@ -75,7 +75,7 @@ namespace Barotrauma
         /// <summary>
         /// In degrees.
         /// </summary>
-        [Serialize(float.NaN, true), Editable]
+        [Serialize(float.NaN, true), Editable(-360f, 360f)]
         public float TorsoAngle
         {
             get => float.IsNaN(TorsoAngleInRadians) ? float.NaN : MathHelper.ToDegrees(TorsoAngleInRadians);
