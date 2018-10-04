@@ -4,6 +4,8 @@
   
   <UIGlow texture="Content/UI/InnerGlow.png"  sourcerect ="0,0,512,384" slice="128,128,384,256"/>
   
+  <FocusIndicator texture="Content/UI/UI_Atlas2.png" sourcerect="112,784,448,224" rows="2" columns="4"/>
+  
   <Font file="Content/Fonts/Exo2-Medium.otf" size="14"/>
   <SmallFont file="Content/Fonts/Exo2-Light.otf" size="12"/>
   <LargeFont file="Content/Fonts/Code Pro Bold.otf" size="22"/>

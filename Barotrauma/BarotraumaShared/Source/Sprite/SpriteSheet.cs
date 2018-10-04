@@ -4,7 +4,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class SpriteSheet : Sprite
+    public partial class SpriteSheet : Sprite
     {
         private Rectangle[] sourceRects;
 
