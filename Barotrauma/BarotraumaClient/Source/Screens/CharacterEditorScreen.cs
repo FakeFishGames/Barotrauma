@@ -1654,6 +1654,7 @@ namespace Barotrauma
                     GUI.DrawLine(spriteBatch, limbScreenPos, tformedJointPos, Color.White, width: 1);
                     if (editJointLimits)
                     {
+                        if (joint.BodyA != limb.body.FarseerBody) { continue; }
                         var toggleWidget = GetToggleWidget($"{joint.jointParams.Name} limits toggle ragdoll", $"{joint.jointParams.Name} limits toggle spritesheet", joint);
                         toggleWidget.DrawPos = tformedJointPos;
                         toggleWidget.Draw(spriteBatch, deltaTime);
