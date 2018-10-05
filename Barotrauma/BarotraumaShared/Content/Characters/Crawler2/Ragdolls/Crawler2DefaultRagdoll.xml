@@ -66,7 +66,7 @@
       texture="Content/Characters/Crawler2/crawler2.png"
       sourcerect="38,0,115,113"
       depth="0.2"
-      origin="0.4654222,0.5798752" />
+      origin="0.4654222,0.5" />
   </limb>
   <!-- BodyLower1 -->
   <limb
@@ -93,9 +93,9 @@
       deflectprojectiles="true" />
     <sprite
       texture="Content/Characters/Crawler2/crawler2.png"
-      sourcerect="165,168,92,92"
-      depth="0.021"
-      origin="0.5635527,0.5427158" />
+      sourcerect="167,172,91,87"
+      depth="0.21"
+      origin="0.5135868,0.5523771" />
   </limb>
   <!-- BodyLower2 -->
   <limb
@@ -123,8 +123,8 @@
     <sprite
       texture="Content/Characters/Crawler2/crawler2.png"
       sourcerect="71,179,84,78"
-      depth="0.022"
-      origin="0.6297284,0.5464926" />
+      depth="0.22"
+      origin="0.5427743,0.5" />
   </limb>
   <!-- BodyLower3 -->
   <limb
@@ -151,9 +151,9 @@
       deflectprojectiles="true" />
     <sprite
       texture="Content/Characters/Crawler2/crawler2.png"
-      sourcerect="97,113,62,60"
+      sourcerect="97,113,70,59"
       depth="0.023"
-      origin="0.5239702,0.408383" />
+      origin="0.5571429,0.4577771" />
   </limb>
   <!-- BodyLower4 -->
   <limb
@@ -181,8 +181,8 @@
     <sprite
       texture="Content/Characters/Crawler2/crawler2.png"
       sourcerect="0,135,48,36"
-      depth="0.024"
-      origin="0.5139524,0.5000708" />
+      depth="0.24"
+      origin="0.5241974,0.6133805" />
   </limb>
   <!-- BodyLower5 -->
   <limb
@@ -211,7 +211,7 @@
       texture="Content/Characters/Crawler2/crawler2.png"
       sourcerect="50,114,43,30"
       depth="0.025"
-      origin="0.6670816,0.5622429" />
+      origin="0.5984064,0.5294023" />
   </limb>
   <!-- BodyLower6 -->
   <limb
@@ -239,8 +239,8 @@
     <sprite
       texture="Content/Characters/Crawler2/crawler2.png"
       sourcerect="47,142,48,26"
-      depth="0.026"
-      origin="0.7982323,0.5715696" />
+      depth="0.26"
+      origin="0.7888877,0.5378913" />
   </limb>
   <!-- Jaw -->
   <limb
@@ -275,7 +275,7 @@
       texture="Content/Characters/Crawler2/crawler2.png"
       sourcerect="0,170,70,87"
       depth="0.11"
-      origin="0.3985665,0.2888792" />
+      origin="0.3381624,0.3895404" />
   </limb>
   <!-- ArmLower -->
   <limb
@@ -292,7 +292,7 @@
       texture="Content/Characters/Crawler2/crawler2.png"
       sourcerect="160,130,96,40"
       depth="0.1"
-      origin="0.1683322,0.1731826" />
+      origin="0.2300953,0.301666" />
     <attack
       range="120"
       damagerange="60"
@@ -378,58 +378,58 @@
   <joint
     limb1="0"
     limb2="1"
-    limb1anchor="-0.503607,1.483494"
-    limb2anchor="57.29352,8.976449"
+    limb1anchor="5.462685,5.877317"
+    limb2anchor="50.43435,-15.44099"
     canbesevered="True"
     limitenabled="True"
-    upperlimit="21.29473"
-    lowerlimit="-50.28691" />
+    upperlimit="102.8425"
+    lowerlimit="-14.6803" />
   <!--Torso to Tail-->
   <joint
     limb1="1"
     limb2="2"
-    limb1anchor="-32.68522,10.20041"
+    limb1anchor="-33.34736,4.744185"
     limb2anchor="31.51369,1.730982"
     canbesevered="True"
     limitenabled="True"
-    upperlimit="30"
+    upperlimit="45"
     lowerlimit="-30" />
   <joint
     limb1="2"
     limb2="3"
-    limb1anchor="-23.68559,-6.398129"
+    limb1anchor="-24.05607,-1.162483"
     limb2anchor="16.46447,-3.551181"
     canbesevered="True"
     limitenabled="True"
-    upperlimit="30"
+    upperlimit="45"
     lowerlimit="-30" />
   <joint
     limb1="3"
     limb2="4"
-    limb1anchor="-22.40701,-4.810691"
-    limb2anchor="30.05886,-0.7930449"
+    limb1anchor="-20.74999,-1.282803"
+    limb2anchor="21.16196,2.358416"
     canbesevered="True"
     limitenabled="True"
-    upperlimit="30"
+    upperlimit="45"
     lowerlimit="-30" />
   <joint
     limb1="4"
     limb2="5"
-    limb1anchor="-12.81256,-6.364013"
-    limb2anchor="11.4966,2.04693"
+    limb1anchor="-16.96122,3.195561"
+    limb2anchor="20.27618,8.145391"
     canbesevered="True"
     limitenabled="True"
-    upperlimit="30"
-    lowerlimit="-30" />
+    upperlimit="45"
+    lowerlimit="-30.02529" />
   <joint
     limb1="5"
     limb2="6"
-    limb1anchor="-15.01194,-1.11425"
-    limb2anchor="6.361674,3.903822"
+    limb1anchor="-10.98386,-0.3554651"
+    limb2anchor="18.53379,-3.801998"
     canbesevered="True"
     limitenabled="True"
-    upperlimit="30"
-    lowerlimit="-30" />
+    upperlimit="45"
+    lowerlimit="-30.37127" />
   <joint
     limb1="6"
     limb2="7"
@@ -437,64 +437,64 @@
     limb2anchor="4.395853,-0.1564362"
     canbesevered="True"
     limitenabled="True"
-    upperlimit="30"
+    upperlimit="45"
     lowerlimit="-30" />
   <!--Head To Jaw-->
   <joint
     limb1="0"
     limb2="8"
-    limb1anchor="4.610345,-17.61497"
+    limb1anchor="3.052869,-25.49709"
     limb2anchor="0.6521592,1.017442"
     canbesevered="True"
     limitenabled="True"
-    upperlimit="-15.40661"
-    lowerlimit="-94.75607" />
+    upperlimit="102.673"
+    lowerlimit="29.41474" />
   <!--Shoulder-->
   <joint
     limb1="1"
     limb2="9"
-    limb1anchor="2.693819,-17.59562"
-    limb2anchor="0.7396562,0.3482265"
+    limb1anchor="14.78105,-23.97115"
+    limb2anchor="3.39634,7.705299"
     canbesevered="True"
     limitenabled="True"
-    upperlimit="-51.12428"
-    lowerlimit="-90.71687" />
+    upperlimit="-64.59682"
+    lowerlimit="-105.544" />
   <!--Elbow-->
   <joint
     limb1="9"
     limb2="10"
-    limb1anchor="2.518626,-37.49477"
-    limb2anchor="0.628906,-0.6120568"
+    limb1anchor="7.679461,-19.56502"
+    limb2anchor="-9.55594,5.383872"
     canbesevered="True"
     limitenabled="True"
-    upperlimit="51.58691"
-    lowerlimit="0.8012903" />
+    upperlimit="110.0152"
+    lowerlimit="-65.67323" />
   <!--FakeFeet-->
   <joint
     limb1="2"
     limb2="11"
-    limb1anchor="8.827947,-30.38599"
-    limb2anchor="-0.9065877,5.457635"
+    limb1anchor="-2.906425,-19.42669"
+    limb2anchor="-1.215703,10.49663"
     canbesevered="True"
     limitenabled="True"
-    upperlimit="30"
-    lowerlimit="-30" />
+    upperlimit="55.2636"
+    lowerlimit="-71.75" />
   <joint
     limb1="3"
     limb2="12"
-    limb1anchor="-12.41102,-16.9414"
-    limb2anchor="6.776855,5.77963"
+    limb1anchor="-10.48523,-14.0308"
+    limb2anchor="7.128497,8.439569"
     canbesevered="True"
     limitenabled="True"
     upperlimit="30"
-    lowerlimit="-30" />
+    lowerlimit="-57.98726" />
   <joint
     limb1="4"
     limb2="13"
-    limb1anchor="5.410462,-13.99454"
-    limb2anchor="1.753272,3.781094"
+    limb1anchor="3.457966,-4.977207"
+    limb2anchor="-5.09082,12.62049"
     canbesevered="True"
     limitenabled="True"
-    upperlimit="30"
+    upperlimit="56.54782"
     lowerlimit="-30" />
 </Ragdoll>
