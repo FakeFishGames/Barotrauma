@@ -1663,7 +1663,7 @@ namespace Barotrauma
                             DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: true, allowPairEditing: true, rotationOffset: angle);
                         }
                     }
-                    if (editJointPositions)
+                    else if (editJointPositions)
                     {
                         if (altDown && joint.BodyA == limb.body.FarseerBody)
                         {
@@ -1975,7 +1975,7 @@ namespace Barotrauma
                         }
                     }
                 }
-                if (editJointPositions)
+                else if (editJointPositions)
                 {
                     Color color = joint.BodyA == limb.body.FarseerBody ? Color.Red : Color.Blue;
                     Vector2 widgetSize = new Vector2(5.0f, 5.0f); ;
@@ -2285,6 +2285,7 @@ namespace Barotrauma
                         });
                     }
                 };
+                widget.PreUpdate += dTime => widget.Enabled = editJointLimits;
                 widgets.Add(ID, widget);
                 return widget;
             }
