@@ -53,9 +53,22 @@ namespace Barotrauma
 
         public Action refresh;
 
-        public bool IsSelected => selectedWidget == this;
+        public bool IsSelected => enabled && selectedWidget == this;
         public bool IsControlled => IsSelected && PlayerInput.LeftButtonHeld();
         public bool IsMouseOver => GUI.MouseOn == null && InputRect.Contains(PlayerInput.MousePosition);
+        private bool enabled = true;
+        public bool Enabled
+        {
+            get { return enabled; }
+            set
+            {
+                enabled = value;
+                if (selectedWidget == this)
+                {
+                    selectedWidget = null;
+                }
+            }
+        }
         public Vector2? tooltipOffset;
 
         public Widget linkedWidget;
@@ -72,6 +85,7 @@ namespace Barotrauma
         public virtual void Update(float deltaTime)
         {
             PreUpdate?.Invoke(deltaTime);
+            if (!enabled) { return; }
             if (IsMouseOver)
             {
                 if (selectedWidget == null)
