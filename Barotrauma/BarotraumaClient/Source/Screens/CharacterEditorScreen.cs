@@ -2252,10 +2252,7 @@ namespace Barotrauma
                         }
                     }
                     widget.refresh();
-                    if (widget.linkedWidget != null)
-                    {
-                        widget.linkedWidget.refresh();
-                    }
+                    widget.linkedWidget?.refresh();
                     if (limbPairEditing)
                     {
                         UpdateOtherJoints(j.LimbA, (otherLimb, otherJoint) =>
@@ -2264,8 +2261,9 @@ namespace Barotrauma
                             {
                                 if (widgets.TryGetValue($"{otherJoint.jointParams.Name} limits toggle spritesheet", out Widget otherWidget))
                                 {
-                                    TryUpdateJointParam(otherJoint, "limitenabled", j.LimitEnabled);
-                                    if (j.LimitEnabled)
+                                    otherJoint.LimitEnabled = joint.LimitEnabled;
+                                    TryUpdateJointParam(otherJoint, "limitenabled", joint.LimitEnabled);
+                                    if (joint.LimitEnabled)
                                     {
                                         if (float.IsNaN(otherJoint.jointParams.UpperLimit))
                                         {
