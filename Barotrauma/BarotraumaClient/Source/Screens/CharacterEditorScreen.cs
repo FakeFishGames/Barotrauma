@@ -1964,15 +1964,6 @@ namespace Barotrauma
                 tformedJointPos += limbScreenPos;
                 if (editJointLimits)
                 {
-                    //if (joint.BodyA == limb.body.FarseerBody)
-                    //{
-                    //    float a1 = joint.UpperLimit - MathHelper.PiOver2;
-                    //    float a2 = joint.LowerLimit - MathHelper.PiOver2;
-                    //    float a3 = (a1 + a2) / 2.0f;
-                    //    GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a1), -(float)Math.Sin(a1)) * 30.0f, Color.Yellow);
-                    //    GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a2), -(float)Math.Sin(a2)) * 30.0f, Color.Cyan);
-                    //    GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a3), -(float)Math.Sin(a3)) * 30.0f, Color.Black);
-                    //}
                     if (joint.BodyA == limb.body.FarseerBody)
                     {
                         var toggleWidget = GetToggleWidget($"{joint.jointParams.Name} limits toggle spritesheet", $"{joint.jointParams.Name} limits toggle ragdoll", joint);
