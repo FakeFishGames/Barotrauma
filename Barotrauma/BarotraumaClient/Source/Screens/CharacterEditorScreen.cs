@@ -379,6 +379,7 @@ namespace Barotrauma
                 {
                     character.AnimController.Recreate(RagdollParams);
                     TeleportTo(spawnPosition);
+                    character.AnimController.ResetLimbs();
                     return true;
                 }
             };
@@ -2161,8 +2162,7 @@ namespace Barotrauma
                 if (displayAngle)
                 {
                     GUI.DrawString(spriteBatch, drawPos, angle.FormatZeroDecimal(), Color.Black, backgroundColor: color, font: GUI.SmallFont);
-                    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight / 4), rotationOffsetInDegrees.FormatZeroDecimal(), Color.Red);
-
+                    //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight / 4), rotationOffsetInDegrees.FormatZeroDecimal(), Color.Red);
                 }
                 onClick(angle);
             }, autoFreeze, onHovered: () => GUI.DrawString(spriteBatch, new Vector2(drawPos.X + 5, drawPos.Y - widgetSize / 2), $"{toolTip} ({angle.FormatZeroDecimal()})", color, Color.Black * 0.5f));
