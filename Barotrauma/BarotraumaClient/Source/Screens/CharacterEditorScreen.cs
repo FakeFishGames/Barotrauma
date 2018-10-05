@@ -1627,10 +1627,8 @@ namespace Barotrauma
                 {
                     Vector2 jointPos = Vector2.Zero;
                     Vector2 otherPos = Vector2.Zero;
-                    Vector2 jointDir = Vector2.Zero;
                     Vector2 anchorPosA = ConvertUnits.ToDisplayUnits(joint.LocalAnchorA);
                     Vector2 anchorPosB = ConvertUnits.ToDisplayUnits(joint.LocalAnchorB);
-                    Vector2 up = -VectorExtensions.Forward(limb.Rotation);
                     if (joint.BodyA == limb.body.FarseerBody)
                     {
                         jointPos = anchorPosA;
@@ -1660,7 +1658,8 @@ namespace Barotrauma
                         toggleWidget.Draw(spriteBatch, deltaTime);
                         if (joint.LimitEnabled)
                         {
-                            DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: true, allowPairEditing: true, rotationOffset: character.AnimController.Collider.Rotation);
+                            float angle = -MathUtils.VectorToAngle(-f.Right());
+                            DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: true, allowPairEditing: true, rotationOffset: angle);
                         }
                     }
                     if (editJointPositions)
@@ -1694,7 +1693,7 @@ namespace Barotrauma
                                 }
                                 Vector2 input = ConvertUnits.ToSimUnits(scaledMouseSpeed) / Cam.Zoom;
                                 input.Y = -input.Y;
-                                input = input.TransformVector(-up);
+                                input = input.TransformVector(VectorExtensions.Forward(limb.Rotation));
                                 if (joint.BodyA == limb.body.FarseerBody)
                                 {
                                     joint.LocalAnchorA += input;
@@ -1811,6 +1810,7 @@ namespace Barotrauma
             foreach (Limb limb in character.AnimController.Limbs)
             {
                 if (limb.ActiveSprite == null || texturePaths.Contains(limb.ActiveSprite.FilePath)) { continue; }
+                if (limb.ActiveSprite.Texture == null) { continue; }
                 textures.Add(limb.ActiveSprite.Texture);
                 texturePaths.Add(limb.ActiveSprite.FilePath);
             }
@@ -1979,7 +1979,7 @@ namespace Barotrauma
                         toggleWidget.Draw(spriteBatch, deltaTime);
                         if (joint.LimitEnabled)
                         {
-                            DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: false, allowPairEditing: false);
+                            DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: false, allowPairEditing: true);
                         }
                     }
                 }
@@ -2037,7 +2037,7 @@ namespace Barotrauma
                             }
                         });
                     }
-                }, rotationOffset: rotationOffset);
+                }, circleRadius: 40, rotationOffset: rotationOffset);
                 DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.LowerLimit), $"{joint.jointParams.Name} Lower Limit", Color.Yellow, angle =>
                 {
                     joint.LowerLimit = MathHelper.ToRadians(-angle);
@@ -2053,11 +2053,11 @@ namespace Barotrauma
                             }
                         });
                     }
-                }, rotationOffset: rotationOffset);
+                }, circleRadius: 30, rotationOffset: rotationOffset);
             }
             else
             {
-                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), $"{joint.jointParams.Name} Upper Limit", Color.Yellow, angle =>
+                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), $"{joint.jointParams.Name} Upper Limit", Color.Cyan, angle =>
                 {
                     joint.UpperLimit = MathHelper.ToRadians(angle);
                     TryUpdateJointParam(joint, "upperlimit", angle);
@@ -2072,8 +2072,8 @@ namespace Barotrauma
                             }
                         });
                     }
-                }, rotationOffset: rotationOffset);
-                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), $"{joint.jointParams.Name} Lower Limit", Color.Cyan, angle =>
+                }, circleRadius: 40, rotationOffset: rotationOffset);
+                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), $"{joint.jointParams.Name} Lower Limit", Color.Yellow, angle =>
                 {
                     joint.LowerLimit = MathHelper.ToRadians(angle);
                     TryUpdateJointParam(joint, "lowerlimit", angle);
@@ -2088,12 +2088,13 @@ namespace Barotrauma
                             }
                         });
                     }
-                }, rotationOffset: rotationOffset);
+                }, circleRadius: 30, rotationOffset: rotationOffset);
             }
-            bool IsMatchingLimb(Limb limb1, Limb limb2, LimbJoint joint1, LimbJoint joint2) =>
-                joint1.BodyA == limb1.body.FarseerBody && joint2.BodyA == limb2.body.FarseerBody ||
-                joint1.BodyB == limb1.body.FarseerBody && joint2.BodyB == limb2.body.FarseerBody;
         }
+
+        private bool IsMatchingLimb(Limb limb1, Limb limb2, LimbJoint joint1, LimbJoint joint2) =>
+            joint1.BodyA == limb1.body.FarseerBody && joint2.BodyA == limb2.body.FarseerBody ||
+            joint1.BodyB == limb1.body.FarseerBody && joint2.BodyB == limb2.body.FarseerBody;
         #endregion
 
         #region Widgets as methods
@@ -2111,6 +2112,7 @@ namespace Barotrauma
             GUI.DrawLine(spriteBatch, drawPos, widgetDrawPos, color);
             DrawWidget(spriteBatch, widgetDrawPos, WidgetType.Rectangle, 10, color, toolTip, () =>
             {
+                // TODO: the input doesnt work when the rotation is less than 270?
                 GUI.DrawLine(spriteBatch, drawPos, drawPos + up, Color.Red);
                 ShapeExtensions.DrawCircle(spriteBatch, drawPos, circleRadius, 40, color, thickness: 1);
                 var rotationOffsetInDegrees = MathHelper.ToDegrees(MathUtils.WrapAnglePi(rotationOffset));
@@ -2126,7 +2128,7 @@ namespace Barotrauma
                 }
                 //GUI.DrawString(spriteBatch, drawPos + Vector2.UnitX * 30, rotationOffsetInDegrees.FormatAsInt(), Color.Red);
                 //GUI.DrawString(spriteBatch, drawPos + Vector2.UnitX * 30, transformedRot.FormatAsInt(), Color.Red);
-                var input = scaledMouseSpeed * 1.5f;
+                var input = scaledMouseSpeed;
                 float x = input.X;
                 float y = input.Y;
                 if (clockWise)
@@ -2159,14 +2161,16 @@ namespace Barotrauma
                 if (displayAngle)
                 {
                     GUI.DrawString(spriteBatch, drawPos, angle.FormatZeroDecimal(), Color.Black, backgroundColor: color, font: GUI.SmallFont);
+                    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight / 4), rotationOffsetInDegrees.FormatZeroDecimal(), Color.Red);
+
                 }
                 onClick(angle);
-            }, autoFreeze);
+            }, autoFreeze, onHovered: () => GUI.DrawString(spriteBatch, new Vector2(drawPos.X + 5, drawPos.Y - widgetSize / 2), $"{toolTip} ({angle.FormatZeroDecimal()})", color, Color.Black * 0.5f));
         }
 
         public enum WidgetType { Rectangle, Circle }
         private string selectedWidget;
-        private void DrawWidget(SpriteBatch spriteBatch, Vector2 drawPos, WidgetType widgetType, int size, Color color, string name, Action onPressed, bool? autoFreeze = null)
+        private void DrawWidget(SpriteBatch spriteBatch, Vector2 drawPos, WidgetType widgetType, int size, Color color, string name, Action onPressed, bool ? autoFreeze = null, Action onHovered = null)
         {
             var drawRect = new Rectangle((int)drawPos.X - size / 2, (int)drawPos.Y - size / 2, size, size);
             var inputRect = drawRect;
@@ -2192,7 +2196,14 @@ namespace Barotrauma
             {
                 selectedWidget = name;
                 // Label/tooltip
-                GUI.DrawString(spriteBatch, new Vector2(drawRect.Right + 5, drawRect.Y - drawRect.Height / 2), name, color, Color.Black * 0.5f);
+                if (onHovered == null)
+                {
+                    GUI.DrawString(spriteBatch, new Vector2(drawRect.Right + 5, drawRect.Y - drawRect.Height / 2), name, color, Color.Black * 0.5f);
+                }
+                else
+                {
+                    onHovered();
+                }
                 if (PlayerInput.LeftButtonHeld())
                 {
                     if (autoFreeze ?? this.autoFreeze)
@@ -2253,6 +2264,34 @@ namespace Barotrauma
                     if (widget.linkedWidget != null)
                     {
                         widget.linkedWidget.refresh();
+                    }
+                    if (limbPairEditing)
+                    {
+                        UpdateOtherJoints(j.LimbA, (otherLimb, otherJoint) =>
+                        {
+                            if (IsMatchingLimb(j.LimbA, otherLimb, joint, otherJoint))
+                            {
+                                if (widgets.TryGetValue($"{otherJoint.jointParams.Name} limits toggle spritesheet", out Widget otherWidget))
+                                {
+                                    TryUpdateJointParam(otherJoint, "limitenabled", j.LimitEnabled);
+                                    if (j.LimitEnabled)
+                                    {
+                                        if (float.IsNaN(otherJoint.jointParams.UpperLimit))
+                                        {
+                                            otherJoint.UpperLimit = 0;
+                                            TryUpdateJointParam(otherJoint, "upperlimit", 0);
+                                        }
+                                        if (float.IsNaN(otherJoint.jointParams.LowerLimit))
+                                        {
+                                            otherJoint.LowerLimit = 0;
+                                            TryUpdateJointParam(otherJoint, "lowerlimit", 0);
+                                        }
+                                    }
+                                    otherWidget.refresh();
+                                    otherWidget.linkedWidget?.refresh();
+                                }
+                            }
+                        });
                     }
                 };
                 widgets.Add(ID, widget);
