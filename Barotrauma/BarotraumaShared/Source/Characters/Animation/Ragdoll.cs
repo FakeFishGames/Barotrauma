@@ -453,6 +453,7 @@ namespace Barotrauma
         public void ResetLimbs()
         {
             Limbs.ForEach(l => l.LoadParams());
+            SetupDrawOrder();
         }
 
         public void AddJoint(JointParams jointParams)
