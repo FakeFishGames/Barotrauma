@@ -332,12 +332,10 @@ namespace Barotrauma
             Name = element.Name.ToString();
         }
 
-        // TODO: decide which properties should be editable in the editor and which only via xml
-
         [Serialize("0, 0, 0, 0", true), Editable]
         public Rectangle SourceRect { get; set; }
 
-        [Serialize("0.5, 0.5", true), Editable]
+        [Serialize("0.5, 0.5", true), Editable(DecimalCount = 2)]
         public Vector2 Origin { get; set; }
 
         [Serialize(0f, true), Editable(DecimalCount = 3)]
