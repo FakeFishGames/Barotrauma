@@ -20,7 +20,8 @@ namespace Barotrauma
         OnWearing, OnContaining, OnContained, 
         OnActive, OnFailure, OnBroken, 
         OnFire, InWater,
-        OnImpact
+        OnImpact, 
+        OnEating
     }
 
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable

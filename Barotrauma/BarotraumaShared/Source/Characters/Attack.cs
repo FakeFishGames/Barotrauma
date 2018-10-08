@@ -161,16 +161,20 @@ namespace Barotrauma
         
         public AttackResult DoDamage(Character attacker, IDamageable target, Vector2 worldPosition, float deltaTime, bool playSound = true)
         {
+            Character targetCharacter = target as Character;
             if (OnlyHumans)
             {
-                Character character = target as Character;
-                if (character != null && character.ConfigPath != Character.HumanConfigFile) return new AttackResult();
+                if (targetCharacter != null && targetCharacter.ConfigPath != Character.HumanConfigFile) return new AttackResult();
             }
 
             DamageParticles(deltaTime, worldPosition);
-
+            
             var attackResult = target.AddDamage(attacker, worldPosition, this, deltaTime, playSound);
             var effectType = attackResult.Damage > 0.0f ? ActionType.OnUse : ActionType.OnFailure;
+            if (targetCharacter != null && targetCharacter.IsDead)
+            {
+                effectType = ActionType.OnEating;
+            }
             if (statusEffects == null) return attackResult;
 
             foreach (StatusEffect effect in statusEffects)
