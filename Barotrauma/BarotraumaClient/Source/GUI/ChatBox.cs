@@ -196,7 +196,17 @@ namespace Barotrauma
                 UserData = message.SenderName,
                 CanBeFocused = false
             };
-            msg.Flash(Color.Yellow);
+
+            if (message is OrderChatMessage orderChatMsg && 
+                Character.Controlled != null && 
+                orderChatMsg.TargetCharacter == Character.Controlled)
+            {
+                msg.Flash(Color.OrangeRed, flashDuration: 5.0f);
+            }
+            else
+            {
+                msg.Flash(Color.Yellow);
+            }
             //some spacing at the bottom of the msg
             msg.RectTransform.NonScaledSize += new Point(0, 5);
                         
