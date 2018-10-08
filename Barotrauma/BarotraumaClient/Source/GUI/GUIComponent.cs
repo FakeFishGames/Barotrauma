@@ -103,9 +103,7 @@ namespace Barotrauma
         public int UpdateOrder { get; set; }
 
         public Action<GUIComponent> OnAddedToGUIUpdateList;
-
-        const float FlashDuration = 1.5f;
-
+        
         public enum ComponentState { None, Hover, Pressed, Selected };
 
         protected Alignment alignment;
@@ -124,6 +122,7 @@ namespace Barotrauma
         protected ComponentState state;
 
         protected Color flashColor;
+        protected float flashDuration = 1.5f;
         protected float flashTimer;
 
         public bool IgnoreLayoutGroups;
@@ -430,9 +429,15 @@ namespace Barotrauma
 
             if (flashTimer > 0.0f)
             {
+                //the number of flashes depends on the duration, 1 flash per 1 full second
+                int flashCycleCount = (int)Math.Max(flashDuration, 1);
+                float flashCycleDuration = flashDuration / flashCycleCount;
+
+                //MathHelper.Pi * 0.8f -> the curve goes from 144 deg to 0, 
+                //i.e. quickly bumps up from almost full brightness to full and then fades out
                 GUI.UIGlow.Draw(spriteBatch,
                     rect,
-                    flashColor * (flashTimer / FlashDuration));
+                    flashColor * (float)Math.Sin(flashTimer % flashCycleDuration / flashCycleDuration * MathHelper.Pi * 0.8f));
             }
         }
 
@@ -478,9 +483,10 @@ namespace Barotrauma
             color = new Color(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, a);
         }
 
-        public virtual void Flash(Color? color = null)
+        public virtual void Flash(Color? color = null, float flashDuration = 1.5f)
         {
-            flashTimer = FlashDuration;
+            flashTimer = flashDuration;
+            this.flashDuration = flashDuration;
             flashColor = (color == null) ? Color.Red : (Color)color;
         }
 
