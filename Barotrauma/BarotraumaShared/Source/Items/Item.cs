@@ -23,6 +23,7 @@ namespace Barotrauma
         OnActive, OnFailure, OnBroken, 
         OnFire, InWater,
         OnImpact,
+        OnEating,
         OnDeath = OnBroken
     }
 
