@@ -156,6 +156,7 @@
   <InputType.CrewOrders>Crew orders</InputType.CrewOrders>
   <InputType.Ragdoll>Ragdoll</InputType.Ragdoll>
   <InputType.Health>Health</InputType.Health>
+  <InputType.Grab>Grab</InputType.Grab>
   <InputType.SelectNextCharacter>Next character</InputType.SelectNextCharacter>
   <InputType.SelectPreviousCharacter>Previous character</InputType.SelectPreviousCharacter>
   
