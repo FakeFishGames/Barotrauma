@@ -42,6 +42,13 @@ namespace Barotrauma
         private bool lockSpritePosition;
         private bool lockSpriteSize;
 
+        private GUITickBox pixelPerfectToggle;
+        private GUIScrollBar spriteScaleBar;
+        private float spriteSheetScale;
+
+        private int spriteSheetOffsetY = 30;
+        private int spriteSheetOffsetX = 30;
+
         public override void Select()
         {
             base.Select();
@@ -383,9 +390,44 @@ namespace Barotrauma
                     return true;
                 }
             };
-            // Sprite dimensions
+            // Sprite sheet controls
             spriteControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupSprite = new GUILayoutGroup(new RectTransform(Vector2.One, spriteControls.RectTransform)) { CanBeFocused = false };
+            new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSprite.RectTransform), "Spritesheet scale:", Color.White);
+            float spriteMinScale = 0.25f;
+            float spriteMaxScale = (centerPanel.Rect.Left - spriteSheetOffsetX) / (float)(Textures.OrderByDescending(t => t.Width).First().Width);
+            spriteSheetScale = MathHelper.Clamp(1, spriteMinScale, spriteMaxScale);
+            spriteScaleBar = new GUIScrollBar(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSprite.RectTransform), barSize: 0.2f)
+            {
+                Enabled = spriteMaxScale < 1,
+                BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteMinScale, spriteMaxScale, spriteSheetScale)),
+                Step = 0.01f,
+                OnMoved = (scrollBar, value) =>
+                {
+                    spriteSheetScale = MathHelper.Lerp(spriteMinScale, spriteMaxScale, value);
+                    return true;
+                }
+            };
+            pixelPerfectToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSprite.RectTransform)
+            {
+                RelativeOffset = new Vector2(0, 0.1f)
+            }, "Pixel Perfect")
+            {
+                Enabled = spriteMaxScale >= 1,
+                Selected = spriteMaxScale >= 1,
+                TextColor = spriteMaxScale >= 1 ? Color.White : Color.Gray,
+                OnSelected = (tickBox) =>
+                {
+                    spriteScaleBar.Enabled = !tickBox.Selected;
+                    spriteSheetScale = Math.Min(1, spriteMaxScale);
+                    spriteScaleBar.BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteMinScale, spriteMaxScale, spriteSheetScale));
+                    return true;
+                }
+            };
+
+            // Spacing
+            new GUIFrame(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSprite.RectTransform), style: null) { CanBeFocused = false };
+
             var lockSpriteOriginToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSprite.RectTransform), "Lock Sprite Origin")
             {
                 Selected = lockSpriteOrigin,
@@ -1819,26 +1861,37 @@ namespace Barotrauma
 
         private void DrawSpritesheetEditor(SpriteBatch spriteBatch, float deltaTime)
         {
-            //TODO: allow to zoom the sprite sheet
-            //TODO: separate or combine the controls for the limbs that share a texture?
-            int y = 30;
-            int x = 30;
+            int offsetX = spriteSheetOffsetX;
+            int offsetY = spriteSheetOffsetY;
             for (int i = 0; i < Textures.Count; i++)
             {
-                spriteBatch.Draw(Textures[i], new Vector2(x, y), Color.White);
+                var texture = Textures[i];
+                spriteBatch.Draw(texture, 
+                    position: new Vector2(offsetX, offsetY), 
+                    rotation: 0, 
+                    origin: Vector2.Zero,
+                    sourceRectangle: null,
+                    scale: spriteSheetScale,
+                    effects: SpriteEffects.None,
+                    color: Color.White,
+                    layerDepth: 0);
+                GUI.DrawRectangle(spriteBatch, new Vector2(offsetX, offsetY), texture.Bounds.Size.ToVector2() * spriteSheetScale, Color.White);
                 foreach (Limb limb in character.AnimController.Limbs)
                 {
                     if (limb.ActiveSprite == null || limb.ActiveSprite.FilePath != texturePaths[i]) continue;
                     Rectangle rect = limb.ActiveSprite.SourceRect;
-                    rect.X += x;
-                    rect.Y += y;
+                    rect.Size = rect.MultiplySize(spriteSheetScale);
+                    rect.Location = rect.Location.Multiply(spriteSheetScale);
+                    rect.X += offsetX;
+                    rect.Y += offsetY;
+
                     GUI.DrawRectangle(spriteBatch, rect, Color.Red);
                     Vector2 origin = limb.ActiveSprite.Origin;
-                    Vector2 limbBodyPos = new Vector2(rect.X + origin.X, rect.Y + origin.Y);
+                    Vector2 limbBodyPos = new Vector2(rect.X + origin.X * spriteSheetScale, rect.Y + origin.Y * spriteSheetScale);
                     // The origin is manipulated when the character is flipped. We have to undo it here.
                     if (character.AnimController.Dir < 0)
                     {
-                        limbBodyPos.X = rect.X + rect.Width - origin.X;
+                        limbBodyPos.X = rect.X + rect.Width - (float)Math.Round(origin.X * spriteSheetScale);
                     }
                     if (editRagdoll)
                     {
@@ -1867,7 +1920,7 @@ namespace Barotrauma
                             {
                                 // Adjust the source rect location
                                 var newRect = limb.ActiveSprite.SourceRect;
-                                var newLocation = new Vector2(PlayerInput.MousePosition.X - x, PlayerInput.MousePosition.Y - y);
+                                var newLocation = new Vector2(PlayerInput.MousePosition.X - offsetX, PlayerInput.MousePosition.Y - offsetY) / spriteSheetScale;
                                 newRect.Location = newLocation.ToPoint();
                                 limb.ActiveSprite.SourceRect = newRect;
                                 if (limb.DamagedSprite != null)
@@ -1884,8 +1937,8 @@ namespace Barotrauma
                             {
                                 // Adjust the source rect width and height, and the sprite size.
                                 var newRect = limb.ActiveSprite.SourceRect;
-                                int width = (int)PlayerInput.MousePosition.X - rect.X;
-                                int height = (int)PlayerInput.MousePosition.Y - rect.Y;
+                                int width = (int)((PlayerInput.MousePosition.X - rect.X) / spriteSheetScale);
+                                int height = (int)((PlayerInput.MousePosition.Y - rect.Y) / spriteSheetScale);
                                 int dx = newRect.Width - width;
                                 newRect.Width = width;
                                 newRect.Height = height;
@@ -1935,7 +1988,7 @@ namespace Barotrauma
                         }
                     }
                 }
-                y += Textures[i].Height;
+                offsetY += (int)(texture.Height * spriteSheetScale);
             }
         }
 
@@ -1958,7 +2011,7 @@ namespace Barotrauma
                 {
                     continue;
                 }
-                Vector2 tformedJointPos = jointPos /= RagdollParams.JointScale;
+                Vector2 tformedJointPos = jointPos = jointPos / RagdollParams.JointScale * spriteSheetScale;
                 tformedJointPos.Y = -tformedJointPos.Y;
                 tformedJointPos.X *= character.AnimController.Dir;
                 tformedJointPos += limbScreenPos;
@@ -1992,7 +2045,7 @@ namespace Barotrauma
                             Vector2 input = ConvertUnits.ToSimUnits(scaledMouseSpeed);
                             input.Y = -input.Y;
                             input.X *= character.AnimController.Dir;
-                            input *= limb.Scale;
+                            input *= limb.Scale / spriteSheetScale;
                             if (joint.BodyA == limb.body.FarseerBody)
                             {
                                 joint.LocalAnchorA += input;
