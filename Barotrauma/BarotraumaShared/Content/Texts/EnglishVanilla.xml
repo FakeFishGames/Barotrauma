@@ -676,6 +676,9 @@
   <SteeringVelocityY>Descent velocity: [kph] km/h</SteeringVelocityY>
   <SteeringDepth>Depth: [m] m</SteeringDepth>
   <SteeringDepthWarning>DANGEROUS PRESSURE</SteeringDepthWarning>
+  <SteeringNoPowerTip>WARNING: Insufficient power</SteeringNoPowerTip>
+  <SteeringAutoPilotMaintainPosTip>AUTOPILOT ON\nMaintaining position. Choose the position to maintain by clicking on the display.</SteeringAutoPilotMaintainPosTip>
+  <SteeringAutoPilotLocationTip>AUTOPILOT ON\nAutopilot is set to navigate towards [locationname].</SteeringAutoPilotLocationTip>
 
   <SonarActive>Active Sonar</SonarActive>
   <SonarPassive>Passive Sonar</SonarPassive>
