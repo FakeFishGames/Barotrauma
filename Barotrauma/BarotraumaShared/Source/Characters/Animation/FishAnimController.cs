@@ -220,7 +220,7 @@ namespace Barotrauma
                 }
             }
 
-            if (character.SelectedCharacter != null) DragCharacter(character.SelectedCharacter);
+            if (character.SelectedCharacter != null) DragCharacter(character.SelectedCharacter, deltaTime);
 
             if (!CurrentFishAnimation.Flip) return;
 
@@ -259,7 +259,7 @@ namespace Barotrauma
 
         private float eatTimer = 0.0f;
 
-        public override void DragCharacter(Character target)
+        public override void DragCharacter(Character target, float deltaTime)
         {
             if (target == null) return;
             
@@ -274,7 +274,7 @@ namespace Barotrauma
 
             Character targetCharacter = target;
             float eatSpeed = character.Mass / targetCharacter.Mass * 0.1f;
-            eatTimer += (float)Timing.Step * eatSpeed;
+            eatTimer += deltaTime * eatSpeed;
 
             Vector2 mouthPos = GetMouthPosition().Value;
             Vector2 attackSimPosition = character.Submarine == null ? ConvertUnits.ToSimUnits(target.WorldPosition) : target.SimPosition;
@@ -293,7 +293,9 @@ namespace Barotrauma
                 float pullStrength = (float)(Math.Sin(eatTimer) * Math.Max(Math.Sin(eatTimer * 0.5f), 0.0f));
                 mouthLimb.body.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f * pullStrength);
 
-                if (eatTimer % 1.0f < 0.5f && (eatTimer - (float)Timing.Step * eatSpeed) % 1.0f > 0.5f)
+                character.ApplyStatusEffects(ActionType.OnEating, deltaTime);
+
+                if (eatTimer % 1.0f < 0.5f && (eatTimer - deltaTime * eatSpeed) % 1.0f > 0.5f)
                 {
                     //apply damage to the target character to get some blood particles flying 
                     targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, 0.0f, 20.0f, 0.0f, false);

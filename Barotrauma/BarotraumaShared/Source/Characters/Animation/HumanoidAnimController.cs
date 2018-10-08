@@ -315,7 +315,7 @@ namespace Barotrauma
 
             if (character.SelectedCharacter != null)
             {
-                DragCharacter(character.SelectedCharacter);
+                DragCharacter(character.SelectedCharacter, deltaTime);
             }
 
             switch (Anim)
@@ -1268,7 +1268,7 @@ namespace Barotrauma
             }
         }
 
-        public override void DragCharacter(Character target)
+        public override void DragCharacter(Character target, float deltaTime)
         {
             if (target == null) return;
 
