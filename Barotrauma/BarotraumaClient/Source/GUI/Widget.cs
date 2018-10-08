@@ -41,6 +41,8 @@ namespace Barotrauma
         public Color textBackgroundColor = Color.Black * 0.5f;
         public readonly string id;
 
+        public event Action Selected;
+        public event Action Deselected;
         public event Action Hovered;
         public event Action Clicked;
         public event Action MouseDown;
@@ -88,15 +90,17 @@ namespace Barotrauma
             if (!enabled) { return; }
             if (IsMouseOver)
             {
+                Hovered?.Invoke();
                 if (selectedWidget == null)
                 {
                     selectedWidget = this;
+                    Selected?.Invoke();
                 }
-                Hovered?.Invoke();
             }
             else if (selectedWidget == this)
             {
                 selectedWidget = null;
+                Deselected?.Invoke();
             }
             if (IsSelected)
             {
