@@ -369,20 +369,31 @@ namespace Barotrauma
                             {
                                 w.DrawPos = PlayerInput.MousePosition;
                                 sprite.SourceRect = new Rectangle(((w.DrawPos + halfSize - textureRect.Location.ToVector2()) / zoom).ToPoint(), sprite.SourceRect.Size);
-                                if (widgets.TryGetValue($"{identifier}_size", out Widget sizeW))
-                                {
-                                    sizeW.DrawPos = w.DrawPos + new Vector2(widgetSize) + sprite.SourceRect.Size.ToVector2() * zoom;
-                                }
+                                UpdateSizeWidget();
                                 if (spriteList.SelectedComponent is GUITextBlock textBox)
                                 {
                                     textBox.Text = GetSpriteName(sprite) + " " + sprite.SourceRect;
                                 }
                                 w.tooltip = $"Position: {sprite.SourceRect.Location}";
                             };
+                            w.Deselected += UpdatePos;
+                            w.MouseUp += UpdatePos;
                             w.PostUpdate += dTime =>
                             {
                                 w.color = selectedSprite == sprite ? Color.Red : Color.White;
                             };
+                            void UpdatePos()
+                            {
+                                w.DrawPos = textureRect.Location.ToVector2() + sprite.SourceRect.Location.ToVector2() * zoom - halfSize;
+                            };
+                            void UpdateSizeWidget()
+                            {
+                                if (widgets.TryGetValue($"{identifier}_size", out Widget sizeW))
+                                {
+                                    //sizeW.DrawPos = w.DrawPos + new Vector2(widgetSize) + sprite.SourceRect.Size.ToVector2() * zoom;
+                                    sizeW.DrawPos = textureRect.Location.ToVector2() + new Vector2(sprite.SourceRect.Right, sprite.SourceRect.Bottom) * zoom + halfSize;
+                                }
+                            }
                         });
                         var sizeWidget = GetWidget($"{identifier}_size", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                         {
@@ -401,10 +412,16 @@ namespace Barotrauma
                                 }
                                 w.tooltip = $"Size: {sprite.SourceRect.Size}";
                             };
+                            w.MouseUp += UpdatePos;
+                            w.Deselected += UpdatePos;
                             w.PostUpdate += dTime =>
                             {
                                 w.color = selectedSprite == sprite ? Color.Red : Color.White;
                             };
+                            void UpdatePos()
+                            {
+                                w.DrawPos = textureRect.Location.ToVector2() + new Vector2(sprite.SourceRect.Right, sprite.SourceRect.Bottom) * zoom + halfSize;
+                            }
                         });
                         positionWidget.Draw(spriteBatch, (float)deltaTime);
                         sizeWidget.Draw(spriteBatch, (float)deltaTime);
