@@ -14,6 +14,9 @@
     <sprite texture="Content/Characters/Husk/DivingSuit.png" sourcerect="110,76,18,52" depth="0.052" origin="0.5,0.5"/>
     <attack range="70" damagerange="35" duration="0.2"  targetforce="10" structuresoundtype="StructureBlunt"
             force="5" applyforceonlimbs="1" torque="-10">
+      <StatusEffect type="OnUse" target="This" disabledeltatime="true">
+        <ReduceAffliction identifier="internaldamage" strength="5"/>
+      </StatusEffect>
       <Affliction identifier="bleeding" strength="10"/>
       <Affliction identifier="huskinfection" strength="5"/>
       <Affliction identifier="stun" strength="0.5"/>        
