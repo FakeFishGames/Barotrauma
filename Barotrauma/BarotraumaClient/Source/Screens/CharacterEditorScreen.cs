@@ -2104,9 +2104,10 @@ namespace Barotrauma
             GUI.DrawLine(spriteBatch, drawPos, widgetDrawPos, color);
             DrawWidget(spriteBatch, widgetDrawPos, WidgetType.Rectangle, 10, color, toolTip, () =>
             {
-                // TODO: the input doesnt work when the rotation is less than 270?
-                GUI.DrawLine(spriteBatch, drawPos, drawPos + up, Color.Red);
-                ShapeExtensions.DrawCircle(spriteBatch, drawPos, circleRadius, 40, color, thickness: 1);
+                //GUI.DrawLine(spriteBatch, drawPos, drawPos + up, Color.White, width: 5);
+                GUI.DrawLine(spriteBatch, drawPos, drawPos + up, Color.Red, width: 2);
+                //GUI.DrawLine(spriteBatch, drawPos, drawPos + up, color);
+                ShapeExtensions.DrawCircle(spriteBatch, drawPos, circleRadius, 40, color, thickness: 2);
                 var rotationOffsetInDegrees = MathHelper.ToDegrees(MathUtils.WrapAnglePi(rotationOffset));
                 // Collider rotation is counter-clockwise, todo: this should be handled before passing the arguments
                 var transformedRot = clockWise ? angle - rotationOffsetInDegrees : angle + rotationOffsetInDegrees;
@@ -2118,9 +2119,9 @@ namespace Barotrauma
                 {
                     transformedRot += 360;
                 }
-                //GUI.DrawString(spriteBatch, drawPos + Vector2.UnitX * 30, rotationOffsetInDegrees.FormatAsInt(), Color.Red);
-                //GUI.DrawString(spriteBatch, drawPos + Vector2.UnitX * 30, transformedRot.FormatAsInt(), Color.Red);
-                var input = scaledMouseSpeed;
+                //GUI.DrawString(spriteBatch, drawPos + Vector2.UnitX * 30, rotationOffsetInDegrees.FormatZeroDecimal(), Color.Red);
+                //GUI.DrawString(spriteBatch, drawPos + Vector2.UnitX * 30 + Vector2.UnitY * 30, transformedRot.FormatZeroDecimal(), Color.Blue);
+                var input = scaledMouseSpeed * (1.5f / (circleRadius / 30));
                 float x = input.X;
                 float y = input.Y;
                 if (clockWise)
@@ -2129,21 +2130,17 @@ namespace Barotrauma
                     {
                         x = -x;
                     }
-                    if (transformedRot > 180 || (transformedRot < 0 && transformedRot > -180))
-                    {
-                        y = -y;
-                    }
                 }
                 else
                 {
-                    if (transformedRot < 90 && transformedRot > -90)
+                    if (transformedRot < 90 && transformedRot > -90 || transformedRot > 270 || transformedRot < -270)
                     {
                         x = -x;
                     }
-                    if (transformedRot < 0 && transformedRot > -180)
-                    {
-                        y = -y;
-                    }
+                }
+                if (transformedRot > 180 || (transformedRot < 0 && transformedRot > -180))
+                {
+                    y = -y;
                 }
                 angle += x + y;
                 if (angle > 360 || angle < -360)
