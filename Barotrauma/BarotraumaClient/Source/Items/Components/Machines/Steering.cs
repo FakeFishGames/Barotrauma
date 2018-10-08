@@ -19,6 +19,10 @@ namespace Barotrauma.Items.Components
 
         private GUITextBlock pressureWarningText;
 
+        private GUITextBlock tipContainer;
+
+        private string noPowerTip, autoPilotMaintainPosTip, autoPilotLevelStartTip, autoPilotLevelEndTip;
+
         private Vector2 keyboardInput = Vector2.Zero;
         private float inputCumulation;
 
@@ -227,8 +231,19 @@ namespace Barotrauma.Items.Components
                 Visible = false
             };
 
+            tipContainer = new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.15f), GuiFrame.RectTransform, Anchor.BottomLeft)
+            { MinSize = new Point(150, 0), RelativeOffset = new Vector2(-0.05f, -0.05f) }, "", wrap: true, style: "GUIToolTip")
+            {
+                AutoScale = true
+            };
+
+            noPowerTip = TextManager.Get("SteeringNoPowerTip");
+            autoPilotMaintainPosTip = TextManager.Get("SteeringAutoPilotMaintainPosTip");
+            autoPilotLevelStartTip = TextManager.Get("SteeringAutoPilotLocationTip").Replace("[locationname]", GameMain.GameSession.StartLocation.Name);
+            autoPilotLevelEndTip = TextManager.Get("SteeringAutoPilotLocationTip").Replace("[locationname]", GameMain.GameSession.EndLocation.Name);
+
             steerArea = new GUICustomComponent(new RectTransform(new Point(viewSize), GuiFrame.RectTransform, Anchor.CenterLeft),
-                (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); }, null);           
+                (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); }, null);
         }
 
         /// <summary>
@@ -362,7 +377,30 @@ namespace Barotrauma.Items.Components
 
             autoPilotControlsDisabler.Visible = !AutoPilot;
 
-            if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
+            if (voltage < minVoltage && currPowerConsumption > 0.0f)
+            {
+                tipContainer.Visible = true;
+                tipContainer.Text = noPowerTip;
+                return;
+            }
+
+
+            tipContainer.Visible = AutoPilot;
+            if (AutoPilot)
+            {
+                if (maintainPos)
+                {
+                    tipContainer.Text = autoPilotMaintainPosTip;
+                }
+                else if (LevelStartSelected)
+                {
+                    tipContainer.Text = autoPilotLevelStartTip;
+                }
+                else if (LevelEndSelected)
+                {
+                    tipContainer.Text = autoPilotLevelEndTip;
+                }
+            }
 
             pressureWarningText.Visible = item.Submarine != null && item.Submarine.AtDamageDepth && Timing.TotalTime % 1.0f < 0.5f;
 
