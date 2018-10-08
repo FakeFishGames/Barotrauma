@@ -332,6 +332,13 @@ namespace Barotrauma
             {
                 matchingAfflictions.AddRange(limbHealths[targetLimb.HealthIndex].Afflictions);
             }
+            else
+            {
+                foreach (LimbHealth limbHealth in limbHealths)
+                {
+                    matchingAfflictions.AddRange(limbHealth.Afflictions);
+                }
+            }
             matchingAfflictions.RemoveAll(a => 
                 a.Prefab.Identifier.ToLowerInvariant() != affliction && 
                 a.Prefab.AfflictionType.ToLowerInvariant() != affliction);
