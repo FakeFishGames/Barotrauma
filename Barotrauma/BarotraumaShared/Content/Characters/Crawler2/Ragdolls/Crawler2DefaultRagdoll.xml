@@ -467,7 +467,7 @@
     limb2anchor="-9.55594,5.383872"
     canbesevered="True"
     limitenabled="True"
-    upperlimit="110.0152"
+    upperlimit="60.05338"
     lowerlimit="-65.67323" />
   <!--FakeFeet-->
   <joint
