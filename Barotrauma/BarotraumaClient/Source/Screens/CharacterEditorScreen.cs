@@ -2162,7 +2162,7 @@ namespace Barotrauma
         {
             var drawRect = new Rectangle((int)drawPos.X - size / 2, (int)drawPos.Y - size / 2, size, size);
             var inputRect = drawRect;
-            inputRect.Inflate(size / 2, size / 2);
+            inputRect.Inflate(size * 0.75f, size * 0.75f);
             bool isMouseOn = inputRect.Contains(PlayerInput.MousePosition);
             // Unselect
             if (!isMouseOn && selectedWidget == name)
@@ -2222,7 +2222,7 @@ namespace Barotrauma
                     if (j.LimitEnabled)
                     {
                         widget.tooltip = j.jointParams.Name + " Disable Joint Limits";
-                        widget.color = Color.Green;
+                        widget.color = Color.LightGreen;
                     }
                     else
                     {
