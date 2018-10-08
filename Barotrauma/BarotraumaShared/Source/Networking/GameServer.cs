@@ -2125,12 +2125,8 @@ namespace Barotrauma.Networking
                     //too far to hear the msg -> don't send
                     if (string.IsNullOrWhiteSpace(modifiedMessage)) continue;
                 }
-
-                var modifiedChatMsg = new OrderChatMessage(
-                    message.Order, message.OrderOption, 
-                    message.TargetEntity, message.TargetCharacter, message.Sender);
-                    
-                SendDirectChatMessage(modifiedChatMsg, client);
+                
+                SendDirectChatMessage(message, client);
             }
 
             string myReceivedMessage = message.Text;
@@ -2141,7 +2137,7 @@ namespace Barotrauma.Networking
 
             if (!string.IsNullOrWhiteSpace(myReceivedMessage))
             {
-                AddChatMessage(myReceivedMessage, ChatMessageType.Order, message.SenderName, message.Sender);
+                AddChatMessage(new OrderChatMessage(message.Order, message.OrderOption, myReceivedMessage, message.TargetEntity, message.TargetCharacter, message.Sender));
             }
         }
 
