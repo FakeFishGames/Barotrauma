@@ -40,7 +40,7 @@ namespace Barotrauma
 
         private GUIComponent loadFrame, saveFrame;
 
-        private GUITextBox nameBox;
+        private GUITextBox nameBox, descriptionBox;
 
         private GUIFrame hullVolumeFrame;
 
@@ -637,7 +637,7 @@ namespace Barotrauma
                         
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.05f), paddedSaveFrame.RectTransform), TextManager.Get("SaveSubDialogDescription"));
 
-            var descriptionBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.25f), paddedSaveFrame.RectTransform))
+            descriptionBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.25f), paddedSaveFrame.RectTransform))
             {
                 Wrap = true,
                 Text = Submarine.MainSub == null ? "" : Submarine.MainSub.Description,
@@ -836,7 +836,7 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform), 
                 TextManager.Get("SaveItemAssemblyDialogDescription"));
-            new GUITextBox(new RectTransform(new Vector2(1.0f, 0.3f), paddedSaveFrame.RectTransform))
+            descriptionBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.3f), paddedSaveFrame.RectTransform))
             {
                 UserData = "description",
                 Wrap = true,
@@ -880,11 +880,9 @@ namespace Barotrauma
                     return false;
                 }
             }
-
-            string description = ((GUITextBox)saveFrame.Children.First().GetChildByUserData("description")).Text;
-
+            
             string saveFolder = Path.Combine("Content", "Items", "Assemblies");
-            XDocument doc = new XDocument(ItemAssemblyPrefab.Save(MapEntity.SelectedList, nameBox.Text, description));
+            XDocument doc = new XDocument(ItemAssemblyPrefab.Save(MapEntity.SelectedList, nameBox.Text, descriptionBox.Text));
             string filePath = Path.Combine(saveFolder, nameBox.Text + ".xml");
             doc.Save(filePath);
 
@@ -1289,14 +1287,7 @@ namespace Barotrauma
             {
                 textBox.UserData = text;
             }
-
-            // textBox.Rect = new Rectangle(textBox.Rect.Location, new Point(textBox.Rect.Width, 20));
             
-            //textBox.Text = ToolBox.LimitString(text, 15);
-
-            //textBox.Flash(Color.Green);
-            //textBox.Deselect();
-
             return true;
         }
         
