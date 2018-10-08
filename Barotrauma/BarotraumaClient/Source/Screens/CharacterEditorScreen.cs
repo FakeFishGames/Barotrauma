@@ -43,8 +43,8 @@ namespace Barotrauma
         private bool lockSpriteSize;
 
         private GUITickBox pixelPerfectToggle;
-        private GUIScrollBar spriteScaleBar;
-        private float spriteSheetScale;
+        private GUIScrollBar spriteSheetZoomBar;
+        private float spriteSheetZoom;
 
         private int spriteSheetOffsetY = 30;
         private int spriteSheetOffsetX = 30;
@@ -393,18 +393,18 @@ namespace Barotrauma
             // Sprite sheet controls
             spriteControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupSprite = new GUILayoutGroup(new RectTransform(Vector2.One, spriteControls.RectTransform)) { CanBeFocused = false };
-            new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSprite.RectTransform), "Spritesheet scale:", Color.White);
+            new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSprite.RectTransform), "Spritesheet zoom:", Color.White);
             float spriteMinScale = 0.25f;
             float spriteMaxScale = (centerPanel.Rect.Left - spriteSheetOffsetX) / (float)(Textures.OrderByDescending(t => t.Width).First().Width);
-            spriteSheetScale = MathHelper.Clamp(1, spriteMinScale, spriteMaxScale);
-            spriteScaleBar = new GUIScrollBar(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSprite.RectTransform), barSize: 0.2f)
+            spriteSheetZoom = MathHelper.Clamp(1, spriteMinScale, spriteMaxScale);
+            spriteSheetZoomBar = new GUIScrollBar(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSprite.RectTransform), barSize: 0.2f)
             {
                 Enabled = spriteMaxScale < 1,
-                BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteMinScale, spriteMaxScale, spriteSheetScale)),
+                BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteMinScale, spriteMaxScale, spriteSheetZoom)),
                 Step = 0.01f,
                 OnMoved = (scrollBar, value) =>
                 {
-                    spriteSheetScale = MathHelper.Lerp(spriteMinScale, spriteMaxScale, value);
+                    spriteSheetZoom = MathHelper.Lerp(spriteMinScale, spriteMaxScale, value);
                     return true;
                 }
             };
@@ -418,9 +418,9 @@ namespace Barotrauma
                 TextColor = spriteMaxScale >= 1 ? Color.White : Color.Gray,
                 OnSelected = (tickBox) =>
                 {
-                    spriteScaleBar.Enabled = !tickBox.Selected;
-                    spriteSheetScale = Math.Min(1, spriteMaxScale);
-                    spriteScaleBar.BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteMinScale, spriteMaxScale, spriteSheetScale));
+                    spriteSheetZoomBar.Enabled = !tickBox.Selected;
+                    spriteSheetZoom = Math.Min(1, spriteMaxScale);
+                    spriteSheetZoomBar.BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteMinScale, spriteMaxScale, spriteSheetZoom));
                     return true;
                 }
             };
@@ -1871,27 +1871,27 @@ namespace Barotrauma
                     rotation: 0, 
                     origin: Vector2.Zero,
                     sourceRectangle: null,
-                    scale: spriteSheetScale,
+                    scale: spriteSheetZoom,
                     effects: SpriteEffects.None,
                     color: Color.White,
                     layerDepth: 0);
-                GUI.DrawRectangle(spriteBatch, new Vector2(offsetX, offsetY), texture.Bounds.Size.ToVector2() * spriteSheetScale, Color.White);
+                GUI.DrawRectangle(spriteBatch, new Vector2(offsetX, offsetY), texture.Bounds.Size.ToVector2() * spriteSheetZoom, Color.White);
                 foreach (Limb limb in character.AnimController.Limbs)
                 {
                     if (limb.ActiveSprite == null || limb.ActiveSprite.FilePath != texturePaths[i]) continue;
                     Rectangle rect = limb.ActiveSprite.SourceRect;
-                    rect.Size = rect.MultiplySize(spriteSheetScale);
-                    rect.Location = rect.Location.Multiply(spriteSheetScale);
+                    rect.Size = rect.MultiplySize(spriteSheetZoom);
+                    rect.Location = rect.Location.Multiply(spriteSheetZoom);
                     rect.X += offsetX;
                     rect.Y += offsetY;
 
                     GUI.DrawRectangle(spriteBatch, rect, Color.Red);
                     Vector2 origin = limb.ActiveSprite.Origin;
-                    Vector2 limbBodyPos = new Vector2(rect.X + origin.X * spriteSheetScale, rect.Y + origin.Y * spriteSheetScale);
+                    Vector2 limbBodyPos = new Vector2(rect.X + origin.X * spriteSheetZoom, rect.Y + origin.Y * spriteSheetZoom);
                     // The origin is manipulated when the character is flipped. We have to undo it here.
                     if (character.AnimController.Dir < 0)
                     {
-                        limbBodyPos.X = rect.X + rect.Width - (float)Math.Round(origin.X * spriteSheetScale);
+                        limbBodyPos.X = rect.X + rect.Width - (float)Math.Round(origin.X * spriteSheetZoom);
                     }
                     if (editRagdoll)
                     {
@@ -1908,7 +1908,8 @@ namespace Barotrauma
                             GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.Red);
                         }
                         // Draw the source rect widgets
-                        int widgetSize = 5;
+                        int widgetSize = 8;
+                        int halfSize = widgetSize / 2;
                         Vector2 stringOffset = new Vector2(5, 14);
                         var topLeft = rect.Location.ToVector2();
                         var topRight = new Vector2(topLeft.X + rect.Width, topLeft.Y);
@@ -1916,12 +1917,13 @@ namespace Barotrauma
                         //var bottomLeft = new Vector2(topLeft.X, bottomRight.Y);
                         if (!lockSpritePosition)
                         {
-                            DrawWidget(spriteBatch, topLeft - new Vector2(widgetSize / 2), WidgetType.Rectangle, widgetSize, Color.Red, "Position", () =>
+                            DrawWidget(spriteBatch, topLeft - new Vector2(halfSize), WidgetType.Rectangle, widgetSize, Color.Red, "Position", () =>
                             {
                                 // Adjust the source rect location
                                 var newRect = limb.ActiveSprite.SourceRect;
-                                var newLocation = new Vector2(PlayerInput.MousePosition.X - offsetX, PlayerInput.MousePosition.Y - offsetY) / spriteSheetScale;
-                                newRect.Location = newLocation.ToPoint();
+                                newRect.Location = new Point(
+                                    (int)((PlayerInput.MousePosition.X + halfSize - offsetX) / spriteSheetZoom), 
+                                    (int)((PlayerInput.MousePosition.Y + halfSize - offsetY) / spriteSheetZoom));
                                 limb.ActiveSprite.SourceRect = newRect;
                                 if (limb.DamagedSprite != null)
                                 {
@@ -1937,8 +1939,8 @@ namespace Barotrauma
                             {
                                 // Adjust the source rect width and height, and the sprite size.
                                 var newRect = limb.ActiveSprite.SourceRect;
-                                int width = (int)((PlayerInput.MousePosition.X - rect.X) / spriteSheetScale);
-                                int height = (int)((PlayerInput.MousePosition.Y - rect.Y) / spriteSheetScale);
+                                int width = (int)((PlayerInput.MousePosition.X - rect.X) / spriteSheetZoom);
+                                int height = (int)((PlayerInput.MousePosition.Y - rect.Y) / spriteSheetZoom);
                                 int dx = newRect.Width - width;
                                 newRect.Width = width;
                                 newRect.Height = height;
@@ -1988,7 +1990,7 @@ namespace Barotrauma
                         }
                     }
                 }
-                offsetY += (int)(texture.Height * spriteSheetScale);
+                offsetY += (int)(texture.Height * spriteSheetZoom);
             }
         }
 
@@ -2011,7 +2013,7 @@ namespace Barotrauma
                 {
                     continue;
                 }
-                Vector2 tformedJointPos = jointPos = jointPos / RagdollParams.JointScale * spriteSheetScale;
+                Vector2 tformedJointPos = jointPos = jointPos / RagdollParams.JointScale * spriteSheetZoom;
                 tformedJointPos.Y = -tformedJointPos.Y;
                 tformedJointPos.X *= character.AnimController.Dir;
                 tformedJointPos += limbScreenPos;
@@ -2045,7 +2047,7 @@ namespace Barotrauma
                             Vector2 input = ConvertUnits.ToSimUnits(scaledMouseSpeed);
                             input.Y = -input.Y;
                             input.X *= character.AnimController.Dir;
-                            input *= limb.Scale / spriteSheetScale;
+                            input *= limb.Scale / spriteSheetZoom;
                             if (joint.BodyA == limb.body.FarseerBody)
                             {
                                 joint.LocalAnchorA += input;
