@@ -178,27 +178,42 @@ namespace Barotrauma
             {
                 senderName = (message.Type == ChatMessageType.Private ? "[PM] " : "") + message.SenderName;
             }
-            
+
+            var msgHolder = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.0f), chatBox.Content.RectTransform, Anchor.TopCenter), style: null,
+                    color: ((chatBox.Content.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f);
+
+            GUITextBlock senderNameBlock = null;
             if (!string.IsNullOrEmpty(senderName))
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), chatBox.Content.RectTransform) { RelativeOffset = new Vector2(0.05f, 0.0f) },
-                    senderName, textColor: Color.White, font: GUI.SmallFont, style: null,
-                    color: ((chatBox.Content.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f)
+                senderNameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), msgHolder.RectTransform)
+                { AbsoluteOffset = new Point((int)(5 * GUI.Scale), 0) },
+                    senderName, textColor: Color.White, font: GUI.SmallFont, style: null)
                 {
-                    CanBeFocused = false
+                    CanBeFocused = true
                 };
             }
 
-            GUITextBlock msg = new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.0f), chatBox.Content.RectTransform) { RelativeOffset = new Vector2(0.08f, 0.0f) },
+            new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.0f), msgHolder.RectTransform)
+            { AbsoluteOffset = new Point((int)(10 * GUI.Scale), senderNameBlock == null ? 0 : senderNameBlock.Rect.Height) },
                 displayedText, textColor: message.Color, font: GUI.SmallFont, style: null, wrap: true,
                 color: ((chatBox.Content.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f)
             {
                 UserData = message.SenderName,
-                CanBeFocused = false
+                CanBeFocused = true
             };
-            msg.Flash(Color.Yellow);
-            //some spacing at the bottom of the msg
-            msg.RectTransform.NonScaledSize += new Point(0, 5);
+
+            if (message is OrderChatMessage orderChatMsg && 
+                Character.Controlled != null && 
+                orderChatMsg.TargetCharacter == Character.Controlled)
+            {
+                msgHolder.Flash(Color.OrangeRed, flashDuration: 5.0f);
+            }
+            else
+            {
+                msgHolder.Flash(Color.Yellow);
+            }
+            //resize the holder to match the size of the message and add some spacing
+            msgHolder.RectTransform.Resize(new Point(msgHolder.Rect.Width, msgHolder.Children.Sum(c => c.Rect.Height) + (int)(10 * GUI.Scale)), resizeChildren: false);
                         
             chatBox.UpdateScrollBarSize();
 

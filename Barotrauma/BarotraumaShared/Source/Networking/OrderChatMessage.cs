@@ -19,16 +19,21 @@ namespace Barotrauma.Networking
         public readonly string OrderOption;
 
         public OrderChatMessage(Order order, string orderOption, Entity targetEntity, Character targetCharacter, Character sender)
-            : base (sender?.Name, 
+            : this(order, orderOption,
                   order.GetChatMessage(targetCharacter?.Name, sender?.CurrentHull?.RoomName, orderOption),
-                  ChatMessageType.Order, sender)
+                  targetEntity, targetCharacter, sender)
+        {
+        }
+
+        public OrderChatMessage(Order order, string orderOption, string text, Entity targetEntity, Character targetCharacter, Character sender)
+            : base(sender?.Name, text, ChatMessageType.Order, sender)
         {
             Order = order;
             OrderOption = orderOption;
             TargetCharacter = targetCharacter;
             TargetEntity = targetEntity;
         }
-        
+
         public override void ServerWrite(NetOutgoingMessage msg, Client c)
         {
             msg.Write((byte)ServerNetObject.CHAT_MESSAGE);
