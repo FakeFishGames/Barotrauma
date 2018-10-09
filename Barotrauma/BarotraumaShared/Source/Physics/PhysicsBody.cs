@@ -99,10 +99,10 @@ namespace Barotrauma
         public float height, width, radius;
         
         private float density;
-        
+
         //the direction the item is facing (for example, a gun has to be 
         //flipped horizontally if the Character holding it turns around)
-        float dir;
+        float dir = 1.0f;
 
         Vector2 offsetFromTargetPos;
         float offsetLerp;
@@ -285,10 +285,8 @@ namespace Barotrauma
             set { body.CollidesWith = value; }
         }
 
-        public PhysicsBody(XElement element, float scale = 1.0f)
-            : this(element, Vector2.Zero, scale)
-        {
-        }
+        public PhysicsBody(XElement element, float scale = 1.0f) : this(element, Vector2.Zero, scale) { }
+        public PhysicsBody(LimbParams limbParams, float scale = 1.0f) : this(limbParams, Vector2.Zero, scale) { }
 
         public PhysicsBody(float width, float height, float radius, float density)
         {
@@ -311,6 +309,24 @@ namespace Barotrauma
             list.Add(this);
         }
 
+        public PhysicsBody(LimbParams limbParams, Vector2 position, float scale = 1.0f)
+        {
+            float radius = ConvertUnits.ToSimUnits(limbParams.Radius) * scale;
+            float height = ConvertUnits.ToSimUnits(limbParams.Height) * scale;
+            float width = ConvertUnits.ToSimUnits(limbParams.Width) * scale;
+            density = limbParams.Density;
+            CreateBody(width, height, radius, density);
+            body.CollisionCategories = Physics.CollisionItem;
+            body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
+            body.Friction = limbParams.Friction;
+            body.Restitution = limbParams.Restitution;
+            body.BodyType = limbParams.BodyType;
+            body.UserData = this;
+            SetTransform(position, 0.0f);
+            LastSentPosition = position;
+            list.Add(this);
+        }
+
         public PhysicsBody(XElement element, Vector2 position, float scale=1.0f)
         {
             float radius = ConvertUnits.ToSimUnits(element.GetAttributeFloat("radius", 0.0f)) * scale;
@@ -330,7 +346,7 @@ namespace Barotrauma
             body.Restitution = element.GetAttributeFloat("restitution", 0.05f);
                         
             Enum.TryParse(element.GetAttributeString("bodytype", "Dynamic"), out BodyType bodyType);
-            body.BodyType = bodyType; ;
+            body.BodyType = bodyType;
 
             body.UserData = this;
 

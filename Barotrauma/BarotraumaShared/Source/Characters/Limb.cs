@@ -292,10 +292,10 @@ namespace Barotrauma
             this.limbParams = limbParams;
             wearingItems = new List<WearableSprite>();            
             dir = Direction.Right;
-            var element = limbParams.Element;
-            // TODO: reduce (or get rid of) parsing here and use the LimbParams directly
-            body = new PhysicsBody(element, Scale);
-            if (element.GetAttributeBool("ignorecollisions", false))
+            body = new PhysicsBody(limbParams, Scale);
+            type = limbParams.Type;
+            Name = type.ToString();
+            if (limbParams.IgnoreCollisions)
             {
                 body.CollisionCategories = Category.None;
                 body.CollidesWith = Category.None;
@@ -307,38 +307,10 @@ namespace Barotrauma
                 body.CollisionCategories = Physics.CollisionCharacter;
                 body.CollidesWith = Physics.CollisionAll & ~Physics.CollisionCharacter & ~Physics.CollisionItem & ~Physics.CollisionItemBlocking;
             }
-            
             body.UserData = this;
-
-            RefJointIndex = -1;
-
             Vector2 pullJointPos = Vector2.Zero;
-            if (element.Attribute("type") != null)
-            {
-                try
-                {
-                    type = (LimbType)Enum.Parse(typeof(LimbType), element.Attribute("type").Value, true);
-                }
-                catch
-                {
-                    type = LimbType.None;
-                    DebugConsole.ThrowError("Error in "+element+"! \""+element.Attribute("type").Value+"\" is not a valid limb type");
-                }
-
-
-                pullJointPos = element.GetAttributeVector2("pullpos", Vector2.Zero) * Scale;
-                pullJointPos = ConvertUnits.ToSimUnits(pullJointPos);
-
-                RefJointIndex = element.GetAttributeInt("refjoint", -1);
-
-            }
-            else
-            {
-                type = LimbType.None;
-            }
-
-            Name = type.ToString();
-
+            pullJointPos = ConvertUnits.ToSimUnits(limbParams.PullPos * Scale);
+            RefJointIndex = limbParams.RefJoint;
             pullJoint = new FixedMouseJoint(body.FarseerBody, pullJointPos)
             {
                 Enabled = false,
@@ -346,13 +318,15 @@ namespace Barotrauma
             };
 
             GameMain.World.AddJoint(pullJoint);
-            
+
+            var element = limbParams.Element;
             if (element.Attribute("mouthpos") != null)
             {
                 MouthPos = ConvertUnits.ToSimUnits(element.GetAttributeVector2("mouthpos", Vector2.Zero));
             }
 
-            body.BodyType = BodyType.Dynamic;
+            // Overrides the settings in the params, on purpose?
+            //body.BodyType = BodyType.Dynamic;
             body.FarseerBody.AngularDamping = LimbAngularDamping;
 
             damageModifiers = new List<DamageModifier>();
