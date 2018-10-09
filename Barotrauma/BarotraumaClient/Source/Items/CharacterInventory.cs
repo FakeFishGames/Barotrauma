@@ -19,6 +19,19 @@ namespace Barotrauma
             Center
         }
 
+        private enum QuickUseAction
+        {
+            None,
+            Equip,
+            Unequip,
+            Drop,
+            TakeFromContainer,
+            TakeFromCharacter,
+            PutToContainer,
+            PutToCharacter,
+            UseTreatment
+        }
+
         private static Sprite toggleArrow;
 
         //which slot is the toggle arrow drawn above
@@ -27,7 +40,7 @@ namespace Barotrauma
         private Point screenResolution;
 
         public Vector2[] SlotPositions;
-        
+                
         private Layout layout;
         public Layout CurrentLayout
         {
@@ -436,10 +449,15 @@ namespace Barotrauma
                         slots[i].QuickUseTimer = Math.Max(0.0f, slots[i].QuickUseTimer - deltaTime * 5.0f);
                         continue;
                     }
+
+                    var quickUseAction = GetQuickUseAction(Items[i], allowEquip: true, allowInventorySwap: false, allowApplyTreatment: false);
+                    slots[i].QuickUseButtonToolTip = quickUseAction == QuickUseAction.None ? 
+                        "" : TextManager.Get("QuickUseAction." + quickUseAction.ToString());
                     
                     //equipped item that can't be put in the inventory, use delayed dropping
-                    if (character.HasEquippedItem(Items[i]) && !Items[i].AllowedSlots.Contains(InvSlotType.Any))
+                    if (quickUseAction == QuickUseAction.Drop)
                     {
+                        slots[i].QuickUseButtonToolTip = "Hold to unequip";
                         if (PlayerInput.LeftButtonHeld())
                         {
                             slots[i].QuickUseTimer = Math.Max(0.1f, slots[i].QuickUseTimer + deltaTime);
@@ -459,7 +477,7 @@ namespace Barotrauma
                         if (PlayerInput.LeftButtonDown()) slots[i].EquipButtonState = GUIComponent.ComponentState.Pressed;
                         if (PlayerInput.LeftButtonClicked())
                         {
-                            QuickUseItem(Items[i], true, false, false);
+                            QuickUseItem(Items[i], allowEquip: true, allowInventorySwap: false, allowApplyTreatment: false);
                         }
                     }
                     
@@ -508,20 +526,22 @@ namespace Barotrauma
                 }
             }
         }
-        
-        private void QuickUseItem(Item item, bool allowEquip, bool allowInventorySwap, bool allowApplyTreatment)
+
+        private QuickUseAction GetQuickUseAction(Item item, bool allowEquip, bool allowInventorySwap, bool allowApplyTreatment)
         {
             if (allowApplyTreatment && CharacterHealth.OpenHealthWindow != null)
             {
-                CharacterHealth.OpenHealthWindow.OnItemDropped(item, ignoreMousePos: true);
-                return;
+                return QuickUseAction.UseTreatment;
             }
-
-            bool wasPut = false;
+            
             if (item.ParentInventory != this)
             {
                 //in another inventory -> attempt to place in the character's inventory
-                if (allowInventorySwap) wasPut = TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                if (allowInventorySwap)
+                {
+                    return item.ParentInventory is CharacterInventory ?
+                        QuickUseAction.TakeFromCharacter : QuickUseAction.TakeFromContainer;
+                }
             }
             else
             {
@@ -529,61 +549,112 @@ namespace Barotrauma
                 if (selectedContainer != null && selectedContainer.Inventory != null && allowInventorySwap)
                 {
                     //player has selected the inventory of another item -> attempt to move the item there
-                    wasPut = selectedContainer.Inventory.TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                    return QuickUseAction.PutToContainer;
                 }
                 else if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null && allowInventorySwap)
                 {
                     //player has selected the inventory of another character -> attempt to move the item there
-                    wasPut = character.SelectedCharacter.Inventory.TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                    return QuickUseAction.PutToCharacter;
                 }
-                else if (character.SelectedBy != null && Character.Controlled == character.SelectedBy && 
+                else if (character.SelectedBy != null && Character.Controlled == character.SelectedBy &&
                     character.SelectedBy.Inventory != null && allowInventorySwap)
                 {
-                    //item is in the inventory of another character -> attempt to get the item from there
-                     wasPut = character.SelectedBy.Inventory.TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                    return QuickUseAction.TakeFromCharacter;
                 }
                 else if (allowEquip) //doubleclicked and no other inventory is selected
                 {
                     //not equipped -> attempt to equip
                     if (!character.HasEquippedItem(item))
                     {
-                        //attempt to put in a free slot first
-                        for (int i = 0; i < capacity; i++)
-                        {
-                            if (Items[i] != null) continue;
-                            if (SlotTypes[i] == InvSlotType.Any || !item.AllowedSlots.Any(a => a.HasFlag(SlotTypes[i]))) continue;
-                            wasPut = TryPutItem(item, i, true, false, Character.Controlled, true);
-                            if (wasPut) break;
-                        }
-
-                        if (!wasPut)
-                        {
-                            for (int i = 0; i < capacity; i++)
-                            {
-                                if (SlotTypes[i] == InvSlotType.Any || !item.AllowedSlots.Any(a => a.HasFlag(SlotTypes[i]))) continue;
-                                //something else already equipped in the slot, attempt to unequip it
-                                if (Items[i] != null && Items[i].AllowedSlots.Contains(InvSlotType.Any))
-                                {
-                                    TryPutItem(Items[i], Character.Controlled, new List<InvSlotType>() { InvSlotType.Any }, true);
-                                }
-                                wasPut = TryPutItem(item, i, true, false, Character.Controlled, true);
-                                if (wasPut) break;
-                            }
-                        }
+                        return QuickUseAction.Equip;
                     }
                     //equipped -> attempt to unequip
                     else if (item.AllowedSlots.Contains(InvSlotType.Any))
                     {
-                        wasPut = TryPutItem(item, Character.Controlled, new List<InvSlotType>() { InvSlotType.Any }, true);
+                        return QuickUseAction.Unequip;
                     }
                     else
                     {
-                        //cannot unequip, use delayed dropping
+                        return QuickUseAction.Drop;
                     }
                 }
             }
 
-            if (wasPut)
+            return QuickUseAction.None;
+        }
+
+        private void QuickUseItem(Item item, bool allowEquip, bool allowInventorySwap, bool allowApplyTreatment)
+        {
+            var quickUseAction = GetQuickUseAction(item, allowEquip, allowInventorySwap, allowApplyTreatment);
+            bool success = false;
+            switch (quickUseAction)
+            {
+                case QuickUseAction.Equip:
+                    //attempt to put in a free slot first
+                    for (int i = 0; i < capacity; i++)
+                    {
+                        if (Items[i] != null) continue;
+                        if (SlotTypes[i] == InvSlotType.Any || !item.AllowedSlots.Any(a => a.HasFlag(SlotTypes[i]))) continue;
+                        success = TryPutItem(item, i, true, false, Character.Controlled, true);
+                        if (success) break;
+                    }
+
+                    if (!success)
+                    {
+                        for (int i = 0; i < capacity; i++)
+                        {
+                            if (SlotTypes[i] == InvSlotType.Any || !item.AllowedSlots.Any(a => a.HasFlag(SlotTypes[i]))) continue;
+                            //something else already equipped in the slot, attempt to unequip it
+                            if (Items[i] != null && Items[i].AllowedSlots.Contains(InvSlotType.Any))
+                            {
+                                TryPutItem(Items[i], Character.Controlled, new List<InvSlotType>() { InvSlotType.Any }, true);
+                            }
+                            success = TryPutItem(item, i, true, false, Character.Controlled, true);
+                            if (success) break;
+                        }
+                    }
+                    break;
+                case QuickUseAction.Unequip:
+                    if (item.AllowedSlots.Contains(InvSlotType.Any))
+                    {
+                        success = TryPutItem(item, Character.Controlled, new List<InvSlotType>() { InvSlotType.Any }, true);
+                    }
+                    break;
+                case QuickUseAction.UseTreatment:
+                    CharacterHealth.OpenHealthWindow?.OnItemDropped(item, ignoreMousePos: true);
+                    return;
+                case QuickUseAction.Drop:
+                    //do nothing, the item is dropped after a delay
+                    return;
+                case QuickUseAction.PutToCharacter:
+                    if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
+                    {
+                        //player has selected the inventory of another character -> attempt to move the item there
+                        success = character.SelectedCharacter.Inventory.TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                    }
+                    break;
+                case QuickUseAction.PutToContainer:
+                    var selectedContainer = character.SelectedConstruction?.GetComponent<ItemContainer>();
+                    if (selectedContainer != null && selectedContainer.Inventory != null)
+                    {
+                        //player has selected the inventory of another item -> attempt to move the item there
+                        success = selectedContainer.Inventory.TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                    }
+                    break;
+                case QuickUseAction.TakeFromCharacter:
+                    if (character.SelectedBy != null && Character.Controlled == character.SelectedBy &&
+                        character.SelectedBy.Inventory != null)
+                    {
+                        //item is in the inventory of another character -> attempt to get the item from there
+                        success = character.SelectedBy.Inventory.TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                    }
+                    break;
+                case QuickUseAction.TakeFromContainer:
+                    success = TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                    break;  
+            }
+
+            if (success)
             {
                 for (int i = 0; i < capacity; i++)
                 {
@@ -592,7 +663,7 @@ namespace Barotrauma
             }
 
             draggingItem = null;
-            GUI.PlayUISound(wasPut ? GUISoundType.PickItem : GUISoundType.PickItemFail);
+            GUI.PlayUISound(success ? GUISoundType.PickItem : GUISoundType.PickItemFail);
         }
         
         public void DrawOwn(SpriteBatch spriteBatch)
@@ -618,13 +689,18 @@ namespace Barotrauma
 
             base.Draw(spriteBatch);
 
+            InventorySlot highlightedQuickUseSlot = null;
             for (int i = 0; i < capacity; i++)
             {
                 if (HideSlot(i)) continue;
                 if (Items[i] == null || !Items[i].AllowedSlots.Any(a => a != InvSlotType.Any)) continue;
 
-                Color color = slots[i].EquipButtonState == GUIComponent.ComponentState.Hover ? Color.White : Color.White * 0.8f;
-                if (slots[i].EquipButtonState == GUIComponent.ComponentState.Pressed) color = Color.Gray;
+                Color color = slots[i].EquipButtonState == GUIComponent.ComponentState.Pressed ? Color.Gray : Color.White * 0.8f;
+                if (slots[i].EquipButtonState == GUIComponent.ComponentState.Hover)
+                {
+                    color = Color.White;
+                    highlightedQuickUseSlot = slots[i];
+                }
 
                 EquipIndicator.Draw(spriteBatch, slots[i].EquipButtonRect.Center.ToVector2(), color, EquipIndicator.size / 2, 0, UIScale);
                 slots[i].QuickUseTimer = Math.Min(slots[i].QuickUseTimer, 1.0f);
@@ -643,6 +719,11 @@ namespace Barotrauma
                 {
                     EquipIndicatorOn.Draw(spriteBatch, slots[i].EquipButtonRect.Center.ToVector2(), color * 0.9f, EquipIndicatorOn.size / 2, 0, UIScale * 0.85f);
                 }
+            }
+
+            if (highlightedQuickUseSlot != null && !string.IsNullOrEmpty(highlightedQuickUseSlot.QuickUseButtonToolTip))
+            {
+                GUIComponent.DrawToolTip(spriteBatch, highlightedQuickUseSlot.QuickUseButtonToolTip, highlightedQuickUseSlot.EquipButtonRect);
             }
         }
     }
