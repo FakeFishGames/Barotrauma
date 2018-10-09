@@ -181,19 +181,29 @@ namespace Barotrauma
             DrawPolygon(spriteBatch, new Vector2(x, y), CreateCircle(radius, sides), color, thickness);
         }
 
-        private static Vector2[] CreateCircle(double radius, int sides)
+        public static void DrawSector(this SpriteBatch spriteBatch, Vector2 center, float radius, float radians, int sides, Color color, float offset = 0, float thickness = 1)
         {
-            const double max = 2.0 * Math.PI;
+            DrawPolygon(spriteBatch, center, CreateCircle(radius, sides, radians, offset), color, thickness);
+        }
+
+        private static Vector2[] CreateCircle(double radius, int sides, float radians = MathHelper.TwoPi, float offset = 0)
+        {
+            //const double max = 2.0 * Math.PI;
+            const float max = MathHelper.TwoPi;
             var points = new Vector2[sides];
             var step = max / sides;
-            var theta = 0.0;
-
+            // Offset the circle 90 degrees ccw, so that 0 is up.
+            // TODO: rotate correctly, not necessarily constant
+            const double constOffset = -MathHelper.PiOver2;
+            double totalOffset = constOffset + offset;
+            double theta = totalOffset;
+            radians = radians + (float)totalOffset;
             for (var i = 0; i < sides; i++)
             {
                 points[i] = new Vector2((float)(radius * Math.Cos(theta)), (float)(radius * Math.Sin(theta)));
                 theta += step;
+                if (theta > radians) { break; }
             }
-
             return points;
         }
     }

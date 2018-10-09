@@ -2067,9 +2067,11 @@ namespace Barotrauma
         private void DrawJointLimitWidgets(SpriteBatch spriteBatch, Limb limb, LimbJoint joint, Vector2 drawPos, bool autoFreeze, bool allowPairEditing, float rotationOffset = 0)
         {
             // The joint limits are flipped and inversed when the character is flipped, so we have to handle it here, because we don't want it to affect the user interface.
+            float upperLimit = character.AnimController.IsFlipped ? MathHelper.ToDegrees(-joint.UpperLimit) : MathHelper.ToDegrees(joint.UpperLimit);
+            float lowerLimit = character.AnimController.IsFlipped ? MathHelper.ToDegrees(-joint.LowerLimit) : MathHelper.ToDegrees(joint.LowerLimit);
             if (character.AnimController.IsFlipped)
             {
-                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.UpperLimit), $"{joint.jointParams.Name} Upper Limit", Color.Cyan, angle =>
+                DrawCircularWidget(spriteBatch, drawPos, upperLimit, $"{joint.jointParams.Name} Upper Limit", Color.Cyan, angle =>
                 {
                     joint.UpperLimit = MathHelper.ToRadians(-angle);
                     TryUpdateJointParam(joint, "upperlimit", -angle);
@@ -2084,8 +2086,9 @@ namespace Barotrauma
                             }
                         });
                     }
+                    DrawAngle(40);
                 }, circleRadius: 40, rotationOffset: rotationOffset);
-                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.LowerLimit), $"{joint.jointParams.Name} Lower Limit", Color.Yellow, angle =>
+                DrawCircularWidget(spriteBatch, drawPos, lowerLimit, $"{joint.jointParams.Name} Lower Limit", Color.Yellow, angle =>
                 {
                     joint.LowerLimit = MathHelper.ToRadians(-angle);
                     TryUpdateJointParam(joint, "lowerlimit", -angle);
@@ -2100,11 +2103,12 @@ namespace Barotrauma
                             }
                         });
                     }
+                    DrawAngle(30);
                 }, circleRadius: 30, rotationOffset: rotationOffset);
             }
             else
             {
-                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), $"{joint.jointParams.Name} Upper Limit", Color.Cyan, angle =>
+                DrawCircularWidget(spriteBatch, drawPos, upperLimit, $"{joint.jointParams.Name} Upper Limit", Color.Cyan, angle =>
                 {
                     joint.UpperLimit = MathHelper.ToRadians(angle);
                     TryUpdateJointParam(joint, "upperlimit", angle);
@@ -2119,8 +2123,9 @@ namespace Barotrauma
                             }
                         });
                     }
+                    DrawAngle(40);
                 }, circleRadius: 40, rotationOffset: rotationOffset);
-                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), $"{joint.jointParams.Name} Lower Limit", Color.Yellow, angle =>
+                DrawCircularWidget(spriteBatch, drawPos, lowerLimit, $"{joint.jointParams.Name} Lower Limit", Color.Yellow, angle =>
                 {
                     joint.LowerLimit = MathHelper.ToRadians(angle);
                     TryUpdateJointParam(joint, "lowerlimit", angle);
@@ -2135,7 +2140,13 @@ namespace Barotrauma
                             }
                         });
                     }
+                    DrawAngle(30);
                 }, circleRadius: 30, rotationOffset: rotationOffset);
+            }
+            void DrawAngle(float radius)
+            {
+                float angle = joint.UpperLimit - joint.LowerLimit;
+                ShapeExtensions.DrawSector(spriteBatch, drawPos, radius, angle, 30, angle > 0 ? Color.LightGreen : Color.Red, offset: rotationOffset, thickness: 5);
             }
         }
 
@@ -2159,8 +2170,7 @@ namespace Barotrauma
             GUI.DrawLine(spriteBatch, drawPos, widgetDrawPos, color);
             DrawWidget(spriteBatch, widgetDrawPos, WidgetType.Rectangle, 10, color, toolTip, () =>
             {
-                //GUI.DrawLine(spriteBatch, drawPos, drawPos + up, Color.White, width: 5);
-                GUI.DrawLine(spriteBatch, drawPos, drawPos + up, Color.Red, width: 2);
+                GUI.DrawLine(spriteBatch, drawPos, drawPos + up, color, width: 3);
                 //GUI.DrawLine(spriteBatch, drawPos, drawPos + up, color);
                 ShapeExtensions.DrawCircle(spriteBatch, drawPos, circleRadius, 40, color, thickness: 2);
                 var rotationOffsetInDegrees = MathHelper.ToDegrees(MathUtils.WrapAnglePi(rotationOffset));
