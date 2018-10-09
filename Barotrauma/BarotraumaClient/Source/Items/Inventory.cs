@@ -43,6 +43,8 @@ namespace Barotrauma
         }
 
         public float QuickUseTimer;
+        public string QuickUseButtonToolTip;
+
         public GUIComponent.ComponentState EquipButtonState;
         public Rectangle EquipButtonRect
         {
