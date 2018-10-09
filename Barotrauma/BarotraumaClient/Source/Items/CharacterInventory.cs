@@ -423,27 +423,49 @@ namespace Barotrauma
                     highlightedSubInventorySlots.Remove(subInventorySlot);
                 }
             }
-
-            if (character == Character.Controlled || true)
+            
+            for (int i = 0; i < capacity; i++)
             {
-                for (int i = 0; i < capacity; i++)
+                if (Items[i] != null && Items[i].AllowedSlots.Any(a => a != InvSlotType.Any))
                 {
-                    if (Items[i] != null && Items[i].AllowedSlots.Any(a => a != InvSlotType.Any))
+                    slots[i].EquipButtonState = slots[i].EquipButtonRect.Contains(PlayerInput.MousePosition) ? 
+                        GUIComponent.ComponentState.Hover : GUIComponent.ComponentState.None;
+                    
+                    if (slots[i].EquipButtonState != GUIComponent.ComponentState.Hover)
                     {
-                        slots[i].EquipButtonState = slots[i].EquipButtonRect.Contains(PlayerInput.MousePosition) ? 
-                            GUIComponent.ComponentState.Hover : GUIComponent.ComponentState.None;
-
-                        if (slots[i].EquipButtonState == GUIComponent.ComponentState.Hover)
+                        slots[i].QuickUseTimer = Math.Max(0.0f, slots[i].QuickUseTimer - deltaTime * 5.0f);
+                        continue;
+                    }
+                    
+                    //equipped item that can't be put in the inventory, use delayed dropping
+                    if (character.HasEquippedItem(Items[i]) && !Items[i].AllowedSlots.Contains(InvSlotType.Any))
+                    {
+                        if (PlayerInput.LeftButtonHeld())
                         {
-                            if (PlayerInput.LeftButtonDown()) slots[i].EquipButtonState = GUIComponent.ComponentState.Pressed;
-                            if (PlayerInput.LeftButtonClicked())
+                            slots[i].QuickUseTimer = Math.Max(0.1f, slots[i].QuickUseTimer + deltaTime);
+                            if (slots[i].QuickUseTimer >= 1.0f)
                             {
-                                QuickUseItem(Items[i], true, false, false);
+                                CreateNetworkEvent();
+                                Items[i].Drop(Character.Controlled);
                             }
                         }
+                        else
+                        {
+                            slots[i].QuickUseTimer = Math.Max(0.0f, slots[i].QuickUseTimer - deltaTime * 5.0f);
+                        }
                     }
+                    else
+                    {
+                        if (PlayerInput.LeftButtonDown()) slots[i].EquipButtonState = GUIComponent.ComponentState.Pressed;
+                        if (PlayerInput.LeftButtonClicked())
+                        {
+                            QuickUseItem(Items[i], true, false, false);
+                        }
+                    }
+                    
                 }
             }
+            
 
             //cancel dragging if too far away from the container of the dragged item
             if (draggingItem != null)
@@ -556,8 +578,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        //cannot unequip, drop?
-                        //maybe make only some items droppable so you don't accidentally drop diving suits or artifacts?
+                        //cannot unequip, use delayed dropping
                     }
                 }
             }
@@ -596,20 +617,31 @@ namespace Barotrauma
             }
 
             base.Draw(spriteBatch);
-            
+
             for (int i = 0; i < capacity; i++)
             {
                 if (HideSlot(i)) continue;
-                if (Items[i] != null && Items[i].AllowedSlots.Any(a => a != InvSlotType.Any))
+                if (Items[i] == null || !Items[i].AllowedSlots.Any(a => a != InvSlotType.Any)) continue;
+
+                Color color = slots[i].EquipButtonState == GUIComponent.ComponentState.Hover ? Color.White : Color.White * 0.8f;
+                if (slots[i].EquipButtonState == GUIComponent.ComponentState.Pressed) color = Color.Gray;
+
+                EquipIndicator.Draw(spriteBatch, slots[i].EquipButtonRect.Center.ToVector2(), color, EquipIndicator.size / 2, 0, UIScale);
+                slots[i].QuickUseTimer = Math.Min(slots[i].QuickUseTimer, 1.0f);
+                if (slots[i].QuickUseTimer > 0.0f)
                 {
-                    Color color = slots[i].EquipButtonState == GUIComponent.ComponentState.Hover ? Color.White : Color.White * 0.8f;
-                    if (slots[i].EquipButtonState == GUIComponent.ComponentState.Pressed) color = Color.Gray;
-                    
-                    EquipIndicator.Draw(spriteBatch, slots[i].EquipButtonRect.Center.ToVector2(), color, EquipIndicator.size / 2, 0, UIScale);
-                    if (character.HasEquippedItem(Items[i]))
-                    {
-                        EquipIndicatorOn.Draw(spriteBatch, slots[i].EquipButtonRect.Center.ToVector2(), color * 0.9f, EquipIndicatorOn.size / 2, 0, UIScale * 0.85f);
-                    }
+                    float indicatorFillAmount = character.HasEquippedItem(Items[i]) ? 1.0f - slots[i].QuickUseTimer : slots[i].QuickUseTimer;
+                    EquipIndicatorOn.DrawTiled(spriteBatch,
+                        slots[i].EquipButtonRect.Center.ToVector2() - EquipIndicatorOn.size / 2 * UIScale * 0.85f,
+                        new Vector2((int)(slots[i].EquipButtonRect.Width * indicatorFillAmount * 0.85f), (int)(slots[i].EquipButtonRect.Height * 0.85f)),
+                        null,
+                        color * 0.9f,
+                        null,
+                        new Vector2(slots[i].EquipButtonRect.Width / EquipIndicatorOn.size.X, slots[i].EquipButtonRect.Height / EquipIndicatorOn.size.Y) * 0.85f);
+                }
+                else if (character.HasEquippedItem(Items[i]))
+                {
+                    EquipIndicatorOn.Draw(spriteBatch, slots[i].EquipButtonRect.Center.ToVector2(), color * 0.9f, EquipIndicatorOn.size / 2, 0, UIScale * 0.85f);
                 }
             }
         }
