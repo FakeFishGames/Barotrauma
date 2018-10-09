@@ -41,7 +41,10 @@ namespace Barotrauma
                 return State == GUIComponent.ComponentState.Hover;
             }
         }
-        
+
+        public float QuickUseTimer;
+        public string QuickUseButtonToolTip;
+
         public GUIComponent.ComponentState EquipButtonState;
         public Rectangle EquipButtonRect
         {
