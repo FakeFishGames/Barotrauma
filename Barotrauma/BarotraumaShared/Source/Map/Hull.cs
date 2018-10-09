@@ -438,21 +438,29 @@ namespace Barotrauma
                 lethalPressure = 0.0f;
                 return;
             }
+            
+            //interpolate the position of the rendered surface towards the "target surface"
+            surface = Math.Max(MathHelper.Lerp(
+                surface, 
+                rect.Y - rect.Height + WaterVolume / rect.Width, 
+                deltaTime * 10.0f), rect.Y - rect.Height);
 
-            float surfaceY = rect.Y - rect.Height + WaterVolume / rect.Width;
             for (int i = 0; i < waveY.Length; i++)
             {
+                //apply velocity
                 waveY[i] = waveY[i] + waveVel[i];
 
-                if (surfaceY + waveY[i] > rect.Y)
+                //if the wave attempts to go "through" the top of the hull, make it bounce back
+                if (surface + waveY[i] > rect.Y)
                 {
-                    float excess = (surfaceY + waveY[i]) - rect.Y;
+                    float excess = (surface + waveY[i]) - rect.Y;
                     waveY[i] -= excess;
                     waveVel[i] = waveVel[i] * -0.5f;
                 }
-                else if (surfaceY + waveY[i] < rect.Y - rect.Height)
+                //if the wave attempts to go "through" the bottom of the hull, make it bounce back
+                else if (surface + waveY[i] < rect.Y - rect.Height)
                 {
-                    float excess = (surfaceY + waveY[i]) - (rect.Y - rect.Height);
+                    float excess = (surface + waveY[i]) - (rect.Y - rect.Height);
                     waveY[i] -= excess;
                     waveVel[i] = waveVel[i] * -0.5f;
                 }
@@ -462,6 +470,7 @@ namespace Barotrauma
                 waveVel[i] = waveVel[i] + a;
             }
 
+            //apply spread (two iterations)
             for (int j = 0; j < 2; j++)
             {
                 for (int i = 1; i < waveY.Length - 1; i++)
@@ -480,18 +489,29 @@ namespace Barotrauma
                 }
             }
 
+            //make waves propagate through horizontal gaps
             foreach (Gap gap in ConnectedGaps)
             {
-                if (!gap.IsRoomToRoom || !gap.IsHorizontal || this != gap.linkedTo[0] as Hull || gap.Open <= 0.0f) continue;
+                if (!gap.IsRoomToRoom || !gap.IsHorizontal || gap.Open <= 0.0f) continue;
+                if (surface > gap.Rect.Y || surface < gap.Rect.Y - gap.Rect.Height) continue;
 
-                if (surfaceY > gap.Rect.Y || surfaceY < gap.Rect.Y - gap.Rect.Height) continue;
-
-                Hull hull2 = (Hull)gap.linkedTo[1];
-
-                float otherSurfaceY = hull2.rect.Y - hull2.rect.Height + hull2.WaterVolume / hull2.rect.Width;
+                Hull hull2 = this == gap.linkedTo[0] as Hull ? (Hull)gap.linkedTo[1] : (Hull)gap.linkedTo[0];
+                float otherSurfaceY = hull2.surface;
                 if (otherSurfaceY > gap.Rect.Y || otherSurfaceY < gap.Rect.Y - gap.Rect.Height) continue;
 
-                float surfaceDiff = (surfaceY - otherSurfaceY) * gap.Open;
+                float surfaceDiff = (surface - otherSurfaceY) * gap.Open;
+                if (this != gap.linkedTo[0] as Hull)
+                {
+                    //the first hull linked to the gap handles the wave propagation, 
+                    //the second just updates the surfaces to the same level
+                    if (surfaceDiff < 32.0f)
+                    {
+                        hull2.waveY[hull2.waveY.Length - 1] = surfaceDiff * 0.5f;
+                        waveY[0] = -surfaceDiff * 0.5f;
+                    }
+                    continue;
+                }
+
                 for (int j = 0; j < 2; j++)
                 {
                     int i = waveY.Length - 1;
@@ -511,13 +531,19 @@ namespace Barotrauma
                     hull2.waveVel[i + 1] += hull2.rightDelta[i];
                 }
 
-                hull2.waveY[0] += rightDelta[waveY.Length - 1];
-                waveY[waveY.Length - 1] += hull2.leftDelta[0];
+                if (surfaceDiff < 32.0f)
+                {
+                    //update surfaces to the same level
+                    hull2.waveY[0] = surfaceDiff * 0.5f;
+                    waveY[waveY.Length - 1] = -surfaceDiff * 0.5f;
+                }
+                else
+                {
+                    hull2.waveY[0] += rightDelta[waveY.Length - 1];
+                    waveY[waveY.Length - 1] += hull2.leftDelta[0];
+                }
             }
-
-            //interpolate the position of the rendered surface towards the "target surface"
-            surface = Math.Max(MathHelper.Lerp(surface, surfaceY, deltaTime*10.0f), rect.Y - rect.Height);
-
+            
             if (waterVolume < Volume)
             {
                 LethalPressure -= 10.0f * deltaTime;
