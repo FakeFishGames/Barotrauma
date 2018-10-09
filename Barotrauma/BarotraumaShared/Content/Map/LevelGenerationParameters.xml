@@ -32,7 +32,8 @@
   
   <ColdCavernsBasic
     biomes="Cold Caverns"
-    width="150000"
+    MinWidth="100000"
+    MaxWidth="200000"
     height="60000"
     VoronoiSiteInterval="2000,2000"
     VoronoiSiteVariance="800,800"
@@ -59,7 +60,8 @@
 
   <ColdCavernsMaze
     biomes="Cold Caverns"
-    width="100000"
+    MinWidth="60000"
+    MaxWidth="100000"
     height="70000"
     VoronoiSiteInterval="1500,1500"
     VoronoiSiteVariance="700,700"
@@ -87,7 +89,8 @@
   
   <RidgeBasic
     biomes="Europan Ridge"
-    width="100000"
+    MinWidth="75000"
+    MaxWidth="150000"
     height="50000"
     VoronoiSiteInterval="1500,1500"
     VoronoiSiteVariance="700,700"
@@ -116,7 +119,8 @@
 
   <PlateauBasic
     biomes="The Aphotic Plateau"
-    width="200000"
+    MinWidth="100000"
+    MaxWidth="200000"
     height="25000"
     VoronoiSiteInterval="2000,2000"
     VoronoiSiteVariance="800,800"
@@ -142,7 +146,8 @@
 
   <VoidBasic
     biomes="The Great Void"
-    width="200000"
+    MinWidth="100000"
+    MaxWidth="200000"
     height="50000"
     VoronoiSiteInterval="2000,2000"
     VoronoiSiteVariance="800,800"
@@ -165,7 +170,8 @@
 
   <WastesBasic
     biomes="Hydrothermal Wastes"
-    width="100000"
+    MinWidth="75000"
+    MaxWidth="150000"
     height="50000"
     VoronoiSiteInterval="1500,1500"
     VoronoiSiteVariance="700,700"

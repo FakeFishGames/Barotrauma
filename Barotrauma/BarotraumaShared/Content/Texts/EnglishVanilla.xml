@@ -222,6 +222,14 @@
   <UseItemButton>Use</UseItemButton>
   <GrabHint>[[key]] Grab</GrabHint>
   <HealHint>[[key]] Heal</HealHint>
+  <QuickUseAction.Equip>Equip</QuickUseAction.Equip>
+  <QuickUseAction.Unequip>Unequip</QuickUseAction.Unequip>
+  <QuickUseAction.Drop>Hold to drop</QuickUseAction.Drop>
+  <QuickUseAction.TakeFromContainer>Take</QuickUseAction.TakeFromContainer>
+  <QuickUseAction.TakeFromCharacter>Take</QuickUseAction.TakeFromCharacter>
+  <QuickUseAction.PutToContainer>Put to container</QuickUseAction.PutToContainer>
+  <QuickUseAction.PutToCharacter>Put to selected character</QuickUseAction.PutToCharacter>
+  <QuickUseAction.UseTreatment>Use as treatment</QuickUseAction.UseTreatment>
 
   <!-- Status -->
   <StatusOK>OK</StatusOK>
@@ -947,6 +955,9 @@
   <weldingtool.Name>Eldingway Ooltay</weldingtool.Name>
   <weldingtool.Description>Oneway ofway ethay ostmay ucialcray oolstay onway oardbay ethay ubmarinesay. Alsoway orksway underwaterway.</weldingtool.Description>
   -->
+
+
+
 
 
 

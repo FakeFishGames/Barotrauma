@@ -192,16 +192,25 @@ namespace Barotrauma
             get { return generationParams.WallColor; }
         }
 
-        public Level(string seed, float difficulty, LevelGenerationParams generationParams, Biome biome)
+        /// <summary>
+        /// Instantiates a level (the Generate-function still needs to be called before the level is playable)
+        /// </summary>
+        /// <param name="difficulty">A scalar between 0-100</param>
+        /// <param name="sizeFactor">A scalar between 0-1 (0 = the minimum width defined in the generation params is used, 1 = the max width is used)</param>
+        public Level(string seed, float difficulty, float sizeFactor, LevelGenerationParams generationParams, Biome biome)
             : base(null)
         {
+
             this.seed = seed;
             this.Biome = biome;
             this.Difficulty = difficulty;
             this.generationParams = generationParams;
 
+            sizeFactor = MathHelper.Clamp(sizeFactor, 0.0f, 1.0f);
+            float width = MathHelper.Lerp(generationParams.MinWidth, generationParams.MaxWidth, sizeFactor);
+
             borders = new Rectangle(0, 0,
-                (int)(Math.Ceiling(generationParams.Width / GridCellSize) * GridCellSize),
+                (int)(Math.Ceiling(width / GridCellSize) * GridCellSize),
                 (int)(Math.Ceiling(generationParams.Height / GridCellSize) * GridCellSize));
 
             //remove from entity dictionary
@@ -211,8 +220,17 @@ namespace Barotrauma
         public static Level CreateRandom(LocationConnection locationConnection)
         {
             string seed = locationConnection.Locations[0].Name + locationConnection.Locations[1].Name;
-            
-            return new Level(seed, locationConnection.Difficulty, LevelGenerationParams.GetRandom(seed, locationConnection.Biome), locationConnection.Biome);
+
+            float sizeFactor = MathUtils.InverseLerp(
+                MapGenerationParams.Instance.SmallLevelConnectionLength, 
+                MapGenerationParams.Instance.LargeLevelConnectionLength,
+                locationConnection.Length);
+
+            return new Level(seed,
+                locationConnection.Difficulty, 
+                sizeFactor,
+                LevelGenerationParams.GetRandom(seed, locationConnection.Biome), 
+                locationConnection.Biome);
         }
 
         public static Level CreateRandom(string seed = "", float? difficulty = null)
@@ -228,8 +246,9 @@ namespace Barotrauma
             var biome = LevelGenerationParams.GetBiomes().Find(b => generationParams.AllowedBiomes.Contains(b));
 
             return new Level(
-                seed, 
+                seed,
                 difficulty ?? Rand.Range(30.0f, 80.0f, Rand.RandSync.Server),
+                Rand.Range(0.0f, 1.0f, Rand.RandSync.Server),
                 generationParams,
                 biome);
         }
