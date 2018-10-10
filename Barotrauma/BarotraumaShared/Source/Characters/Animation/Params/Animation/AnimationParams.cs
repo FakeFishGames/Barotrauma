@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System;
 using System.Linq;
@@ -234,6 +235,35 @@ namespace Barotrauma
                         animations.Add(Name, this);
                     }
                 }
+            }
+        }
+
+        protected static string ParseFootAngles(Dictionary<int, float> footAngles)
+        {
+            //convert to the format "id1:angle,id2:angle,id3:angle"
+            return string.Join(",", footAngles.Select(kv => kv.Key + ": " + kv.Value.ToString("G", CultureInfo.InvariantCulture)).ToArray());
+        }
+
+        protected static void SetFootAngles(Dictionary<int, float> footAngles, string value)
+        {
+            footAngles.Clear();
+            if (string.IsNullOrEmpty(value))
+            {
+                return;
+            }
+
+            string[] keyValuePairs = value.Split(',');
+            foreach (string joinedKvp in keyValuePairs)
+            {
+                string[] keyValuePair = joinedKvp.Split(':');
+                if (keyValuePair.Length != 2 ||
+                    !int.TryParse(keyValuePair[0].Trim(), out int limbIndex) ||
+                    !float.TryParse(keyValuePair[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float angle))
+                {
+                    DebugConsole.ThrowError("Failed to parse foot angles (" + value + ")");
+                    continue;
+                }
+                footAngles[limbIndex] = angle;
             }
         }
     }

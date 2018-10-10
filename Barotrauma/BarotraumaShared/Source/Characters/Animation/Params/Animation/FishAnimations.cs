@@ -1,7 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 
 namespace Barotrauma
 {
@@ -99,37 +97,11 @@ namespace Barotrauma
         }
         public float ColliderStandAngleInRadians { get; private set; }
         
-        [Serialize(null, true)]
+        [Serialize(null, true), Editable]
         public string FootAngles
         {
-            get
-            {
-                //convert to the format "id1:angle,id2:angle,id3:angle"
-                return string.Join(",", 
-                    FootAnglesInRadians.Select(kv => kv.Key + ": " + kv.Value.ToString("G", CultureInfo.InvariantCulture)).ToArray());
-            }
-            set
-            {
-                FootAnglesInRadians.Clear();
-                if (string.IsNullOrEmpty(value))
-                {
-                    return;
-                }
-                
-                string[] keyValuePairs = value.Split(',');
-                foreach (string joinedKvp in keyValuePairs)
-                {
-                    string[] keyValuePair = joinedKvp.Split(':');
-                    if (keyValuePair.Length != 2 ||
-                        !int.TryParse(keyValuePair[0].Trim(), out int limbIndex) ||
-                        !float.TryParse(keyValuePair[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float angle))
-                    {
-                        DebugConsole.ThrowError("Failed to parse foot angles (" + value + ")");
-                        continue;
-                    }
-                    FootAnglesInRadians[limbIndex] = angle;
-                }                
-            }
+            get => ParseFootAngles(FootAnglesInRadians);
+            set => SetFootAngles(FootAnglesInRadians, value);
         }
         
         /// <summary>
@@ -167,37 +139,11 @@ namespace Barotrauma
         [Serialize(50.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500, ToolTip = "How much torque is used to rotate the tail to the correct orientation.")]
         public float TailTorque { get; set; }
 
-        [Serialize(null, true)]
+        [Serialize(null, true), Editable]
         public string FootAngles
         {
-            get
-            {
-                //convert to the format "id1:angle,id2:angle,id3:angle"
-                return string.Join(",",
-                    FootAnglesInRadians.Select(kv => kv.Key + ": " + kv.Value.ToString("G", CultureInfo.InvariantCulture)).ToArray());
-            }
-            set
-            {
-                FootAnglesInRadians.Clear();
-                if (string.IsNullOrEmpty(value))
-                {
-                    return;
-                }
-
-                string[] keyValuePairs = value.Split(',');
-                foreach (string joinedKvp in keyValuePairs)
-                {
-                    string[] keyValuePair = joinedKvp.Split(':');
-                    if (keyValuePair.Length != 2 ||
-                        !int.TryParse(keyValuePair[0].Trim(), out int limbIndex) ||
-                        !float.TryParse(keyValuePair[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float angle))
-                    {
-                        DebugConsole.ThrowError("Failed to parse foot angles (" + value + ")");
-                        continue;
-                    }
-                    FootAnglesInRadians[limbIndex] = angle;
-                }
-            }
+            get => ParseFootAngles(FootAnglesInRadians);
+            set => SetFootAngles(FootAnglesInRadians, value);
         }
 
         /// <summary>
@@ -209,8 +155,7 @@ namespace Barotrauma
     interface IFishAnimation
     {
         bool Flip { get; set; }
+        string FootAngles { get; set; }
         Dictionary<int, float> FootAnglesInRadians { get; set; }
-        /*float FootAngle { get; set; }
-        float FootAngleInRadians { get; }*/
     }
 }
