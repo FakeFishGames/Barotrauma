@@ -1303,8 +1303,11 @@ namespace Barotrauma
 
             if (limbJoint.UpperLimit - limbJoint.LowerLimit > MathHelper.TwoPi)
             {
-                limbJoint.LowerLimit = MathUtils.WrapAnglePi(limbJoint.LowerLimit);
-                limbJoint.UpperLimit = MathUtils.WrapAnglePi(limbJoint.UpperLimit);
+                // Wrapping the limits between PI seems to cause the joint angles being flipped by 180 degrees.
+                //limbJoint.LowerLimit = MathUtils.WrapAnglePi(limbJoint.LowerLimit);
+                //limbJoint.UpperLimit = MathUtils.WrapAnglePi(limbJoint.UpperLimit);
+                limbJoint.LowerLimit = MathUtils.WrapAngleTwoPi(limbJoint.LowerLimit);
+                limbJoint.UpperLimit = MathUtils.WrapAngleTwoPi(limbJoint.UpperLimit);
             }
         }
         #endregion
