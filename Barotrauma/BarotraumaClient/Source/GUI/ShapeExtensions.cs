@@ -139,22 +139,17 @@ namespace Barotrauma
 
         private static Vector2[] CreateCircle(double radius, int sides, float radians = MathHelper.TwoPi, float offset = 0)
         {
-            //const double max = 2.0 * Math.PI;
-            const float max = MathHelper.TwoPi;
-            var points = new Vector2[sides];
-            var step = max / sides;
-            // Offset the circle 90 degrees ccw, so that 0 is up.
-            // TODO: rotate correctly, not necessarily constant
-            const double constOffset = -MathHelper.PiOver2;
-            double totalOffset = constOffset + offset;
-            double theta = totalOffset;
-            radians = radians + (float)totalOffset;
+            //circle sectors need one extra point at the center
+            var points = new Vector2[radians < MathHelper.TwoPi ? sides + 1 : sides];
+            var step = radians / sides;
+
+            double theta = offset;
             for (var i = 0; i < sides; i++)
             {
-                points[i] = new Vector2((float)(radius * Math.Cos(theta)), (float)(radius * Math.Sin(theta)));
+                points[i] = new Vector2((float)Math.Cos(theta), (float)Math.Sin(theta)) * (float)radius;
                 theta += step;
-                if (theta > radians) { break; }
             }
+
             return points;
         }
     }
