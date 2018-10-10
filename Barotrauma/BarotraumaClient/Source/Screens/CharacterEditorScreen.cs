@@ -1094,57 +1094,61 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
-            if (PlayerInput.KeyHit(Keys.T) || PlayerInput.KeyHit(Keys.X))
+            // Handle shortcut keys
+            if (GUI.KeyboardDispatcher.Subscriber == null)
             {
-                animTestPoseToggle.Selected = !animTestPoseToggle.Selected;
-            }
-            if (PlayerInput.KeyHit(InputType.Run))
-            {
-                int index = 0;
-                bool isSwimming = character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast || character.AnimController.ForceSelectAnimationType == AnimationType.SwimSlow;
-                bool isMovingFast = character.AnimController.ForceSelectAnimationType == AnimationType.Run || character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast;
-                if (isMovingFast)
+                if (PlayerInput.KeyHit(Keys.T) || PlayerInput.KeyHit(Keys.X))
                 {
-                    if (isSwimming || !character.AnimController.CanWalk)
+                    animTestPoseToggle.Selected = !animTestPoseToggle.Selected;
+                }
+                if (PlayerInput.KeyHit(InputType.Run))
+                {
+                    int index = 0;
+                    bool isSwimming = character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast || character.AnimController.ForceSelectAnimationType == AnimationType.SwimSlow;
+                    bool isMovingFast = character.AnimController.ForceSelectAnimationType == AnimationType.Run || character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast;
+                    if (isMovingFast)
                     {
-                        index = (int)AnimationType.SwimSlow - 1;
+                        if (isSwimming || !character.AnimController.CanWalk)
+                        {
+                            index = (int)AnimationType.SwimSlow - 1;
+                        }
+                        else
+                        {
+                            index = (int)AnimationType.Walk - 1;
+                        }
                     }
                     else
                     {
-                        index = (int)AnimationType.Walk - 1;
+                        if (isSwimming || !character.AnimController.CanWalk)
+                        {
+                            index = (int)AnimationType.SwimFast - 1;
+                        }
+                        else
+                        {
+                            index = (int)AnimationType.Run - 1;
+                        }
+                    }
+                    if (animSelection.SelectedIndex != index)
+                    {
+                        animSelection.Select(index);
                     }
                 }
-                else
+                if (PlayerInput.KeyHit(Keys.E))
                 {
-                    if (isSwimming || !character.AnimController.CanWalk)
+                    bool isSwimming = character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast || character.AnimController.ForceSelectAnimationType == AnimationType.SwimSlow;
+                    if (isSwimming)
                     {
-                        index = (int)AnimationType.SwimFast - 1;
+                        animSelection.Select((int)AnimationType.Walk - 1);
                     }
                     else
                     {
-                        index = (int)AnimationType.Run - 1;
+                        animSelection.Select((int)AnimationType.SwimSlow - 1);
                     }
                 }
-                if (animSelection.SelectedIndex != index)
+                if (PlayerInput.KeyHit(Keys.F))
                 {
-                    animSelection.Select(index);
+                    freezeToggle.Selected = !freezeToggle.Selected;
                 }
-            }
-            if (PlayerInput.KeyHit(Keys.E))
-            {
-                bool isSwimming = character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast || character.AnimController.ForceSelectAnimationType == AnimationType.SwimSlow;
-                if (isSwimming)
-                {
-                    animSelection.Select((int)AnimationType.Walk - 1);
-                }
-                else
-                {
-                    animSelection.Select((int)AnimationType.SwimSlow - 1);
-                }
-            }
-            if (PlayerInput.KeyHit(Keys.F))
-            {
-                freezeToggle.Selected = !freezeToggle.Selected;
             }
             if (!isFreezed)
             {
