@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace Barotrauma.Lights
 {
@@ -23,9 +24,10 @@ namespace Barotrauma.Lights
             }
         }
 
+        private float currLightMapScale;
+
         public Color AmbientLight;
 
-        private float lightmapScale = 0.5f;
         public RenderTarget2D LightMap
         {
             get;
@@ -102,20 +104,22 @@ namespace Barotrauma.Lights
         {
             var pp = graphics.PresentationParameters;
 
+            currLightMapScale = GameMain.Config.LightMapScale;
+
             LightMap?.Dispose();
             LightMap = new RenderTarget2D(graphics,
-                       (int)(GameMain.GraphicsWidth * lightmapScale), (int)(GameMain.GraphicsHeight * lightmapScale), false,
+                       (int)(GameMain.GraphicsWidth * GameMain.Config.LightMapScale), (int)(GameMain.GraphicsHeight * GameMain.Config.LightMapScale), false,
                        pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount,
                        RenderTargetUsage.DiscardContents);
 
             SpecularMap?.Dispose();
             SpecularMap = new RenderTarget2D(graphics,
-                       (int)(GameMain.GraphicsWidth * lightmapScale), (int)(GameMain.GraphicsHeight * lightmapScale), false,
+                       (int)(GameMain.GraphicsWidth * GameMain.Config.LightMapScale), (int)(GameMain.GraphicsHeight * GameMain.Config.LightMapScale), false,
                        pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount,
                        RenderTargetUsage.DiscardContents);
 
             LosTexture?.Dispose();
-            LosTexture = new RenderTarget2D(graphics, (int)(GameMain.GraphicsWidth * lightmapScale), (int)(GameMain.GraphicsHeight * lightmapScale), false, SurfaceFormat.Color, DepthFormat.None);
+            LosTexture = new RenderTarget2D(graphics, (int)(GameMain.GraphicsWidth * GameMain.Config.LightMapScale), (int)(GameMain.GraphicsHeight * GameMain.Config.LightMapScale), false, SurfaceFormat.Color, DepthFormat.None);
         }
 
         public void AddLight(LightSource light)
@@ -173,12 +177,21 @@ namespace Barotrauma.Lights
         public void UpdateLightMap(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam)
         {
             if (!LightingEnabled) return;
+
+            if (Math.Abs(currLightMapScale - GameMain.Config.LightMapScale) > 0.01f)
+            {
+                //lightmap scale has changed -> recreate render targets
+                CreateRenderTargets(graphics);
+            }
             
-            Matrix spriteBatchTransform = cam.Transform * Matrix.CreateScale(new Vector3(lightmapScale, lightmapScale, 1.0f));
+            Matrix spriteBatchTransform = cam.Transform * Matrix.CreateScale(new Vector3(GameMain.Config.LightMapScale, GameMain.Config.LightMapScale, 1.0f));
             Matrix transform = cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
-            UpdateSpecularMap(graphics, spriteBatch, spriteBatchTransform, cam);
+            if (GameMain.Config.SpecularityEnabled)
+            {
+                UpdateSpecularMap(graphics, spriteBatch, spriteBatchTransform, cam);
+            }
 
             graphics.SetRenderTarget(LightMap);
 
@@ -334,11 +347,14 @@ namespace Barotrauma.Lights
                     new Vector2(LightSource.LightTexture.Width / 2, LightSource.LightTexture.Height / 2), 1.0f, SpriteEffects.None, 0.0f);
             }
             spriteBatch.End();
-            
-            spriteBatch.Begin(blendState: CustomBlendStates.Multiplicative);
-            spriteBatch.Draw(SpecularMap, Vector2.Zero, Color.White);
-            //spriteBatch.Draw(SpecularMap, Vector2.Zero, Color.White);
-            spriteBatch.End();
+
+            if (GameMain.Config.SpecularityEnabled)
+            {
+                spriteBatch.Begin(blendState: CustomBlendStates.Multiplicative);
+                spriteBatch.Draw(SpecularMap, Vector2.Zero, Color.White);
+                //spriteBatch.Draw(SpecularMap, Vector2.Zero, Color.White);
+                spriteBatch.End();
+            }
 
             //draw the actual light volumes, additive particles, hull ambient lights and the halo around the player
             //---------------------------------------------------------------------------------------------------
@@ -410,7 +426,7 @@ namespace Barotrauma.Lights
 
             graphics.SetRenderTarget(LosTexture);
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, transformMatrix: cam.Transform * Matrix.CreateScale(new Vector3(lightmapScale, lightmapScale, 1.0f)));
+            spriteBatch.Begin(SpriteSortMode.Deferred, transformMatrix: cam.Transform * Matrix.CreateScale(new Vector3(GameMain.Config.LightMapScale, GameMain.Config.LightMapScale, 1.0f)));
             
             if (ObstructVision)
             {
