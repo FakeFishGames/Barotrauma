@@ -1476,7 +1476,11 @@ namespace Barotrauma
                             SimToScreen(new Vector2(limb.SimPosition.X, colliderBottom.Y)), 
                             MathHelper.ToDegrees(fishParams.FootAnglesInRadians[limb.limbParams.ID]), 
                             "Foot Angle", Color.White,
-                            angle => fishParams.FootAnglesInRadians[limb.limbParams.ID] = MathHelper.ToRadians(angle), 
+                            angle =>
+                            {
+                                fishParams.FootAnglesInRadians[limb.limbParams.ID] = MathHelper.ToRadians(angle);
+                                TryUpdateAnimParam("footangles", fishParams.FootAngles);
+                            },
                             circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0);
                     }
                 }
