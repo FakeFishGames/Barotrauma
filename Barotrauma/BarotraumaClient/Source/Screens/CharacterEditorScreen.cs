@@ -411,7 +411,7 @@ namespace Barotrauma
             pixelPerfectToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSprite.RectTransform)
             {
                 RelativeOffset = new Vector2(0, 0.1f)
-            }, "Pixel Perfect")
+            }, "Zoom 100%")
             {
                 Enabled = spriteMaxScale >= 1,
                 Selected = spriteMaxScale >= 1,
@@ -1094,57 +1094,61 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
-            if (PlayerInput.KeyHit(Keys.T) || PlayerInput.KeyHit(Keys.X))
+            // Handle shortcut keys
+            if (GUI.KeyboardDispatcher.Subscriber == null)
             {
-                animTestPoseToggle.Selected = !animTestPoseToggle.Selected;
-            }
-            if (PlayerInput.KeyHit(InputType.Run))
-            {
-                int index = 0;
-                bool isSwimming = character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast || character.AnimController.ForceSelectAnimationType == AnimationType.SwimSlow;
-                bool isMovingFast = character.AnimController.ForceSelectAnimationType == AnimationType.Run || character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast;
-                if (isMovingFast)
+                if (PlayerInput.KeyHit(Keys.T) || PlayerInput.KeyHit(Keys.X))
                 {
-                    if (isSwimming || !character.AnimController.CanWalk)
+                    animTestPoseToggle.Selected = !animTestPoseToggle.Selected;
+                }
+                if (PlayerInput.KeyHit(InputType.Run))
+                {
+                    int index = 0;
+                    bool isSwimming = character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast || character.AnimController.ForceSelectAnimationType == AnimationType.SwimSlow;
+                    bool isMovingFast = character.AnimController.ForceSelectAnimationType == AnimationType.Run || character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast;
+                    if (isMovingFast)
                     {
-                        index = (int)AnimationType.SwimSlow - 1;
+                        if (isSwimming || !character.AnimController.CanWalk)
+                        {
+                            index = (int)AnimationType.SwimSlow - 1;
+                        }
+                        else
+                        {
+                            index = (int)AnimationType.Walk - 1;
+                        }
                     }
                     else
                     {
-                        index = (int)AnimationType.Walk - 1;
+                        if (isSwimming || !character.AnimController.CanWalk)
+                        {
+                            index = (int)AnimationType.SwimFast - 1;
+                        }
+                        else
+                        {
+                            index = (int)AnimationType.Run - 1;
+                        }
+                    }
+                    if (animSelection.SelectedIndex != index)
+                    {
+                        animSelection.Select(index);
                     }
                 }
-                else
+                if (PlayerInput.KeyHit(Keys.E))
                 {
-                    if (isSwimming || !character.AnimController.CanWalk)
+                    bool isSwimming = character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast || character.AnimController.ForceSelectAnimationType == AnimationType.SwimSlow;
+                    if (isSwimming)
                     {
-                        index = (int)AnimationType.SwimFast - 1;
+                        animSelection.Select((int)AnimationType.Walk - 1);
                     }
                     else
                     {
-                        index = (int)AnimationType.Run - 1;
+                        animSelection.Select((int)AnimationType.SwimSlow - 1);
                     }
                 }
-                if (animSelection.SelectedIndex != index)
+                if (PlayerInput.KeyHit(Keys.F))
                 {
-                    animSelection.Select(index);
+                    freezeToggle.Selected = !freezeToggle.Selected;
                 }
-            }
-            if (PlayerInput.KeyHit(Keys.E))
-            {
-                bool isSwimming = character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast || character.AnimController.ForceSelectAnimationType == AnimationType.SwimSlow;
-                if (isSwimming)
-                {
-                    animSelection.Select((int)AnimationType.Walk - 1);
-                }
-                else
-                {
-                    animSelection.Select((int)AnimationType.SwimSlow - 1);
-                }
-            }
-            if (PlayerInput.KeyHit(Keys.F))
-            {
-                freezeToggle.Selected = !freezeToggle.Selected;
             }
             if (!isFreezed)
             {
@@ -1152,7 +1156,10 @@ namespace Barotrauma
                 Submarine.MainSub.Update((float)deltaTime);
                 PhysicsBody.List.ForEach(pb => pb.SetPrevTransform(pb.SimPosition, pb.Rotation));
                 // Handle ragdolling here, because we are not calling the Character.Update() method.
-                character.IsRagdolled = PlayerInput.KeyDown(InputType.Ragdoll);
+                if (!Character.DisableControls)
+                {
+                    character.IsRagdolled = PlayerInput.KeyDown(InputType.Ragdoll);
+                }
                 if (character.IsRagdolled)
                 {
                     character.AnimController.ResetPullJoints();
@@ -1183,6 +1190,11 @@ namespace Barotrauma
         private Vector2 scaledMouseSpeed;
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
+            if (isFreezed)
+            {
+                Timing.Alpha = 0.0f;
+            }
+
             base.Draw(deltaTime, graphics, spriteBatch);
             scaledMouseSpeed = PlayerInput.MouseSpeedPerSecond * (float)deltaTime;
             float brightness = 2f;
@@ -1287,6 +1299,24 @@ namespace Barotrauma
         private Vector2 ScreenToSim(Vector2 p) => ConvertUnits.ToSimUnits(Cam.ScreenToWorld(p));
         private Vector2 SimToScreen(float x, float y) => SimToScreen(new Vector2(x, y));
         private Vector2 SimToScreen(Vector2 p) => Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(p));
+
+        private void ValidateJoint(LimbJoint limbJoint)
+        {
+            if (limbJoint.UpperLimit < limbJoint.LowerLimit)
+            {
+                if (limbJoint.LowerLimit > 0.0f) limbJoint.LowerLimit -= MathHelper.TwoPi;
+                if (limbJoint.UpperLimit < 0.0f) limbJoint.UpperLimit += MathHelper.TwoPi;
+            }
+
+            if (limbJoint.UpperLimit - limbJoint.LowerLimit > MathHelper.TwoPi)
+            {
+                // Wrapping the limits between PI seems to cause the joint angles being flipped by 180 degrees.
+                //limbJoint.LowerLimit = MathUtils.WrapAnglePi(limbJoint.LowerLimit);
+                //limbJoint.UpperLimit = MathUtils.WrapAnglePi(limbJoint.UpperLimit);
+                limbJoint.LowerLimit = MathUtils.WrapAngleTwoPi(limbJoint.LowerLimit);
+                limbJoint.UpperLimit = MathUtils.WrapAngleTwoPi(limbJoint.UpperLimit);
+            }
+        }
         #endregion
 
         #region Animation Controls
@@ -1440,8 +1470,26 @@ namespace Barotrauma
                 // Fish only
                 if (animParams is IFishAnimation fishParams)
                 {
-                    DrawCircularWidget(spriteBatch, SimToScreen(colliderBottom), fishParams.FootAngle, "Foot Angle", Color.White,
-                        angle => TryUpdateAnimParam("footangle", angle), circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0);
+                    foreach (Limb limb in character.AnimController.Limbs)
+                    {
+                        if (limb.type != LimbType.LeftFoot && limb.type != LimbType.RightFoot) continue;
+                        
+                        if (!fishParams.FootAnglesInRadians.ContainsKey(limb.limbParams.ID))
+                        {
+                            fishParams.FootAnglesInRadians[limb.limbParams.ID] = 0.0f;
+                        }
+
+                        DrawCircularWidget(spriteBatch, 
+                            SimToScreen(new Vector2(limb.SimPosition.X, colliderBottom.Y)), 
+                            MathHelper.ToDegrees(fishParams.FootAnglesInRadians[limb.limbParams.ID]), 
+                            "Foot Angle", Color.White,
+                            angle =>
+                            {
+                                fishParams.FootAnglesInRadians[limb.limbParams.ID] = MathHelper.ToRadians(angle);
+                                TryUpdateAnimParam("footangles", fishParams.FootAngles);
+                            },
+                            circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0);
+                    }
                 }
                 // Grounded only
                 if (groundedParams != null)
@@ -1701,8 +1749,8 @@ namespace Barotrauma
                         toggleWidget.Draw(spriteBatch, deltaTime);
                         if (joint.LimitEnabled)
                         {
-                            float angle = -MathUtils.VectorToAngle(-f.Right());
-                            DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: true, allowPairEditing: true, rotationOffset: angle);
+                            DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: true, allowPairEditing: true, rotationOffset: limb.Rotation);
+                            GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + VectorExtensions.Forward(joint.LimbB.Rotation, 20.0f), Color.Magenta, width: 2);
                         }
                     }
                     else if (editJointPositions)
@@ -2066,87 +2114,52 @@ namespace Barotrauma
 
         private void DrawJointLimitWidgets(SpriteBatch spriteBatch, Limb limb, LimbJoint joint, Vector2 drawPos, bool autoFreeze, bool allowPairEditing, float rotationOffset = 0)
         {
-            // The joint limits are flipped and inversed when the character is flipped, so we have to handle it here, because we don't want it to affect the user interface.
-            float upperLimit = character.AnimController.IsFlipped ? MathHelper.ToDegrees(-joint.UpperLimit) : MathHelper.ToDegrees(joint.UpperLimit);
-            float lowerLimit = character.AnimController.IsFlipped ? MathHelper.ToDegrees(-joint.LowerLimit) : MathHelper.ToDegrees(joint.LowerLimit);
-            if (character.AnimController.IsFlipped)
+            Color angleColor = joint.UpperLimit - joint.LowerLimit > 0 ? Color.LightGreen * 0.5f : Color.Red;
+            DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), $"{joint.jointParams.Name} Upper Limit", Color.Cyan, angle =>
             {
-                DrawCircularWidget(spriteBatch, drawPos, upperLimit, $"{joint.jointParams.Name} Upper Limit", Color.Cyan, angle =>
+                joint.UpperLimit = MathHelper.ToRadians(angle);
+                ValidateJoint(joint);
+                TryUpdateJointParam(joint, "upperlimit", angle);
+                if (allowPairEditing && limbPairEditing)
                 {
-                    joint.UpperLimit = MathHelper.ToRadians(-angle);
-                    TryUpdateJointParam(joint, "upperlimit", -angle);
-                    if (allowPairEditing && limbPairEditing)
+                    UpdateOtherJoints(limb, (otherLimb, otherJoint) =>
                     {
-                        UpdateOtherJoints(limb, (otherLimb, otherJoint) =>
+                        if (IsMatchingLimb(limb, otherLimb, joint, otherJoint))
                         {
-                            if (IsMatchingLimb(limb, otherLimb, joint, otherJoint))
-                            {
-                                otherJoint.UpperLimit = MathHelper.ToRadians(-angle);
-                                TryUpdateJointParam(otherJoint, "upperlimit", -angle);
-                            }
-                        });
-                    }
-                    DrawAngle(40);
-                }, circleRadius: 40, rotationOffset: rotationOffset);
-                DrawCircularWidget(spriteBatch, drawPos, lowerLimit, $"{joint.jointParams.Name} Lower Limit", Color.Yellow, angle =>
-                {
-                    joint.LowerLimit = MathHelper.ToRadians(-angle);
-                    TryUpdateJointParam(joint, "lowerlimit", -angle);
-                    if (allowPairEditing && limbPairEditing)
-                    {
-                        UpdateOtherJoints(limb, (otherLimb, otherJoint) =>
-                        {
-                            if (IsMatchingLimb(limb, otherLimb, joint, otherJoint))
-                            {
-                                otherJoint.LowerLimit = MathHelper.ToRadians(-angle);
-                                TryUpdateJointParam(otherJoint, "lowerlimit", -angle);
-                            }
-                        });
-                    }
-                    DrawAngle(30);
-                }, circleRadius: 30, rotationOffset: rotationOffset);
-            }
-            else
+                            otherJoint.UpperLimit = joint.UpperLimit;
+                            TryUpdateJointParam(otherJoint, "upperlimit", angle);
+                        }
+                    });
+                }
+                DrawAngle(20, angleColor, 4);
+                DrawAngle(40, Color.Cyan);
+                GUI.DrawString(spriteBatch, drawPos, angle.FormatZeroDecimal(), Color.Black, backgroundColor: Color.Cyan, font: GUI.SmallFont);
+            }, circleRadius: 40, rotationOffset: rotationOffset, displayAngle: false);
+            DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), $"{joint.jointParams.Name} Lower Limit", Color.Yellow, angle =>
             {
-                DrawCircularWidget(spriteBatch, drawPos, upperLimit, $"{joint.jointParams.Name} Upper Limit", Color.Cyan, angle =>
+                joint.LowerLimit = MathHelper.ToRadians(angle);
+                ValidateJoint(joint);
+                TryUpdateJointParam(joint, "lowerlimit", angle);
+                if (allowPairEditing && limbPairEditing)
                 {
-                    joint.UpperLimit = MathHelper.ToRadians(angle);
-                    TryUpdateJointParam(joint, "upperlimit", angle);
-                    if (allowPairEditing && limbPairEditing)
+                    UpdateOtherJoints(limb, (otherLimb, otherJoint) =>
                     {
-                        UpdateOtherJoints(limb, (otherLimb, otherJoint) =>
+                        if (IsMatchingLimb(limb, otherLimb, joint, otherJoint))
                         {
-                            if (IsMatchingLimb(limb, otherLimb, joint, otherJoint))
-                            {
-                                otherJoint.UpperLimit = MathHelper.ToRadians(angle);
-                                TryUpdateJointParam(otherJoint, "upperlimit", angle);
-                            }
-                        });
-                    }
-                    DrawAngle(40);
-                }, circleRadius: 40, rotationOffset: rotationOffset);
-                DrawCircularWidget(spriteBatch, drawPos, lowerLimit, $"{joint.jointParams.Name} Lower Limit", Color.Yellow, angle =>
-                {
-                    joint.LowerLimit = MathHelper.ToRadians(angle);
-                    TryUpdateJointParam(joint, "lowerlimit", angle);
-                    if (allowPairEditing && limbPairEditing)
-                    {
-                        UpdateOtherJoints(limb, (otherLimb, otherJoint) =>
-                        {
-                            if (IsMatchingLimb(limb, otherLimb, joint, otherJoint))
-                            {
-                                otherJoint.LowerLimit = MathHelper.ToRadians(angle);
-                                TryUpdateJointParam(otherJoint, "lowerlimit", angle);
-                            }
-                        });
-                    }
-                    DrawAngle(30);
-                }, circleRadius: 30, rotationOffset: rotationOffset);
-            }
-            void DrawAngle(float radius)
+                            otherJoint.LowerLimit = joint.LowerLimit;
+                            TryUpdateJointParam(otherJoint, "lowerlimit", angle);
+                        }
+                    });
+                }
+                DrawAngle(20, angleColor, 4);
+                DrawAngle(25, Color.Yellow);
+                GUI.DrawString(spriteBatch, drawPos, angle.FormatZeroDecimal(), Color.Black, backgroundColor: Color.Yellow, font: GUI.SmallFont);
+            }, circleRadius: 25, rotationOffset: rotationOffset, displayAngle: false);
+            void DrawAngle(float radius, Color color, float thickness = 5)
             {
                 float angle = joint.UpperLimit - joint.LowerLimit;
-                ShapeExtensions.DrawSector(spriteBatch, drawPos, radius, angle, 30, angle > 0 ? Color.LightGreen : Color.Red, offset: rotationOffset, thickness: 5);
+                ShapeExtensions.DrawSector(spriteBatch, drawPos, radius, angle, 40, color, 
+                    offset: -rotationOffset - joint.UpperLimit + MathHelper.PiOver2, thickness: thickness);
             }
         }
 
@@ -2164,61 +2177,30 @@ namespace Barotrauma
             {
                 angle = 0;
             }
-            var up = -VectorExtensions.Forward(rotationOffset, circleRadius);
-            var widgetDrawPos = drawPos + up;
-            widgetDrawPos = MathUtils.RotatePointAroundTarget(widgetDrawPos, drawPos, angle, clockWise);
+            var widgetDrawPos = drawPos + VectorExtensions.Forward(MathHelper.ToRadians(angle) + rotationOffset, circleRadius);
             GUI.DrawLine(spriteBatch, drawPos, widgetDrawPos, color);
             DrawWidget(spriteBatch, widgetDrawPos, WidgetType.Rectangle, 10, color, toolTip, () =>
             {
-                GUI.DrawLine(spriteBatch, drawPos, drawPos + up, color, width: 3);
-                //GUI.DrawLine(spriteBatch, drawPos, drawPos + up, color);
-                ShapeExtensions.DrawCircle(spriteBatch, drawPos, circleRadius, 40, color, thickness: 2);
-                var rotationOffsetInDegrees = MathHelper.ToDegrees(MathUtils.WrapAnglePi(rotationOffset));
-                // Collider rotation is counter-clockwise, todo: this should be handled before passing the arguments
-                var transformedRot = clockWise ? angle - rotationOffsetInDegrees : angle + rotationOffsetInDegrees;
-                if (transformedRot > 360)
-                {
-                    transformedRot -= 360;
-                }
-                else if (transformedRot < -360)
-                {
-                    transformedRot += 360;
-                }
-                //GUI.DrawString(spriteBatch, drawPos + Vector2.UnitX * 30, rotationOffsetInDegrees.FormatZeroDecimal(), Color.Red);
-                //GUI.DrawString(spriteBatch, drawPos + Vector2.UnitX * 30 + Vector2.UnitY * 30, transformedRot.FormatZeroDecimal(), Color.Blue);
-                var input = scaledMouseSpeed * (1.5f / (circleRadius / 30));
-                float x = input.X;
-                float y = input.Y;
-                if (clockWise)
-                {
-                    if ((transformedRot > 90 && transformedRot < 270) || (transformedRot < -90 && transformedRot > -270))
-                    {
-                        x = -x;
-                    }
-                }
-                else
-                {
-                    if (transformedRot < 90 && transformedRot > -90 || transformedRot > 270 || transformedRot < -270)
-                    {
-                        x = -x;
-                    }
-                }
-                if (transformedRot > 180 || (transformedRot < 0 && transformedRot > -180))
-                {
-                    y = -y;
-                }
-                angle += x + y;
-                if (angle > 360 || angle < -360)
-                {
-                    angle = 0;
-                }
+                GUI.DrawLine(spriteBatch, drawPos, widgetDrawPos, color, width: 3);
+                ShapeExtensions.DrawCircle(spriteBatch, drawPos, circleRadius, 40, color, thickness: 1);
+                Vector2 d = PlayerInput.MousePosition - drawPos;
+                float newAngle = -(MathHelper.ToDegrees(MathUtils.VectorToAngle(d) - MathHelper.PiOver2));
+                angle = newAngle - MathHelper.ToDegrees(rotationOffset);
                 if (displayAngle)
                 {
                     GUI.DrawString(spriteBatch, drawPos, angle.FormatZeroDecimal(), Color.Black, backgroundColor: color, font: GUI.SmallFont);
-                    //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight / 4), rotationOffsetInDegrees.FormatZeroDecimal(), Color.Red);
                 }
                 onClick(angle);
-            }, autoFreeze, onHovered: () => GUI.DrawString(spriteBatch, new Vector2(drawPos.X + 5, drawPos.Y - widgetSize / 2), $"{toolTip} ({angle.FormatZeroDecimal()})", color, Color.Black * 0.5f));
+                var zeroPos = drawPos + VectorExtensions.Forward(rotationOffset, circleRadius);
+                GUI.DrawLine(spriteBatch, drawPos, zeroPos, Color.Red, width: 3);
+            }, autoFreeze, onHovered: () =>
+            {
+                if (!PlayerInput.LeftButtonHeld())
+                {
+                    GUI.DrawString(spriteBatch, new Vector2(drawPos.X + 5, drawPos.Y - widgetSize / 2),
+                        $"{toolTip} ({angle.FormatZeroDecimal()})", color, Color.Black * 0.5f);
+                }    
+            });
         }
 
         public enum WidgetType { Rectangle, Circle }
@@ -2238,7 +2220,7 @@ namespace Barotrauma
             switch (widgetType)
             {
                 case WidgetType.Rectangle:
-                    GUI.DrawRectangle(spriteBatch, drawRect, color, false, thickness: isSelected ? 3 : 1);
+                    GUI.DrawRectangle(spriteBatch, drawRect, color, thickness: isSelected ? 3 : 1, isFilled: isSelected && PlayerInput.LeftButtonHeld());
                     break;
                 case WidgetType.Circle:
                     ShapeExtensions.DrawCircle(spriteBatch, drawPos, size / 2, 40, color, thickness: isSelected ? 3 : 1);
@@ -2251,7 +2233,7 @@ namespace Barotrauma
                 // Label/tooltip
                 if (onHovered == null)
                 {
-                    GUI.DrawString(spriteBatch, new Vector2(drawRect.Right + 5, drawRect.Y - drawRect.Height / 2), name, color, Color.Black * 0.5f);
+                    GUI.DrawString(spriteBatch, new Vector2(drawRect.Right + 5, drawRect.Y - drawRect.Height / 2), name, color, Color.Black);
                 }
                 else
                 {
@@ -2390,7 +2372,7 @@ namespace Barotrauma
         //        base.Update(deltaTime);
         //        if (IsControlled)
         //        {
-        //            var rotationOffsetInDegrees = MathHelper.ToDegrees(MathUtils.WrapAnglePi(rotationOffset));
+        //            var rotationOffsetInDegrees = MathHelper.ToDegrees(MathUtils.WrapAngleTwoPi(rotationOffset));
         //            // Collider rotation is counter-clockwise, todo: this should be handled before passing the arguments
         //            var transformedRot = clockWise ? angle - rotationOffsetInDegrees : angle + rotationOffsetInDegrees;
         //            if (transformedRot > 360)

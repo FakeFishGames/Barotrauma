@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -78,6 +79,9 @@ namespace Barotrauma
         [Serialize(50.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 200, ToolTip = "How much torque is used to rotate the torso to the correct orientation.")]
         public float TorsoTorque { get; set; }
 
+        [Serialize(25.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500, ToolTip = "How much torque is used to rotate the feet to the correct orientation.")]
+        public float FootTorque { get; set; }
+
         [Serialize(0.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 200, ToolTip = "Optional torque that's constantly applied to legs.")]
         public float LegTorque { get; set; }
 
@@ -92,23 +96,18 @@ namespace Barotrauma
             set => ColliderStandAngleInRadians = MathHelper.ToRadians(value);
         }
         public float ColliderStandAngleInRadians { get; private set; }
-
-        /// <summary>
-        /// In degrees.
-        /// </summary>
-        [Serialize(float.NaN, true), Editable(MinValueFloat = -360, MaxValueFloat = 360)]
-        public float FootAngle
+        
+        [Serialize(null, true), Editable]
+        public string FootAngles
         {
-            get => float.IsNaN(FootAngleInRadians) ? float.NaN : MathHelper.ToDegrees(FootAngleInRadians);
-            set
-            {
-                if (!float.IsNaN(value))
-                {
-                    FootAngleInRadians = MathHelper.ToRadians(value);
-                }
-            }
+            get => ParseFootAngles(FootAnglesInRadians);
+            set => SetFootAngles(FootAnglesInRadians, value);
         }
-        public float FootAngleInRadians { get; private set; } = float.NaN;
+        
+        /// <summary>
+        /// Key = limb id, value = angle in radians
+        /// </summary>
+        public Dictionary<int, float> FootAnglesInRadians { get; set; } = new Dictionary<int, float>();
     }
 
     abstract class FishSwimParams : SwimParams, IFishAnimation
@@ -140,28 +139,23 @@ namespace Barotrauma
         [Serialize(50.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500, ToolTip = "How much torque is used to rotate the tail to the correct orientation.")]
         public float TailTorque { get; set; }
 
-        /// <summary>
-        /// In degrees.
-        /// </summary>
-        [Serialize(float.NaN, true), Editable(MinValueFloat = -360, MaxValueFloat = 360)]
-        public float FootAngle
+        [Serialize(null, true), Editable]
+        public string FootAngles
         {
-            get => float.IsNaN(FootAngleInRadians) ? float.NaN : MathHelper.ToDegrees(FootAngleInRadians);
-            set
-            {
-                if (!float.IsNaN(value))
-                {
-                    FootAngleInRadians = MathHelper.ToRadians(value);
-                }
-            }
+            get => ParseFootAngles(FootAnglesInRadians);
+            set => SetFootAngles(FootAnglesInRadians, value);
         }
-        public float FootAngleInRadians { get; private set; } = float.NaN;
+
+        /// <summary>
+        /// Key = limb id, value = angle in radians
+        /// </summary>
+        public Dictionary<int, float> FootAnglesInRadians { get; set; } = new Dictionary<int, float>();
     }
 
     interface IFishAnimation
     {
         bool Flip { get; set; }
-        float FootAngle { get; set; }
-        float FootAngleInRadians { get; }
+        string FootAngles { get; set; }
+        Dictionary<int, float> FootAnglesInRadians { get; set; }
     }
 }
