@@ -37,6 +37,8 @@ namespace Barotrauma
         
         public int ParticleLimit { get; set; }
 
+        public float LightMapScale { get; set; }
+        public bool SpecularityEnabled { get; set; }
         public bool ChromaticAberrationEnabled { get; set; }
 
         private KeyOrMouse[] keyMapping;
@@ -279,18 +281,19 @@ namespace Barotrauma
             }
 
             XElement graphicsMode = doc.Root.Element("graphicsmode");
-            GraphicsWidth = graphicsMode.GetAttributeInt("width", 0);
-            GraphicsHeight = graphicsMode.GetAttributeInt("height", 0);
-            VSyncEnabled = graphicsMode.GetAttributeBool("vsync", true);
+            GraphicsWidth   = graphicsMode.GetAttributeInt("width", 0);
+            GraphicsHeight  = graphicsMode.GetAttributeInt("height", 0);
+            VSyncEnabled    = graphicsMode.GetAttributeBool("vsync", true);
 
             XElement graphicsSettings = doc.Root.Element("graphicssettings");
-            ParticleLimit = graphicsSettings.GetAttributeInt("particlelimit", 1500);
-            ChromaticAberrationEnabled = graphicsSettings.GetAttributeBool("chromaticaberration", true);
-            HUDScale = graphicsSettings.GetAttributeFloat("hudscale", 1.0f);
-            InventoryScale = graphicsSettings.GetAttributeFloat("inventoryscale", 1.0f);
-
-            var losModeStr = graphicsSettings.GetAttributeString("losmode", "Transparent");
-            if (!Enum.TryParse<LosMode>(losModeStr, out losMode))
+            ParticleLimit               = graphicsSettings.GetAttributeInt("particlelimit", 1500);
+            LightMapScale               = MathHelper.Clamp(graphicsSettings.GetAttributeFloat("lightmapscale", 0.5f), 0.1f, 1.0f);
+            SpecularityEnabled          = graphicsSettings.GetAttributeBool("specularity", true);
+            ChromaticAberrationEnabled  = graphicsSettings.GetAttributeBool("chromaticaberration", true);
+            HUDScale                    = graphicsSettings.GetAttributeFloat("hudscale", 1.0f);
+            InventoryScale              = graphicsSettings.GetAttributeFloat("inventoryscale", 1.0f);
+            var losModeStr              = graphicsSettings.GetAttributeString("losmode", "Transparent");
+            if (!Enum.TryParse(losModeStr, out losMode))
             {
                 losMode = LosMode.Transparent;
             }
@@ -314,13 +317,8 @@ namespace Barotrauma
             SoundVolume = doc.Root.GetAttributeFloat("soundvolume", 1.0f);
             MusicVolume = doc.Root.GetAttributeFloat("musicvolume", 0.3f);
 
-#if DEBUG
             useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true);
             requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true);
-#else
-            useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true);
-            requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true);
-#endif
 
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", true);
 
@@ -481,11 +479,14 @@ namespace Barotrauma
                 doc.Root.Add(gSettings);
             }
 
-            gSettings.ReplaceAttributes(new XAttribute("particlelimit", ParticleLimit));
-            gSettings.ReplaceAttributes(new XAttribute("chromaticaberration", ChromaticAberrationEnabled));
-            gSettings.ReplaceAttributes(new XAttribute("losmode", LosMode));
-            gSettings.ReplaceAttributes(new XAttribute("hudscale", HUDScale));
-            gSettings.ReplaceAttributes(new XAttribute("inventoryscale", InventoryScale));
+            gSettings.ReplaceAttributes(
+                new XAttribute("particlelimit", ParticleLimit),
+                new XAttribute("lightmapscale", LightMapScale),
+                new XAttribute("specularity", SpecularityEnabled),
+                new XAttribute("chromaticaberration", ChromaticAberrationEnabled),
+                new XAttribute("losmode", LosMode),
+                new XAttribute("hudscale", HUDScale),
+                new XAttribute("inventoryscale", InventoryScale));
 
             foreach (ContentPackage contentPackage in SelectedContentPackages)
             {
