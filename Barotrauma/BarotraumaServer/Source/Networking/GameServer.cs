@@ -328,16 +328,13 @@ namespace Barotrauma.Networking
 
         public override void Update(float deltaTime)
         {
+#if CLIENT
+            if (ShowNetStats) netStats.Update(deltaTime);
+#endif
             if (!started) return;
 
-            if (ownerConnection != null && ownerConnection.Status != NetConnectionStatus.Connected)
-            {
-                GameMain.ShouldRun = false;
-                return;
-            }
-
             base.Update(deltaTime);
-            
+
             foreach (UnauthenticatedClient unauthClient in unauthenticatedClients)
             {
                 unauthClient.AuthTimer -= deltaTime;
@@ -353,6 +350,9 @@ namespace Barotrauma.Networking
 
             if (gameStarted)
             {
+#if CLIENT
+                SetRadioButtonColor();
+#endif
                 if (respawnManager != null) respawnManager.Update(deltaTime);
 
                 entityEventManager.Update(connectedClients);
@@ -407,19 +407,29 @@ namespace Barotrauma.Networking
                 if (startGameCoroutine != null && !CoroutineManager.IsCoroutineRunning(startGameCoroutine))
                 {
                     if (serverSettings.AutoRestart) serverSettings.AutoRestartTimer = Math.Max(serverSettings.AutoRestartInterval, 5.0f);
-                    
+                    //GameMain.NetLobbyScreen.StartButtonEnabled = true;
+
                     GameMain.NetLobbyScreen.LastUpdateID++;
 
                     startGameCoroutine = null;
                     initiatedStartGame = false;
                 }
             }
-            else if (serverSettings.AutoRestart && Screen.Selected == GameMain.NetLobbyScreen && connectedClients.Count > 0)
+            else if (Screen.Selected == GameMain.NetLobbyScreen && connectedClients.Count > 0 && !gameStarted && !initiatedStartGame)
             {
-                serverSettings.AutoRestartTimer -= deltaTime;
-                if (serverSettings.AutoRestartTimer < 0.0f && !initiatedStartGame)
+                if (serverSettings.AutoRestart) serverSettings.AutoRestartTimer -= deltaTime;
+
+                if (serverSettings.AutoRestart && serverSettings.AutoRestartTimer < 0.0f)
                 {
                     StartGame();
+                }
+                else if (serverSettings.StartWhenClientsReady)
+                {
+                    int clientsReady = connectedClients.Count(c => c.GetVote<bool>(VoteType.StartRound));
+                    if (clientsReady / (float)connectedClients.Count >= serverSettings.StartWhenClientsReadyRatio)
+                    {
+                        StartGame();
+                    }
                 }
             }
 
@@ -442,6 +452,18 @@ namespace Barotrauma.Networking
                 //slowly reset spam timers
                 c.ChatSpamTimer = Math.Max(0.0f, c.ChatSpamTimer - deltaTime);
                 c.ChatSpamSpeed = Math.Max(0.0f, c.ChatSpamSpeed - deltaTime);
+
+                //constantly increase AFK timer if the client is controlling a character (gets reset to zero every time an input is received)
+                if (gameStarted && c.Character != null && !c.Character.IsDead && !c.Character.IsUnconscious)
+                {
+                    c.KickAFKTimer += deltaTime;
+                }
+            }
+
+            IEnumerable<Client> kickAFK = connectedClients.FindAll(c => c.KickAFKTimer >= serverSettings.KickAFKTime);
+            foreach (Client c in kickAFK)
+            {
+                KickClient(c, TextManager.Get("DisconnectMessage.AFK"));
             }
 
             NetIncomingMessage inc = null;
@@ -486,12 +508,10 @@ namespace Barotrauma.Networking
                                 {
                                     inc.SenderConnection.Approve();
                                     HandleClientAuthRequest(inc.SenderConnection);
-                                    HandleOwnership(inc.SenderConnection.RemoteHailMessage);
                                 }
                                 else if (packetHeader == ClientPacketHeader.REQUEST_STEAMAUTH)
                                 {
                                     ReadClientSteamAuthRequest(inc, out ulong clientSteamID);
-                                    HandleOwnership(inc.SenderConnection.RemoteHailMessage);
                                     if (serverSettings.BanList.IsBanned("", clientSteamID))
                                     {
                                         inc.SenderConnection.Deny(DisconnectReason.Banned.ToString());
@@ -556,7 +576,7 @@ namespace Barotrauma.Networking
             }
             refreshMasterTimer = DateTime.Now + refreshMasterInterval;
         }
-
+        
         private void ReadDataMessage(NetIncomingMessage inc)
         {
             var connectedClient = connectedClients.Find(c => c.Connection == inc.SenderConnection);
@@ -1983,18 +2003,14 @@ namespace Barotrauma.Networking
                     if (string.IsNullOrWhiteSpace(modifiedMessage)) continue;
                 }
 
-                var modifiedChatMsg = new OrderChatMessage(
-                    message.Order, message.OrderOption,
-                    message.TargetEntity, message.TargetCharacter, message.Sender);
-
-                SendDirectChatMessage(modifiedChatMsg, client);
+                SendDirectChatMessage(message, client);
             }
 
             string myReceivedMessage = message.Text;
             
             if (!string.IsNullOrWhiteSpace(myReceivedMessage))
             {
-                AddChatMessage(myReceivedMessage, ChatMessageType.Order, message.SenderName, message.Sender);
+                AddChatMessage(new OrderChatMessage(message.Order, message.OrderOption, myReceivedMessage, message.TargetEntity, message.TargetCharacter, message.Sender));
             }
         }
 

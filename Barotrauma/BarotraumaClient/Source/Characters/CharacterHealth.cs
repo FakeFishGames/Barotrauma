@@ -70,6 +70,9 @@ namespace Barotrauma
         private float healthShadowSize;
         private float healthShadowDelay;
 
+        // 0-1
+        private float damageIntensity;
+        private float damageIntensityDropdownRate = 0.1f;
         private float healthBarPulsateTimer;
         private float healthBarPulsatePhase;
 
@@ -259,6 +262,9 @@ namespace Barotrauma
 
             if (healthBarPulsateTimer <= 0.0f) healthBarPulsatePhase = 0.0f;
             healthBarPulsateTimer = 1.0f;
+
+            float additionalIntensity = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(0, 0.1f, attackResult.Damage / MaxVitality));
+            damageIntensity = MathHelper.Clamp(damageIntensity + additionalIntensity, 0, 1);
         }
 
         private void UpdateAlignment()
@@ -384,7 +390,18 @@ namespace Barotrauma
                 }
             }
 
-            if (damageOverlayTimer > 0.0f) damageOverlayTimer -= deltaTime;
+            if (damageOverlayTimer > 0.0f)
+            {
+                damageOverlayTimer -= deltaTime;
+            }
+            if (damageIntensity > 0)
+            {
+                damageIntensity -= deltaTime * damageIntensityDropdownRate;
+                if (damageIntensity < 0)
+                {
+                    damageIntensity = 0;
+                }
+            }
 
             if (healthShadowDelay > 0.0f)
             {
@@ -629,6 +646,11 @@ namespace Barotrauma
             {
                 damageOverlayAlpha = Math.Max(1.0f - (vitality / maxVitality * 10.0f), damageOverlayAlpha);
             }
+            else
+            {
+                float pulsateAmount = (float)(Math.Sin(healthBarPulsatePhase) + 1.0f) / 2.0f;
+                damageOverlayAlpha = pulsateAmount * healthBarPulsateTimer * damageIntensity;
+            }
 
             if (damageOverlayAlpha > 0.0f)
             {
@@ -657,30 +679,30 @@ namespace Barotrauma
 
         public void DrawStatusHUD(SpriteBatch spriteBatch)
         {
-            Rectangle interactArea = healthBar.Rect;
+            //Rectangle interactArea = healthBar.Rect;
             if (openHealthWindow != this)
             {
-                List<Pair<AfflictionPrefab, string>> statusIcons = new List<Pair<AfflictionPrefab, string>>();
+                List<Pair<Affliction, string>> statusIcons = new List<Pair<Affliction, string>>();
                 if (character.CurrentHull == null || character.CurrentHull.LethalPressure > 5.0f)
-                    statusIcons.Add(new Pair<AfflictionPrefab, string>(AfflictionPrefab.Pressure, TextManager.Get("PressureHUDWarning")));
+                    statusIcons.Add(new Pair<Affliction, string>(pressureAffliction, TextManager.Get("PressureHUDWarning")));
                 if (character.CurrentHull != null && character.OxygenAvailable < LowOxygenThreshold && oxygenLowAffliction.Strength < oxygenLowAffliction.Prefab.ShowIconThreshold)
-                    statusIcons.Add(new Pair<AfflictionPrefab, string>(AfflictionPrefab.OxygenLow, TextManager.Get("OxygenHUDWarning")));
+                    statusIcons.Add(new Pair<Affliction, string>(oxygenLowAffliction, TextManager.Get("OxygenHUDWarning")));
 
                 var allAfflictions = GetAllAfflictions(true);
                 foreach (Affliction affliction in allAfflictions)
                 {
                     if (affliction.Strength < affliction.Prefab.ShowIconThreshold || affliction.Prefab.Icon == null) continue;
-                    statusIcons.Add(new Pair<AfflictionPrefab, string>(affliction.Prefab, affliction.Prefab.Name));
+                    statusIcons.Add(new Pair<Affliction, string>(affliction, affliction.Prefab.Name));
                 }
 
-                Pair<AfflictionPrefab, string> highlightedIcon = null;
+                Pair<Affliction, string> highlightedIcon = null;
                 Vector2 highlightedIconPos = Vector2.Zero;
                 Rectangle afflictionArea =  alignment == Alignment.Left ? HUDLayoutSettings.AfflictionAreaLeft : HUDLayoutSettings.AfflictionAreaRight;
                 Point pos = afflictionArea.Location + healthBar.RectTransform.ScreenSpaceOffset;
 
                 bool horizontal = afflictionArea.Width > afflictionArea.Height;
                 int iconSize = horizontal ? afflictionArea.Height : afflictionArea.Width;
-                foreach (Pair<AfflictionPrefab, string> statusIcon in statusIcons)
+                /*foreach (Pair<Affliction, string> statusIcon in statusIcons)
                 {
                     Rectangle afflictionIconRect = new Rectangle(pos, new Point(iconSize));
                     interactArea = Rectangle.Union(interactArea, afflictionIconRect);
@@ -693,21 +715,40 @@ namespace Barotrauma
                         pos.X += iconSize + (int)(5 * GUI.Scale);
                     else
                         pos.Y += iconSize + (int)(5 * GUI.Scale);
-                }
+                }*/
 
                 pos = afflictionArea.Location;
-                foreach (Pair<AfflictionPrefab, string> statusIcon in statusIcons)
+                foreach (Pair<Affliction, string> statusIcon in statusIcons)
                 {
+                    Rectangle afflictionIconRect = new Rectangle(pos, new Point(iconSize));
+                    if (afflictionIconRect.Contains(PlayerInput.MousePosition))
+                    {
+                        highlightedIcon = statusIcon;
+                        highlightedIconPos = afflictionIconRect.Center.ToVector2();
+                    }
+
+                    if (statusIcon.First.DamagePerSecond > 1.0f)
+                    {
+                        Rectangle glowRect = afflictionIconRect;
+                        glowRect.Inflate((int)(25 * GUI.Scale), (int)(25 * GUI.Scale));
+                        var glow = GUI.Style.GetComponentStyle("OuterGlow");
+                        glow.Sprites[GUIComponent.ComponentState.None][0].Draw(
+                            spriteBatch, glowRect,
+                            Color.Red * (float)((Math.Sin(statusIcon.First.DamagePerSecondTimer * MathHelper.TwoPi - MathHelper.PiOver2) + 1.0f) * 0.5f));
+                    }
+
                     var slot = GUI.Style.GetComponentStyle("AfflictionIconSlot");
                     slot.Sprites[highlightedIcon == statusIcon ? GUIComponent.ComponentState.Hover : GUIComponent.ComponentState.None][0].Draw(
-                        spriteBatch, new Rectangle(pos, new Point(iconSize)),
+                        spriteBatch, afflictionIconRect,
                         highlightedIcon == statusIcon ? slot.HoverColor : slot.Color);
 
-                    statusIcon.First.Icon?.Draw(spriteBatch,
+
+                    statusIcon.First.Prefab.Icon?.Draw(spriteBatch,
                         pos.ToVector2(),
-                        highlightedIcon == statusIcon ? statusIcon.First.IconColor : statusIcon.First.IconColor * 0.8f,
+                        highlightedIcon == statusIcon ? statusIcon.First.Prefab.IconColor : statusIcon.First.Prefab.IconColor * 0.8f,
                         rotate: 0,
-                        scale: iconSize / statusIcon.First.Icon.size.X);
+                        scale: iconSize / statusIcon.First.Prefab.Icon.size.X);
+
                     if (horizontal)
                         pos.X += iconSize + (int)(5 * GUI.Scale);
                     else
@@ -1077,7 +1118,7 @@ namespace Barotrauma
             int rows = (int)Math.Ceiling(items.Count / (float)columns);
             itemContainer.RectTransform.NonScaledSize = new Point(healItemContainer.Content.Rect.Width / 2, rows * (itemSlotSize + spacing));
 
-            for (int i = 0; i<items.Count; i++)
+            for (int i = 0; i < items.Count; i++)
             {
                 var item = items[i];
                 if (item == null) continue;
@@ -1086,7 +1127,7 @@ namespace Barotrauma
                 Point slotPos = new Point((i % columns) * itemSlotSize, (int)Math.Floor(i / (float)columns) * itemSlotSize);
                 var child = new GUIButton(new RectTransform(new Point(itemSlotSize, itemSlotSize), itemContainer.RectTransform) { AbsoluteOffset = slotPos },
                     text: "", style: "InventorySlotSmall")
-                {                    
+                {
                     UserData = item
                 };
                 child.OnClicked += OnTreatmentButtonClicked;

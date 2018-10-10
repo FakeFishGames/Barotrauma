@@ -54,6 +54,9 @@ namespace Barotrauma.Items.Components
 
         private bool shutDown;
 
+        const float AIUpdateInterval = 1.0f;
+        private float aiUpdateTimer;
+
         private Character lastUser;
         private Character LastUser
         {
@@ -457,6 +460,19 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
             }
+
+            if (aiUpdateTimer > 0.0f)
+            {
+                aiUpdateTimer -= deltaTime;
+                return false;
+            }
+
+            if (lastUser != character && lastUser != null && lastUser.SelectedConstruction == item)
+            {
+                character.Speak(TextManager.Get("DialogReactorTaken"), null, 0.0f, "reactortaken", 10.0f);
+            }
+
+            LastUser = character;
             
             switch (objective.Option.ToLowerInvariant())
             {
@@ -475,7 +491,7 @@ namespace Barotrauma.Items.Components
                     {
                         AutoTemp = false;
                         unsentChanges = true;
-                        UpdateAutoTemp(2.0f + degreeOfSuccess * 5.0f, deltaTime);
+                        UpdateAutoTemp(2.0f + degreeOfSuccess * 5.0f, 1.0f);
                     }                    
                     break;
                 case "shutdown":
@@ -488,6 +504,8 @@ namespace Barotrauma.Items.Components
                     targetTurbineOutput = 0.0f;
                     break;
             }
+
+            aiUpdateTimer = AIUpdateInterval;
 
             return false;
         }

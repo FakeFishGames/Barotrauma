@@ -16,6 +16,8 @@ namespace Barotrauma
 {
     class SubmarineBody
     {
+        const float HorizontalDrag = 0.01f;
+        const float VerticalDrag = 0.05f;
         const float MaxDrag = 0.1f;
 
         public const float DamageDepth = -30000.0f;
@@ -309,12 +311,11 @@ namespace Barotrauma
                     jointEdge = jointEdge.Next;
                 }
                 
-                float dragCoefficient = MathHelper.Clamp(0.01f + attachedMass / 5000.0f, 0.0f, MaxDrag);
-
-                float speedLength = (Body.LinearVelocity == Vector2.Zero) ? 0.0f : Body.LinearVelocity.Length();
-                float drag = speedLength * speedLength * dragCoefficient * Body.Mass;
-
-                totalForce += -Vector2.Normalize(Body.LinearVelocity) * drag;
+                float horizontalDragCoefficient = MathHelper.Clamp(HorizontalDrag + attachedMass / 5000.0f, 0.0f, MaxDrag);
+                totalForce.X -= Math.Sign(Body.LinearVelocity.X) * Body.LinearVelocity.X * Body.LinearVelocity.X * horizontalDragCoefficient * Body.Mass;
+                
+                float verticalDragCoefficient = MathHelper.Clamp(VerticalDrag + attachedMass / 5000.0f, 0.0f, MaxDrag);
+                totalForce.Y -= Math.Sign(Body.LinearVelocity.Y) * Body.LinearVelocity.Y * Body.LinearVelocity.Y * verticalDragCoefficient * Body.Mass;
             }
 
             ApplyForce(totalForce);
@@ -379,7 +380,10 @@ namespace Barotrauma
 
             float buoyancy = neutralPercentage - waterPercentage;
 
-            if (buoyancy > 0.0f) buoyancy *= 2.0f;
+            if (buoyancy > 0.0f)
+                buoyancy *= 2.0f;
+            else
+                buoyancy = Math.Max(buoyancy, -0.5f);
 
             return new Vector2(0.0f, buoyancy * Body.Mass * 10.0f);
         }

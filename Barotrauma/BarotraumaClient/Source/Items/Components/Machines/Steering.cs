@@ -19,6 +19,10 @@ namespace Barotrauma.Items.Components
 
         private GUITextBlock pressureWarningText;
 
+        private GUITextBlock tipContainer;
+
+        private string noPowerTip, autoPilotMaintainPosTip, autoPilotLevelStartTip, autoPilotLevelEndTip;
+
         private Vector2 keyboardInput = Vector2.Zero;
         private float inputCumulation;
 
@@ -70,6 +74,7 @@ namespace Barotrauma.Items.Components
                 {
                     AutoPilot = !box.Selected;
                     unsentChanges = true;
+                    user = Character.Controlled;
 
                     return true;
                 }
@@ -81,6 +86,7 @@ namespace Barotrauma.Items.Components
                 {
                     AutoPilot = box.Selected;
                     unsentChanges = true;
+                    user = Character.Controlled;
 
                     return true;
                 }
@@ -105,6 +111,7 @@ namespace Barotrauma.Items.Components
                     if (maintainPos != tickBox.Selected)
                     {
                         unsentChanges = true;
+                        user = Character.Controlled;
                         maintainPos = tickBox.Selected;
                         if (maintainPos)
                         {
@@ -141,6 +148,7 @@ namespace Barotrauma.Items.Components
                     if (levelStartSelected != tickBox.Selected)
                     {
                         unsentChanges = true;
+                        user = Character.Controlled;
                         levelStartSelected = tickBox.Selected;
                         levelEndSelected = !levelStartSelected;
                         if (levelStartSelected)
@@ -167,6 +175,7 @@ namespace Barotrauma.Items.Components
                     if (levelEndSelected != tickBox.Selected)
                     {
                         unsentChanges = true;
+                        user = Character.Controlled;
                         levelEndSelected = tickBox.Selected;
                         levelStartSelected = !levelEndSelected;
                         if (levelEndSelected)
@@ -222,8 +231,19 @@ namespace Barotrauma.Items.Components
                 Visible = false
             };
 
+            tipContainer = new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.15f), GuiFrame.RectTransform, Anchor.BottomLeft)
+            { MinSize = new Point(150, 0), RelativeOffset = new Vector2(-0.05f, -0.05f) }, "", wrap: true, style: "GUIToolTip")
+            {
+                AutoScale = true
+            };
+
+            noPowerTip = TextManager.Get("SteeringNoPowerTip");
+            autoPilotMaintainPosTip = TextManager.Get("SteeringAutoPilotMaintainPosTip");
+            autoPilotLevelStartTip = TextManager.Get("SteeringAutoPilotLocationTip").Replace("[locationname]", GameMain.GameSession.StartLocation.Name);
+            autoPilotLevelEndTip = TextManager.Get("SteeringAutoPilotLocationTip").Replace("[locationname]", GameMain.GameSession.EndLocation.Name);
+
             steerArea = new GUICustomComponent(new RectTransform(new Point(viewSize), GuiFrame.RectTransform, Anchor.CenterLeft),
-                (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); }, null);           
+                (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); }, null);
         }
 
         /// <summary>
@@ -357,7 +377,30 @@ namespace Barotrauma.Items.Components
 
             autoPilotControlsDisabler.Visible = !AutoPilot;
 
-            if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
+            if (voltage < minVoltage && currPowerConsumption > 0.0f)
+            {
+                tipContainer.Visible = true;
+                tipContainer.Text = noPowerTip;
+                return;
+            }
+
+
+            tipContainer.Visible = AutoPilot;
+            if (AutoPilot)
+            {
+                if (maintainPos)
+                {
+                    tipContainer.Text = autoPilotMaintainPosTip;
+                }
+                else if (LevelStartSelected)
+                {
+                    tipContainer.Text = autoPilotLevelStartTip;
+                }
+                else if (LevelEndSelected)
+                {
+                    tipContainer.Text = autoPilotLevelEndTip;
+                }
+            }
 
             pressureWarningText.Visible = item.Submarine != null && item.Submarine.AtDamageDepth && Timing.TotalTime % 1.0f < 0.5f;
 
@@ -374,9 +417,9 @@ namespace Barotrauma.Items.Components
                     else
                     {
                         SteeringInput = inputPos;
-                        //steeringAdjustSpeed = character == null ? 0.2f : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("helm") / 100.0f);
                     }
                     unsentChanges = true;
+                    user = Character.Controlled;
                 }
             }
             if (!AutoPilot && Character.DisableControls)
@@ -425,10 +468,11 @@ namespace Barotrauma.Items.Components
                     {
                         keyboardInput += normalizedInput * length;
                     }
-                    if (keyboardInput.Length() > 0)
+                    if (keyboardInput.LengthSquared() > 0.01f)
                     {
                         SteeringInput += keyboardInput;
                         unsentChanges = true;
+                        user = Character.Controlled;
                         keyboardInput *= MathHelper.Clamp(1 - step, 0, 1);
                     }
                 }

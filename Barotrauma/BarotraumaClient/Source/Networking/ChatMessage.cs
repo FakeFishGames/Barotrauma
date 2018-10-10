@@ -71,13 +71,14 @@ namespace Barotrauma.Networking
                 else if (targetCharacter != null)
                 {
                     targetCharacter.SetOrder(
-                        new Order(order.Prefab, targetEntity, (targetEntity as Item)?.GetComponent<Items.Components.ItemComponent>()), 
+                        new Order(order.Prefab, targetEntity, (targetEntity as Item)?.GetComponent<Items.Components.ItemComponent>()),
                             orderOption, senderCharacter);
                 }
 
                 if (NetIdUtils.IdMoreRecent(ID, LastID))
                 {
-                    GameMain.Client.AddChatMessage(txt, type, senderName, senderCharacter);
+                    GameMain.Client.AddChatMessage(
+                        new OrderChatMessage(order, orderOption, txt, targetEntity, targetCharacter, senderCharacter));
                     LastID = ID;
                 }
                 return;

@@ -246,6 +246,8 @@ namespace Barotrauma
 
             if (Screen.Selected != GameMain.SubEditorScreen) return;
 
+            if (Character.Controlled == null) activeHUDs.Clear();
+
             if (!Linkable) return;
 
             if (!PlayerInput.KeyDown(Keys.Space)) return;

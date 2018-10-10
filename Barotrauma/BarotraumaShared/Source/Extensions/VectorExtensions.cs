@@ -52,7 +52,8 @@ namespace Barotrauma.Extensions
 
         public static Vector2 Clamp(this Vector2 v, Vector2 min, Vector2 max)
         {
-            return new Vector2(MathHelper.Clamp(v.X, min.X, max.X), MathHelper.Clamp(v.Y, min.Y, max.Y));
+            //return new Vector2(MathHelper.Clamp(v.X, min.X, max.X), MathHelper.Clamp(v.Y, min.Y, max.Y));
+            return Vector2.Clamp(v, min, max);
         }
 
         public static bool NearlyEquals(this Vector2 v, Vector2 other)

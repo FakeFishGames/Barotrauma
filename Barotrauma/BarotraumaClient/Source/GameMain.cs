@@ -22,6 +22,7 @@ namespace Barotrauma
         public static bool ShowFPS = false;
         public static bool ShowPerf = false;
         public static bool DebugDraw;
+        public static bool IsMultiplayer => NetworkMember!=null;
 
         public static PerformanceCounter PerformanceCounter;
 

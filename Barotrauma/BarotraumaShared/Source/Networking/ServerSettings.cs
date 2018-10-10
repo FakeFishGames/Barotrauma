@@ -494,6 +494,13 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
+        
+        [Serialize(120.0f, true)]
+        public float KickAFKTime
+        {
+            get;
+            private set;
+        }
 
         [Serialize(true, true)]
         public bool TraitorUseRatio

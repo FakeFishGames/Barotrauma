@@ -315,9 +315,9 @@ namespace Barotrauma
             OnDeselected?.Invoke(this, Keys.None);
         }
 
-        public override void Flash(Color? color = null)
+        public override void Flash(Color? color = null, float flashDuration = 1.5f)
         {
-            textBlock.Flash(color);
+            textBlock.Flash(color, flashDuration);
         }
         
         protected override void Update(float deltaTime)
@@ -540,6 +540,7 @@ namespace Barotrauma
                 case (char)0x16: // ctrl-v
                     string text = GetCopiedText();
                     int previousCaretIndex = CaretIndex;
+                    RemoveSelectedText();
                     Text = Text.Insert(CaretIndex, text);
                     CaretIndex = Math.Min(Text.Length, previousCaretIndex + text.Length);
                     OnTextChanged?.Invoke(this, Text);
@@ -667,6 +668,7 @@ namespace Barotrauma
 
         private void RemoveSelectedText()
         {
+            if (selectedText.Length == 0) { return; }
             if (IsLeftToRight)
             {
                 Text = Text.Remove(selectionStartIndex, selectedText.Length);

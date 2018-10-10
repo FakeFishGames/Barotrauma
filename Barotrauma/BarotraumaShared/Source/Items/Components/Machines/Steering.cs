@@ -454,6 +454,13 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
+            if (user != character && user != null && user.SelectedConstruction == item)
+            {
+                character.Speak(TextManager.Get("DialogSteeringTaken"), null, 0.0f, "steeringtaken", 10.0f);
+            }
+
+            user = character;
+
             switch (objective.Option.ToLowerInvariant())
             {
                 case "maintainposition":
@@ -528,7 +535,9 @@ namespace Barotrauma.Items.Components
                 newSteeringInput = new Vector2(msg.ReadFloat(), msg.ReadFloat());
             }
 
-            if (!item.CanClientAccess(c)) return; 
+            if (!item.CanClientAccess(c)) return;
+
+            user = c.Character;
 
             AutoPilot = autoPilot;
 

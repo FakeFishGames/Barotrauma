@@ -341,6 +341,9 @@ namespace Barotrauma
 
             keyMapping[(int)InputType.Select] = new KeyOrMouse(Keys.E);
 
+            keyMapping[(int)InputType.SelectNextCharacter] = new KeyOrMouse(Keys.Tab);
+            keyMapping[(int)InputType.SelectPreviousCharacter] = new KeyOrMouse(Keys.Q);
+
             keyMapping[(int)InputType.Use] = new KeyOrMouse(0);
             keyMapping[(int)InputType.Aim] = new KeyOrMouse(1);
 
