@@ -90,7 +90,7 @@ namespace Barotrauma
         public new FishGroundedParams CurrentGroundedParams => base.CurrentGroundedParams as FishGroundedParams;
         public new FishSwimParams CurrentSwimParams => base.CurrentSwimParams as FishSwimParams;
 
-        protected float? FootAngle => GetValidOrNull(CurrentSwimParams, CurrentSwimParams?.FootAngleInRadians);
+        //protected float? FootAngle => GetValidOrNull(CurrentSwimParams, CurrentSwimParams?.FootAngleInRadians);
 
         public override GroundedMovementParams WalkParams
         {
@@ -359,19 +359,20 @@ namespace Barotrauma
                 Limb head = GetLimb(LimbType.Head);
                 head?.body.SmoothRotate(HeadAngle.Value * Dir, CurrentSwimParams.HeadTorque);
             }
-            if (FootAngle.HasValue)
+
+            foreach (var limb in Limbs)
             {
-                foreach (var limb in Limbs)
+                switch (limb.type)
                 {
-                    switch (limb.type)
-                    {
-                        case LimbType.LeftFoot:
-                        case LimbType.RightFoot:
-                            limb.body.SmoothRotate(FootAngle.Value * Dir, CurrentSwimParams.FootTorque);
-                            break;
-                    }
+                    case LimbType.LeftFoot:
+                    case LimbType.RightFoot:
+                        if (CurrentSwimParams.FootAnglesInRadians.ContainsKey(limb.limbParams.ID))
+                        {
+                            limb.body.SmoothRotate(CurrentSwimParams.FootAnglesInRadians[limb.limbParams.ID] * Dir, CurrentSwimParams.FootTorque);
+                        }
+                        break;
                 }
-            }
+            }            
 
             Limb tail = GetLimb(LimbType.Tail);
             if (tail != null)
@@ -483,9 +484,12 @@ namespace Barotrauma
                                 (-transformedStepSize.Y > 0.0f) ? -transformedStepSize.Y : 0.0f),
                             CurrentGroundedParams.FootMoveForce);
                         }
-
-                        if (MathUtils.IsValid(CurrentGroundedParams.FootAngleInRadians)) limb.body.SmoothRotate(CurrentGroundedParams.FootAngleInRadians * Dir, 50.0f);
-
+                        
+                        if (CurrentGroundedParams.FootAnglesInRadians.ContainsKey(limb.limbParams.ID))
+                        {
+                            limb.body.SmoothRotate(CurrentGroundedParams.FootAnglesInRadians[limb.limbParams.ID] * Dir, CurrentGroundedParams.FootTorque);
+                        }
+     
                         break;
                     case LimbType.LeftLeg:
                     case LimbType.RightLeg:
