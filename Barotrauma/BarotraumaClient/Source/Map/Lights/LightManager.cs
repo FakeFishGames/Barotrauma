@@ -31,6 +31,11 @@ namespace Barotrauma.Lights
             get;
             private set;
         }
+        public RenderTarget2D SpecularMap
+        {
+            get;
+            private set;
+        }
         public RenderTarget2D LosTexture
         {
             get;
@@ -103,6 +108,12 @@ namespace Barotrauma.Lights
                        pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount,
                        RenderTargetUsage.DiscardContents);
 
+            SpecularMap?.Dispose();
+            SpecularMap = new RenderTarget2D(graphics,
+                       (int)(GameMain.GraphicsWidth * lightmapScale), (int)(GameMain.GraphicsHeight * lightmapScale), false,
+                       pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount,
+                       RenderTargetUsage.DiscardContents);
+
             LosTexture?.Dispose();
             LosTexture = new RenderTarget2D(graphics, (int)(GameMain.GraphicsWidth * lightmapScale), (int)(GameMain.GraphicsHeight * lightmapScale), false, SurfaceFormat.Color, DepthFormat.None);
         }
@@ -163,6 +174,12 @@ namespace Barotrauma.Lights
         {
             if (!LightingEnabled) return;
             
+            Matrix spriteBatchTransform = cam.Transform * Matrix.CreateScale(new Vector3(lightmapScale, lightmapScale, 1.0f));
+            Matrix transform = cam.ShaderTransform
+                * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
+
+            UpdateSpecularMap(graphics, spriteBatch, spriteBatchTransform, cam);
+
             graphics.SetRenderTarget(LightMap);
 
             Rectangle viewRect = cam.WorldView;
@@ -177,13 +194,11 @@ namespace Barotrauma.Lights
                 activeLights.Add(light);
             }
 
+
             //clear the lightmap
             graphics.Clear(Color.Black);
             graphics.BlendState = BlendState.Additive;
 
-            Matrix spriteBatchTransform = cam.Transform * Matrix.CreateScale(new Vector3(lightmapScale, lightmapScale, 1.0f));
-            Matrix transform = cam.ShaderTransform
-                * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
             //draw background lights
             //---------------------------------------------------------------------------------------------------
@@ -196,11 +211,9 @@ namespace Barotrauma.Lights
                 light.DrawLightVolume(spriteBatch, lightEffect, transform);
                 backgroundSpritesDrawn = true;
             }
-
             GameMain.ParticleManager.Draw(spriteBatch, true, null, Particles.ParticleBlendState.Additive);
             spriteBatch.End();
-
-
+            
             //draw a black rectangle on hulls to hide background lights behind subs
             //---------------------------------------------------------------------------------------------------
             Dictionary<Hull, Rectangle> visibleHulls = new Dictionary<Hull, Rectangle>();
@@ -322,6 +335,70 @@ namespace Barotrauma.Lights
             }
             spriteBatch.End();
             
+            spriteBatch.Begin(blendState: CustomBlendStates.Multiplicative);
+            spriteBatch.Draw(SpecularMap, Vector2.Zero, Color.White);
+            //spriteBatch.Draw(SpecularMap, Vector2.Zero, Color.White);
+            spriteBatch.End();
+
+            //draw the actual light volumes, additive particles, hull ambient lights and the halo around the player
+            //---------------------------------------------------------------------------------------------------
+
+            graphics.SetRenderTarget(null);
+            graphics.BlendState = BlendState.AlphaBlend;
+        }
+
+
+        public void UpdateSpecularMap(GraphicsDevice graphics, SpriteBatch spriteBatch, Matrix spriteBatchTransform, Camera cam)
+        {
+            graphics.SetRenderTarget(SpecularMap);
+            
+            //clear the lightmap
+            graphics.Clear(Color.Gray);
+            graphics.BlendState = BlendState.AlphaBlend;
+
+            spriteBatch.Begin(sortMode: SpriteSortMode.Deferred, blendState: BlendState.AlphaBlend, transformMatrix: spriteBatchTransform);
+
+            if (Level.Loaded != null)
+            {
+                Level.Loaded.LevelObjectManager.DrawObjects(spriteBatch, cam, drawFront: false, specular: true);
+            }
+
+            Dictionary<Hull, Rectangle> visibleHulls = new Dictionary<Hull, Rectangle>();
+            foreach (Hull hull in Hull.hullList)
+            {
+                var drawRect =
+                    hull.Submarine == null ?
+                    hull.Rect :
+                    new Rectangle((int)(hull.Submarine.DrawPosition.X + hull.Rect.X), (int)(hull.Submarine.DrawPosition.Y + hull.Rect.Y), hull.Rect.Width, hull.Rect.Height);
+
+                if (drawRect.Right < cam.WorldView.X || drawRect.X > cam.WorldView.Right ||
+                    drawRect.Y - drawRect.Height > cam.WorldView.Y || drawRect.Y < cam.WorldView.Y - cam.WorldView.Height)
+                {
+                    continue;
+                }
+                visibleHulls.Add(hull, drawRect);
+            }
+            
+            foreach (Rectangle drawRect in visibleHulls.Values)
+            {
+                //TODO: draw some sort of smoothed rectangle
+                GUI.DrawRectangle(spriteBatch,
+                    new Vector2(drawRect.X, -drawRect.Y),
+                    new Vector2(drawRect.Width, drawRect.Height),
+                    Color.Gray, true);
+            }
+
+            /*Submarine.DrawBack(spriteBatch);
+
+            foreach (Character c in Character.CharacterList)
+            {
+                c.Draw(spriteBatch, cam);
+            }
+
+            Submarine.DrawFront(spriteBatch);*/
+
+            spriteBatch.End();
+
             graphics.SetRenderTarget(null);
             graphics.BlendState = BlendState.AlphaBlend;
         }
