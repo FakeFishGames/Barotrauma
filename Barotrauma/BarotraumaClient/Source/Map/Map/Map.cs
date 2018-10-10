@@ -456,17 +456,33 @@ namespace Barotrauma
             {
                 foreach (LocationConnection connection in connections)
                 {
-                    Color crackColor = Color.White;
+                    Color connectionColor;
+                    if (GameMain.DebugDraw)
+                    {
+                        float sizeFactor = MathUtils.InverseLerp(
+                           MapGenerationParams.Instance.SmallLevelConnectionLength,
+                           MapGenerationParams.Instance.LargeLevelConnectionLength,
+                           connection.Length);
+
+                        connectionColor = ToolBox.GradientLerp(sizeFactor, Color.LightGreen, Color.Orange, Color.Red);
+                    }
+                    else
+                    {
+                        connectionColor = ToolBox.GradientLerp(connection.Difficulty / 100.0f, 
+                            MapGenerationParams.Instance.LowDifficultyColor,
+                            MapGenerationParams.Instance.MediumDifficultyColor,
+                            MapGenerationParams.Instance.HighDifficultyColor);
+                    }
 
                     if (selectedLocation != currentLocation &&
                         (connection.Locations.Contains(selectedLocation) && connection.Locations.Contains(currentLocation)))
                     {
-                        crackColor = Color.Red;
+                        connectionColor = Color.Gold;
                     }
                     else if (highlightedLocation != currentLocation &&
                     (connection.Locations.Contains(highlightedLocation) && connection.Locations.Contains(currentLocation)))
                     {
-                        crackColor = Color.Red * 0.5f;
+                        connectionColor = Color.Gold * 0.5f;
                     }
                     else if (!connection.Passed)
                     {
@@ -505,10 +521,10 @@ namespace Barotrauma
 
                         int width = (int)(3 * zoom);
 
-                        float a = (200.0f - distFromPlayer) / 200.0f;
+                        float a = GameMain.DebugDraw ? 1.0f : (200.0f - distFromPlayer) / 200.0f;
                         spriteBatch.Draw(generationParams.ConnectionSprite.Texture,
                             new Rectangle((int)start.X, (int)start.Y, (int)(dist - 1 * zoom), width),
-                            null, crackColor * MathHelper.Clamp(a, 0.1f, 0.5f), MathUtils.VectorToAngle(end - start),
+                            null, connectionColor * MathHelper.Clamp(a, 0.1f, 0.5f), MathUtils.VectorToAngle(end - start),
                             new Vector2(0, 16), SpriteEffects.None, 0.01f);
                     }
 

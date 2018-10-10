@@ -55,7 +55,7 @@ namespace Barotrauma
             private set;
         }
 
-        private float width, height;
+        private float minWidth, maxWidth, height;
 
         private Vector2 voronoiSiteInterval;
         //how much the sites are "scattered" on x- and y-axis
@@ -126,10 +126,17 @@ namespace Barotrauma
         }
 
         [Serialize(100000.0f, false)]
-        public float Width
+        public float MinWidth
         {
-            get { return width; }
-            set { width = Math.Max(value, 2000.0f); }
+            get { return minWidth; }
+            set { minWidth = Math.Max(value, 2000.0f); }
+        }
+
+        [Serialize(100000.0f, false)]
+        public float MaxWidth
+        {
+            get { return maxWidth; }
+            set { maxWidth = Math.Max(value, 2000.0f); }
         }
 
         [Serialize(50000.0f, false)]
@@ -145,7 +152,7 @@ namespace Barotrauma
             get { return voronoiSiteInterval; }
             set
             {
-                voronoiSiteInterval.X = MathHelper.Clamp(value.X, 100.0f, width / 2);
+                voronoiSiteInterval.X = MathHelper.Clamp(value.X, 100.0f, MinWidth / 2);
                 voronoiSiteInterval.Y = MathHelper.Clamp(value.Y, 100.0f, height / 2);
             }
         }
@@ -167,8 +174,8 @@ namespace Barotrauma
             get { return mainPathNodeIntervalRange; }
             set
             {
-                mainPathNodeIntervalRange.X = MathHelper.Clamp(value.X, 100.0f, width / 2);
-                mainPathNodeIntervalRange.Y = MathHelper.Clamp(value.Y, mainPathNodeIntervalRange.X, width / 2);
+                mainPathNodeIntervalRange.X = MathHelper.Clamp(value.X, 100.0f, MinWidth / 2);
+                mainPathNodeIntervalRange.Y = MathHelper.Clamp(value.Y, mainPathNodeIntervalRange.X, MinWidth / 2);
             }
         }
 
@@ -185,8 +192,8 @@ namespace Barotrauma
             get { return smallTunnelLengthRange; }
             set
             {
-                smallTunnelLengthRange.X = MathHelper.Clamp(value.X, 100.0f, width);
-                smallTunnelLengthRange.Y = MathHelper.Clamp(value.Y, smallTunnelLengthRange.X, width);
+                smallTunnelLengthRange.X = MathHelper.Clamp(value.X, 100.0f, MinWidth);
+                smallTunnelLengthRange.Y = MathHelper.Clamp(value.Y, smallTunnelLengthRange.X, MinWidth);
             }
         }
 
