@@ -3,6 +3,7 @@
   <Item
     name="Label"
     identifier="label"
+    interactdistance="0"
     resizehorizontal="true"
     resizevertical="true">
 

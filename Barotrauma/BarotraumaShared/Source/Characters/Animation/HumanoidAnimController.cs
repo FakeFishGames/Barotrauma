@@ -315,7 +315,7 @@ namespace Barotrauma
 
             if (character.SelectedCharacter != null)
             {
-                DragCharacter(character.SelectedCharacter);
+                DragCharacter(character.SelectedCharacter, deltaTime);
             }
 
             switch (Anim)
@@ -548,7 +548,7 @@ namespace Barotrauma
             if (TargetMovement.X != 0.0f)
             {
                 //progress the walking animation
-                WalkPos -= MathHelper.ToRadians(CurrentGroundedParams.CycleSpeed) * walkCycleMultiplier * Math.Sign(movement.X);
+                WalkPos -= MathHelper.ToRadians(CurrentAnimationParams.CycleSpeed) * walkCycleMultiplier * Math.Sign(movement.X);
 
                 for (int i = -1; i < 2; i += 2)
                 {
@@ -1282,7 +1282,7 @@ namespace Barotrauma
             }
         }
 
-        public override void DragCharacter(Character target)
+        public override void DragCharacter(Character target, float deltaTime)
         {
             if (target == null) return;
 

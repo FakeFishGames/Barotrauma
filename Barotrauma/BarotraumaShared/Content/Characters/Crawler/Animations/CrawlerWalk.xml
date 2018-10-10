@@ -1,6 +1,6 @@
 ﻿<CrawlerWalk
   AnimationType="Walk"
-  speed="2"
+  movementspeed="2"
   stepsize="0.12,0.2"
   legtorque="10"
   colliderstandangle="90"

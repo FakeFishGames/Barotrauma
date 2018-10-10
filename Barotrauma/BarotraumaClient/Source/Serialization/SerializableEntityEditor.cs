@@ -484,6 +484,7 @@ namespace Barotrauma
                 Stretch = true,
                 RelativeSpacing = 0.05f
             };
+            var editableAttribute = property.GetAttribute<Editable>();
             var fields = new GUIComponent[2];
             for (int i = 1; i >= 0; i--)
             {
@@ -499,6 +500,8 @@ namespace Barotrauma
                     numberInput.FloatValue = value.X;
                 else
                     numberInput.FloatValue = value.Y;
+
+                numberInput.DecimalsToDisplay = editableAttribute.DecimalCount;
 
                 int comp = i;
                 numberInput.OnValueChanged += (numInput) =>
@@ -532,6 +535,7 @@ namespace Barotrauma
                 Stretch = true,
                 RelativeSpacing = 0.03f
             };
+            var editableAttribute = property.GetAttribute<Editable>();
             var fields = new GUIComponent[3];
             for (int i = 2; i >= 0; i--)
             {
@@ -549,6 +553,8 @@ namespace Barotrauma
                     numberInput.FloatValue = value.Y;
                 else if (i == 2)
                     numberInput.FloatValue = value.Z;
+
+                numberInput.DecimalsToDisplay = editableAttribute.DecimalCount;
 
                 int comp = i;
                 numberInput.OnValueChanged += (numInput) =>
@@ -579,6 +585,7 @@ namespace Barotrauma
             {
                 ToolTip = toolTip
             };
+            var editableAttribute = property.GetAttribute<Editable>();
             var fields = new GUIComponent[4];
             var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 1), frame.RectTransform, Anchor.TopRight), isHorizontal: true, childAnchor: Anchor.CenterRight)
             {
@@ -594,6 +601,8 @@ namespace Barotrauma
                 {
                     Font = GUI.SmallFont
                 };
+
+                numberInput.DecimalsToDisplay = editableAttribute.DecimalCount;
 
                 if (i == 0)
                     numberInput.FloatValue = value.X;

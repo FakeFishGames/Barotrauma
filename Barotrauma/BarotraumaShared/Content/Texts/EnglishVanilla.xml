@@ -156,6 +156,9 @@
   <InputType.CrewOrders>Crew orders</InputType.CrewOrders>
   <InputType.Ragdoll>Ragdoll</InputType.Ragdoll>
   <InputType.Health>Health</InputType.Health>
+  <InputType.Grab>Grab</InputType.Grab>
+  <InputType.SelectNextCharacter>Next character</InputType.SelectNextCharacter>
+  <InputType.SelectPreviousCharacter>Previous character</InputType.SelectPreviousCharacter>
   
   <!-- Server settings menu -->
   <ServerSettingsRoundsTab>Rounds</ServerSettingsRoundsTab>
@@ -219,6 +222,14 @@
   <UseItemButton>Use</UseItemButton>
   <GrabHint>[[key]] Grab</GrabHint>
   <HealHint>[[key]] Heal</HealHint>
+  <QuickUseAction.Equip>Equip</QuickUseAction.Equip>
+  <QuickUseAction.Unequip>Unequip</QuickUseAction.Unequip>
+  <QuickUseAction.Drop>Hold to drop</QuickUseAction.Drop>
+  <QuickUseAction.TakeFromContainer>Take</QuickUseAction.TakeFromContainer>
+  <QuickUseAction.TakeFromCharacter>Take</QuickUseAction.TakeFromCharacter>
+  <QuickUseAction.PutToContainer>Put to container</QuickUseAction.PutToContainer>
+  <QuickUseAction.PutToCharacter>Put to selected character</QuickUseAction.PutToCharacter>
+  <QuickUseAction.UseTreatment>Use as treatment</QuickUseAction.UseTreatment>
 
   <!-- Status -->
   <StatusOK>OK</StatusOK>
@@ -675,6 +686,9 @@
   <SteeringVelocityY>Descent velocity: [kph] km/h</SteeringVelocityY>
   <SteeringDepth>Depth: [m] m</SteeringDepth>
   <SteeringDepthWarning>DANGEROUS PRESSURE</SteeringDepthWarning>
+  <SteeringNoPowerTip>WARNING: Insufficient power</SteeringNoPowerTip>
+  <SteeringAutoPilotMaintainPosTip>AUTOPILOT ON\nMaintaining position. Choose the position to maintain by clicking on the display.</SteeringAutoPilotMaintainPosTip>
+  <SteeringAutoPilotLocationTip>AUTOPILOT ON\nAutopilot is set to navigate towards [locationname].</SteeringAutoPilotLocationTip>
 
   <SonarActive>Active Sonar</SonarActive>
   <SonarPassive>Passive Sonar</SonarPassive>
@@ -766,6 +780,9 @@
   <DialogAffirmative>Aye!</DialogAffirmative>
   <DialogAffirmative>Got it!</DialogAffirmative>
   <DialogReactorFuel>Loading more fuel to the reactor!</DialogReactorFuel>
+  <DialogReactorTaken>Hey, I'm operating the reactor!</DialogReactorTaken>
+  <DialogReactorTaken>Hands off please, I've got this!</DialogReactorTaken>
+  <DialogReactorTaken>Hey, we don't need two people at the reactor!</DialogReactorTaken>
   <DialogLoadTurret>Loading ammunition to the [itemname]!</DialogLoadTurret>
   <DialogFireTurret>Firing!</DialogFireTurret>
   <DialogFireTurret>Fire in the hole!</DialogFireTurret>
@@ -803,6 +820,9 @@
   <DialogNoFire>What fire?</DialogNoFire>
   <DialogNoFire>Can't see any fires!</DialogNoFire>
   <DialogNoFire>I don't think there's any fire to put out!</DialogNoFire>
+  <DialogSteeringTaken>Hey, I'm at the helm now!</DialogSteeringTaken>
+  <DialogSteeringTaken>Hands off please, I'm steering now!</DialogSteeringTaken>
+  <DialogSteeringTaken>Hey, we don't need two people to steer!</DialogSteeringTaken>
   <DialogSonarTarget>A target on the sonar at [direction]!</DialogSonarTarget>
   <DialogSonarTarget>A blip on the sonar at [direction]!</DialogSonarTarget>
   <DialogSonarTarget>Something on the sonar at [direction]!</DialogSonarTarget>
@@ -937,6 +957,9 @@
   <weldingtool.Name>Eldingway Ooltay</weldingtool.Name>
   <weldingtool.Description>Oneway ofway ethay ostmay ucialcray oolstay onway oardbay ethay ubmarinesay. Alsoway orksway underwaterway.</weldingtool.Description>
   -->
+
+
+
 
 
 

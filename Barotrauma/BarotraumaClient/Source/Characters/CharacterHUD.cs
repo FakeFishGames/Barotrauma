@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Items.Components;
-using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -14,9 +13,11 @@ namespace Barotrauma
         const float ItemOverlayDelay = 1.0f;
         private static Item focusedItem;
         private static float focusedItemOverlayTimer;
-
+        
         private static List<Item> brokenItems = new List<Item>();
         private static float brokenItemsCheckTimer;
+
+        private static SpriteSheet focusIndicator;
 
         public static void AddToGUIUpdateList(Character character)
         {
@@ -116,7 +117,7 @@ namespace Barotrauma
         public static void Draw(SpriteBatch spriteBatch, Character character, Camera cam)
         {
             if (GUI.DisableHUD) return;
-
+            
             character.CharacterHealth.Alignment = Alignment.Right;
 
             if (GameMain.GameSession?.CrewManager != null)
@@ -163,23 +164,46 @@ namespace Barotrauma
                     textPos.Y += 20;
                     if (character.FocusedCharacter.CanInventoryBeAccessed)
                     {
-                        GUI.DrawString(spriteBatch, textPos, TextManager.Get("GrabHint").Replace("[key]", GameMain.Config.KeyBind(InputType.Select).ToString()), 
+                        // TODO: (garbage colleciton optimization) use the string builder class, because Replace returns a new string and the draw function is called multiple times per frame
+                        GUI.DrawString(spriteBatch, textPos, TextManager.Get("GrabHint").Replace("[key]", GameMain.Config.KeyBind(InputType.Grab).ToString()),
                             Color.LightGreen, Color.Black, 2, GUI.SmallFont);
                         textPos.Y += 15;
                     }
                     if (character.FocusedCharacter.CharacterHealth.UseHealthWindow)
                     {
+                        // TODO: (garbage colleciton optimization) use the string builder class, because Replace returns a new string and the draw function is called multiple times per frame
                         GUI.DrawString(spriteBatch, textPos, TextManager.Get("HealHint").Replace("[key]", GameMain.Config.KeyBind(InputType.Health).ToString()), Color.LightGreen, Color.Black, 2, GUI.SmallFont);
                         textPos.Y += 15;
                     }
                 }
-                else if (character.SelectedCharacter == null && character.FocusedItem != null && character.SelectedConstruction == null)
+
+                float circleSize = 1.0f;
+                if (character.FocusedItem != null)
                 {
-                    focusedItem = character.FocusedItem;
+                    if (focusedItem != character.FocusedItem)
+                    {
+                        focusedItemOverlayTimer = Math.Min(1.0f, focusedItemOverlayTimer);
+                    }
+                    focusedItem = character.FocusedItem;                    
                 }
 
                 if (focusedItem != null && focusedItemOverlayTimer > ItemOverlayDelay)
                 {
+                    Vector2 circlePos = cam.WorldToScreen(focusedItem.DrawPosition);
+                    circleSize = Math.Max(focusedItem.Rect.Width, focusedItem.Rect.Height) * 1.5f;
+                    circleSize = MathHelper.Clamp(circleSize, 45.0f, 100.0f) * Math.Min((focusedItemOverlayTimer - 1.0f) * 5.0f, 1.0f);
+                    if (circleSize > 0.0f)
+                    {
+                        Vector2 scale = new Vector2(circleSize / GUI.Style.FocusIndicator.FrameSize.X);
+                        GUI.Style.FocusIndicator.Draw(spriteBatch,
+                            (int)((focusedItemOverlayTimer - 1.0f) * GUI.Style.FocusIndicator.FrameCount * 3.0f),
+                            circlePos,
+                            Color.Orange * 0.3f,
+                            origin: GUI.Style.FocusIndicator.FrameSize.ToVector2() / 2,
+                            rotate: (float)Timing.TotalTime,
+                            scale: scale);
+                    }
+
                     var hudTexts = focusedItem.GetHUDTexts(character);
 
                     int dir = Math.Sign(focusedItem.WorldPosition.X - character.WorldPosition.X);
@@ -187,8 +211,8 @@ namespace Barotrauma
                     startPos.Y -= (hudTexts.Count + 1) * 20;
                     if (focusedItem.Sprite != null)
                     {
-                        startPos.X += (int)Math.Sqrt(focusedItem.Sprite.size.X / 2) * dir;
-                        startPos.Y -= (int)Math.Sqrt(focusedItem.Sprite.size.Y / 2);
+                        startPos.X += (int)(circleSize * 0.4f * dir);
+                        startPos.Y -= (int)(circleSize * 0.4f);
                     }
 
                     Vector2 textPos = startPos;
@@ -231,13 +255,14 @@ namespace Barotrauma
                     }
                 }
             }
-
+            bool drawPortraitToolTip = false;
             if (character.Stun <= 0.1f && !character.IsDead)
             {
                 if (character?.Info?.Portrait != null && CharacterHealth.OpenHealthWindow == null && character.SelectedCharacter == null)
                 {
                     character.Info.Portrait.Draw(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(),
                         scale: HUDLayoutSettings.PortraitArea.Width / character.Info.Portrait.size.X);
+                    drawPortraitToolTip = HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition);
                 }
                 if (character.Inventory != null && !character.LockHands)
                 {
@@ -273,6 +298,14 @@ namespace Barotrauma
                 {
                     //character.Inventory.CurrentLayout = (CharacterHealth.OpenHealthWindow == null) ? Alignment.Center : Alignment.Left;
                 }
+            }
+
+            if (drawPortraitToolTip)
+            {
+                GUIComponent.DrawToolTip(
+                    spriteBatch,
+                    character.Info.Job == null ? character.Name : character.Name + " (" + character.Info.Job.Name + ")",
+                    HUDLayoutSettings.PortraitArea);
             }
         }
 

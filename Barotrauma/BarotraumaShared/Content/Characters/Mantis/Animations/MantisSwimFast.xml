@@ -1,6 +1,6 @@
 ﻿<MantisSwimFast
   AnimationType="SwimFast"
-  speed="6"
+  movementspeed="6"
   waveamplitude="1"
   wavelength="20"
   steertorque="25"

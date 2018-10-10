@@ -1,0 +1,18 @@
+﻿<CrawlerSwimSlow
+  AnimationType="SwimSlow"
+  movementspeed="2"
+  steertorque="20"
+  waveamplitude="0.1983792"
+  wavelength="21.09184"
+  flip="True"
+  headangle="0"
+  torsoangle="45"
+  mirror="True"
+  rotatetowardsmovement="True"
+  torsotorque="25"
+  headtorque="10"
+  foottorque="25"
+  tailtorque="50"
+  footangle="0"
+  cyclespeed="5"
+  animationtype="SwimSlow" />

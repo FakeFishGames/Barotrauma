@@ -1,6 +1,6 @@
 ﻿<MolochBossSwimFast
   AnimationType="SwimFast"
-  speed="3"
+  movementspeed="3"
   waveamplitude="0"
   mirror="True"
   rotatetowardsmovement="False"

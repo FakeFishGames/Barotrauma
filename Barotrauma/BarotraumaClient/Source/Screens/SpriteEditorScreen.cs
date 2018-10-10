@@ -21,15 +21,15 @@ namespace Barotrauma
         private GUITextBlock texturePathText;
         private GUITextBlock xmlPathText;
         private GUITickBox pixelPerfectToggle;
-        private GUIScrollBar scaleBar;
+        private GUIScrollBar zoomBar;
         private string xmlPath;
         private Sprite selectedSprite;
         private Texture2D selectedTexture;
         private Rectangle viewArea;
         private Rectangle textureRect;
-        private float scale = 1;
-        private float minScale = 0.25f;
-        private float maxScale;
+        private float zoom = 1;
+        private float minZoom = 0.25f;
+        private float maxZoom;
         private int spriteCount;
 
         private readonly Camera cam;
@@ -155,8 +155,8 @@ namespace Barotrauma
                     }
                 }
             };
-            new GUITextBlock(new RectTransform(new Vector2(0.2f, 0.2f), topPanelContents.RectTransform, Anchor.TopCenter, Pivot.CenterRight) { RelativeOffset = new Vector2(0, 0.3f) }, "Scale: ");
-            scaleBar = new GUIScrollBar(new RectTransform(new Vector2(0.2f, 0.35f), topPanelContents.RectTransform, Anchor.TopCenter, Pivot.CenterRight)
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 0.2f), topPanelContents.RectTransform, Anchor.TopCenter, Pivot.CenterRight) { RelativeOffset = new Vector2(0, 0.3f) }, "Zoom: ");
+            zoomBar = new GUIScrollBar(new RectTransform(new Vector2(0.2f, 0.35f), topPanelContents.RectTransform, Anchor.TopCenter, Pivot.CenterRight)
             {
                 RelativeOffset = new Vector2(0.05f, 0.3f)
             }, barSize: 0.1f)
@@ -165,7 +165,7 @@ namespace Barotrauma
                 Step = 0.01f,
                 OnMoved = (scrollBar, value) =>
                 {
-                    scale = MathHelper.Lerp(minScale, maxScale, value);
+                    zoom = MathHelper.Lerp(minZoom, maxZoom, value);
                     widgets.Clear();
                     return true;
                 }
@@ -177,7 +177,7 @@ namespace Barotrauma
             {
                 OnSelected = (tickBox) =>
                 {
-                    scaleBar.Enabled = !tickBox.Selected;
+                    zoomBar.Enabled = !tickBox.Selected;
                     CalculateScale();
                     widgets.Clear();
                     return true;
@@ -285,7 +285,7 @@ namespace Barotrauma
                         if (sprite.Texture != selectedTexture) continue;
                         if (PlayerInput.LeftButtonClicked())
                         {
-                            var scaledRect = new Rectangle(textureRect.Location + sprite.SourceRect.Location.Multiply(scale), sprite.SourceRect.Size.Multiply(scale));
+                            var scaledRect = new Rectangle(textureRect.Location + sprite.SourceRect.Location.Multiply(zoom), sprite.SourceRect.Size.Multiply(zoom));
                             if (scaledRect.Contains(PlayerInput.MousePosition))
                             {
                                 spriteList.Select(sprite);
@@ -296,8 +296,8 @@ namespace Barotrauma
             }
             if (!pixelPerfectToggle.Selected && PlayerInput.ScrollWheelSpeed != 0 && viewArea.Contains(PlayerInput.MousePosition))
             {
-                scale = MathHelper.Clamp(scale + PlayerInput.ScrollWheelSpeed * (float)deltaTime * 0.05f * scale, minScale, maxScale);
-                scaleBar.BarScroll = GetBarScrollValue();
+                zoom = MathHelper.Clamp(zoom + PlayerInput.ScrollWheelSpeed * (float)deltaTime * 0.05f * zoom, minZoom, maxZoom);
+                zoomBar.BarScroll = GetBarScrollValue();
                 widgets.Clear();
             }
         }
@@ -313,10 +313,10 @@ namespace Barotrauma
             if (selectedTexture != null)
             {
                 textureRect = new Rectangle(
-                    (int)(viewArea.Center.X - selectedTexture.Bounds.Width / 2f * scale),
-                    (int)(viewArea.Center.Y - selectedTexture.Bounds.Height / 2f * scale),
-                    (int)(selectedTexture.Bounds.Width * scale),
-                    (int)(selectedTexture.Bounds.Height * scale));
+                    (int)(viewArea.Center.X - selectedTexture.Bounds.Width / 2f * zoom),
+                    (int)(viewArea.Center.Y - selectedTexture.Bounds.Height / 2f * zoom),
+                    (int)(selectedTexture.Bounds.Width * zoom),
+                    (int)(selectedTexture.Bounds.Height * zoom));
 
                 spriteBatch.Draw(selectedTexture,
                     viewArea.Center.ToVector2(), 
@@ -324,7 +324,7 @@ namespace Barotrauma
                     color: Color.White, 
                     rotation: 0.0f,
                     origin: new Vector2(selectedTexture.Bounds.Width / 2.0f, selectedTexture.Bounds.Height / 2.0f), 
-                    scale: scale, 
+                    scale: zoom, 
                     effects: SpriteEffects.None, 
                     layerDepth: 0);
 
@@ -339,10 +339,10 @@ namespace Barotrauma
                     spriteCount++;
 
                     Rectangle sourceRect = new Rectangle(
-                        textureRect.X + (int)(sprite.SourceRect.X * scale),
-                        textureRect.Y + (int)(sprite.SourceRect.Y * scale),
-                        (int)(sprite.SourceRect.Width * scale),
-                        (int)(sprite.SourceRect.Height * scale));
+                        textureRect.X + (int)(sprite.SourceRect.X * zoom),
+                        textureRect.Y + (int)(sprite.SourceRect.Y * zoom),
+                        (int)(sprite.SourceRect.Width * zoom),
+                        (int)(sprite.SourceRect.Height * zoom));
 
                     GUI.DrawRectangle(spriteBatch, sourceRect,
                         selectedSprite == sprite ? Color.Red : Color.White * 0.5f);
@@ -362,49 +362,66 @@ namespace Barotrauma
                         {
                             w.tooltipOffset = tooltipOffset;
                             w.tooltip = $"Position: {sprite.SourceRect.Location}";
-                            w.DrawPos = textureRect.Location.ToVector2() + topLeft * scale - halfSize;
+                            w.DrawPos = textureRect.Location.ToVector2() + topLeft * zoom - halfSize;
                             w.inputAreaMargin = new Point(widgetSize / 2);
                             w.MouseDown += () => spriteList.Select(sprite);
-                            w.MouseHeld += () =>
+                            w.MouseHeld += dTime =>
                             {
                                 w.DrawPos = PlayerInput.MousePosition;
-                                sprite.SourceRect = new Rectangle(((w.DrawPos + halfSize - textureRect.Location.ToVector2()) / scale).ToPoint(), sprite.SourceRect.Size);
-                                if (widgets.TryGetValue($"{identifier}_size", out Widget sizeW))
-                                {
-                                    sizeW.DrawPos = w.DrawPos + new Vector2(widgetSize) + sprite.SourceRect.Size.ToVector2() * scale;
-                                }
+                                sprite.SourceRect = new Rectangle(((w.DrawPos + halfSize - textureRect.Location.ToVector2()) / zoom).ToPoint(), sprite.SourceRect.Size);
+                                UpdateSizeWidget();
                                 if (spriteList.SelectedComponent is GUITextBlock textBox)
                                 {
                                     textBox.Text = GetSpriteName(sprite) + " " + sprite.SourceRect;
                                 }
                                 w.tooltip = $"Position: {sprite.SourceRect.Location}";
                             };
+                            w.Deselected += UpdatePos;
+                            w.MouseUp += UpdatePos;
                             w.PostUpdate += dTime =>
                             {
                                 w.color = selectedSprite == sprite ? Color.Red : Color.White;
                             };
+                            void UpdatePos()
+                            {
+                                w.DrawPos = textureRect.Location.ToVector2() + sprite.SourceRect.Location.ToVector2() * zoom - halfSize;
+                            };
+                            void UpdateSizeWidget()
+                            {
+                                if (widgets.TryGetValue($"{identifier}_size", out Widget sizeW))
+                                {
+                                    //sizeW.DrawPos = w.DrawPos + new Vector2(widgetSize) + sprite.SourceRect.Size.ToVector2() * zoom;
+                                    sizeW.DrawPos = textureRect.Location.ToVector2() + new Vector2(sprite.SourceRect.Right, sprite.SourceRect.Bottom) * zoom + halfSize;
+                                }
+                            }
                         });
                         var sizeWidget = GetWidget($"{identifier}_size", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                         {
                             w.tooltipOffset = tooltipOffset;
                             w.tooltip = $"Size: {sprite.SourceRect.Size}";
-                            w.DrawPos = textureRect.Location.ToVector2() + bottomRight * scale + halfSize;
+                            w.DrawPos = textureRect.Location.ToVector2() + bottomRight * zoom + halfSize;
                             w.inputAreaMargin = new Point(widgetSize / 2);
                             w.MouseDown += () => spriteList.Select(sprite);
-                            w.MouseHeld += () =>
+                            w.MouseHeld += dTime =>
                             {
                                 w.DrawPos = PlayerInput.MousePosition;
-                                sprite.SourceRect = new Rectangle(sprite.SourceRect.Location, ((w.DrawPos - new Vector2(widgetSize) - positionWidget.DrawPos) / scale).ToPoint());
+                                sprite.SourceRect = new Rectangle(sprite.SourceRect.Location, ((w.DrawPos - new Vector2(widgetSize) - positionWidget.DrawPos) / zoom).ToPoint());
                                 if (spriteList.SelectedComponent is GUITextBlock textBox)
                                 {
                                     textBox.Text = GetSpriteName(sprite) + " " + sprite.SourceRect;
                                 }
                                 w.tooltip = $"Size: {sprite.SourceRect.Size}";
                             };
+                            w.MouseUp += UpdatePos;
+                            w.Deselected += UpdatePos;
                             w.PostUpdate += dTime =>
                             {
                                 w.color = selectedSprite == sprite ? Color.Red : Color.White;
                             };
+                            void UpdatePos()
+                            {
+                                w.DrawPos = textureRect.Location.ToVector2() + new Vector2(sprite.SourceRect.Right, sprite.SourceRect.Bottom) * zoom + halfSize;
+                            }
                         });
                         positionWidget.Draw(spriteBatch, (float)deltaTime);
                         sizeWidget.Draw(spriteBatch, (float)deltaTime);
@@ -425,12 +442,12 @@ namespace Barotrauma
         {
             float width = viewArea.Width / (float)selectedTexture.Width;
             float height = viewArea.Height / (float)selectedTexture.Height;
-            maxScale = Math.Min(width, height);
-            scale = pixelPerfectToggle.Selected ? 1 : maxScale;
-            scaleBar.BarScroll = GetBarScrollValue();
+            maxZoom = Math.Min(width, height);
+            zoom = pixelPerfectToggle.Selected ? 1 : maxZoom;
+            zoomBar.BarScroll = GetBarScrollValue();
         }
 
-        private float GetBarScrollValue() => MathHelper.Lerp(0, 1, MathUtils.InverseLerp(minScale, maxScale, scale));
+        private float GetBarScrollValue() => MathHelper.Lerp(0, 1, MathUtils.InverseLerp(minZoom, maxZoom, zoom));
 
         private string GetIdentifier(Sprite sprite)
         {

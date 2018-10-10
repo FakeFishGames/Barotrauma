@@ -62,11 +62,19 @@ namespace Barotrauma
             }
         }
 
+        public float Length
+        {
+            get;
+            private set;
+        }
+
         public LocationConnection(Location location1, Location location2)
         {
             locations = new Location[] { location1, location2 };
 
             MissionsCompleted = 0;
+
+            Length = Vector2.Distance(location1.MapPosition, location2.MapPosition);
         }
 
         public void CheckMissionCompleted()

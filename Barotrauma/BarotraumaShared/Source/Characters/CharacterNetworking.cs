@@ -54,8 +54,9 @@ namespace Barotrauma
             Attack = 0x400,
             Ragdoll = 0x800,
             Health = 0x1000,
+            Grab = 0x2000,
 
-            MaxVal = 0x1FFF
+            MaxVal = 0x3FFF
         }
         private InputNetFlags dequeuedInput = 0;
         private InputNetFlags prevDequeuedInput = 0;

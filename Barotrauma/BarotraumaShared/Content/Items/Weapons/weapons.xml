@@ -55,7 +55,7 @@
       <Sound file="Content/Items/Weapons/harpoon1.ogg" type="OnUse"/>
       <Sound file="Content/Items/Weapons/harpoon2.ogg" type="OnUse"/>
       <StatusEffect type="OnUse">
-        <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" flash="false" sparks="false" camerashake="6.0"/>
+        <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" underwaterbubble="false" flash="false" sparks="false" camerashake="6.0"/>
       </StatusEffect>
       <RequiredItems identifier="spear" type="Contained" msg="ItemMsgSpearRequired"/>
       <RequiredSkill identifier="weapons" level="30"/>
@@ -160,7 +160,7 @@
       <Sound file="Content/Items/Weapons/revolver3.ogg" type="OnUse" range="3000"/>
       <Sound file="Content/Items/Weapons/revolver4.ogg" type="OnUse" range="3000"/>
       <StatusEffect type="OnUse">
-        <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" sparks="false" camerashake="6.0"/>
+        <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" underwaterbubble="false" sparks="false" camerashake="6.0"/>
       </StatusEffect>
       <RequiredItems identifier="revolverround" type="Contained" msg="ItemMsgAmmoRequired"/>
       <RequiredSkill identifier="weapons" level="40"/>

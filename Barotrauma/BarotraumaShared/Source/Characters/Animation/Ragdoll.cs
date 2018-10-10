@@ -231,11 +231,9 @@ namespace Barotrauma
         protected abstract float? TorsoPosition { get; }
         protected abstract float? TorsoAngle { get; }
 
-        public bool Draggable
-        {
-            get;
-            private set;
-        }
+        public float ImpactTolerance => RagdollParams.ImpactTolerance;
+        public bool Draggable => RagdollParams.Draggable;
+        public bool CanEnterSubmarine => RagdollParams.CanEnterSubmarine;
 
         public float Dir
         {
@@ -251,8 +249,6 @@ namespace Barotrauma
         {
             get { return headInWater; }
         }
-
-        public bool CanEnterSubmarine { get; private set; }
 
         public Hull CurrentHull
         {
@@ -279,12 +275,6 @@ namespace Barotrauma
                 ignorePlatforms = value;
             }
         }
-
-        public float ImpactTolerance
-        {
-            get;
-            private set;
-        }
         
         /// <summary>
         /// Call this to create the ragdoll from the RagdollParams.
@@ -297,18 +287,6 @@ namespace Barotrauma
             }
             dir = Direction.Right;
             RagdollParams = ragdollParams;
-            XElement element = RagdollParams.MainElement;
-            // TODO: maybe the scale should override min and max and not vice versa?
-            //float scale = element.GetAttributeFloat("scale", 1.0f);
-            //if (element.Attribute("minscale") != null)
-            //{
-            //    float minScale = element.GetAttributeFloat("minscale", 1.0f);
-            //    float maxScale = Math.Max(minScale, element.GetAttributeFloat("maxscale", 1.0f));
-            //    scale = MathHelper.Lerp(minScale, maxScale, (float)random.NextDouble());
-            //}
-            ImpactTolerance = element.GetAttributeFloat("impacttolerance", 50.0f);
-            CanEnterSubmarine = element.GetAttributeBool("canentersubmarine", true);
-            Draggable = element.GetAttributeBool("draggable", false);
             CreateColliders();
             CreateLimbs();
             CreateJoints();
@@ -453,6 +431,7 @@ namespace Barotrauma
         public void ResetLimbs()
         {
             Limbs.ForEach(l => l.LoadParams());
+            SetupDrawOrder();
         }
 
         public void AddJoint(JointParams jointParams)

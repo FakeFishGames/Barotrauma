@@ -1,6 +1,6 @@
 ﻿<CharybdisSwimFast
   AnimationType="SwimFast"
-  speed="6"
+  movementspeed="6"
   waveamplitude="3"
   wavelength="50"
   steertorque="100"

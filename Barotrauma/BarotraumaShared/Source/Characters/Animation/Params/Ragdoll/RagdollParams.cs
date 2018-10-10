@@ -5,6 +5,7 @@ using System.Xml.Linq;
 using System.Linq;
 using System.IO;
 using Barotrauma.Extensions;
+using FarseerPhysics.Dynamics;
 
 namespace Barotrauma
 {
@@ -26,14 +27,23 @@ namespace Barotrauma
 
         public string SpeciesName { get; private set; }
 
-        [Serialize(45f, true), Editable(0f, 1000f)]
-        public float ColliderHeightFromFloor { get; set; }
-
         [Serialize(1.0f, true), Editable(MIN_SCALE, MAX_SCALE)]
         public float LimbScale { get; set; }
 
         [Serialize(1.0f, true), Editable(MIN_SCALE, MAX_SCALE)]
         public float JointScale { get; set; }
+
+        [Serialize(45f, true), Editable(0f, 1000f)]
+        public float ColliderHeightFromFloor { get; set; }
+
+        [Serialize(50f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+        public float ImpactTolerance { get; set; }
+
+        [Serialize(true, true), Editable]
+        public bool CanEnterSubmarine { get; set; }
+
+        [Serialize(true, true), Editable]
+        public bool Draggable { get; set; }
 
         private static Dictionary<string, Dictionary<string, RagdollParams>> allRagdolls = new Dictionary<string, Dictionary<string, RagdollParams>>();
 
@@ -215,10 +225,10 @@ namespace Barotrauma
             Name = $"Joint {element.Attribute("limb1").Value} - {element.Attribute("limb2").Value}";
         }
 
-        [Serialize(-1, true)]
+        [Serialize(-1, true), Editable]
         public int Limb1 { get; set; }
 
-        [Serialize(-1, true)]
+        [Serialize(-1, true), Editable]
         public int Limb2 { get; set; }
 
         /// <summary>
@@ -281,19 +291,17 @@ namespace Barotrauma
         public readonly SpriteParams damagedSpriteParams;
         public readonly SpriteParams deformSpriteParams;
 
-        // TODO: decide which properties should be editable in the editor and which only via xml
-
         /// <summary>
-        /// TODO: editing this in-game doesn't currently have any effect
+        /// Note that editing this in-game doesn't currently have any effect. It should be visible, but readonly.
         /// </summary>
         [Serialize(-1, true)]
         public int ID { get; set; }
 
-        /// <summary>
-        /// TODO: editing this in-game doesn't currently have any effect
-        /// </summary>
         [Serialize(LimbType.None, true), Editable]
         public LimbType Type { get; set; }
+
+        [Serialize(BodyType.Dynamic, true), Editable]
+        public BodyType BodyType { get; set; }
 
         [Serialize(false, true), Editable]
         public bool Flip { get; set; }
@@ -304,25 +312,41 @@ namespace Barotrauma
         [Serialize(0f, true), Editable]
         public float AttackPriority { get; set; }
 
-        [Serialize(0f, true), Editable]
+        [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
         public float SteerForce { get; set; }
 
         [Serialize("0, 0", true), Editable]
         public Vector2 StepOffset { get; set; }
 
-        // Following params are not used right now. The params are assigned to a PhysicsBody.
+        [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+        public float Radius { get; set; }
 
-        //[Serialize(0f, true)]
-        //public float Radius { get; set; }
+        [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+        public float Height { get; set; }
 
-        //[Serialize(0f, true)]
-        //public float Height { get; set; }
+        [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+        public float Width { get; set; }
 
-        //[Serialize(0f, true)]
-        //public float Mass { get; set; }
+        [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 10000)]
+        public float Mass { get; set; }
 
-        //[Serialize(false, true)]
-        //public bool IgnoreCollisions { get; set; }
+        [Serialize(0.3f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        public float Friction { get; set; }
+
+        [Serialize(0.05f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        public float Restitution { get; set; }
+
+        [Serialize(10f, true), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
+        public float Density { get; set; }
+
+        [Serialize("0, 0", true), Editable]
+        public Vector2 PullPos { get; set; }
+
+        [Serialize(-1, true), Editable]
+        public int RefJoint { get; set; }
+
+        [Serialize(false, true), Editable]
+        public bool IgnoreCollisions { get; set; }
     }
 
     class SpriteParams : RagdollSubParams
@@ -332,21 +356,20 @@ namespace Barotrauma
             Name = element.Name.ToString();
         }
 
-        // TODO: decide which properties should be editable in the editor and which only via xml
-
         [Serialize("0, 0, 0, 0", true), Editable]
         public Rectangle SourceRect { get; set; }
 
-        [Serialize("0.5, 0.5", true), Editable]
+        [Serialize("0.5, 0.5", true), Editable(DecimalCount = 2)]
         public Vector2 Origin { get; set; }
 
-        [Serialize(0f, true), Editable]
+        [Serialize(0f, true), Editable(DecimalCount = 3)]
         public float Depth { get; set; }
 
         //[Serialize("", true)]
         //public string Texture { get; set; }
     }
 
+    // TODO: params for the main collider(s)?
     abstract class RagdollSubParams : ISerializableEntity
     {
         public string Name { get; protected set; }

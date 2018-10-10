@@ -41,11 +41,13 @@ namespace Barotrauma
         public Color textBackgroundColor = Color.Black * 0.5f;
         public readonly string id;
 
+        public event Action Selected;
+        public event Action Deselected;
         public event Action Hovered;
         public event Action Clicked;
         public event Action MouseDown;
         public event Action MouseUp;
-        public event Action MouseHeld;
+        public event Action<float> MouseHeld;
         public event Action<float> PreUpdate;
         public event Action<float> PostUpdate;
         public event Action<SpriteBatch, float> PreDraw;
@@ -53,9 +55,22 @@ namespace Barotrauma
 
         public Action refresh;
 
-        public bool IsSelected => selectedWidget == this;
+        public bool IsSelected => enabled && selectedWidget == this;
         public bool IsControlled => IsSelected && PlayerInput.LeftButtonHeld();
         public bool IsMouseOver => GUI.MouseOn == null && InputRect.Contains(PlayerInput.MousePosition);
+        private bool enabled = true;
+        public bool Enabled
+        {
+            get { return enabled; }
+            set
+            {
+                enabled = value;
+                if (selectedWidget == this)
+                {
+                    selectedWidget = null;
+                }
+            }
+        }
         public Vector2? tooltipOffset;
 
         public Widget linkedWidget;
@@ -72,23 +87,26 @@ namespace Barotrauma
         public virtual void Update(float deltaTime)
         {
             PreUpdate?.Invoke(deltaTime);
+            if (!enabled) { return; }
             if (IsMouseOver)
             {
+                Hovered?.Invoke();
                 if (selectedWidget == null)
                 {
                     selectedWidget = this;
+                    Selected?.Invoke();
                 }
-                Hovered?.Invoke();
             }
             else if (selectedWidget == this)
             {
                 selectedWidget = null;
+                Deselected?.Invoke();
             }
             if (IsSelected)
             {
                 if (PlayerInput.LeftButtonHeld())
                 {
-                    MouseHeld?.Invoke();
+                    MouseHeld?.Invoke(deltaTime);
                 }
                 if (PlayerInput.LeftButtonDown())
                 {

@@ -332,6 +332,13 @@ namespace Barotrauma
             {
                 matchingAfflictions.AddRange(limbHealths[targetLimb.HealthIndex].Afflictions);
             }
+            else
+            {
+                foreach (LimbHealth limbHealth in limbHealths)
+                {
+                    matchingAfflictions.AddRange(limbHealth.Afflictions);
+                }
+            }
             matchingAfflictions.RemoveAll(a => 
                 a.Prefab.Identifier.ToLowerInvariant() != affliction && 
                 a.Prefab.AfflictionType.ToLowerInvariant() != affliction);
@@ -490,6 +497,7 @@ namespace Barotrauma
                 {
                     Limb targetLimb = character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == i);
                     affliction.Update(this, targetLimb, deltaTime);
+                    affliction.DamagePerSecondTimer += deltaTime;
                     if (affliction is AfflictionBleeding)
                     {
                         UpdateBleedingProjSpecific((AfflictionBleeding)affliction, targetLimb, deltaTime);
@@ -509,6 +517,7 @@ namespace Barotrauma
             for (int i = 0; i < afflictions.Count; i++)
             {
                 afflictions[i].Update(this, null, deltaTime);
+                afflictions[i].DamagePerSecondTimer += deltaTime;
             }
 
             UpdateLimbAfflictionOverlays();
@@ -556,13 +565,16 @@ namespace Barotrauma
                         vitalityDecrease *= limbHealth.VitalityTypeMultipliers[affliction.Prefab.AfflictionType.ToLowerInvariant()];
                     }
                     vitality -= vitalityDecrease;
+                    affliction.CalculateDamagePerSecond(vitalityDecrease);
                 }
             }
 
             foreach (Affliction affliction in afflictions)
             {
-                vitality -= affliction.GetVitalityDecrease(this);
-            }            
+                float vitalityDecrease = affliction.GetVitalityDecrease(this);
+                vitality -= vitalityDecrease;
+                affliction.CalculateDamagePerSecond(vitalityDecrease);
+            }
         }
 
         private void Kill()
@@ -611,10 +623,14 @@ namespace Barotrauma
                     var existingAffliction = mergedAfflictions.Find(a => a.Prefab == affliction.Prefab);
                     if (existingAffliction == null)
                     {
-                        mergedAfflictions.Add(affliction.Prefab.Instantiate(affliction.Strength));
+                        var newAffliction = affliction.Prefab.Instantiate(affliction.Strength);
+                        newAffliction.DamagePerSecond = affliction.DamagePerSecond;
+                        newAffliction.DamagePerSecondTimer = affliction.DamagePerSecondTimer;
+                        mergedAfflictions.Add(newAffliction);
                     }
                     else
                     {
+                        existingAffliction.DamagePerSecond += affliction.DamagePerSecond;
                         existingAffliction.Strength += affliction.Strength;
                     }
                 }

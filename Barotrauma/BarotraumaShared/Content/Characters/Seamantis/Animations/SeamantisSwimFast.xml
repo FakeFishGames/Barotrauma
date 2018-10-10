@@ -1,6 +1,6 @@
 ﻿<SeamantisSwimFast
   AnimationType="SwimFast"
-  speed="4.440001"
+  movementspeed="4.440001"
   waveamplitude="1.51"
   wavelength="27.75"
   steertorque="25"

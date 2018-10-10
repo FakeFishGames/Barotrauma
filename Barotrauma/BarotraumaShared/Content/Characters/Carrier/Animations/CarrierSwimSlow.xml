@@ -1,6 +1,6 @@
 ﻿<CarrierSwimSlow
   AnimationType="SwimSlow"
-  speed="4"
+  movementspeed="4"
   waveamplitude="0"
   wavelength="0"
   steertorque="25"

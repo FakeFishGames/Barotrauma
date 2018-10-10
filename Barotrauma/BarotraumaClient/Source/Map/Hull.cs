@@ -230,9 +230,16 @@ namespace Barotrauma
                 {
                     Rectangle fireSourceRect = new Rectangle((int)fs.WorldPosition.X, -(int)fs.WorldPosition.Y, (int)fs.Size.X, (int)fs.Size.Y);
                     GUI.DrawRectangle(spriteBatch, fireSourceRect, Color.Orange, false, 0, 5);
-
                     //GUI.DrawRectangle(spriteBatch, new Rectangle((int)fs.LastExtinguishPos.X, (int)-fs.LastExtinguishPos.Y, 5,5), Color.Yellow, true);
                 }
+
+                /*GUI.DrawLine(spriteBatch, new Vector2(drawRect.X, -WorldSurface), new Vector2(drawRect.Right, -WorldSurface), Color.Cyan * 0.5f);
+                for (int i = 0; i < waveY.Length - 1; i++)
+                {
+                    GUI.DrawLine(spriteBatch,
+                        new Vector2(drawRect.X + WaveWidth * i, -WorldSurface - waveY[i] - 10),
+                        new Vector2(drawRect.X + WaveWidth * (i + 1), -WorldSurface - waveY[i + 1] - 10), Color.Blue * 0.5f);
+                }*/
             }
 
             if ((IsSelected || isHighlighted) && editing)
@@ -346,6 +353,7 @@ namespace Barotrauma
                         prevUVs[1] = uvCoords[3];
                     }
 
+                    //we only create a new quad if this is the first or the last one, of if there's a wave large enough that we need more geometry
                     if (i == end - 1 || i == start || Math.Abs(prevCorners[1].Y - corners[3].Y) > 1.0f)
                     {
                         renderer.vertices[renderer.PositionInBuffer] = new VertexPositionTexture(prevCorners[0], prevUVs[0]);
@@ -356,10 +364,10 @@ namespace Barotrauma
                         renderer.vertices[renderer.PositionInBuffer + 4] = new VertexPositionTexture(corners[2], uvCoords[2]);
                         renderer.vertices[renderer.PositionInBuffer + 5] = new VertexPositionTexture(prevCorners[1], prevUVs[1]);
 
-                        prevCorners[0] = corners[0];
-                        prevCorners[1] = corners[3];
-                        prevUVs[0] = uvCoords[0];
-                        prevUVs[1] = uvCoords[3];
+                        prevCorners[0] = corners[1];
+                        prevCorners[1] = corners[2];
+                        prevUVs[0] = uvCoords[1];
+                        prevUVs[1] = uvCoords[2];
 
                         renderer.PositionInBuffer += 6;
                     }
@@ -367,17 +375,21 @@ namespace Barotrauma
 
                 if (renderer.PositionInIndoorsBuffer[Submarine] <= renderer.IndoorsVertices[Submarine].Length - 12)
                 {
-                    //surface shrinks and finally disappears when the water level starts to reach the top of the hull
-                    float surfaceScale = 1.0f - MathHelper.Clamp(corners[3].Y - (top - 10), 0.0f, 1.0f);
+                    const float SurfaceSize = 10.0f;
+                    const float SineFrequency1 = 0.01f;
+                    const float SineFrequency2 = 0.05f;
 
-                    Vector3 surfaceOffset = new Vector3(0.0f, -10.0f, 0.0f);
-                    surfaceOffset.Y += (float)Math.Sin((rect.X+i* width) * 0.01f + renderer.WavePos.X * 0.25f) * 2;
-                    surfaceOffset.Y += (float)Math.Sin((rect.X + i * width) * 0.05f - renderer.WavePos.X) * 2;
+                    //surface shrinks and finally disappears when the water level starts to reach the top of the hull
+                    float surfaceScale = 1.0f - MathHelper.Clamp(corners[3].Y - (top - SurfaceSize), 0.0f, 1.0f);
+
+                    Vector3 surfaceOffset = new Vector3(0.0f, -SurfaceSize, 0.0f);
+                    surfaceOffset.Y += (float)Math.Sin((rect.X + i * WaveWidth) * SineFrequency1 + renderer.WavePos.X * 0.25f) * 2;
+                    surfaceOffset.Y += (float)Math.Sin((rect.X + i * WaveWidth) * SineFrequency2 - renderer.WavePos.X) * 2;
                     surfaceOffset *= surfaceScale;
 
-                    Vector3 surfaceOffset2 = new Vector3(0.0f, -10.0f, 0.0f);
-                    surfaceOffset2.Y += (float)Math.Sin((rect.X + (i + 1) * width) * 0.01f + renderer.WavePos.X * 0.25f) * 2;
-                    surfaceOffset2.Y += (float)Math.Sin((rect.X + (i + 1) * width) * 0.05f - renderer.WavePos.X) * 2;
+                    Vector3 surfaceOffset2 = new Vector3(0.0f, -SurfaceSize, 0.0f);
+                    surfaceOffset2.Y += (float)Math.Sin((rect.X + i * WaveWidth + width) * SineFrequency1 + renderer.WavePos.X * 0.25f) * 2;
+                    surfaceOffset2.Y += (float)Math.Sin((rect.X + i * WaveWidth + width) * SineFrequency2 - renderer.WavePos.X) * 2;
                     surfaceOffset2 *= surfaceScale;
 
                     int posInBuffer = renderer.PositionInIndoorsBuffer[Submarine];

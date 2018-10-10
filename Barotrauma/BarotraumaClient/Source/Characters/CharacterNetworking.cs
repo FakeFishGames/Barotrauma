@@ -48,6 +48,7 @@ namespace Barotrauma
                     if (IsKeyDown(InputType.Crouch)) newInput |= InputNetFlags.Crouch;
                     if (IsKeyHit(InputType.Select)) newInput |= InputNetFlags.Select; //TODO: clean up the way this input is registered
                     if (IsKeyHit(InputType.Health)) newInput |= InputNetFlags.Health;
+                    if (IsKeyHit(InputType.Grab)) newInput |= InputNetFlags.Grab;
                     if (IsKeyDown(InputType.Use)) newInput |= InputNetFlags.Use;
                     if (IsKeyDown(InputType.Aim)) newInput |= InputNetFlags.Aim;
                     if (IsKeyDown(InputType.Attack)) newInput |= InputNetFlags.Attack;
@@ -125,7 +126,8 @@ namespace Barotrauma
                     }
                     if (memInput[i].states.HasFlag(InputNetFlags.Select) || 
                         memInput[i].states.HasFlag(InputNetFlags.Use) || 
-                        memInput[i].states.HasFlag(InputNetFlags.Health))
+                        memInput[i].states.HasFlag(InputNetFlags.Health) ||
+                        memInput[i].states.HasFlag(InputNetFlags.Grab))
                     {
                         msg.Write(memInput[i].interact);
                     }

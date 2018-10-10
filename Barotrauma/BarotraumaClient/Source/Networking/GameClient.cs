@@ -1833,7 +1833,12 @@ namespace Barotrauma.Networking
         {
             get { return inGameHUD; }
         }
-        
+
+        public ChatBox ChatBox
+        {
+            get { return chatBox; }
+        }
+
         protected void SetRadioButtonColor()
         {
             if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f)

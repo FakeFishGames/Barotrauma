@@ -1,6 +1,6 @@
 ﻿<HumanSwimFast
   AnimationType="SwimFast"
-  speed="1.6"
+  movementspeed="1.6"
   steertorque="25"
   headangle="19.5"
   torsoangle="0"

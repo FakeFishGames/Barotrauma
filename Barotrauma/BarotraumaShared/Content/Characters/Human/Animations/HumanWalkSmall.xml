@@ -16,7 +16,7 @@
   headleanamount="0.05512172"
   torsoleanamount="0.313649"
   footmoveoffset="0.02,0"
-  speed="1.549369"
+  movementspeed="1.549369"
   headangle="9.695074"
   torsoangle="3.599627"
   animationtype="Walk"

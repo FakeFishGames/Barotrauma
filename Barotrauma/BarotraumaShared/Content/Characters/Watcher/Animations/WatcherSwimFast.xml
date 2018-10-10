@@ -1,6 +1,6 @@
 ﻿<WatcherSwimFast
   AnimationType="SwimFast"
-  speed="1.5"
+  movementspeed="1.5"
   waveaplitude="0"
   mirror="True"
   rotatetowardsmovement="False"

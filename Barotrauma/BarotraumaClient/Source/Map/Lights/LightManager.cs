@@ -177,8 +177,8 @@ namespace Barotrauma.Lights
                 activeLights.Add(light);
             }
 
-            //clear to some small ambient light
-            graphics.Clear(AmbientLight);
+            //clear the lightmap
+            graphics.Clear(Color.Black);
             graphics.BlendState = BlendState.Additive;
 
             Matrix spriteBatchTransform = cam.Transform * Matrix.CreateScale(new Vector3(lightmapScale, lightmapScale, 1.0f));
@@ -201,7 +201,7 @@ namespace Barotrauma.Lights
             spriteBatch.End();
 
 
-            //draw an ambient light -colored rectangle on hulls to hide background lights behind subs
+            //draw a black rectangle on hulls to hide background lights behind subs
             //---------------------------------------------------------------------------------------------------
             Dictionary<Hull, Rectangle> visibleHulls = new Dictionary<Hull, Rectangle>();
             foreach (Hull hull in Hull.hullList)
@@ -228,7 +228,7 @@ namespace Barotrauma.Lights
                     GUI.DrawRectangle(spriteBatch,
                         new Vector2(drawRect.X, -drawRect.Y),
                         new Vector2(drawRect.Width, drawRect.Height),
-                        AmbientLight, true);
+                        Color.Black, true);
                 }
                 spriteBatch.End();
                 graphics.BlendState = BlendState.Additive;
@@ -238,7 +238,7 @@ namespace Barotrauma.Lights
             //and light sprites (done before drawing the actual light volumes so we can make characters obstruct the highlights and sprites)
             //---------------------------------------------------------------------------------------------------
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);
-
+            
             if (Character.Controlled != null)
             {
                 if (Character.Controlled.FocusedItem != null)
@@ -265,28 +265,17 @@ namespace Barotrauma.Lights
                 light.DrawSprite(spriteBatch);
             }
             spriteBatch.End();
-            
+                        
             //draw characters to obstruct the highlighted items/characters and light sprites
             //---------------------------------------------------------------------------------------------------
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: spriteBatchTransform);
             foreach (Character character in Character.CharacterList)
             {
                 if (character.CurrentHull == null || !character.Enabled) continue;
-
-                Color color = AmbientLight;
-                if (smoothedHullAmbientLights.ContainsKey(character.CurrentHull))
-                {
-                    color = color.Add(smoothedHullAmbientLights[character.CurrentHull]);
-                }
-                color.A = 255;
-
+                if (Character.Controlled?.FocusedCharacter == character) continue;                
                 foreach (Limb limb in character.AnimController.Limbs)
                 {
-                    //TODO: draw the limb using one solid color? 
-                    //Drawing a tinted version of the sprite makes it visible on the lightmap, 
-                    //making it possible to vaguely see the character through sprites in front of it 
-                    //(which is not necessarily a bad thing though)
-                    limb.Draw(spriteBatch, cam, color);
+                    limb.Draw(spriteBatch, cam, Color.Black);
                 }
             }
             spriteBatch.End();
@@ -294,7 +283,10 @@ namespace Barotrauma.Lights
             
             //draw the actual light volumes, additive particles, hull ambient lights and the halo around the player
             //---------------------------------------------------------------------------------------------------
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);            
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);
+
+            GUI.DrawRectangle(spriteBatch, new Rectangle(cam.WorldView.X, -cam.WorldView.Y, cam.WorldView.Width, cam.WorldView.Height), AmbientLight, isFilled:true);
+
             foreach (LightSource light in activeLights)
             {
                 if (light.IsBackground) continue;
