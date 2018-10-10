@@ -700,21 +700,25 @@
   <icechunk spawnpos="Wall, RuinWall" minsurfacewidth="0"
             minsize="5" maxsize="8" randomrotation="-180,180" commonness="10" depthrange="100,2000">
     <Sprite texture="Content/LevelObjects/ice.png" sourcerect="0,0,668,523" origin="0.5,0.5"/>
+    <SpecularSprite texture="Content/LevelObjects/ice_specular.png" sourcerect="0,0,668,523" origin="0.5,0.5"/>
   </icechunk>
 
   <icechunk spawnpos="Wall, RuinWall" minsurfacewidth="0" 
             minsize="5" maxsize="8" randomrotation="-180,180" commonness="10" depthrange="100,2000">
     <Sprite texture="Content/LevelObjects/ice.png" sourcerect="669,0,355,513" origin="0.5,0.5"/>
+    <SpecularSprite texture="Content/LevelObjects/ice_specular.png" sourcerect="669,0,355,513" origin="0.5,0.5"/>
   </icechunk>
 
   <icechunk spawnpos="Wall, RuinWall" minsurfacewidth="0" 
             minsize="5" maxsize="8" randomrotation="-180,180" commonness="10" depthrange="100,2000">
     <Sprite texture="Content/LevelObjects/ice.png" sourcerect="0,523,331,501" origin="0.5,0.5"/>
+    <SpecularSprite texture="Content/LevelObjects/ice_specular.png" sourcerect="0,523,331,501" origin="0.5,0.5"/>
   </icechunk>
 
   <icechunk spawnpos="Wall, RuinWall" minsurfacewidth="0" 
             minsize="5" maxsize="8" randomrotation="-180,180" commonness="10" depthrange="100,2000">
     <Sprite texture="Content/LevelObjects/ice.png" sourcerect="702,513,322,511" origin="0.5,0.5"/>
+    <SpecularSprite texture="Content/LevelObjects/ice_specular.png" sourcerect="702,513,322,511" origin="0.5,0.5"/>
   </icechunk>
 
   <blacksmoker1 spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="1.2" randomrotation="-5,5" commonness="0">
