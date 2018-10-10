@@ -1292,6 +1292,21 @@ namespace Barotrauma
         private Vector2 ScreenToSim(Vector2 p) => ConvertUnits.ToSimUnits(Cam.ScreenToWorld(p));
         private Vector2 SimToScreen(float x, float y) => SimToScreen(new Vector2(x, y));
         private Vector2 SimToScreen(Vector2 p) => Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(p));
+
+        private void ValidateJoint(LimbJoint limbJoint)
+        {
+            if (limbJoint.UpperLimit < limbJoint.LowerLimit)
+            {
+                if (limbJoint.LowerLimit > 0.0f) limbJoint.LowerLimit -= MathHelper.TwoPi;
+                if (limbJoint.UpperLimit < 0.0f) limbJoint.UpperLimit += MathHelper.TwoPi;
+            }
+
+            if (limbJoint.UpperLimit - limbJoint.LowerLimit > MathHelper.TwoPi)
+            {
+                limbJoint.LowerLimit = MathUtils.WrapAnglePi(limbJoint.LowerLimit);
+                limbJoint.UpperLimit = MathUtils.WrapAnglePi(limbJoint.UpperLimit);
+            }
+        }
         #endregion
 
         #region Animation Controls
@@ -2117,6 +2132,7 @@ namespace Barotrauma
                 DrawCircularWidget(spriteBatch, drawPos, upperLimit, $"{joint.jointParams.Name} Upper Limit", Color.Cyan, angle =>
                 {
                     joint.UpperLimit = MathHelper.ToRadians(angle);
+                    ValidateJoint(joint);
                     TryUpdateJointParam(joint, "upperlimit", angle);
                     if (allowPairEditing && limbPairEditing)
                     {
@@ -2134,6 +2150,7 @@ namespace Barotrauma
                 DrawCircularWidget(spriteBatch, drawPos, lowerLimit, $"{joint.jointParams.Name} Lower Limit", Color.Yellow, angle =>
                 {
                     joint.LowerLimit = MathUtils.WrapAnglePi(MathHelper.ToRadians(angle));
+                    ValidateJoint(joint);
                     TryUpdateJointParam(joint, "lowerlimit", angle);
                     if (allowPairEditing && limbPairEditing)
                     {
