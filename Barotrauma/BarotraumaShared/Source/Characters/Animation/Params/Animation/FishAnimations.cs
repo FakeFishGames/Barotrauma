@@ -1,4 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -78,6 +81,9 @@ namespace Barotrauma
         [Serialize(50.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 200, ToolTip = "How much torque is used to rotate the torso to the correct orientation.")]
         public float TorsoTorque { get; set; }
 
+        [Serialize(25.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500, ToolTip = "How much torque is used to rotate the feet to the correct orientation.")]
+        public float FootTorque { get; set; }
+
         [Serialize(0.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 200, ToolTip = "Optional torque that's constantly applied to legs.")]
         public float LegTorque { get; set; }
 
@@ -92,23 +98,44 @@ namespace Barotrauma
             set => ColliderStandAngleInRadians = MathHelper.ToRadians(value);
         }
         public float ColliderStandAngleInRadians { get; private set; }
-
-        /// <summary>
-        /// In degrees.
-        /// </summary>
-        [Serialize(float.NaN, true), Editable(MinValueFloat = -360, MaxValueFloat = 360)]
-        public float FootAngle
+        
+        [Serialize(null, true)]
+        public string FootAngles
         {
-            get => float.IsNaN(FootAngleInRadians) ? float.NaN : MathHelper.ToDegrees(FootAngleInRadians);
+            get
+            {
+                //convert to the format "id1:angle,id2:angle,id3:angle"
+                return string.Join(",", 
+                    FootAnglesInRadians.Select(kv => kv.Key + ": " + kv.Value.ToString("G", CultureInfo.InvariantCulture)).ToArray());
+            }
             set
             {
-                if (!float.IsNaN(value))
+                FootAnglesInRadians.Clear();
+                if (string.IsNullOrEmpty(value))
                 {
-                    FootAngleInRadians = MathHelper.ToRadians(value);
+                    return;
                 }
+                
+                string[] keyValuePairs = value.Split(',');
+                foreach (string joinedKvp in keyValuePairs)
+                {
+                    string[] keyValuePair = joinedKvp.Split(':');
+                    if (keyValuePair.Length != 2 ||
+                        !int.TryParse(keyValuePair[0].Trim(), out int limbIndex) ||
+                        !float.TryParse(keyValuePair[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float angle))
+                    {
+                        DebugConsole.ThrowError("Failed to parse foot angles (" + value + ")");
+                        continue;
+                    }
+                    FootAnglesInRadians[limbIndex] = angle;
+                }                
             }
         }
-        public float FootAngleInRadians { get; private set; } = float.NaN;
+        
+        /// <summary>
+        /// Key = limb id, value = angle in radians
+        /// </summary>
+        public Dictionary<int, float> FootAnglesInRadians { get; set; } = new Dictionary<int, float>();
     }
 
     abstract class FishSwimParams : SwimParams, IFishAnimation
@@ -140,28 +167,50 @@ namespace Barotrauma
         [Serialize(50.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500, ToolTip = "How much torque is used to rotate the tail to the correct orientation.")]
         public float TailTorque { get; set; }
 
-        /// <summary>
-        /// In degrees.
-        /// </summary>
-        [Serialize(float.NaN, true), Editable(MinValueFloat = -360, MaxValueFloat = 360)]
-        public float FootAngle
+        [Serialize(null, true)]
+        public string FootAngles
         {
-            get => float.IsNaN(FootAngleInRadians) ? float.NaN : MathHelper.ToDegrees(FootAngleInRadians);
+            get
+            {
+                //convert to the format "id1:angle,id2:angle,id3:angle"
+                return string.Join(",",
+                    FootAnglesInRadians.Select(kv => kv.Key + ": " + kv.Value.ToString("G", CultureInfo.InvariantCulture)).ToArray());
+            }
             set
             {
-                if (!float.IsNaN(value))
+                FootAnglesInRadians.Clear();
+                if (string.IsNullOrEmpty(value))
                 {
-                    FootAngleInRadians = MathHelper.ToRadians(value);
+                    return;
+                }
+
+                string[] keyValuePairs = value.Split(',');
+                foreach (string joinedKvp in keyValuePairs)
+                {
+                    string[] keyValuePair = joinedKvp.Split(':');
+                    if (keyValuePair.Length != 2 ||
+                        !int.TryParse(keyValuePair[0].Trim(), out int limbIndex) ||
+                        !float.TryParse(keyValuePair[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float angle))
+                    {
+                        DebugConsole.ThrowError("Failed to parse foot angles (" + value + ")");
+                        continue;
+                    }
+                    FootAnglesInRadians[limbIndex] = angle;
                 }
             }
         }
-        public float FootAngleInRadians { get; private set; } = float.NaN;
+
+        /// <summary>
+        /// Key = limb id, value = angle in radians
+        /// </summary>
+        public Dictionary<int, float> FootAnglesInRadians { get; set; } = new Dictionary<int, float>();
     }
 
     interface IFishAnimation
     {
         bool Flip { get; set; }
-        float FootAngle { get; set; }
-        float FootAngleInRadians { get; }
+        Dictionary<int, float> FootAnglesInRadians { get; set; }
+        /*float FootAngle { get; set; }
+        float FootAngleInRadians { get; }*/
     }
 }
