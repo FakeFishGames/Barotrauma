@@ -134,10 +134,10 @@ namespace Barotrauma
 
         public static void DrawSector(this SpriteBatch spriteBatch, Vector2 center, float radius, float radians, int sides, Color color, float offset = 0, float thickness = 1)
         {
-            DrawPolygon(spriteBatch, center, CreateCircle(radius, sides, radians, offset), color, thickness);
+            DrawPolygon(spriteBatch, center, CreateSector(radius, sides, radians, offset), color, thickness);
         }
 
-        private static Vector2[] CreateCircle(double radius, int sides, float radians = MathHelper.TwoPi, float offset = 0)
+        private static Vector2[] CreateSector(double radius, int sides, float radians, float offset = 0)
         {
             //circle sectors need one extra point at the center
             var points = new Vector2[radians < MathHelper.TwoPi ? sides + 1 : sides];
@@ -151,6 +151,11 @@ namespace Barotrauma
             }
 
             return points;
+        }
+
+        private static Vector2[] CreateCircle(double radius, int sides)
+        {
+            return CreateSector(radius, sides, MathHelper.TwoPi);
         }
     }
 
