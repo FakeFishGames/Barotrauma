@@ -173,7 +173,7 @@ namespace Barotrauma
             pixelPerfectToggle = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.35f), topPanelContents.RectTransform, Anchor.BottomCenter, Pivot.BottomRight)
             {
                 RelativeOffset = new Vector2(0, 0.1f)
-            }, "Pixel Perfect")
+            }, "Zoom 100%")
             {
                 OnSelected = (tickBox) =>
                 {
