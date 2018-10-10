@@ -1463,8 +1463,22 @@ namespace Barotrauma
                 // Fish only
                 if (animParams is IFishAnimation fishParams)
                 {
-                    DrawCircularWidget(spriteBatch, SimToScreen(colliderBottom), fishParams.FootAngle, "Foot Angle", Color.White,
-                        angle => TryUpdateAnimParam("footangle", angle), circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0);
+                    foreach (Limb limb in character.AnimController.Limbs)
+                    {
+                        if (limb.type != LimbType.LeftFoot && limb.type != LimbType.RightFoot) continue;
+                        
+                        if (!fishParams.FootAnglesInRadians.ContainsKey(limb.limbParams.ID))
+                        {
+                            fishParams.FootAnglesInRadians[limb.limbParams.ID] = 0.0f;
+                        }
+
+                        DrawCircularWidget(spriteBatch, 
+                            SimToScreen(new Vector2(limb.SimPosition.X, colliderBottom.Y)), 
+                            MathHelper.ToDegrees(fishParams.FootAnglesInRadians[limb.limbParams.ID]), 
+                            "Foot Angle", Color.White,
+                            angle => fishParams.FootAnglesInRadians[limb.limbParams.ID] = MathHelper.ToRadians(angle), 
+                            circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0);
+                    }
                 }
                 // Grounded only
                 if (groundedParams != null)

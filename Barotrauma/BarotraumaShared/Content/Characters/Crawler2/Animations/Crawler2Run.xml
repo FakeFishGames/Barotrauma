@@ -1,7 +1,7 @@
 ﻿<CrawlerRun
   AnimationType="Run"
   movementspeed="3.816794"
-  stepsize="0.5533333,0.4260238"
+  stepsize="0.778822,0.3536411"
   legtorque="0"
   colliderstandangle="0"
   flip="True"
@@ -17,4 +17,6 @@
   footangle="-15.42238"
   backwardsmovementmultiplier="0.75"
   cyclespeed="4.270349"
-  animationtype="Run" />
+  animationtype="Run"
+  foottorque="25"
+  footangles="10: -0.08004291" />
