@@ -411,7 +411,7 @@ namespace Barotrauma
             pixelPerfectToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSprite.RectTransform)
             {
                 RelativeOffset = new Vector2(0, 0.1f)
-            }, "Pixel Perfect")
+            }, "Zoom 100%")
             {
                 Enabled = spriteMaxScale >= 1,
                 Selected = spriteMaxScale >= 1,
