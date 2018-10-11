@@ -125,6 +125,9 @@ namespace Barotrauma
 
 #if CLIENT
         
+        [Serialize(15.0f, true), Editable(1.0f, 1000.0f, ToolTip = "Size of the location icons in pixels when at 100% zoom.")]
+        public float LocationIconSize { get; set; }
+
         [Serialize("0,1,0,1", true), Editable(ToolTip = "The color used to display the low-difficulty connections on the map.")]
         public Color LowDifficultyColor { get; set; }
         [Serialize("1,0.5,0.15,1", true), Editable(ToolTip = "The color used to display the medium-difficulty connections on the map.")]
