@@ -1103,6 +1103,7 @@ namespace Barotrauma
                 }
                 if (PlayerInput.KeyHit(InputType.Run))
                 {
+                    // TODO: refactor this horrible hacky index manipulation mess
                     int index = 0;
                     bool isSwimming = character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast || character.AnimController.ForceSelectAnimationType == AnimationType.SwimSlow;
                     bool isMovingFast = character.AnimController.ForceSelectAnimationType == AnimationType.Run || character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast;
@@ -1110,7 +1111,7 @@ namespace Barotrauma
                     {
                         if (isSwimming || !character.AnimController.CanWalk)
                         {
-                            index = (int)AnimationType.SwimSlow - 1;
+                            index = !character.AnimController.CanWalk ? 0 : (int)AnimationType.SwimSlow - 1;
                         }
                         else
                         {
@@ -1121,7 +1122,7 @@ namespace Barotrauma
                     {
                         if (isSwimming || !character.AnimController.CanWalk)
                         {
-                            index = (int)AnimationType.SwimFast - 1;
+                            index = !character.AnimController.CanWalk ? 1 : (int)AnimationType.SwimFast - 1; 
                         }
                         else
                         {
