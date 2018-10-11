@@ -445,20 +445,6 @@ namespace Barotrauma
                 }
             };
             uniformScalingToggle.TextColor = Color.White;
-            new GUIButton(new RectTransform(new Point(elementSize.X, textAreaHeight * 2), ragdollControls.RectTransform)
-            {
-                AbsoluteOffset = new Point(elementSize.X + 20, (int)(textAreaHeight * 1.5f))
-            }, "Recreate Ragdoll")
-            {
-                ToolTip = "Many of the parameters requires recreation of the ragdoll. If adjusting the parameter doesn't seem to have effect, click this button.",
-                OnClicked = (button, data) =>
-                {
-                    character.AnimController.Recreate(RagdollParams);
-                    TeleportTo(spawnPosition);
-                    character.AnimController.ResetLimbs();
-                    return true;
-                }
-            };
             // Animation
             animationControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupAnimation = new GUILayoutGroup(new RectTransform(Vector2.One, animationControls.RectTransform)) { CanBeFocused = false };
@@ -1009,6 +995,17 @@ namespace Barotrauma
                     limb.ActiveSprite.ReloadTexture();
                 }
                 return true;
+            };
+            new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Recreate Ragdoll")
+            {
+                ToolTip = "Many of the parameters requires recreation of the ragdoll. If adjusting the parameter doesn't seem to have effect, click this button.",
+                OnClicked = (button, data) =>
+                {
+                    character.AnimController.Recreate(RagdollParams);
+                    TeleportTo(spawnPosition);
+                    character.AnimController.ResetLimbs();
+                    return true;
+                }
             };
         }
         #endregion
