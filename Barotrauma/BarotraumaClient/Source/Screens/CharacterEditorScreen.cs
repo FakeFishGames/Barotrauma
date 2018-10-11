@@ -42,12 +42,11 @@ namespace Barotrauma
         private bool lockSpritePosition;
         private bool lockSpriteSize;
 
-        private GUITickBox pixelPerfectToggle;
-        private GUIScrollBar spriteSheetZoomBar;
         private float spriteSheetZoom;
-
         private int spriteSheetOffsetY = 30;
         private int spriteSheetOffsetX = 30;
+
+        private float spriteSheetOrientation;
 
         public override void Select()
         {
@@ -280,6 +279,8 @@ namespace Barotrauma
         private GUITickBox animTestPoseToggle;
         private GUIScrollBar jointScaleBar;
         private GUIScrollBar limbScaleBar;
+        private GUITickBox pixelPerfectToggle;
+        private GUIScrollBar spriteSheetZoomBar;
 
         private void CreateGUI()
         {
@@ -1247,6 +1248,12 @@ namespace Barotrauma
             {
                 GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 100, 150), "Animation Test Pose Enabled", Color.Blue, Color.White * 0.5f, 10, GUI.Font);
             }
+            if (editJointLimits)
+            {
+                GUI.DrawString(spriteBatch, new Vector2(spriteControls.Rect.Left, 160), "Spritesheet Orientation:", Color.White, Color.Gray * 0.5f, 10, GUI.Font);
+                DrawRadialWidget(spriteBatch, new Vector2(spriteControls.Rect.Left + 60, 240), spriteSheetOrientation, string.Empty, Color.White, 
+                    angle => spriteSheetOrientation = angle, circleRadius: 50, widgetSize: 20, rotationOffset: MathHelper.Pi);
+            }
             // Debug
             if (GameMain.DebugDraw)
             {
@@ -1400,8 +1407,8 @@ namespace Barotrauma
             if (head != null)
             {
                 // Head angle
-                DrawCircularWidget(spriteBatch, SimToScreen(head.SimPosition), animParams.HeadAngle, "Head Angle", Color.White,
-                    angle => TryUpdateAnimParam("headangle", angle), circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0);
+                DrawRadialWidget(spriteBatch, SimToScreen(head.SimPosition), animParams.HeadAngle, "Head Angle", Color.White,
+                    angle => TryUpdateAnimParam("headangle", angle), circleRadius: 25, rotationOffset: collider.Rotation + MathHelper.Pi, clockWise: dir < 0);
                 // Head position and leaning
                 if (animParams.IsGroundedAnimation)
                 {
@@ -1438,8 +1445,8 @@ namespace Barotrauma
                     referencePoint -= simSpaceForward * 0.25f;
                 }
                 // Torso angle
-                DrawCircularWidget(spriteBatch, SimToScreen(referencePoint), animParams.TorsoAngle, "Torso Angle", Color.White,
-                    angle => TryUpdateAnimParam("torsoangle", angle), rotationOffset: collider.Rotation, clockWise: dir < 0);
+                DrawRadialWidget(spriteBatch, SimToScreen(referencePoint), animParams.TorsoAngle, "Torso Angle", Color.White,
+                    angle => TryUpdateAnimParam("torsoangle", angle), rotationOffset: collider.Rotation + MathHelper.Pi, clockWise: dir < 0);
 
                 if (animParams.IsGroundedAnimation)
                 {
@@ -1483,7 +1490,7 @@ namespace Barotrauma
                             fishParams.FootAnglesInRadians[limb.limbParams.ID] = 0.0f;
                         }
 
-                        DrawCircularWidget(spriteBatch, 
+                        DrawRadialWidget(spriteBatch, 
                             SimToScreen(new Vector2(limb.SimPosition.X, colliderBottom.Y)), 
                             MathHelper.ToDegrees(fishParams.FootAnglesInRadians[limb.limbParams.ID]), 
                             "Foot Angle", Color.White,
@@ -1769,8 +1776,9 @@ namespace Barotrauma
                         toggleWidget.Draw(spriteBatch, deltaTime);
                         if (joint.LimitEnabled)
                         {
+                            Vector2 to = tformedJointPos + VectorExtensions.Forward(joint.LimbB.Rotation + MathHelper.ToRadians(-spriteSheetOrientation), 20);
                             DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: true, allowPairEditing: true, rotationOffset: limb.Rotation);
-                            GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + VectorExtensions.Forward(joint.LimbB.Rotation, 20.0f), Color.Magenta, width: 2);
+                            GUI.DrawLine(spriteBatch, tformedJointPos, to, Color.Magenta, width: 2);
                         }
                     }
                     else if (editJointPositions)
@@ -2134,8 +2142,9 @@ namespace Barotrauma
 
         private void DrawJointLimitWidgets(SpriteBatch spriteBatch, Limb limb, LimbJoint joint, Vector2 drawPos, bool autoFreeze, bool allowPairEditing, float rotationOffset = 0)
         {
+            rotationOffset -= MathHelper.ToRadians(spriteSheetOrientation);
             Color angleColor = joint.UpperLimit - joint.LowerLimit > 0 ? Color.LightGreen * 0.5f : Color.Red;
-            DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), $"{joint.jointParams.Name} Upper Limit", Color.Cyan, angle =>
+            DrawRadialWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), $"{joint.jointParams.Name} Upper Limit", Color.Cyan, angle =>
             {
                 joint.UpperLimit = MathHelper.ToRadians(angle);
                 ValidateJoint(joint);
@@ -2154,8 +2163,8 @@ namespace Barotrauma
                 DrawAngle(20, angleColor, 4);
                 DrawAngle(40, Color.Cyan);
                 GUI.DrawString(spriteBatch, drawPos, angle.FormatZeroDecimal(), Color.Black, backgroundColor: Color.Cyan, font: GUI.SmallFont);
-            }, circleRadius: 40, rotationOffset: rotationOffset, displayAngle: false);
-            DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), $"{joint.jointParams.Name} Lower Limit", Color.Yellow, angle =>
+            }, circleRadius: 40, rotationOffset: rotationOffset, displayAngle: false, clockWise: false);
+            DrawRadialWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), $"{joint.jointParams.Name} Lower Limit", Color.Yellow, angle =>
             {
                 joint.LowerLimit = MathHelper.ToRadians(angle);
                 ValidateJoint(joint);
@@ -2174,7 +2183,7 @@ namespace Barotrauma
                 DrawAngle(20, angleColor, 4);
                 DrawAngle(25, Color.Yellow);
                 GUI.DrawString(spriteBatch, drawPos, angle.FormatZeroDecimal(), Color.Black, backgroundColor: Color.Yellow, font: GUI.SmallFont);
-            }, circleRadius: 25, rotationOffset: rotationOffset, displayAngle: false);
+            }, circleRadius: 25, rotationOffset: rotationOffset, displayAngle: false, clockWise: false);
             void DrawAngle(float radius, Color color, float thickness = 5)
             {
                 float angle = joint.UpperLimit - joint.LowerLimit;
@@ -2189,7 +2198,7 @@ namespace Barotrauma
         #endregion
 
         #region Widgets as methods
-        private void DrawCircularWidget(SpriteBatch spriteBatch, Vector2 drawPos, float value, string toolTip, Color color, Action<float> onClick,
+        private void DrawRadialWidget(SpriteBatch spriteBatch, Vector2 drawPos, float value, string toolTip, Color color, Action<float> onClick,
             float circleRadius = 30, int widgetSize = 10, float rotationOffset = 0, bool clockWise = true, bool displayAngle = true, bool? autoFreeze = null)
         {
             var angle = value;
@@ -2197,15 +2206,20 @@ namespace Barotrauma
             {
                 angle = 0;
             }
-            var widgetDrawPos = drawPos + VectorExtensions.Forward(MathHelper.ToRadians(angle) + rotationOffset, circleRadius);
+            float drawAngle = clockWise ? -angle : angle;
+            var widgetDrawPos = drawPos + VectorExtensions.Forward(MathHelper.ToRadians(drawAngle) + rotationOffset, circleRadius);
             GUI.DrawLine(spriteBatch, drawPos, widgetDrawPos, color);
             DrawWidget(spriteBatch, widgetDrawPos, WidgetType.Rectangle, 10, color, toolTip, () =>
             {
                 GUI.DrawLine(spriteBatch, drawPos, widgetDrawPos, color, width: 3);
                 ShapeExtensions.DrawCircle(spriteBatch, drawPos, circleRadius, 40, color, thickness: 1);
                 Vector2 d = PlayerInput.MousePosition - drawPos;
-                float newAngle = -(MathHelper.ToDegrees(MathUtils.VectorToAngle(d) - MathHelper.PiOver2));
-                angle = newAngle - MathHelper.ToDegrees(rotationOffset);
+                float newAngle = MathUtils.VectorToAngle(d) - MathHelper.PiOver2 + rotationOffset;
+                angle = MathHelper.ToDegrees(newAngle);
+                if (!clockWise)
+                {
+                    angle = -angle;
+                }
                 if (displayAngle)
                 {
                     GUI.DrawString(spriteBatch, drawPos, angle.FormatZeroDecimal(), Color.Black, backgroundColor: color, font: GUI.SmallFont);
