@@ -1719,16 +1719,20 @@ namespace Barotrauma
             {
                 Vector2 limbScreenPos = SimToScreen(limb.SimPosition);
                 
-                var pullJointWidgetSize = new Vector2(5, 5);
-                Vector2 tformedPullPos = SimToScreen(limb.PullJointWorldAnchorA);
-                GUI.DrawRectangle(spriteBatch, tformedPullPos - pullJointWidgetSize / 2, pullJointWidgetSize, Color.Red, true);
-                DrawWidget(spriteBatch, tformedPullPos, WidgetType.Rectangle, 8, Color.Cyan, "Pull position",
-                () =>
+                if (limb.type == LimbType.LeftFoot || limb.type == LimbType.RightFoot || limb.type == LimbType.LeftHand || limb.type == LimbType.RightHand)
                 {
-                    Vector2 simPullPos = ScreenToSim(PlayerInput.MousePosition);
-                    limb.PullJointWorldAnchorA = simPullPos;
-                    GUI.DrawLine(spriteBatch, SimToScreen(limb.SimPosition), tformedPullPos, Color.MediumPurple);
-                });
+                    var pullJointWidgetSize = new Vector2(5, 5);
+                    Vector2 tformedPullPos = SimToScreen(limb.PullJointWorldAnchorA);
+                    GUI.DrawRectangle(spriteBatch, tformedPullPos - pullJointWidgetSize / 2, pullJointWidgetSize, Color.Red, true);
+                    DrawWidget(spriteBatch, tformedPullPos, WidgetType.Rectangle, 8, Color.Cyan, "Pull position",
+                    () =>
+                    {
+                        Vector2 simPullPos = ScreenToSim(PlayerInput.MousePosition);
+                        limb.PullJointWorldAnchorA = simPullPos;
+                        TryUpdateLimbParam(limb, "pullpos", ConvertUnits.ToDisplayUnits(limb.PullJointLocalAnchorA / limb.limbParams.Ragdoll.LimbScale));
+                        GUI.DrawLine(spriteBatch, SimToScreen(limb.SimPosition), tformedPullPos, Color.MediumPurple);
+                    });
+                }
                 
                 foreach (var joint in character.AnimController.LimbJoints)
                 {

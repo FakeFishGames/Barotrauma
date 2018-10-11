@@ -293,6 +293,11 @@ namespace Barotrauma
             }
         }
 
+        public Vector2 PullJointLocalAnchorA
+        {
+            get { return pullJoint.LocalAnchorA; }
+        }
+        
         public string Name
         {
             get;
