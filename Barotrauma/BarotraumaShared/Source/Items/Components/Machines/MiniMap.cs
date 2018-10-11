@@ -81,13 +81,13 @@ namespace Barotrauma.Items.Components
         {
             base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
 
-            if (sender == null || sender.CurrentHull == null) return;
+            if (source == null || source.CurrentHull == null) return;
 
-            Hull senderHull = sender.CurrentHull;
-            if (!hullDatas.TryGetValue(senderHull, out HullData hullData))
+            Hull sourceHull = source.CurrentHull;
+            if (!hullDatas.TryGetValue(sourceHull, out HullData hullData))
             {
                 hullData = new HullData();
-                hullDatas.Add(senderHull, hullData);
+                hullDatas.Add(sourceHull, hullData);
             }
 
             switch (connection.Name)
@@ -100,7 +100,7 @@ namespace Barotrauma.Items.Components
                     }
                     else
                     {
-                        hullData.Water = Math.Min(senderHull.WaterVolume / senderHull.Volume, 1.0f);
+                        hullData.Water = Math.Min(sourceHull.WaterVolume / sourceHull.Volume, 1.0f);
                     }
                     break;
                 case "oxygen_data_in":
