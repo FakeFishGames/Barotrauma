@@ -51,9 +51,8 @@ namespace Barotrauma
         public override void Select()
         {
             base.Select();
-            Submarine.RefreshSavedSubs();
-            Submarine.MainSub = Submarine.SavedSubmarines.First(s => s.Name.Contains("AnimEditor"));
-            Submarine.MainSub.Load(true);
+            Submarine.MainSub = new Submarine("Content/AnimEditor.sub");
+            Submarine.MainSub.Load(unloadPrevious: true, showWarningMessages: false);
             Submarine.MainSub.GodMode = true;
             originalWall = new WallGroup(new List<Structure>(Structure.WallList));
             CloneWalls();
@@ -66,6 +65,7 @@ namespace Barotrauma
         public override void Deselect()
         {
             base.Deselect();
+            Submarine.MainSub.Remove();
             GameMain.Instance.OnResolutionChanged -= OnResolutionChanged;
         }
 

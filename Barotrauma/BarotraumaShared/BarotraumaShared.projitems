@@ -2107,7 +2107,7 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Effects\watershader_opengl.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Submarines\AnimEditor.sub">
+    <None Include="$(MSBuildThisFileDirectory)Content\AnimEditor.sub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Submarines\Polaris.sub">

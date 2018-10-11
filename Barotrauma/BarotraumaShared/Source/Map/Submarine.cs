@@ -1056,7 +1056,7 @@ namespace Barotrauma
             return doc;
         }
 
-        public void Load(bool unloadPrevious, XElement submarineElement = null)
+        public void Load(bool unloadPrevious, XElement submarineElement = null, bool showWarningMessages = true)
         {
             if (unloadPrevious) Unload();
 
@@ -1136,7 +1136,7 @@ namespace Barotrauma
                 }
             }
 
-            subBody = new SubmarineBody(this);
+            subBody = new SubmarineBody(this, showWarningMessages);
             subBody.SetPosition(HiddenSubPosition);
 
             loaded.Add(this);
@@ -1171,7 +1171,7 @@ namespace Barotrauma
 #endif
             //if the sub was made using an older version, 
             //halve the brightness of the lights to make them look (almost) right on the new lighting formula
-            if (Screen.Selected != GameMain.SubEditorScreen && (GameVersion == null || GameVersion < new Version("0.9.0.0")))
+            if (showWarningMessages && Screen.Selected != GameMain.SubEditorScreen && (GameVersion == null || GameVersion < new Version("0.9.0.0")))
             {
                 DebugConsole.ThrowError("The submarine \"" + Name + "\" was made using an older version of the Barotrauma that used a different formula to calculate the lighting. "
                     + "The game automatically adjusts the lights make them look better with the new formula, but it's recommended to open the submarine in the submarine editor and make sure everything looks right after the automatic conversion.");
