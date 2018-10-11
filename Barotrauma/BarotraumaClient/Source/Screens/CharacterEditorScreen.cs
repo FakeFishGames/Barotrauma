@@ -1234,7 +1234,6 @@ namespace Barotrauma
             {
                 DrawSpritesheetEditor(spriteBatch, (float)deltaTime);
             }
-            //widgets.Values.ForEach(w => w.Draw(spriteBatch, (float)deltaTime));
             Structure wall = CurrentWall.walls.FirstOrDefault();
             Vector2 indicatorPos = wall == null ? originalWall.walls.First().DrawPosition : wall.DrawPosition;
             GUI.DrawIndicator(spriteBatch, indicatorPos, Cam, 700, GUI.SubmarineIcon, Color.White);
@@ -1286,7 +1285,7 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch, colliderDrawPos, SimToScreen(collider.SimPosition + forward * 0.25f), Color.Blue);
                 //Vector2 left = Vector2.Transform(-Vector2.UnitX, Matrix.CreateRotationZ(collider.Rotation));
                 //Vector2 left = -Vector2.UnitX.TransformVector(forward);
-                Vector2 left = -forward.Right();
+                Vector2 left = forward.Left();
                 GUI.DrawLine(spriteBatch, colliderDrawPos, SimToScreen(collider.SimPosition + left * 0.25f), Color.Red);
                 ShapeExtensions.DrawCircle(spriteBatch, colliderDrawPos, (endPos - colliderDrawPos).Length(), 40, Color.LightGreen);
                 GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 300, 0), $"Collider rotation: {MathHelper.ToDegrees(MathUtils.WrapAngleTwoPi(collider.Rotation))}", Color.White, font: GUI.SmallFont);
@@ -1345,7 +1344,7 @@ namespace Barotrauma
             //Vector2 centerOfMass = character.AnimController.GetCenterOfMass();
             Vector2 simSpaceForward = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation));
             //Vector2 simSpaceLeft = Vector2.Transform(-Vector2.UnitX, Matrix.CreateRotationZ(collider.Rotation));
-            Vector2 screenSpaceForward = -VectorExtensions.Forward(collider.Rotation, 1);
+            Vector2 screenSpaceForward = VectorExtensions.Backward(collider.Rotation, 1);
             Vector2 screenSpaceLeft = screenSpaceForward.Right();
             // The forward vector is left or right in screen space when the unit is not swimming. Cannot rely on the collider here, because the rotation may vary on ground.
             Vector2 forward = animParams.IsSwimAnimation ? screenSpaceForward : Vector2.UnitX * dir;
@@ -1637,7 +1636,7 @@ namespace Barotrauma
                 var origin = limb.ActiveSprite.Origin;
                 var sourceRect = limb.ActiveSprite.SourceRect;
                 Vector2 size = sourceRect.Size.ToVector2() * Cam.Zoom * limb.Scale;
-                Vector2 up = -VectorExtensions.Forward(limb.Rotation);
+                Vector2 up = VectorExtensions.Backward(limb.Rotation);
                 Vector2 left = up.Right();
                 Vector2 limbScreenPos = SimToScreen(limb.SimPosition);
                 var relativeOrigin = new Vector2(origin.X / sourceRect.Width, origin.Y / sourceRect.Height);
