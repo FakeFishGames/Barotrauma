@@ -1724,7 +1724,7 @@ namespace Barotrauma
                     var pullJointWidgetSize = new Vector2(5, 5);
                     Vector2 tformedPullPos = SimToScreen(limb.PullJointWorldAnchorA);
                     GUI.DrawRectangle(spriteBatch, tformedPullPos - pullJointWidgetSize / 2, pullJointWidgetSize, Color.Red, true);
-                    DrawWidget(spriteBatch, tformedPullPos, WidgetType.Rectangle, 8, Color.Cyan, "Pull position",
+                    DrawWidget(spriteBatch, tformedPullPos, WidgetType.Rectangle, 8, Color.Cyan, "IK Target",
                     () =>
                     {
                         Vector2 simPullPos = ScreenToSim(PlayerInput.MousePosition);
