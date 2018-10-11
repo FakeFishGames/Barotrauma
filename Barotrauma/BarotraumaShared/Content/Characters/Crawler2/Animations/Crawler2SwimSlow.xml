@@ -14,5 +14,6 @@
   foottorque="25"
   tailtorque="50"
   footangle="0"
-  cyclespeed="5"
-  animationtype="SwimSlow" />
+  cyclespeed="1.89328"
+  animationtype="SwimSlow"
+  footangles="10: 0" />

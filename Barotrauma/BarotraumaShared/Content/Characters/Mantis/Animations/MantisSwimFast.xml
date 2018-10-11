@@ -7,4 +7,12 @@
   flip="True"
   mirror="True"
   rotatetowardsmovement="True"
-  headangle="-90"/>
+  headangle="-90"
+  torsotorque="25"
+  headtorque="25"
+  foottorque="25"
+  tailtorque="50"
+  footangles="8: 0,10: 0"
+  cyclespeed="3.128562"
+  torsoangle="NaN"
+  animationtype="SwimFast" />
