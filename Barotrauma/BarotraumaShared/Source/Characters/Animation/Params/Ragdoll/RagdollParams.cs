@@ -299,8 +299,9 @@ namespace Barotrauma
 
         [Serialize(LimbType.None, true), Editable]
         public LimbType Type { get; set; }
-
-        [Serialize(BodyType.Dynamic, true), Editable]
+                
+        //this shouldn't be editable, static/kinematic limbs don't make much sense
+        [Serialize(BodyType.Dynamic, true)]
         public BodyType BodyType { get; set; }
 
         [Serialize(false, true), Editable]
@@ -309,13 +310,13 @@ namespace Barotrauma
         [Serialize(0, true), Editable]
         public int HealthIndex { get; set; }
 
-        [Serialize(0f, true), Editable]
+        [Serialize(0f, true), Editable(ToolTip = "Higher values make AI characters prefer attacking this limb.")]
         public float AttackPriority { get; set; }
 
         [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
         public float SteerForce { get; set; }
 
-        [Serialize("0, 0", true), Editable]
+        [Serialize("0, 0", true), Editable(ToolTip = "Only applicable if this limb is a foot. Determines the \"neutral position\" of the foot relative to a joint determined by the \"RefJoint\" parameter. For example, a value of {-100, 0} would mean that the foot is positioned on the floor, 100 units behind the reference joint.")]
         public Vector2 StepOffset { get; set; }
 
         [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
@@ -333,7 +334,7 @@ namespace Barotrauma
         [Serialize(0.3f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
         public float Friction { get; set; }
 
-        [Serialize(0.05f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        [Serialize(0.05f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1, ToolTip = "The \"bounciness\" of the limb.")]
         public float Restitution { get; set; }
 
         [Serialize(10f, true), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
@@ -342,7 +343,7 @@ namespace Barotrauma
         [Serialize("0, 0", true), Editable]
         public Vector2 PullPos { get; set; }
 
-        [Serialize(-1, true), Editable]
+        [Serialize(-1, true), Editable(ToolTip = "Only applicable if this limb is a foot. Determines which joint is used as the \"neutral x-position\" for the foot movement. For example in the case of a humanoid-shaped characters this would usually be the waist. The position can be offset using the StepOffset parameter.")]
         public int RefJoint { get; set; }
 
         [Serialize(false, true), Editable]

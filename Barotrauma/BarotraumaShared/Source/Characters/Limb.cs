@@ -221,10 +221,10 @@ namespace Barotrauma
         public float Dir
         {
             get { return ((dir == Direction.Left) ? -1.0f : 1.0f); }
-            set { dir = (value==-1.0f) ? Direction.Left : Direction.Right; }
+            set { dir = (value == -1.0f) ? Direction.Left : Direction.Right; }
         }
 
-        public int RefJointIndex { get; private set; }
+        public int RefJointIndex => limbParams.RefJoint;
 
         private List<WearableSprite> wearingItems;
         public List<WearableSprite> WearingItems
@@ -336,7 +336,6 @@ namespace Barotrauma
             body.UserData = this;
             Vector2 pullJointPos = Vector2.Zero;
             pullJointPos = ConvertUnits.ToSimUnits(limbParams.PullPos * Scale);
-            RefJointIndex = limbParams.RefJoint;
             pullJoint = new FixedMouseJoint(body.FarseerBody, pullJointPos)
             {
                 Enabled = false,
