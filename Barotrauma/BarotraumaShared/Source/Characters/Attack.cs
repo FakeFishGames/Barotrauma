@@ -79,6 +79,9 @@ namespace Barotrauma
         public float Torque { get; private set; }
 
         [Serialize(0.0f, false)]
+        public float TargetImpulse { get; private set; }
+
+        [Serialize(0.0f, false)]
         public float TargetForce { get; private set; }
 
         [Serialize(0.0f, false)]

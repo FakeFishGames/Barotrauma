@@ -39,6 +39,7 @@ namespace Barotrauma
         {
             CollideConnected = false;
             MotorEnabled = true;
+            //TODO: expose this to character editor (a torque that makes the joint more stiff)
             MaxMotorTorque = 0.25f;
             LimbA = limbA;
             LimbB = limbB;
