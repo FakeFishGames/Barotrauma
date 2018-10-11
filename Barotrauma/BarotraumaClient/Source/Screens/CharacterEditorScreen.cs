@@ -1326,9 +1326,9 @@ namespace Barotrauma
             var animParams = character.AnimController.CurrentAnimationParams;
             var groundedParams = animParams as GroundedMovementParams;
             var humanGroundedParams = animParams as HumanGroundedParams;
+            var humanSwimParams = animParams as HumanSwimParams;
             var fishGroundedParams = animParams as FishGroundedParams;
             var fishSwimParams = animParams as FishSwimParams;
-            var humanSwimParams = animParams as HumanSwimParams;
             var head = character.AnimController.GetLimb(LimbType.Head);
             var torso = character.AnimController.GetLimb(LimbType.Torso);
             var tail = character.AnimController.GetLimb(LimbType.Tail);
@@ -1388,6 +1388,10 @@ namespace Barotrauma
                     float speed = animParams.MovementSpeed + ConvertUnits.ToSimUnits(Vector2.Multiply(scaledMouseSpeed / multiplier, forward).Combine()) / Cam.Zoom;
                     TryUpdateAnimParam("movementspeed", MathHelper.Clamp(speed, 0.1f, Ragdoll.MAX_SPEED));
                     GUI.DrawLine(spriteBatch, drawPos, referencePoint, Color.Turquoise);
+                    if (humanSwimParams != null)
+                    {
+                        TryUpdateAnimParam("cyclespeed", animParams.MovementSpeed);
+                    }
                 });
                 GUI.DrawLine(spriteBatch, drawPos + forward * 10, drawPos + forward * 15, Color.Turquoise);
             }
