@@ -79,7 +79,7 @@ namespace Barotrauma
         }
 
 
-        public void DrawObjects(SpriteBatch spriteBatch, Camera cam, bool drawFront)
+        public void DrawObjects(SpriteBatch spriteBatch, Camera cam, bool drawFront, bool specular = false)
         {
             Rectangle indices = Rectangle.Empty;
             indices.X = (int)Math.Floor(cam.WorldView.X / (float)GridSize);
@@ -118,15 +118,19 @@ namespace Barotrauma
                         1.0f + sin * obj.CurrentScaleOscillation.Y);
                 }
 
-                obj.ActivePrefab.Sprite?.Draw(
+                Sprite activeSprite = specular ? obj.ActivePrefab.SpecularSprite : obj.ActivePrefab.Sprite;
+
+                activeSprite?.Draw(
                     spriteBatch,
                     new Vector2(obj.Position.X, -obj.Position.Y) - camDiff * obj.Position.Z / 10000.0f,
                     Color.Lerp(Color.White, Level.Loaded.BackgroundColor, obj.Position.Z / 5000.0f),
-                    obj.ActivePrefab.Sprite.Origin,
+                    activeSprite.Origin,
                     obj.CurrentRotation,
                     scale,
                     SpriteEffects.None,
                     z);
+
+                if (specular) continue;
 
                 if (obj.ActivePrefab.DeformableSprite != null)
                 {
