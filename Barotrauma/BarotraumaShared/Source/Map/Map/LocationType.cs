@@ -23,10 +23,7 @@ namespace Barotrauma
         //<name, commonness>
         private List<Tuple<JobPrefab, float>> hireableJobs;
         private float totalHireableWeight;
-
-        //placeholder
-        public readonly Color HaloColor;
-
+        
         public Dictionary<int, float> CommonnessPerZone = new Dictionary<int, float>();
 
         public readonly string Name;
@@ -48,6 +45,12 @@ namespace Barotrauma
         public Sprite Sprite
         {
             get { return symbolSprite; }
+        }
+
+        public Color SpriteColor
+        {
+            get;
+            private set;
         }
 
         public Sprite Background
@@ -76,8 +79,6 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Failed to read name file for location type \""+Name+"\"!", e);
                 names = new List<string>() { "Name file not found" };
             }
-
-            HaloColor = element.GetAttributeColor("halo", Color.Transparent);
 
             string[] commonnessPerZoneStrs = element.GetAttributeStringArray("commonnessperzone", new string[] { "" });
             foreach (string commonnessPerZoneStr in commonnessPerZoneStrs)
@@ -113,6 +114,7 @@ namespace Barotrauma
                         break;
                     case "symbol":
                         symbolSprite = new Sprite(subElement);
+                        SpriteColor = subElement.GetAttributeColor("color", Color.White);
                         break;
                     case "changeto":
                         CanChangeTo.Add(new LocationTypeChange(subElement));
