@@ -246,18 +246,38 @@ namespace Barotrauma
         public Vector2 PullJointWorldAnchorA
         {
             get { return pullJoint.WorldAnchorA; }
+            set
+            {
+                if (!MathUtils.IsValid(value))
+                {
+                    string errorMsg = "Attempted to set the anchor of a limb's pull joint to an invalid value (" + value + ")\n" + Environment.StackTrace;
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorA:InvalidValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    return;
+                }
+
+                if (Vector2.DistanceSquared(pullJoint.WorldAnchorB, value) > 50.0f * 50.0f)
+                {
+                    string errorMsg = "Attempted to move the anchor of a limb's pull joint extremely far from the limb (" + value + ")\n" + Environment.StackTrace;
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorA:ExcessiveValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    return;
+                }
+
+                pullJoint.WorldAnchorA = value;
+            }
         }
         
         public Vector2 PullJointWorldAnchorB
         {
             get { return pullJoint.WorldAnchorB; }
             set
-            {                
+            {
                 if (!MathUtils.IsValid(value))
                 {
                     string errorMsg = "Attempted to set the anchor of a limb's pull joint to an invalid value (" + value + ")\n" + Environment.StackTrace;
                     DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchor:InvalidValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorB:InvalidValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                     return;
                 }
 
@@ -265,7 +285,7 @@ namespace Barotrauma
                 {
                     string errorMsg = "Attempted to move the anchor of a limb's pull joint extremely far from the limb (" + value + ")\n" + Environment.StackTrace;
                     DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchor:ExcessiveValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorB:ExcessiveValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                     return;
                 }
 
