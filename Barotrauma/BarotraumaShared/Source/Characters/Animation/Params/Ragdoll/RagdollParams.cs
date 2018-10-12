@@ -298,11 +298,7 @@ namespace Barotrauma
         public int ID { get; set; }
 
         [Serialize(LimbType.None, true), Editable]
-        public LimbType Type { get; set; }
-                
-        //this shouldn't be editable, static/kinematic limbs don't make much sense
-        [Serialize(BodyType.Dynamic, true)]
-        public BodyType BodyType { get; set; }
+        public LimbType Type { get; set; } 
 
         [Serialize(false, true), Editable]
         public bool Flip { get; set; }
