@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -55,7 +58,7 @@ namespace Barotrauma
 
         public Action refresh;
 
-        public bool IsSelected => enabled && selectedWidget == this;
+        public bool IsSelected => enabled && selectedWidgets.Contains(this);
         public bool IsControlled => IsSelected && PlayerInput.LeftButtonHeld();
         public bool IsMouseOver => GUI.MouseOn == null && InputRect.Contains(PlayerInput.MousePosition);
         private bool enabled = true;
@@ -65,9 +68,23 @@ namespace Barotrauma
             set
             {
                 enabled = value;
-                if (selectedWidget == this)
+                if (selectedWidgets.Contains(this))
                 {
-                    selectedWidget = null;
+                    selectedWidgets.Remove(this);
+                }
+            }
+        }
+
+        private static bool multiselect;
+        public static bool EnableMultiSelect
+        {
+            get { return multiselect; }
+            set
+            {
+                multiselect = value;
+                if (!multiselect && selectedWidgets.Multiple())
+                {
+                    selectedWidgets = selectedWidgets.Take(1).ToList();
                 }
             }
         }
@@ -75,7 +92,7 @@ namespace Barotrauma
 
         public Widget linkedWidget;
 
-        public static Widget selectedWidget;
+        public static List<Widget> selectedWidgets = new List<Widget>();
 
         public Widget(string id, int size, Shape shape)
         {
@@ -91,15 +108,15 @@ namespace Barotrauma
             if (IsMouseOver)
             {
                 Hovered?.Invoke();
-                if (selectedWidget == null)
+                if ((multiselect && !selectedWidgets.Contains(this)) || selectedWidgets.None())
                 {
-                    selectedWidget = this;
+                    selectedWidgets.Add(this);
                     Selected?.Invoke();
                 }
             }
-            else if (selectedWidget == this)
+            else if (selectedWidgets.Contains(this))
             {
-                selectedWidget = null;
+                selectedWidgets.Remove(this);
                 Deselected?.Invoke();
             }
             if (IsSelected)
