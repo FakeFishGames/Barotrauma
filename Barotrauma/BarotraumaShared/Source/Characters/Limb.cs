@@ -350,8 +350,7 @@ namespace Barotrauma
                 MouthPos = ConvertUnits.ToSimUnits(element.GetAttributeVector2("mouthpos", Vector2.Zero));
             }
 
-            // Overrides the settings in the params, on purpose?
-            //body.BodyType = BodyType.Dynamic;
+            body.BodyType = BodyType.Dynamic;
             body.FarseerBody.AngularDamping = LimbAngularDamping;
 
             damageModifiers = new List<DamageModifier>();
