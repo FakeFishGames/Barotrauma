@@ -1,7 +1,7 @@
 ﻿<HumanWalk
   AnimationType="Walk"
   getupforce="0.35"
-  cyclespeed="5.5"
+  cyclespeed="3.748913"
   footmovestrength="15"
   footrotatestrength="15"
   stepsize="0.3289057,0.06857298"
@@ -22,4 +22,5 @@
   crouchingtorsopos="0.65"
   crouchingtorsoangle="-10"
   backwardsmovementmultiplier="0.5"
-  animationtype="Walk" />
+  animationtype="Walk"
+  legbendtorque="10" />
