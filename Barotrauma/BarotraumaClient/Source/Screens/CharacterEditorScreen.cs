@@ -45,6 +45,7 @@ namespace Barotrauma
         private float spriteSheetZoom;
         private int spriteSheetOffsetY = 30;
         private int spriteSheetOffsetX = 30;
+        private Color backgroundColor = new Color(0.12f, 0.298f, 0.542f, 1.0f);
 
         private float spriteSheetOrientation;
 
@@ -275,6 +276,7 @@ namespace Barotrauma
         private GUIFrame animationControls;
         private GUIFrame spriteControls;
         private GUIFrame spriteSheetControls;
+        private GUIFrame generalControls;
         private GUIDropDown animSelection;
         private GUITickBox freezeToggle;
         private GUITickBox animTestPoseToggle;
@@ -299,6 +301,61 @@ namespace Barotrauma
             Point elementSize = new Point(120, 20);
             int textAreaHeight = 20;
             centerPanel = new GUIFrame(new RectTransform(new Vector2(0.45f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.Center), style: null) { CanBeFocused = false };
+            // General controls
+            generalControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerPanel.RectTransform, Anchor.TopRight), style: null) { CanBeFocused = false };
+            var layoutGroupGeneral = new GUILayoutGroup(new RectTransform(Vector2.One, generalControls.RectTransform), childAnchor: Anchor.TopRight)
+            {
+                AbsoluteSpacing = 5, CanBeFocused = false
+            };
+            // Background color
+            var frame = new GUIFrame(new RectTransform(new Point(500, 80), layoutGroupGeneral.RectTransform), style: null, color: Color.Black * 0.4f);
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), frame.RectTransform) { MinSize = new Point(80, 26) }, "Background Color:", textColor: Color.WhiteSmoke);
+            var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 1), frame.RectTransform, Anchor.TopRight)
+            {
+                AbsoluteOffset = new Point(20, 0)
+            }, isHorizontal: true, childAnchor: Anchor.CenterRight)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.01f
+            };
+            var fields = new GUIComponent[4];
+            string[] colorComponentLabels = { "R", "G", "B" };
+            for (int i = 2; i >= 0; i--)
+            {
+                var element = new GUIFrame(new RectTransform(new Vector2(0.2f, 1), inputArea.RectTransform)
+                {
+                    MinSize = new Point(40, 0),
+                    MaxSize = new Point(100, 50)
+                }, style: null, color: Color.Black * 0.6f);
+                var colorLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), colorComponentLabels[i], 
+                    font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
+                GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight),
+                    GUINumberInput.NumberType.Int)
+                {
+                    Font = GUI.SmallFont
+                };
+                numberInput.MinValueInt = 0;
+                numberInput.MaxValueInt = 255;
+                numberInput.Font = GUI.SmallFont;
+                switch (i)
+                {
+                    case 0:
+                        colorLabel.TextColor = Color.Red;
+                        numberInput.IntValue = backgroundColor.R;
+                        numberInput.OnValueChanged += (numInput) => backgroundColor.R = (byte)(numInput.IntValue);
+                        break;
+                    case 1:
+                        colorLabel.TextColor = Color.LightGreen;
+                        numberInput.IntValue = backgroundColor.G;
+                        numberInput.OnValueChanged += (numInput) => backgroundColor.G = (byte)(numInput.IntValue);
+                        break;
+                    case 2:
+                        colorLabel.TextColor = Color.DeepSkyBlue;
+                        numberInput.IntValue = backgroundColor.B;
+                        numberInput.OnValueChanged += (numInput) => backgroundColor.B = (byte)(numInput.IntValue);
+                        break;
+                }
+            }
             // Spritesheet controls
             spriteSheetControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerPanel.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupSpriteSheet = new GUILayoutGroup(new RectTransform(Vector2.One, spriteSheetControls.RectTransform)) { AbsoluteSpacing = 5, CanBeFocused = false };
@@ -1071,6 +1128,7 @@ namespace Barotrauma
         {
             //base.AddToGUIUpdateList();
             rightPanel.AddToGUIUpdateList();
+            generalControls.AddToGUIUpdateList();
             if (showAnimControls)
             {
                 animationControls.AddToGUIUpdateList();
@@ -1200,9 +1258,7 @@ namespace Barotrauma
 
             base.Draw(deltaTime, graphics, spriteBatch);
             scaledMouseSpeed = PlayerInput.MouseSpeedPerSecond * (float)deltaTime;
-            float brightness = 2f;
-            var color = new Color(0.051f, 0.149f, 0.271f, 1.0f);
-            graphics.Clear(color * brightness);
+            graphics.Clear(backgroundColor);
             Cam.UpdateTransform(true);
 
             // Submarine
