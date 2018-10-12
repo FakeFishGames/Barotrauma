@@ -42,10 +42,11 @@ namespace Barotrauma
         private bool lockSpriteOrigin;
         private bool lockSpritePosition;
         private bool lockSpriteSize;
+        private bool displayColliders;
 
         private float spriteSheetZoom;
         private int spriteSheetOffsetY = 100;
-        private int spriteSheetOffsetX = 30;
+        private int spriteSheetOffsetX = 20;
         private Color backgroundColor = new Color(0.12f, 0.298f, 0.542f, 1.0f);
 
         private float spriteSheetOrientation;
@@ -737,7 +738,7 @@ namespace Barotrauma
             };
             new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Auto Move")
             {
-                OnSelected = (GUITickBox box) =>
+                OnSelected = box =>
                 {
                     character.OverrideMovement = box.Selected ? new Vector2(1, 0) as Vector2? : null;
                     return true;
@@ -745,12 +746,22 @@ namespace Barotrauma
             };
             new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Follow Cursor")
             {
-                OnSelected = (GUITickBox box) =>
+                OnSelected = box =>
                 {
                     character.dontFollowCursor = !box.Selected;
                     return true;
                 }
             };
+            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Display Colliders")
+            {
+                Selected = displayColliders,
+                OnSelected = box =>
+                {
+                    displayColliders = box.Selected;
+                    return true;
+                }
+            };
+
             var quickSaveAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Quick Save Animations");
             quickSaveAnimButton.OnClicked += (button, userData) =>
             {
@@ -1301,6 +1312,10 @@ namespace Barotrauma
             if (GameMain.DebugDraw)
             {
                 character.AnimController.DebugDraw(spriteBatch);
+            }
+            else if (displayColliders)
+            {
+                character.AnimController.Limbs.ForEach(l => l.body.DebugDraw(spriteBatch, Color.LightGreen));
             }
             spriteBatch.End();
 
