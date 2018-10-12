@@ -213,7 +213,14 @@ namespace Barotrauma
         public override void AddToEditor(ParamsEditor editor)
         {
             base.AddToEditor(editor);
-            GetAllSubParams().ForEach(p => p.AddToEditor(editor));
+            var subParams = GetAllSubParams();
+            foreach (var subParam in subParams)
+            {
+                subParam.AddToEditor(editor);   
+                //TODO: divider sprite
+                new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 10), editor.EditorBox.Content.RectTransform), 
+                    style: "ConnectionPanelWire");
+            }
         }
 #endif
     }
