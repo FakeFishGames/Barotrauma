@@ -32,6 +32,7 @@ namespace Barotrauma
         private bool editRagdoll;
         private bool editJointPositions;
         private bool editJointLimits;
+        private bool editIK;
         private bool showParamsEditor;
         private bool showSpritesheet;
         private bool isFreezed;
@@ -601,6 +602,7 @@ namespace Barotrauma
             var ragdollToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Ragdoll") { Selected = editRagdoll };
             var jointPositionsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joint Positions") { Selected = editJointPositions };
             var jointLimitsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joints Limits") { Selected = editJointLimits };
+            var ikToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit IK Targets") { Selected = editIK };
             freezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Freeze") { Selected = isFreezed };
             var autoFreezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Auto Freeze") { Selected = autoFreeze };
             var limbPairEditToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Limb Pair Editing") { Selected = limbPairEditing };
@@ -662,6 +664,7 @@ namespace Barotrauma
                     ragdollToggle.Selected = true;
                     spritesheetToggle.Selected = !paramsToggle.Selected;
                     jointLimitsToggle.Selected = false;
+                    ikToggle.Selected = false;
                 }
                 return true;
             };
@@ -672,6 +675,18 @@ namespace Barotrauma
                 {
                     ragdollToggle.Selected = true;
                     spritesheetToggle.Selected = !paramsToggle.Selected;
+                    jointPositionsToggle.Selected = false;
+                    ikToggle.Selected = false;
+                }
+                return true;
+            };
+            ikToggle.OnSelected = box =>
+            {
+                editIK = box.Selected;
+                if (editIK)
+                {
+                    ragdollToggle.Selected = true;
+                    jointLimitsToggle.Selected = false;
                     jointPositionsToggle.Selected = false;
                 }
                 return true;
@@ -1781,21 +1796,21 @@ namespace Barotrauma
             }
             foreach (Limb limb in character.AnimController.Limbs)
             {
-                Vector2 limbScreenPos = SimToScreen(limb.SimPosition);
-                
-                if (limb.type == LimbType.LeftFoot || limb.type == LimbType.RightFoot || limb.type == LimbType.LeftHand || limb.type == LimbType.RightHand)
+                if (editIK)
                 {
-                    var pullJointWidgetSize = new Vector2(5, 5);
-                    Vector2 tformedPullPos = SimToScreen(limb.PullJointWorldAnchorA);
-                    GUI.DrawRectangle(spriteBatch, tformedPullPos - pullJointWidgetSize / 2, pullJointWidgetSize, Color.Red, true);
-                    DrawWidget(spriteBatch, tformedPullPos, WidgetType.Rectangle, 8, Color.Cyan, "IK Target",
-                    () =>
+                    if (limb.type == LimbType.LeftFoot || limb.type == LimbType.RightFoot || limb.type == LimbType.LeftHand || limb.type == LimbType.RightHand)
                     {
-                        Vector2 simPullPos = ScreenToSim(PlayerInput.MousePosition);
-                        limb.PullJointWorldAnchorA = simPullPos;
-                        TryUpdateLimbParam(limb, "pullpos", ConvertUnits.ToDisplayUnits(limb.PullJointLocalAnchorA / limb.limbParams.Ragdoll.LimbScale));
-                        GUI.DrawLine(spriteBatch, SimToScreen(limb.SimPosition), tformedPullPos, Color.MediumPurple);
-                    });
+                        var pullJointWidgetSize = new Vector2(5, 5);
+                        Vector2 tformedPullPos = SimToScreen(limb.PullJointWorldAnchorA);
+                        GUI.DrawRectangle(spriteBatch, tformedPullPos - pullJointWidgetSize / 2, pullJointWidgetSize, Color.Red, true);
+                        DrawWidget(spriteBatch, tformedPullPos, WidgetType.Rectangle, 8, Color.Cyan, $"IK ({limb.Name})",
+                        () =>
+                        {
+                            limb.PullJointWorldAnchorA = ScreenToSim(PlayerInput.MousePosition);
+                            TryUpdateLimbParam(limb, "pullpos", ConvertUnits.ToDisplayUnits(limb.PullJointLocalAnchorA / limb.limbParams.Ragdoll.LimbScale));
+                            GUI.DrawLine(spriteBatch, SimToScreen(limb.SimPosition), tformedPullPos, Color.MediumPurple);
+                        });
+                    }
                 }
                 
                 foreach (var joint in character.AnimController.LimbJoints)
@@ -1818,6 +1833,7 @@ namespace Barotrauma
                     {
                         continue;
                     }
+                    Vector2 limbScreenPos = SimToScreen(limb.SimPosition);
                     var f = Vector2.Transform(jointPos, Matrix.CreateRotationZ(limb.Rotation));
                     f.Y = -f.Y;
                     Vector2 tformedJointPos = limbScreenPos + f * Cam.Zoom;
