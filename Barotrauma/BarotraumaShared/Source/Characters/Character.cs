@@ -1563,7 +1563,7 @@ namespace Barotrauma
             }
 
             //climb ladders automatically when pressing up/down inside their trigger area
-            if (SelectedConstruction == null && !AnimController.InWater)
+            if (SelectedConstruction == null && !AnimController.InWater && Screen.Selected != GameMain.SubEditorScreen)
             {
                 bool climbInput = IsKeyDown(InputType.Up) || IsKeyDown(InputType.Down);
                 
