@@ -222,7 +222,11 @@ namespace Barotrauma
     {
         public JointParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
         {
-            Name = $"Joint {element.Attribute("limb1").Value} - {element.Attribute("limb2").Value}";
+            Name = element.GetAttributeString("name", null);
+            if (Name == null)
+            {
+                Name = $"Joint {element.Attribute("limb1").Value} - {element.Attribute("limb2").Value}";
+            }
         }
 
         [Serialize(-1, true), Editable]
@@ -266,7 +270,11 @@ namespace Barotrauma
     {
         public LimbParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
         {
-            Name = $"Limb {element.Attribute("id").Value}";
+            Name = element.GetAttributeString("name", null);
+            if (Name == null)
+            {
+                Name = $"Limb {element.Attribute("id").Value}";
+            }
             var spriteElement = element.Element("sprite");
             if (spriteElement != null)
             {
