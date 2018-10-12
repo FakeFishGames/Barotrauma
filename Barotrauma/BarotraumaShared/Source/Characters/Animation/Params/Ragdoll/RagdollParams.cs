@@ -344,7 +344,7 @@ namespace Barotrauma
         [Serialize(10f, true), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
         public float Density { get; set; }
 
-        [Serialize("0, 0", true), Editable]
+        [Serialize("0, 0", true), Editable(ToolTip = "The position which is used to lead the IK chain to the IK goal. Only applicable if the limb is hand or foot.")]
         public Vector2 PullPos { get; set; }
 
         [Serialize(-1, true), Editable(ToolTip = "Only applicable if this limb is a foot. Determines which joint is used as the \"neutral x-position\" for the foot movement. For example in the case of a humanoid-shaped characters this would usually be the waist. The position can be offset using the StepOffset parameter.")]
