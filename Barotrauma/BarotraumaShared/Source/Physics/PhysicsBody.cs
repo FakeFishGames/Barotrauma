@@ -320,7 +320,6 @@ namespace Barotrauma
             body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
             body.Friction = limbParams.Friction;
             body.Restitution = limbParams.Restitution;
-            body.BodyType = limbParams.BodyType;
             body.UserData = this;
             SetTransform(position, 0.0f);
             LastSentPosition = position;
