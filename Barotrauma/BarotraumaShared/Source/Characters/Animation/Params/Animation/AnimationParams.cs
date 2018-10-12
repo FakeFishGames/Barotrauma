@@ -53,8 +53,7 @@ namespace Barotrauma
         [Serialize(1.0f, true), Editable(DecimalCount = 2)]
         public float MovementSpeed { get; set; }
 
-        [Serialize(1.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2, 
-            ToolTip = "The speed of the \"animation cycle\", i.e. how fast the character takes steps or moves the tail/legs/arms (the outcome depends what the clip is about)")]
+        [Serialize(5.0f, true), Editable(DecimalCount = 2, ToolTip = "The speed of the \"walk cycle\", i.e. how fast the character takes steps.")]
         public float CycleSpeed { get; set; }
 
         /// <summary>
