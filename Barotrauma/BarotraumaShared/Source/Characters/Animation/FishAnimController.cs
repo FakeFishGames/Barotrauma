@@ -377,10 +377,7 @@ namespace Barotrauma
             Limb tail = GetLimb(LimbType.Tail);
             if (tail != null)
             {
-                //progress the swim animations
-                //WalkPos -= movement.Length();
-                WalkPos -= CurrentAnimationParams.CycleSpeed * Vector2.Normalize(movement).Length();
-
+                WalkPos -= movement.Length();
                 var waveLength = Math.Abs(CurrentSwimParams.WaveLength);
                 var waveAmplitude = Math.Abs(CurrentSwimParams.WaveAmplitude);
                 if (waveLength > 0 && waveAmplitude > 0)
@@ -453,8 +450,7 @@ namespace Barotrauma
                 movement.X,
                 Collider.LinearVelocity.Y > 0.0f ? Collider.LinearVelocity.Y * 0.5f : Collider.LinearVelocity.Y);
             
-            //WalkPos -= MainLimb.LinearVelocity.X * (CurrentAnimationParams.CycleSpeed / 100.0f);
-            WalkPos -= Vector2.Normalize(MainLimb.LinearVelocity).X * (CurrentAnimationParams.CycleSpeed / 20);
+            WalkPos -= MainLimb.LinearVelocity.X * (CurrentAnimationParams.CycleSpeed / 100.0f);
 
             Vector2 transformedStepSize = Vector2.Zero;
             if (Math.Abs(TargetMovement.X) > 0.01f)
