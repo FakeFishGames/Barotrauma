@@ -334,9 +334,7 @@ namespace Barotrauma
                 body.CollidesWith = Physics.CollisionAll & ~Physics.CollisionCharacter & ~Physics.CollisionItem & ~Physics.CollisionItemBlocking;
             }
             body.UserData = this;
-            Vector2 pullJointPos = Vector2.Zero;
-            pullJointPos = ConvertUnits.ToSimUnits(limbParams.PullPos * Scale);
-            pullJoint = new FixedMouseJoint(body.FarseerBody, pullJointPos)
+            pullJoint = new FixedMouseJoint(body.FarseerBody, ConvertUnits.ToSimUnits(limbParams.PullPos * Scale))
             {
                 Enabled = false,
                 MaxForce = ((type == LimbType.LeftHand || type == LimbType.RightHand) ? 400.0f : 150.0f) * body.Mass
@@ -664,6 +662,7 @@ namespace Barotrauma
             Sprite?.LoadParams(limbParams.normalSpriteParams, isFlipped);
             DamagedSprite?.LoadParams(limbParams.damagedSpriteParams, isFlipped);
             DeformSprite?.Sprite.LoadParams(limbParams.deformSpriteParams, isFlipped);
+            pullJoint.LocalAnchorA = ConvertUnits.ToSimUnits(limbParams.PullPos * Scale);
         }
     }
 }
