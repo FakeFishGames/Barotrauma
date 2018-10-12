@@ -356,7 +356,7 @@ namespace Barotrauma
         [Serialize("0, 0, 0, 0", true), Editable]
         public Rectangle SourceRect { get; set; }
 
-        [Serialize("0.5, 0.5", true), Editable(DecimalCount = 2)]
+        [Serialize("0.5, 0.5", true), Editable(DecimalCount = 2, ToolTip = "Relative to the collider.")]
         public Vector2 Origin { get; set; }
 
         [Serialize(0f, true), Editable(DecimalCount = 3)]
