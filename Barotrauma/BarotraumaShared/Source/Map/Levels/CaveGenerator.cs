@@ -347,8 +347,64 @@ namespace Barotrauma
 
             return pathCells;
         }
-        
-        public static Body GeneratePolygons(List<VoronoiCell> cells, Level level, out List<Vector2[]> renderTriangles, bool setSolid = true)
+
+        /// <summary>
+        /// Makes the cell rounder by subdividing the edges and offsetting them at the middle
+        /// </summary>
+        /// <param name="minEdgeLength">How small the individual subdivided edges can be (smaller values produce rounder shapes, but require more geometry)</param>
+        public static void RoundCell(VoronoiCell cell, float minEdgeLength = 500.0f, float minOffsetAmount = 0.0f, float maxOffsetAmount = 500.0f)
+        {
+            List<GraphEdge> tempEdges = new List<GraphEdge>();
+            foreach (GraphEdge edge in cell.edges)
+            {
+                if (!edge.IsSolid)
+                {
+                    tempEdges.Add(edge);
+                    continue;
+                }
+
+                List<Vector2> edgePoints = new List<Vector2>();
+                Vector2 edgeNormal = GetEdgeNormal(edge, cell);
+                int pointCount = (int)Math.Max(Vector2.Distance(edge.Point1, edge.Point2) / minEdgeLength, 1);
+                Vector2 edgeDir = (edge.Point2 - edge.Point1);
+                for (int i = 0; i <= pointCount; i++)
+                {
+                    if (i == 0)
+                    {
+                        edgePoints.Add(edge.Point1);
+                    }
+                    else if (i == pointCount)
+                    {
+                        edgePoints.Add(edge.Point2);
+                    }
+                    else
+                    {
+                        float centerF = 0.5f - Math.Abs(0.5f - (i / (float)pointCount));
+                        edgePoints.Add(
+                            edge.Point1 +
+                            edgeDir * (i / (float)pointCount) -
+                            edgeNormal * Rand.Range(minOffsetAmount, maxOffsetAmount, Rand.RandSync.Server) * centerF);
+                    }
+                }
+
+                for (int i = 0; i < pointCount; i++)
+                {
+                    tempEdges.Add(new GraphEdge(edgePoints[i], edgePoints[i + 1])
+                    {
+                        Cell1 = edge.Cell1,
+                        Cell2 = edge.Cell2,
+                        IsSolid = edge.IsSolid,
+                        Site1 = edge.Site1,
+                        Site2 = edge.Site2,
+                        OutsideLevel = edge.OutsideLevel
+                    });
+                }
+            }
+
+            cell.edges = tempEdges;
+        }
+
+        public static Body GeneratePolygons(List<VoronoiCell> cells, Level level, out List<Vector2[]> renderTriangles)
         {
             renderTriangles = new List<Vector2[]>();
 
@@ -373,12 +429,7 @@ namespace Barotrauma
                     if (Vector2.DistanceSquared(ge.Point1, ge.Point2) < 0.01f) continue;
                     if (!tempVertices.Contains(ge.Point1)) tempVertices.Add(ge.Point1);
                     if (!tempVertices.Contains(ge.Point2)) tempVertices.Add(ge.Point2);
-
-                    VoronoiCell adjacentCell = ge.AdjacentCell(cell);
-                    //if (adjacentCell!=null && cells.Contains(adjacentCell)) continue;
-
-                    if (setSolid) ge.IsSolid = (adjacentCell == null || !cells.Contains(adjacentCell));
-
+                    
                     if (!bodyPoints.Contains(ge.Point1)) bodyPoints.Add(ge.Point1);
                     if (!bodyPoints.Contains(ge.Point2)) bodyPoints.Add(ge.Point2);
                 }

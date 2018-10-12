@@ -15,6 +15,8 @@ namespace Barotrauma
         private Vector2 defaultDustVelocity;
         private Vector2 dustVelocity;
 
+        private RasterizerState cullNone;
+
         private Level level;
 
         private VertexBuffer wallVertices, bodyVertices;
@@ -22,6 +24,8 @@ namespace Barotrauma
         public LevelRenderer(Level level)
         {
             defaultDustVelocity = Vector2.UnitY * 10.0f;
+
+            cullNone = new RasterizerState() { CullMode = CullMode.None };
 
             if (wallEdgeEffect == null)
             {
@@ -326,7 +330,9 @@ namespace Barotrauma
                 graphicsDevice.SetVertexBuffer(wall.BodyVertices);
                 graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.BodyVertices.VertexCount / 3.0f));
             }
-            
+
+            var defaultRasterizerState = graphicsDevice.RasterizerState;
+            graphicsDevice.RasterizerState = cullNone;
             wallEdgeEffect.World = transformMatrix;
             wallEdgeEffect.CurrentTechnique.Passes[0].Apply();
 
@@ -343,7 +349,8 @@ namespace Barotrauma
                 wallEdgeEffect.CurrentTechnique.Passes[0].Apply();
                 graphicsDevice.SetVertexBuffer(wall.WallVertices);
                 graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.WallVertices.VertexCount / 3.0f));
-            }                     
+            }
+            graphicsDevice.RasterizerState = defaultRasterizerState;
         }
 
         public void Dispose()
