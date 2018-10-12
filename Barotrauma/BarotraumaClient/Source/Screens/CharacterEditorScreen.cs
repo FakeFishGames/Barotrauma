@@ -44,7 +44,7 @@ namespace Barotrauma
         private bool lockSpriteSize;
 
         private float spriteSheetZoom;
-        private int spriteSheetOffsetY = 30;
+        private int spriteSheetOffsetY = 100;
         private int spriteSheetOffsetX = 30;
         private Color backgroundColor = new Color(0.12f, 0.298f, 0.542f, 1.0f);
 
@@ -271,6 +271,7 @@ namespace Barotrauma
         #endregion
 
         #region GUI
+        private GUIFrame leftPanel;
         private GUIFrame rightPanel;
         private GUIFrame centerPanel;
         private GUIFrame ragdollControls;
@@ -288,6 +289,7 @@ namespace Barotrauma
 
         private void CreateGUI()
         {
+            CreateLeftPanel();
             CreateRightPanel();
             CreateCenterPanel();
         }
@@ -357,37 +359,6 @@ namespace Barotrauma
                         break;
                 }
             }
-            // Spritesheet controls
-            spriteSheetControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerPanel.RectTransform), style: null) { CanBeFocused = false };
-            var layoutGroupSpriteSheet = new GUILayoutGroup(new RectTransform(Vector2.One, spriteSheetControls.RectTransform)) { AbsoluteSpacing = 5, CanBeFocused = false };
-            new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), "Spritesheet zoom:", Color.White);
-            float spriteMinScale = 0.25f;
-            float spriteMaxScale = (centerPanel.Rect.Left - spriteSheetOffsetX) / (float)(Textures.OrderByDescending(t => t.Width).First().Width);
-            spriteSheetZoom = MathHelper.Clamp(1, spriteMinScale, spriteMaxScale);
-            spriteSheetZoomBar = new GUIScrollBar(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), barSize: 0.2f)
-            {
-                Enabled = spriteMaxScale < 1,
-                BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteMinScale, spriteMaxScale, spriteSheetZoom)),
-                Step = 0.01f,
-                OnMoved = (scrollBar, value) =>
-                {
-                    spriteSheetZoom = MathHelper.Lerp(spriteMinScale, spriteMaxScale, value);
-                    return true;
-                }
-            };
-            pixelPerfectToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), "Zoom 100%")
-            {
-                Enabled = spriteMaxScale >= 1,
-                Selected = spriteMaxScale >= 1,
-                TextColor = spriteMaxScale >= 1 ? Color.White : Color.Gray,
-                OnSelected = (tickBox) =>
-                {
-                    spriteSheetZoomBar.Enabled = !tickBox.Selected;
-                    spriteSheetZoom = Math.Min(1, spriteMaxScale);
-                    spriteSheetZoomBar.BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteMinScale, spriteMaxScale, spriteSheetZoom));
-                    return true;
-                }
-            };
             // Sprite controls
             spriteControls = new GUIFrame(new RectTransform(new Vector2(1, 0.9f), centerPanel.RectTransform) { RelativeOffset = new Vector2(0, 0.1f) }, style: null) { CanBeFocused = false };
             var layoutGroupSpriteControls = new GUILayoutGroup(new RectTransform(Vector2.One, spriteControls.RectTransform)) { CanBeFocused = false };
@@ -567,6 +538,49 @@ namespace Barotrauma
                         throw new NotImplementedException();
                 }
                 return true;
+            };
+        }
+
+        private void CreateLeftPanel()
+        {
+            // Release the old panel
+            if (leftPanel != null)
+            {
+                leftPanel.RectTransform.Parent = null;
+            }
+            leftPanel = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.2f), parent: Frame.RectTransform) { AbsoluteOffset = new Point(20, 20) });
+            // Spritesheet controls
+            Point elementSize = new Point(120, 20);
+            int textAreaHeight = 20;
+            spriteSheetControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), leftPanel.RectTransform), style: null) { CanBeFocused = false };
+            var layoutGroupSpriteSheet = new GUILayoutGroup(new RectTransform(Vector2.One, spriteSheetControls.RectTransform)) { AbsoluteSpacing = 5, CanBeFocused = false };
+            new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), "Spritesheet zoom:", Color.White);
+            float spriteMinScale = 0.25f;
+            float spriteMaxScale = (leftPanel.Rect.Right - spriteSheetOffsetX) / (float)(Textures.OrderByDescending(t => t.Width).First().Width);
+            spriteSheetZoom = MathHelper.Clamp(1, spriteMinScale, spriteMaxScale);
+            spriteSheetZoomBar = new GUIScrollBar(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), barSize: 0.2f)
+            {
+                Enabled = spriteMaxScale < 1,
+                BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteMinScale, spriteMaxScale, spriteSheetZoom)),
+                Step = 0.01f,
+                OnMoved = (scrollBar, value) =>
+                {
+                    spriteSheetZoom = MathHelper.Lerp(spriteMinScale, spriteMaxScale, value);
+                    return true;
+                }
+            };
+            pixelPerfectToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), "Zoom 100%")
+            {
+                Enabled = spriteMaxScale >= 1,
+                Selected = spriteMaxScale >= 1,
+                TextColor = spriteMaxScale >= 1 ? Color.White : Color.Gray,
+                OnSelected = (tickBox) =>
+                {
+                    spriteSheetZoomBar.Enabled = !tickBox.Selected;
+                    spriteSheetZoom = Math.Min(1, spriteMaxScale);
+                    spriteSheetZoomBar.BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteMinScale, spriteMaxScale, spriteSheetZoom));
+                    return true;
+                }
             };
         }
 
@@ -1320,10 +1334,11 @@ namespace Barotrauma
             {
                 GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 100, 150), "Animation Test Pose Enabled", Color.Blue, Color.White * 0.5f, 10, GUI.Font);
             }
-            if (editJointLimits)
+            if (showSpritesheet)
             {
-                GUI.DrawString(spriteBatch, new Vector2(spriteControls.Rect.Center.X, 50), "Spritesheet Orientation:", Color.White, Color.Gray * 0.5f, 10, GUI.Font);
-                DrawRadialWidget(spriteBatch, new Vector2(spriteControls.Rect.Center.X + 210, 60), spriteSheetOrientation, string.Empty, Color.White, 
+                var topLeft = leftPanel.RectTransform.TopLeft;
+                GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 200, 50), "Spritesheet Orientation:", Color.White, Color.Gray * 0.5f, 10, GUI.Font);
+                DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 410, 60), spriteSheetOrientation, string.Empty, Color.White, 
                     angle => spriteSheetOrientation = angle, circleRadius: 40, widgetSize: 20, rotationOffset: MathHelper.Pi, autoFreeze: false);
             }
             // Debug
