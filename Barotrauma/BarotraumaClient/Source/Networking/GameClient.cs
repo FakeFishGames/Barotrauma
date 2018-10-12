@@ -1715,7 +1715,7 @@ namespace Barotrauma.Networking
         public void RequestSelectSub(int subIndex)
         {
             if (!HasPermission(ClientPermissions.SelectSub)) return;
-            if (subIndex < 0 || subIndex >= GameMain.NetLobbyScreen.SubList.CountChildren)
+            if (subIndex < 0 || subIndex >= GameMain.NetLobbyScreen.SubList.Content.CountChildren)
             {
                 DebugConsole.ThrowError("Submarine index out of bounds (" + subIndex + ")\n" + Environment.StackTrace);
                 return;
