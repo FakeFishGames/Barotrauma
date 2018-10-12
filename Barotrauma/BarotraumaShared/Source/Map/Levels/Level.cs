@@ -607,12 +607,26 @@ namespace Barotrauma
             startPosition.Y = borders.Height;
             endPosition.Y = borders.Height;
 
+            foreach (VoronoiCell cell in cells)
+            {
+                foreach (GraphEdge ge in cell.edges)
+                {
+                    VoronoiCell adjacentCell = ge.AdjacentCell(cell);
+                    ge.IsSolid = (adjacentCell == null || !cells.Contains(adjacentCell));
+                }
+            }
+
             List<VoronoiCell> cellsWithBody = new List<VoronoiCell>(cells);
+            foreach (VoronoiCell cell in cellsWithBody)
+            {
+                //TODO: define cell roundness in level generation params
+                CaveGenerator.RoundCell(cell, maxOffsetAmount: 1000.0f);
+            }
             bodies.Add(CaveGenerator.GeneratePolygons(cellsWithBody, this, out List<Vector2[]> triangles));
 
 #if CLIENT
             renderer.SetBodyVertices(CaveGenerator.GenerateRenderVerticeList(triangles).ToArray(), generationParams.WallColor);
-            renderer.SetWallVertices(CaveGenerator.GenerateWallShapes(cells, this), generationParams.WallColor);
+            renderer.SetWallVertices(CaveGenerator.GenerateWallShapes(cellsWithBody, this), generationParams.WallColor);
 #endif
 
             TopBarrier = BodyFactory.CreateEdge(GameMain.World, 
