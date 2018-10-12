@@ -6,13 +6,4 @@
   steertorque="100"
   flip="True"
   mirror="False"
-  rotatetowardsmovement="True"
-  torsotorque="25"
-  headtorque="25"
-  foottorque="25"
-  tailtorque="50"
-  footangles=""
-  cyclespeed="1"
-  headangle="NaN"
-  torsoangle="NaN"
-  animationtype="SwimSlow" />
+  rotatetowardsmovement="True"/>
