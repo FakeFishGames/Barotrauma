@@ -360,7 +360,8 @@ namespace Barotrauma
                 HoverColor = Color.Transparent,
                 SelectedColor = Color.Transparent,
                 CanBeFocused = false,
-                ToolTip = characterToolTip
+                ToolTip = characterToolTip,
+                AutoScale = true
             };
 
             //---------------- order buttons ----------------
