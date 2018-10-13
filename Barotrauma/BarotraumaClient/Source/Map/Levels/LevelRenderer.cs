@@ -159,7 +159,7 @@ namespace Barotrauma
 
             spriteBatch.Begin(SpriteSortMode.Deferred,
                 BlendState.AlphaBlend,
-                SamplerState.LinearWrap, DepthStencilState.Default, null, null,
+                SamplerState.LinearWrap, DepthStencilState.DepthRead, null, null,
                 cam.Transform);            
 
             if (backgroundSpriteManager != null) backgroundSpriteManager.DrawObjects(spriteBatch, cam, drawFront: false);
@@ -215,11 +215,11 @@ namespace Barotrauma
             spriteBatch.End();
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Draw(SpriteBatch spriteBatch, Camera cam)
         {
-            if (GameMain.DebugDraw && GameMain.GameScreen.Cam.Zoom > 0.05f)
+            if (GameMain.DebugDraw && cam.Zoom > 0.05f)
             {
-                var cells = level.GetCells(GameMain.GameScreen.Cam.WorldViewCenter, 2);
+                var cells = level.GetCells(cam.WorldViewCenter, 2);
                 foreach (VoronoiCell cell in cells)
                 {
                     GUI.DrawRectangle(spriteBatch, new Vector2(cell.Center.X - 10.0f, -cell.Center.Y - 10.0f), new Vector2(20.0f, 20.0f), Color.Cyan, true);
@@ -255,16 +255,16 @@ namespace Barotrauma
 
             Vector2 pos = new Vector2(0.0f, -level.Size.Y);
 
-            if (GameMain.GameScreen.Cam.WorldView.Y >= -pos.Y - 1024)
+            if (cam.WorldView.Y >= -pos.Y - 1024)
             {
-                pos.X = GameMain.GameScreen.Cam.WorldView.X -1024;
-                int width = (int)(Math.Ceiling(GameMain.GameScreen.Cam.WorldView.Width / 1024 + 4.0f) * 1024);
+                pos.X = cam.WorldView.X -1024;
+                int width = (int)(Math.Ceiling(cam.WorldView.Width / 1024 + 4.0f) * 1024);
 
                 GUI.DrawRectangle(spriteBatch,new Rectangle(
                     (int)(MathUtils.Round(pos.X, 1024)), 
-                    -GameMain.GameScreen.Cam.WorldView.Y, 
+                    -cam.WorldView.Y, 
                     width, 
-                    (int)(GameMain.GameScreen.Cam.WorldView.Y + pos.Y) - 30),
+                    (int)(cam.WorldView.Y + pos.Y) - 30),
                     Color.Black, true);
 
                 spriteBatch.Draw(level.GenerationParams.WallEdgeSprite.Texture,
@@ -275,17 +275,17 @@ namespace Barotrauma
                     SpriteEffects.None, 0.0f);
             }
 
-            if (GameMain.GameScreen.Cam.WorldView.Y - GameMain.GameScreen.Cam.WorldView.Height < level.SeaFloorTopPos + 1024)
+            if (cam.WorldView.Y - cam.WorldView.Height < level.SeaFloorTopPos + 1024)
             {
-                pos = new Vector2(GameMain.GameScreen.Cam.WorldView.X - 1024, -level.BottomPos);
+                pos = new Vector2(cam.WorldView.X - 1024, -level.BottomPos);
 
-                int width = (int)(Math.Ceiling(GameMain.GameScreen.Cam.WorldView.Width / 1024 + 4.0f) * 1024);
+                int width = (int)(Math.Ceiling(cam.WorldView.Width / 1024 + 4.0f) * 1024);
 
                 GUI.DrawRectangle(spriteBatch, new Rectangle(
                     (int)(MathUtils.Round(pos.X, 1024)), 
                     (int)-(level.BottomPos - 30), 
                     width, 
-                    (int)(level.BottomPos - (GameMain.GameScreen.Cam.WorldView.Y - GameMain.GameScreen.Cam.WorldView.Height))), 
+                    (int)(level.BottomPos - (cam.WorldView.Y - cam.WorldView.Height))), 
                     Color.Black, true);
 
                 spriteBatch.Draw(level.GenerationParams.WallEdgeSprite.Texture,

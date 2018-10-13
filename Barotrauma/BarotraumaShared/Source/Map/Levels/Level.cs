@@ -617,11 +617,17 @@ namespace Barotrauma
             }
 
             List<VoronoiCell> cellsWithBody = new List<VoronoiCell>(cells);
-            foreach (VoronoiCell cell in cellsWithBody)
+            if (generationParams.CellRoundingAmount > 0.01f || generationParams.CellIrregularity > 0.01f)
             {
-                //TODO: define cell roundness in level generation params
-                CaveGenerator.RoundCell(cell, maxOffsetAmount: 1000.0f);
+                foreach (VoronoiCell cell in cellsWithBody)
+                {
+                    CaveGenerator.RoundCell(cell,
+                        minEdgeLength: generationParams.CellSubdivisionLength,
+                        roundingAmount: generationParams.CellRoundingAmount,
+                        irregularity: generationParams.CellIrregularity);
+                }
             }
+
             bodies.Add(CaveGenerator.GeneratePolygons(cellsWithBody, this, out List<Vector2[]> triangles));
 
 #if CLIENT

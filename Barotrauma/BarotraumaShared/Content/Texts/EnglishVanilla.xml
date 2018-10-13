@@ -587,6 +587,11 @@
   <ParticleEditorSaveAll>Save all</ParticleEditorSaveAll>
   <ParticleEditorCopyToClipboard>Copy to clipboard</ParticleEditorCopyToClipboard>
 
+  <!-- Level editor -->
+  <LevelEditorSaveAll>Save all</LevelEditorSaveAll>
+  <LevelEditorLevelSeed>Level seed</LevelEditorLevelSeed>
+  <LevelEditorGenerate>Generate</LevelEditorGenerate>
+  
   <!-- Rooms -->
   <ReactorRoom>Reactor room</ReactorRoom>
   <EngineRoom>Engine room</EngineRoom>
