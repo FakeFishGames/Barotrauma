@@ -80,6 +80,10 @@ namespace Barotrauma
         //how much random variance there can be in the height of the formations
         private float seaFloorVariance;
 
+        private float cellSubdivisionLength;
+        private float cellRoundingAmount;
+        private float cellIrregularity;
+
         private int mountainCountMin, mountainCountMax;
         
         private float mountainHeightMin, mountainHeightMax;
@@ -175,6 +179,42 @@ namespace Barotrauma
                     MathHelper.Clamp(value.Y, 0, voronoiSiteInterval.Y));
             }
         }
+
+        [Serialize(500.0f, true), Editable(MinValueFloat = 100.0f, MaxValueFloat = 10000.0f, ToolTip = "The edges of the individual wall cells are subdivided into edges of this size. "
+            + "Can be used in conjunction with the rounding values to make the cells rounder. Smaller values will make the cells look smoother, " +
+            "but make the level more performance-intensive as the number of polygons used in rendering and physics calculations increases.")]
+        public float CellSubdivisionLength
+        {
+            get { return cellSubdivisionLength; }
+            set
+            {
+                cellSubdivisionLength = Math.Max(value, 10.0f);
+            }
+        }
+
+
+        [Serialize(0.5f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, ToolTip = "How much the individual wall cells are rounded. "
+            +"Note that the final shape of the cells is also affected by the CellSubdivisionLength parameter.")]
+        public float CellRoundingAmount
+        {
+            get { return cellRoundingAmount; }
+            set
+            {
+                cellRoundingAmount = MathHelper.Clamp(value, 0.0f, 1.0f);
+            }
+        }
+
+        [Serialize(0.1f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, ToolTip = "How much random variance is applied to the edges of the cells. "
+            + "Note that the final shape of the cells is also affected by the CellSubdivisionLength parameter.")]
+        public float CellIrregularity
+        {
+            get { return cellIrregularity; }
+            set
+            {
+                cellIrregularity = MathHelper.Clamp(value, 0.0f, 1.0f);
+            }
+        }
+
 
         [Serialize("5000.0, 10000.0", true), Editable(ToolTip = "The distance between the nodes that are used to generate the main path through the level (min, max). Larger values produce a straighter path.")]
         public Vector2 MainPathNodeIntervalRange

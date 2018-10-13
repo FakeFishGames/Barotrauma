@@ -25,6 +25,8 @@ namespace Barotrauma
         private GUIListBox paramsList;
         private GUIListBox editorContainer;
 
+        private GUITextBox seedBox;
+
         public LevelEditorScreen()
         {
             cam = new Camera()
@@ -50,7 +52,7 @@ namespace Barotrauma
             };
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), paddedLeftPanel.RectTransform),
-                TextManager.Get("ParticleEditorSaveAll"))
+                TextManager.Get("LevelEditorSaveAll"))
             {
                 OnClicked = (btn, obj) =>
                 {
@@ -69,13 +71,16 @@ namespace Barotrauma
 
             editorContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), paddedRightPanel.RectTransform));
 
+            var seedContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedRightPanel.RectTransform), isHorizontal: true);
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), seedContainer.RectTransform), TextManager.Get("LevelEditorLevelSeed"));
+            seedBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), seedContainer.RectTransform), ToolBox.RandomSeed(8));
+
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), paddedRightPanel.RectTransform),
-                "Generate")
+                TextManager.Get("LevelEditorGenerate"))
             {
                 OnClicked = (btn, obj) =>
                 {
-                    //TODO: allow selecting the seed
-                    Level.CreateRandom("123", generationParams: selectedParams).Generate(mirror: false);
+                    Level.CreateRandom(seedBox.Text, generationParams: selectedParams).Generate(mirror: false);
                     cam.Position = new Vector2(Level.Loaded.Size.X / 2, Level.Loaded.Size.Y / 2);
                     return true;
                 }
@@ -110,7 +115,7 @@ namespace Barotrauma
             {
                 Level.Loaded.DrawBack(graphics, spriteBatch, cam);
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap, DepthStencilState.Default, transformMatrix: cam.Transform);
-                //Level.Loaded.DrawFront(spriteBatch);
+                Level.Loaded.DrawFront(spriteBatch, cam);
                 spriteBatch.End();
             }
 
