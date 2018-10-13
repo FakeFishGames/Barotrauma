@@ -13,23 +13,18 @@ namespace Barotrauma
 {
     static partial class DebugConsole
     {
-        static bool isOpen;
+        private static bool isOpen;
+        public static bool IsOpen = isOpen;
 
         private static Queue<ColoredText> queuedMessages = new Queue<ColoredText>();
 
         private static GUITextBlock activeQuestionText;
-        
-        public static bool IsOpen
-        {
-            get
-            {
-                return isOpen;
-            }
-        }
 
-        static GUIFrame frame;
-        static GUIListBox listBox;
-        static GUITextBox textBox;
+        private static GUIFrame frame;
+        private static GUIListBox listBox;
+        private static GUITextBox textBox;
+
+        public static GUITextBox TextBox => textBox;
 
         public static void Init()
         {
