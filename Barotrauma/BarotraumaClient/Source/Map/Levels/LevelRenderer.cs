@@ -163,7 +163,7 @@ namespace Barotrauma
                 cam.Transform);            
 
             if (backgroundSpriteManager != null) backgroundSpriteManager.DrawObjects(spriteBatch, cam, drawFront: false);
-            if (backgroundCreatureManager != null) backgroundCreatureManager.Draw(spriteBatch);
+            if (backgroundCreatureManager != null) backgroundCreatureManager.Draw(spriteBatch, cam);
 
             if (level.GenerationParams.WaterParticles != null)
             {

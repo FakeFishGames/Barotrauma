@@ -13,7 +13,7 @@ namespace Barotrauma
         const float ZoomSmoothness = 8.0f;
         const float MoveSmoothness = 8.0f;
 
-        const float MinZoom = 0.1f, MaxZoom = 10.0f;
+        public float MinZoom = 0.1f, MaxZoom = 2.0f;
 
         private float zoom;
 
@@ -236,7 +236,10 @@ namespace Barotrauma
                     Vector2 mouseInWorld = ScreenToWorld(PlayerInput.MousePosition);
                     Vector2 diffViewCenter;
                     diffViewCenter = ((mouseInWorld - Position) * Zoom);
-                    Zoom = MathHelper.Clamp(zoom + (PlayerInput.ScrollWheelSpeed / 1000.0f) * zoom, GameMain.DebugDraw ? 0.01f : 0.1f, Screen.Selected == GameMain.CharacterEditorScreen ? 5.0f : 2.0f);
+                    Zoom = MathHelper.Clamp(
+                        zoom + (PlayerInput.ScrollWheelSpeed / 1000.0f) * zoom, 
+                        GameMain.DebugDraw ? MinZoom * 0.1f : MinZoom, 
+                        MaxZoom);
                     if (!PlayerInput.KeyDown(Keys.F)) Position = mouseInWorld - (diffViewCenter / Zoom);
                 }
             }
