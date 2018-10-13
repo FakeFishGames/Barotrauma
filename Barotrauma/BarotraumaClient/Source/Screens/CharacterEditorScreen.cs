@@ -19,7 +19,11 @@ namespace Barotrauma
             {
                 if (cam == null)
                 {
-                    cam = new Camera();
+                    cam = new Camera()
+                    {
+                        MinZoom = 0.1f,
+                        MaxZoom = 5.0f
+                    };
                 }
                 return cam;
             }

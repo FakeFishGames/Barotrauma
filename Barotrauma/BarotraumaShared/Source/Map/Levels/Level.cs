@@ -233,7 +233,7 @@ namespace Barotrauma
                 locationConnection.Biome);
         }
 
-        public static Level CreateRandom(string seed = "", float? difficulty = null)
+        public static Level CreateRandom(string seed = "", float? difficulty = null, LevelGenerationParams generationParams = null)
         {
             if (seed == "")
             {
@@ -242,7 +242,7 @@ namespace Barotrauma
 
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
 
-            var generationParams = LevelGenerationParams.GetRandom(seed);
+            if (generationParams == null) generationParams = LevelGenerationParams.GetRandom(seed);
             var biome = LevelGenerationParams.GetBiomes().Find(b => generationParams.AllowedBiomes.Contains(b));
 
             return new Level(
