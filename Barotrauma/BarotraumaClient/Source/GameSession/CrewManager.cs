@@ -932,7 +932,7 @@ namespace Barotrauma
         partial void UpdateProjectSpecific(float deltaTime)
         {
             // Quick selection
-            if (!GameMain.IsMultiplayer)
+            if (!GameMain.IsMultiplayer && GUI.KeyboardDispatcher.Subscriber == null)
             {
                 if (PlayerInput.KeyHit(InputType.SelectNextCharacter))
                 {
