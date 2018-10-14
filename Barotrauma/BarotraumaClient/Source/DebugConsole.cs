@@ -14,7 +14,7 @@ namespace Barotrauma
     static partial class DebugConsole
     {
         private static bool isOpen;
-        public static bool IsOpen = isOpen;
+        public static bool IsOpen => isOpen;
 
         private static Queue<ColoredText> queuedMessages = new Queue<ColoredText>();
 
