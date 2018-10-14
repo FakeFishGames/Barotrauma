@@ -1,6 +1,7 @@
 ﻿using System;
 using OpenTK.Audio.OpenAL;
 using Microsoft.Xna.Framework;
+using System.IO;
 
 namespace Barotrauma.Sounds
 {
@@ -55,7 +56,7 @@ namespace Barotrauma.Sounds
         public Sound(SoundManager owner,string filename,bool stream)
         {
             Owner = owner;
-            Filename = filename;
+            Filename = Path.GetFullPath(filename);
             Stream = stream;
 
             BaseGain = 1.0f;
@@ -92,6 +93,11 @@ namespace Barotrauma.Sounds
             {
                 alBuffer = 0;
             }
+        }
+
+        public override string ToString()
+        {
+            return GetType().ToString() + " (" + Filename + ")";
         }
 
         public bool IsPlaying()

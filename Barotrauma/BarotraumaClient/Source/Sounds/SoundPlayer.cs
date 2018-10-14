@@ -3,6 +3,7 @@ using Barotrauma.Sounds;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -39,7 +40,7 @@ namespace Barotrauma
                 
         public BackgroundMusic(XElement element)
         {
-            this.File = element.GetAttributeString("file", "");
+            this.File = Path.GetFullPath(element.GetAttributeString("file", ""));
             this.Type = element.GetAttributeString("type", "").ToLowerInvariant();
             this.IntensityRange = element.GetAttributeVector2("intensityrange", new Vector2(0.0f, 100.0f));
         }
