@@ -97,8 +97,8 @@ namespace Barotrauma.Networking
 
             doc.Root.SetAttributeValue("autorestart", autoRestart);
 
-            doc.Root.SetAttributeValue("SubSelection", subSelectionMode.ToString());
-            doc.Root.SetAttributeValue("ModeSelection", modeSelectionMode.ToString());
+            doc.Root.SetAttributeValue("SubSelection", SubSelectionMode.ToString());
+            doc.Root.SetAttributeValue("ModeSelection", ModeSelectionMode.ToString());
             doc.Root.SetAttributeValue("LevelDifficulty", ((int)selectedLevelDifficulty).ToString());
             doc.Root.SetAttributeValue("TraitorsEnabled", TraitorsEnabled.ToString());
 
@@ -140,14 +140,10 @@ namespace Barotrauma.Networking
             SerializableProperties = SerializableProperty.DeserializeProperties(this, doc.Root);
 
             AutoRestart = doc.Root.GetAttributeBool("autorestart", false);
-
-            subSelectionMode = SelectionMode.Manual;
-            Enum.TryParse(doc.Root.GetAttributeString("SubSelection", "Manual"), out subSelectionMode);
-            Voting.AllowSubVoting = subSelectionMode == SelectionMode.Vote;
-
-            modeSelectionMode = SelectionMode.Manual;
-            Enum.TryParse(doc.Root.GetAttributeString("ModeSelection", "Manual"), out modeSelectionMode);
-            Voting.AllowModeVoting = modeSelectionMode == SelectionMode.Vote;
+            
+            Voting.AllowSubVoting = SubSelectionMode == SelectionMode.Vote;
+            
+            Voting.AllowModeVoting = ModeSelectionMode == SelectionMode.Vote;
 
             selectedLevelDifficulty = doc.Root.GetAttributeFloat("LevelDifficulty", 20.0f);
             GameMain.NetLobbyScreen.SetLevelDifficulty(selectedLevelDifficulty);

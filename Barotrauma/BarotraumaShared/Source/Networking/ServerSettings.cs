@@ -277,9 +277,6 @@ namespace Barotrauma.Networking
         public bool ShowNetStats;
 
         private TimeSpan sparseUpdateInterval = new TimeSpan(0, 0, 0, 3);
-
-        private SelectionMode subSelectionMode, modeSelectionMode;
-
         private float selectedLevelDifficulty;
         private string password;
 
@@ -455,15 +452,11 @@ namespace Barotrauma.Networking
             set;
         }
 
-        public SelectionMode SubSelectionMode
-        {
-            get { return subSelectionMode; }
-        }
+        [Serialize(SelectionMode.Manual, true)]
+        public SelectionMode SubSelectionMode { get; private set; }
 
-        public SelectionMode ModeSelectionMode
-        {
-            get { return modeSelectionMode; }
-        }
+        [Serialize(SelectionMode.Manual, true)]
+        public SelectionMode ModeSelectionMode { get; private set; }
 
         public BanList BanList { get; private set; }
 
