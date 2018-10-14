@@ -94,6 +94,7 @@ namespace Barotrauma.Items.Components
         partial void LaunchProjSpecific()
         {
             recoilTimer = Math.Max(Reload, 0.1f);
+            PlaySound(ActionType.OnUse, item.WorldPosition);
         }
 
         partial void UpdateProjSpecific(float deltaTime)
@@ -321,7 +322,6 @@ namespace Barotrauma.Items.Components
             }
 
             Launch(projectile);
-            PlaySound(ActionType.OnUse, item.WorldPosition);
         }
     }
 }
