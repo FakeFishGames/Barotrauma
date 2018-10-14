@@ -29,6 +29,7 @@ namespace Barotrauma.Networking
                     else if (GUIComponent is GUITickBox tickBox) return tickBox.Selected;
                     else if (GUIComponent is GUITextBox textBox) return textBox.Text;
                     else if (GUIComponent is GUIScrollBar scrollBar) return scrollBar.BarScrollValue;
+                    else if (GUIComponent is GUIRadioButtonGroup radioButtonGroup) return radioButtonGroup.Selected;
                     return null;
                 }
                 set
@@ -37,6 +38,7 @@ namespace Barotrauma.Networking
                     else if (GUIComponent is GUITickBox tickBox) tickBox.Selected = (bool)value;
                     else if (GUIComponent is GUITextBox textBox) textBox.Text = (string)value;
                     else if (GUIComponent is GUIScrollBar scrollBar) scrollBar.BarScrollValue = (float)value;
+                    else if (GUIComponent is GUIRadioButtonGroup radioButtonGroup) radioButtonGroup.Selected = (Enum)value;
                 }
             }
 
@@ -65,8 +67,12 @@ namespace Barotrauma.Networking
                         if (!(a is bool?)) return false;
                         if (!(b is bool?)) return false;
                         return (bool)a == (bool)b;
+                    case "Enum":
+                        if (!(a is Enum)) return false;
+                        if (!(b is Enum)) return false;
+                        return ((Enum)a).Equals((Enum)b);
                     default:
-                        return false;
+                        return a.ToString().Equals(b.ToString(),StringComparison.InvariantCulture);
                 }
             }
         }
@@ -250,16 +256,15 @@ namespace Barotrauma.Networking
                 Stretch = true,
                 RelativeSpacing = 0.05f
             };
-            
+
+            GUIRadioButtonGroup selectionMode = new GUIRadioButtonGroup();
             for (int i = 0; i < 3; i++)
             {
-                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), ((SelectionMode)i).ToString(), font: GUI.SmallFont)
-                {
-                    Selected = i == (int)subSelectionMode,
-                    OnSelected = SwitchSubSelection,
-                    UserData = (SelectionMode)i
-                };
+                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), ((SelectionMode)i).ToString(), font: GUI.SmallFont);
+                selectionMode.AddRadioButton((SelectionMode)i, selectionTick);
             }
+            DebugConsole.NewMessage(SubSelectionMode.ToString(),Color.White);
+            GetPropertyData("SubSelectionMode").AssignGUIComponent(selectionMode);
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsModeSelection"));
             selectionFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), isHorizontal: true)
@@ -267,15 +272,14 @@ namespace Barotrauma.Networking
                 Stretch = true,
                 RelativeSpacing = 0.05f
             };
+
+            selectionMode = new GUIRadioButtonGroup();
             for (int i = 0; i < 3; i++)
             {
-                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), ((SelectionMode)i).ToString(), font: GUI.SmallFont)
-                {
-                    Selected = i == (int)modeSelectionMode,
-                    OnSelected = SwitchModeSelection,
-                    UserData = (SelectionMode)i
-                };
+                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), ((SelectionMode)i).ToString(), font: GUI.SmallFont);
+                selectionMode.AddRadioButton((SelectionMode)i, selectionTick);
             }
+            GetPropertyData("ModeSelectionMode").AssignGUIComponent(selectionMode);
             
             var endBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform),
                 TextManager.Get("ServerSettingsEndRoundWhenDestReached"))
@@ -731,33 +735,7 @@ namespace Barotrauma.Networking
             //slider has a reference to the label to change the text when it's used
             slider.UserData = label;
         }
-
-        private bool SwitchSubSelection(GUITickBox tickBox)
-        {
-            //can't deselect tickboxes, the mode is switched by selecting a deselected tickbox in the group
-            if (!tickBox.Selected)
-            {
-                tickBox.Selected = true;
-                return false;
-            }
-            //subSelectionMode = (SelectionMode)tickBox.UserData;
-
-            foreach (GUIComponent otherComponent in tickBox.Parent.Children)
-            {
-                if (!(otherComponent is GUITickBox otherTickBox)) continue;
-                otherTickBox.Selected = otherTickBox == tickBox;
-            }
-
-            //Voting.AllowSubVoting = subSelectionMode == SelectionMode.Vote;
-
-            /*if (subSelectionMode == SelectionMode.Random)
-            {
-                GameMain.NetLobbyScreen.SubList.Select(Rand.Range(0, GameMain.NetLobbyScreen.SubList.CountChildren));
-            }*/
-
-            return true;
-        }
-
+        
         private bool SelectSettingsTab(GUIButton button, object obj)
         {
             settingsTabIndex = (int)obj;
@@ -769,34 +747,7 @@ namespace Barotrauma.Networking
 
             return true;
         }
-
-        private bool SwitchModeSelection(GUITickBox tickBox)
-        {
-            //can't deselect tickboxes, the mode is switched by selecting a deselected tickbox in the group
-            if (!tickBox.Selected)
-            {
-                tickBox.Selected = true;
-                return false;
-            }
-            modeSelectionMode = (SelectionMode)tickBox.UserData;
-
-            foreach (GUIComponent otherTickBox in tickBox.Parent.Children)
-            {
-                if (otherTickBox == tickBox) continue;
-                ((GUITickBox)otherTickBox).Selected = false;
-            }
-
-            Voting.AllowModeVoting = modeSelectionMode == SelectionMode.Vote;
-
-            if (modeSelectionMode == SelectionMode.Random)
-            {
-                GameMain.NetLobbyScreen.ModeList.Select(Rand.Range(0, GameMain.NetLobbyScreen.ModeList.CountChildren));
-            }
-
-            return true;
-        }
-
-
+        
         public bool ToggleSettingsFrame(GUIButton button, object obj)
         {
             if (settingsFrame == null)

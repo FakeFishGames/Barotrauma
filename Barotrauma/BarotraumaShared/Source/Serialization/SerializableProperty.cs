@@ -379,6 +379,7 @@ namespace Barotrauma
         public static string GetSupportedTypeName(Type type)
         {
             string typeName = null;
+            if (type.IsEnum) return "Enum";
             if (!supportedTypes.TryGetValue(type, out typeName))
             {
                 return null;
