@@ -1,7 +1,7 @@
 ﻿<HumanoidRun
   AnimationType="Run"
   getupforce="0.5"
-  cyclespeed="9"
+  cyclespeed="1.738449"
   footmovestrength="15"
   footrotatestrength="20"
   stepsize="0.685,0.2250002"
@@ -22,4 +22,5 @@
   crouchingtorsopos="0.65"
   crouchingtorsoangle="-10"
   backwardsmovementmultiplier="0.75"
-  animationtype="Run" />
+  animationtype="Run"
+  legbendtorque="10" />

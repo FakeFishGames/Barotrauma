@@ -24,12 +24,28 @@ namespace Barotrauma.Extensions
         }
 
         /// <summary>
+        /// Creates a backward pointing vector based on the rotation (in radians).
+        /// </summary>
+        public static Vector2 Backward(float radians, float radius = 1)
+        {
+            return -Forward(radians, radius);
+        }
+
+        /// <summary>
         /// Creates a normalized perpendicular vector to the right from a forward vector.
         /// </summary>
         public static Vector2 Right(this Vector2 forward)
         {
             var normV = Vector2.Normalize(forward);
             return new Vector2(normV.Y, -normV.X);
+        }
+
+        /// <summary>
+        /// Creates a normalized perpendicular vector to the left from a forward vector.
+        /// </summary>
+        public static Vector2 Left(this Vector2 forward)
+        {
+            return -forward.Right();
         }
 
         /// <summary>
@@ -52,7 +68,6 @@ namespace Barotrauma.Extensions
 
         public static Vector2 Clamp(this Vector2 v, Vector2 min, Vector2 max)
         {
-            //return new Vector2(MathHelper.Clamp(v.X, min.X, max.X), MathHelper.Clamp(v.Y, min.Y, max.Y));
             return Vector2.Clamp(v, min, max);
         }
 

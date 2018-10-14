@@ -1,15 +1,16 @@
 ﻿<Ragdoll
   type="crawler2"
-  colliderheightfromfloor="50"
+  colliderheightfromfloor="35"
   minscale="0.8"
   maxscale="1.2"
   impacttolerance="6"
-  draggable="true"
+  draggable="True"
   limbscale="1"
-  jointscale="1">
+  jointscale="1"
+  canentersubmarine="True">
   <collider
-    height="60"
-    radius="22" />
+    width="80"
+    radius="40" />
   <!-- Head -->
   <limb
     id="0"
@@ -20,7 +21,17 @@
     mouthpos="240,65"
     healthindex="0"
     attackpriority="0"
-    stepoffset="0,0">
+    stepoffset="0,0"
+    bodytype="Dynamic"
+    height="0"
+    width="0"
+    mass="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    pullpos="0,0"
+    refjoint="-1"
+    ignorecollisions="False">
     <damagemodifier
       armorsector="0.0,180.0"
       afflictiontypes="damage"
@@ -42,14 +53,23 @@
   <!-- BodyUpper (main torso) -->
   <limb
     id="1"
-    width="115"
-    height="113"
+    width="50"
+    height="0"
     type="Torso"
     flip="True"
     steerforce="0.1"
     healthindex="0"
     attackpriority="0"
-    stepoffset="0,0">
+    stepoffset="0,0"
+    bodytype="Dynamic"
+    radius="35"
+    mass="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    pullpos="0,0"
+    refjoint="-1"
+    ignorecollisions="False">
     <damagemodifier
       armorsector="0.0,180.0"
       afflictiontypes="damage"
@@ -72,13 +92,22 @@
   <limb
     id="2"
     width="80"
-    height="86"
+    height="70"
     type="Tail"
     flip="True"
     healthindex="0"
     attackpriority="0"
     steerforce="0"
-    stepoffset="0,0">
+    stepoffset="0,0"
+    bodytype="Dynamic"
+    radius="0"
+    mass="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    pullpos="0,0"
+    refjoint="-1"
+    ignorecollisions="False">
     <damagemodifier
       armorsector="0.0,180.0"
       afflictiontypes="damage"
@@ -101,13 +130,22 @@
   <limb
     id="3"
     width="62"
-    height="57"
+    height="52"
     type="Tail"
     flip="True"
     healthindex="0"
     attackpriority="0"
     steerforce="0"
-    stepoffset="0,0">
+    stepoffset="0,0"
+    bodytype="Dynamic"
+    radius="0"
+    mass="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    pullpos="0,0"
+    refjoint="-1"
+    ignorecollisions="False">
     <damagemodifier
       armorsector="0.0,180.0"
       afflictiontypes="damage"
@@ -136,7 +174,16 @@
     healthindex="0"
     attackpriority="0"
     steerforce="0"
-    stepoffset="0,0">
+    stepoffset="0,0"
+    bodytype="Dynamic"
+    radius="0"
+    mass="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    pullpos="0,0"
+    refjoint="-1"
+    ignorecollisions="False">
     <damagemodifier
       armorsector="0.0,180.0"
       afflictiontypes="damage"
@@ -158,14 +205,23 @@
   <!-- BodyLower4 -->
   <limb
     id="5"
-    width="53"
-    height="26"
+    width="30"
+    height="0"
     type="Tail"
     flip="True"
     healthindex="0"
     attackpriority="0"
     steerforce="0"
-    stepoffset="0,0">
+    stepoffset="0,0"
+    bodytype="Dynamic"
+    radius="12"
+    mass="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    pullpos="0,0"
+    refjoint="-1"
+    ignorecollisions="False">
     <damagemodifier
       armorsector="0.0,180.0"
       afflictiontypes="damage"
@@ -182,19 +238,28 @@
       texture="Content/Characters/Crawler2/crawler2.png"
       sourcerect="0,135,48,36"
       depth="0.24"
-      origin="0.5241974,0.6133805" />
+      origin="0.524421,0.5587717" />
   </limb>
   <!-- BodyLower5 -->
   <limb
     id="6"
-    width="53"
-    height="30"
+    width="30"
+    height="0"
     type="Tail"
     flip="True"
     healthindex="0"
     attackpriority="0"
     steerforce="0"
-    stepoffset="0,0">
+    stepoffset="0,0"
+    bodytype="Dynamic"
+    radius="8"
+    mass="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    pullpos="0,0"
+    refjoint="-1"
+    ignorecollisions="False">
     <damagemodifier
       armorsector="0.0,180.0"
       afflictiontypes="damage"
@@ -217,13 +282,22 @@
   <limb
     id="7"
     width="53"
-    height="30"
+    height="10"
     type="Tail"
     flip="True"
     healthindex="0"
     attackpriority="0"
     steerforce="0"
-    stepoffset="0,0">
+    stepoffset="0,0"
+    bodytype="Dynamic"
+    radius="0"
+    mass="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    pullpos="0,0"
+    refjoint="-1"
+    ignorecollisions="False">
     <damagemodifier
       armorsector="0.0,180.0"
       afflictiontypes="damage"
@@ -247,18 +321,49 @@
     id="8"
     width="42"
     height="44"
-    ignorecollisions="true"
+    ignorecollisions="True"
     flip="True"
     type="None"
     healthindex="0"
     attackpriority="0"
     steerforce="0"
-    stepoffset="0,0">
+    stepoffset="0,0"
+    bodytype="Dynamic"
+    radius="0"
+    mass="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    pullpos="0,0"
+    refjoint="-1">
     <sprite
       texture="Content/Characters/Crawler2/crawler2.png"
       sourcerect="160,86,41,43"
       depth="0.01"
       origin="0.4026982,0.2012291" />
+    <attack
+      range="120"
+      damagerange="60"
+      duration="0.25"
+      stun="0.3"
+      structuredamage="5"
+      itemdamage="10"
+      structuresoundtype="StructureSlash"
+      targetimpulse="-20"
+      severlimbsprobability="0.5"
+      force="25"
+      applyforceonlimbs="0,9"
+      torque="50">
+      <Affliction
+        identifier="bleeding"
+        strength="30" />
+      <Affliction
+        identifier="stun"
+        strength="0.25" />
+      <Affliction
+        identifier="internaldamage"
+        strength="10" />
+    </attack>
   </limb>
   <!-- ArmUpper -->
   <limb
@@ -270,7 +375,16 @@
     healthindex="0"
     attackpriority="0"
     steerforce="0"
-    stepoffset="0,0">
+    stepoffset="0,0"
+    bodytype="Dynamic"
+    radius="0"
+    mass="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    pullpos="0,0"
+    refjoint="-1"
+    ignorecollisions="False">
     <sprite
       texture="Content/Characters/Crawler2/crawler2.png"
       sourcerect="0,170,70,87"
@@ -280,55 +394,51 @@
   <!-- ArmLower -->
   <limb
     id="10"
-    width="96"
-    height="40"
+    width="60"
+    height="0"
     type="RightFoot"
     flip="True"
     healthindex="0"
     attackpriority="0"
     steerforce="0"
-    stepoffset="0,0">
+    stepoffset="0,0"
+    bodytype="Dynamic"
+    radius="15"
+    mass="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    pullpos="13.06022,-3.164046"
+    refjoint="-1"
+    ignorecollisions="False">
     <sprite
       texture="Content/Characters/Crawler2/crawler2.png"
       sourcerect="160,130,96,40"
       depth="0.1"
       origin="0.2300953,0.301666" />
-    <attack
-      range="120"
-      damagerange="60"
-      duration="0.25"
-      stun="0.3"
-      structuredamage="5"
-      itemdamage="10"
-      structuresoundtype="StructureSlash"
-      targetforce="-30"
-      severlimbsprobability="0.5"
-      force="15"
-      applyforceonlimbs="0,1"
-      torque="-20">
-      <Affliction
-        identifier="bleeding"
-        strength="30" />
-      <Affliction
-        identifier="internaldamage"
-        strength="10" />
-    </attack>
     <sound
-      tag="footstep_metal" />
+      tag="footstep_armor_heavy" />
   </limb>
   <!-- FakeFoot1 -->
   <limb
     id="11"
     width="38"
     height="50"
-    ignorecollisions="true"
+    ignorecollisions="True"
     flip="True"
     mass="0.5"
     type="None"
     healthindex="0"
     attackpriority="0"
     steerforce="0"
-    stepoffset="0,0">
+    stepoffset="0,0"
+    bodytype="Dynamic"
+    radius="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    pullpos="0,0"
+    refjoint="-1">
     <sprite
       texture="Content/Characters/Crawler2/crawler2.png"
       sourcerect="0,0,38,52"
@@ -340,14 +450,21 @@
     id="12"
     width="38"
     height="51"
-    ignorecollisions="true"
+    ignorecollisions="True"
     flip="True"
     mass="0.5"
     type="None"
     healthindex="0"
     attackpriority="0"
     steerforce="0"
-    stepoffset="0,0">
+    stepoffset="0,0"
+    bodytype="Dynamic"
+    radius="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    pullpos="0,0"
+    refjoint="-1">
     <sprite
       texture="Content/Characters/Crawler2/crawler2.png"
       sourcerect="0,50,38,52"
@@ -359,14 +476,21 @@
     id="13"
     width="21"
     height="22"
-    ignorecollisions="true"
+    ignorecollisions="True"
     flip="True"
     mass="0.5"
     type="None"
     healthindex="0"
     attackpriority="0"
     steerforce="0"
-    stepoffset="0,0">
+    stepoffset="0,0"
+    bodytype="Dynamic"
+    radius="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    pullpos="0,0"
+    refjoint="-1">
     <sprite
       texture="Content/Characters/Crawler2/crawler2.png"
       sourcerect="0,101,21,22"
@@ -378,27 +502,27 @@
   <joint
     limb1="0"
     limb2="1"
-    limb1anchor="5.462685,5.877317"
-    limb2anchor="50.43435,-15.44099"
+    limb1anchor="-8.376499,13.93317"
+    limb2anchor="41.83706,-3.272205"
     canbesevered="True"
     limitenabled="True"
-    upperlimit="102.8425"
-    lowerlimit="-14.6803" />
+    upperlimit="57.46242"
+    lowerlimit="-25.10567" />
   <!--Torso to Tail-->
   <joint
     limb1="1"
     limb2="2"
-    limb1anchor="-33.34736,4.744185"
+    limb1anchor="-22.88378,4.744185"
     limb2anchor="31.51369,1.730982"
     canbesevered="True"
     limitenabled="True"
-    upperlimit="45"
-    lowerlimit="-30" />
+    upperlimit="8.367105"
+    lowerlimit="-66.20706" />
   <joint
     limb1="2"
     limb2="3"
-    limb1anchor="-24.05607,-1.162483"
-    limb2anchor="16.46447,-3.551181"
+    limb1anchor="-22.74688,-2.118584"
+    limb2anchor="16.64025,-2.27062"
     canbesevered="True"
     limitenabled="True"
     upperlimit="45"
@@ -407,7 +531,7 @@
     limb1="3"
     limb2="4"
     limb1anchor="-20.74999,-1.282803"
-    limb2anchor="21.16196,2.358416"
+    limb2anchor="13.49095,7.263193"
     canbesevered="True"
     limitenabled="True"
     upperlimit="45"
@@ -415,8 +539,8 @@
   <joint
     limb1="4"
     limb2="5"
-    limb1anchor="-16.96122,3.195561"
-    limb2anchor="20.27618,8.145391"
+    limb1anchor="-27.64617,1.882713"
+    limb2anchor="12.23051,0.2277253"
     canbesevered="True"
     limitenabled="True"
     upperlimit="45"
@@ -424,7 +548,7 @@
   <joint
     limb1="5"
     limb2="6"
-    limb1anchor="-10.98386,-0.3554651"
+    limb1anchor="-9.358315,-1.319017"
     limb2anchor="18.53379,-3.801998"
     canbesevered="True"
     limitenabled="True"
@@ -453,7 +577,7 @@
   <joint
     limb1="1"
     limb2="9"
-    limb1anchor="14.78105,-23.97115"
+    limb1anchor="11.54731,-23.31197"
     limb2anchor="3.39634,7.705299"
     canbesevered="True"
     limitenabled="True"
@@ -463,7 +587,7 @@
   <joint
     limb1="9"
     limb2="10"
-    limb1anchor="7.679461,-19.56502"
+    limb1anchor="-0.6235328,-31.32381"
     limb2anchor="-9.55594,5.383872"
     canbesevered="True"
     limitenabled="True"
@@ -482,7 +606,7 @@
   <joint
     limb1="3"
     limb2="12"
-    limb1anchor="-10.48523,-14.0308"
+    limb1anchor="12.48289,-22.7742"
     limb2anchor="7.128497,8.439569"
     canbesevered="True"
     limitenabled="True"

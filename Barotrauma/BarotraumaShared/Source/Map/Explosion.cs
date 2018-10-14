@@ -36,6 +36,7 @@ namespace Barotrauma
             shockwave = true;
             smoke = true;
             flames = true;
+            underwaterBubble = true;
         }
 
         public Explosion(XElement element, string parentDebugName)

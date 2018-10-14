@@ -548,7 +548,7 @@ namespace Barotrauma
             if (TargetMovement.X != 0.0f)
             {
                 //progress the walking animation
-                WalkPos -= MathHelper.ToRadians(CurrentAnimationParams.CycleSpeed) * walkCycleMultiplier * Math.Sign(movement.X);
+                WalkPos -= MathHelper.ToRadians(CurrentAnimationParams.CycleSpeed) * walkCycleMultiplier * movement.X;
 
                 for (int i = -1; i < 2; i += 2)
                 {
@@ -905,11 +905,11 @@ namespace Barotrauma
                 }
                 else
                 {
-                    thigh.body.SmoothRotate(torso.Rotation + (float)Math.Sin(legCyclePos / CurrentSwimParams.LegCycleLength) * i * 0.3f, 2.0f);
+                    thigh.body.SmoothRotate(torso.Rotation + (float)Math.Sin(legCyclePos / CurrentSwimParams.LegCycleLength) * i * 0.3f * CurrentAnimationParams.CycleSpeed, 2.0f);
                 }
             }
 
-            Vector2 transformedFootPos = new Vector2((float)Math.Sin(legCyclePos / CurrentSwimParams.LegCycleLength) * CurrentSwimParams.LegMoveAmount, 0.0f);
+            Vector2 transformedFootPos = new Vector2((float)Math.Sin(legCyclePos / CurrentSwimParams.LegCycleLength) * CurrentSwimParams.LegMoveAmount * CurrentAnimationParams.CycleSpeed, 0.0f);
             transformedFootPos = Vector2.Transform(transformedFootPos, Matrix.CreateRotationZ(Collider.Rotation));
 
             MoveLimb(rightFoot, footPos - transformedFootPos, 1.0f);
@@ -946,8 +946,8 @@ namespace Barotrauma
             // Not sure why the params has to be flipped, but it works.
             var handMoveAmount = CurrentSwimParams.HandMoveAmount.Flip();
             var handMoveOffset = CurrentSwimParams.HandMoveOffset.Flip();
-            float handPosX = (float)Math.Cos(handCyclePos) * handMoveAmount.X;
-            float handPosY = (float)Math.Sin(handCyclePos) * handMoveAmount.Y;
+            float handPosX = (float)Math.Cos(handCyclePos) * handMoveAmount.X * CurrentAnimationParams.CycleSpeed;
+            float handPosY = (float)Math.Sin(handCyclePos) * handMoveAmount.Y * CurrentAnimationParams.CycleSpeed;
             //handPosY = MathHelper.Clamp(handPosY, -0.8f, 0.8f);
 
             Matrix rotationMatrix = Matrix.CreateRotationZ(torso.Rotation);

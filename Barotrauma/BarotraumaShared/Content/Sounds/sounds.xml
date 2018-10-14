@@ -20,6 +20,7 @@
   <damagesound file="Content/Sounds/Damage/GlassBreak1.ogg" damagerange="20.0,50.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
   <damagesound file="Content/Sounds/Damage/GlassBreak2.ogg" damagerange="25.0,80.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
   <damagesound file="Content/Sounds/Damage/GlassBreak3.ogg" damagerange="50.0,100.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
+  <damagesound file="Content/Sounds/Damage/GlassBreak4.ogg" damagerange="50.0,100.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
 
   <damagesound file="Content/Sounds/Damage/StructureCrunch1.ogg" damagerange="0.0,40.0" damagesoundtype="StructureSlash"/>
   <damagesound file="Content/Sounds/Damage/StructureCrunch2.ogg" damagerange="5.0,70.0" damagesoundtype="StructureSlash"/>
@@ -27,10 +28,10 @@
   <damagesound file="Content/Sounds/Damage/StructureCrunch4.ogg" damagerange="25.0,100.0" damagesoundtype="StructureSlash"/>
   <damagesound file="Content/Sounds/Damage/StructureCrunch5.ogg" damagerange="25.0,100.0" damagesoundtype="StructureSlash"/>
 
-  <damagesound file="Content/Sounds/Damage/LimbBlunt1.ogg" damagerange="0.0,40.0" damagesoundtype="LimbBlunt"/>
-  <damagesound file="Content/Sounds/Damage/LimbBlunt2.ogg" damagerange="0.0,40.0" damagesoundtype="LimbBlunt"/>
-  <damagesound file="Content/Sounds/Damage/LimbBlunt3.ogg" damagerange="25.0,100.0" damagesoundtype="LimbBlunt"/>
-  <damagesound file="Content/Sounds/Damage/LimbBlunt4.ogg" damagerange="25.0,100.0" damagesoundtype="LimbBlunt"/>
+  <damagesound file="Content/Sounds/Damage/LimbBlunt1.ogg" damagerange="0.0,40.0" damagesoundtype="LimbBlunt" volume="0.5"/>
+  <damagesound file="Content/Sounds/Damage/LimbBlunt2.ogg" damagerange="0.0,40.0" damagesoundtype="LimbBlunt" volume="0.6"/>
+  <damagesound file="Content/Sounds/Damage/LimbBlunt3.ogg" damagerange="25.0,100.0" damagesoundtype="LimbBlunt" volume="0.7"/>
+  <damagesound file="Content/Sounds/Damage/LimbBlunt4.ogg" damagerange="25.0,100.0" damagesoundtype="LimbBlunt" volume="0.8"/>
 
   <damagesound file="Content/Sounds/Damage/LimbSlash1.ogg" damagerange="0.0,40.0" damagesoundtype="LimbSlash"/>
   <damagesound file="Content/Sounds/Damage/LimbSlash2.ogg" damagerange="0.0,80.0" damagesoundtype="LimbSlash"/>
@@ -81,21 +82,30 @@
   <waterambience file="Content/Sounds/Water/WaterAmbience1.ogg"/>
   <waterambience file="Content/Sounds/Water/WaterAmbience2.ogg"/>
 
-  <footstep file="Content/Sounds/Footsteps/step.ogg"/>
-  <footstep_metal file="Content/Sounds/Footsteps/Metal/metal-01.ogg"/>
-  <footstep_metal file="Content/Sounds/Footsteps/Metal/metal-02.ogg"/>
-  <footstep_metal file="Content/Sounds/Footsteps/Metal/metal-03.ogg"/>
-  <footstep_metal file="Content/Sounds/Footsteps/Metal/metal-04.ogg"/>
-  <footstep_metal file="Content/Sounds/Footsteps/Metal/metal-05.ogg"/>
-  <footstep_metal file="Content/Sounds/Footsteps/Metal/metal-06.ogg"/>
-  <footstep_metal file="Content/Sounds/Footsteps/Metal/metal-07.ogg"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal1.ogg" volume="0.5"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal2.ogg" volume="0.5"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal3.ogg" volume="0.5"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal4.ogg" volume="0.5"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal5.ogg" volume="0.5"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal6.ogg" volume="0.5"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal7.ogg" volume="0.5"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal8.ogg" volume="0.5"/>
 
-  <footstep_armor file="Content/Sounds/Footsteps/Armor/armor-01.ogg"/>
-  <footstep_armor file="Content/Sounds/Footsteps/Armor/armor-02.ogg"/>
-  <footstep_armor file="Content/Sounds/Footsteps/Armor/armor-03.ogg"/>
+  <footstep_armor file="Content/Sounds/Footsteps/Armor/FootstepArmor1.ogg"/>
+  <footstep_armor file="Content/Sounds/Footsteps/Armor/FootstepArmor2.ogg"/>
+  <footstep_armor file="Content/Sounds/Footsteps/Armor/FootstepArmor3.ogg"/>
+  <footstep_armor file="Content/Sounds/Footsteps/Armor/FootstepArmor4.ogg"/>
+  <footstep_armor file="Content/Sounds/Footsteps/Armor/FootstepArmor5.ogg"/>
 
-  <footstep_clown file="Content/Sounds/Footsteps/Clown/clown-01.ogg"/>
-  <footstep_clown file="Content/Sounds/Footsteps/Clown/clown-02.ogg"/>
+  <footstep_armor_heavy file="Content/Sounds/Footsteps/Armor/FootstepArmorHeavy1.ogg"/>
+  <footstep_armor_heavy file="Content/Sounds/Footsteps/Armor/FootstepArmorHeavy2.ogg"/>
+  <footstep_armor_heavy file="Content/Sounds/Footsteps/Armor/FootstepArmorHeavy3.ogg"/>
+  <footstep_armor_heavy file="Content/Sounds/Footsteps/Armor/FootstepArmorHeavy4.ogg"/>
+
+  <footstep_clown file="Content/Sounds/Footsteps/Clown/FootstepClown1.ogg"/>
+  <footstep_clown file="Content/Sounds/Footsteps/Clown/FootstepClown2.ogg"/>
+  <footstep_clown file="Content/Sounds/Footsteps/Clown/FootstepClown3.ogg"/>
+  <footstep_clown file="Content/Sounds/Footsteps/Clown/FootstepClown4.ogg"/>
 
   <ambient file="Content/Sounds/Ambient/Ambient1.ogg"/>
   <ambient file="Content/Sounds/Ambient/Ambient2.ogg"/>

@@ -210,8 +210,8 @@ namespace Barotrauma
                     prefab.BackgroundSprite.effects = oldEffects;
                 }
             }
-            // TODO: use SpriteOverrideDepth if defined?
-            if (back == prefab.sprite.Depth > 0.5f || editing)
+
+            if (back == depth > 0.5f || editing)
             {
                 SpriteEffects oldEffects = prefab.sprite.effects;
                 prefab.sprite.effects ^= SpriteEffects;

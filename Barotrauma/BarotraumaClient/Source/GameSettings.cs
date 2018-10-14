@@ -4,8 +4,6 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -13,8 +11,8 @@ namespace Barotrauma
     {
         private enum Tab
         {
+            General,
             Graphics,
-            General
         }
         
         private GUIFrame settingsFrame;
@@ -99,8 +97,10 @@ namespace Barotrauma
             tabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length];
             foreach (Tab tab in Enum.GetValues(typeof(Tab)))
             {
-                tabs[(int)tab] = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.91f), paddedFrame.RectTransform), style: "InnerFrame");
-                tabs[(int)tab].UserData = tab;
+                tabs[(int)tab] = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.91f), paddedFrame.RectTransform), style: "InnerFrame")
+                {
+                    UserData = tab
+                };
                 new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), tabButtonHolder.RectTransform), tab.ToString())
                 {
                     UserData = tab,
@@ -173,7 +173,6 @@ namespace Barotrauma
                       
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), leftColumn.RectTransform), style: null);
-
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("ParticleLimit"));
             GUIScrollBar particleScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
                 barSize: 0.1f)
@@ -185,7 +184,6 @@ namespace Barotrauma
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), rightColumn.RectTransform), style: null);
-
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("LosEffect"));
             var losModeDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform));
             losModeDD.AddItem(TextManager.Get("LosModeNone"), LosMode.None);
@@ -203,11 +201,41 @@ namespace Barotrauma
                 }
                 return true;
             };
+            
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), style: null);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("LightMapScale"))
+            {
+                ToolTip = TextManager.Get("LightMapScaleToolTip")
+            };
+            new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
+                barSize: 0.1f)
+            {
+                ToolTip = TextManager.Get("LightMapScaleToolTip"),
+                BarScroll = MathUtils.InverseLerp(0.2f, 1.0f, LightMapScale),
+                OnMoved = (scrollBar, barScroll) => { LightMapScale = MathHelper.Lerp(0.2f, 1.0f, barScroll); UnsavedSettings = true; return true; },
+                Step = 0.25f
+            };
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), style: null);
+            new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("SpecularLighting"))
+            {
+                ToolTip = TextManager.Get("SpecularLightingToolTip"),
+                Selected = SpecularityEnabled,
+                OnSelected = (tickBox) =>
+                {
+                    SpecularityEnabled = tickBox.Selected;
+                    UnsavedSettings = true;
+                    return true;
+                }
+            };
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), rightColumn.RectTransform), style: null);
             new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("ChromaticAberration"))
             {
+                ToolTip = TextManager.Get("ChromaticAberrationToolTip"),
                 Selected = ChromaticAberrationEnabled,
                 OnSelected = (tickBox) =>
                 {
@@ -218,7 +246,7 @@ namespace Barotrauma
             };
                         
             //spacing
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), rightColumn.RectTransform), style: null);
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), style: null);
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("HUDScale"));
             new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
@@ -242,7 +270,7 @@ namespace Barotrauma
             };
 
             //spacing
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.4f), rightColumn.RectTransform), style: null);
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), rightColumn.RectTransform), style: null);
 
             /// General tab --------------------------------------------------------------
 

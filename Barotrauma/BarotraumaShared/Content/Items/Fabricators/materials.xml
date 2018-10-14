@@ -113,13 +113,15 @@
 
     <Body width="24" height="12" density="60"/>
 
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0">
-      <StatusEffect type="OnBroken" target="This" Condition="-100.0">
-        <sound file="Content/Items/Reactor/explosion.ogg"/>
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" characterusable="false">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0">
+        <sound file="Content/Items/Weapons/ExplosionSmall3.ogg" range="5000"/>
+        <sound file="Content/Items/Weapons/ExplosionDebris3.ogg" range="5000"/>
         <Explosion range="500.0" structuredamage="2" force="20.0">
           <Affliction identifier="burn" strength="50"/>
           <Affliction identifier="stun" strength="3"/>
         </Explosion>
+        <Remove/>
         <Fire size="100.0"/>
       </StatusEffect>
     </Holdable>

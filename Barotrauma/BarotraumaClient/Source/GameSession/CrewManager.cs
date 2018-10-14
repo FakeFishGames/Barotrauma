@@ -360,7 +360,8 @@ namespace Barotrauma
                 HoverColor = Color.Transparent,
                 SelectedColor = Color.Transparent,
                 CanBeFocused = false,
-                ToolTip = characterToolTip
+                ToolTip = characterToolTip,
+                AutoScale = true
             };
 
             //---------------- order buttons ----------------
@@ -926,7 +927,7 @@ namespace Barotrauma
         partial void UpdateProjectSpecific(float deltaTime)
         {
             // Quick selection
-            if (!GameMain.IsMultiplayer)
+            if (!GameMain.IsMultiplayer && GUI.KeyboardDispatcher.Subscriber == null)
             {
                 if (PlayerInput.KeyHit(InputType.SelectNextCharacter))
                 {

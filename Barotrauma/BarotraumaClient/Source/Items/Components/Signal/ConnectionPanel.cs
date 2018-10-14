@@ -16,7 +16,10 @@ namespace Barotrauma.Items.Components
         partial void InitProjSpecific(XElement element)
         {
             if (GuiFrame == null) return;
-            new GUICustomComponent(new RectTransform(Vector2.One, GuiFrame.RectTransform), DrawConnections, null);
+            new GUICustomComponent(new RectTransform(Vector2.One, GuiFrame.RectTransform), DrawConnections, null)
+            {
+                UserData = this
+            };
         }
 
         public override bool ShouldDrawHUD(Character character)

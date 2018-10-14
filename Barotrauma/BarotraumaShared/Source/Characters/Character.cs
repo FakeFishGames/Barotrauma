@@ -1569,7 +1569,7 @@ namespace Barotrauma
             }
 
             //climb ladders automatically when pressing up/down inside their trigger area
-            if (SelectedConstruction == null && !AnimController.InWater)
+            if (SelectedConstruction == null && !AnimController.InWater && Screen.Selected != GameMain.SubEditorScreen)
             {
                 bool climbInput = IsKeyDown(InputType.Up) || IsKeyDown(InputType.Down);
                 bool isControlled = Controlled == this;
@@ -1992,9 +1992,12 @@ namespace Barotrauma
         public AttackResult ApplyAttack(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false, Limb targetLimb = null)
         {
             Limb limbHit = targetLimb;
+
+            float attackImpulse = attack.TargetImpulse + attack.TargetForce * deltaTime;
+
             var attackResult = targetLimb == null ?
-                AddDamage(worldPosition, attack.Afflictions, attack.Stun, playSound, attack.TargetForce, out limbHit, attacker) :
-                DamageLimb(worldPosition, targetLimb, attack.Afflictions, attack.Stun, playSound, attack.TargetForce, attacker);
+                AddDamage(worldPosition, attack.Afflictions, attack.Stun, playSound, attackImpulse, out limbHit, attacker) :
+                DamageLimb(worldPosition, targetLimb, attack.Afflictions, attack.Stun, playSound, attackImpulse, attacker);
 
             if (limbHit == null) return new AttackResult();
 
@@ -2045,12 +2048,12 @@ namespace Barotrauma
             return attackResult;
         }
         
-        public AttackResult AddDamage(Vector2 worldPosition, List<Affliction> afflictions, float stun, bool playSound, float attackForce = 0.0f, Character attacker = null)
+        public AttackResult AddDamage(Vector2 worldPosition, List<Affliction> afflictions, float stun, bool playSound, float attackImpulse = 0.0f, Character attacker = null)
         {
-            return AddDamage(worldPosition, afflictions, stun, playSound, attackForce, out _, attacker);
+            return AddDamage(worldPosition, afflictions, stun, playSound, attackImpulse, out _, attacker);
         }
 
-        public AttackResult AddDamage(Vector2 worldPosition, List<Affliction> afflictions, float stun, bool playSound, float attackForce, out Limb hitLimb, Character attacker = null)
+        public AttackResult AddDamage(Vector2 worldPosition, List<Affliction> afflictions, float stun, bool playSound, float attackImpulse, out Limb hitLimb, Character attacker = null)
         {
             hitLimb = null;
 
@@ -2067,20 +2070,20 @@ namespace Barotrauma
                 }
             }
 
-            return DamageLimb(worldPosition, hitLimb, afflictions, stun, playSound, attackForce, attacker);
+            return DamageLimb(worldPosition, hitLimb, afflictions, stun, playSound, attackImpulse, attacker);
         }
 
-        public AttackResult DamageLimb(Vector2 worldPosition, Limb hitLimb, List<Affliction> afflictions, float stun, bool playSound, float attackForce, Character attacker = null)
+        public AttackResult DamageLimb(Vector2 worldPosition, Limb hitLimb, List<Affliction> afflictions, float stun, bool playSound, float attackImpulse, Character attacker = null)
         {
             if (Removed) return new AttackResult();
 
             SetStun(stun);
 
-            if (Math.Abs(attackForce) > 0.0f)
+            if (Math.Abs(attackImpulse) > 0.0f)
             {
                 Vector2 diff = hitLimb.WorldPosition - worldPosition;
                 if (diff == Vector2.Zero) diff = Rand.Vector(1.0f);
-                hitLimb.body.ApplyForce(Vector2.Normalize(diff) * attackForce, hitLimb.SimPosition + ConvertUnits.ToSimUnits(diff));
+                hitLimb.body.ApplyLinearImpulse(Vector2.Normalize(diff) * attackImpulse, hitLimb.SimPosition + ConvertUnits.ToSimUnits(diff));
             }
 
             AttackResult attackResult = hitLimb.AddDamage(worldPosition, afflictions, playSound);

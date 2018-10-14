@@ -14,9 +14,9 @@
   headtorque="50"
   torsotorque="50"
   foottorque="25"
-  footangles="8: -1.218539,10: -0.778924"
+  footangles="8: -1.218539,10: 1.078918"
   torsoposition="NaN"
   backwardsmovementmultiplier="0.75"
-  cyclespeed="4.273196"
+  cyclespeed="5.690165"
   torsoangle="NaN"
   animationtype="Walk" />

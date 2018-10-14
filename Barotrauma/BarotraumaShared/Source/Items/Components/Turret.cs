@@ -324,6 +324,7 @@ namespace Barotrauma.Items.Components
                 GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.components.IndexOf(this), projectile });
             }
 
+            ApplyStatusEffects(ActionType.OnUse, 1.0f);
             LaunchProjSpecific();
         }
 
@@ -468,9 +469,6 @@ namespace Barotrauma.Items.Components
 
 #if CLIENT
             moveSoundChannel?.Dispose(); moveSoundChannel = null;
-            moveSound?.Dispose(); moveSound = null;
-            endMoveSound?.Dispose(); endMoveSound = null;
-            startMoveSound?.Dispose(); startMoveSound = null;
 #endif
         }
 

@@ -213,8 +213,17 @@ namespace Barotrauma
                     BarScroll += dir * 0.1f;
                 }
             }
-
-            if (GUI.MouseOn == Frame)
+            
+            if (draggingBar == this)
+            {
+                if (!PlayerInput.LeftButtonHeld()) draggingBar = null;
+                if ((isHorizontal && PlayerInput.MousePosition.X > Rect.X && PlayerInput.MousePosition.X < Rect.Right) ||
+                    (!isHorizontal && PlayerInput.MousePosition.Y > Rect.Y && PlayerInput.MousePosition.Y < Rect.Bottom))
+                {
+                    MoveButton(PlayerInput.MouseSpeed);
+                }
+            }
+            else if (GUI.MouseOn == Frame)
             {
                 if (PlayerInput.LeftButtonClicked())
                 {
@@ -222,12 +231,6 @@ namespace Barotrauma
                         Math.Sign(PlayerInput.MousePosition.X - Bar.Rect.Center.X) * Bar.Rect.Width,
                         Math.Sign(PlayerInput.MousePosition.Y - Bar.Rect.Center.Y) * Bar.Rect.Height));
                 }
-            }
-
-            if (draggingBar == this)
-            {
-                if (!PlayerInput.LeftButtonHeld()) draggingBar = null;
-                MoveButton(PlayerInput.MouseSpeed);
             }       
         }
 

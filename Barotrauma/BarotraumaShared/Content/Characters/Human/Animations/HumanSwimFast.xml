@@ -1,11 +1,13 @@
 ﻿<HumanSwimFast
   AnimationType="SwimFast"
-  movementspeed="1.6"
+  movementspeed="1.4"
   steertorque="25"
-  headangle="19.5"
+  headangle="21.80321"
   torsoangle="0"
-  legmoveamount="1.1"
-  handmoveamount="2,0"
+  legmoveamount="0.6795487"
+  handmoveamount="0.7361093,0.07409383"
   handmoveoffset="0,0"
-  handcyclespeed="5"
-  legcyclelength="9.149996" />
+  handcyclespeed="4"
+  legcyclelength="4.88225"
+  cyclespeed="1.4"
+  animationtype="SwimFast" />

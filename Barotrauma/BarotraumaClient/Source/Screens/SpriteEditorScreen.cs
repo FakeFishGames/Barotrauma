@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -23,7 +24,7 @@ namespace Barotrauma
         private GUITickBox pixelPerfectToggle;
         private GUIScrollBar zoomBar;
         private string xmlPath;
-        private Sprite selectedSprite;
+        private List<Sprite> selectedSprites = new List<Sprite>();
         private Texture2D selectedTexture;
         private Rectangle viewArea;
         private Rectangle textureRect;
@@ -88,30 +89,33 @@ namespace Barotrauma
             new GUIButton(new RectTransform(new Vector2(0.12f, 0.4f), topPanelContents.RectTransform, Anchor.TopLeft)
             {
                 RelativeOffset = new Vector2(0.15f, 0.1f)
-            }, "Save Selected Source Rect")
+            }, "Save Selected Source Rects")
             {
                 OnClicked = (button, userData) =>
                 {
-                    if (selectedSprite == null) { return false; }
-                    var element = selectedSprite.SourceElement;
-                    if (element == null)
+                    if (selectedSprites.None()) { return false; }
+                    foreach (var sprite in selectedSprites)
                     {
-                        xmlPathText.Text = "No xml element defined for the sprite";
-                        xmlPathText.TextColor = Color.Red;
-                        return false;
+                        var element = sprite.SourceElement;
+                        if (element == null)
+                        {
+                            xmlPathText.Text = "No xml element defined for the sprite";
+                            xmlPathText.TextColor = Color.Red;
+                            return false;
+                        }
+                        element.SetAttributeValue("sourcerect", XMLExtensions.RectToString(sprite.SourceRect));
                     }
-                    element.SetAttributeValue("sourcerect", XMLExtensions.RectToString(selectedSprite.SourceRect));
+                    var firstSprite = selectedSprites.First();
+                    XElement e = firstSprite.SourceElement;
                     var d = XMLExtensions.TryLoadXml(xmlPath);
-                    if (d == null || d.BaseUri != element.Document.BaseUri)
+                    if (d == null || d.BaseUri != e.Document.BaseUri)
                     {
                         xmlPathText.Text = "Failed to save to " + xmlPath;
                         xmlPathText.TextColor = Color.Red;
                         return false;
                     }
-                    element.Document.Save(xmlPath);
-                    string name = GetSpriteName(selectedSprite);
-                    xmlPathText.Text = string.IsNullOrEmpty(name) ? "Selected rect saved to " : $"{name} saved to ";
-                    xmlPathText.Text += xmlPath;
+                    e.Document.Save(xmlPath);
+                    xmlPathText.Text = "Selected rects saved to " + xmlPath;
                     xmlPathText.TextColor = Color.LightGreen;
                     return true;
                 }
@@ -210,13 +214,14 @@ namespace Barotrauma
                         var sprite = (Sprite)textBlock.UserData;
                         textBlock.TextColor = new Color(textBlock.TextColor, sprite.Texture == selectedTexture ? 1.0f : 0.4f);
                     }
-                    if (selectedSprite == null || selectedSprite.Texture != selectedTexture)
+                    if (selectedSprites.None(s => s.Texture == selectedTexture))
                     {
                         spriteList.Select(Sprite.LoadedSprites.First(s => s.Texture == selectedTexture));
                     }
-                    texturePathText.Text = selectedSprite.FilePath;
+                    var firstSprite = selectedSprites.First();
+                    texturePathText.Text = firstSprite.FilePath;
                     texturePathText.TextColor = Color.LightGray;
-                    var element = selectedSprite.SourceElement;
+                    var element = firstSprite.SourceElement;
                     if (element == null)
                     {
                         xmlPathText.Text = string.Empty;
@@ -249,11 +254,26 @@ namespace Barotrauma
                 {
                     Sprite sprite = userData as Sprite;
                     if (sprite == null) return false;
-                    if (selectedSprite != null && selectedSprite.Texture != sprite.Texture)
+                    if (selectedSprites.Any(s => s.Texture != selectedTexture))
                     {
                         widgets.Clear();
                     }
-                    selectedSprite = sprite;
+                    if (Widget.EnableMultiSelect)
+                    {
+                        if (selectedSprites.Contains(sprite))
+                        {
+                            selectedSprites.Remove(sprite);
+                        }
+                        else
+                        {
+                            selectedSprites.Add(sprite);
+                        }
+                    }
+                    else
+                    {
+                        selectedSprites.Clear();
+                        selectedSprites.Add(sprite);
+                    }
                     textureList.Select(sprite.Texture);
                     return true;
                 }
@@ -275,8 +295,9 @@ namespace Barotrauma
             {
                 widgets.ElementAt(i).Value.Update((float)deltaTime);
             }
+            Widget.EnableMultiSelect = PlayerInput.KeyDown(Keys.LeftControl);
             // Select rects with the mouse
-            if (Widget.selectedWidget == null)
+            if (Widget.selectedWidgets.None() || Widget.EnableMultiSelect)
             {
                 if (selectedTexture != null)
                 {
@@ -305,7 +326,7 @@ namespace Barotrauma
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             graphics.Clear(new Color(0.051f, 0.149f, 0.271f, 1.0f));
-            spriteBatch.Begin(SpriteSortMode.Immediate, rasterizerState: GameMain.ScissorTestEnable);
+            spriteBatch.Begin(SpriteSortMode.Immediate, rasterizerState: GameMain.ScissorTestEnable, samplerState: SamplerState.PointClamp);
 
             int margin = 20;
             viewArea = new Rectangle(leftPanel.Rect.Right + margin, topPanel.Rect.Bottom + margin, rightPanel.Rect.Left - leftPanel.Rect.Right - margin * 2, Frame.Rect.Height - topPanel.Rect.Height - margin * 2);
@@ -344,8 +365,7 @@ namespace Barotrauma
                         (int)(sprite.SourceRect.Width * zoom),
                         (int)(sprite.SourceRect.Height * zoom));
 
-                    GUI.DrawRectangle(spriteBatch, sourceRect,
-                        selectedSprite == sprite ? Color.Red : Color.White * 0.5f);
+                    GUI.DrawRectangle(spriteBatch, sourceRect, selectedSprites.Contains(sprite) ? Color.Red : Color.White * 0.5f);
 
                     string identifier = sprite.SourceElement?.ToString();
                     if (!string.IsNullOrEmpty(identifier))
@@ -380,7 +400,7 @@ namespace Barotrauma
                             w.MouseUp += UpdatePos;
                             w.PostUpdate += dTime =>
                             {
-                                w.color = selectedSprite == sprite ? Color.Red : Color.White;
+                                w.color = selectedSprites.Contains(sprite) ? Color.Red : Color.White;
                             };
                             void UpdatePos()
                             {
@@ -416,7 +436,7 @@ namespace Barotrauma
                             w.Deselected += UpdatePos;
                             w.PostUpdate += dTime =>
                             {
-                                w.color = selectedSprite == sprite ? Color.Red : Color.White;
+                                w.color = selectedSprites.Contains(sprite) ? Color.Red : Color.White;
                             };
                             void UpdatePos()
                             {

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Xml.Linq;
 using OpenTK.Audio.OpenAL;
 using Microsoft.Xna.Framework;
+using System.Linq;
 
 namespace Barotrauma.Sounds
 {
@@ -81,6 +82,15 @@ namespace Barotrauma.Sounds
                     throw new Exception("Failed to set listener gain: " + AL.GetErrorString(alError));
                 }
             }
+        }
+
+        public int LoadedSoundCount
+        {
+            get { return loadedSounds.Count; }
+        }
+        public int UniqueLoadedSoundCount
+        {
+            get { return loadedSounds.Select(s => s.Filename).Distinct().Count(); }
         }
 
         private Dictionary<string, Pair<float,bool>> categoryModifiers;
@@ -204,11 +214,11 @@ namespace Barotrauma.Sounds
 
         }
 
-        public Sound LoadSound(string filename,bool stream=false)
+        public Sound LoadSound(string filename, bool stream = false)
         {
             if (!System.IO.File.Exists(filename))
             {
-                throw new Exception("\"" + filename + "\" doesn't exist!");
+                throw new Exception("Sound file \"" + filename + "\" doesn't exist!");
             }
 
             Sound newSound = new OggSound(this, filename, stream);
@@ -216,9 +226,14 @@ namespace Barotrauma.Sounds
             return newSound;
         }
 
-        public Sound LoadSound(XElement element,bool stream=false)
+        public Sound LoadSound(XElement element, bool stream = false)
         {
+
             string filePath = element.GetAttributeString("file", "");
+            if (!System.IO.File.Exists(filePath))
+            {
+                throw new Exception("Sound file \"" + filePath + "\" doesn't exist!");
+            }
 
             var newSound = new OggSound(this, filePath, stream);
             if (newSound != null)
@@ -345,21 +360,21 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public void SetCategoryGainMultiplier(string category,float gain)
+        public void SetCategoryGainMultiplier(string category, float gain)
         {
             category = category.ToLower();
-            if (categoryModifiers == null) categoryModifiers = new Dictionary<string, Pair<float,bool>>();
+            if (categoryModifiers == null) categoryModifiers = new Dictionary<string, Pair<float, bool>>();
             if (!categoryModifiers.ContainsKey(category))
             {
-                categoryModifiers.Add(category, new Pair<float,bool>(gain, false));
+                categoryModifiers.Add(category, new Pair<float, bool>(gain, false));
             }
             else
             {
                 categoryModifiers[category].First = gain;
             }
-            for (int i=0;i<SOURCE_COUNT;i++)
+            for (int i = 0; i < SOURCE_COUNT; i++)
             {
-                if (playingChannels[i]!=null && playingChannels[i].IsPlaying)
+                if (playingChannels[i] != null && playingChannels[i].IsPlaying)
                 {
                     playingChannels[i].Gain = playingChannels[i].Gain; //force all channels to recalculate their gain
                 }

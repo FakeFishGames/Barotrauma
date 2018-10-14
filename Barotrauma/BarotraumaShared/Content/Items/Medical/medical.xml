@@ -299,7 +299,8 @@
         <RequiredItem identifier="medicalsyringe" type="Container"/>
       </StatusEffect>
       <StatusEffect type="InWater" target="This" Condition="0.0" setvalue="true">
-        <Sound file="Content/Items/Reactor/explosion.ogg"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" selectionmode="All" range="5000"/>
+        <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" selectionmode="All" range="5000"/>
         <Explosion range="250.0" structuredamage="10" force="5.0">
           <Affliction identifier="burn" amount="20"/>
           <Affliction identifier="stun" amount="3"/>
@@ -603,7 +604,8 @@
         <RequiredItem identifier="medicalsyringe" type="Container"/>
       </StatusEffect>
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true">
-        <sound file="Content/Items/Reactor/explosion.ogg"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall2.ogg" range="5000" selectionmode="All"/>
+        <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" range="5000"/>
         <Explosion range="300.0" structuredamage="50" force="10.0">
           <Affliction identifier="burn" amount="30"/>
           <Affliction identifier="stun" amount="2"/>
@@ -866,14 +868,16 @@
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true"/>
       <StatusEffect type="OnFire" target="this" condition="-50"/> 
       <StatusEffect type="OnBroken" target="This" Condition="-100.0">
-        <Sound file="Content/Items/Reactor/explosion.ogg"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall2.ogg" selectionmode="All" range="5000"/>
+        <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" selectionmode="All" range="5000"/>
         <Explosion range="500" force="0.1">
           <Affliction identifier="burn" amount="5"/>
           <Affliction identifier="stun" amount="3"/>
         </Explosion>
       </StatusEffect>
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
-        <Sound file="Content/Items/Reactor/explosion.ogg"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall2.ogg" selectionmode="All" range="5000"/>
+        <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" selectionmode="All" range="5000"/>
         <Explosion range="500" force="0.1">
           <Affliction identifier="burn" amount="5"/>
           <Affliction identifier="stun" amount="3"/>
@@ -1057,7 +1061,8 @@
       <StatusEffect type="OnFire" target="This" Condition="-50.0"/>
       
       <StatusEffect type="OnBroken" target="This" Condition="-100.0">
-        <sound file="Content/Items/Reactor/explosion.ogg" range="3000"/>
+        <sound file="Content/Items/Weapons/ExplosionMedium2.ogg" selectionmode="All" range="8000"/>
+        <sound file="Content/Items/Weapons/ExplosionDebris3.ogg" selectionmode="All" range="8000"/>
         <Explosion range="600.0" structuredamage="400" force="20.0" severlimbsprobability="0.4" decal="explosion" decalsize="0.5">
           <Affliction identifier="burn" amount="100"/>
           <Affliction identifier="internaldamage" amount="200"/>

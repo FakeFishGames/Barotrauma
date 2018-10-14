@@ -347,8 +347,66 @@ namespace Barotrauma
 
             return pathCells;
         }
-        
-        public static Body GeneratePolygons(List<VoronoiCell> cells, Level level, out List<Vector2[]> renderTriangles, bool setSolid = true)
+
+        /// <summary>
+        /// Makes the cell rounder by subdividing the edges and offsetting them at the middle
+        /// </summary>
+        /// <param name="minEdgeLength">How small the individual subdivided edges can be (smaller values produce rounder shapes, but require more geometry)</param>
+        public static void RoundCell(VoronoiCell cell, float minEdgeLength = 500.0f, float roundingAmount = 0.5f, float irregularity = 0.1f)
+        {
+            List<GraphEdge> tempEdges = new List<GraphEdge>();
+            foreach (GraphEdge edge in cell.edges)
+            {
+                if (!edge.IsSolid)
+                {
+                    tempEdges.Add(edge);
+                    continue;
+                }
+
+                List<Vector2> edgePoints = new List<Vector2>();
+                Vector2 edgeNormal = GetEdgeNormal(edge, cell);
+                float edgeLength = Vector2.Distance(edge.Point1, edge.Point2);
+                int pointCount = (int)Math.Max(Math.Ceiling(edgeLength / minEdgeLength), 1);
+                Vector2 edgeDir = (edge.Point2 - edge.Point1);
+                for (int i = 0; i <= pointCount; i++)
+                {
+                    if (i == 0)
+                    {
+                        edgePoints.Add(edge.Point1);
+                    }
+                    else if (i == pointCount)
+                    {
+                        edgePoints.Add(edge.Point2);
+                    }
+                    else
+                    {
+                        float centerF = 0.5f - Math.Abs(0.5f - (i / (float)pointCount));
+                        float randomVariance = Rand.Range(0, irregularity, Rand.RandSync.Server);
+                        edgePoints.Add(
+                            edge.Point1 +
+                            edgeDir * (i / (float)pointCount) -
+                            edgeNormal * edgeLength * (roundingAmount + randomVariance) * centerF);
+                    }
+                }
+
+                for (int i = 0; i < pointCount; i++)
+                {
+                    tempEdges.Add(new GraphEdge(edgePoints[i], edgePoints[i + 1])
+                    {
+                        Cell1 = edge.Cell1,
+                        Cell2 = edge.Cell2,
+                        IsSolid = edge.IsSolid,
+                        Site1 = edge.Site1,
+                        Site2 = edge.Site2,
+                        OutsideLevel = edge.OutsideLevel
+                    });
+                }
+            }
+
+            cell.edges = tempEdges;
+        }
+
+        public static Body GeneratePolygons(List<VoronoiCell> cells, Level level, out List<Vector2[]> renderTriangles)
         {
             renderTriangles = new List<Vector2[]>();
 
@@ -371,16 +429,16 @@ namespace Barotrauma
                 foreach (GraphEdge ge in cell.edges)
                 {
                     if (Vector2.DistanceSquared(ge.Point1, ge.Point2) < 0.01f) continue;
-                    if (!tempVertices.Contains(ge.Point1)) tempVertices.Add(ge.Point1);
-                    if (!tempVertices.Contains(ge.Point2)) tempVertices.Add(ge.Point2);
-
-                    VoronoiCell adjacentCell = ge.AdjacentCell(cell);
-                    //if (adjacentCell!=null && cells.Contains(adjacentCell)) continue;
-
-                    if (setSolid) ge.IsSolid = (adjacentCell == null || !cells.Contains(adjacentCell));
-
-                    if (!bodyPoints.Contains(ge.Point1)) bodyPoints.Add(ge.Point1);
-                    if (!bodyPoints.Contains(ge.Point2)) bodyPoints.Add(ge.Point2);
+                    if (!tempVertices.Any(v => Vector2.DistanceSquared(ge.Point1, v) < 1.0f))
+                    {
+                        tempVertices.Add(ge.Point1);
+                        bodyPoints.Add(ge.Point1);
+                    }
+                    if (!tempVertices.Any(v => Vector2.DistanceSquared(ge.Point2, v) < 1.0f))
+                    {
+                        tempVertices.Add(ge.Point2);
+                        bodyPoints.Add(ge.Point2);
+                    }
                 }
 
                 if (tempVertices.Count < 3 || bodyPoints.Count < 2)
@@ -416,12 +474,14 @@ namespace Barotrauma
                 
                 for (int i = 0; i < triangles.Count; i++)
                 {
-                    //don't create a triangle if any of the vertices are too close to each other
+                    //don't create a triangle if the area of the triangle is too small
                     //(apparently Farseer doesn't like polygons with a very small area, see Shape.ComputeProperties)
-                    if (Vector2.DistanceSquared(triangles[i][0], triangles[i][1]) < 0.006f ||
-                        Vector2.DistanceSquared(triangles[i][0], triangles[i][2]) < 0.006f ||
-                        Vector2.DistanceSquared(triangles[i][1], triangles[i][2]) < 0.006f) continue;
-                    
+                    Vector2 a = triangles[i][0];
+                    Vector2 b = triangles[i][1];
+                    Vector2 c = triangles[i][2];
+                    float area = Math.Abs(a.X * (b.Y - c.Y) + b.X * (c.Y - a.Y) + c.X * (a.Y - b.Y)) / 2.0f;
+                    if (area < 1.0f) continue;
+
                     Vertices bodyVertices = new Vertices(triangles[i]);
                     var newFixture = FixtureFactory.AttachPolygon(bodyVertices, 5.0f, cellBody);
                     newFixture.UserData = cell;

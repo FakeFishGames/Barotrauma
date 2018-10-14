@@ -104,8 +104,9 @@
       <Attack structuredamage="1" damagetype="Blunt">
         <Affliction identifier="internaldamage" strength="10"/>
       </Attack>
+      <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" type="OnImpact" selectionmode="Random" range="20000"/>
+      <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" type="OnImpact" selectionmode="Random" range="20000"/>
       <StatusEffect type="OnImpact" Condition="-100.0" stun="10.0" disabledeltatime="true">
-        <sound file="Content/Items/Weapons/bigexplosion.ogg" range="20000"/>
         <Explosion range="1000.0" structuredamage="1000" force="50.0">
           <Affliction identifier="burn" strength="500"/>
           <Affliction identifier="internaldamage" strength="500"/>

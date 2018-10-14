@@ -213,7 +213,14 @@ namespace Barotrauma
         public override void AddToEditor(ParamsEditor editor)
         {
             base.AddToEditor(editor);
-            GetAllSubParams().ForEach(p => p.AddToEditor(editor));
+            var subParams = GetAllSubParams();
+            foreach (var subParam in subParams)
+            {
+                subParam.AddToEditor(editor);   
+                //TODO: divider sprite
+                new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 10), editor.EditorBox.Content.RectTransform), 
+                    style: "ConnectionPanelWire");
+            }
         }
 #endif
     }
@@ -222,7 +229,11 @@ namespace Barotrauma
     {
         public JointParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
         {
-            Name = $"Joint {element.Attribute("limb1").Value} - {element.Attribute("limb2").Value}";
+            Name = element.GetAttributeString("name", null);
+            if (Name == null)
+            {
+                Name = $"Joint {element.Attribute("limb1").Value} - {element.Attribute("limb2").Value}";
+            }
         }
 
         [Serialize(-1, true), Editable]
@@ -266,7 +277,11 @@ namespace Barotrauma
     {
         public LimbParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
         {
-            Name = $"Limb {element.Attribute("id").Value}";
+            Name = element.GetAttributeString("name", null);
+            if (Name == null)
+            {
+                Name = $"Limb {element.Attribute("id").Value}";
+            }
             var spriteElement = element.Element("sprite");
             if (spriteElement != null)
             {
@@ -298,10 +313,7 @@ namespace Barotrauma
         public int ID { get; set; }
 
         [Serialize(LimbType.None, true), Editable]
-        public LimbType Type { get; set; }
-
-        [Serialize(BodyType.Dynamic, true), Editable]
-        public BodyType BodyType { get; set; }
+        public LimbType Type { get; set; } 
 
         [Serialize(false, true), Editable]
         public bool Flip { get; set; }
@@ -309,13 +321,13 @@ namespace Barotrauma
         [Serialize(0, true), Editable]
         public int HealthIndex { get; set; }
 
-        [Serialize(0f, true), Editable]
+        [Serialize(0f, true), Editable(ToolTip = "Higher values make AI characters prefer attacking this limb.")]
         public float AttackPriority { get; set; }
 
         [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
         public float SteerForce { get; set; }
 
-        [Serialize("0, 0", true), Editable]
+        [Serialize("0, 0", true), Editable(ToolTip = "Only applicable if this limb is a foot. Determines the \"neutral position\" of the foot relative to a joint determined by the \"RefJoint\" parameter. For example, a value of {-100, 0} would mean that the foot is positioned on the floor, 100 units behind the reference joint.")]
         public Vector2 StepOffset { get; set; }
 
         [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
@@ -333,16 +345,16 @@ namespace Barotrauma
         [Serialize(0.3f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
         public float Friction { get; set; }
 
-        [Serialize(0.05f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        [Serialize(0.05f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1, ToolTip = "The \"bounciness\" of the limb.")]
         public float Restitution { get; set; }
 
         [Serialize(10f, true), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
         public float Density { get; set; }
 
-        [Serialize("0, 0", true), Editable]
+        [Serialize("0, 0", true), Editable(ToolTip = "The position which is used to lead the IK chain to the IK goal. Only applicable if the limb is hand or foot.")]
         public Vector2 PullPos { get; set; }
 
-        [Serialize(-1, true), Editable]
+        [Serialize(-1, true), Editable(ToolTip = "Only applicable if this limb is a foot. Determines which joint is used as the \"neutral x-position\" for the foot movement. For example in the case of a humanoid-shaped characters this would usually be the waist. The position can be offset using the StepOffset parameter.")]
         public int RefJoint { get; set; }
 
         [Serialize(false, true), Editable]
@@ -359,7 +371,7 @@ namespace Barotrauma
         [Serialize("0, 0, 0, 0", true), Editable]
         public Rectangle SourceRect { get; set; }
 
-        [Serialize("0.5, 0.5", true), Editable(DecimalCount = 2)]
+        [Serialize("0.5, 0.5", true), Editable(DecimalCount = 2, ToolTip = "Relative to the collider.")]
         public Vector2 Origin { get; set; }
 
         [Serialize(0f, true), Editable(DecimalCount = 3)]
