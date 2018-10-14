@@ -24,7 +24,8 @@
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5">
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
         <Conditional Condition="gt 25"/>
-        <sound file="Content/Items/Reactor/explosion.ogg"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="5000"/>
+        <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" range="5000"/>
         <Explosion range="250.0" structuredamage="10" force="3.0">
           <Affliction identifier="internaldamage" strength="20"/>
           <Affliction identifier="stun" strength="5"/>
@@ -55,7 +56,8 @@
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5">
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
         <Conditional Condition="gt 20"/>
-        <sound file="Content/Items/Reactor/explosion.ogg"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall2.ogg" range="5000"/>
+        <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" range="5000"/>
         <Explosion range="280.0" structuredamage="20" damage="30" stun="8" force="3.0"/>
       </StatusEffect>
     </Holdable>
@@ -222,7 +224,7 @@
     <Propulsion force="80" usablein="water" particles="bubbles">
       <RequiredItems identifier="batterycell,fulguriumbatterycell" type="Contained" msg="ItemMsgBatteryCellRequired"/>
       <StatusEffect type="OnUse" target="Contained" Condition="-1.0"/>
-      <sound file="Content/Items/Diving/scooter.ogg" type="OnUse" range="500.0" loop="true"/>
+      <sound file="Content/Items/Diving/ScooterLoop.ogg" type="OnUse" range="500.0" loop="true"/>
       <LightComponent LightColor="1.0,1.0,1.0,0.8" range="800">
         <LightTexture texture="Content/Lights/lightcone.png" origin="0.05, 0.5" size="2.0,1.0"/>
       </LightComponent>

@@ -252,8 +252,6 @@
       <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.05" changespeed="10" blendmode="add"/>
     </deformablesprite>    
     -->
-    <sound
-      tag="footstep_armor" />
   </limb>
   <!-- claw -->
   <limb
@@ -308,8 +306,6 @@
         identifier="stun"
         strength="0.1" />
     </attack>
-    <sound
-      tag="footstep_armor" />
   </limb>
   <limb
     id="7"
@@ -373,7 +369,7 @@
     </deformablesprite>    
     -->
     <sound
-      tag="footstep_armor" />
+      tag="footstep_armor_heavy" />
   </limb>
   <limb
     id="9"
@@ -437,7 +433,7 @@
     </deformablesprite>    
     -->
     <sound
-      tag="footstep_armor" />
+      tag="footstep_armor_heavy" />
   </limb>
   <joint
     limb1="0"

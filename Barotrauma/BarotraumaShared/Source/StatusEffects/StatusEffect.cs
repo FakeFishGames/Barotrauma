@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Items.Components;
 #if CLIENT
 using Barotrauma.Particles;
 using Barotrauma.Sounds;
@@ -17,8 +18,7 @@ namespace Barotrauma
         public List<ISerializableEntity> Targets;
         public float Timer;
     }
-
-
+    
     partial class StatusEffect
     {
         [Flags]
@@ -89,7 +89,8 @@ namespace Barotrauma
 #if CLIENT
         private List<ParticleEmitter> particleEmitters;
 
-        private List<Sound> sounds = new List<Sound>();
+        private List<RoundSound> sounds = new List<RoundSound>();
+        private SoundSelectionMode soundSelectionMode;
         private SoundChannel soundChannel;
         private bool loopSound;
 #endif
@@ -339,6 +340,13 @@ namespace Barotrauma
                     case "sound":
                         var sound = Submarine.LoadRoundSound(subElement);
                         loopSound = subElement.GetAttributeBool("loop", false);
+                        if (subElement.Attribute("selectionmode") != null)
+                        {
+                            if (Enum.TryParse(subElement.GetAttributeString("selectionmode", "Random"), out SoundSelectionMode selectionMode))
+                            {
+                                soundSelectionMode = selectionMode;
+                            }
+                        }
 
                         sounds.Add(sound);
                         break;
@@ -473,9 +481,33 @@ namespace Barotrauma
             {
                 if (soundChannel == null || !soundChannel.IsPlaying)
                 {
-                    var selectedSound = sounds[Rand.Int(sounds.Count)];
-                    soundChannel = SoundPlayer.PlaySound(selectedSound, 1.0f, selectedSound.BaseFar, entity.WorldPosition, hull);
-                    if (soundChannel != null) soundChannel.Looping = loopSound;
+                    if (soundSelectionMode == SoundSelectionMode.All)
+                    {
+                        foreach (RoundSound sound in sounds)
+                        {
+                            soundChannel = SoundPlayer.PlaySound(sound.Sound, sound.Volume, sound.Range, entity.WorldPosition, hull);
+                            if (soundChannel != null) soundChannel.Looping = loopSound;
+                        }
+                    }
+                    else
+                    {
+                        int selectedSoundIndex = 0;
+                        if (soundSelectionMode == SoundSelectionMode.ItemSpecific && entity is Item item)
+                        {
+                            selectedSoundIndex = item.ID % sounds.Count;
+                        }
+                        else if (soundSelectionMode == SoundSelectionMode.CharacterSpecific && entity is Character user)
+                        {
+                            selectedSoundIndex = user.ID % sounds.Count;
+                        }
+                        else
+                        {
+                            selectedSoundIndex = Rand.Int(sounds.Count);
+                        }
+                        var selectedSound = sounds[selectedSoundIndex];
+                        soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, selectedSound.Volume, selectedSound.Range, entity.WorldPosition, hull);
+                        if (soundChannel != null) soundChannel.Looping = loopSound;
+                    }
                 }
             }
 #endif            

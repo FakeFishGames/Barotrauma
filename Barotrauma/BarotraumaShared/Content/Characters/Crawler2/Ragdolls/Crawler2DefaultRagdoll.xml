@@ -417,7 +417,7 @@
       depth="0.1"
       origin="0.2300953,0.301666" />
     <sound
-      tag="footstep_metal" />
+      tag="footstep_armor_heavy" />
   </limb>
   <!-- FakeFoot1 -->
   <limb

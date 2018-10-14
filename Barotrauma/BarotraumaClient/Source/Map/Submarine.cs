@@ -12,57 +12,74 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    class RoundSound
+    {
+        public Sound Sound;
+        public readonly float Volume;
+        public readonly float Range;
+        public readonly bool Stream;
+
+        public string Filename
+        {
+            get { return Sound.Filename; }
+        }
+
+        public RoundSound(XElement element, Sound sound)
+        {
+            Sound = sound;
+            Stream = sound.Stream;
+            Range = element.GetAttributeFloat("range", 1000.0f);
+            Volume = element.GetAttributeFloat("volume", 1.0f);
+        }
+    }
+
     partial class Submarine : Entity, IServerSerializable
     {
         public Sprite PreviewImage;
 
-        private static List<Sound> roundSounds = null;
-
-        public static Sound LoadRoundSound(string filename,bool stream=false)
+        private static List<RoundSound> roundSounds = null;
+        public static RoundSound LoadRoundSound(XElement element, bool stream=false)
         {
+            string filename = element.GetAttributeString("file", "");
+            if (string.IsNullOrEmpty(filename)) filename = element.GetAttributeString("sound", "");
+
+            if (string.IsNullOrEmpty(filename))
+            {
+                DebugConsole.ThrowError("Error when loading round sound (" + element + ") - file path not set");
+                return null;
+            }
+            
+            Sound existingSound = null;
             if (roundSounds == null)
             {
-                roundSounds = new List<Sound>();
+                roundSounds = new List<RoundSound>();
             }
             else
             {
-                Sound sound = roundSounds.Find(s => s.Filename == filename && s.Stream == stream);
-
-                if (sound != null) return sound;
+                existingSound = roundSounds.Find(s => s.Filename == filename && s.Stream == stream)?.Sound;
             }
 
-            Sound newSound = GameMain.SoundManager.LoadSound(filename, stream);
+            if (existingSound == null)
+            {
+                existingSound = GameMain.SoundManager.LoadSound(filename, stream);
+            }
+
+            RoundSound newSound = new RoundSound(element, existingSound);
 
             roundSounds.Add(newSound);
             return newSound;
         }
 
-        public static Sound LoadRoundSound(XElement element, bool stream=false)
+        private static void RemoveRoundSound(RoundSound roundSound)
         {
-            if (roundSounds == null)
-            {
-                roundSounds = new List<Sound>();
-            }
-            else
-            {
-                Sound sound = roundSounds.Find(s =>
-                    s.Filename == element.GetAttributeString("file", "") &&
-                    Math.Abs(s.BaseGain - element.GetAttributeFloat("volume", 1.0f)) < 0.01f &&
-                    Math.Abs(s.BaseFar - element.GetAttributeFloat("range", 1000.0f)) < 0.01f &&
-                    s.Stream == stream);
-
-                if (sound != null) return sound;
-            }
-            Sound newSound = GameMain.SoundManager.LoadSound(element, stream);
-            roundSounds.Add(newSound);
-            return newSound;
-        }
-
-        public static void RemoveRoundSound(Sound sound)
-        {
-            sound.Dispose();
+            roundSound.Sound?.Dispose();
             if (roundSounds == null) return;
-            if (roundSounds.Contains(sound)) roundSounds.Remove(sound);
+
+            if (roundSounds.Contains(roundSound)) roundSounds.Remove(roundSound);
+            foreach (RoundSound otherSound in roundSounds)
+            {
+                if (otherSound.Sound == roundSound.Sound) otherSound.Sound = null;
+            }
         }
 
         public static void RemoveAllRoundSounds()

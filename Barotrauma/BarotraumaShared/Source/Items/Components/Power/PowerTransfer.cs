@@ -193,7 +193,8 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                     if (sparkSounds.Count > 0)
                     {
-                        SoundPlayer.PlaySound(sparkSounds[Rand.Int(sparkSounds.Count)], 1.0f, 600.0f, pt.item.WorldPosition, pt.item.CurrentHull);
+                        var sparkSound = sparkSounds[Rand.Int(sparkSounds.Count)];
+                        SoundPlayer.PlaySound(sparkSound.Sound, sparkSound.Volume, sparkSound.Range, pt.item.WorldPosition, pt.item.CurrentHull);
                     }
 
                     Vector2 baseVel = Rand.Vector(300.0f);
@@ -205,7 +206,7 @@ namespace Barotrauma.Items.Components
                         if (particle != null) particle.Size *= Rand.Range(0.5f, 1.0f);
                     }
 #endif
-                    
+
                     float currentIntensity = GameMain.GameSession?.EventManager != null ? 
                         GameMain.GameSession.EventManager.CurrentIntensity : 0.5f;
                     

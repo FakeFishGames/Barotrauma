@@ -35,9 +35,10 @@
       
       <RequiredSkill identifier="mechanical" level="30"/>
 
-      <sound file="Content/Items/Reactor/reactor.ogg" type="OnActive" range="2000.0" volume="FissionRate" volumemultiplier="0.02" loop="true"/>
+      <sound file="Content/Items/Reactor/reactor.ogg" type="OnActive" range="2000.0" volumeproperty="FissionRate" volume="0.02" loop="true"/>
       <StatusEffect type="OnBroken" target="This" FissionRate="0.0" disabledeltatime="true">
-        <Sound file="Content/Items/Reactor/explosion.ogg" range="5000"/>
+        <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" range="8000" selectionmode="All"/>
+        <sound file="Content/Items/Weapons/ExplosionDebris5.ogg" range="8000" />
         <Explosion range ="800"  structuredamage="400" force="5.0">
           <Affliction identifier="burn" strength="200"/>
           <Affliction identifier="internaldamage" strength="200"/>

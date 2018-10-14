@@ -178,7 +178,8 @@
     <Sprite texture="weapons.png" sourcerect="17,0,80,25" depth="0.55" />
     <Body width="90" height="30" density="30" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="50,0" handle1="-5,0" holdangle="10" reload="1.0">
-      <Attack stun="0.2" sound="Content/Items/Weapons/smack.ogg">
+      <Attack stun="0.2">
+        <Sound file="Content/Items/Weapons/smack.ogg" range="800"/>
         <Affliction identifier="internaldamage" strength="2" />
       </Attack>
       <StatusEffect type="OnUse" target="Contained,Character" Condition="-25.0" stun="15.0" disabledeltatime="true">

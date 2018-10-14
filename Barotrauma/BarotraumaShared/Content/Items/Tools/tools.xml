@@ -26,7 +26,7 @@
       <ParticleEmitterHitStructure particle="weldsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="20" />
       <ParticleEmitterHitItem particle="weldsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
       <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
-      <sound file="Content/Items/Tools/weldingTool.ogg" type="OnUse" range="500.0" loop="true" />
+      <sound file="Content/Items/Tools/WeldingLoop.ogg" type="OnUse" range="500.0" loop="true" />
       <!-- when using, the contained welding fuel tank will detoriate (= lose fuel) -->
       <StatusEffect type="OnUse" target="Contained" targetidentifiers="weldingfueltank" Condition="-1.0" />
       <!-- welding a door, it will get stuck after a while -->
@@ -72,7 +72,7 @@
       <ParticleEmitterHitStructure particle="plasmasmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="20" />
       <ParticleEmitterHitItem particle="plasmasmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
       <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
-      <sound file="Content/Items/Tools/plasmaCutter.ogg" type="OnUse" range="500.0" loop="true" />
+      <sound file="Content/Items/Tools/PlasmaCutterLoop.ogg" type="OnUse" range="500.0" loop="true" />
       <Fixable identifier="structure" />
       <RequiredSkill identifier="mechanical" level="30" />
       <StatusEffect type="OnFailure" target="Contained" targetidentifiers="weldingfueltank,oxygentank" Condition="-3.0" />
@@ -99,7 +99,8 @@
     <Body width="12" height="33" density="5" />
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5">
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
-        <sound file="Content/Items/Reactor/explosion.ogg" />
+        <sound file="Content/Items/Weapons/ExplosionSmall3.ogg" range="5000" selectionmode="All"/>
+        <sound file="Content/Items/Weapons/ExplosionDebris3.ogg" range="5000" />
         <Explosion range="250.0" structuredamage="15" force="3.0">
           <Affliction identifier="burn" strength="25" />
           <Affliction identifier="stun" strength="5" />
@@ -154,7 +155,9 @@
     <Sprite texture="tools.png" sourcerect="0,47,32,10" depth="0.55" />
     <Body width="30" height="7" density="50" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="50,0" handle1="-5,0" holdangle="30" reload="1.0">
-      <Attack damage="5" structuredamage="5" stun="0.2" sound="Content/Items/Weapons/smack2.ogg" />
+      <Attack damage="5" structuredamage="5" stun="0.2">
+        <Sound file="Content/Items/Weapons/smack2.ogg" range="800"/>
+      </Attack>
     </MeleeWeapon>
   </Item>
   <Item name="Crowbar" identifier="crowbar" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate">
@@ -169,7 +172,9 @@
     <Sprite texture="tools.png" sourcerect="0,65,63,13" depth="0.55" />
     <Body width="60" height="10" density="50" />
     <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="50,0" handle1="-5,0" handle2="-3,5" holdangle="30" reload="1.7">
-      <Attack bluntdamage="20" structuredamage="10" stun="0.6" sound="Content/Items/Weapons/smack2.ogg" />
+      <Attack bluntdamage="20" structuredamage="10" stun="0.6">
+        <Sound file="Content/Items/Weapons/smack2.ogg" range="800"/>
+      </Attack>
     </MeleeWeapon>
   </Item>
   <Item name="Handheld Sonar" identifier="handheldsonar" category="Equipment" Tags="smallitem,sonar" cargocontaineridentifier="metalcrate">
