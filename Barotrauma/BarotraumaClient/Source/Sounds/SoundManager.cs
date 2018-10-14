@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Xml.Linq;
 using OpenTK.Audio.OpenAL;
 using Microsoft.Xna.Framework;
+using System.Linq;
 
 namespace Barotrauma.Sounds
 {
@@ -86,6 +87,10 @@ namespace Barotrauma.Sounds
         public int LoadedSoundCount
         {
             get { return loadedSounds.Count; }
+        }
+        public int UniqueLoadedSoundCount
+        {
+            get { return loadedSounds.Select(s => s.Filename).Distinct().Count(); }
         }
 
         private Dictionary<string, Pair<float,bool>> categoryModifiers;

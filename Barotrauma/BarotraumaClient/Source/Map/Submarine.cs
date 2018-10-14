@@ -48,7 +48,8 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Error when loading round sound (" + element + ") - file path not set");
                 return null;
             }
-            
+
+            filename = Path.GetFullPath(filename);            
             Sound existingSound = null;
             if (roundSounds == null)
             {

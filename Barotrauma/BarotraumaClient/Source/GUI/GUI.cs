@@ -272,7 +272,7 @@ namespace Barotrauma
                     y += 15;
 
                     DrawString(spriteBatch, new Vector2(500, y),
-                        "Loaded sounds: " + GameMain.SoundManager.LoadedSoundCount, Color.White, Color.Black * 0.5f, 0, SmallFont);
+                        "Loaded sounds: " + GameMain.SoundManager.LoadedSoundCount + " (" + GameMain.SoundManager.UniqueLoadedSoundCount + " unique)", Color.White, Color.Black * 0.5f, 0, SmallFont);
                     y += 15;
 
                     for (int i = 0; i < SoundManager.SOURCE_COUNT; i++)
