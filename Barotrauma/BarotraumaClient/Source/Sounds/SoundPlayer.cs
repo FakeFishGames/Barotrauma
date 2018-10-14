@@ -153,7 +153,7 @@ namespace Barotrauma
                         waterAmbiences.Add(GameMain.SoundManager.LoadSound(soundElement, false));
                         break;
                     case "damagesound":
-                        Sound damageSound = GameMain.SoundManager.LoadSound(soundElement.GetAttributeString("file", ""), false);
+                        Sound damageSound = GameMain.SoundManager.LoadSound(soundElement, false);
                         if (damageSound == null) continue;
                     
                         string damageSoundType = soundElement.GetAttributeString("damagesoundtype", "None");
@@ -166,7 +166,7 @@ namespace Barotrauma
 
                         break;
                     default:
-                        Sound sound = GameMain.SoundManager.LoadSound(soundElement.GetAttributeString("file", ""), false);
+                        Sound sound = GameMain.SoundManager.LoadSound(soundElement, false);
                         if (sound != null)
                         {
                             miscSoundList.Add(new KeyValuePair<string, Sound>(soundElement.Name.ToString().ToLowerInvariant(), sound));
@@ -222,7 +222,6 @@ namespace Barotrauma
             }
 
             float ambienceVolume = 0.8f;
-            float lowpassHFGain = 1.0f;
             if (Character.Controlled != null)
             {
                 AnimController animController = Character.Controlled.AnimController;
@@ -230,19 +229,13 @@ namespace Barotrauma
                 {
                     ambienceVolume = 1.0f;
                     ambienceVolume += animController.Limbs[0].LinearVelocity.Length();
-
-                    lowpassHFGain = 0.2f;
                 }
-
-                lowpassHFGain *= Character.Controlled.LowPassMultiplier;
             }
 
             UpdateWaterAmbience(ambienceVolume);
             UpdateWaterFlowSounds(deltaTime);
             UpdateRandomAmbience(deltaTime);
-            UpdateFireSounds(deltaTime);
-            GameMain.SoundManager.SetCategoryMuffle("default", lowpassHFGain < 0.5f);
-            
+            UpdateFireSounds(deltaTime);            
         }
 
         private static void UpdateWaterAmbience(float ambienceVolume)
@@ -372,25 +365,27 @@ namespace Barotrauma
                     Vector2 diff = fs.WorldPosition + fs.Size / 2 - listenerPos;
                     if (Math.Abs(diff.X) < FireSoundRange && Math.Abs(diff.Y) < FireSoundRange)
                     {
-                        Vector2 diffLeft = (fs.WorldPosition + new Vector2(0.0f, fs.Size.Y / 2)) - listenerPos;
+                        Vector2 diffLeft = (fs.WorldPosition + new Vector2(fs.Size.X, fs.Size.Y / 2)) - listenerPos;
+                        if (diff.X < fs.Size.X / 2.0f) diff.X = 0.0f;
                         if (diffLeft.X <= 0)
                         {
                             float distFallOffLeft = diffLeft.Length() / FireSoundRange;
                             if (distFallOffLeft < 0.99f)
                             {
-                                fireVolumeLeft[0] = (1.0f - distFallOffLeft) * (fs.Size.X / FireSoundLargeLimit);
-                                if (fs.Size.X > FireSoundLargeLimit) fireVolumeLeft[1] = (1.0f - distFallOffLeft) * ((fs.Size.X - FireSoundLargeLimit) / FireSoundLargeLimit);
+                                fireVolumeLeft[0] += (1.0f - distFallOffLeft) * (fs.Size.X / FireSoundLargeLimit);
+                                if (fs.Size.X > FireSoundLargeLimit) fireVolumeLeft[1] += (1.0f - distFallOffLeft) * ((fs.Size.X - FireSoundLargeLimit) / FireSoundLargeLimit);
                             }
                         }
 
-                        Vector2 diffRight = (fs.WorldPosition + new Vector2(fs.Size.X, fs.Size.Y / 2)) - listenerPos;
+                        Vector2 diffRight = (fs.WorldPosition + new Vector2(0.0f, fs.Size.Y / 2)) - listenerPos;
+                        if (diff.X < fs.Size.X / 2.0f) diff.X = 0.0f;
                         if (diffRight.X >= 0)
                         {
                             float distFallOffRight = diffRight.Length() / FireSoundRange;
                             if (distFallOffRight < 0.99f)
                             {
-                                fireVolumeRight[0] = 1.0f - distFallOffRight;
-                                if (fs.Size.X > FireSoundLargeLimit) fireVolumeRight[1] = (1.0f - distFallOffRight) * ((fs.Size.X - FireSoundLargeLimit) / FireSoundLargeLimit);
+                                fireVolumeRight[0] += 1.0f - distFallOffRight;
+                                if (fs.Size.X > FireSoundLargeLimit) fireVolumeRight[1] += (1.0f - distFallOffRight) * ((fs.Size.X - FireSoundLargeLimit) / FireSoundLargeLimit);
                             }
                         }
                     }
@@ -457,13 +452,13 @@ namespace Barotrauma
         {
             var sound = GetSound(soundTag);
             if (sound == null) return null;
-            return PlaySound(sound, volume, range, position, hullGuess);
+            return PlaySound(sound, sound.BaseGain * volume, range, position, hullGuess);
         }
 
         public static SoundChannel PlaySound(Sound sound, float volume, float range, Vector2 position, Hull hullGuess = null)
         {
             if (Vector2.DistanceSquared(new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y), position) > range * range) return null;
-            return sound.Play(volume, range, position, muffle: ShouldMuffleSound(Character.Controlled, position, range, hullGuess));            
+            return sound.Play(sound.BaseGain * volume, range, position, muffle: ShouldMuffleSound(Character.Controlled, position, range, hullGuess));            
         }
 
         private static void UpdateMusic(float deltaTime)
@@ -662,6 +657,17 @@ namespace Barotrauma
         public static bool ShouldMuffleSound(Character listener, Vector2 soundWorldPos, float range, Hull hullGuess)
         {
             if (listener == null) return false;
+
+            float lowpassHFGain = 1.0f;
+            AnimController animController = listener.AnimController;
+            if (animController.HeadInWater)
+            {
+                lowpassHFGain = 0.2f;
+            }
+            lowpassHFGain *= Character.Controlled.LowPassMultiplier;
+            if (lowpassHFGain < 0.5f) return true;
+            
+
             Hull targetHull = Hull.FindHull(soundWorldPos, hullGuess, true);
             if (listener.CurrentHull == null || targetHull == null)
             {

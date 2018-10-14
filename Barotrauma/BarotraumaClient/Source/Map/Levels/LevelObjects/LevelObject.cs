@@ -46,7 +46,7 @@ namespace Barotrauma
             private set;
         }
 
-        public Sound[] Sounds
+        public RoundSound[] Sounds
         {
             get;
             private set;
@@ -104,7 +104,7 @@ namespace Barotrauma
                 }
             }
             
-            Sounds = new Sound[Prefab.Sounds.Count];
+            Sounds = new RoundSound[Prefab.Sounds.Count];
             SoundChannels = new SoundChannel[Prefab.Sounds.Count];
             SoundTriggers = new LevelTrigger[Prefab.Sounds.Count];
             for (int i = 0; i < Prefab.Sounds.Count; i++)
@@ -179,14 +179,14 @@ namespace Barotrauma
             {
                 if (SoundTriggers[i] == null || SoundTriggers[i].IsTriggered)
                 {
-                    Sound sound = Sounds[i];
+                    RoundSound roundSound = Sounds[i];
                     Vector2 soundPos = LocalToWorld(new Vector2(Prefab.Sounds[i].Position.X, Prefab.Sounds[i].Position.Y));
                     if (Vector2.DistanceSquared(new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y), soundPos) <
-                        sound.BaseFar * sound.BaseFar)
+                        roundSound.Range * roundSound.Range)
                     {
                         if (SoundChannels[i] == null || !SoundChannels[i].IsPlaying)
                         {
-                            SoundChannels[i] = sound.Play(1.0f, sound.BaseFar, soundPos);
+                            SoundChannels[i] = roundSound.Sound.Play(roundSound.Volume, roundSound.Range, soundPos);
                         }
                         SoundChannels[i].Position = new Vector3(soundPos.X, soundPos.Y, 0.0f);
                     }
@@ -253,8 +253,6 @@ namespace Barotrauma
             {
                 SoundChannels[i]?.Dispose();
                 SoundChannels[i] = null;
-                Sounds[i]?.Dispose();
-                Sounds[i] = null;
             }
         }
     }

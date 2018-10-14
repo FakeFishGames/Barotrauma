@@ -19,7 +19,7 @@ namespace Barotrauma.Items.Components
 
         private float recoilTimer;
 
-        private Sound startMoveSound, endMoveSound, moveSound;
+        private RoundSound startMoveSound, endMoveSound, moveSound;
 
         private SoundChannel moveSoundChannel;
 
@@ -117,14 +117,14 @@ namespace Barotrauma.Items.Components
             {
                 if (moveSoundChannel == null && startMoveSound != null)
                 {
-                    moveSoundChannel = SoundPlayer.PlaySound(startMoveSound, 1.0f, startMoveSound.BaseFar, item.WorldPosition);
+                    moveSoundChannel = SoundPlayer.PlaySound(startMoveSound.Sound, startMoveSound.Volume, startMoveSound.Range, item.WorldPosition);
                 }
                 else if (moveSoundChannel == null || !moveSoundChannel.IsPlaying)
                 {
                     if (moveSound != null)
                     {
                         moveSoundChannel.Dispose();
-                        moveSoundChannel = SoundPlayer.PlaySound(moveSound, 1.0f, moveSound.BaseFar, item.WorldPosition);
+                        moveSoundChannel = SoundPlayer.PlaySound(moveSound.Sound, moveSound.Volume, moveSound.Range, item.WorldPosition);
                         if (moveSoundChannel != null) moveSoundChannel.Looping = true;
                     }
                 }
@@ -133,10 +133,10 @@ namespace Barotrauma.Items.Components
             {
                 if (moveSoundChannel != null)
                 {
-                    if (endMoveSound != null && moveSoundChannel.Sound != endMoveSound)
+                    if (endMoveSound != null && moveSoundChannel.Sound != endMoveSound.Sound)
                     {
                         moveSoundChannel.Dispose();
-                        moveSoundChannel = SoundPlayer.PlaySound(endMoveSound, 1.0f, endMoveSound.BaseFar, item.WorldPosition);
+                        moveSoundChannel = SoundPlayer.PlaySound(endMoveSound.Sound, endMoveSound.Volume, endMoveSound.Range, item.WorldPosition);
                         if (moveSoundChannel != null) moveSoundChannel.Looping = false;
                     }
                     else if (!moveSoundChannel.IsPlaying)

@@ -462,9 +462,6 @@ namespace Barotrauma.Items.Components
 
 #if CLIENT
             moveSoundChannel?.Dispose(); moveSoundChannel = null;
-            moveSound?.Dispose(); moveSound = null;
-            endMoveSound?.Dispose(); endMoveSound = null;
-            startMoveSound?.Dispose(); startMoveSound = null;
 #endif
         }
 

@@ -11,24 +11,38 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
+    enum SoundSelectionMode
+    {
+        Random,
+        CharacterSpecific,
+        ItemSpecific,
+        All
+    }
+
     class ItemSound
     {
-        public readonly Sound Sound;
+        public readonly RoundSound RoundSound;
         public readonly ActionType Type;
 
         public string VolumeProperty;
-        public float VolumeMultiplier;
+        public float VolumeMultiplier
+        {
+            get { return RoundSound.Volume; }
+        }
         
-        public readonly float Range;
+        public float Range
+        {
+            get { return RoundSound.Range; }
+        }
+
+
 
         public readonly bool Loop;
 
-        public ItemSound(Sound sound, ActionType type, float range, bool loop = false)
+        public ItemSound(RoundSound sound, ActionType type, bool loop = false)
         {
-            this.Sound = sound;
+            this.RoundSound = sound;
             this.Type = type;
-            this.Range = range;
-
             this.Loop = loop;
         }
     }
@@ -118,13 +132,6 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        enum SoundSelectionMode
-        {
-            Random, 
-            CharacterSpecific,
-            ItemSpecific
-        }
-
         public GUIFrame GuiFrame { get; protected set; }
 
         [Serialize(false, false)]
@@ -170,6 +177,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private bool shouldMuffleLooping;
+        private float lastMuffleCheckTime;
         private ItemSound loopingSound;
         private SoundChannel loopingSoundChannel;
         public void PlaySound(ActionType type, Vector2 position, Character user = null)
@@ -185,13 +194,16 @@ namespace Barotrauma.Items.Components
                     return;
                 }
 
-                if (loopingSoundChannel != null && loopingSoundChannel.Sound != loopingSound.Sound)
+                if (loopingSoundChannel != null && loopingSoundChannel.Sound != loopingSound.RoundSound.Sound)
                 {
                     loopingSoundChannel.Dispose(); loopingSoundChannel = null;
                 }
                 if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
                 {
-                    loopingSoundChannel = loopingSound.Sound.Play(new Vector3(position.X, position.Y, 0.0f), GetSoundVolume(loopingSound));
+                    loopingSoundChannel = loopingSound.RoundSound.Sound.Play(
+                        new Vector3(position.X, position.Y, 0.0f), 
+                        GetSoundVolume(loopingSound),
+                        SoundPlayer.ShouldMuffleSound(Character.Controlled, position, loopingSound.Range, Character.Controlled?.CurrentHull));
                     loopingSoundChannel.Looping = true;
                     //TODO: tweak
                     loopingSoundChannel.Near = loopingSound.Range * 0.4f;
@@ -199,6 +211,12 @@ namespace Barotrauma.Items.Components
                 }
                 if (loopingSoundChannel != null)
                 {
+                    if (Timing.TotalTime > lastMuffleCheckTime + 0.2f)
+                    {
+                        shouldMuffleLooping = SoundPlayer.ShouldMuffleSound(Character.Controlled, position, loopingSound.Range, Character.Controlled?.CurrentHull);
+                        lastMuffleCheckTime = (float)Timing.TotalTime;
+                    }
+                    loopingSoundChannel.Muffled = shouldMuffleLooping;
                     loopingSoundChannel.Gain = GetSoundVolume(loopingSound);
                     loopingSoundChannel.Position = new Vector3(position.X, position.Y, 0.0f);
                 }
@@ -206,7 +224,7 @@ namespace Barotrauma.Items.Components
             }
 
             if (!sounds.TryGetValue(type, out List<ItemSound> matchingSounds)) return;
-
+            
             ItemSound itemSound = null;
             if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
             {
@@ -220,16 +238,28 @@ namespace Barotrauma.Items.Components
                 {
                     index = item.ID % matchingSounds.Count;
                 }
+                else if (soundSelectionMode == SoundSelectionMode.All)
+                {
+                    foreach (ItemSound sound in matchingSounds)
+                    {
+                        PlaySound(sound, position, user);
+                    }
+                    return;
+                }
                 else
                 {
                     index = Rand.Int(matchingSounds.Count);
                 }
-                    
+
                 itemSound = matchingSounds[index];
+                PlaySound(matchingSounds[index], position, user);
             }
 
-            if (itemSound == null) return;
+        }
 
+
+        private void PlaySound(ItemSound itemSound, Vector2 position, Character user = null)
+        {
             if (Vector3.DistanceSquared(GameMain.SoundManager.ListenerPosition, new Vector3(position.X, position.Y, 0.0f)) > itemSound.Range * itemSound.Range)
             {
                 return;
@@ -238,13 +268,16 @@ namespace Barotrauma.Items.Components
             if (itemSound.Loop)
             {
                 loopingSound = itemSound;
-                if (loopingSoundChannel != null && loopingSoundChannel.Sound != loopingSound.Sound)
+                if (loopingSoundChannel != null && loopingSoundChannel.Sound != loopingSound.RoundSound.Sound)
                 {
                     loopingSoundChannel.Dispose(); loopingSoundChannel = null;
                 }
                 if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
                 {
-                    loopingSoundChannel = loopingSound.Sound.Play(new Vector3(position.X, position.Y, 0.0f), GetSoundVolume(loopingSound));
+                    loopingSoundChannel = loopingSound.RoundSound.Sound.Play(
+                        new Vector3(position.X, position.Y, 0.0f), 
+                        GetSoundVolume(loopingSound),
+                        muffle: SoundPlayer.ShouldMuffleSound(Character.Controlled, position, loopingSound.Range, Character.Controlled?.CurrentHull));
                     loopingSoundChannel.Looping = true;
                     //TODO: tweak
                     loopingSoundChannel.Near = loopingSound.Range * 0.4f;
@@ -254,8 +287,8 @@ namespace Barotrauma.Items.Components
             else
             {
                 float volume = GetSoundVolume(itemSound);
-                if (volume == 0.0f) return;
-                SoundPlayer.PlaySound(itemSound.Sound, volume, itemSound.Range, position, item.CurrentHull);
+                if (volume <= 0.0f) return;
+                SoundPlayer.PlaySound(itemSound.RoundSound.Sound, volume, itemSound.Range, position, item.CurrentHull);
             }
         }
 
@@ -343,6 +376,7 @@ namespace Barotrauma.Items.Components
                 case "alternativelayout":
                     AlternativeLayout = GUILayoutSettings.Load(subElement);
                     break;
+                case "itemsound":
                 case "sound":
                     string filePath = subElement.GetAttributeString("file", "");
 
@@ -370,12 +404,11 @@ namespace Barotrauma.Items.Components
                         break;
                     }
                     
-                    Sound sound = Submarine.LoadRoundSound(filePath);
-                    float range = subElement.GetAttributeFloat("range", 800.0f);
-                    bool loop = subElement.GetAttributeBool("loop", false);
-                    ItemSound itemSound = new ItemSound(sound, type, range, loop);
-                    itemSound.VolumeProperty = subElement.GetAttributeString("volume", "");
-                    itemSound.VolumeMultiplier = subElement.GetAttributeFloat("volumemultiplier", 1.0f);
+                    RoundSound sound = Submarine.LoadRoundSound(subElement);
+                    ItemSound itemSound = new ItemSound(sound, type, subElement.GetAttributeBool("loop", false))
+                    {
+                        VolumeProperty = subElement.GetAttributeString("volumeproperty", "")
+                    };
 
                     if (soundSelectionModes == null) soundSelectionModes = new Dictionary<ActionType, SoundSelectionMode>();
                     if (!soundSelectionModes.ContainsKey(type) || soundSelectionModes[type] == SoundSelectionMode.Random)
