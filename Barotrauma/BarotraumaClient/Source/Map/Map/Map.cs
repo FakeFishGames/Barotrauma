@@ -308,8 +308,7 @@ namespace Barotrauma
             hudOpenState = Math.Min(hudOpenState + deltaTime, 0.75f + (float)Math.Sin(Timing.TotalTime * 3.0f) * 0.25f);
             
             Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y);
-
-            float maxDist = 20.0f;
+            
             float closestDist = 0.0f;
             highlightedLocation = null;
             for (int i = 0; i < locations.Count; i++)
@@ -319,8 +318,18 @@ namespace Barotrauma
 
                 if (!rect.Contains(pos)) continue;
 
+                float iconScale = MapGenerationParams.Instance.LocationIconSize / location.Type.Sprite.size.X;
+
+                Rectangle drawRect = location.Type.Sprite.SourceRect;
+                drawRect.Width = (int)(drawRect.Width * iconScale * zoom);
+                drawRect.Height = (int)(drawRect.Height * iconScale * zoom);
+                drawRect.X = (int)pos.X - drawRect.Width / 2;
+                drawRect.Y = (int)pos.Y - drawRect.Width / 2;
+
+                if (!drawRect.Contains(PlayerInput.MousePosition)) continue;
+
                 float dist = Vector2.Distance(PlayerInput.MousePosition, pos);
-                if (dist < maxDist && (highlightedLocation == null || dist < closestDist))
+                if (highlightedLocation == null || dist < closestDist)
                 {
                     closestDist = dist;
                     highlightedLocation = location;
@@ -474,6 +483,8 @@ namespace Barotrauma
                             MapGenerationParams.Instance.HighDifficultyColor);
                     }
 
+                    int width = (int)(3 * zoom);
+
                     if (selectedLocation != currentLocation &&
                         (connection.Locations.Contains(selectedLocation) && connection.Locations.Contains(currentLocation)))
                     {
@@ -482,7 +493,8 @@ namespace Barotrauma
                     else if (highlightedLocation != currentLocation &&
                     (connection.Locations.Contains(highlightedLocation) && connection.Locations.Contains(currentLocation)))
                     {
-                        connectionColor = Color.Gold * 0.5f;
+                        connectionColor = Color.Lerp(connectionColor, Color.White, 0.5f);
+                        width *= 2;
                     }
                     else if (!connection.Passed)
                     {
@@ -518,9 +530,7 @@ namespace Barotrauma
 
                         float distFromPlayer = Vector2.Distance(currentLocation.MapPosition, (segment[0] + segment[1]) / 2.0f);
                         float dist = Vector2.Distance(start, end);
-
-                        int width = (int)(3 * zoom);
-
+                        
                         float a = GameMain.DebugDraw ? 1.0f : (200.0f - distFromPlayer) / 200.0f;
                         spriteBatch.Draw(generationParams.ConnectionSprite.Texture,
                             new Rectangle((int)start.X, (int)start.Y, (int)(dist - 1 * zoom), width),
@@ -547,17 +557,29 @@ namespace Barotrauma
                     Location location = locations[i];
                     Vector2 pos = rectCenter + (location.MapPosition + viewOffset) * zoom;
 
+                    float iconScale = MapGenerationParams.Instance.LocationIconSize / location.Type.Sprite.size.X;
+
                     Rectangle drawRect = location.Type.Sprite.SourceRect;
                     drawRect.X = (int)pos.X - drawRect.Width / 2;
                     drawRect.Y = (int)pos.Y - drawRect.Width / 2;
 
                     if (!rect.Intersects(drawRect)) continue;
 
-                    Color color = location.Connections.Find(c => c.Locations.Contains(currentLocation)) == null ? Color.Orange : Color.Green;
+                    Color color = location.Type.SpriteColor;
+                    
+                    if (location.Connections.Find(c => c.Locations.Contains(currentLocation)) == null)
+                    {
+                        color *= 0.5f;
+                    }
                     //color *= (location.Discovered) ? 0.8f : 0.5f;
-                    if (location == currentLocation) color = Color.Red;
+                    //if (location != currentLocation) color *= 1.0f;
+                    if (location == highlightedLocation)
+                    {
+                        iconScale *= 1.1f;
+                        color = Color.Lerp(color, Color.White, 0.5f);
+                    }
 
-                    spriteBatch.Draw(location.Type.Sprite.Texture, pos, null, color, 0.0f, location.Type.Sprite.size / 2, 0.2f * zoom, SpriteEffects.None, 0.0f);
+                    location.Type.Sprite.Draw(spriteBatch, pos, color, scale: iconScale * zoom);                    
                 }
 
             }

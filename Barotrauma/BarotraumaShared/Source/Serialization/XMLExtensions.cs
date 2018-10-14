@@ -445,6 +445,8 @@ namespace Barotrauma
                 {
                     components[i] = components[i] / 255.0f;
                 }
+                //alpha defaults to 255 if not given
+                if (strComponents.Length < 4) components[3] = 255;
             }
 
             return new Color(components[0], components[1], components[2], components[3]);

@@ -233,7 +233,7 @@ namespace Barotrauma
                 locationConnection.Biome);
         }
 
-        public static Level CreateRandom(string seed = "", float? difficulty = null)
+        public static Level CreateRandom(string seed = "", float? difficulty = null, LevelGenerationParams generationParams = null)
         {
             if (seed == "")
             {
@@ -242,7 +242,7 @@ namespace Barotrauma
 
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
 
-            var generationParams = LevelGenerationParams.GetRandom(seed);
+            if (generationParams == null) generationParams = LevelGenerationParams.GetRandom(seed);
             var biome = LevelGenerationParams.GetBiomes().Find(b => generationParams.AllowedBiomes.Contains(b));
 
             return new Level(
@@ -607,12 +607,32 @@ namespace Barotrauma
             startPosition.Y = borders.Height;
             endPosition.Y = borders.Height;
 
+            foreach (VoronoiCell cell in cells)
+            {
+                foreach (GraphEdge ge in cell.edges)
+                {
+                    VoronoiCell adjacentCell = ge.AdjacentCell(cell);
+                    ge.IsSolid = (adjacentCell == null || !cells.Contains(adjacentCell));
+                }
+            }
+
             List<VoronoiCell> cellsWithBody = new List<VoronoiCell>(cells);
+            if (generationParams.CellRoundingAmount > 0.01f || generationParams.CellIrregularity > 0.01f)
+            {
+                foreach (VoronoiCell cell in cellsWithBody)
+                {
+                    CaveGenerator.RoundCell(cell,
+                        minEdgeLength: generationParams.CellSubdivisionLength,
+                        roundingAmount: generationParams.CellRoundingAmount,
+                        irregularity: generationParams.CellIrregularity);
+                }
+            }
+
             bodies.Add(CaveGenerator.GeneratePolygons(cellsWithBody, this, out List<Vector2[]> triangles));
 
 #if CLIENT
             renderer.SetBodyVertices(CaveGenerator.GenerateRenderVerticeList(triangles).ToArray(), generationParams.WallColor);
-            renderer.SetWallVertices(CaveGenerator.GenerateWallShapes(cells, this), generationParams.WallColor);
+            renderer.SetWallVertices(CaveGenerator.GenerateWallShapes(cellsWithBody, this), generationParams.WallColor);
 #endif
 
             TopBarrier = BodyFactory.CreateEdge(GameMain.World, 

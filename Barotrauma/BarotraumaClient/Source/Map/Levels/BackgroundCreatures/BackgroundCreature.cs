@@ -159,7 +159,7 @@ namespace Barotrauma
             velocity = Vector3.Lerp(velocity, new Vector3(Steering.X, Steering.Y, velocity.Z), deltaTime);
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Draw(SpriteBatch spriteBatch, Camera cam)
         {
             float rotation = 0.0f;
             if (!prefab.DisableRotation)
@@ -168,12 +168,10 @@ namespace Barotrauma
                 if (velocity.X < 0.0f) rotation -= MathHelper.Pi;
             }
 
-            drawPosition = position;// +Level.Loaded.Position;
-
+            drawPosition = position;
             if (depth > 0.0f)
             {
-                Vector2 camOffset = drawPosition - GameMain.GameScreen.Cam.WorldViewCenter;
-
+                Vector2 camOffset = drawPosition - cam.WorldViewCenter;
                 drawPosition -= camOffset * (depth / MaxDepth) * 0.05f;
             }
             

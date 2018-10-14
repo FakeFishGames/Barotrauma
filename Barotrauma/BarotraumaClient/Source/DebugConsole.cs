@@ -49,23 +49,18 @@ namespace Barotrauma
             }
         }
 
-        static bool isOpen;
+        private static bool isOpen;
+        public static bool IsOpen => isOpen;
 
         private static Queue<ColoredText> queuedMessages = new Queue<ColoredText>();
 
         private static GUITextBlock activeQuestionText;
+        
+        private static GUIFrame frame;
+        private static GUIListBox listBox;
+        private static GUITextBox textBox;
 
-        public static bool IsOpen
-        {
-            get
-            {
-                return isOpen;
-            }
-        }
-
-        static GUIFrame frame;
-        static GUIListBox listBox;
-        static GUITextBox textBox;
+        public static GUITextBox TextBox => textBox;
 
         public static void Init()
         {
@@ -345,6 +340,11 @@ namespace Barotrauma
             commands.Add(new Command("editparticles", "", (string[] args) =>
             {
                 GameMain.ParticleEditorScreen.Select();
+            }));
+
+            commands.Add(new Command("editlevels", "", (string[] args) =>
+            {
+                GameMain.LevelEditorScreen.Select();
             }));
 
             commands.Add(new Command("editsprites|editsprite|spriteeditor|spriteedit", "", (string[] args) =>

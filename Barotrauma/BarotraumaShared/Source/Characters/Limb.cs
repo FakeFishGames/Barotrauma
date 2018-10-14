@@ -39,6 +39,7 @@ namespace Barotrauma
         {
             CollideConnected = false;
             MotorEnabled = true;
+            //TODO: expose this to character editor (a torque that makes the joint more stiff)
             MaxMotorTorque = 0.25f;
             LimbA = limbA;
             LimbB = limbB;
@@ -220,10 +221,10 @@ namespace Barotrauma
         public float Dir
         {
             get { return ((dir == Direction.Left) ? -1.0f : 1.0f); }
-            set { dir = (value==-1.0f) ? Direction.Left : Direction.Right; }
+            set { dir = (value == -1.0f) ? Direction.Left : Direction.Right; }
         }
 
-        public int RefJointIndex { get; private set; }
+        public int RefJointIndex => limbParams.RefJoint;
 
         private List<WearableSprite> wearingItems;
         public List<WearableSprite> WearingItems
@@ -246,18 +247,38 @@ namespace Barotrauma
         public Vector2 PullJointWorldAnchorA
         {
             get { return pullJoint.WorldAnchorA; }
+            set
+            {
+                if (!MathUtils.IsValid(value))
+                {
+                    string errorMsg = "Attempted to set the anchor of a limb's pull joint to an invalid value (" + value + ")\n" + Environment.StackTrace;
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorA:InvalidValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    return;
+                }
+
+                if (Vector2.DistanceSquared(pullJoint.WorldAnchorB, value) > 50.0f * 50.0f)
+                {
+                    string errorMsg = "Attempted to move the anchor of a limb's pull joint extremely far from the limb (" + value + ")\n" + Environment.StackTrace;
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorA:ExcessiveValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    return;
+                }
+
+                pullJoint.WorldAnchorA = value;
+            }
         }
         
         public Vector2 PullJointWorldAnchorB
         {
             get { return pullJoint.WorldAnchorB; }
             set
-            {                
+            {
                 if (!MathUtils.IsValid(value))
                 {
                     string errorMsg = "Attempted to set the anchor of a limb's pull joint to an invalid value (" + value + ")\n" + Environment.StackTrace;
                     DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchor:InvalidValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorB:InvalidValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                     return;
                 }
 
@@ -265,7 +286,7 @@ namespace Barotrauma
                 {
                     string errorMsg = "Attempted to move the anchor of a limb's pull joint extremely far from the limb (" + value + ")\n" + Environment.StackTrace;
                     DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchor:ExcessiveValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorB:ExcessiveValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                     return;
                 }
 
@@ -273,6 +294,11 @@ namespace Barotrauma
             }
         }
 
+        public Vector2 PullJointLocalAnchorA
+        {
+            get { return pullJoint.LocalAnchorA; }
+        }
+        
         public string Name
         {
             get;
@@ -308,10 +334,7 @@ namespace Barotrauma
                 body.CollidesWith = Physics.CollisionAll & ~Physics.CollisionCharacter & ~Physics.CollisionItem & ~Physics.CollisionItemBlocking;
             }
             body.UserData = this;
-            Vector2 pullJointPos = Vector2.Zero;
-            pullJointPos = ConvertUnits.ToSimUnits(limbParams.PullPos * Scale);
-            RefJointIndex = limbParams.RefJoint;
-            pullJoint = new FixedMouseJoint(body.FarseerBody, pullJointPos)
+            pullJoint = new FixedMouseJoint(body.FarseerBody, ConvertUnits.ToSimUnits(limbParams.PullPos * Scale))
             {
                 Enabled = false,
                 MaxForce = ((type == LimbType.LeftHand || type == LimbType.RightHand) ? 400.0f : 150.0f) * body.Mass
@@ -325,8 +348,7 @@ namespace Barotrauma
                 MouthPos = ConvertUnits.ToSimUnits(element.GetAttributeVector2("mouthpos", Vector2.Zero));
             }
 
-            // Overrides the settings in the params, on purpose?
-            //body.BodyType = BodyType.Dynamic;
+            body.BodyType = BodyType.Dynamic;
             body.FarseerBody.AngularDamping = LimbAngularDamping;
 
             damageModifiers = new List<DamageModifier>();
@@ -636,6 +658,7 @@ namespace Barotrauma
             Sprite?.LoadParams(limbParams.normalSpriteParams, isFlipped);
             DamagedSprite?.LoadParams(limbParams.damagedSpriteParams, isFlipped);
             DeformSprite?.Sprite.LoadParams(limbParams.deformSpriteParams, isFlipped);
+            pullJoint.LocalAnchorA = ConvertUnits.ToSimUnits(limbParams.PullPos * Scale);
         }
     }
 }

@@ -48,6 +48,12 @@ namespace Barotrauma
             private set;
         }
 
+        public Sprite SpecularSprite
+        {
+            get;
+            private set;
+        }
+
         public DeformableSprite DeformableSprite
         {
             get;
@@ -303,6 +309,9 @@ namespace Barotrauma
                 {
                     case "sprite":
                         Sprite = new Sprite(subElement);
+                        break;
+                    case "specularsprite":
+                        SpecularSprite = new Sprite(subElement);
                         break;
                     case "deformablesprite":
                         DeformableSprite = new DeformableSprite(subElement);

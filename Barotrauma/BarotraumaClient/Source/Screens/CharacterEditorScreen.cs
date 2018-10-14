@@ -19,7 +19,11 @@ namespace Barotrauma
             {
                 if (cam == null)
                 {
-                    cam = new Camera();
+                    cam = new Camera()
+                    {
+                        MinZoom = 0.1f,
+                        MaxZoom = 5.0f
+                    };
                 }
                 return cam;
             }
@@ -32,6 +36,7 @@ namespace Barotrauma
         private bool editRagdoll;
         private bool editJointPositions;
         private bool editJointLimits;
+        private bool editIK;
         private bool showParamsEditor;
         private bool showSpritesheet;
         private bool isFreezed;
@@ -41,20 +46,20 @@ namespace Barotrauma
         private bool lockSpriteOrigin;
         private bool lockSpritePosition;
         private bool lockSpriteSize;
+        private bool displayColliders;
 
-        private GUITickBox pixelPerfectToggle;
-        private GUIScrollBar spriteSheetZoomBar;
         private float spriteSheetZoom;
+        private int spriteSheetOffsetY = 100;
+        private int spriteSheetOffsetX = 20;
+        private Color backgroundColor = new Color(0.12f, 0.298f, 0.542f, 1.0f);
 
-        private int spriteSheetOffsetY = 30;
-        private int spriteSheetOffsetX = 30;
+        private float spriteSheetOrientation;
 
         public override void Select()
         {
             base.Select();
-            Submarine.RefreshSavedSubs();
-            Submarine.MainSub = Submarine.SavedSubmarines.First(s => s.Name.Contains("AnimEditor"));
-            Submarine.MainSub.Load(true);
+            Submarine.MainSub = new Submarine("Content/AnimEditor.sub");
+            Submarine.MainSub.Load(unloadPrevious: true, showWarningMessages: false);
             Submarine.MainSub.GodMode = true;
             originalWall = new WallGroup(new List<Structure>(Structure.WallList));
             CloneWalls();
@@ -67,6 +72,7 @@ namespace Barotrauma
         public override void Deselect()
         {
             base.Deselect();
+            Submarine.MainSub.Remove();
             GameMain.Instance.OnResolutionChanged -= OnResolutionChanged;
         }
 
@@ -270,19 +276,25 @@ namespace Barotrauma
         #endregion
 
         #region GUI
+        private GUIFrame leftPanel;
         private GUIFrame rightPanel;
         private GUIFrame centerPanel;
         private GUIFrame ragdollControls;
         private GUIFrame animationControls;
         private GUIFrame spriteControls;
+        private GUIFrame spriteSheetControls;
+        private GUIFrame generalControls;
         private GUIDropDown animSelection;
         private GUITickBox freezeToggle;
         private GUITickBox animTestPoseToggle;
         private GUIScrollBar jointScaleBar;
         private GUIScrollBar limbScaleBar;
+        private GUITickBox pixelPerfectToggle;
+        private GUIScrollBar spriteSheetZoomBar;
 
         private void CreateGUI()
         {
+            CreateLeftPanel();
             CreateRightPanel();
             CreateCenterPanel();
         }
@@ -297,8 +309,99 @@ namespace Barotrauma
             Point elementSize = new Point(120, 20);
             int textAreaHeight = 20;
             centerPanel = new GUIFrame(new RectTransform(new Vector2(0.45f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.Center), style: null) { CanBeFocused = false };
+            // General controls
+            generalControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerPanel.RectTransform, Anchor.TopRight), style: null) { CanBeFocused = false };
+            var layoutGroupGeneral = new GUILayoutGroup(new RectTransform(Vector2.One, generalControls.RectTransform), childAnchor: Anchor.TopRight)
+            {
+                AbsoluteSpacing = 5, CanBeFocused = false
+            };
+            // Background color
+            var frame = new GUIFrame(new RectTransform(new Point(500, 80), layoutGroupGeneral.RectTransform), style: null, color: Color.Black * 0.4f);
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), frame.RectTransform) { MinSize = new Point(80, 26) }, "Background Color:", textColor: Color.WhiteSmoke);
+            var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 1), frame.RectTransform, Anchor.TopRight)
+            {
+                AbsoluteOffset = new Point(20, 0)
+            }, isHorizontal: true, childAnchor: Anchor.CenterRight)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.01f
+            };
+            var fields = new GUIComponent[4];
+            string[] colorComponentLabels = { "R", "G", "B" };
+            for (int i = 2; i >= 0; i--)
+            {
+                var element = new GUIFrame(new RectTransform(new Vector2(0.2f, 1), inputArea.RectTransform)
+                {
+                    MinSize = new Point(40, 0),
+                    MaxSize = new Point(100, 50)
+                }, style: null, color: Color.Black * 0.6f);
+                var colorLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), colorComponentLabels[i], 
+                    font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
+                GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight),
+                    GUINumberInput.NumberType.Int)
+                {
+                    Font = GUI.SmallFont
+                };
+                numberInput.MinValueInt = 0;
+                numberInput.MaxValueInt = 255;
+                numberInput.Font = GUI.SmallFont;
+                switch (i)
+                {
+                    case 0:
+                        colorLabel.TextColor = Color.Red;
+                        numberInput.IntValue = backgroundColor.R;
+                        numberInput.OnValueChanged += (numInput) => backgroundColor.R = (byte)(numInput.IntValue);
+                        break;
+                    case 1:
+                        colorLabel.TextColor = Color.LightGreen;
+                        numberInput.IntValue = backgroundColor.G;
+                        numberInput.OnValueChanged += (numInput) => backgroundColor.G = (byte)(numInput.IntValue);
+                        break;
+                    case 2:
+                        colorLabel.TextColor = Color.DeepSkyBlue;
+                        numberInput.IntValue = backgroundColor.B;
+                        numberInput.OnValueChanged += (numInput) => backgroundColor.B = (byte)(numInput.IntValue);
+                        break;
+                }
+            }
+            // Sprite controls
+            spriteControls = new GUIFrame(new RectTransform(new Vector2(1, 0.9f), centerPanel.RectTransform) { RelativeOffset = new Vector2(0, 0.1f) }, style: null) { CanBeFocused = false };
+            var layoutGroupSpriteControls = new GUILayoutGroup(new RectTransform(Vector2.One, spriteControls.RectTransform)) { CanBeFocused = false };
+            // Spacing
+            new GUIFrame(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteControls.RectTransform), style: null) { CanBeFocused = false };
+
+            var lockSpriteOriginToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteControls.RectTransform), "Lock Sprite Origin")
+            {
+                Selected = lockSpriteOrigin,
+                OnSelected = (GUITickBox box) =>
+                {
+                    lockSpriteOrigin = box.Selected;
+                    return true;
+                }
+            };
+            lockSpriteOriginToggle.TextColor = Color.White;
+            var lockSpritePositionToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteControls.RectTransform), "Lock Sprite Position")
+            {
+                Selected = lockSpritePosition,
+                OnSelected = (GUITickBox box) =>
+                {
+                    lockSpritePosition = box.Selected;
+                    return true;
+                }
+            };
+            lockSpritePositionToggle.TextColor = Color.White;
+            var lockSpriteSizeToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteControls.RectTransform), "Lock Sprite Size")
+            {
+                Selected = lockSpriteSize,
+                OnSelected = (GUITickBox box) =>
+                {
+                    lockSpriteSize = box.Selected;
+                    return true;
+                }
+            };
+            lockSpriteSizeToggle.TextColor = Color.White;
             // Ragdoll
-            ragdollControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
+            ragdollControls = new GUIFrame(new RectTransform(new Vector2(1, 0.9f), centerPanel.RectTransform) { RelativeOffset = new Vector2(0, 0.1f) }, style: null) { CanBeFocused = false };
             var layoutGroupRagdoll = new GUILayoutGroup(new RectTransform(Vector2.One, ragdollControls.RectTransform)) { CanBeFocused = false };
             var jointScaleElement = new GUIFrame(new RectTransform(elementSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
             var jointScaleText = new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), jointScaleElement.RectTransform), $"Joint Scale: {RagdollParams.JointScale.FormatDoubleDecimal()}", Color.WhiteSmoke, textAlignment: Alignment.Center);
@@ -376,88 +479,6 @@ namespace Barotrauma
                 }
             };
             uniformScalingToggle.TextColor = Color.White;
-            new GUIButton(new RectTransform(new Point(elementSize.X, textAreaHeight * 2), ragdollControls.RectTransform)
-            {
-                AbsoluteOffset = new Point(elementSize.X + 20, (int)(textAreaHeight * 1.5f))
-            }, "Recreate Ragdoll")
-            {
-                ToolTip = "Many of the parameters requires recreation of the ragdoll. If adjusting the parameter doesn't seem to have effect, click this button.",
-                OnClicked = (button, data) =>
-                {
-                    character.AnimController.Recreate(RagdollParams);
-                    TeleportTo(spawnPosition);
-                    character.AnimController.ResetLimbs();
-                    return true;
-                }
-            };
-            // Sprite sheet controls
-            spriteControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
-            var layoutGroupSprite = new GUILayoutGroup(new RectTransform(Vector2.One, spriteControls.RectTransform)) { CanBeFocused = false };
-            new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSprite.RectTransform), "Spritesheet zoom:", Color.White);
-            float spriteMinScale = 0.25f;
-            float spriteMaxScale = (centerPanel.Rect.Left - spriteSheetOffsetX) / (float)(Textures.OrderByDescending(t => t.Width).First().Width);
-            spriteSheetZoom = MathHelper.Clamp(1, spriteMinScale, spriteMaxScale);
-            spriteSheetZoomBar = new GUIScrollBar(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSprite.RectTransform), barSize: 0.2f)
-            {
-                Enabled = spriteMaxScale < 1,
-                BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteMinScale, spriteMaxScale, spriteSheetZoom)),
-                Step = 0.01f,
-                OnMoved = (scrollBar, value) =>
-                {
-                    spriteSheetZoom = MathHelper.Lerp(spriteMinScale, spriteMaxScale, value);
-                    return true;
-                }
-            };
-            pixelPerfectToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSprite.RectTransform)
-            {
-                RelativeOffset = new Vector2(0, 0.1f)
-            }, "Zoom 100%")
-            {
-                Enabled = spriteMaxScale >= 1,
-                Selected = spriteMaxScale >= 1,
-                TextColor = spriteMaxScale >= 1 ? Color.White : Color.Gray,
-                OnSelected = (tickBox) =>
-                {
-                    spriteSheetZoomBar.Enabled = !tickBox.Selected;
-                    spriteSheetZoom = Math.Min(1, spriteMaxScale);
-                    spriteSheetZoomBar.BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteMinScale, spriteMaxScale, spriteSheetZoom));
-                    return true;
-                }
-            };
-
-            // Spacing
-            new GUIFrame(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSprite.RectTransform), style: null) { CanBeFocused = false };
-
-            var lockSpriteOriginToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSprite.RectTransform), "Lock Sprite Origin")
-            {
-                Selected = lockSpriteOrigin,
-                OnSelected = (GUITickBox box) =>
-                {
-                    lockSpriteOrigin = box.Selected;
-                    return true;
-                }
-            };
-            lockSpriteOriginToggle.TextColor = Color.White;
-            var lockSpritePositionToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSprite.RectTransform), "Lock Sprite Position")
-            {
-                Selected = lockSpritePosition,
-                OnSelected = (GUITickBox box) =>
-                {
-                    lockSpritePosition = box.Selected;
-                    return true;
-                }
-            };
-            lockSpritePositionToggle.TextColor = Color.White;
-            var lockSpriteSizeToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSprite.RectTransform), "Lock Sprite Size")
-            {
-                Selected = lockSpriteSize,
-                OnSelected = (GUITickBox box) =>
-                {
-                    lockSpriteSize = box.Selected;
-                    return true;
-                }
-            };
-            lockSpriteSizeToggle.TextColor = Color.White;
             // Animation
             animationControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupAnimation = new GUILayoutGroup(new RectTransform(Vector2.One, animationControls.RectTransform)) { CanBeFocused = false };
@@ -525,6 +546,49 @@ namespace Barotrauma
             };
         }
 
+        private void CreateLeftPanel()
+        {
+            // Release the old panel
+            if (leftPanel != null)
+            {
+                leftPanel.RectTransform.Parent = null;
+            }
+            leftPanel = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.2f), parent: Frame.RectTransform) { AbsoluteOffset = new Point(20, 20) });
+            // Spritesheet controls
+            Point elementSize = new Point(120, 20);
+            int textAreaHeight = 20;
+            spriteSheetControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), leftPanel.RectTransform), style: null) { CanBeFocused = false };
+            var layoutGroupSpriteSheet = new GUILayoutGroup(new RectTransform(Vector2.One, spriteSheetControls.RectTransform)) { AbsoluteSpacing = 5, CanBeFocused = false };
+            new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), "Spritesheet zoom:", Color.White);
+            float spriteMinScale = 0.25f;
+            float spriteMaxScale = (leftPanel.Rect.Right - spriteSheetOffsetX) / (float)(Textures.OrderByDescending(t => t.Width).First().Width);
+            spriteSheetZoom = MathHelper.Clamp(1, spriteMinScale, spriteMaxScale);
+            spriteSheetZoomBar = new GUIScrollBar(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), barSize: 0.2f)
+            {
+                Enabled = spriteMaxScale < 1,
+                BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteMinScale, spriteMaxScale, spriteSheetZoom)),
+                Step = 0.01f,
+                OnMoved = (scrollBar, value) =>
+                {
+                    spriteSheetZoom = MathHelper.Lerp(spriteMinScale, spriteMaxScale, value);
+                    return true;
+                }
+            };
+            pixelPerfectToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), "Zoom 100%")
+            {
+                Enabled = spriteMaxScale >= 1,
+                Selected = spriteMaxScale >= 1,
+                TextColor = spriteMaxScale >= 1 ? Color.White : Color.Gray,
+                OnSelected = (tickBox) =>
+                {
+                    spriteSheetZoomBar.Enabled = !tickBox.Selected;
+                    spriteSheetZoom = Math.Min(1, spriteMaxScale);
+                    spriteSheetZoomBar.BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteMinScale, spriteMaxScale, spriteSheetZoom));
+                    return true;
+                }
+            };
+        }
+
         private void CreateRightPanel()
         {
             // Release the old panel
@@ -557,6 +621,7 @@ namespace Barotrauma
             var ragdollToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Ragdoll") { Selected = editRagdoll };
             var jointPositionsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joint Positions") { Selected = editJointPositions };
             var jointLimitsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joints Limits") { Selected = editJointLimits };
+            var ikToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit IK Targets") { Selected = editIK };
             freezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Freeze") { Selected = isFreezed };
             var autoFreezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Auto Freeze") { Selected = autoFreeze };
             var limbPairEditToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Limb Pair Editing") { Selected = limbPairEditing };
@@ -618,6 +683,7 @@ namespace Barotrauma
                     ragdollToggle.Selected = true;
                     spritesheetToggle.Selected = !paramsToggle.Selected;
                     jointLimitsToggle.Selected = false;
+                    ikToggle.Selected = false;
                 }
                 return true;
             };
@@ -628,6 +694,18 @@ namespace Barotrauma
                 {
                     ragdollToggle.Selected = true;
                     spritesheetToggle.Selected = !paramsToggle.Selected;
+                    jointPositionsToggle.Selected = false;
+                    ikToggle.Selected = false;
+                }
+                return true;
+            };
+            ikToggle.OnSelected = box =>
+            {
+                editIK = box.Selected;
+                if (editIK)
+                {
+                    ragdollToggle.Selected = true;
+                    jointLimitsToggle.Selected = false;
                     jointPositionsToggle.Selected = false;
                 }
                 return true;
@@ -664,7 +742,7 @@ namespace Barotrauma
             };
             new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Auto Move")
             {
-                OnSelected = (GUITickBox box) =>
+                OnSelected = box =>
                 {
                     character.OverrideMovement = box.Selected ? new Vector2(1, 0) as Vector2? : null;
                     return true;
@@ -672,12 +750,22 @@ namespace Barotrauma
             };
             new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Follow Cursor")
             {
-                OnSelected = (GUITickBox box) =>
+                OnSelected = box =>
                 {
                     character.dontFollowCursor = !box.Selected;
                     return true;
                 }
             };
+            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Display Colliders")
+            {
+                Selected = displayColliders,
+                OnSelected = box =>
+                {
+                    displayColliders = box.Selected;
+                    return true;
+                }
+            };
+
             var quickSaveAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Quick Save Animations");
             quickSaveAnimButton.OnClicked += (button, userData) =>
             {
@@ -1009,6 +1097,17 @@ namespace Barotrauma
                 }
                 return true;
             };
+            new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Recreate Ragdoll")
+            {
+                ToolTip = "Many of the parameters requires recreation of the ragdoll. If adjusting the parameter doesn't seem to have effect, click this button.",
+                OnClicked = (button, data) =>
+                {
+                    character.AnimController.Recreate(RagdollParams);
+                    TeleportTo(spawnPosition);
+                    character.AnimController.ResetLimbs();
+                    return true;
+                }
+            };
         }
         #endregion
 
@@ -1073,9 +1172,14 @@ namespace Barotrauma
         {
             //base.AddToGUIUpdateList();
             rightPanel.AddToGUIUpdateList();
+            generalControls.AddToGUIUpdateList();
             if (showAnimControls)
             {
                 animationControls.AddToGUIUpdateList();
+            }
+            if (showSpritesheet)
+            {
+                spriteSheetControls.AddToGUIUpdateList();
             }
             if (editRagdoll)
             {
@@ -1103,6 +1207,7 @@ namespace Barotrauma
                 }
                 if (PlayerInput.KeyHit(InputType.Run))
                 {
+                    // TODO: refactor this horrible hacky index manipulation mess
                     int index = 0;
                     bool isSwimming = character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast || character.AnimController.ForceSelectAnimationType == AnimationType.SwimSlow;
                     bool isMovingFast = character.AnimController.ForceSelectAnimationType == AnimationType.Run || character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast;
@@ -1110,7 +1215,7 @@ namespace Barotrauma
                     {
                         if (isSwimming || !character.AnimController.CanWalk)
                         {
-                            index = (int)AnimationType.SwimSlow - 1;
+                            index = !character.AnimController.CanWalk ? 0 : (int)AnimationType.SwimSlow - 1;
                         }
                         else
                         {
@@ -1121,7 +1226,7 @@ namespace Barotrauma
                     {
                         if (isSwimming || !character.AnimController.CanWalk)
                         {
-                            index = (int)AnimationType.SwimFast - 1;
+                            index = !character.AnimController.CanWalk ? 1 : (int)AnimationType.SwimFast - 1; 
                         }
                         else
                         {
@@ -1197,9 +1302,7 @@ namespace Barotrauma
 
             base.Draw(deltaTime, graphics, spriteBatch);
             scaledMouseSpeed = PlayerInput.MouseSpeedPerSecond * (float)deltaTime;
-            float brightness = 2f;
-            var color = new Color(0.051f, 0.149f, 0.271f, 1.0f);
-            graphics.Clear(color * brightness);
+            graphics.Clear(backgroundColor);
             Cam.UpdateTransform(true);
 
             // Submarine
@@ -1213,6 +1316,10 @@ namespace Barotrauma
             if (GameMain.DebugDraw)
             {
                 character.AnimController.DebugDraw(spriteBatch);
+            }
+            else if (displayColliders)
+            {
+                character.AnimController.Limbs.ForEach(l => l.body.DebugDraw(spriteBatch, Color.LightGreen));
             }
             spriteBatch.End();
 
@@ -1234,7 +1341,6 @@ namespace Barotrauma
             {
                 DrawSpritesheetEditor(spriteBatch, (float)deltaTime);
             }
-            //widgets.Values.ForEach(w => w.Draw(spriteBatch, (float)deltaTime));
             Structure wall = CurrentWall.walls.FirstOrDefault();
             Vector2 indicatorPos = wall == null ? originalWall.walls.First().DrawPosition : wall.DrawPosition;
             GUI.DrawIndicator(spriteBatch, indicatorPos, Cam, 700, GUI.SubmarineIcon, Color.White);
@@ -1246,6 +1352,13 @@ namespace Barotrauma
             if (animTestPoseToggle.Selected)
             {
                 GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 100, 150), "Animation Test Pose Enabled", Color.Blue, Color.White * 0.5f, 10, GUI.Font);
+            }
+            if (showSpritesheet)
+            {
+                var topLeft = leftPanel.RectTransform.TopLeft;
+                GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 200, 50), "Spritesheet Orientation:", Color.White, Color.Gray * 0.5f, 10, GUI.Font);
+                DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 410, 60), spriteSheetOrientation, string.Empty, Color.White, 
+                    angle => spriteSheetOrientation = angle, circleRadius: 40, widgetSize: 20, rotationOffset: MathHelper.Pi, autoFreeze: false);
             }
             // Debug
             if (GameMain.DebugDraw)
@@ -1286,7 +1399,7 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch, colliderDrawPos, SimToScreen(collider.SimPosition + forward * 0.25f), Color.Blue);
                 //Vector2 left = Vector2.Transform(-Vector2.UnitX, Matrix.CreateRotationZ(collider.Rotation));
                 //Vector2 left = -Vector2.UnitX.TransformVector(forward);
-                Vector2 left = -forward.Right();
+                Vector2 left = forward.Left();
                 GUI.DrawLine(spriteBatch, colliderDrawPos, SimToScreen(collider.SimPosition + left * 0.25f), Color.Red);
                 ShapeExtensions.DrawCircle(spriteBatch, colliderDrawPos, (endPos - colliderDrawPos).Length(), 40, Color.LightGreen);
                 GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 300, 0), $"Collider rotation: {MathHelper.ToDegrees(MathUtils.WrapAngleTwoPi(collider.Rotation))}", Color.White, font: GUI.SmallFont);
@@ -1327,9 +1440,9 @@ namespace Barotrauma
             var animParams = character.AnimController.CurrentAnimationParams;
             var groundedParams = animParams as GroundedMovementParams;
             var humanGroundedParams = animParams as HumanGroundedParams;
+            var humanSwimParams = animParams as HumanSwimParams;
             var fishGroundedParams = animParams as FishGroundedParams;
             var fishSwimParams = animParams as FishSwimParams;
-            var humanSwimParams = animParams as HumanSwimParams;
             var head = character.AnimController.GetLimb(LimbType.Head);
             var torso = character.AnimController.GetLimb(LimbType.Torso);
             var tail = character.AnimController.GetLimb(LimbType.Tail);
@@ -1345,7 +1458,7 @@ namespace Barotrauma
             //Vector2 centerOfMass = character.AnimController.GetCenterOfMass();
             Vector2 simSpaceForward = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation));
             //Vector2 simSpaceLeft = Vector2.Transform(-Vector2.UnitX, Matrix.CreateRotationZ(collider.Rotation));
-            Vector2 screenSpaceForward = -VectorExtensions.Forward(collider.Rotation, 1);
+            Vector2 screenSpaceForward = VectorExtensions.Backward(collider.Rotation, 1);
             Vector2 screenSpaceLeft = screenSpaceForward.Right();
             // The forward vector is left or right in screen space when the unit is not swimming. Cannot rely on the collider here, because the rotation may vary on ground.
             Vector2 forward = animParams.IsSwimAnimation ? screenSpaceForward : Vector2.UnitX * dir;
@@ -1389,6 +1502,10 @@ namespace Barotrauma
                     float speed = animParams.MovementSpeed + ConvertUnits.ToSimUnits(Vector2.Multiply(scaledMouseSpeed / multiplier, forward).Combine()) / Cam.Zoom;
                     TryUpdateAnimParam("movementspeed", MathHelper.Clamp(speed, 0.1f, Ragdoll.MAX_SPEED));
                     GUI.DrawLine(spriteBatch, drawPos, referencePoint, Color.Turquoise);
+                    if (humanSwimParams != null)
+                    {
+                        TryUpdateAnimParam("cyclespeed", animParams.MovementSpeed);
+                    }
                 });
                 GUI.DrawLine(spriteBatch, drawPos + forward * 10, drawPos + forward * 15, Color.Turquoise);
             }
@@ -1396,8 +1513,8 @@ namespace Barotrauma
             if (head != null)
             {
                 // Head angle
-                DrawCircularWidget(spriteBatch, SimToScreen(head.SimPosition), animParams.HeadAngle, "Head Angle", Color.White,
-                    angle => TryUpdateAnimParam("headangle", angle), circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0);
+                DrawRadialWidget(spriteBatch, SimToScreen(head.SimPosition), animParams.HeadAngle, "Head Angle", Color.White,
+                    angle => TryUpdateAnimParam("headangle", angle), circleRadius: 25, rotationOffset: collider.Rotation + MathHelper.Pi, clockWise: dir < 0);
                 // Head position and leaning
                 if (animParams.IsGroundedAnimation)
                 {
@@ -1434,8 +1551,8 @@ namespace Barotrauma
                     referencePoint -= simSpaceForward * 0.25f;
                 }
                 // Torso angle
-                DrawCircularWidget(spriteBatch, SimToScreen(referencePoint), animParams.TorsoAngle, "Torso Angle", Color.White,
-                    angle => TryUpdateAnimParam("torsoangle", angle), rotationOffset: collider.Rotation, clockWise: dir < 0);
+                DrawRadialWidget(spriteBatch, SimToScreen(referencePoint), animParams.TorsoAngle, "Torso Angle", Color.White,
+                    angle => TryUpdateAnimParam("torsoangle", angle), rotationOffset: collider.Rotation + MathHelper.Pi, clockWise: dir < 0);
 
                 if (animParams.IsGroundedAnimation)
                 {
@@ -1479,7 +1596,7 @@ namespace Barotrauma
                             fishParams.FootAnglesInRadians[limb.limbParams.ID] = 0.0f;
                         }
 
-                        DrawCircularWidget(spriteBatch, 
+                        DrawRadialWidget(spriteBatch, 
                             SimToScreen(new Vector2(limb.SimPosition.X, colliderBottom.Y)), 
                             MathHelper.ToDegrees(fishParams.FootAnglesInRadians[limb.limbParams.ID]), 
                             "Foot Angle", Color.White,
@@ -1637,7 +1754,7 @@ namespace Barotrauma
                 var origin = limb.ActiveSprite.Origin;
                 var sourceRect = limb.ActiveSprite.SourceRect;
                 Vector2 size = sourceRect.Size.ToVector2() * Cam.Zoom * limb.Scale;
-                Vector2 up = -VectorExtensions.Forward(limb.Rotation);
+                Vector2 up = VectorExtensions.Backward(limb.Rotation);
                 Vector2 left = up.Right();
                 Vector2 limbScreenPos = SimToScreen(limb.SimPosition);
                 var relativeOrigin = new Vector2(origin.X / sourceRect.Width, origin.Y / sourceRect.Height);
@@ -1713,7 +1830,23 @@ namespace Barotrauma
             }
             foreach (Limb limb in character.AnimController.Limbs)
             {
-                Vector2 limbScreenPos = SimToScreen(limb.SimPosition);
+                if (editIK)
+                {
+                    if (limb.type == LimbType.LeftFoot || limb.type == LimbType.RightFoot || limb.type == LimbType.LeftHand || limb.type == LimbType.RightHand)
+                    {
+                        var pullJointWidgetSize = new Vector2(5, 5);
+                        Vector2 tformedPullPos = SimToScreen(limb.PullJointWorldAnchorA);
+                        GUI.DrawRectangle(spriteBatch, tformedPullPos - pullJointWidgetSize / 2, pullJointWidgetSize, Color.Red, true);
+                        DrawWidget(spriteBatch, tformedPullPos, WidgetType.Rectangle, 8, Color.Cyan, $"IK ({limb.Name})",
+                        () =>
+                        {
+                            limb.PullJointWorldAnchorA = ScreenToSim(PlayerInput.MousePosition);
+                            TryUpdateLimbParam(limb, "pullpos", ConvertUnits.ToDisplayUnits(limb.PullJointLocalAnchorA / limb.limbParams.Ragdoll.LimbScale));
+                            GUI.DrawLine(spriteBatch, SimToScreen(limb.SimPosition), tformedPullPos, Color.MediumPurple);
+                        });
+                    }
+                }
+                
                 foreach (var joint in character.AnimController.LimbJoints)
                 {
                     Vector2 jointPos = Vector2.Zero;
@@ -1734,6 +1867,7 @@ namespace Barotrauma
                     {
                         continue;
                     }
+                    Vector2 limbScreenPos = SimToScreen(limb.SimPosition);
                     var f = Vector2.Transform(jointPos, Matrix.CreateRotationZ(limb.Rotation));
                     f.Y = -f.Y;
                     Vector2 tformedJointPos = limbScreenPos + f * Cam.Zoom;
@@ -1749,8 +1883,9 @@ namespace Barotrauma
                         toggleWidget.Draw(spriteBatch, deltaTime);
                         if (joint.LimitEnabled)
                         {
+                            Vector2 to = tformedJointPos + VectorExtensions.Forward(joint.LimbB.Rotation + MathHelper.ToRadians(-spriteSheetOrientation), 20);
                             DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: true, allowPairEditing: true, rotationOffset: limb.Rotation);
-                            GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + VectorExtensions.Forward(joint.LimbB.Rotation, 20.0f), Color.Magenta, width: 2);
+                            GUI.DrawLine(spriteBatch, tformedJointPos, to, Color.Magenta, width: 2);
                         }
                     }
                     else if (editJointPositions)
@@ -2114,8 +2249,9 @@ namespace Barotrauma
 
         private void DrawJointLimitWidgets(SpriteBatch spriteBatch, Limb limb, LimbJoint joint, Vector2 drawPos, bool autoFreeze, bool allowPairEditing, float rotationOffset = 0)
         {
+            rotationOffset -= MathHelper.ToRadians(spriteSheetOrientation);
             Color angleColor = joint.UpperLimit - joint.LowerLimit > 0 ? Color.LightGreen * 0.5f : Color.Red;
-            DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), $"{joint.jointParams.Name} Upper Limit", Color.Cyan, angle =>
+            DrawRadialWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), $"{joint.jointParams.Name} Upper Limit", Color.Cyan, angle =>
             {
                 joint.UpperLimit = MathHelper.ToRadians(angle);
                 ValidateJoint(joint);
@@ -2134,8 +2270,8 @@ namespace Barotrauma
                 DrawAngle(20, angleColor, 4);
                 DrawAngle(40, Color.Cyan);
                 GUI.DrawString(spriteBatch, drawPos, angle.FormatZeroDecimal(), Color.Black, backgroundColor: Color.Cyan, font: GUI.SmallFont);
-            }, circleRadius: 40, rotationOffset: rotationOffset, displayAngle: false);
-            DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), $"{joint.jointParams.Name} Lower Limit", Color.Yellow, angle =>
+            }, circleRadius: 40, rotationOffset: rotationOffset, displayAngle: false, clockWise: false);
+            DrawRadialWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), $"{joint.jointParams.Name} Lower Limit", Color.Yellow, angle =>
             {
                 joint.LowerLimit = MathHelper.ToRadians(angle);
                 ValidateJoint(joint);
@@ -2154,7 +2290,7 @@ namespace Barotrauma
                 DrawAngle(20, angleColor, 4);
                 DrawAngle(25, Color.Yellow);
                 GUI.DrawString(spriteBatch, drawPos, angle.FormatZeroDecimal(), Color.Black, backgroundColor: Color.Yellow, font: GUI.SmallFont);
-            }, circleRadius: 25, rotationOffset: rotationOffset, displayAngle: false);
+            }, circleRadius: 25, rotationOffset: rotationOffset, displayAngle: false, clockWise: false);
             void DrawAngle(float radius, Color color, float thickness = 5)
             {
                 float angle = joint.UpperLimit - joint.LowerLimit;
@@ -2169,7 +2305,7 @@ namespace Barotrauma
         #endregion
 
         #region Widgets as methods
-        private void DrawCircularWidget(SpriteBatch spriteBatch, Vector2 drawPos, float value, string toolTip, Color color, Action<float> onClick,
+        private void DrawRadialWidget(SpriteBatch spriteBatch, Vector2 drawPos, float value, string toolTip, Color color, Action<float> onClick,
             float circleRadius = 30, int widgetSize = 10, float rotationOffset = 0, bool clockWise = true, bool displayAngle = true, bool? autoFreeze = null)
         {
             var angle = value;
@@ -2177,15 +2313,20 @@ namespace Barotrauma
             {
                 angle = 0;
             }
-            var widgetDrawPos = drawPos + VectorExtensions.Forward(MathHelper.ToRadians(angle) + rotationOffset, circleRadius);
+            float drawAngle = clockWise ? -angle : angle;
+            var widgetDrawPos = drawPos + VectorExtensions.Forward(MathHelper.ToRadians(drawAngle) + rotationOffset, circleRadius);
             GUI.DrawLine(spriteBatch, drawPos, widgetDrawPos, color);
             DrawWidget(spriteBatch, widgetDrawPos, WidgetType.Rectangle, 10, color, toolTip, () =>
             {
                 GUI.DrawLine(spriteBatch, drawPos, widgetDrawPos, color, width: 3);
                 ShapeExtensions.DrawCircle(spriteBatch, drawPos, circleRadius, 40, color, thickness: 1);
                 Vector2 d = PlayerInput.MousePosition - drawPos;
-                float newAngle = -(MathHelper.ToDegrees(MathUtils.VectorToAngle(d) - MathHelper.PiOver2));
-                angle = newAngle - MathHelper.ToDegrees(rotationOffset);
+                float newAngle = MathUtils.VectorToAngle(d) - MathHelper.PiOver2 + rotationOffset;
+                angle = MathHelper.ToDegrees(newAngle);
+                if (!clockWise)
+                {
+                    angle = -angle;
+                }
                 if (displayAngle)
                 {
                     GUI.DrawString(spriteBatch, drawPos, angle.FormatZeroDecimal(), Color.Black, backgroundColor: color, font: GUI.SmallFont);

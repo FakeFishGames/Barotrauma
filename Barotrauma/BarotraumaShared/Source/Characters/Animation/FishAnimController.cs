@@ -406,13 +406,15 @@ namespace Barotrauma
 
             float mainLimbHeight = ColliderHeightFromFloor;
 
+            Vector2 colliderBottom = GetColliderBottom();
+
             Limb torso = GetLimb(LimbType.Torso);
             if (torso != null)
             {
                 if (TorsoAngle.HasValue) torso.body.SmoothRotate(TorsoAngle.Value * Dir, CurrentGroundedParams.TorsoTorque);
                 if (TorsoPosition.HasValue)
                 {
-                    Vector2 pos = GetColliderBottom() + Vector2.UnitY * TorsoPosition.Value;
+                    Vector2 pos = colliderBottom + Vector2.UnitY * TorsoPosition.Value;
 
                     if (torso != MainLimb)
                         pos.X = torso.SimPosition.X;
@@ -431,7 +433,7 @@ namespace Barotrauma
                 if (HeadAngle.HasValue) head.body.SmoothRotate(HeadAngle.Value * Dir, CurrentGroundedParams.HeadTorque);
                 if (HeadPosition.HasValue)
                 {
-                    Vector2 pos = GetColliderBottom() + Vector2.UnitY * HeadPosition.Value;
+                    Vector2 pos = colliderBottom + Vector2.UnitY * HeadPosition.Value;
 
                     if (head != MainLimb)
                         pos.X = head.SimPosition.X;
@@ -450,9 +452,13 @@ namespace Barotrauma
             
             WalkPos -= MainLimb.LinearVelocity.X * (CurrentAnimationParams.CycleSpeed / 100.0f);
 
-            Vector2 transformedStepSize = new Vector2(
-                (float)Math.Cos(WalkPos) * CurrentGroundedParams.StepSize.X * RagdollParams.JointScale * 3.0f,
-                (float)Math.Sin(WalkPos) * CurrentGroundedParams.StepSize.Y * RagdollParams.JointScale * 2.0f);
+            Vector2 transformedStepSize = Vector2.Zero;
+            if (Math.Abs(TargetMovement.X) > 0.01f)
+            {
+                transformedStepSize = new Vector2(
+                    (float)Math.Cos(WalkPos) * CurrentGroundedParams.StepSize.X * RagdollParams.JointScale * 3.0f,
+                    (float)Math.Sin(WalkPos) * CurrentGroundedParams.StepSize.Y * RagdollParams.JointScale * 2.0f);
+            }
 
             foreach (Limb limb in Limbs)
             {
@@ -460,9 +466,9 @@ namespace Barotrauma
                 {
                     case LimbType.LeftFoot:
                     case LimbType.RightFoot:
-                        Vector2 footPos = new Vector2(limb.SimPosition.X, MainLimb.SimPosition.Y - mainLimbHeight);
+                        Vector2 footPos = new Vector2(limb.SimPosition.X, colliderBottom.Y);
 
-                        if (limb.RefJointIndex>-1)
+                        if (limb.RefJointIndex > -1)
                         {
                             RevoluteJoint refJoint = LimbJoints[limb.RefJointIndex];
                             footPos.X = refJoint.WorldAnchorA.X;

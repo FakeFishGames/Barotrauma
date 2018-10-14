@@ -12,10 +12,10 @@ namespace Barotrauma
 
         private BackgroundCreatureManager backgroundCreatureManager;
         
-        public void DrawFront(SpriteBatch spriteBatch)
+        public void DrawFront(SpriteBatch spriteBatch, Camera cam)
         {
             if (renderer == null) return;
-            renderer.Draw(spriteBatch);
+            renderer.Draw(spriteBatch, cam);
 
             if (GameMain.DebugDraw)
             {

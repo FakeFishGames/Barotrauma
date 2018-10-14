@@ -248,7 +248,7 @@ namespace Barotrauma
 			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap, DepthStencilState.None, null, null, cam.Transform);
 			foreach (Character c in Character.CharacterList) c.DrawFront(spriteBatch, cam);
 
-			if (Level.Loaded != null) Level.Loaded.DrawFront(spriteBatch);
+			if (Level.Loaded != null) Level.Loaded.DrawFront(spriteBatch, cam);
             if (GameMain.DebugDraw && GameMain.GameSession?.EventManager != null)
             {
                 GameMain.GameSession.EventManager.DebugDraw(spriteBatch);

@@ -126,9 +126,10 @@ namespace Barotrauma.Items.Components
                     if (draggingConnected == equippedWire) Inventory.draggingItem = equippedWire.Item;
                 }
             }
-
-            //stop dragging a wire item if cursor is outside the panel
-            if (mouseInRect) Inventory.draggingItem = null;            
+            
+            //stop dragging a wire item if the cursor is within any connection panel
+            //(so we don't drop the item when dropping the wire on a connection)
+            if (mouseInRect || GUI.MouseOn?.UserData is ConnectionPanel) Inventory.draggingItem = null;            
         }
 
         private void Draw(SpriteBatch spriteBatch, ConnectionPanel panel, Vector2 position, Vector2 labelPos, Vector2 wirePosition, bool mouseIn, Wire equippedWire, float wireInterval)

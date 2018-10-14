@@ -38,6 +38,7 @@ namespace Barotrauma
 
         public static SubEditorScreen       SubEditorScreen;
         public static ParticleEditorScreen  ParticleEditorScreen;
+        public static LevelEditorScreen     LevelEditorScreen;
         public static SpriteEditorScreen    SpriteEditorScreen;
         public static CharacterEditorScreen CharacterEditorScreen;
 
@@ -419,6 +420,7 @@ namespace Barotrauma
 
             SubEditorScreen         = new SubEditorScreen();
             ParticleEditorScreen    = new ParticleEditorScreen();
+            LevelEditorScreen       = new LevelEditorScreen();
             SpriteEditorScreen      = new SpriteEditorScreen();
             CharacterEditorScreen   = new CharacterEditorScreen();
 
