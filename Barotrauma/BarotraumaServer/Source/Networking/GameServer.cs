@@ -489,6 +489,7 @@ namespace Barotrauma.Networking
                                     */
                                     DisconnectClient(inc.SenderConnection,
                                         connectedClient != null ? connectedClient.Name + " has disconnected" : "");
+                                    if (inc.SenderConnection == ownerConnection) GameMain.ShouldRun = false;
                                     break;
                             }
                             break;
