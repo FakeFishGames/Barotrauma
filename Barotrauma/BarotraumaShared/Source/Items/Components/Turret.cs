@@ -318,6 +318,7 @@ namespace Barotrauma.Items.Components
                 GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.components.IndexOf(this), projectile });
             }
 
+            ApplyStatusEffects(ActionType.OnUse, 1.0f);
             LaunchProjSpecific();
         }
 

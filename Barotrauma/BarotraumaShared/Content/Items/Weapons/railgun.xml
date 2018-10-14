@@ -27,7 +27,7 @@
             rotationspeedlowskill="1" rotationspeedhighskill="8">
       <StatusEffect type="OnUse" target="This">
         <sound file="Content/Items/Weapons/railgun.ogg" range="5000"/>
-        <Explosion range="1000.0" structuredamage="0" force="0.01" camerashake="10.0" flames="false" smoke="false" sparks="false"/>
+        <Explosion range="1000.0" structuredamage="0" force="0.01" camerashake="10.0" flames="false" smoke="false" sparks="false" underwaterbubble="false"/>
       </StatusEffect>
       <Crosshair texture="crosshair.png"/>
       <CrosshairPointer texture="crosshairPointer.png"/>
