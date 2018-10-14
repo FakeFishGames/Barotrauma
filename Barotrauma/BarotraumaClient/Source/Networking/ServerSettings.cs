@@ -289,17 +289,8 @@ namespace Barotrauma.Networking
             GetPropertyData("EndRoundAtLevelEnd").AssignGUIComponent(endBox);
             
             var endVoteBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform),
-                TextManager.Get("ServerSettingsEndRoundVoting"))
-            {
-                Selected = Voting.AllowEndVoting,
-                OnSelected = (GUITickBox) =>
-                {
-                    //TODO: fix
-                    //Voting.AllowEndVoting = !Voting.AllowEndVoting;
-                    //GameMain.Server.UpdateVoteStatus();
-                    return true;
-                }
-            };
+                TextManager.Get("ServerSettingsEndRoundVoting"));
+            GetPropertyData("AllowEndVoting").AssignGUIComponent(endVoteBox);
 
             GUIScrollBar slider;
             GUITextBlock sliderLabel;
@@ -538,29 +529,21 @@ namespace Barotrauma.Networking
 
             //***********************************************
 
-            /*TODO: reimplement
             var startWhenClientsReady = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform),
-                TextManager.Get("ServerSettingsStartWhenClientsReady"))
-            {
-                Selected = StartWhenClientsReady,
-                OnSelected = (tickBox) =>
-                {
-                    StartWhenClientsReady = tickBox.Selected;
-                    return true;
-                }
-            };
+                TextManager.Get("ServerSettingsStartWhenClientsReady"));
+            GetPropertyData("StartWhenClientsReady").AssignGUIComponent(startWhenClientsReady);
 
             CreateLabeledSlider(serverTab, "ServerSettingsStartWhenClientsReadyRatio", out slider, out sliderLabel);
             string clientsReadyRequiredLabel = sliderLabel.Text;
             slider.Step = 0.2f;
-            slider.BarScroll = (StartWhenClientsReadyRatio - 0.5f) * 2.0f;
+            slider.Range = new Vector2(0.5f, 1.0f);
             slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
-                StartWhenClientsReadyRatio = barScroll / 2.0f + 0.5f;
-                ((GUITextBlock)scrollBar.UserData).Text = clientsReadyRequiredLabel.Replace("[percentage]", ((int)MathUtils.Round(StartWhenClientsReadyRatio * 100.0f, 10.0f)).ToString());
+                ((GUITextBlock)scrollBar.UserData).Text = clientsReadyRequiredLabel.Replace("[percentage]", ((int)MathUtils.Round(scrollBar.BarScrollValue * 100.0f, 10.0f)).ToString());
                 return true;
             };
-            slider.OnMoved(slider, slider.BarScroll);*/
+            GetPropertyData("StartWhenClientsReadyRatio").AssignGUIComponent(slider);
+            slider.OnMoved(slider, slider.BarScroll);
 
             //***********************************************
 
@@ -573,17 +556,8 @@ namespace Barotrauma.Networking
             };
             GetPropertyData("AllowSpectating").AssignGUIComponent(allowSpecBox);
 
-            var voteKickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsAllowVoteKick"))
-            {
-                Selected = Voting.AllowVoteKick,
-                OnSelected = (GUITickBox) =>
-                {
-                    //TODO: fix
-                    //Voting.AllowVoteKick = !Voting.AllowVoteKick;
-                    //GameMain.Server.UpdateVoteStatus();
-                    return true;
-                }
-            };
+            var voteKickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsAllowVoteKick"));
+            GetPropertyData("AllowVoteKick").AssignGUIComponent(voteKickBox);
 
             CreateLabeledSlider(serverTab, "ServerSettingsKickVotesRequired", out slider, out sliderLabel);
             string votesRequiredLabel = sliderLabel.Text;
