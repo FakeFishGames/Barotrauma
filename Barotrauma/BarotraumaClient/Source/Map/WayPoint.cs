@@ -87,7 +87,7 @@ namespace Barotrauma
 
         private bool ChangeSpawnType(GUIButton button, object obj)
         {
-            GUITextBlock spawnTypeText = button.Parent.GetChild<GUITextBlock>();
+            GUITextBlock spawnTypeText = button.Parent.GetChildByUserData("spawntypetext") as GUITextBlock;
 
             spawnType += (int)button.UserData;
 
@@ -181,7 +181,10 @@ namespace Barotrauma
                     UserData = -1,
                     OnClicked = ChangeSpawnType
                 };
-                var spawnTypeText = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), spawnTypeContainer.RectTransform), spawnType.ToString(), textAlignment: Alignment.Center);
+                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), spawnTypeContainer.RectTransform), spawnType.ToString(), textAlignment: Alignment.Center)
+                {
+                    UserData = "spawntypetext"
+                };
                 button = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), spawnTypeContainer.RectTransform), "+")
                 {
                     UserData = 1,
