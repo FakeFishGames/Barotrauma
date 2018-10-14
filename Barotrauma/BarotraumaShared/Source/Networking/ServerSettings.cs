@@ -405,6 +405,32 @@ namespace Barotrauma.Networking
         {
             get { return !string.IsNullOrEmpty(password); }
         }
+        
+        [Serialize(true, true)]
+        public bool AllowVoteKick
+        {
+            get
+            {
+                return Voting.AllowVoteKick;
+            }
+            set
+            {
+                Voting.AllowVoteKick = value;
+            }
+        }
+
+        [Serialize(true, true)]
+        public bool AllowEndVoting
+        {
+            get
+            {
+                return Voting.AllowEndVoting;
+            }
+            set
+            {
+                Voting.AllowEndVoting = value;
+            }
+        }
 
         [Serialize(true, true)]
         public bool AllowRespawn
@@ -459,14 +485,7 @@ namespace Barotrauma.Networking
         public SelectionMode ModeSelectionMode { get; private set; }
 
         public BanList BanList { get; private set; }
-
-        [Serialize(true, true)]
-        public bool AllowVoteKick
-        {
-            get;
-            private set;
-        }
-
+        
         [Serialize(0.6f, true)]
         public float EndVoteRequiredRatio
         {
