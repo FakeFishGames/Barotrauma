@@ -353,7 +353,7 @@ namespace Barotrauma
 
             return character;
         }
-
+        
         private void ReadStatus(NetBuffer msg)
         {
             bool isDead = msg.ReadBoolean();
