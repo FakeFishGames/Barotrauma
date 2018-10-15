@@ -45,6 +45,11 @@ namespace Barotrauma
             get { return true; }
         }
 
+        public virtual bool CanFlip
+        {
+            get { return true; }
+        }
+
         public virtual AIObjectiveManager ObjectiveManager
         {
             get { return null; }
