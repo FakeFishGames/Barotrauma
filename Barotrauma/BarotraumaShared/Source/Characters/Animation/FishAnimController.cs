@@ -186,7 +186,7 @@ namespace Barotrauma
                 UpdateWalkAnim(deltaTime);
             }
             
-            if (!character.IsRemotePlayer)
+            if (!character.IsRemotePlayer && (character.AIController == null || character.AIController.CanFlip))
             {
                 if (!inWater || CurrentSwimParams.Mirror)
                 {
@@ -223,6 +223,7 @@ namespace Barotrauma
             if (character.SelectedCharacter != null) DragCharacter(character.SelectedCharacter, deltaTime);
 
             if (!CurrentFishAnimation.Flip) return;
+            if (character.AIController != null && !character.AIController.CanFlip) return;
 
             flipTimer += deltaTime;
 
