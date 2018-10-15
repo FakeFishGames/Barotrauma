@@ -3,6 +3,8 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using FarseerPhysics.Dynamics;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -11,6 +13,35 @@ namespace Barotrauma
         private LevelRenderer renderer;
 
         private BackgroundCreatureManager backgroundCreatureManager;
+
+        public void ReloadTextures()
+        {
+            renderer.ReloadTextures();
+
+            HashSet<Texture2D> uniqueTextures = new HashSet<Texture2D>();
+            HashSet<Sprite> uniqueSprites = new HashSet<Sprite>();
+            var allLevelObjects = levelObjectManager.GetAllObjects();
+            foreach (var levelObj in allLevelObjects)
+            {
+                if (levelObj.Prefab.Sprite != null &&
+                    !uniqueTextures.Contains(levelObj.Prefab.Sprite.Texture))
+                {
+                    uniqueTextures.Add(levelObj.Prefab.Sprite.Texture);
+                    uniqueSprites.Add(levelObj.Prefab.Sprite);
+                }
+                if (levelObj.Prefab.SpecularSprite != null &&
+                    !uniqueTextures.Contains(levelObj.Prefab.SpecularSprite.Texture))
+                {
+                    uniqueTextures.Add(levelObj.Prefab.SpecularSprite.Texture);
+                    uniqueSprites.Add(levelObj.Prefab.SpecularSprite);
+                }
+            }
+
+            foreach (Sprite sprite in uniqueSprites)
+            {
+                sprite.ReloadTexture();
+            }
+        }
         
         public void DrawFront(SpriteBatch spriteBatch, Camera cam)
         {

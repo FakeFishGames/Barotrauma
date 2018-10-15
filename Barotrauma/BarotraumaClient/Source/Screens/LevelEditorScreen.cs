@@ -52,6 +52,16 @@ namespace Barotrauma
             };
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), paddedLeftPanel.RectTransform),
+                TextManager.Get("LevelEditorReloadTextures"))
+            {
+                OnClicked = (btn, obj) =>
+                {
+                    Level.Loaded?.ReloadTextures();
+                    return true;
+                }
+            };
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), paddedLeftPanel.RectTransform),
                 TextManager.Get("LevelEditorSaveAll"))
             {
                 OnClicked = (btn, obj) =>

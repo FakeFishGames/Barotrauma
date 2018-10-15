@@ -52,6 +52,14 @@ namespace Barotrauma
                 
             this.level = level;
         }
+
+        public void ReloadTextures()
+        {
+            level.GenerationParams.WallEdgeSprite.ReloadTexture();
+            wallEdgeEffect.Texture = level.GenerationParams.WallEdgeSprite.Texture;
+            level.GenerationParams.WallSprite.ReloadTexture();
+            wallCenterEffect.Texture = level.GenerationParams.WallSprite.Texture;
+        }
         
         public void Update(float deltaTime, Camera cam)
         {
