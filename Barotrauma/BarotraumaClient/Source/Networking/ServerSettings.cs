@@ -140,16 +140,16 @@ namespace Barotrauma.Networking
 
         public void ClientWrite()
         {
-            IEnumerable<KeyValuePair<UInt32, NetPropertyData>> changedProperties = netProperties.Where(kvp => kvp.Value.ChangedLocally);
-            UInt32 count = (UInt32)changedProperties.Count();
-            bool changedMonsterSettings = tempMonsterEnabled.Any(p => p.Value != MonsterEnabled[p.Key]);
-
-            if (count == 0 && !changedMonsterSettings) return;
-
             NetOutgoingMessage outMsg = GameMain.NetworkMember.NetPeer.CreateMessage();
 
             outMsg.Write((byte)ClientPacketHeader.SERVER_SETTINGS);
 
+            SharedWrite(outMsg);
+
+            IEnumerable<KeyValuePair<UInt32, NetPropertyData>> changedProperties = netProperties.Where(kvp => kvp.Value.ChangedLocally);
+            UInt32 count = (UInt32)changedProperties.Count();
+            bool changedMonsterSettings = tempMonsterEnabled.Any(p => p.Value != MonsterEnabled[p.Key]);
+            
             outMsg.Write(count);
             DebugConsole.NewMessage("COUNT: " + count.ToString(), Color.Yellow);
             foreach (KeyValuePair<UInt32,NetPropertyData> prop in changedProperties)
@@ -449,12 +449,9 @@ namespace Barotrauma.Networking
                 return true;
             };
 
-            /* TODO: fix
-            foreach (MapEntityPrefab pf in MapEntityPrefab.List)
+            foreach (ItemPrefab ip in MapEntityPrefab.List.Where(p => p is ItemPrefab).Select(p => p as ItemPrefab))
             {
-                ItemPrefab ip = pf as ItemPrefab;
-
-                if (ip == null || (!ip.CanBeBought && !ip.Tags.Contains("smallitem"))) continue;
+                if (!ip.CanBeBought && !ip.Tags.Contains("smallitem")) continue;
 
                 GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.15f), cargoFrame.Content.RectTransform) { MinSize = new Point(0, 30) },
                     ip.Name, font: GUI.SmallFont)
@@ -472,7 +469,7 @@ namespace Barotrauma.Networking
                     };
                 }
                 
-                extraCargo.TryGetValue(ip, out int cargoVal);
+                ExtraCargo.TryGetValue(ip, out int cargoVal);
                 var amountInput = new GUINumberInput(new RectTransform(new Vector2(0.3f, 1.0f), textBlock.RectTransform, Anchor.CenterRight),
                     GUINumberInput.NumberType.Int)
                 {
@@ -482,17 +479,17 @@ namespace Barotrauma.Networking
                 };
                 amountInput.OnValueChanged += (numberInput) =>
                 {
-                    if (extraCargo.ContainsKey(ip))
+                    if (ExtraCargo.ContainsKey(ip))
                     {
-                        extraCargo[ip] = numberInput.IntValue;
+                        ExtraCargo[ip] = numberInput.IntValue;
+                        if (numberInput.IntValue <= 0) ExtraCargo.Remove(ip);
                     }
                     else
                     {
-                        extraCargo.Add(ip, numberInput.IntValue);
+                        ExtraCargo.Add(ip, numberInput.IntValue);
                     }
                 };
             }
-            */
 
             //--------------------------------------------------------------------------------
             //                              server settings 

@@ -1441,7 +1441,7 @@ namespace Barotrauma.Networking
                 if (sub == null) continue;
 
                 List<PurchasedItem> spawnList = new List<PurchasedItem>();
-                foreach (KeyValuePair<ItemPrefab, int> kvp in serverSettings.extraCargo)
+                foreach (KeyValuePair<ItemPrefab, int> kvp in serverSettings.ExtraCargo)
                 {
                     spawnList.Add(new PurchasedItem(kvp.Key, kvp.Value));
                 }

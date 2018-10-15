@@ -61,6 +61,8 @@ namespace Barotrauma.Networking
         
         public void ServerRead(NetIncomingMessage incMsg,Client c)
         {
+            SharedRead(incMsg);
+
             UInt32 count = incMsg.ReadUInt32();
             bool changed = false;
 
@@ -226,8 +228,7 @@ namespace Barotrauma.Networking
             {
                 if (!MonsterEnabled.ContainsKey(s)) MonsterEnabled.Add(s, true);
             }
-            extraCargo = new Dictionary<ItemPrefab, int>();
-
+            
             AutoBanTime = doc.Root.GetAttributeFloat("autobantime", 60);
             MaxAutoBanTime = doc.Root.GetAttributeFloat("maxautobantime", 360);
         }
