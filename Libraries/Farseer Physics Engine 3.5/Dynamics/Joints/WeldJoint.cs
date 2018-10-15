@@ -163,9 +163,9 @@ namespace FarseerPhysics.Dynamics.Joints
             _localCenterA = BodyA._sweep.LocalCenter;
             _localCenterB = BodyB._sweep.LocalCenter;
             _invMassA = BodyA._invMass;
-            _invMassB = BodyB._invMass;
+            _invMassB = KinematicBodyB ? 0.0f : BodyB._invMass;
             _invIA = BodyA._invI;
-            _invIB = BodyB._invI;
+            _invIB = KinematicBodyB ? 0.0f : BodyB._invI;
 
             float aA = data.positions[_indexA].a;
             Vector2 vA = data.velocities[_indexA].v;
@@ -268,7 +268,7 @@ namespace FarseerPhysics.Dynamics.Joints
             Vector2 vB = data.velocities[_indexB].v;
             float wB = data.velocities[_indexB].w;
 
-            float mA = _invMassA, mB = KinematicBodyB ? _invMassB : 0.0f;
+            float mA = _invMassA, mB = _invMassB;
             float iA = _invIA, iB = _invIB;
 
             if (FrequencyHz > 0.0f)
