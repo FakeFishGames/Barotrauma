@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 using Barotrauma.Extensions;
 using FarseerPhysics;
 
@@ -1108,7 +1109,53 @@ namespace Barotrauma
                     return true;
                 }
             };
+            new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Create New Character (WIP)")
+            {
+                OnClicked = (button, data) =>
+                {
+                    string speciesName = "Wormx";
+                    string mainFolder = $"Content/Characters/{speciesName}";
+                    // Config file
+                    string configFilePath = Path.Combine(mainFolder, $"{speciesName}.xml");
+                    if (ContentPackage.GetFilesOfType(GameMain.SelectedPackages, ContentType.Character).None(path => path.Contains(speciesName)))
+                    {
+                        var contentPackage = GameMain.Config.SelectedContentPackages.Last();
+                        XElement mainElement = new XElement("Character",
+                            new XAttribute("name", speciesName),
+                            new XAttribute("humanoid", false),
+                            new XElement("ragdolls"),
+                            new XElement("animations"),
+                            new XElement("health"),
+                            new XElement("ai"));
+                        XDocument doc = new XDocument(mainElement);
+                        if (!Directory.Exists(mainFolder))
+                        {
+                            Directory.CreateDirectory(mainFolder);
+                        }
+                        doc.Save(configFilePath);
+                        contentPackage.Save(contentPackage.Path);
+                    }
+                    // Ragdoll
+                    string ragdollFolder = RagdollParams.GetDefaultFolder(speciesName);
+                    string ragdollPath = RagdollParams.GetDefaultFile(speciesName);
+                    RagdollParams ragdollParams = RagdollParams.CreateDummy<FishRagdollParams>(ragdollPath, speciesName);
+                    // Animations
+                    string animFolder = AnimationParams.GetDefaultFolder(speciesName);
+                    foreach (AnimationType animType in Enum.GetValues(typeof(AnimationType)))
+                    {
+                        if (animType != AnimationType.NotDefined)
+                        {
+                            Type type = AnimationParams.GetParamTypeFromAnimType(animType, false);
+                            string fullPath = AnimationParams.GetDefaultFile(speciesName, animType);
+                            AnimationParams.CreateDummy(fullPath, speciesName, animType, type);
+                        }
+                    }
+                    SpawnCharacter(configFilePath, ragdollParams);
+                    return true;
+                }
+            };
         }
+
         #endregion
 
         #region Params

@@ -10,7 +10,7 @@ namespace Barotrauma
 {
     abstract class EditableParams : ISerializableEntity
     {
-        public bool IsLoaded { get; private set; }
+        public bool IsLoaded { get; protected set; }
         public string Name { get; private set; }
         public string FileName { get; private set; }
         public string Folder { get; private set; }
@@ -28,6 +28,10 @@ namespace Barotrauma
                     return new XDocument();
                 }
                 return doc;
+            }
+            protected set
+            {
+                doc = value;
             }
         }
 
@@ -51,9 +55,9 @@ namespace Barotrauma
             return IsLoaded;
         }
 
-        protected virtual void UpdatePath(string newPath)
+        protected virtual void UpdatePath(string fullPath)
         {
-            FullPath = newPath;
+            FullPath = fullPath;
             Name = Path.GetFileNameWithoutExtension(FullPath);
             FileName = Path.GetFileName(FullPath);
             Folder = Path.GetDirectoryName(FullPath);
