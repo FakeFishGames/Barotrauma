@@ -105,7 +105,7 @@
     <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="384,0,96,160" depth="0.1"/>
   </ExtA_03>
 
-  <ExtA_04 identifier="ExtA_04" description="ExtA 04" body="true" castshadow="true" width="512" height="96">
+  <ExtA_04 identifier="ExtA_04" description="ExtA 04" body="true" castshadow="true" width="512" height="96" resizehorizontal="true">
     <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="512,0,512,96" depth="0.1"/>
   </ExtA_04>
 
@@ -153,68 +153,68 @@
     <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="608,320,160,160" depth="0.1"/>
   </ExtA_15>
 
-  <ExtA_16 identifier="ExtA_16" description="ExtA 16" body="true" castshadow="true" width="0" height="0">
-    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="0,0,0,0" depth="0.1"/>
+  <ExtA_16 identifier="ExtA_16" description="ExtA 16" body="true" castshadow="true" width="160" height="224">
+    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="832,288,160,224" depth="0.1"/>
   </ExtA_16>
 
-  <ExtA_17 identifier="ExtA_17" description="ExtA 17" body="true" castshadow="true" width="0" height="0">
-    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="0,0,0,0" depth="0.1"/>
+  <ExtA_17 identifier="ExtA_17" description="ExtA 17" body="true" castshadow="true" width="384" height="224">
+    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="1056,384,384,224" depth="0.1"/>
   </ExtA_17>
 
-  <ExtA_18 identifier="ExtA_18" description="ExtA 18" body="true" castshadow="true" width="0" height="0">
-    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="0,0,0,0" depth="0.1"/>
+  <ExtA_18 identifier="ExtA_18" description="ExtA 18" body="true" castshadow="true" width="224" height="384">
+    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="0,512,224,384" depth="0.1"/>
   </ExtA_18>
 
-  <ExtA_19 identifier="ExtA_19" description="ExtA 19" body="true" castshadow="true" width="0" height="0">
-    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="0,0,0,0" depth="0.1"/>
+  <ExtA_19 identifier="ExtA_19" description="ExtA 19" body="true" castshadow="true" width="131" height="480">
+    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="253,512,131,480" depth="0.1"/>
   </ExtA_19>
 
-  <ExtA_20 identifier="ExtA_20NEW" description="ExtA 20" body="true" castshadow="true" width="0" height="0">
-    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="0,0,0,0" depth="0.1"/>
+  <ExtA_20 identifier="ExtA_20NEW" description="ExtA 20" body="true" castshadow="true" width="320" height="256">
+    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="416,544,320,256" depth="0.1"/>
   </ExtA_20>
 
-  <ExtA_21 identifier="ExtA_21" description="ExtA 21" body="true" castshadow="true" width="0" height="0">
-    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="0,0,0,0" depth="0.1"/>
+  <ExtA_21 identifier="ExtA_21" description="ExtA 21" body="true" castshadow="true" width="224" height="320">
+    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="768,512,224,320" depth="0.1"/>
   </ExtA_21>
 
-  <ExtA_22 identifier="ExtA_22" description="ExtA 22" body="true" castshadow="true" width="0" height="0">
-    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="0,0,0,0" depth="0.1"/>
+  <ExtA_22 identifier="ExtA_22" description="ExtA 22" body="true" castshadow="true" width="448" height="384">
+    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="992,640,448,384" depth="0.1"/>
   </ExtA_22>
 
-  <ExtA_23 identifier="ExtA_23" description="ExtA 23" body="true" castshadow="true" width="0" height="0">
-    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="0,0,0,0" depth="0.1"/>
+  <ExtA_23 identifier="ExtA_23" description="ExtA 23" body="true" castshadow="true" width="288" height="480">
+    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="1760,672,288,480" depth="0.1"/>
   </ExtA_23>
 
-  <ExtA_24 identifier="ExtA_24" description="ExtA 24" body="true" castshadow="true" width="0" height="0">
-    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="0,0,0,0" depth="0.1"/>
+  <ExtA_24 identifier="ExtA_24" description="ExtA 24" body="true" castshadow="true" width="320" height="192">
+    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="416,800,320,192" depth="0.1"/>
   </ExtA_24>
 
-  <ExtA_25 identifier="ExtA_25" description="ExtA 25" body="true" castshadow="true" width="0" height="0">
-    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="0,0,0,0" depth="0.1"/>
+  <ExtA_25 identifier="ExtA_25" description="ExtA 25" body="true" castshadow="true" width="384" height="352">
+    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="0,1024,384,352" depth="0.1"/>
   </ExtA_25>
 
-  <ExtA_26 identifier="ExtA_26" description="ExtA 26" body="true" castshadow="true" width="0" height="0">
-    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="0,0,0,0" depth="0.1"/>
+  <ExtA_26 identifier="ExtA_26" description="ExtA 26" body="true" castshadow="true" width="512" height="352">
+    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="384,1024,512,352" depth="0.1"/>
   </ExtA_26>
 
-  <ExtA_27 identifier="ExtA_27" description="ExtA 27" body="true" castshadow="true" width="0" height="0">
-    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="0,0,0,0" depth="0.1"/>
+  <ExtA_27 identifier="ExtA_27" description="ExtA 27" body="true" castshadow="true" width="416" height="544">
+    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="0,1504,416,544" depth="0.1"/>
   </ExtA_27>
 
-  <ExtA_28 identifier="ExtA_28" description="ExtA 28" body="true" castshadow="true" width="0" height="0">
-    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="0,0,0,0" depth="0.1"/>
+  <ExtA_28 identifier="ExtA_28" description="ExtA 28" body="true" castshadow="true" width="544" height="512">
+    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="416,1536,544,512" depth="0.1"/>
   </ExtA_28>
-
-  <ExtA_29A identifier="ExtA_29A" description="ExtA 29A" body="true" castshadow="true" width="0" height="0">
-    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="0,0,0,0" depth="0.1"/>
+  
+  <ExtA_29A identifier="ExtA_29A" description="ExtA 29A" body="true" castshadow="true" width="432" height="304">
+    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="1184,1744,432,304" depth="0.1"/>
   </ExtA_29A>
 
-  <ExtA_29B identifier="ExtA_29B" description="ExtA 29B" body="true" castshadow="true" width="0" height="0">
-    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="0,0,0,0" depth="0.1"/>
+  <ExtA_29B identifier="ExtA_29B" description="ExtA 29B" body="true" castshadow="true" width="560" height="432">
+    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="1184,1312,560,432" depth="0.1"/>
   </ExtA_29B>
 
-  <ExtA_29C identifier="ExtA_29C" description="ExtA 29C" body="true" castshadow="true" width="0" height="0">
-    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="0,0,0,0" depth="0.1"/>
+  <ExtA_29C identifier="ExtA_29C" description="ExtA 29C" body="true" castshadow="true" width="304" height="432">
+    <sprite texture="Content/Map/extwall_atlas_a.png" sourcerect="1744,1312,304,432" depth="0.1"/>
   </ExtA_29C>
 
   <!-- LEGACY EXTERIOR WALLS -->
