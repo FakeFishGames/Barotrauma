@@ -59,16 +59,22 @@ namespace Barotrauma
             Folder = Path.GetDirectoryName(FullPath);
         }
 
-        public virtual bool Save(string fileNameWithoutExtension = null)
+        public virtual bool Save(string fileNameWithoutExtension = null, XmlWriterSettings settings = null)
         {
-            Serialize(Doc.Root);
-            // TODO: would Doc.Save() be enough?
-            XmlWriterSettings settings = new XmlWriterSettings
+            if (!Directory.Exists(Folder))
             {
-                Indent = true,
-                OmitXmlDeclaration = true,
-                NewLineOnAttributes = true
-            };
+                Directory.CreateDirectory(Folder);
+            }
+            Serialize(Doc.Root);
+            if (settings == null)
+            {
+                settings = new XmlWriterSettings
+                {
+                    Indent = true,
+                    OmitXmlDeclaration = true,
+                    NewLineOnAttributes = true
+                };
+            }
             if (fileNameWithoutExtension != null)
             {
                 UpdatePath(Path.Combine(Folder, $"{fileNameWithoutExtension}.xml"));
