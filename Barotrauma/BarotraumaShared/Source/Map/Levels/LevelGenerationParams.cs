@@ -90,6 +90,8 @@ namespace Barotrauma
 
         private int ruinCount;
 
+        private float waterParticleScale;
+
         //which biomes can this type of level appear in
         private List<Biome> allowedBiomes = new List<Biome>();
 
@@ -323,8 +325,8 @@ namespace Barotrauma
         [Serialize(1.0f, true), Editable(ToolTip = "Scale of the water particle texture.")]
         public float WaterParticleScale
         {
-            get;
-            private set;
+            get { return waterParticleScale; }
+            private set { waterParticleScale = Math.Max(value, 0.01f); }
         }
 
         public Sprite BackgroundSprite { get; private set; }
