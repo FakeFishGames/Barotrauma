@@ -30,10 +30,14 @@ namespace Barotrauma
         private float attachCooldown;
 
         private Limb attachLimb;
-        
-        private List<Joint> attachJoints = new List<Joint>();
+        private Vector2 localAttachPos;
+        private float attachLimbRotation;
 
-        public List<Joint> AttachJoints
+        private float jointDir;
+        
+        private List<WeldJoint> attachJoints = new List<WeldJoint>();
+
+        public List<WeldJoint> AttachJoints
         {
             get { return attachJoints; }
         }
@@ -57,9 +61,10 @@ namespace Barotrauma
             maxDeattachSpeed = Math.Max(minDeattachSpeed, element.GetAttributeFloat("maxdeattachspeed", 10.0f));
             damageOnDetach = element.GetAttributeFloat("damageondetach", 0.0f);
             detachStun = element.GetAttributeFloat("detachstun", 0.0f);
+            localAttachPos = ConvertUnits.ToSimUnits(element.GetAttributeVector2("localattachpos", Vector2.Zero));
+            attachLimbRotation = MathHelper.ToRadians(element.GetAttributeFloat("attachlimbrotation", 0.0f));
 
-            LimbType attachLimbType;
-            if (Enum.TryParse(element.GetAttributeString("attachlimb", "Head"), out attachLimbType))
+            if (Enum.TryParse(element.GetAttributeString("attachlimb", "Head"), out LimbType attachLimbType))
             {
                 attachLimb = enemyAI.Character.AnimController.GetLimb(attachLimbType);
             }
@@ -85,6 +90,15 @@ namespace Barotrauma
                 WallAttachPos = null;
                 return;
             }
+
+            if (Math.Sign(attachLimb.Dir) != Math.Sign(jointDir) && attachJoints.Count > 0)
+            {
+                attachJoints[0].LocalAnchorA =
+                    new Vector2(-attachJoints[0].LocalAnchorA.X, attachJoints[0].LocalAnchorA.Y);
+                attachJoints[0].ReferenceAngle = -attachJoints[0].ReferenceAngle;
+                jointDir = attachLimb.Dir;
+            }
+
 
             attachCooldown -= deltaTime;
             deattachTimer -= deltaTime;
@@ -138,9 +152,7 @@ namespace Barotrauma
                         if (dist < Math.Max(Math.Max(character.AnimController.Collider.radius, character.AnimController.Collider.width), character.AnimController.Collider.height) * 1.2f)
                         {
                             //close enough to a wall -> attach
-                            character.AnimController.Collider.MoveToPos(wallAttachPos, 1.0f);
-                            AttachToBody(character.AnimController.Collider, attachLimb.body, attachTargetBody, wallAttachPos);
-                            enemyAI.SteeringManager.Reset();
+                            character.AnimController.Collider.MoveToPos(wallAttachPos, 1.0f);                            enemyAI.SteeringManager.Reset();
                         }
                         else
                         {
@@ -157,7 +169,7 @@ namespace Barotrauma
                         if (attachToSub && wallAttachPos != Vector2.Zero && attachTargetBody != null &&
                             Vector2.DistanceSquared(transformedAttachPos, enemyAI.AttackingLimb.SimPosition) < enemyAI.AttackingLimb.attack.Range * enemyAI.AttackingLimb.attack.Range)
                         {
-                            AttachToBody(character.AnimController.Collider, attachLimb.body, attachTargetBody, transformedAttachPos);
+                            AttachToBody(character.AnimController.Collider, attachLimb, attachTargetBody, transformedAttachPos);
                         }
                     }
                     break;
@@ -190,7 +202,7 @@ namespace Barotrauma
             }
         }
 
-        private void AttachToBody(PhysicsBody collider, PhysicsBody attachLimb, Body targetBody, Vector2 attachPos)
+        private void AttachToBody(PhysicsBody collider, Limb attachLimb, Body targetBody, Vector2 attachPos)
         {
             //already attached to something
             if (attachJoints.Count > 0)
@@ -199,18 +211,22 @@ namespace Barotrauma
                 if (attachJoints[0].BodyB == targetBody) return;
                 DeattachFromBody();
             }
+
+            jointDir = attachLimb.Dir;
+
+            Vector2 transformedLocalAttachPos = localAttachPos;
+            if (jointDir < 0.0f) transformedLocalAttachPos.X = -transformedLocalAttachPos.X;
+            transformedLocalAttachPos = Vector2.Transform(transformedLocalAttachPos, Matrix.CreateRotationZ(attachLimb.Rotation));
             
-            Vector2 attachLimbFront = attachLimb.GetFrontLocal();
-            float angle = MathUtils.VectorToAngle(attachPos - collider.SimPosition) - MathHelper.PiOver2;
-            attachLimb.SetTransform(attachPos + Vector2.Normalize(collider.SimPosition - attachPos) * attachLimbFront.Length(), angle);
+            float angle = MathUtils.VectorToAngle(attachPos - collider.SimPosition) - MathHelper.PiOver2 + attachLimbRotation * attachLimb.Dir;
+            attachLimb.body.SetTransform(attachPos + Vector2.Normalize(collider.SimPosition - attachPos) * transformedLocalAttachPos.Length(), angle);
             
-            var limbJoint = new WeldJoint(attachLimb.FarseerBody, targetBody, attachLimb.GetFrontLocal(), targetBody.GetLocalPoint(attachPos), false)
+            var limbJoint = new WeldJoint(attachLimb.body.FarseerBody, targetBody, localAttachPos, targetBody.GetLocalPoint(attachPos), false)
             {
 
                 CollideConnected = false,
                 //Length = 0.1f
             };
-
 
             Vector2 colliderFront = collider.GetFrontLocal();
             collider.SetTransform(attachPos + Vector2.Normalize(collider.SimPosition - attachPos) * colliderFront.Length(), angle);

@@ -68,6 +68,11 @@ namespace FarseerPhysics.Dynamics.Joints
         private float _invIB;
         private Mat33 _mass;
 
+        /// <summary>
+        /// If true, body B is treated as if it was kinematic (i.e. as if it had infinite mass)
+        /// </summary>
+        public bool KinematicBodyB;
+
         internal WeldJoint()
         {
             JointType = JointType.Weld;
@@ -263,7 +268,7 @@ namespace FarseerPhysics.Dynamics.Joints
             Vector2 vB = data.velocities[_indexB].v;
             float wB = data.velocities[_indexB].w;
 
-            float mA = _invMassA, mB = _invMassB;
+            float mA = _invMassA, mB = KinematicBodyB ? _invMassB : 0.0f;
             float iA = _invIA, iB = _invIB;
 
             if (FrequencyHz > 0.0f)
