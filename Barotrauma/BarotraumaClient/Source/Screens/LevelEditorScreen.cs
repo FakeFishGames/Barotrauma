@@ -27,6 +27,8 @@ namespace Barotrauma
 
         private GUITextBox seedBox;
 
+        private GUITickBox lightingEnabled;
+
         public LevelEditorScreen()
         {
             cam = new Camera()
@@ -39,9 +41,10 @@ namespace Barotrauma
                 style: "GUIFrameLeft");
             var paddedLeftPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), leftPanel.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.02f, 0.0f) })
             {
-                Stretch = true
+                Stretch = true,
+                RelativeSpacing = 0.01f
             };
-            
+
             paramsList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), paddedLeftPanel.RectTransform));
             paramsList.OnSelected += (GUIComponent component, object obj) =>
             {
@@ -50,6 +53,10 @@ namespace Barotrauma
                 new SerializableEntityEditor(editorContainer.Content.RectTransform, selectedParams, false, true, elementHeight: 20);
                 return true;
             };
+
+
+            lightingEnabled = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform),
+                TextManager.Get("LevelEditorLightingEnabled"));
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), paddedLeftPanel.RectTransform),
                 TextManager.Get("LevelEditorReloadTextures"))
@@ -90,6 +97,7 @@ namespace Barotrauma
             {
                 OnClicked = (btn, obj) =>
                 {
+                    GameMain.LightManager.ClearLights();
                     Level.CreateRandom(seedBox.Text, generationParams: selectedParams).Generate(mirror: false);
                     cam.Position = new Vector2(Level.Loaded.Size.X / 2, Level.Loaded.Size.Y / 2);
                     return true;
@@ -119,6 +127,10 @@ namespace Barotrauma
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
+            if (lightingEnabled.Selected)
+            {
+                GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam);
+            }
             graphics.Clear(Color.Black);
 
             if (Level.Loaded != null)
@@ -126,8 +138,18 @@ namespace Barotrauma
                 Level.Loaded.DrawBack(graphics, spriteBatch, cam);
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap, DepthStencilState.Default, transformMatrix: cam.Transform);
                 Level.Loaded.DrawFront(spriteBatch, cam);
+                Submarine.Draw(spriteBatch, false);
+                Submarine.DrawFront(spriteBatch);
+                Submarine.DrawDamageable(spriteBatch, null);
                 spriteBatch.End();
-            }
+
+                if (lightingEnabled.Selected)
+                {
+                    spriteBatch.Begin(SpriteSortMode.Immediate, Lights.CustomBlendStates.Multiplicative, null, DepthStencilState.None, null, null, null);
+                    spriteBatch.Draw(GameMain.LightManager.LightMap, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+                    spriteBatch.End();
+                }
+            }            
 
             spriteBatch.Begin(SpriteSortMode.Immediate, rasterizerState: GameMain.ScissorTestEnable);
 
