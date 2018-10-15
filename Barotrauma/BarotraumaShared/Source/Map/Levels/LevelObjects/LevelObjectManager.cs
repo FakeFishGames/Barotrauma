@@ -136,7 +136,7 @@ namespace Barotrauma
                         var childPrefab = prefabCount == 0 ? null : matchingPrefabs.ElementAt(Rand.Range(0, prefabCount, Rand.RandSync.Server));
                         if (childPrefab == null) continue;
 
-                        Vector2 childPos = position + edgeDir * Rand.Range(-0.5f, 0.5f, Rand.RandSync.Server) * newObject.Scale * prefab.MinSurfaceWidth;
+                        Vector2 childPos = position + edgeDir * Rand.Range(-0.5f, 0.5f, Rand.RandSync.Server) * prefab.MinSurfaceWidth;
 
                         var childObject = new LevelObject(childPrefab,
                             new Vector3(childPos, Rand.Range(childPrefab.DepthRange.X, childPrefab.DepthRange.Y, Rand.RandSync.Server)),
@@ -259,6 +259,11 @@ namespace Barotrauma
             return new Microsoft.Xna.Framework.Point(
                 (int)Math.Floor(worldPosition.X / GridSize),
                 (int)Math.Floor((worldPosition.Y - Level.Loaded.BottomPos) / GridSize));
+        }
+
+        public List<LevelObject> GetAllObjects()
+        {
+            return new List<LevelObject>(objects);
         }
 
         public List<LevelObject> GetAllObjects(Vector2 worldPosition, float radius)

@@ -40,8 +40,8 @@
       damageondetach="1000"
       detachstun="5.0"
       attachlimb="Head"
-      localattachpos="40,10"
-      attachlimbrotation="90"/>
+      localattachpos="50,-10"
+      attachlimbrotation="170"/>
 
     <targetpriority tag="human" state="Attack" priority="500"/>
     <targetpriority tag="nasonov" state="Attack" priority="100"/>

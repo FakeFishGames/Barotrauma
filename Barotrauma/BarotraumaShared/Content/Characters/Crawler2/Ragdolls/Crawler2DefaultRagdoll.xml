@@ -1,12 +1,10 @@
 ﻿<Ragdoll
   type="crawler2"
   colliderheightfromfloor="35"
-  minscale="0.8"
-  maxscale="1.2"
   impacttolerance="6"
   draggable="True"
-  limbscale="1"
-  jointscale="1"
+  limbscale="0.7"
+  jointscale="0.7"
   canentersubmarine="True">
   <collider
     width="80"

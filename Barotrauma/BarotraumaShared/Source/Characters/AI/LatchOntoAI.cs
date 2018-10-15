@@ -16,6 +16,7 @@ namespace Barotrauma
         private float raycastTimer;
 
         private Body attachTargetBody;
+        private Vector2 attachSurfaceNormal;
         private Submarine attachTargetSubmarine;
 
         private bool attachToSub;
@@ -73,10 +74,11 @@ namespace Barotrauma
             enemyAI.Character.OnDeath += OnCharacterDeath;
         }
 
-        public void SetAttachTarget(Body attachTarget, Submarine attachTargetSub, Vector2 attachPos)
+        public void SetAttachTarget(Body attachTarget, Submarine attachTargetSub, Vector2 attachPos, Vector2 attachSurfaceNormal)
         {
             attachTargetBody = attachTarget;
             attachTargetSubmarine = attachTargetSub;
+            this.attachSurfaceNormal = attachSurfaceNormal;
             wallAttachPos = attachPos;
         }
         
@@ -98,7 +100,6 @@ namespace Barotrauma
                 attachJoints[0].ReferenceAngle = -attachJoints[0].ReferenceAngle;
                 jointDir = attachLimb.Dir;
             }
-
 
             attachCooldown -= deltaTime;
             deattachTimer -= deltaTime;
@@ -127,11 +128,20 @@ namespace Barotrauma
                             var cells = Level.Loaded.GetCells(character.WorldPosition, 1);
                             if (cells.Count > 0)
                             {
-                                Body closestBody = Submarine.CheckVisibility(character.SimPosition, ConvertUnits.ToSimUnits(cells[0].Center));
-                                if (closestBody != null && closestBody.UserData is Voronoi2.VoronoiCell)
+                                foreach (Voronoi2.VoronoiCell cell in cells)
                                 {
-                                    attachTargetBody = closestBody;
-                                    wallAttachPos = Submarine.LastPickedPosition;
+                                    foreach (Voronoi2.GraphEdge edge in cell.edges)
+                                    {
+                                        Vector2? intersection = MathUtils.GetLineIntersection(edge.Point1, edge.Point2, character.WorldPosition, cell.Center);
+                                        if (intersection.HasValue)
+                                        {
+                                            attachSurfaceNormal = edge.GetNormal(cell);
+                                            attachTargetBody = cell.body;
+                                            wallAttachPos = ConvertUnits.ToSimUnits(intersection.Value);
+                                            break;
+                                        }
+                                    }
+                                    if (WallAttachPos != Vector2.Zero) break;
                                 }
                             }
                             raycastTimer = RaycastInterval;
@@ -152,7 +162,8 @@ namespace Barotrauma
                         if (dist < Math.Max(Math.Max(character.AnimController.Collider.radius, character.AnimController.Collider.width), character.AnimController.Collider.height) * 1.2f)
                         {
                             //close enough to a wall -> attach
-                            character.AnimController.Collider.MoveToPos(wallAttachPos, 1.0f);                            enemyAI.SteeringManager.Reset();
+                            AttachToBody(character.AnimController.Collider, attachLimb, attachTargetBody, wallAttachPos);
+                            enemyAI.SteeringManager.Reset();
                         }
                         else
                         {
@@ -214,32 +225,36 @@ namespace Barotrauma
 
             jointDir = attachLimb.Dir;
 
-            Vector2 transformedLocalAttachPos = localAttachPos;
+            Vector2 transformedLocalAttachPos = localAttachPos * attachLimb.character.AnimController.RagdollParams.LimbScale;
             if (jointDir < 0.0f) transformedLocalAttachPos.X = -transformedLocalAttachPos.X;
-            transformedLocalAttachPos = Vector2.Transform(transformedLocalAttachPos, Matrix.CreateRotationZ(attachLimb.Rotation));
-            
-            float angle = MathUtils.VectorToAngle(attachPos - collider.SimPosition) - MathHelper.PiOver2 + attachLimbRotation * attachLimb.Dir;
-            attachLimb.body.SetTransform(attachPos + Vector2.Normalize(collider.SimPosition - attachPos) * transformedLocalAttachPos.Length(), angle);
-            
-            var limbJoint = new WeldJoint(attachLimb.body.FarseerBody, targetBody, localAttachPos, targetBody.GetLocalPoint(attachPos), false)
-            {
 
+            //transformedLocalAttachPos = Vector2.Transform(transformedLocalAttachPos, Matrix.CreateRotationZ(attachLimb.Rotation));
+
+            float angle = MathUtils.VectorToAngle(-attachSurfaceNormal) - MathHelper.PiOver2 + attachLimbRotation * attachLimb.Dir;
+            attachLimb.body.SetTransform(attachPos + attachSurfaceNormal * transformedLocalAttachPos.Length(), angle);
+            
+            var limbJoint = new WeldJoint(attachLimb.body.FarseerBody, targetBody,
+                transformedLocalAttachPos, targetBody.GetLocalPoint(attachPos), false)
+            {
+                KinematicBodyB = true,
                 CollideConnected = false,
                 //Length = 0.1f
             };
 
-            Vector2 colliderFront = collider.GetFrontLocal();
-            collider.SetTransform(attachPos + Vector2.Normalize(collider.SimPosition - attachPos) * colliderFront.Length(), angle);
+            Vector2 colliderFront = collider.GetFrontLocal() * attachLimb.character.AnimController.RagdollParams.LimbScale;
+            if (jointDir < 0.0f) colliderFront.X = -colliderFront.X;
+            collider.SetTransform(attachPos + attachSurfaceNormal * colliderFront.Length(), angle);
 
             GameMain.World.AddJoint(limbJoint);
             attachJoints.Add(limbJoint);
-            var colliderJoint = new WeldJoint(collider.FarseerBody, targetBody, collider.GetFrontLocal(), targetBody.GetLocalPoint(attachPos), false)
+            var colliderJoint = new WeldJoint(collider.FarseerBody, targetBody, colliderFront, targetBody.GetLocalPoint(attachPos), false)
             {
+                KinematicBodyB = true,
                 CollideConnected = false,
                 //Length = 0.1f
             };
             GameMain.World.AddJoint(colliderJoint);
-            attachJoints.Add(colliderJoint);
+            attachJoints.Add(colliderJoint);            
         }
 
         public void DeattachFromBody()
@@ -248,7 +263,7 @@ namespace Barotrauma
             {
                 GameMain.World.RemoveJoint(joint);
             }
-            attachJoints.Clear();
+            attachJoints.Clear();            
         }
 
         private void OnCharacterDeath(Character character, CauseOfDeath causeOfDeath)
