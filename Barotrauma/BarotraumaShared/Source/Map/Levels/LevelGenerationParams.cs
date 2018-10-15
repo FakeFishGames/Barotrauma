@@ -113,7 +113,14 @@ namespace Barotrauma
             set;
         }
 
-        [Serialize("50,46,20", true), Editable]
+        [Serialize("20,40,50", true), Editable()]
+        public Color BackgroundTextureColor
+        {
+            get;
+            set;
+        }
+
+        [Serialize("20,40,50", true), Editable]
         public Color BackgroundColor
         {
             get;
@@ -182,7 +189,7 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(500.0f, true), Editable(MinValueFloat = 100.0f, MaxValueFloat = 10000.0f, ToolTip = "The edges of the individual wall cells are subdivided into edges of this size. "
+        [Serialize(1000.0f, true), Editable(MinValueFloat = 100.0f, MaxValueFloat = 10000.0f, ToolTip = "The edges of the individual wall cells are subdivided into edges of this size. "
             + "Can be used in conjunction with the rounding values to make the cells rounder. Smaller values will make the cells look smoother, " +
             "but make the level more performance-intensive as the number of polygons used in rendering and physics calculations increases.")]
         public float CellSubdivisionLength
