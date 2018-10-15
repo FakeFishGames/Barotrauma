@@ -6,6 +6,7 @@ using System.Linq;
 using System.IO;
 using Barotrauma.Extensions;
 using FarseerPhysics.Dynamics;
+using System.Xml;
 
 namespace Barotrauma
 {
@@ -157,6 +158,16 @@ namespace Barotrauma
                     }
                 }
             }
+        }
+
+        public bool Save(string fileNameWithoutExtension = null)
+        {
+            return base.Save(fileNameWithoutExtension, new XmlWriterSettings
+            {
+                Indent = true,
+                OmitXmlDeclaration = true,
+                NewLineOnAttributes = false
+            });
         }
 
         protected bool Load(string file, string speciesName)
