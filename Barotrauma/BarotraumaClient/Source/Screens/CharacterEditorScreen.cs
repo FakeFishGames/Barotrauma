@@ -365,7 +365,7 @@ namespace Barotrauma
                 }
             }
             // Sprite controls
-            spriteControls = new GUIFrame(new RectTransform(new Vector2(1, 0.9f), centerPanel.RectTransform) { RelativeOffset = new Vector2(0, 0.1f) }, style: null) { CanBeFocused = false };
+            spriteControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupSpriteControls = new GUILayoutGroup(new RectTransform(Vector2.One, spriteControls.RectTransform)) { CanBeFocused = false };
             // Spacing
             new GUIFrame(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteControls.RectTransform), style: null) { CanBeFocused = false };
@@ -401,7 +401,7 @@ namespace Barotrauma
             };
             lockSpriteSizeToggle.TextColor = Color.White;
             // Ragdoll
-            ragdollControls = new GUIFrame(new RectTransform(new Vector2(1, 0.9f), centerPanel.RectTransform) { RelativeOffset = new Vector2(0, 0.1f) }, style: null) { CanBeFocused = false };
+            ragdollControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupRagdoll = new GUILayoutGroup(new RectTransform(Vector2.One, ragdollControls.RectTransform)) { CanBeFocused = false };
             var jointScaleElement = new GUIFrame(new RectTransform(elementSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
             var jointScaleText = new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), jointScaleElement.RectTransform), $"Joint Scale: {RagdollParams.JointScale.FormatDoubleDecimal()}", Color.WhiteSmoke, textAlignment: Alignment.Center);
@@ -1472,7 +1472,7 @@ namespace Barotrauma
             bool altDown = PlayerInput.KeyDown(Keys.LeftAlt);
             if (!altDown)
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 100, 20), "HOLD \"Left Alt\" TO ADJUST THE CYCLE SPEED", Color.White, Color.Black * 0.5f, 10, GUI.Font);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 120, GameMain.GraphicsHeight - 80), "HOLD \"Left Alt\" TO ADJUST THE CYCLE SPEED", Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
             // Widgets for all anims -->
             Vector2 referencePoint = SimToScreen(head != null ? head.SimPosition : collider.SimPosition);
@@ -1826,7 +1826,7 @@ namespace Barotrauma
             bool altDown = PlayerInput.KeyDown(Keys.LeftAlt);
             if (!altDown && editJointPositions)
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 200, 20), "HOLD \"Left Alt\" TO MANIPULATE THE OTHER END OF THE JOINT", Color.White, Color.Black * 0.5f, 10, GUI.Font);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 200, GameMain.GraphicsHeight - 80), "HOLD \"Left Alt\" TO MANIPULATE THE OTHER END OF THE JOINT", Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
             foreach (Limb limb in character.AnimController.Limbs)
             {
