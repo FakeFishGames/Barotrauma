@@ -55,6 +55,19 @@ namespace Barotrauma.Networking
                 outMsg.Write(false);
                 outMsg.WritePadBits();
             }
+
+            WriteMonsterEnabled(outMsg);
+        }
+        
+        public void WriteMonsterEnabled(NetBuffer msg)
+        {
+            //monster spawn settings
+            List<string> monsterNames = MonsterEnabled.Keys.ToList();
+            foreach (string s in monsterNames)
+            {
+                msg.Write(MonsterEnabled[s]);
+            }
+            msg.WritePadBits();
         }
 
         public void ServerRead(NetIncomingMessage incMsg,Client c)
@@ -215,10 +228,10 @@ namespace Barotrauma.Networking
             {
                 monsterNames[i] = Path.GetFileName(Path.GetDirectoryName(monsterNames[i]));
             }
-            monsterEnabled = new Dictionary<string, bool>();
+            MonsterEnabled = new Dictionary<string, bool>();
             foreach (string s in monsterNames)
             {
-                if (!monsterEnabled.ContainsKey(s)) monsterEnabled.Add(s, true);
+                if (!MonsterEnabled.ContainsKey(s)) MonsterEnabled.Add(s, true);
             }
             extraCargo = new Dictionary<ItemPrefab, int>();
 

@@ -15,8 +15,6 @@ namespace Barotrauma.Networking
 {
     partial class GameServer : NetworkMember
     {
-        private NetConnection ownerConnection;
-
         public override bool IsServer
         {
             get { return true; }
@@ -79,6 +77,8 @@ namespace Barotrauma.Networking
             get;
             set;
         }
+
+        public NetConnection OwnerConnection { get; private set; }
 
         public GameServer(string name, int port, int queryPort = 0, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10, int ownerKey = 0)
         {
@@ -489,12 +489,18 @@ namespace Barotrauma.Networking
                                     */
                                     DisconnectClient(inc.SenderConnection,
                                         connectedClient != null ? connectedClient.Name + " has disconnected" : "");
-                                    if (inc.SenderConnection == ownerConnection) GameMain.ShouldRun = false;
+                                    if (inc.SenderConnection == OwnerConnection) GameMain.ShouldRun = false;
                                     break;
                             }
                             break;
                         case NetIncomingMessageType.ConnectionApproval:
-                            if (serverSettings.BanList.IsBanned(inc.SenderEndPoint.Address.ToString(), 0))
+                            ClientPacketHeader packetHeader = (ClientPacketHeader)inc.SenderConnection.RemoteHailMessage.ReadByte();
+                            if (packetHeader == ClientPacketHeader.REQUEST_AUTH || packetHeader == ClientPacketHeader.REQUEST_STEAMAUTH)
+                            {
+                                HandleOwnership(inc);
+                            }
+
+                            if (inc.SenderConnection != OwnerConnection && serverSettings.BanList.IsBanned(inc.SenderEndPoint.Address.ToString(), 0))
                             {
                                 inc.SenderConnection.Deny(DisconnectReason.Banned.ToString());
                             }
@@ -504,7 +510,7 @@ namespace Barotrauma.Networking
                             }
                             else
                             {
-                                ClientPacketHeader packetHeader = (ClientPacketHeader)inc.SenderConnection.RemoteHailMessage.ReadByte();
+                                
                                 if (packetHeader == ClientPacketHeader.REQUEST_AUTH)
                                 {
                                     inc.SenderConnection.Approve();
@@ -513,7 +519,7 @@ namespace Barotrauma.Networking
                                 else if (packetHeader == ClientPacketHeader.REQUEST_STEAMAUTH)
                                 {
                                     ReadClientSteamAuthRequest(inc, out ulong clientSteamID);
-                                    if (serverSettings.BanList.IsBanned("", clientSteamID))
+                                    if (inc.SenderConnection != OwnerConnection && serverSettings.BanList.IsBanned("", clientSteamID))
                                     {
                                         inc.SenderConnection.Deny(DisconnectReason.Banned.ToString());
                                     }
@@ -581,7 +587,7 @@ namespace Barotrauma.Networking
         private void ReadDataMessage(NetIncomingMessage inc)
         {
             var connectedClient = connectedClients.Find(c => c.Connection == inc.SenderConnection);
-            if (serverSettings.BanList.IsBanned(inc.SenderEndPoint.Address.ToString(), connectedClient == null ? 0 : connectedClient.SteamID))
+            if (inc.SenderConnection != OwnerConnection && serverSettings.BanList.IsBanned(inc.SenderEndPoint.Address.ToString(), connectedClient == null ? 0 : connectedClient.SteamID))
             {
                 KickClient(inc.SenderConnection, "You have been banned from the server.");
                 return;
@@ -591,12 +597,12 @@ namespace Barotrauma.Networking
             switch (header)
             {
                 case ClientPacketHeader.REQUEST_AUTH:
-                    HandleClientAuthRequest(inc.SenderConnection);
                     HandleOwnership(inc);
+                    HandleClientAuthRequest(inc.SenderConnection);
                     break;
                 case ClientPacketHeader.REQUEST_STEAMAUTH:
-                    ReadClientSteamAuthRequest(inc, out _);
                     HandleOwnership(inc);
+                    ReadClientSteamAuthRequest(inc, out _);
                     break;
                 case ClientPacketHeader.REQUEST_INIT:
                     ClientInitRequest(inc);
@@ -1540,13 +1546,7 @@ namespace Barotrauma.Networking
                 msg.Write(false);
             }
 
-            //monster spawn settings
-            List<string> monsterNames = serverSettings.monsterEnabled.Keys.ToList();
-            foreach (string s in monsterNames)
-            {
-                msg.Write(serverSettings.monsterEnabled[s]);
-            }
-            msg.WritePadBits();
+            serverSettings.WriteMonsterEnabled(msg);
 
             CompressOutgoingMessage(msg);
 
@@ -1656,6 +1656,8 @@ namespace Barotrauma.Networking
 
         public void KickClient(NetConnection conn, string reason)
         {
+            if (conn == OwnerConnection) return;
+
             Client client = connectedClients.Find(c => c.Connection == conn);
             KickClient(client, reason);
         }
@@ -1689,6 +1691,7 @@ namespace Barotrauma.Networking
         public void BanClient(Client client, string reason, bool range = false, TimeSpan? duration = null)
         {
             if (client == null) return;
+            if (client.Connection == OwnerConnection) return;
 
             string msg = DisconnectReason.Banned.ToString();
             if (!string.IsNullOrWhiteSpace(reason)) msg += ";\nReason: " + reason;

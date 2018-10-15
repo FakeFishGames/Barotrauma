@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 
 namespace Barotrauma.Networking
@@ -127,6 +128,8 @@ namespace Barotrauma.Networking
                         incMsg.Position += 8 * size;
                     }
                 }
+
+                ReadMonsterEnabled(incMsg);
             }
             else
             {
@@ -411,14 +414,14 @@ namespace Barotrauma.Networking
                 ((GUIComponent)obj).Visible = !((GUIComponent)obj).Visible;
                 return true;
             };
-            /* TODO: fix
-            List<string> monsterNames = monsterEnabled.Keys.ToList();
+            
+            List<string> monsterNames = MonsterEnabled.Keys.ToList();
             foreach (string s in monsterNames)
             {
                 var monsterEnabledBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), monsterFrame.Content.RectTransform) { MinSize = new Point(0, 25) },
                     label: s)
                 {
-                    Selected = monsterEnabled[s],
+                    Selected = MonsterEnabled[s],
                     OnSelected = (GUITickBox) =>
                     {
                         if (GameMain.NetworkMember.GameStarted)
@@ -427,11 +430,11 @@ namespace Barotrauma.Networking
                             monsterButton.Enabled = false;
                             return true;
                         }
-                        monsterEnabled[s] = !monsterEnabled[s];
+                        MonsterEnabled[s] = !MonsterEnabled[s];
                         return true;
                     }
                 };
-            }*/
+            }
 
             var cargoButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), buttonHolder.RectTransform),
                 TextManager.Get("ServerSettingsAdditionalCargo"))
