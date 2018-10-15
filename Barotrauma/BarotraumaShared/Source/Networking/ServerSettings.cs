@@ -221,6 +221,8 @@ namespace Barotrauma.Networking
             Whitelist = new WhiteList();
             BanList = new BanList();
 
+            ExtraCargo = new Dictionary<ItemPrefab, int>();
+
             InitProjSpecific();
 
             netProperties = new Dictionary<UInt32, NetPropertyData>();
@@ -270,9 +272,9 @@ namespace Barotrauma.Networking
 
         public Voting Voting;
 
-        public Dictionary<string, bool> MonsterEnabled;
+        public Dictionary<string, bool> MonsterEnabled { get; private set; }
 
-        public Dictionary<ItemPrefab, int> extraCargo;
+        public Dictionary<ItemPrefab, int> ExtraCargo { get; private set; }
 
         public bool ShowNetStats;
 
@@ -636,6 +638,37 @@ namespace Barotrauma.Networking
             msg.WritePadBits();
         }
 
+        public void ReadExtraCargo(NetBuffer msg)
+        {
+            UInt32 count = msg.ReadUInt32();
+            ExtraCargo = new Dictionary<ItemPrefab, int>();
+            for (int i=0;i<count;i++)
+            {
+                string prefabName = msg.ReadString();
+                byte amount = msg.ReadByte();
+                ItemPrefab ip = MapEntityPrefab.List.Find(p => p is ItemPrefab && p.Name.Equals(prefabName,StringComparison.InvariantCulture)) as ItemPrefab;
+                if (ip != null && amount>0)
+                {
+                    ExtraCargo.Add(ip, amount);
+                }
+            }
+        }
+
+        public void WriteExtraCargo(NetBuffer msg)
+        {
+            if (ExtraCargo == null)
+            {
+                msg.Write((UInt32)0);
+                return;
+            }
+
+            msg.Write((UInt32)ExtraCargo.Count);
+            foreach (KeyValuePair<ItemPrefab, int> kvp in ExtraCargo)
+            {
+                msg.Write(kvp.Key.Name); msg.Write((byte)kvp.Value);
+            }
+        }
+
         private void SharedWrite(NetBuffer outMsg)
         {
             outMsg.Write(ServerName);
@@ -643,6 +676,8 @@ namespace Barotrauma.Networking
             outMsg.Write((UInt16)maxPlayers);
             outMsg.Write(ServerName);
             outMsg.Write(ServerMessageText);
+
+            WriteExtraCargo(outMsg);
         }
 
         private void SharedRead(NetBuffer incMsg)
@@ -652,6 +687,8 @@ namespace Barotrauma.Networking
             maxPlayers = incMsg.ReadUInt16();
             ServerName = incMsg.ReadString();
             ServerMessageText = incMsg.ReadString();
+
+            ReadExtraCargo(incMsg);
         }
     }
 }
