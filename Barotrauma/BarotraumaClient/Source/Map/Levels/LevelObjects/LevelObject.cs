@@ -254,6 +254,14 @@ namespace Barotrauma
                 SoundChannels[i]?.Dispose();
                 SoundChannels[i] = null;
             }
+            if (LightSources != null)
+            {
+                for (int i = 0; i < LightSources.Length; i++)
+                {
+                    LightSources[i].Remove();
+                }
+                LightSources = null;
+            }
         }
     }
 }
