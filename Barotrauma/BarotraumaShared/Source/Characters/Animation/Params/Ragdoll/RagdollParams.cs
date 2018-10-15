@@ -6,6 +6,7 @@ using System.Linq;
 using System.IO;
 using Barotrauma.Extensions;
 using FarseerPhysics.Dynamics;
+using System.Xml;
 
 namespace Barotrauma
 {
@@ -135,11 +136,59 @@ namespace Barotrauma
             return (T)ragdoll;
         }
 
-        protected override void UpdatePath(string newPath)
+        public static T CreateDummy<T>(string fullPath, string speciesName) where T : RagdollParams, new()
+        {
+            if (!allRagdolls.TryGetValue(speciesName, out Dictionary<string, RagdollParams> ragdolls))
+            {
+                ragdolls = new Dictionary<string, RagdollParams>();
+                allRagdolls.Add(speciesName, ragdolls);
+            }
+            if (ragdolls.TryGetValue(Path.GetFileNameWithoutExtension(fullPath), out RagdollParams ragdoll))
+            {
+                return ragdoll as T;
+            }
+            var instance = new T();
+            XElement ragdollElement = new XElement("Ragdoll",
+                new XAttribute("type", speciesName),
+                new XElement("collider", new XAttribute("radius", 60)),
+                new XElement("limb",
+                    new XAttribute("id", 0),
+                    new XAttribute("type", LimbType.Head.ToString().ToLowerInvariant()),
+                    new XAttribute("radius", 30),
+                    new XAttribute("height", 86),
+                    new XAttribute("steerforce", 1),
+                    new XElement("sprite",
+                        new XAttribute("texture", "Content/Characters/Mantis/mantis.png"),
+                        new XAttribute("sourcerect", "0,0,101,168"))),
+                new XElement("limb",
+                    new XAttribute("id", 1),
+                    new XAttribute("type", LimbType.Torso.ToString().ToLowerInvariant()),
+                    new XAttribute("width", 42),
+                    new XAttribute("height", 61),
+                    new XElement("sprite",
+                        new XAttribute("texture", "Content/Characters/Mantis/mantis.png"),
+                        new XAttribute("sourcerect", "3,168,59,64"))),
+                new XElement("joint",
+                    new XAttribute("name", "Head to Torso"),
+                    new XAttribute("limb1", 0),
+                    new XAttribute("limb2", 1),
+                    new XAttribute("limb1anchor", "-12.24539,-62.17848"),
+                    new XAttribute("limb2anchor", "0,20")));
+            instance.doc = new XDocument(ragdollElement);
+            instance.UpdatePath(fullPath);
+            instance.IsLoaded = instance.Deserialize(ragdollElement);
+            instance.Save();
+            instance.Load(fullPath, speciesName);
+            ragdolls.Add(instance.Name, instance);
+            DebugConsole.NewMessage("[RagdollParams] Dummy file successfully created.", Color.NavajoWhite);
+            return instance as T;
+        }
+
+        protected override void UpdatePath(string fullPath)
         {
             if (SpeciesName == null)
             {
-                base.UpdatePath(newPath);
+                base.UpdatePath(fullPath);
             }
             else
             {
@@ -148,7 +197,7 @@ namespace Barotrauma
                 {
                     ragdolls.Remove(Name);
                 }
-                base.UpdatePath(newPath);
+                base.UpdatePath(fullPath);
                 if (ragdolls != null)
                 {
                     if (!ragdolls.ContainsKey(Name))
@@ -157,6 +206,16 @@ namespace Barotrauma
                     }
                 }
             }
+        }
+
+        public bool Save(string fileNameWithoutExtension = null)
+        {
+            return base.Save(fileNameWithoutExtension, new XmlWriterSettings
+            {
+                Indent = true,
+                OmitXmlDeclaration = true,
+                NewLineOnAttributes = false
+            });
         }
 
         protected bool Load(string file, string speciesName)
