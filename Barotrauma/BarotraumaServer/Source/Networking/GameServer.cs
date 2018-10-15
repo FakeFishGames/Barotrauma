@@ -489,7 +489,6 @@ namespace Barotrauma.Networking
                                     */
                                     DisconnectClient(inc.SenderConnection,
                                         connectedClient != null ? connectedClient.Name + " has disconnected" : "");
-                                    if (inc.SenderConnection == OwnerConnection) GameMain.ShouldRun = false;
                                     break;
                             }
                             break;
@@ -1711,6 +1710,11 @@ namespace Barotrauma.Networking
 
         public void DisconnectClient(NetConnection senderConnection, string msg = "", string targetmsg = "")
         {
+            if (senderConnection == OwnerConnection)
+            {
+                DebugConsole.NewMessage("Owner disconnected: closing server", Color.Yellow);
+                GameMain.ShouldRun = false;
+            }
             Client client = connectedClients.Find(x => x.Connection == senderConnection);
             if (client == null) return;
 

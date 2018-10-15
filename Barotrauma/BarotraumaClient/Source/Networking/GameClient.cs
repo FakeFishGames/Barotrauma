@@ -1555,12 +1555,12 @@ namespace Barotrauma.Networking
             {
                 int checks = 0;
                 while (!GameMain.ServerChildProcess.HasExited) {
-                    Thread.Sleep(500);
-                    checks++;
-                    if (checks>10)
+                    if (checks > 10)
                     {
                         GameMain.ServerChildProcess.Kill();
                     }
+                    Thread.Sleep(100);
+                    checks++;
                 }
                 GameMain.ServerChildProcess = null;
             }
