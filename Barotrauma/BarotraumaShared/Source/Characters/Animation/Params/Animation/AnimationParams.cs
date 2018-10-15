@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System;
 using System.Linq;
+using System.Xml.Linq;
 using Barotrauma.Extensions;
 
 namespace Barotrauma
@@ -205,6 +206,70 @@ namespace Barotrauma
             return (T)anim;
         }
 
+        public static AnimationParams CreateDummy(string fullPath, string speciesName, AnimationType animationType, Type type)
+        {
+            if (type == typeof(HumanWalkParams))
+            {
+                return CreateDummy<HumanWalkParams>(fullPath, speciesName, animationType);
+            }
+            if (type == typeof(HumanRunParams))
+            {
+                return CreateDummy<HumanRunParams>(fullPath, speciesName, animationType);
+            }
+            if (type == typeof(HumanSwimSlowParams))
+            {
+                return CreateDummy<HumanSwimSlowParams>(fullPath, speciesName, animationType);
+            }
+            if (type == typeof(HumanSwimFastParams))
+            {
+                return CreateDummy<HumanSwimFastParams>(fullPath, speciesName, animationType);
+            }
+            if (type == typeof(FishWalkParams))
+            {
+                return CreateDummy<FishWalkParams>(fullPath, speciesName, animationType);
+            }
+            if (type == typeof(FishRunParams))
+            {
+                return CreateDummy<FishRunParams>(fullPath, speciesName, animationType);
+            }
+            if (type == typeof(FishSwimSlowParams))
+            {
+                return CreateDummy<FishSwimSlowParams>(fullPath, speciesName, animationType);
+            }
+            if (type == typeof(FishSwimFastParams))
+            {
+                return CreateDummy<FishSwimFastParams>(fullPath, speciesName, animationType);
+            }
+            throw new NotImplementedException(type.ToString());
+        }
+
+        public static T CreateDummy<T>(string fullPath, string speciesName, AnimationType animationType) where T : AnimationParams, new()
+        {
+            if (animationType == AnimationType.NotDefined)
+            {
+                throw new Exception("Cannot create an animation file of type " + animationType.ToString());
+            }
+            if (!allAnimations.TryGetValue(speciesName, out Dictionary<string, AnimationParams> anims))
+            {
+                anims = new Dictionary<string, AnimationParams>();
+                allAnimations.Add(speciesName, anims);
+            }
+            if (anims.TryGetValue(Path.GetFileNameWithoutExtension(fullPath), out AnimationParams anim))
+            {
+                return anim as T;
+            }
+            var instance = new T();
+            XElement animationElement = new XElement(GetDefaultFileName(speciesName, animationType), new XAttribute("animationtype", animationType.ToString()));
+            instance.doc = new XDocument(animationElement);
+            instance.UpdatePath(fullPath);
+            instance.IsLoaded = instance.Deserialize(animationElement);
+            instance.Save();
+            instance.Load(fullPath, speciesName);
+            anims.Add(instance.Name, instance);
+            DebugConsole.NewMessage($"[AnimationParams] Dummy file of type {animationType} created.", Color.GhostWhite);
+            return instance as T;
+        }
+
         protected bool Load(string file, string speciesName)
         {
             if (Load(file))
@@ -265,6 +330,42 @@ namespace Barotrauma
                     continue;
                 }
                 footAngles[limbIndex] = angle;
+            }
+        }
+
+        public static Type GetParamTypeFromAnimType(AnimationType type, bool isHumanoid)
+        {
+            if (isHumanoid)
+            {
+                switch (type)
+                {
+                    case AnimationType.Walk:
+                        return typeof(HumanWalkParams);
+                    case AnimationType.Run:
+                        return typeof(HumanRunParams);
+                    case AnimationType.SwimSlow:
+                        return typeof(HumanSwimSlowParams);
+                    case AnimationType.SwimFast:
+                        return typeof(HumanSwimFastParams);
+                    default:
+                        throw new NotImplementedException(type.ToString());
+                }
+            }
+            else
+            {
+                switch (type)
+                {
+                    case AnimationType.Walk:
+                        return typeof(FishWalkParams);
+                    case AnimationType.Run:
+                        return typeof(FishRunParams);
+                    case AnimationType.SwimSlow:
+                        return typeof(FishSwimSlowParams);
+                    case AnimationType.SwimFast:
+                        return typeof(FishSwimFastParams);
+                    default:
+                        throw new NotImplementedException(type.ToString());
+                }
             }
         }
     }
