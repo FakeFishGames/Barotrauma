@@ -59,17 +59,6 @@ namespace Barotrauma.Networking
             WriteMonsterEnabled(outMsg);
         }
         
-        public void WriteMonsterEnabled(NetBuffer msg)
-        {
-            //monster spawn settings
-            List<string> monsterNames = MonsterEnabled.Keys.ToList();
-            foreach (string s in monsterNames)
-            {
-                msg.Write(MonsterEnabled[s]);
-            }
-            msg.WritePadBits();
-        }
-
         public void ServerRead(NetIncomingMessage incMsg,Client c)
         {
             UInt32 count = incMsg.ReadUInt32();
@@ -91,6 +80,10 @@ namespace Barotrauma.Networking
                     incMsg.Position += 8 * size;
                 }
             }
+
+            bool changedMonsterSettings = incMsg.ReadBoolean(); incMsg.ReadPadBits();
+            changed |= changedMonsterSettings;
+            if (changedMonsterSettings) ReadMonsterEnabled(incMsg);
 
             if (changed) GameMain.NetLobbyScreen.LastUpdateID++;
         }

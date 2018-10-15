@@ -622,6 +622,19 @@ namespace Barotrauma.Networking
             }
             inc.ReadPadBits();
         }
+        
+        public void WriteMonsterEnabled(NetBuffer msg, Dictionary<string, bool> monsterEnabled = null)
+        {
+            //monster spawn settings
+            if (monsterEnabled == null) monsterEnabled = MonsterEnabled;
+
+            List<string> monsterNames = monsterEnabled.Keys.ToList();
+            foreach (string s in monsterNames)
+            {
+                msg.Write(monsterEnabled[s]);
+            }
+            msg.WritePadBits();
+        }
 
         private void SharedWrite(NetBuffer outMsg)
         {

@@ -77,6 +77,7 @@ namespace Barotrauma.Networking
                 }
             }
         }
+        private Dictionary<string, bool> tempMonsterEnabled;
 
         partial void InitProjSpecific()
         {
@@ -141,8 +142,9 @@ namespace Barotrauma.Networking
         {
             IEnumerable<KeyValuePair<UInt32, NetPropertyData>> changedProperties = netProperties.Where(kvp => kvp.Value.ChangedLocally);
             UInt32 count = (UInt32)changedProperties.Count();
+            bool changedMonsterSettings = tempMonsterEnabled.Any(p => p.Value != MonsterEnabled[p.Key]);
 
-            if (count == 0) return;
+            if (count == 0 && !changedMonsterSettings) return;
 
             NetOutgoingMessage outMsg = GameMain.NetworkMember.NetPeer.CreateMessage();
 
@@ -156,6 +158,9 @@ namespace Barotrauma.Networking
                 outMsg.Write(prop.Key);
                 prop.Value.Write(outMsg,prop.Value.GUIComponentValue);
             }
+
+            outMsg.Write(changedMonsterSettings); outMsg.WritePadBits();
+            if (changedMonsterSettings) WriteMonsterEnabled(outMsg, tempMonsterEnabled);
             
             (GameMain.NetworkMember.NetPeer as NetClient).SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
         }
@@ -285,10 +290,7 @@ namespace Barotrauma.Networking
             GetPropertyData("ModeSelectionMode").AssignGUIComponent(selectionMode);
             
             var endBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform),
-                TextManager.Get("ServerSettingsEndRoundWhenDestReached"))
-            {
-                OnSelected = (GUITickBox) => { return true; }
-            };
+                TextManager.Get("ServerSettingsEndRoundWhenDestReached"));
             GetPropertyData("EndRoundAtLevelEnd").AssignGUIComponent(endBox);
             
             var endVoteBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform),
@@ -311,13 +313,7 @@ namespace Barotrauma.Networking
             slider.OnMoved(slider, slider.BarScroll);
 
             var respawnBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform),
-                TextManager.Get("ServerSettingsAllowRespawning"))
-            {
-                OnSelected = (GUITickBox) =>
-                {
-                    return true;
-                }
-            };
+                TextManager.Get("ServerSettingsAllowRespawning"));
             GetPropertyData("AllowRespawn").AssignGUIComponent(respawnBox);
 
             CreateLabeledSlider(roundsTab, "ServerSettingsRespawnInterval", out slider, out sliderLabel);
@@ -416,21 +412,16 @@ namespace Barotrauma.Networking
             };
             
             List<string> monsterNames = MonsterEnabled.Keys.ToList();
+            tempMonsterEnabled = new Dictionary<string, bool>(MonsterEnabled);
             foreach (string s in monsterNames)
             {
                 var monsterEnabledBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), monsterFrame.Content.RectTransform) { MinSize = new Point(0, 25) },
                     label: s)
                 {
-                    Selected = MonsterEnabled[s],
-                    OnSelected = (GUITickBox) =>
+                    Selected = tempMonsterEnabled[s],
+                    OnSelected = (GUITickBox tb) =>
                     {
-                        if (GameMain.NetworkMember.GameStarted)
-                        {
-                            monsterFrame.Visible = false;
-                            monsterButton.Enabled = false;
-                            return true;
-                        }
-                        MonsterEnabled[s] = !MonsterEnabled[s];
+                        tempMonsterEnabled[s] = tb.Selected;
                         return true;
                     }
                 };
@@ -550,13 +541,7 @@ namespace Barotrauma.Networking
 
             //***********************************************
 
-            var allowSpecBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsAllowSpectating"))
-            {
-                OnSelected = (GUITickBox) =>
-                {
-                    return true;
-                }
-            };
+            var allowSpecBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsAllowSpectating"));
             GetPropertyData("AllowSpectating").AssignGUIComponent(allowSpecBox);
 
             var voteKickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsAllowVoteKick"));
@@ -586,22 +571,10 @@ namespace Barotrauma.Networking
             GetPropertyData("AutoBanTime").AssignGUIComponent(slider);
             slider.OnMoved(slider, slider.BarScroll);
 
-            var shareSubsBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsShareSubFiles"))
-            {
-                OnSelected = (GUITickBox) =>
-                {
-                    return true;
-                }
-            };
+            var shareSubsBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsShareSubFiles"));
             GetPropertyData("AllowFileTransfers").AssignGUIComponent(shareSubsBox);
 
-            var randomizeLevelBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsRandomizeSeed"))
-            {
-                OnSelected = (GUITickBox) =>
-                {
-                    return true;
-                }
-            };
+            var randomizeLevelBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsRandomizeSeed"));
             GetPropertyData("RandomizeSeed").AssignGUIComponent(randomizeLevelBox);
 
             var saveLogsBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsSaveLogs"))
@@ -615,13 +588,7 @@ namespace Barotrauma.Networking
             };
             GetPropertyData("SaveServerLogs").AssignGUIComponent(saveLogsBox);
 
-            var ragdollButtonBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsAllowRagdollButton"))
-            {
-                OnSelected = (GUITickBox) =>
-                {
-                    return true;
-                }
-            };
+            var ragdollButtonBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsAllowRagdollButton"));
             GetPropertyData("AllowRagdollButton").AssignGUIComponent(ragdollButtonBox);
 
             var traitorRatioBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsUseTraitorRatio"));
@@ -674,13 +641,7 @@ namespace Barotrauma.Networking
             traitorRatioBox.OnSelected(traitorRatioBox);
 
 
-            var karmaBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsUseKarma"))
-            {
-                OnSelected = (GUITickBox) =>
-                {
-                    return true;
-                }
-            };
+            var karmaBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsUseKarma"));
             GetPropertyData("KarmaEnabled").AssignGUIComponent(karmaBox);
 
             //--------------------------------------------------------------------------------
