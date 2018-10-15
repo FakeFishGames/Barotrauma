@@ -92,7 +92,7 @@ namespace Barotrauma
                 }
                 if (amount > 0)
                 {
-                    new Swarm(swarmMembers, prefab.SwarmRadius);
+                    new Swarm(swarmMembers, prefab.SwarmRadius, prefab.SwarmCohesion);
                 }
             }
         }
