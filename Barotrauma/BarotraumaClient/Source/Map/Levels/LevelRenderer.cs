@@ -150,7 +150,7 @@ namespace Barotrauma
                     var backgroundTop = level.GenerationParams.BackgroundTopSprite;
                     backgroundTop.SourceRect = new Rectangle((int)backgroundPos.X, (int)backgroundPos.Y, 1024, (int)Math.Min(-backgroundPos.Y, 1024));
                     backgroundTop.DrawTiled(spriteBatch, Vector2.Zero, new Vector2(GameMain.GraphicsWidth, Math.Min(-backgroundPos.Y, GameMain.GraphicsHeight)),
-                        color: level.BackgroundColor);
+                        color: level.BackgroundTextureColor);
                 }
                 if (backgroundPos.Y > -1024 && level.GenerationParams.BackgroundSprite != null)
                 {
@@ -159,7 +159,7 @@ namespace Barotrauma
                     background.DrawTiled(spriteBatch,
                         (backgroundPos.Y < 0) ? new Vector2(0.0f, (int)-backgroundPos.Y) : Vector2.Zero,
                         new Vector2(GameMain.GraphicsWidth, (int)Math.Ceiling(1024 - backgroundPos.Y)),
-                        color: level.BackgroundColor);
+                        color: level.BackgroundTextureColor);
                 }
             }
 
@@ -188,8 +188,8 @@ namespace Barotrauma
                 {
                     float scale = (1.0f - i * 0.2f);
 
-                    //alpha goes from 1.0 to 0.0 when scale is in the range of 0.3-0.1
-                    float alpha = (cam.Zoom * scale) < 0.3f ? (cam.Zoom * scale - 0.1f) * 5.0f : 1.0f;
+                    //alpha goes from 1.0 to 0.0 when scale is in the range of 0.1 - 0.05
+                    float alpha = (cam.Zoom * scale) < 0.1f ? (cam.Zoom * scale - 0.05f) * 20.0f : 1.0f;
                     if (alpha <= 0.0f) continue;
 
                     Vector2 offsetS = offset * scale
@@ -278,7 +278,7 @@ namespace Barotrauma
                 spriteBatch.Draw(level.GenerationParams.WallEdgeSprite.Texture,
                     new Rectangle((int)(MathUtils.Round(pos.X, 1024)), (int)pos.Y-1000, width, 1024),
                     new Rectangle(0, 0, width, -1024),
-                    level.BackgroundColor, 0.0f,
+                    level.BackgroundTextureColor, 0.0f,
                     Vector2.Zero,
                     SpriteEffects.None, 0.0f);
             }
@@ -299,7 +299,7 @@ namespace Barotrauma
                 spriteBatch.Draw(level.GenerationParams.WallEdgeSprite.Texture,
                     new Rectangle((int)(MathUtils.Round(pos.X, 1024)), (int)-level.BottomPos, width, 1024),
                     new Rectangle(0, 0, width, -1024),
-                    level.BackgroundColor, 0.0f,
+                    level.BackgroundTextureColor, 0.0f,
                     Vector2.Zero,
                     SpriteEffects.FlipVertically, 0.0f);
             }

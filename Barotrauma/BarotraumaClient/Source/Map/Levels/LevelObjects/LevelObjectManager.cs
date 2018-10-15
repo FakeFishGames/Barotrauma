@@ -123,7 +123,7 @@ namespace Barotrauma
                 activeSprite?.Draw(
                     spriteBatch,
                     new Vector2(obj.Position.X, -obj.Position.Y) - camDiff * obj.Position.Z / 10000.0f,
-                    Color.Lerp(Color.White, Level.Loaded.BackgroundColor, obj.Position.Z / 5000.0f),
+                    Color.Lerp(Color.White, Level.Loaded.BackgroundTextureColor, obj.Position.Z / 5000.0f),
                     activeSprite.Origin,
                     obj.CurrentRotation,
                     scale,
