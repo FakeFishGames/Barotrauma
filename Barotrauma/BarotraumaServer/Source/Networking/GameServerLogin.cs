@@ -55,7 +55,7 @@ namespace Barotrauma.Networking
 
             DebugConsole.Log("  Auth ticket data: " + ((authTicketData == null) ? "null" : authTicketData.Length.ToString()));
 
-            if (serverSettings.BanList.IsBanned("", clientSteamID))
+            if (inc.SenderConnection != OwnerConnection && serverSettings.BanList.IsBanned("", clientSteamID))
             {
                 return;
             }
@@ -160,7 +160,6 @@ namespace Barotrauma.Networking
             {
                 return false; //incorrect owner key, how did this even happen
             }
-            ownerKey = 0; //destroy owner key so nobody else can take ownership of the server
             return true;
         }
         
@@ -168,7 +167,8 @@ namespace Barotrauma.Networking
         {
             if (IsServerOwner(inc))
             {
-                ownerConnection = inc.SenderConnection;
+                ownerKey = 0; //destroy owner key so nobody else can take ownership of the server
+                OwnerConnection = inc.SenderConnection;
                 DebugConsole.NewMessage("Successfully set up server owner", Color.Lime);
             }
         }
@@ -383,7 +383,7 @@ namespace Barotrauma.Networking
                 DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (invalid name)", Color.Red);
                 return;
             }
-            if (inc.SenderConnection != ownerConnection && Homoglyphs.Compare(clName.ToLower(),Name.ToLower()))
+            if (inc.SenderConnection != OwnerConnection && Homoglyphs.Compare(clName.ToLower(),Name.ToLower()))
             {
                 DisconnectUnauthClient(inc, unauthClient, DisconnectReason.NameTaken, "");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name taken by the server)", ServerLog.MessageType.Error);
@@ -422,7 +422,7 @@ namespace Barotrauma.Networking
             unauthClient = null;
             ConnectedClients.Add(newClient);
 
-            if (newClient.Connection == ownerConnection)
+            if (newClient.Connection == OwnerConnection)
             {
                 newClient.GivePermission(ClientPermissions.All);
                 newClient.PermittedConsoleCommands.AddRange(DebugConsole.Commands);

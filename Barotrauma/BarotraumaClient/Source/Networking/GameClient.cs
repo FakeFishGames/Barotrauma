@@ -513,6 +513,17 @@ namespace Barotrauma.Networking
         {
             if (SteamManager.IsInitialized && SteamManager.USE_STEAM)
             {
+                outmsg.Write((byte)ClientPacketHeader.REQUEST_STEAMAUTH);
+            }
+            else
+            {
+                outmsg.Write((byte)ClientPacketHeader.REQUEST_AUTH);
+            }
+
+            outmsg.Write(ownerKey);
+
+            if (SteamManager.IsInitialized && SteamManager.USE_STEAM)
+            {
                 if (steamAuthTicket == null)
                 {
                     steamAuthTicket = SteamManager.GetAuthSessionTicket();
@@ -524,8 +535,7 @@ namespace Barotrauma.Networking
                 {
                     System.Threading.Thread.Sleep(10);
                 }
-
-                outmsg.Write((byte)ClientPacketHeader.REQUEST_STEAMAUTH);
+                
                 outmsg.Write(SteamManager.GetSteamID());
                 outmsg.Write(steamAuthTicket.Data.Length);
                 outmsg.Write(steamAuthTicket.Data);
@@ -535,11 +545,6 @@ namespace Barotrauma.Networking
                 DebugConsole.Log("   Ticket data: " + steamAuthTicket.Data.Length);
                 DebugConsole.Log("   Msg length: " + outmsg.LengthBytes);
             }
-            else
-            {
-                outmsg.Write((byte)ClientPacketHeader.REQUEST_AUTH);
-            }
-            outmsg.Write(ownerKey);
         }
 
         public override void Update(float deltaTime)
@@ -926,29 +931,8 @@ namespace Barotrauma.Networking
             bool disguisesAllowed   = inc.ReadBoolean();
             bool isTraitor          = inc.ReadBoolean();
             string traitorTargetName = isTraitor ? inc.ReadString() : null;
-            
-            //monster spawn settings
-            if (serverSettings.monsterEnabled == null)
-            {
-                List<string> monsterNames1 = GameMain.Instance.GetFilesOfType(ContentType.Character).ToList();
-                for (int i = 0; i < monsterNames1.Count; i++)
-                {
-                    monsterNames1[i] = Path.GetFileName(Path.GetDirectoryName(monsterNames1[i]));
-                }
 
-                serverSettings.monsterEnabled = new Dictionary<string, bool>();
-                foreach (string s in monsterNames1)
-                {
-                    if (!serverSettings.monsterEnabled.ContainsKey(s)) serverSettings.monsterEnabled.Add(s, true);
-                }
-            }
-
-            List<string> monsterNames = serverSettings.monsterEnabled.Keys.ToList();
-            foreach (string s in monsterNames)
-            {
-                serverSettings.monsterEnabled[s] = inc.ReadBoolean();
-            }
-            inc.ReadPadBits();
+            serverSettings.ReadMonsterEnabled(inc);
 
             GameModePreset gameMode = GameModePreset.list.Find(gm => gm.Name == modeName);
             MultiPlayerCampaign campaign = GameMain.NetLobbyScreen.SelectedMode == GameMain.GameSession?.GameMode.Preset ?

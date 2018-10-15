@@ -270,7 +270,7 @@ namespace Barotrauma.Networking
 
         public Voting Voting;
 
-        public Dictionary<string, bool> monsterEnabled;
+        public Dictionary<string, bool> MonsterEnabled;
 
         public Dictionary<ItemPrefab, int> extraCargo;
 
@@ -596,7 +596,33 @@ namespace Barotrauma.Networking
             get;
             private set;
         } = new List<Pair<int, int>>();
-        
+
+        public void ReadMonsterEnabled(NetBuffer inc)
+        {
+            //monster spawn settings
+            if (MonsterEnabled == null)
+            {
+                List<string> monsterNames1 = GameMain.Instance.GetFilesOfType(ContentType.Character).ToList();
+                for (int i = 0; i < monsterNames1.Count; i++)
+                {
+                    monsterNames1[i] = Path.GetFileName(Path.GetDirectoryName(monsterNames1[i]));
+                }
+
+                MonsterEnabled = new Dictionary<string, bool>();
+                foreach (string s in monsterNames1)
+                {
+                    if (!MonsterEnabled.ContainsKey(s)) MonsterEnabled.Add(s, true);
+                }
+            }
+
+            List<string> monsterNames = MonsterEnabled.Keys.ToList();
+            foreach (string s in monsterNames)
+            {
+                MonsterEnabled[s] = inc.ReadBoolean();
+            }
+            inc.ReadPadBits();
+        }
+
         private void SharedWrite(NetBuffer outMsg)
         {
             outMsg.Write(ServerName);
