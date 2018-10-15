@@ -644,8 +644,16 @@ namespace Barotrauma
                     }
                     if (wall.SectionDamage(i) > sectionDamage) sectionIndex = i;
                 }
-
+                
                 Vector2 sectionPos = ConvertUnits.ToSimUnits(wall.SectionPosition(sectionIndex));
+                if (wall.IsHorizontal)
+                {
+                    sectionPos.Y += ConvertUnits.ToSimUnits(wall.Rect.Height / 2) * Math.Sign(Character.SimPosition.Y - wall.WorldPosition.Y);
+                }
+                else
+                {
+                    sectionPos.X += ConvertUnits.ToSimUnits(wall.Rect.Width / 2) * Math.Sign(Character.SimPosition.X - wall.WorldPosition.X);
+                }
                 wallTarget = new WallTarget(ConvertUnits.ToDisplayUnits(sectionPos), wall, sectionIndex);
                 latchOntoAI?.SetAttachTarget(wall.Submarine.PhysicsBody.FarseerBody, wall.Submarine, sectionPos);
             }         
