@@ -13,8 +13,7 @@ namespace Barotrauma
         public readonly float WanderZAmount;
 
         public readonly int SwarmMin, SwarmMax;
-
-        public readonly float SwarmRadius;
+        public readonly float SwarmRadius, SwarmCohesion;
 
         public readonly bool DisableRotation;
 
@@ -32,6 +31,7 @@ namespace Barotrauma
             SwarmMax = element.GetAttributeInt("swarmmax", 1);
 
             SwarmRadius = element.GetAttributeFloat("swarmradius", 200.0f);
+            SwarmCohesion = element.GetAttributeFloat("swarmcohesion", 0.2f);
 
             DisableRotation = element.GetAttributeBool("disablerotation", false);
 

@@ -517,7 +517,8 @@ namespace Barotrauma
                             break;
                     }
                 }
-                
+
+                element.Attribute(property.Name)?.Remove();
                 element.SetAttributeValue(property.Name.ToLowerInvariant(), stringValue);
             }
         }

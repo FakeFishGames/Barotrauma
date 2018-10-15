@@ -593,6 +593,8 @@
   <LevelEditorSaveAll>Save all</LevelEditorSaveAll>
   <LevelEditorLevelSeed>Level seed</LevelEditorLevelSeed>
   <LevelEditorGenerate>Generate</LevelEditorGenerate>
+  <LevelEditorLightingEnabled>Enable lighting</LevelEditorLightingEnabled>
+  <LevelEditorReloadTextures>Reload textures</LevelEditorReloadTextures>
   
   <!-- Rooms -->
   <ReactorRoom>Reactor room</ReactorRoom>

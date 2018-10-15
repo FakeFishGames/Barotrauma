@@ -1,12 +1,10 @@
 ﻿<Ragdoll
   type="crawler2"
   colliderheightfromfloor="35"
-  minscale="0.8"
-  maxscale="1.2"
   impacttolerance="6"
   draggable="True"
-  limbscale="1"
-  jointscale="1"
+  limbscale="0.7"
+  jointscale="0.7"
   canentersubmarine="True">
   <collider
     width="80"
@@ -18,7 +16,7 @@
     type="Head"
     flip="True"
     steerforce="15"
-    mouthpos="240,65"
+    mouthpos="50,0"
     healthindex="0"
     attackpriority="0"
     stepoffset="0,0"

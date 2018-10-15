@@ -144,6 +144,15 @@ namespace Barotrauma
             }
         }
 
+        public override bool CanFlip
+        {
+            get
+            {
+                //can't flip when attached to something
+                return latchOntoAI == null || !latchOntoAI.IsAttached;
+            }
+        }
+
         public EnemyAIController(Character c, string file, string seed) : base(c)
         {
             targetMemories = new Dictionary<AITarget, AITargetMemory>();
@@ -644,10 +653,21 @@ namespace Barotrauma
                     }
                     if (wall.SectionDamage(i) > sectionDamage) sectionIndex = i;
                 }
-
+                
                 Vector2 sectionPos = ConvertUnits.ToSimUnits(wall.SectionPosition(sectionIndex));
+                Vector2 attachTargetNormal;
+                if (wall.IsHorizontal)
+                {
+                    attachTargetNormal = new Vector2(0.0f, Math.Sign(Character.SimPosition.Y - wall.WorldPosition.Y));
+                    sectionPos.Y += ConvertUnits.ToSimUnits(wall.Rect.Height / 2) * attachTargetNormal.Y;
+                }
+                else
+                {
+                    attachTargetNormal = new Vector2(Math.Sign(Character.SimPosition.X - wall.WorldPosition.X), 0.0f);
+                    sectionPos.X += ConvertUnits.ToSimUnits(wall.Rect.Width / 2) * attachTargetNormal.X;
+                }
                 wallTarget = new WallTarget(ConvertUnits.ToDisplayUnits(sectionPos), wall, sectionIndex);
-                latchOntoAI?.SetAttachTarget(wall.Submarine.PhysicsBody.FarseerBody, wall.Submarine, sectionPos);
+                latchOntoAI?.SetAttachTarget(wall.Submarine.PhysicsBody.FarseerBody, wall.Submarine, sectionPos, attachTargetNormal);
             }         
         }
 
