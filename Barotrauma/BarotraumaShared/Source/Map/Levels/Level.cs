@@ -182,6 +182,11 @@ namespace Barotrauma
             get { return generationParams; }
         }
 
+        public Color BackgroundTextureColor
+        {
+            get { return generationParams.BackgroundTextureColor; }
+        }
+
         public Color BackgroundColor
         {
             get { return generationParams.BackgroundColor; }
@@ -286,10 +291,6 @@ namespace Barotrauma
 
 #if CLIENT
             renderer = new LevelRenderer(this);
-
-            var backgroundColor = generationParams.BackgroundColor;
-            float avgValue = (backgroundColor.R + backgroundColor.G + backgroundColor.G) / 3;
-            GameMain.LightManager.AmbientLight = new Color(backgroundColor * (10.0f / avgValue), 1.0f);
 #endif
 
             SeaFloorTopPos = generationParams.SeaFloorDepth + generationParams.MountainHeightMax + generationParams.SeaFloorVariance;

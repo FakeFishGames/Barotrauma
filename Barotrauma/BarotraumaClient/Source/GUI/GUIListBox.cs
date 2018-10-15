@@ -566,7 +566,10 @@ namespace Barotrauma
             return true;
         }
 
-        public void ReceiveTextInput(char inputChar) { }
+        public void ReceiveTextInput(char inputChar)
+        {
+            GUI.KeyboardDispatcher.Subscriber = null;
+        }
         public void ReceiveTextInput(string text) { }
         public void ReceiveCommandInput(char command) { }
 
@@ -579,6 +582,9 @@ namespace Barotrauma
                     break;
                 case Keys.Up:
                     Select(Math.Max(0, SelectedIndex - 1));
+                    break;
+                default:
+                    GUI.KeyboardDispatcher.Subscriber = null;
                     break;
             }
         }
