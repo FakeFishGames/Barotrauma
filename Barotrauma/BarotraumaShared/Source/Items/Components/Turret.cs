@@ -544,8 +544,11 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "position_in":
-                    float.TryParse(signal, out targetRotation);
-                    IsActive = true;
+                    if (float.TryParse(signal, out float newRotation))
+                    {
+                        targetRotation = newRotation;
+                        IsActive = true;
+                    }
                     user = sender;
                     break;
                 case "trigger_in":
