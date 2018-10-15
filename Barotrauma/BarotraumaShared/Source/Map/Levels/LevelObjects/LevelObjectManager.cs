@@ -261,6 +261,11 @@ namespace Barotrauma
                 (int)Math.Floor((worldPosition.Y - Level.Loaded.BottomPos) / GridSize));
         }
 
+        public List<LevelObject> GetAllObjects()
+        {
+            return new List<LevelObject>(objects);
+        }
+
         public List<LevelObject> GetAllObjects(Vector2 worldPosition, float radius)
         {
             var minIndices = GetGridIndices(worldPosition - Vector2.One * radius);
