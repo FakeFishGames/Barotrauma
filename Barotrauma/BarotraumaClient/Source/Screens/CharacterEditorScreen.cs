@@ -1163,8 +1163,9 @@ namespace Barotrauma
             {
                 OnClicked = (button, data) =>
                 {
-                    var box = new GUIMessageBox("Create New Character", "Character Name", new string[] { "Cancel", "Save" }, messageBoxWidth, messageBoxHeight);
-                    var nameField = new GUITextBox(new RectTransform(new Point(box.Content.Rect.Width, 30), box.Content.RectTransform, Anchor.Center), "Wormx");
+                    var box = new GUIMessageBox("Create New Character", string.Empty, new string[] { "Cancel", "Create" }, messageBoxWidth, messageBoxHeight);
+                    var nameField = new GUITextBox(new RectTransform(new Point(box.Content.Rect.Width / 2, 30), box.Content.RectTransform, Anchor.Center), "Worm X");
+                    string name = nameField.Text.RemoveWhitespace().CapitaliseFirstInvariant();
                     box.Buttons[0].OnClicked += (b, d) =>
                     {
                         box.Close();
@@ -1173,8 +1174,8 @@ namespace Barotrauma
                     box.Buttons[1].OnClicked += (b, d) =>
                     {
                         // TODO: provide data from the user selections
-                        CreateCharacter(nameField.Text);
-                        GUI.AddMessage($"New Character Created with the Name {nameField.Text}", Color.Green, font: GUI.Font);
+                        CreateCharacter(name);
+                        GUI.AddMessage($"New Character Created with the Name {name}", Color.Green, font: GUI.Font);
                         box.Close();
                         return true;
                     };
