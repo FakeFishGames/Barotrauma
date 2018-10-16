@@ -136,7 +136,7 @@ namespace Barotrauma
             return (T)ragdoll;
         }
 
-        public static T CreateDummy<T>(string fullPath, string speciesName) where T : RagdollParams, new()
+        public static T CreateDummy<T>(string fullPath, string speciesName, params object[] ragdollConfig) where T : RagdollParams, new()
         {
             if (!allRagdolls.TryGetValue(speciesName, out Dictionary<string, RagdollParams> ragdolls))
             {
@@ -148,32 +148,7 @@ namespace Barotrauma
                 return ragdoll as T;
             }
             var instance = new T();
-            XElement ragdollElement = new XElement("Ragdoll",
-                new XAttribute("type", speciesName),
-                new XElement("collider", new XAttribute("radius", 60)),
-                new XElement("limb",
-                    new XAttribute("id", 0),
-                    new XAttribute("type", LimbType.Head.ToString().ToLowerInvariant()),
-                    new XAttribute("radius", 30),
-                    new XAttribute("height", 86),
-                    new XAttribute("steerforce", 1),
-                    new XElement("sprite",
-                        new XAttribute("texture", "Content/Characters/Mantis/mantis.png"),
-                        new XAttribute("sourcerect", "0,0,101,168"))),
-                new XElement("limb",
-                    new XAttribute("id", 1),
-                    new XAttribute("type", LimbType.Torso.ToString().ToLowerInvariant()),
-                    new XAttribute("width", 42),
-                    new XAttribute("height", 61),
-                    new XElement("sprite",
-                        new XAttribute("texture", "Content/Characters/Mantis/mantis.png"),
-                        new XAttribute("sourcerect", "3,168,59,64"))),
-                new XElement("joint",
-                    new XAttribute("name", "Head to Torso"),
-                    new XAttribute("limb1", 0),
-                    new XAttribute("limb2", 1),
-                    new XAttribute("limb1anchor", "-12.24539,-62.17848"),
-                    new XAttribute("limb2anchor", "0,20")));
+            XElement ragdollElement = new XElement("Ragdoll", ragdollConfig);
             instance.doc = new XDocument(ragdollElement);
             instance.UpdatePath(fullPath);
             instance.IsLoaded = instance.Deserialize(ragdollElement);
