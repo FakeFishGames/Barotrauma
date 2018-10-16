@@ -1116,10 +1116,10 @@ namespace Barotrauma
                     string speciesName = "Wormx";
                     string mainFolder = $"Content/Characters/{speciesName}";
                     // Config file
-                    string configFilePath = Path.Combine(mainFolder, $"{speciesName}.xml");
+                    string configFilePath = $"{mainFolder}/{speciesName}.xml";
                     if (ContentPackage.GetFilesOfType(GameMain.SelectedPackages, ContentType.Character).None(path => path.Contains(speciesName)))
                     {
-                        var contentPackage = GameMain.Config.SelectedContentPackages.Last();
+                        // Create the config file
                         XElement mainElement = new XElement("Character",
                             new XAttribute("name", speciesName),
                             new XAttribute("humanoid", false),
@@ -1133,6 +1133,9 @@ namespace Barotrauma
                             Directory.CreateDirectory(mainFolder);
                         }
                         doc.Save(configFilePath);
+                        // Add to the content package
+                        var contentPackage = GameMain.Config.SelectedContentPackages.Last();
+                        contentPackage.AddFile(configFilePath, ContentType.Character);
                         contentPackage.Save(contentPackage.Path);
                     }
                     // Ragdoll

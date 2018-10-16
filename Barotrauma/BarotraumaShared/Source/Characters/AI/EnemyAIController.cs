@@ -47,7 +47,7 @@ namespace Barotrauma
             }
         }
 
-        private const float UpdateTargetsInterval = 0.5f;
+        private const float UpdateTargetsInterval = 1.0f;
 
         private const float RaycastInterval = 1.0f;
 
@@ -424,7 +424,7 @@ namespace Barotrauma
                 return;
             }
 
-            selectedTargetMemory.Priority -= deltaTime;
+            selectedTargetMemory.Priority -= deltaTime * 0.1f;
 
             Vector2 attackSimPosition = Character.Submarine == null ? ConvertUnits.ToSimUnits(selectedAiTarget.WorldPosition) : selectedAiTarget.SimPosition;
 
@@ -561,9 +561,8 @@ namespace Barotrauma
                     SteeringManager.SteeringAvoid(deltaTime, colliderSize * 1.5f, 1.0f);
                 }
 
-                if (steeringManager is IndoorsSteeringManager)
+                if (steeringManager is IndoorsSteeringManager indoorsSteering)
                 {
-                    var indoorsSteering = (IndoorsSteeringManager)steeringManager;
                     if (indoorsSteering.CurrentPath != null && !indoorsSteering.IsPathDirty)
                     {
                         if (indoorsSteering.CurrentPath.Unreachable)
@@ -815,23 +814,15 @@ namespace Barotrauma
                     }
                     else if (targetCharacter.IsDead)
                     {
-                        /*if (GetTargetingPriority("dead") == 0.0f) continue;
-                        valueModifier = eatDeadPriority;*/
                         targetingTag = "dead";
                     }
-                    /*else if (targetCharacter.SpeciesName == "human")
-                    {
-                        if (attackHumans == 0.0f) continue;
-                        valueModifier = attackHumans;                        
-                    }*/
                     else if (targetingPriorities.ContainsKey(targetCharacter.SpeciesName.ToLowerInvariant()))
                     {
                         targetingTag = targetCharacter.SpeciesName.ToLowerInvariant();
                     }
                     else
                     {
-                        EnemyAIController enemy = targetCharacter.AIController as EnemyAIController;
-                        if (enemy != null)
+                        if (targetCharacter.AIController is EnemyAIController enemy)
                         {
                             if (enemy.combatStrength > combatStrength)
                             {
@@ -851,9 +842,8 @@ namespace Barotrauma
                     
                     //multiply the priority of the target if it's a door from outside to inside and the AI is an aggressive boarder
                     Door door = null;
-                    if (target.Entity is Item)
+                    if (target.Entity is Item item)
                     {
-                        Item item = (Item)target.Entity;
 
                         //item inside and we're outside -> attack the hull
                         if (item.CurrentHull != null && character.CurrentHull == null)
@@ -912,8 +902,12 @@ namespace Barotrauma
                 if (dist > target.SightRange * sight && dist > target.SoundRange * hearing) continue;
                 if (!target.IsWithinSector(WorldPosition)) continue;
 
+                //if the target is very close, the distance doesn't make much difference 
+                // -> just ignore the distance and attack whatever has the highest priority
+                dist = Math.Max(dist, 100.0f);
+
                 AITargetMemory targetMemory = FindTargetMemory(target);
-                valueModifier = valueModifier * targetMemory.Priority / dist;
+                valueModifier = valueModifier * targetMemory.Priority / (float)Math.Sqrt(dist);
 
                 if (valueModifier > targetValue)
                 {                  
@@ -954,7 +948,7 @@ namespace Barotrauma
                 return memory;
             }
 
-            memory = new AITargetMemory(100.0f);
+            memory = new AITargetMemory(10.0f);
             targetMemories.Add(target, memory);
 
             return memory;
@@ -964,16 +958,23 @@ namespace Barotrauma
         //have a corresponding AItarget or whose priority is 0.0f
         private void UpdateTargetMemories()
         {
-            List<AITarget> toBeRemoved = new List<AITarget>();
-            foreach(KeyValuePair<AITarget, AITargetMemory> memory in targetMemories)
+            List<AITarget> toBeRemoved = null;
+            foreach (KeyValuePair<AITarget, AITargetMemory> memory in targetMemories)
             {
-                memory.Value.Priority += 0.5f;
-                if (Math.Abs(memory.Value.Priority) < 1.0f || !AITarget.List.Contains(memory.Key)) toBeRemoved.Add(memory.Key);
+                memory.Value.Priority += 0.1f;
+                if (Math.Abs(memory.Value.Priority) < 1.0f || !AITarget.List.Contains(memory.Key))
+                {
+                    if (toBeRemoved == null) toBeRemoved = new List<AITarget>();
+                    toBeRemoved.Add(memory.Key);
+                }
             }
 
-            foreach (AITarget target in toBeRemoved)
+            if (toBeRemoved != null)
             {
-                targetMemories.Remove(target);
+                foreach (AITarget target in toBeRemoved)
+                {
+                    targetMemories.Remove(target);
+                }
             }
         }
 
