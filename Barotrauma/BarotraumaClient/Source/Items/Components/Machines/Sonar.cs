@@ -378,7 +378,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 spriteBatch.End();
-                spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
             }
 
             if (useDirectionalPing && IsActive)

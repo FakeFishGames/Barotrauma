@@ -92,7 +92,7 @@ namespace Barotrauma
             GameMain.PerformanceCounter.AddElapsedTicks("DrawMap", sw.ElapsedTicks);
             sw.Restart();
 
-            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, GameMain.ScissorTestEnable);
             
             if (Character.Controlled != null && cam != null) Character.Controlled.DrawHUD(spriteBatch, cam);
 

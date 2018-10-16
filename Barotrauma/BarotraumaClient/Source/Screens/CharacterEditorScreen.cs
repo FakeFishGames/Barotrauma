@@ -1456,7 +1456,7 @@ namespace Barotrauma
             spriteBatch.End();
 
             // GUI
-            spriteBatch.Begin(SpriteSortMode.Immediate, rasterizerState: GameMain.ScissorTestEnable);
+            spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
             if (showAnimControls)
             {
                 DrawAnimationControls(spriteBatch);

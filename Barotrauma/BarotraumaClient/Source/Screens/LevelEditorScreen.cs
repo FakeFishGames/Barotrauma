@@ -151,7 +151,7 @@ namespace Barotrauma
                 }
             }            
 
-            spriteBatch.Begin(SpriteSortMode.Immediate, rasterizerState: GameMain.ScissorTestEnable);
+            spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
 
             GUI.Draw(Cam, spriteBatch);
 
