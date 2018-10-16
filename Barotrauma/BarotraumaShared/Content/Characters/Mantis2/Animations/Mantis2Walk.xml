@@ -1,5 +1,4 @@
 ﻿<MantisWalk
-  AnimationType="Walk"
   movementspeed="3.653424"
   stepsize="0.2492984,0.06366661"
   legtorque="0"
@@ -19,4 +18,4 @@
   torsoangle="NaN"
   animationtype="Walk"
   foottorque="50"
-  footangles="8: 3.181855,10: 0.5240308" />
+  footangles="8: 3.181855,10: 1.648134" />

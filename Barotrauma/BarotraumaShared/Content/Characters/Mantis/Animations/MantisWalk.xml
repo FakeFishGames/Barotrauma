@@ -1,5 +1,4 @@
 ﻿<MantisWalk
-  AnimationType="Walk"
   movementspeed="1.929684"
   stepsize="0.1281207,0.1795029"
   legtorque="10"

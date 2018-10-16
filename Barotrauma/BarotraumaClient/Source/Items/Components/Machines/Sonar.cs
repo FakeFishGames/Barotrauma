@@ -279,7 +279,7 @@ namespace Barotrauma.Items.Components
 
             if (IsActive)
             {
-                if (useDirectionalPing && directionalPingCircle != null)
+                if (isLastPingDirectional && directionalPingCircle != null)
                 {
                     directionalPingCircle.Draw(spriteBatch, center, Color.White * (1.0f - pingState),
                         rotate: MathUtils.VectorToAngle(lastPingDirection),
@@ -362,7 +362,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 spriteBatch.End();
-                spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
             }
 
             if (useDirectionalPing && IsActive)
@@ -726,7 +726,7 @@ namespace Barotrauma.Items.Components
             }
 
             Vector2 dir = pos / (float)Math.Sqrt(posDistSqr);
-            if (useDirectionalPing)
+            if (isLastPingDirectional)
             {
                 if (Vector2.Dot(lastPingDirection, dir) < DirectionalPingDotProduct)
                 {

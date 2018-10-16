@@ -1,5 +1,4 @@
 ﻿<CarrierSwimSlow
-  AnimationType="SwimSlow"
   movementspeed="4"
   waveamplitude="0"
   wavelength="0"
@@ -10,4 +9,10 @@
   footangle="NaN"
   headangle="270"
   torsoangle="NaN"
-  animationtype="SwimSlow" />
+  animationtype="SwimSlow"
+  torsotorque="25"
+  headtorque="50"
+  foottorque="25"
+  tailtorque="50"
+  footangles=""
+  cyclespeed="1" />

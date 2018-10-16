@@ -1,5 +1,4 @@
 ﻿<MantisRun
-  AnimationType="Run"
   movementspeed="6"
   stepsize="0.25,0.4"
   legtorque="10"

@@ -404,8 +404,10 @@ namespace Barotrauma
             Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y);
 
             Rectangle prevScissorRect = GameMain.Instance.GraphicsDevice.ScissorRectangle;
-            GameMain.Instance.GraphicsDevice.ScissorRectangle = rect;
-            
+            spriteBatch.End();
+            spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, rect);
+            spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+
             for (int x = 0; x < mapTiles.GetLength(0); x++)
             {
                 for (int y = 0; y < mapTiles.GetLength(1); y++)
@@ -603,6 +605,8 @@ namespace Barotrauma
             }
                         
             GameMain.Instance.GraphicsDevice.ScissorRectangle = prevScissorRect;
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Deferred);
         }
 
         private float hudOpenState;
@@ -611,7 +615,7 @@ namespace Barotrauma
         private void DrawDecorativeHUD(SpriteBatch spriteBatch, Rectangle rect)
         {
             spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, null, null, GameMain.ScissorTestEnable);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, null, GameMain.ScissorTestEnable);
             
             if (generationParams.ShowOverlay)
             {
@@ -692,7 +696,7 @@ namespace Barotrauma
             }
 
             spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, GameMain.ScissorTestEnable);
         }
 
         private void UpdateMapAnim(MapAnim anim, float deltaTime)

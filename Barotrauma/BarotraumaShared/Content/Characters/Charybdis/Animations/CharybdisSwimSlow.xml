@@ -1,5 +1,4 @@
 ﻿<CharybdisSwimSlow
-  AnimationType="SwimSlow"
   movementspeed="3"
   waveamplitude="1"
   wavelength="60"
@@ -9,5 +8,11 @@
   rotatetowardsmovement="True"
   footangle="NaN"
   headangle="NaN"
-  torsoangle="NaN"
-  animationtype="SwimSlow" />
+  torsoangle="0"
+  animationtype="SwimSlow"
+  torsotorque="150"
+  headtorque="25"
+  foottorque="25"
+  tailtorque="50"
+  footangles=""
+  cyclespeed="1" />

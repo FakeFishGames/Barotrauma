@@ -1780,7 +1780,7 @@ namespace Barotrauma
 
             if (wiringMode)
             {
-                if (!dummyCharacter.SelectedItems.Any(it => it != null && it.HasTag("Wire")))
+                if (!dummyCharacter.SelectedItems.Any(it => it != null && it.HasTag("wire")))
                 {
                     wiringToolPanel.GetChild<GUIListBox>().Deselect();
                 }
@@ -1875,7 +1875,10 @@ namespace Barotrauma
 
             //-------------------- HUD -----------------------------
 
-            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+
+            spriteBatch.Begin(SpriteSortMode.Deferred);
 
             if (Submarine.MainSub != null)
             {
@@ -1900,6 +1903,9 @@ namespace Barotrauma
             if (!PlayerInput.LeftButtonHeld()) Inventory.draggingItem = null;
                                               
             spriteBatch.End();
+
+            sw.Stop();
+            System.Diagnostics.Debug.WriteLine(sw.ElapsedTicks);
         }
 
         private void CreateImage(int width, int height, Stream stream)

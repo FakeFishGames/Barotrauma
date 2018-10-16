@@ -731,18 +731,15 @@ namespace Barotrauma
         public bool HasTag(string tag)
         {
             if (tag == null) return true;
-
-            return tags.Contains(tag) || tags.Contains(tag.ToLowerInvariant()) || 
-                prefab.Tags.Contains(tag) || prefab.Tags.Contains(tag.ToLowerInvariant());
+            return tags.Contains(tag) || prefab.Tags.Contains(tag);
         }
 
         public bool HasTag(IEnumerable<string> allowedTags)
         {
             if (allowedTags == null) return true;
-
             foreach (string tag in allowedTags)
             {
-                if (tags.Contains(tag) || tags.Contains(tag.ToLowerInvariant())) return true;
+                if (tags.Contains(tag)) return true;
             }
             return false;
         }

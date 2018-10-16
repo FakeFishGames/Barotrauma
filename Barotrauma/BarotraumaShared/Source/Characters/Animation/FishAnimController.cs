@@ -331,12 +331,20 @@ namespace Barotrauma
 
             if (movement.LengthSquared() < 0.00001f) return;
 
-            float movementAngle = MathUtils.VectorToAngle(movement) - MathHelper.PiOver2;
-            
+            float movementAngle = MathUtils.VectorToAngle(movement) - MathHelper.PiOver2;            
             if (CurrentSwimParams.RotateTowardsMovement)
             {
                 Collider.SmoothRotate(movementAngle, CurrentSwimParams.SteerTorque);
-                MainLimb.body.SmoothRotate(movementAngle, CurrentSwimParams.TorsoTorque);
+                if (TorsoAngle.HasValue)
+                {
+                    Limb torso = GetLimb(LimbType.Torso);
+                    torso?.body.SmoothRotate(movementAngle + TorsoAngle.Value * Dir, CurrentSwimParams.TorsoTorque);
+                }
+                if (HeadAngle.HasValue)
+                {
+                    Limb head = GetLimb(LimbType.Head);
+                    head?.body.SmoothRotate(movementAngle + HeadAngle.Value * Dir, CurrentSwimParams.HeadTorque);
+                }
             }
             else
             {
@@ -348,18 +356,18 @@ namespace Barotrauma
                 {
                     Collider.SmoothRotate(TorsoAngle.Value * Dir, CurrentSwimParams.SteerTorque);
                 }
+                if (TorsoAngle.HasValue)
+                {
+                    Limb torso = GetLimb(LimbType.Torso);
+                    torso?.body.SmoothRotate(TorsoAngle.Value * Dir, CurrentSwimParams.TorsoTorque);
+                }
+                if (HeadAngle.HasValue)
+                {
+                    Limb head = GetLimb(LimbType.Head);
+                    head?.body.SmoothRotate(HeadAngle.Value * Dir, CurrentSwimParams.HeadTorque);
+                }
             }
 
-            if (TorsoAngle.HasValue)
-            {
-                Limb torso = GetLimb(LimbType.Torso);
-                torso?.body.SmoothRotate(TorsoAngle.Value * Dir, CurrentSwimParams.TorsoTorque);
-            }
-            if (HeadAngle.HasValue)
-            {
-                Limb head = GetLimb(LimbType.Head);
-                head?.body.SmoothRotate(HeadAngle.Value * Dir, CurrentSwimParams.HeadTorque);
-            }
 
             foreach (var limb in Limbs)
             {
@@ -378,12 +386,13 @@ namespace Barotrauma
             Limb tail = GetLimb(LimbType.Tail);
             if (tail != null)
             {
-                WalkPos -= movement.Length();
                 var waveLength = Math.Abs(CurrentSwimParams.WaveLength);
                 var waveAmplitude = Math.Abs(CurrentSwimParams.WaveAmplitude);
+                WalkPos -= movement.Length() / Math.Abs(waveLength);
+                WalkPos = MathUtils.WrapAngleTwoPi(WalkPos);
                 if (waveLength > 0 && waveAmplitude > 0)
                 {
-                    float waveRotation = (float)Math.Sin(WalkPos / waveLength);
+                    float waveRotation = (float)Math.Sin(WalkPos);
                     tail.body.ApplyTorque(waveRotation * tail.Mass * CurrentSwimParams.TailTorque * waveAmplitude);
                 }
             }

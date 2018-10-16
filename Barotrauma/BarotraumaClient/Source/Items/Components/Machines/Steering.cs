@@ -85,6 +85,10 @@ namespace Barotrauma.Items.Components
                 OnSelected = (GUITickBox box) =>
                 {
                     AutoPilot = box.Selected;
+                    if (AutoPilot && MaintainPos)
+                    {
+                        posToMaintain = controlledSub == null ? item.WorldPosition : controlledSub.WorldPosition;
+                    }
                     unsentChanges = true;
                     user = Character.Controlled;
 

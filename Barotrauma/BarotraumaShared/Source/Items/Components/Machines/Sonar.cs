@@ -42,6 +42,9 @@ namespace Barotrauma.Items.Components
         private Vector2 lastPingDirection = new Vector2(1.0f, 0.0f);
         private Vector2 pingDirection = new Vector2(1.0f, 0.0f);
 
+        //was the last ping sent with directional pinging
+        private bool isLastPingDirectional;
+
         private readonly Sprite pingCircle, directionalPingCircle, screenOverlay, screenBackground;
         private readonly Sprite sonarBlip;
 
@@ -154,16 +157,17 @@ namespace Barotrauma.Items.Components
                     if (item.CurrentHull != null)
                     {
                         item.CurrentHull.AiTarget.SoundRange = Math.Max(Range * pingState / zoom, item.CurrentHull.AiTarget.SoundRange);
-                        item.CurrentHull.AiTarget.SectorDegrees = useDirectionalPing ? DirectionalPingSector : 360.0f;
+                        item.CurrentHull.AiTarget.SectorDegrees = isLastPingDirectional ? DirectionalPingSector : 360.0f;
                         item.CurrentHull.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
                     }
                     if (item.AiTarget != null)
                     {
                         item.AiTarget.SoundRange = Math.Max(Range * pingState / zoom, item.AiTarget.SoundRange);
-                        item.AiTarget.SectorDegrees = useDirectionalPing ? DirectionalPingSector : 360.0f;
+                        item.AiTarget.SectorDegrees = isLastPingDirectional ? DirectionalPingSector : 360.0f;
                         item.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
                     }
                     aiPingCheckPending = true;
+                    isLastPingDirectional = useDirectionalPing;
                     lastPingDirection = pingDirection;
                     item.Use(deltaTime);
                     pingState = 0.0f;
