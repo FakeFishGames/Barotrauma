@@ -313,6 +313,11 @@ namespace Barotrauma
             InsertToList();
         }
 
+        public override string ToString()
+        {
+            return Name;
+        }
+
         public override MapEntity Clone()
         {
             var clone = new Structure(rect, prefab, Submarine);
