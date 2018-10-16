@@ -32,6 +32,11 @@ namespace Barotrauma
             : base (character, "")
         {
             this.itemIdentifiers = itemIdentifiers;
+            for (int i = 0; i < itemIdentifiers.Length; i++)
+            {
+                itemIdentifiers[i] = itemIdentifiers[i].ToLowerInvariant();
+            }
+
             this.container = container;
         }
 

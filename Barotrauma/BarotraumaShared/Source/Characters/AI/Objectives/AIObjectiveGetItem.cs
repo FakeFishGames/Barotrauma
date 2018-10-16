@@ -65,6 +65,10 @@ namespace Barotrauma
             currSearchIndex = -1;
             this.equip = equip;
             this.itemIdentifiers = itemIdentifiers;
+            for (int i = 0; i < itemIdentifiers.Length; i++)
+            {
+                itemIdentifiers[i] = itemIdentifiers[i].ToLowerInvariant();
+            }
 
             CheckInventory();
         }

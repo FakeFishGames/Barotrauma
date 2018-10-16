@@ -1049,10 +1049,8 @@ namespace Barotrauma
                     {
                         attackPos = Submarine.LastPickedPosition;
 
-                        if (body.UserData is Submarine)
+                        if (body.UserData is Submarine sub)
                         {
-                            var sub = ((Submarine)body.UserData);
-
                             body = Submarine.PickBody(
                                 attackLimb.SimPosition - ((Submarine)body.UserData).SimPosition,
                                 attackPos - ((Submarine)body.UserData).SimPosition,
@@ -2001,9 +1999,9 @@ namespace Barotrauma
 
             if (limbHit == null) return new AttackResult();
 
-            var attackingCharacter = attacker as Character;
+            limbHit.body.ApplyLinearImpulse(attack.TargetImpulseWorld + attack.TargetForceWorld * deltaTime);
 #if SERVER
-            if (attackingCharacter != null && attackingCharacter.AIController == null)
+            if (attacker is Character attackingCharacter && attackingCharacter.AIController == null)
             {
                 string logMsg = LogName + " attacked by " + attackingCharacter.LogName + ".";
                 foreach (Affliction affliction in attackResult.Afflictions)

@@ -74,8 +74,8 @@ namespace Barotrauma
             if (!Visible) return;
             if (editing && !ShowItems) return;
             
-            Color color = (IsSelected && editing) ? Color.Red : GetSpriteColor();
-            if (isHighlighted) color = Color.Orange;
+            Color color = isHighlighted ? Color.Orange : GetSpriteColor();
+            if (IsSelected && editing) color = Color.Lerp(color, Color.Gold, 0.5f);
 
             Sprite activeSprite = prefab.sprite;
             BrokenItemSprite fadeInBrokenSprite = null;

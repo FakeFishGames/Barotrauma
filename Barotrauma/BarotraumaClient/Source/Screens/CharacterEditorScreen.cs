@@ -274,6 +274,55 @@ namespace Barotrauma
         {
             character.AnimController.SetPosition(ConvertUnits.ToSimUnits(position), false);
         }
+
+        private void CreateCharacter(string name, bool isHumanoid, params object[] ragdollConfig)
+        {
+            string speciesName = name;
+            string mainFolder = $"Content/Characters/{speciesName}";
+            // Config file
+            string configFilePath = $"{mainFolder}/{speciesName}.xml";
+            if (ContentPackage.GetFilesOfType(GameMain.SelectedPackages, ContentType.Character).None(path => path.Contains(speciesName)))
+            {
+                // Create the config file
+                XElement mainElement = new XElement("Character",
+                    new XAttribute("name", speciesName),
+                    new XAttribute("humanoid", isHumanoid),
+                    new XElement("ragdolls"),
+                    new XElement("animations"),
+                    new XElement("health"),
+                    new XElement("ai"));
+                XDocument doc = new XDocument(mainElement);
+                if (!Directory.Exists(mainFolder))
+                {
+                    Directory.CreateDirectory(mainFolder);
+                }
+                doc.Save(configFilePath);
+                // Add to the content package
+                var contentPackage = GameMain.Config.SelectedContentPackages.Last();
+                contentPackage.AddFile(configFilePath, ContentType.Character);
+                contentPackage.Save(contentPackage.Path);
+            }
+            // Ragdoll
+            string ragdollFolder = RagdollParams.GetDefaultFolder(speciesName);
+            string ragdollPath = RagdollParams.GetDefaultFile(speciesName);
+            RagdollParams ragdollParams = RagdollParams.CreateDummy<FishRagdollParams>(ragdollPath, speciesName, ragdollConfig);
+            // Animations
+            string animFolder = AnimationParams.GetDefaultFolder(speciesName);
+            foreach (AnimationType animType in Enum.GetValues(typeof(AnimationType)))
+            {
+                if (animType != AnimationType.NotDefined)
+                {
+                    Type type = AnimationParams.GetParamTypeFromAnimType(animType, false);
+                    string fullPath = AnimationParams.GetDefaultFile(speciesName, animType);
+                    AnimationParams.CreateDummy(fullPath, speciesName, animType, type);
+                }
+            }
+            if (!AllFiles.Contains(configFilePath))
+            {
+                AllFiles.Add(configFilePath);
+            }
+            SpawnCharacter(configFilePath, ragdollParams);
+        }
         #endregion
 
         #region GUI
@@ -1113,49 +1162,139 @@ namespace Barotrauma
             {
                 OnClicked = (button, data) =>
                 {
-                    string speciesName = "Wormx";
-                    string mainFolder = $"Content/Characters/{speciesName}";
-                    // Config file
-                    string configFilePath = Path.Combine(mainFolder, $"{speciesName}.xml");
-                    if (ContentPackage.GetFilesOfType(GameMain.SelectedPackages, ContentType.Character).None(path => path.Contains(speciesName)))
+                    var box = new GUIMessageBox("Create New Character", string.Empty, new string[] { "Cancel", "Create" }, messageBoxWidth, messageBoxHeight * 2);
+                    box.Content.ChildAnchor = Anchor.TopCenter;
+                    box.Content.AbsoluteSpacing = 20;
+                    int elementSize = 30;
+                    var listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.9f), box.Content.RectTransform));
+                    var topGroup = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 3 + 20), listBox.Content.RectTransform)) { AbsoluteSpacing = 2};
+                    var fields = new List<GUIComponent>();
+                    for (int i = 0; i < 3; i++)
                     {
-                        var contentPackage = GameMain.Config.SelectedContentPackages.Last();
-                        XElement mainElement = new XElement("Character",
-                            new XAttribute("name", speciesName),
-                            new XAttribute("humanoid", false),
-                            new XElement("ragdolls"),
-                            new XElement("animations"),
-                            new XElement("health"),
-                            new XElement("ai"));
-                        XDocument doc = new XDocument(mainElement);
-                        if (!Directory.Exists(mainFolder))
+                        var mainElement = new GUIFrame(new RectTransform(new Point(topGroup.RectTransform.Rect.Width, elementSize), topGroup.RectTransform), style: null, color: Color.Gray * 0.25f);
+                        fields.Add(mainElement);
+                        RectTransform leftElement = new RectTransform(new Vector2(0.5f, 1), mainElement.RectTransform, Anchor.TopLeft);
+                        RectTransform rightElement = new RectTransform(new Vector2(0.5f, 1), mainElement.RectTransform, Anchor.TopRight);
+                        switch (i)
                         {
-                            Directory.CreateDirectory(mainFolder);
-                        }
-                        doc.Save(configFilePath);
-                        contentPackage.Save(contentPackage.Path);
-                    }
-                    // Ragdoll
-                    string ragdollFolder = RagdollParams.GetDefaultFolder(speciesName);
-                    string ragdollPath = RagdollParams.GetDefaultFile(speciesName);
-                    RagdollParams ragdollParams = RagdollParams.CreateDummy<FishRagdollParams>(ragdollPath, speciesName);
-                    // Animations
-                    string animFolder = AnimationParams.GetDefaultFolder(speciesName);
-                    foreach (AnimationType animType in Enum.GetValues(typeof(AnimationType)))
-                    {
-                        if (animType != AnimationType.NotDefined)
-                        {
-                            Type type = AnimationParams.GetParamTypeFromAnimType(animType, false);
-                            string fullPath = AnimationParams.GetDefaultFile(speciesName, animType);
-                            AnimationParams.CreateDummy(fullPath, speciesName, animType, type);
+                            case 0:
+                                new GUITextBlock(leftElement, "Name");
+                                new GUITextBox(rightElement, "Worm X");
+                                break;
+                            case 1:
+                                new GUITextBlock(leftElement, "Size");
+                                new GUINumberInput(rightElement, GUINumberInput.NumberType.Float) { FloatValue = 10 };
+                                break;
+                            case 2:
+                                new GUITextBlock(leftElement, "Is Humanoid?");
+                                new GUITickBox(rightElement, string.Empty);
+                                break;
                         }
                     }
-                    SpawnCharacter(configFilePath, ragdollParams);
+                    var codeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), listBox.Content.RectTransform), style: null) { CanBeFocused = false };
+                    new GUITextBlock(new RectTransform(new Vector2(1, 0.05f), codeArea.RectTransform), "Custom code:");
+                    new GUITextBox(new RectTransform(new Vector2(1, 1 - 0.05f), codeArea.RectTransform, Anchor.BottomLeft), string.Empty, textAlignment: Alignment.TopLeft);
+                    // Spacing
+                    new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), style: null);
+                    // Limbs
+                    var limbs = new Dictionary<XElement, object[]>();
+                    var limbElements = new List<GUIComponent>();
+                    // TODO: add a label
+                    var buttonElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), listBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
+                    {
+                        CanBeFocused = false
+                    };
+                    var minusButton = new GUIButton(new RectTransform(new Point(buttonElement.Rect.Height, buttonElement.Rect.Height), buttonElement.RectTransform), "-")
+                    {
+                        OnClicked = (b, d) =>
+                        {
+                            var element = limbElements.LastOrDefault();
+                            if (element == null) { return false; }
+                            element.RectTransform.Parent = null;
+                            limbElements.Remove(element);
+                            return true;
+                        }
+                    };
+                    var plusButton = new GUIButton(new RectTransform(new Point(buttonElement.Rect.Height, buttonElement.Rect.Height), buttonElement.RectTransform)
+                    {
+                        AbsoluteOffset = new Point(minusButton.Rect.Width + 10, 0)
+                    }, "+")
+                    {
+                        OnClicked = (b, d) =>
+                        {
+                            var limbElement = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 3), listBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
+                            {
+                                CanBeFocused = false
+                            };
+                            var group = new GUILayoutGroup(new RectTransform(Vector2.One, limbElement.RectTransform)) { AbsoluteSpacing = 2 };
+                            int id = limbElements.Count;
+                            var label = new GUITextBlock(new RectTransform(new Vector2(1, 0.3f), group.RectTransform), $"Limb {id}");
+                            var field = new GUIFrame(new RectTransform(new Vector2(1, 0.3f), group.RectTransform), style: null);
+                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), field.RectTransform, Anchor.TopLeft), $"ID");
+                            // TODO: name, source rect
+                            new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), field.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
+                            {
+                                IntValue = id,
+                                OnValueChanged = numInput =>
+                                {
+                                    id = numInput.IntValue;
+                                    label.Text = $"Limb {id}";
+                                }
+                            };
+                            limbElements.Add(limbElement);
+                            return true;
+                        }
+                    };
+                    box.Buttons[0].OnClicked += (b, d) =>
+                    {
+                        box.Close();
+                        return true;
+                    };
+                    box.Buttons[1].OnClicked += (b, d) =>
+                    {
+                        string name = fields[0].GetChild<GUITextBox>().Text.RemoveWhitespace().CapitaliseFirstInvariant();
+                        float size = fields[1].GetChild<GUINumberInput>().FloatValue;
+                        bool isHumanoid = fields[2].GetChild<GUITickBox>().Selected;
+                        // TODO: gui elements for adding and removing limbs and joints
+                        // TODO: parse from the code field and gui elements
+                        // TODO: parse from css/html file
+                        var ragdollParams = new object[]
+                        {
+                            new XAttribute("type", name),
+                            new XElement("collider", new XAttribute("radius", size)),
+                            new XElement("limb",
+                                new XAttribute("id", 0),
+                                new XAttribute("type", LimbType.Head),
+                                new XAttribute("radius", 30),
+                                new XAttribute("height", 86),
+                                new XAttribute("steerforce", 1),
+                                new XElement("sprite",
+                                    new XAttribute("texture", "Content/Characters/Mantis/mantis.png"),
+                                    new XAttribute("sourcerect", "0,0,101,168"))),
+                            new XElement("limb",
+                                new XAttribute("id", 1),
+                                new XAttribute("type", LimbType.Torso),
+                                new XAttribute("width", 42),
+                                new XAttribute("height", 61),
+                                new XElement("sprite",
+                                    new XAttribute("texture", "Content/Characters/Mantis/mantis.png"),
+                                    new XAttribute("sourcerect", "3,168,59,64"))),
+                            new XElement("joint",
+                                new XAttribute("name", "Head to Torso"),
+                                new XAttribute("limb1", 0),
+                                new XAttribute("limb2", 1),
+                                new XAttribute("limb1anchor", "-12.24539,-62.17848"),
+                                new XAttribute("limb2anchor", "0,20"))
+                        };
+                        CreateCharacter(name, isHumanoid, ragdollParams);
+                        GUI.AddMessage($"New Character Created with the Name {name}", Color.Green, font: GUI.Font);
+                        box.Close();
+                        return true;
+                    };
                     return true;
                 }
             };
         }
-
         #endregion
 
         #region Params
@@ -1371,7 +1510,7 @@ namespace Barotrauma
             spriteBatch.End();
 
             // GUI
-            spriteBatch.Begin(SpriteSortMode.Immediate, rasterizerState: GameMain.ScissorTestEnable);
+            spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
             if (showAnimControls)
             {
                 DrawAnimationControls(spriteBatch);

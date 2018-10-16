@@ -46,9 +46,8 @@ namespace Barotrauma
         public SwimParams CurrentSwimParams => IsMovingFast ? SwimFastParams : SwimSlowParams;
 
         public bool CanWalk => CanEnterSubmarine;
-        public bool IsMovingBackwards => Math.Sign(targetMovement.X) == -Math.Sign(Dir);
-
-
+        public bool IsMovingBackwards => !InWater && Math.Sign(targetMovement.X) == -Math.Sign(Dir);
+        
         // TODO: define death anim duration in XML
         protected float deathAnimTimer, deathAnimDuration = 5.0f;
 

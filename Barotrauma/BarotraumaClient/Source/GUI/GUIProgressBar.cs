@@ -67,7 +67,12 @@ namespace Barotrauma
             }
 
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
-            spriteBatch.GraphicsDevice.ScissorRectangle = sliderRect;
+            if (BarSize <= 1.0f)
+            {
+                spriteBatch.End();
+                spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, sliderRect);
+                spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+            }
 
             Color currColor = GetCurrentColor(state);
 
@@ -83,7 +88,12 @@ namespace Barotrauma
             //hide the slider, we've already drawn it manually
             frame.Visible = false;
             slider.Visible = false;
-            spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
+            if (BarSize <= 1.0f)
+            {
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+                spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
+            }
         }
     }
 }

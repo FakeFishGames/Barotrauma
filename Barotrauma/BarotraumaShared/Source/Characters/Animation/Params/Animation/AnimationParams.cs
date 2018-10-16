@@ -129,7 +129,12 @@ namespace Barotrauma
         {
             var doc = XMLExtensions.TryLoadXml(filePath);
             if (doc == null) { return false; }
-            return Enum.TryParse(doc.Root.GetAttributeString("AnimationType", "NotDefined"), out AnimationType fileType) && fileType == type;
+            var typeString = doc.Root.GetAttributeString("animationtype", null);
+            if (string.IsNullOrWhiteSpace(typeString))
+            {
+                typeString = doc.Root.GetAttributeString("AnimationType", "NotDefined");
+            }
+            return Enum.TryParse(typeString, out AnimationType fileType) && fileType == type;
         }
 
         public static T GetDefaultAnimParams<T>(string speciesName, AnimationType animType) where T : AnimationParams, new() => GetAnimParams<T>(speciesName, animType, GetDefaultFileName(speciesName, animType));
