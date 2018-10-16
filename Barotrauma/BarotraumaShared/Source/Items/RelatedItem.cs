@@ -41,7 +41,7 @@ namespace Barotrauma
                 identifiers = value.Split(',');
                 for (int i = 0; i < identifiers.Length; i++)
                 {
-                    identifiers[i] = identifiers[i].Trim();
+                    identifiers[i] = identifiers[i].Trim().ToLowerInvariant();
                 }
             }
         }
