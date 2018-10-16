@@ -158,30 +158,32 @@ namespace Barotrauma
 #endif
 			GameMain.ParticleManager.Draw(spriteBatch, true, false, Particles.ParticleBlendState.AlphaBlend);
 			spriteBatch.End();
-
-			//draw additive particles that are in water and behind subs
-			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, DepthStencilState.None, null, null, cam.Transform);
-			GameMain.ParticleManager.Draw(spriteBatch, true, false, Particles.ParticleBlendState.Additive);
-			spriteBatch.End();
+            
+            //draw additive particles that are in water and behind subs
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, DepthStencilState.None, null, null, cam.Transform);
+            GameMain.ParticleManager.Draw(spriteBatch, true, false, Particles.ParticleBlendState.Additive);
+            spriteBatch.End();
+            //Draw resizeable background structures (= background walls) and wall background sprites 
+            //(= the background texture that's revealed when a wall is destroyed) into the background render target
+            //These will be visible through the LOS effect.
+            //Could be drawn with one Submarine.DrawBack call, but we can avoid sorting by depth by doing it like this.
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
-			Submarine.DrawBack(spriteBatch, false, s => s is Structure && ((Structure)s).ResizeVertical && ((Structure)s).ResizeHorizontal);
-			Submarine.DrawBack(spriteBatch, false, s => s is Structure && ((Structure)s).DrawBelowWater && !(((Structure)s).ResizeVertical && ((Structure)s).ResizeHorizontal));
-			spriteBatch.End();
-            graphics.SetRenderTarget(renderTarget);
-			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, null);
-			spriteBatch.Draw(renderTargetBackground, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
-			spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
-			Submarine.DrawBack(spriteBatch, false, s => !(s is Structure));
-			Submarine.DrawBack(spriteBatch, false, s => s is Structure && !((Structure)s).DrawBelowWater && !(((Structure)s).ResizeVertical && ((Structure)s).ResizeHorizontal));
-            foreach (Character c in Character.CharacterList) c.Draw(spriteBatch, Cam);
+            Submarine.DrawBack(spriteBatch, false, s => s is Structure && s.ResizeVertical && s.ResizeHorizontal);
+            Submarine.DrawBack(spriteBatch, false, s => s is Structure && !(s.ResizeVertical && s.ResizeHorizontal) && ((Structure)s).Prefab.BackgroundSprite != null);
             spriteBatch.End();
 
-            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, null, null, cam.Transform);
-
+            //Start drawing to the normal render target (stuff that can't be seen through the LOS effect)
+            graphics.SetRenderTarget(renderTarget);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, null);
+            spriteBatch.Draw(renderTargetBackground, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+            spriteBatch.End();
+            //Draw the rest of the structures, characters and front structures
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
+            Submarine.DrawBack(spriteBatch, false, s => !(s is Structure) || !(s.ResizeVertical && s.ResizeHorizontal));
+            foreach (Character c in Character.CharacterList) c.Draw(spriteBatch, Cam);
             Submarine.DrawFront(spriteBatch, false, null);
             spriteBatch.End();
-
+            
 			//draw the rendertarget and particles that are only supposed to be drawn in water into renderTargetWater
 			graphics.SetRenderTarget(renderTargetWater);
 
