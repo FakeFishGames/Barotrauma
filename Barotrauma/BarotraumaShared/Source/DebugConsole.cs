@@ -2257,7 +2257,7 @@ namespace Barotrauma
             currentAutoCompletedIndex = 0;
         }
 
-        public static string SelectMessage(int direction)
+        public static string SelectMessage(int direction, string currentText = null)
         {
             if (Messages.Count == 0) return "";
 
@@ -2270,7 +2270,7 @@ namespace Barotrauma
 				if (selectedIndex < 0) selectedIndex = Messages.Count - 1;
 				selectedIndex = selectedIndex % Messages.Count;
 				if (++i >= Messages.Count) break;
-			} while (!Messages[selectedIndex].IsCommand);
+			} while (!Messages[selectedIndex].IsCommand || Messages[selectedIndex].Text == currentText);
 
             return Messages[selectedIndex].Text;            
         }
