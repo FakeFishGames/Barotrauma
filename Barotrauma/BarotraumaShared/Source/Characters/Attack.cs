@@ -72,17 +72,32 @@ namespace Barotrauma
         [Serialize(false, false)]
         public bool OnlyHumans { get; private set; }
 
+        //force applied to the attacking limb (or limbs defined using ApplyForceOnLimbs)
+        //the direction of the force is towards the target that's being attacked
         [Serialize(0.0f, false)]
         public float Force { get; private set; }
 
+        //torque applied to the attacking limb
         [Serialize(0.0f, false)]
         public float Torque { get; private set; }
 
+        //impulse applied to the target the attack hits
+        //the direction of the impulse is from this limb towards the target (use negative values to pull the target closer)
         [Serialize(0.0f, false)]
         public float TargetImpulse { get; private set; }
 
+        //impulse applied to the target, in world space coordinates (i.e. 0,-1 pushes the target downwards)
+        [Serialize("0.0, 0.0", false)]
+        public Vector2 TargetImpulseWorld { get; private set; }
+
+        //force applied to the target the attack hits 
+        //the direction of the force is from this limb towards the target (use negative values to pull the target closer)
         [Serialize(0.0f, false)]
         public float TargetForce { get; private set; }
+
+        //force applied to the target, in world space coordinates (i.e. 0,-1 pushes the target downwards)
+        [Serialize("0.0, 0.0", false)]
+        public Vector2 TargetForceWorld { get; private set; }
 
         [Serialize(0.0f, false)]
         public float SeverLimbsProbability { get; set; }
