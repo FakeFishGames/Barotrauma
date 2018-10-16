@@ -170,9 +170,14 @@ namespace Barotrauma.Networking
                         {
                             DebugConsole.NewMessage(
                                 "Received msg " + thisEventID + " (waiting for " + (lastReceivedID + 1) + ")",
-                                thisEventID < lastReceivedID + 1
-                                    ? Microsoft.Xna.Framework.Color.Yellow
-                                    : Microsoft.Xna.Framework.Color.Red);
+                                NetIdUtils.IdMoreRecent(thisEventID, (UInt16)(lastReceivedID + 1))
+                                    ? Microsoft.Xna.Framework.Color.Red
+                                    : Microsoft.Xna.Framework.Color.Yellow);
+                        }
+                        
+                        if (NetIdUtils.IdMoreRecent(thisEventID, (UInt16)(lastReceivedID + 1)))
+                        {
+                            GameMain.Client.ReportError(ClientNetError.MISSING_EVENT, expectedID: (UInt16)(lastReceivedID + 1), eventID: thisEventID);
                         }
                     }
                     else if (entity == null)
@@ -180,6 +185,7 @@ namespace Barotrauma.Networking
                         DebugConsole.NewMessage(
                             "Received msg " + thisEventID + ", entity " + entityID + " not found",
                             Microsoft.Xna.Framework.Color.Red);
+                        GameMain.Client.ReportError(ClientNetError.MISSING_ENTITY, eventID: thisEventID, entityID: entityID);
                     }
                     
                     msg.Position += msgLength * 8;

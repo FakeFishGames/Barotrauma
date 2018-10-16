@@ -17,7 +17,9 @@ namespace Barotrauma.Networking
         FILE_REQUEST,   //request a (submarine) file from the server
         
         RESPONSE_STARTGAME, //tell the server whether you're ready to start
-        SERVER_COMMAND      //tell the server to end a round or kick/ban someone (special permissions required)
+        SERVER_COMMAND,     //tell the server to end a round or kick/ban someone (special permissions required)
+
+        ERROR           //tell the server that an error occurred
     }
     enum ClientNetObject
     {
@@ -27,6 +29,12 @@ namespace Barotrauma.Networking
         VOTE,           //you get the idea
         CHARACTER_INPUT,
         ENTITY_STATE
+    }
+
+    enum ClientNetError
+    {
+        MISSING_EVENT, //client was expecting a previous event
+        MISSING_ENTITY //client can't find an entity of a certain ID
     }
 
     enum ServerPacketHeader
