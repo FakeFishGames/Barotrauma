@@ -1153,6 +1153,10 @@ namespace Barotrauma
                             AnimationParams.CreateDummy(fullPath, speciesName, animType, type);
                         }
                     }
+                    if (!AllFiles.Contains(configFilePath))
+                    {
+                        AllFiles.Add(configFilePath);
+                    }
                     SpawnCharacter(configFilePath, ragdollParams);
                     return true;
                 }
