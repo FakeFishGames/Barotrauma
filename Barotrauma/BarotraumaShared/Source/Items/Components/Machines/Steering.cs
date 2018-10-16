@@ -67,6 +67,7 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
+                    PosToMaintain = null;
                     MaintainPos = false;
                     LevelEndSelected = false;
                     LevelStartSelected = false;
