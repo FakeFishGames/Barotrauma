@@ -1165,13 +1165,13 @@ namespace Barotrauma
                     var box = new GUIMessageBox("Create New Character", string.Empty, new string[] { "Cancel", "Create" }, messageBoxWidth, messageBoxHeight * 2);
                     box.Content.ChildAnchor = Anchor.TopCenter;
                     box.Content.AbsoluteSpacing = 20;
+                    int elementSize = 30;
                     var listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.9f), box.Content.RectTransform));
-                    var topGroup = new GUILayoutGroup(new RectTransform(new Vector2(1, 0.3f), listBox.Content.RectTransform)) { AbsoluteSpacing = 2};
-                    float elementSize = 0.1f;
+                    var topGroup = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 3 + 20), listBox.Content.RectTransform)) { AbsoluteSpacing = 2};
                     var fields = new List<GUIComponent>();
                     for (int i = 0; i < 3; i++)
                     {
-                        var mainElement = new GUIFrame(new RectTransform(new Vector2(1, elementSize), topGroup.RectTransform), style: null, color: Color.Gray * 0.25f);
+                        var mainElement = new GUIFrame(new RectTransform(new Point(topGroup.RectTransform.Rect.Width, elementSize), topGroup.RectTransform), style: null, color: Color.Gray * 0.25f);
                         fields.Add(mainElement);
                         RectTransform leftElement = new RectTransform(new Vector2(0.5f, 1), mainElement.RectTransform, Anchor.TopLeft);
                         RectTransform rightElement = new RectTransform(new Vector2(0.5f, 1), mainElement.RectTransform, Anchor.TopRight);
@@ -1191,9 +1191,60 @@ namespace Barotrauma
                                 break;
                         }
                     }
-                    var codeArea = new GUIFrame(new RectTransform(Vector2.One, listBox.Content.RectTransform), style: null) { CanBeFocused = false };
+                    var codeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), listBox.Content.RectTransform), style: null) { CanBeFocused = false };
                     new GUITextBlock(new RectTransform(new Vector2(1, 0.05f), codeArea.RectTransform), "Custom code:");
                     new GUITextBox(new RectTransform(new Vector2(1, 1 - 0.05f), codeArea.RectTransform, Anchor.BottomLeft), string.Empty, textAlignment: Alignment.TopLeft);
+                    // Spacing
+                    new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), style: null);
+                    // Limbs
+                    var limbs = new Dictionary<XElement, object[]>();
+                    var limbElements = new List<GUIComponent>();
+                    // TODO: add a label
+                    var buttonElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), listBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
+                    {
+                        CanBeFocused = false
+                    };
+                    var minusButton = new GUIButton(new RectTransform(new Point(buttonElement.Rect.Height, buttonElement.Rect.Height), buttonElement.RectTransform), "-")
+                    {
+                        OnClicked = (b, d) =>
+                        {
+                            var element = limbElements.LastOrDefault();
+                            if (element == null) { return false; }
+                            element.RectTransform.Parent = null;
+                            limbElements.Remove(element);
+                            return true;
+                        }
+                    };
+                    var plusButton = new GUIButton(new RectTransform(new Point(buttonElement.Rect.Height, buttonElement.Rect.Height), buttonElement.RectTransform)
+                    {
+                        AbsoluteOffset = new Point(minusButton.Rect.Width + 10, 0)
+                    }, "+")
+                    {
+                        OnClicked = (b, d) =>
+                        {
+                            var limbElement = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 3), listBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
+                            {
+                                CanBeFocused = false
+                            };
+                            var group = new GUILayoutGroup(new RectTransform(Vector2.One, limbElement.RectTransform)) { AbsoluteSpacing = 2 };
+                            int id = limbElements.Count;
+                            var label = new GUITextBlock(new RectTransform(new Vector2(1, 0.3f), group.RectTransform), $"Limb {id}");
+                            var field = new GUIFrame(new RectTransform(new Vector2(1, 0.3f), group.RectTransform), style: null);
+                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), field.RectTransform, Anchor.TopLeft), $"ID");
+                            // TODO: name, source rect
+                            new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), field.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
+                            {
+                                IntValue = id,
+                                OnValueChanged = numInput =>
+                                {
+                                    id = numInput.IntValue;
+                                    label.Text = $"Limb {id}";
+                                }
+                            };
+                            limbElements.Add(limbElement);
+                            return true;
+                        }
+                    };
                     box.Buttons[0].OnClicked += (b, d) =>
                     {
                         box.Close();
