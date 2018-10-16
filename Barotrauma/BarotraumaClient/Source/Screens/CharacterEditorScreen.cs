@@ -274,6 +274,56 @@ namespace Barotrauma
         {
             character.AnimController.SetPosition(ConvertUnits.ToSimUnits(position), false);
         }
+
+        // Method for creating a new character from scratch. TODO: refactor so that the user can provide most of the data via GUI elements.
+        private void CreateCharacter(string name)
+        {
+            string speciesName = name;
+            string mainFolder = $"Content/Characters/{speciesName}";
+            // Config file
+            string configFilePath = $"{mainFolder}/{speciesName}.xml";
+            if (ContentPackage.GetFilesOfType(GameMain.SelectedPackages, ContentType.Character).None(path => path.Contains(speciesName)))
+            {
+                // Create the config file
+                XElement mainElement = new XElement("Character",
+                    new XAttribute("name", speciesName),
+                    new XAttribute("humanoid", false),
+                    new XElement("ragdolls"),
+                    new XElement("animations"),
+                    new XElement("health"),
+                    new XElement("ai"));
+                XDocument doc = new XDocument(mainElement);
+                if (!Directory.Exists(mainFolder))
+                {
+                    Directory.CreateDirectory(mainFolder);
+                }
+                doc.Save(configFilePath);
+                // Add to the content package
+                var contentPackage = GameMain.Config.SelectedContentPackages.Last();
+                contentPackage.AddFile(configFilePath, ContentType.Character);
+                contentPackage.Save(contentPackage.Path);
+            }
+            // Ragdoll
+            string ragdollFolder = RagdollParams.GetDefaultFolder(speciesName);
+            string ragdollPath = RagdollParams.GetDefaultFile(speciesName);
+            RagdollParams ragdollParams = RagdollParams.CreateDummy<FishRagdollParams>(ragdollPath, speciesName);
+            // Animations
+            string animFolder = AnimationParams.GetDefaultFolder(speciesName);
+            foreach (AnimationType animType in Enum.GetValues(typeof(AnimationType)))
+            {
+                if (animType != AnimationType.NotDefined)
+                {
+                    Type type = AnimationParams.GetParamTypeFromAnimType(animType, false);
+                    string fullPath = AnimationParams.GetDefaultFile(speciesName, animType);
+                    AnimationParams.CreateDummy(fullPath, speciesName, animType, type);
+                }
+            }
+            if (!AllFiles.Contains(configFilePath))
+            {
+                AllFiles.Add(configFilePath);
+            }
+            SpawnCharacter(configFilePath, ragdollParams);
+        }
         #endregion
 
         #region GUI
@@ -1113,56 +1163,25 @@ namespace Barotrauma
             {
                 OnClicked = (button, data) =>
                 {
-                    string speciesName = "Wormx";
-                    string mainFolder = $"Content/Characters/{speciesName}";
-                    // Config file
-                    string configFilePath = $"{mainFolder}/{speciesName}.xml";
-                    if (ContentPackage.GetFilesOfType(GameMain.SelectedPackages, ContentType.Character).None(path => path.Contains(speciesName)))
+                    var box = new GUIMessageBox("Create New Character", "Character Name", new string[] { "Cancel", "Save" }, messageBoxWidth, messageBoxHeight);
+                    var nameField = new GUITextBox(new RectTransform(new Point(box.Content.Rect.Width, 30), box.Content.RectTransform, Anchor.Center), "Wormx");
+                    box.Buttons[0].OnClicked += (b, d) =>
                     {
-                        // Create the config file
-                        XElement mainElement = new XElement("Character",
-                            new XAttribute("name", speciesName),
-                            new XAttribute("humanoid", false),
-                            new XElement("ragdolls"),
-                            new XElement("animations"),
-                            new XElement("health"),
-                            new XElement("ai"));
-                        XDocument doc = new XDocument(mainElement);
-                        if (!Directory.Exists(mainFolder))
-                        {
-                            Directory.CreateDirectory(mainFolder);
-                        }
-                        doc.Save(configFilePath);
-                        // Add to the content package
-                        var contentPackage = GameMain.Config.SelectedContentPackages.Last();
-                        contentPackage.AddFile(configFilePath, ContentType.Character);
-                        contentPackage.Save(contentPackage.Path);
-                    }
-                    // Ragdoll
-                    string ragdollFolder = RagdollParams.GetDefaultFolder(speciesName);
-                    string ragdollPath = RagdollParams.GetDefaultFile(speciesName);
-                    RagdollParams ragdollParams = RagdollParams.CreateDummy<FishRagdollParams>(ragdollPath, speciesName);
-                    // Animations
-                    string animFolder = AnimationParams.GetDefaultFolder(speciesName);
-                    foreach (AnimationType animType in Enum.GetValues(typeof(AnimationType)))
+                        box.Close();
+                        return true;
+                    };
+                    box.Buttons[1].OnClicked += (b, d) =>
                     {
-                        if (animType != AnimationType.NotDefined)
-                        {
-                            Type type = AnimationParams.GetParamTypeFromAnimType(animType, false);
-                            string fullPath = AnimationParams.GetDefaultFile(speciesName, animType);
-                            AnimationParams.CreateDummy(fullPath, speciesName, animType, type);
-                        }
-                    }
-                    if (!AllFiles.Contains(configFilePath))
-                    {
-                        AllFiles.Add(configFilePath);
-                    }
-                    SpawnCharacter(configFilePath, ragdollParams);
+                        // TODO: provide data from the user selections
+                        CreateCharacter(nameField.Text);
+                        GUI.AddMessage($"New Character Created with the Name {nameField.Text}", Color.Green, font: GUI.Font);
+                        box.Close();
+                        return true;
+                    };
                     return true;
                 }
             };
         }
-
         #endregion
 
         #region Params
