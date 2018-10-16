@@ -219,7 +219,7 @@ namespace Barotrauma
                         targetIdentifiers = new HashSet<string>();
                         for (int i = 0; i < identifiers.Length; i++)
                         {
-                            targetIdentifiers.Add(identifiers[i].Trim());
+                            targetIdentifiers.Add(identifiers[i].Trim().ToLowerInvariant());
                         }
                         break;
                     case "duration":

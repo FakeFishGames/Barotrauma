@@ -161,6 +161,15 @@ namespace Barotrauma
                 //ignore all hulls with fires or water in them
                 targetHulls.RemoveAll(h => h.FireSources.Any() || h.WaterVolume / h.Volume > 0.1f);
 
+                //remove ballast hulls
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.HasTag("ballast") && targetHulls.Contains(item.CurrentHull))
+                    {
+                        targetHulls.Remove(item.CurrentHull);
+                    }
+                }
+
                 //ignore hulls that are too low to stand inside
                 if (character.AnimController is HumanoidAnimController animController)
                 {

@@ -1780,7 +1780,7 @@ namespace Barotrauma
 
             if (wiringMode)
             {
-                if (!dummyCharacter.SelectedItems.Any(it => it != null && it.HasTag("Wire")))
+                if (!dummyCharacter.SelectedItems.Any(it => it != null && it.HasTag("wire")))
                 {
                     wiringToolPanel.GetChild<GUIListBox>().Deselect();
                 }
