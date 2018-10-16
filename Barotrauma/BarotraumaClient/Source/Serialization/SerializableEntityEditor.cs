@@ -282,6 +282,7 @@ namespace Barotrauma
             layoutGroup.RectTransform.NonScaledSize = new Point(layoutGroup.RectTransform.NonScaledSize.X, contentHeight);
         }
 
+        // TODO: decouple gui element creation from serializable entities -> create static methods for creating fields (that can be used also in other gui elements)
         private GUIComponent CreateNewField(SerializableProperty property, ISerializableEntity entity)
         {
             object value = property.GetValue();
