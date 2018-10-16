@@ -105,15 +105,15 @@ namespace Barotrauma
 
                 if (PlayerInput.KeyHit(Keys.Up))
                 {
-                    textBox.Text = SelectMessage(-1);
+                    textBox.Text = SelectMessage(-1, textBox.Text);
                 }
                 else if (PlayerInput.KeyHit(Keys.Down))
                 {
-                    textBox.Text = SelectMessage(1);
+                    textBox.Text = SelectMessage(1, textBox.Text);
                 }
                 else if (PlayerInput.KeyHit(Keys.Tab))
                 {
-                    textBox.Text = AutoComplete(textBox.Text);
+                     textBox.Text = AutoComplete(textBox.Text);
                 }
 
                 if (PlayerInput.KeyHit(Keys.Enter))
