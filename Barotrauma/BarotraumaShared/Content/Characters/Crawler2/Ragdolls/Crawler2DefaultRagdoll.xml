@@ -7,7 +7,7 @@
   jointscale="0.7"
   canentersubmarine="True">
   <collider
-    width="80"
+    height="80"
     radius="40" />
   <!-- Head -->
   <limb

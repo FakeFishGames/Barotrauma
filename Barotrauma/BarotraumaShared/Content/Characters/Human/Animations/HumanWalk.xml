@@ -1,5 +1,4 @@
 ﻿<HumanWalk
-  AnimationType="Walk"
   getupforce="0.3"
   cyclespeed="3.531664"
   footmovestrength="15"
