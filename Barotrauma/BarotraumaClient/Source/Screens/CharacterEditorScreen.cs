@@ -275,8 +275,7 @@ namespace Barotrauma
             character.AnimController.SetPosition(ConvertUnits.ToSimUnits(position), false);
         }
 
-        // Method for creating a new character from scratch. TODO: refactor so that the user can provide most of the data via GUI elements.
-        private void CreateCharacter(string name)
+        private void CreateCharacter(string name, bool isHumanoid, params object[] ragdollConfig)
         {
             string speciesName = name;
             string mainFolder = $"Content/Characters/{speciesName}";
@@ -287,7 +286,7 @@ namespace Barotrauma
                 // Create the config file
                 XElement mainElement = new XElement("Character",
                     new XAttribute("name", speciesName),
-                    new XAttribute("humanoid", false),
+                    new XAttribute("humanoid", isHumanoid),
                     new XElement("ragdolls"),
                     new XElement("animations"),
                     new XElement("health"),
@@ -306,7 +305,7 @@ namespace Barotrauma
             // Ragdoll
             string ragdollFolder = RagdollParams.GetDefaultFolder(speciesName);
             string ragdollPath = RagdollParams.GetDefaultFile(speciesName);
-            RagdollParams ragdollParams = RagdollParams.CreateDummy<FishRagdollParams>(ragdollPath, speciesName);
+            RagdollParams ragdollParams = RagdollParams.CreateDummy<FishRagdollParams>(ragdollPath, speciesName, ragdollConfig);
             // Animations
             string animFolder = AnimationParams.GetDefaultFolder(speciesName);
             foreach (AnimationType animType in Enum.GetValues(typeof(AnimationType)))
@@ -1164,8 +1163,34 @@ namespace Barotrauma
                 OnClicked = (button, data) =>
                 {
                     var box = new GUIMessageBox("Create New Character", string.Empty, new string[] { "Cancel", "Create" }, messageBoxWidth, messageBoxHeight);
-                    var nameField = new GUITextBox(new RectTransform(new Point(box.Content.Rect.Width / 2, 30), box.Content.RectTransform, Anchor.Center), "Worm X");
-                    string name = nameField.Text.RemoveWhitespace().CapitaliseFirstInvariant();
+                    box.Content.ChildAnchor = Anchor.TopCenter;
+                    float elementSize = 0.05f;
+                    var fields = new List<GUIComponent>();
+                    for (int i = 0; i < 3; i++)
+                    {
+                        var mainElement = new GUIFrame(new RectTransform(new Vector2(1, elementSize), box.Content.RectTransform), style: null, color: Color.Gray * 0.25f);
+                        fields.Add(mainElement);
+                        RectTransform leftElement = new RectTransform(new Vector2(0.5f, 1), mainElement.RectTransform, Anchor.TopLeft);
+                        RectTransform rightElement = new RectTransform(new Vector2(0.5f, 1), mainElement.RectTransform, Anchor.TopRight);
+                        switch (i)
+                        {
+                            case 0:
+                                new GUITextBlock(leftElement, "Name");
+                                new GUITextBox(rightElement, "Worm X");
+                                break;
+                            case 1:
+                                new GUITextBlock(leftElement, "Size");
+                                new GUINumberInput(rightElement, GUINumberInput.NumberType.Float) { FloatValue = 10 };
+                                break;
+                            case 2:
+                                new GUITextBlock(leftElement, "Is Humanoid?");
+                                new GUITickBox(rightElement, string.Empty);
+                                break;
+                        }
+                    }
+                    var codeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.8f - elementSize * fields.Count), box.Content.RectTransform), style: null);
+                    new GUITextBlock(new RectTransform(new Vector2(1, elementSize), codeArea.RectTransform), "Custom code:");
+                    new GUITextBox(new RectTransform(new Vector2(1, 1 - elementSize), codeArea.RectTransform, Anchor.BottomLeft), string.Empty, color: Color.Gray * 0.25f, textAlignment: Alignment.TopLeft);
                     box.Buttons[0].OnClicked += (b, d) =>
                     {
                         box.Close();
@@ -1173,8 +1198,41 @@ namespace Barotrauma
                     };
                     box.Buttons[1].OnClicked += (b, d) =>
                     {
-                        // TODO: provide data from the user selections
-                        CreateCharacter(name);
+                        string name = fields[0].GetChild<GUITextBox>().Text.RemoveWhitespace().CapitaliseFirstInvariant();
+                        float size = fields[1].GetChild<GUINumberInput>().FloatValue;
+                        bool isHumanoid = fields[2].GetChild<GUITickBox>().Selected;
+                        // TODO: gui elements for adding and removing limbs and joints
+                        // TODO: parse from the code field and gui elements
+                        // TODO: parse from css/html file
+                        var ragdollParams = new object[]
+                        {
+                            new XAttribute("type", name),
+                            new XElement("collider", new XAttribute("radius", size)),
+                            new XElement("limb",
+                                new XAttribute("id", 0),
+                                new XAttribute("type", LimbType.Head.ToString().ToLowerInvariant()),
+                                new XAttribute("radius", 30),
+                                new XAttribute("height", 86),
+                                new XAttribute("steerforce", 1),
+                                new XElement("sprite",
+                                    new XAttribute("texture", "Content/Characters/Mantis/mantis.png"),
+                                    new XAttribute("sourcerect", "0,0,101,168"))),
+                            new XElement("limb",
+                                new XAttribute("id", 1),
+                                new XAttribute("type", LimbType.Torso.ToString().ToLowerInvariant()),
+                                new XAttribute("width", 42),
+                                new XAttribute("height", 61),
+                                new XElement("sprite",
+                                    new XAttribute("texture", "Content/Characters/Mantis/mantis.png"),
+                                    new XAttribute("sourcerect", "3,168,59,64"))),
+                            new XElement("joint",
+                                new XAttribute("name", "Head to Torso"),
+                                new XAttribute("limb1", 0),
+                                new XAttribute("limb2", 1),
+                                new XAttribute("limb1anchor", "-12.24539,-62.17848"),
+                                new XAttribute("limb2anchor", "0,20"))
+                        };
+                        CreateCharacter(name, isHumanoid, ragdollParams);
                         GUI.AddMessage($"New Character Created with the Name {name}", Color.Green, font: GUI.Font);
                         box.Close();
                         return true;
