@@ -518,7 +518,10 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime);
         
-        public void UpdateAttack(float deltaTime, Vector2 attackPosition, IDamageable damageTarget)
+        /// <summary>
+        /// Returns true if the attack successfully hit something
+        /// </summary>
+        public bool UpdateAttack(float deltaTime, Vector2 attackPosition, IDamageable damageTarget)
         {
             float dist = ConvertUnits.ToDisplayUnits(Vector2.Distance(SimPosition, attackPosition));
 
@@ -527,7 +530,6 @@ namespace Barotrauma
             body.ApplyTorque(Mass * character.AnimController.Dir * attack.Torque);
 
             bool wasHit = false;
-
             if (damageTarget != null)
             {
                 switch (attack.HitDetectionType)
@@ -596,10 +598,14 @@ namespace Barotrauma
                     attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, false);
 #endif
                 }
+                else
+                {
+                    wasHit = false;
+                }
             }
 
             Vector2 diff = attackPosition - SimPosition;
-            if (diff.LengthSquared() < 0.00001f) return;
+            if (diff.LengthSquared() < 0.00001f) return wasHit;
             
             if (attack.ApplyForceOnLimbs != null)
             {
@@ -619,7 +625,7 @@ namespace Barotrauma
                 body.ApplyLinearImpulse(Mass * attack.Force *
                     Vector2.Normalize(attackPosition - SimPosition), forcePos);
             }
-
+            return wasHit;
         }
         
         public void Remove()
