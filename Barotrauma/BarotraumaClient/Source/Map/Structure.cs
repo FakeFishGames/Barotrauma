@@ -174,8 +174,7 @@ namespace Barotrauma
             Color color = (isHighlighted) ? Color.Orange : spriteColor;
             if (IsSelected && editing)
             {
-                color = Color.Red;
-
+                color = Color.Lerp(color, Color.Gold, 0.5f);
                 GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, -rect.Y, rect.Width, rect.Height), color);
             }
 
