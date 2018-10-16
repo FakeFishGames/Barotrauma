@@ -818,7 +818,12 @@ namespace Barotrauma
 
             bool useScissorRect = messages.Any(m => !m.WorldSpace);
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
-            if (useScissorRect) spriteBatch.GraphicsDevice.ScissorRectangle = HUDLayoutSettings.MessageAreaTop;
+            if (useScissorRect)
+            {
+                spriteBatch.End();
+                spriteBatch.GraphicsDevice.ScissorRectangle = HUDLayoutSettings.MessageAreaTop;
+                spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+            }
 
             foreach (GUIMessage msg in messages)
             {
@@ -831,7 +836,12 @@ namespace Barotrauma
                 break;                
             }
 
-            if (useScissorRect) spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
+            if (useScissorRect)
+            {
+                spriteBatch.End();
+                spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
+                spriteBatch.Begin(SpriteSortMode.Deferred);
+            }
             
             foreach (GUIMessage msg in messages)
             {

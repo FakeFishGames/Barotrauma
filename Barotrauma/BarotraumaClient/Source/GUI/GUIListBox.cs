@@ -522,9 +522,14 @@ namespace Barotrauma
             if (!Visible) return;
 
             Content.DrawManually(spriteBatch, alsoChildren: false);
-
+            
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
-            if (HideChildrenOutsideFrame) spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, Content.Rect);
+            if (HideChildrenOutsideFrame)
+            {                    
+                spriteBatch.End();
+                spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, Content.Rect);
+                spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+            }
 
             var children = Content.Children;
             int lastVisible = 0;
@@ -542,8 +547,13 @@ namespace Barotrauma
                 child.DrawManually(spriteBatch, alsoChildren: true, recursive: true);
                 i++;
             }
-            
-            if (HideChildrenOutsideFrame) spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
+
+            if (HideChildrenOutsideFrame)
+            {
+                spriteBatch.End();
+                spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
+                spriteBatch.Begin(SpriteSortMode.Deferred);
+            }
 
             if (ScrollBar.Visible) ScrollBar.DrawManually(spriteBatch, alsoChildren: true, recursive: true);
         }

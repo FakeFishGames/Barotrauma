@@ -513,6 +513,8 @@ namespace Barotrauma
 #endif
 
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
             if (slots[slotIndex].SubInventoryDir > 0)
             {
                 spriteBatch.GraphicsDevice.ScissorRectangle = new Rectangle(
@@ -525,9 +527,10 @@ namespace Barotrauma
                     new Point(0, 0),
                     new Point(GameMain.GraphicsWidth, slots[slotIndex].Rect.Y));
             }
-
             container.Inventory.Draw(spriteBatch, true);
+            spriteBatch.End();
             spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
+            spriteBatch.Begin(SpriteSortMode.Deferred);
 
             container.InventoryBottomSprite?.Draw(spriteBatch,
                 new Vector2(slots[slotIndex].Rect.Center.X, slots[slotIndex].Rect.Y) + slots[slotIndex].DrawOffset,

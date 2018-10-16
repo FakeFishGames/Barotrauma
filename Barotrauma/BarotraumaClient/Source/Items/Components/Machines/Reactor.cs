@@ -342,8 +342,17 @@ namespace Barotrauma.Items.Components
 
         private void DrawFissionRateMeter(SpriteBatch spriteBatch, GUICustomComponent container)
         {
+            Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
+            spriteBatch.End();
+            spriteBatch.GraphicsDevice.ScissorRectangle = container.Rect;
+            spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+
             DrawMeter(spriteBatch, container.Rect,
                 fissionRateMeter, FissionRate, new Vector2(0.0f, 100.0f), optimalFissionRate, allowedFissionRate);
+
+            spriteBatch.End();
+            spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
+            spriteBatch.Begin(SpriteSortMode.Deferred);
         }
 
         private void DrawTurbineOutputMeter(SpriteBatch spriteBatch, GUICustomComponent container)
@@ -422,17 +431,22 @@ namespace Barotrauma.Items.Components
             }
             else
             {
+                spriteBatch.End();
+                Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
+                spriteBatch.GraphicsDevice.ScissorRectangle = new Rectangle(0,0,GameMain.GraphicsWidth, (int)(pos.Y + (meterSprite.size.Y - meterSprite.Origin.Y) * scale));
+                spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+
                 sectorSprite.Draw(spriteBatch, pos, Color.LightGreen, MathHelper.PiOver2, scale);
 
-                Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
-                spriteBatch.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, GameMain.GraphicsWidth, (int)(pos.Y + (meterSprite.size.Y - meterSprite.Origin.Y) * scale));
                 sectorSprite.Draw(spriteBatch, pos, Color.Orange, optimalSectorRad.X, scale);
                 sectorSprite.Draw(spriteBatch, pos, Color.Red, allowedSectorRad.X, scale);
 
                 sectorSprite.Draw(spriteBatch, pos, Color.Orange, MathHelper.Pi + optimalSectorRad.Y, scale);
                 sectorSprite.Draw(spriteBatch, pos, Color.Red, MathHelper.Pi + allowedSectorRad.Y, scale);
 
+                spriteBatch.End();
                 spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
+                spriteBatch.Begin(SpriteSortMode.Deferred);
             }
 
             meterSprite.Draw(spriteBatch, pos, 0, scale);
@@ -453,6 +467,7 @@ namespace Barotrauma.Items.Components
 
         private void DrawGraph(IList<float> graph, SpriteBatch spriteBatch, Rectangle rect, float maxVal, float xOffset, Color color)
         {
+            //TODO: fix
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
             spriteBatch.GraphicsDevice.ScissorRectangle = rect;
 
