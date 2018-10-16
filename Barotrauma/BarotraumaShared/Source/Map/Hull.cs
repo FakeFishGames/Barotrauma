@@ -796,6 +796,7 @@ namespace Barotrauma
                 if (item.GetComponent<Items.Components.Engine>() != null) roomItems.Add("engine");
                 if (item.GetComponent<Items.Components.Steering>() != null) roomItems.Add("steering");
                 if (item.GetComponent<Items.Components.Sonar>() != null) roomItems.Add("sonar");
+                if (item.HasTag("ballast")) roomItems.Add("ballast");
             }
 
             if (roomItems.Contains("reactor"))
@@ -804,6 +805,8 @@ namespace Barotrauma
                 return TextManager.Get("EngineRoom");
             else if (roomItems.Contains("steering") && roomItems.Contains("sonar"))
                 return TextManager.Get("CommandRoom");
+            else if (roomItems.Contains("ballast"))
+                return TextManager.Get("Ballast");
 
             if (ConnectedGaps.Any(g => !g.IsRoomToRoom && g.ConnectedDoor != null))
             {

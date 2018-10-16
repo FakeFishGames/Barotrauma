@@ -81,7 +81,7 @@ namespace Barotrauma
                 }
             }
 
-            ItemIdentifiers = orderElement.GetAttributeStringArray("targetitemidentifiers", new string[0]);
+            ItemIdentifiers = orderElement.GetAttributeStringArray("targetitemidentifiers", new string[0], trim: true, convertToLowerInvariant: true);
             Color = orderElement.GetAttributeColor("color", Color.White);
             FadeOutTime = orderElement.GetAttributeFloat("fadeouttime", 0.0f);
             UseController = orderElement.GetAttributeBool("usecontroller", false);

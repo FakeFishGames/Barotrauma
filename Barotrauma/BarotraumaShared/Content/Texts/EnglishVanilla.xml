@@ -599,6 +599,7 @@
   <EngineRoom>Engine room</EngineRoom>
   <CommandRoom>Command room</CommandRoom>
   <Airlock>Airlock</Airlock>
+  <Ballast>Ballast</Ballast>
   <SubTopLeft>Upper aft side</SubTopLeft>
   <SubTopCenter>Upper mid</SubTopCenter>
   <SubTopRight>Upper fore side</SubTopRight>
