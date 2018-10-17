@@ -618,6 +618,7 @@ namespace Barotrauma.Networking
             string errorStr = "Unhandled error report";
 
             ClientNetError error = (ClientNetError)inc.ReadByte();
+            int levelEqualityCheckVal = inc.ReadInt32();
             switch (error)
             {
                 case ClientNetError.MISSING_EVENT:
@@ -631,21 +632,26 @@ namespace Barotrauma.Networking
                     Entity entity = Entity.FindEntityByID(entityID);
                     if (entity == null)
                     {
-                        errorStr = "Received an update for an entity that doesn't exist (event id " + eventID.ToString() + ", entity id " + entityID.ToString() + ")";
+                        errorStr = "Received an update for an entity that doesn't exist (event id " + eventID.ToString() + ", entity id " + entityID.ToString() + ").";
                     }
                     else if (entity is Character character)
                     {
-                        errorStr = "Missing character " + character.Name + " (event id " + eventID.ToString() + ", entity id " + entityID.ToString() + ")";
+                        errorStr = "Missing character " + character.Name + " (event id " + eventID.ToString() + ", entity id " + entityID.ToString() + ").";
                     }
                     else if (entity is Item item)
                     {
-                        errorStr = "Missing item " + item.Name + " (event id " + eventID.ToString() + ", entity id " + entityID.ToString() + ")";
+                        errorStr = "Missing item " + item.Name + " (event id " + eventID.ToString() + ", entity id " + entityID.ToString() + ").";
                     }
                     else
                     {
-                        errorStr = "Missing entity " + entity.ToString() + " (event id " + eventID.ToString() + ", entity id " + entityID.ToString() + ")";
+                        errorStr = "Missing entity " + entity.ToString() + " (event id " + eventID.ToString() + ", entity id " + entityID.ToString() + ").";
                     }
                     break;
+            }
+
+            if (Level.Loaded != null && levelEqualityCheckVal != Level.Loaded.EqualityCheckVal)
+            {
+                errorStr += " Level equality check failed, something went wrong during level generation (seed " + Level.Loaded.Seed + ").";
             }
 
             if (c == null)
@@ -654,7 +660,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-				GameServer.Log(c.Name + " has reported an error: " + errorStr, ServerLog.MessageType.Error);
+				Log(c.Name + " has reported an error: " + errorStr, ServerLog.MessageType.Error);
 				KickClient(c, errorStr);
             }
         }

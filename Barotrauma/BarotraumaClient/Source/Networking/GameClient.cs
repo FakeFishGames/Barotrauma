@@ -1647,11 +1647,12 @@ namespace Barotrauma.Networking
             return false;
         }
 
-        public void ReportError(ClientNetError error,UInt16 expectedID=0,UInt16 eventID=0,UInt16 entityID=0)
+        public void ReportError(ClientNetError error, UInt16 expectedID = 0, UInt16 eventID = 0, UInt16 entityID = 0)
         {
             NetOutgoingMessage outMsg = client.CreateMessage();
             outMsg.Write((byte)ClientPacketHeader.ERROR);
             outMsg.Write((byte)error);
+            outMsg.Write(Level.Loaded == null ? 0 : Level.Loaded.EqualityCheckVal);
             switch (error)
             {
                 case ClientNetError.MISSING_EVENT:
