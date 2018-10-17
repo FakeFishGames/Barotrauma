@@ -128,6 +128,16 @@ namespace Barotrauma
             get { return seed; }
         }
 
+        /// <summary>
+        /// A random integer assigned at the end of level generation. If these values differ between clients/server,
+        /// it means the levels aren't identical for some reason and there will most likely be major ID mismatches.
+        /// </summary>
+        public int EqualityCheckVal
+        {
+            get;
+            private set;
+        }
+
         public float Difficulty
         {
             get;
@@ -538,6 +548,9 @@ namespace Barotrauma
             GenerateSeaFloor(mirror);
 
             backgroundSpriteManager.PlaceSprites(this, generationParams.BackgroundSpriteAmount);
+
+            EqualityCheckVal = Rand.Int(int.MaxValue, Rand.RandSync.Server);
+
 #if CLIENT
             backgroundCreatureManager.SpawnSprites(80);
 #endif
