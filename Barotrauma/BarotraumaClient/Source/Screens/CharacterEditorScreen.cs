@@ -1178,7 +1178,7 @@ namespace Barotrauma
             var topGroup = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 4 + 20), listBox.Content.RectTransform)) { AbsoluteSpacing = 2 };
             var fields = new List<GUIComponent>();
             GUITextBox texturePathElement = null;
-            void UpdateTexturePathElement() => texturePathElement.Text = $"Content/Characters/{name}.png";
+            void UpdateTexturePathElement() => texturePathElement.Text = $"Content/Characters/{name}/{name}.png";
             for (int i = 0; i < 4; i++)
             {
                 var mainElement = new GUIFrame(new RectTransform(new Point(topGroup.RectTransform.Rect.Width, elementSize), topGroup.RectTransform), style: null, color: Color.Gray * 0.25f);
@@ -1231,8 +1231,8 @@ namespace Barotrauma
             new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), style: null);
             // Limbs
             new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), "Limbs:") { CanBeFocused = false };
-            var limbs = new List<XElement>();
-            var limbElements = new List<GUIComponent>();
+            var limbXElements = new List<XElement>();
+            var limbGUIElements = new List<GUIComponent>();
             var buttonElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), listBox.Content.RectTransform), style: null)
             {
                 CanBeFocused = false
@@ -1241,10 +1241,10 @@ namespace Barotrauma
             {
                 OnClicked = (b, d) =>
                 {
-                    var element = limbElements.LastOrDefault();
+                    var element = limbGUIElements.LastOrDefault();
                     if (element == null) { return false; }
                     element.RectTransform.Parent = null;
-                    limbElements.Remove(element);
+                    limbGUIElements.Remove(element);
                     return true;
                 }
             };
@@ -1259,16 +1259,23 @@ namespace Barotrauma
                     {
                         CanBeFocused = false
                     };
-                    int id = limbElements.Count;
-                    string limbName = string.Empty;
-                    LimbType limbType = LimbType.None;
-                    Rectangle sourceRect = Rectangle.Empty;
+                    int id = limbGUIElements.Count;
                     var group = new GUILayoutGroup(new RectTransform(Vector2.One, limbElement.RectTransform)) { AbsoluteSpacing = 2 };
                     var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), $"Limb {id}");
                     var idField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                     var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
+                    var limbType = LimbType.None;
+                    switch (limbGUIElements.Count)
+                    {
+                        case 0:
+                            limbType = LimbType.Head;
+                            break;
+                        case 1:
+                            limbType = LimbType.Torso;
+                            break;
+                    }
                     var limbTypeField = GUI.CreateEnumField(limbType, elementSize, "Limb Type", group.RectTransform, font: GUI.Font);
-                    var sourceRectField = GUI.CreateRectangleField(sourceRect, elementSize, "Source Rect", group.RectTransform, font: GUI.Font);
+                    var sourceRectField = GUI.CreateRectangleField(Rectangle.Empty, elementSize, "Source Rect", group.RectTransform, font: GUI.Font);
                     new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopLeft), "ID");
                     new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
                     {
@@ -1291,15 +1298,7 @@ namespace Barotrauma
                             label.Text = $"Limb {t}";
                             return true;
                         };
-                    limbElements.Add(limbElement);
-                    limbs.Add(new XElement("limb",
-                        new XAttribute("id", id),
-                        new XAttribute("name", limbName),
-                        new XAttribute("type", limbType.ToString()),
-                        new XElement("sprite",
-                            new XAttribute("texture", texturePathElement.Text),
-                            new XAttribute("sourcerect", $"{sourceRect.X}, {sourceRect.Y}, {sourceRect.Width}, {sourceRect.Height}"))
-                        ));
+                    limbGUIElements.Add(limbElement);
                     return true;
                 }
             };
@@ -1313,24 +1312,40 @@ namespace Barotrauma
             };
             box.Buttons[1].OnClicked += (b, d) =>
             {
-                foreach (var limbElement in limbElements)
+                // Parse the data from the GUI elements and store in XElements
+                for (int i = 0; i < limbGUIElements.Count; i++)
                 {
-
+                    var limbGUIElement = limbGUIElements[i];
+                    var allChildren = limbGUIElement.GetAllChildren();
+                    GUITextBlock GetField(string n) => allChildren.First(c => c is GUITextBlock textBlock && textBlock.Text == n) as GUITextBlock;
+                    int id = GetField("ID").Parent.GetChild<GUINumberInput>().IntValue;
+                    string limbName = GetField("Name").Parent.GetChild<GUITextBox>().Text;
+                    LimbType limbType = (LimbType)GetField("Limb Type").Parent.GetChild<GUIDropDown>().SelectedData;
+                    var rectInputs = GetField("Source Rect").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).ToArray();
+                    limbXElements.Add(new XElement("limb",
+                        new XAttribute("id", id),
+                        new XAttribute("name", limbName),
+                        new XAttribute("type", limbType.ToString()),
+                        new XAttribute("radius", size / 10),    // Placeholder value
+                        new XAttribute("height", size / 5),     // Placeholder value
+                        new XElement("sprite",
+                            new XAttribute("texture", texturePathElement.Text),
+                            new XAttribute("sourcerect", $"{rectInputs[0].IntValue}, {rectInputs[1].IntValue}, {rectInputs[2].IntValue}, {rectInputs[3].IntValue}"))
+                        ));
                 }
-
-                // TODO: parse the params from the gui elements
+                // TODO: parse the joint params from the gui elements
                 // TODO: parse from css/html file
                 var ragdollParams = new object[]
                 {
-                                new XAttribute("type", name),
-                                new XElement("collider", new XAttribute("radius", size)),   // TODO: if we set the radius, the collider cannot be a rectangle
-                                limbs,
-                                new XElement("joint",
-                                    new XAttribute("name", "Head to Torso"),
-                                    new XAttribute("limb1", 0),
-                                    new XAttribute("limb2", 1),
-                                    new XAttribute("limb1anchor", "-12.24539,-62.17848"),   // create from ids
-                                    new XAttribute("limb2anchor", "0,20"))                  // create from ids
+                    new XAttribute("type", name),
+                    new XElement("collider", new XAttribute("radius", size)),   // TODO: if we set the radius, the collider cannot be a rectangle
+                    limbXElements,
+                    new XElement("joint",
+                        new XAttribute("name", "Head to Torso"),
+                        new XAttribute("limb1", 0),
+                        new XAttribute("limb2", 1),
+                        new XAttribute("limb1anchor", "-12.24539,-62.17848"),   // create from ids
+                        new XAttribute("limb2anchor", "0,20"))                  // create from ids
                 };
                 CreateCharacter(name, isHumanoid, ragdollParams);
                 GUI.AddMessage($"New Character Created with the Name {name}", Color.Green, font: GUI.Font);
