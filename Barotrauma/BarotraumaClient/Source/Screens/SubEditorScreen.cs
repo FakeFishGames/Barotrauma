@@ -135,6 +135,10 @@ namespace Barotrauma
         public SubEditorScreen()
         {
             cam = new Camera();
+            WayPoint.ShowWayPoints = false;
+            WayPoint.ShowSpawnPoints = false;
+            Hull.ShowHulls = false;
+            Gap.ShowGaps = false;
             CreateUI();
         }
 
