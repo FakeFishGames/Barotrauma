@@ -13,6 +13,8 @@ int deformArrayHeight;
 float2 uvTopLeft;
 float2 uvBottomRight;
 
+float4 tintColor;
+
 struct VertexShaderInput
 {
 	float4 Position : SV_POSITION;
@@ -61,7 +63,7 @@ VertexShaderOutput mainVS(in VertexShaderInput input)
     };
 
     output.Position = mul(input.Position + float4(vertexOffset, 0, 0), xTransform);
-	output.Color = input.Color;
+	output.Color = input.Color * tintColor;
 	output.TexCoords = input.TexCoords;
 
 	return output;
