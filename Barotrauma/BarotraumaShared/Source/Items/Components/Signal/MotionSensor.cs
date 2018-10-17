@@ -13,17 +13,26 @@ namespace Barotrauma.Items.Components
 
         private bool motionDetected;
 
-        private float range;
+        private float rangeX, rangeY;
 
         private float updateTimer;
-
+        
         [InGameEditable, Serialize(0.0f, true)]
-        public float Range
+        public float RangeX
         {
-            get { return range; }
+            get { return rangeX; }
             set
             {
-                range = MathHelper.Clamp(value, 0.0f, 500.0f);
+                rangeX = MathHelper.Clamp(value, 0.0f, 1000.0f);
+            }
+        }
+        [InGameEditable, Serialize(0.0f, true)]
+        public float RangeY
+        {
+            get { return rangeY; }
+            set
+            {
+                rangeY = MathHelper.Clamp(value, 0.0f, 1000.0f);
             }
         }
 
@@ -45,6 +54,12 @@ namespace Barotrauma.Items.Components
             : base (item, element)
         {
             IsActive = true;
+
+            //backwards compatibility
+            if (element.Attribute("range") != null)
+            {
+                rangeX = rangeY = element.GetAttributeFloat("range", 0.0f);
+            }
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -69,8 +84,8 @@ namespace Barotrauma.Items.Components
 
             foreach (Character c in Character.CharacterList)
             {
-                if (Math.Abs(c.WorldPosition.X - item.WorldPosition.X) < range &&
-                    Math.Abs(c.WorldPosition.Y - item.WorldPosition.Y) < range)
+                if (Math.Abs(c.WorldPosition.X - item.WorldPosition.X) < rangeX &&
+                    Math.Abs(c.WorldPosition.Y - item.WorldPosition.Y) < rangeY)
                 {
                     if (!c.AnimController.Limbs.Any(l => l.body.FarseerBody.Awake)) continue;
 
