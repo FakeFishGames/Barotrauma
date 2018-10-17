@@ -1120,6 +1120,38 @@ namespace Barotrauma
             }
             return frame;
         }
+
+        public static GUIComponent CreateVector2Field(Vector2 value, int elementHeight, string name, RectTransform parent, string toolTip = null, ScalableFont font = null, int decimalsToDisplay = 1)
+        {
+            font = font ?? SmallFont;
+            var frame = new GUIFrame(new RectTransform(new Point(parent.Rect.Width, Math.Max(elementHeight, 26)), parent), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), name, font: font)
+            {
+                ToolTip = toolTip
+            };
+            var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform, Anchor.TopRight), isHorizontal: true, childAnchor: Anchor.CenterRight)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
+            for (int i = 1; i >= 0; i--)
+            {
+                var element = new GUIFrame(new RectTransform(new Vector2(0.45f, 1), inputArea.RectTransform), style: null);
+                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), vectorComponentLabels[i], font: font, textAlignment: Alignment.CenterLeft);
+                GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight), GUINumberInput.NumberType.Float) { Font = font };
+                switch (i)
+                {
+                    case 0:
+                        numberInput.FloatValue = value.X;
+                        break;
+                    case 1:
+                        numberInput.FloatValue = value.Y;
+                        break;
+                }
+                numberInput.DecimalsToDisplay = decimalsToDisplay;
+            }
+            return frame;
+        }
         #endregion
 
         #region Element positioning
