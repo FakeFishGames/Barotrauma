@@ -19,24 +19,23 @@ namespace Barotrauma
         {
             float jointAngle = this.JointAngle;
 
-            BezierDeformation limbADeformation = LimbA.Deformations.Find(d => d is BezierDeformation) as BezierDeformation;
-            BezierDeformation limbBDeformation = LimbB.Deformations.Find(d => d is BezierDeformation) as BezierDeformation;
+            JointBendDeformation limbADeformation = LimbA.Deformations.Find(d => d is JointBendDeformation) as JointBendDeformation;
+            JointBendDeformation limbBDeformation = LimbB.Deformations.Find(d => d is JointBendDeformation) as JointBendDeformation;
 
             if (limbADeformation != null && limbBDeformation != null)
             {
-                UpdateBend(LimbA, limbADeformation, this.LocalAnchorA, -jointAngle);// (float)(Math.Sin(Timing.TotalTime)));
-                UpdateBend(LimbB, limbBDeformation, this.LocalAnchorB, jointAngle);// (float)(Math.Sin(Timing.TotalTime)));
+                UpdateBend(LimbA, limbADeformation, this.LocalAnchorA, -jointAngle);
+                UpdateBend(LimbB, limbBDeformation, this.LocalAnchorB, jointAngle);
 
             }
             
-            void UpdateBend(Limb limb, BezierDeformation deformation, Vector2 localAnchor, float angle)
+            void UpdateBend(Limb limb, JointBendDeformation deformation, Vector2 localAnchor, float angle)
             {
                 deformation.Scale = limb.DeformSprite.Size;
 
                 Vector2 displayAnchor = ConvertUnits.ToDisplayUnits(localAnchor);
                 displayAnchor.Y = -displayAnchor.Y;
-                Vector2 refPos = displayAnchor + limb.DeformSprite.Origin;// Vector2.Transform(localAnchor, )
-                //refPos.Y = -refPos.Y;
+                Vector2 refPos = displayAnchor + limb.DeformSprite.Origin;
 
                 refPos.X /= limb.DeformSprite.Size.X;
                 refPos.Y /= limb.DeformSprite.Size.Y;
@@ -69,58 +68,6 @@ namespace Barotrauma
                 }
             }
 
-            /*void UpdateBezier(Limb limb)
-            {
-                if (limb.DeformSprite == null) { return; }
-
-                #region Experimental
-                //var origin = limb.DeformSprite.Origin;
-                //var rotation = limb.Rotation;
-                ////rotation = -rotation;
-                //var pos = limb.WorldPosition;
-                //Matrix matrix = Matrix.CreateTranslation(-origin.X, -origin.Y, 0)
-                //    * Matrix.CreateScale(new Vector3(1, -1, 1))
-                //    * Matrix.CreateRotationZ(rotation)
-                //    * Matrix.CreateTranslation(new Vector3(pos, MathHelper.Clamp(limb.DeformSprite.Sprite.Depth, 0, 1)));
-                #endregion
-
-                foreach (var deformation in limb.Deformations)
-                {
-                    if (deformation is BezierDeformation bezierDeformation)
-                    {
-                        bezierDeformation.flipX = limb.character.AnimController.IsFlipped;
-
-                        #region Sine wave
-                        if ((limb.character.AnimController is FishAnimController fishController))
-                        {
-                            var waveLength = fishController.CurrentSwimParams.WaveLength;
-                            var waveAmplitude = fishController.CurrentSwimParams.WaveAmplitude;
-                            if (waveLength > 0 && waveAmplitude > 0)
-                            {
-                                float waveRotation = (float)Math.Sin(fishController.WalkPos / waveLength);
-                                float v = waveRotation * waveAmplitude;
-                                bezierDeformation.start.X = v;
-                                bezierDeformation.start.Y = v;
-                                bezierDeformation.end.X = v;
-                                bezierDeformation.end.Y = v;
-                                bezierDeformation.control.X = v;
-                                bezierDeformation.control.Y = v;
-                            }
-                        }
-                        #endregion
-
-                        #region Experimental
-                        //matrix = Matrix.Invert(matrix);
-                        //matrix = matrix * Matrix.CreateScale(1.0f / limb.DeformSprite.Size.X, 1.0f / limb.DeformSprite.Size.Y, 1);
-                        //bezierDeformation.start = Vector2.Transform(start, matrix) * 1;
-                        //bezierDeformation.end = Vector2.Transform(end, matrix) * 1;
-                        //bezierDeformation.control = Vector2.Transform(control, matrix) * 1;
-                        #endregion
-                    }
-                }
-            }
-            UpdateBezier(LimbA);
-            UpdateBezier(LimbB);*/
         }
 
         public void Draw(SpriteBatch spriteBatch)
