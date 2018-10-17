@@ -1233,11 +1233,11 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), "Limbs:") { CanBeFocused = false };
             var limbXElements = new List<XElement>();
             var limbGUIElements = new List<GUIComponent>();
-            var buttonElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), listBox.Content.RectTransform), style: null)
+            var limbButtonElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), listBox.Content.RectTransform), style: null)
             {
                 CanBeFocused = false
             };
-            var minusButton = new GUIButton(new RectTransform(new Point(buttonElement.Rect.Height, buttonElement.Rect.Height), buttonElement.RectTransform), "-")
+            var removeLimbButton = new GUIButton(new RectTransform(new Point(limbButtonElement.Rect.Height, limbButtonElement.Rect.Height), limbButtonElement.RectTransform), "-")
             {
                 OnClicked = (b, d) =>
                 {
@@ -1248,9 +1248,9 @@ namespace Barotrauma
                     return true;
                 }
             };
-            var plusButton = new GUIButton(new RectTransform(new Point(buttonElement.Rect.Height, buttonElement.Rect.Height), buttonElement.RectTransform)
+            var addLimbButton = new GUIButton(new RectTransform(new Point(limbButtonElement.Rect.Height, limbButtonElement.Rect.Height), limbButtonElement.RectTransform)
             {
-                AbsoluteOffset = new Point(minusButton.Rect.Width + 10, 0)
+                AbsoluteOffset = new Point(removeLimbButton.Rect.Width + 10, 0)
             }, "+")
             {
                 OnClicked = (b, d) =>
@@ -1303,8 +1303,73 @@ namespace Barotrauma
                 }
             };
             // Joints
-            new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), style: null);
-            // TODO
+            new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), "Joints:") { CanBeFocused = false };
+            var jointXElements = new List<XElement>();
+            var jointGUIElements = new List<GUIComponent>();
+            var jointButtonElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), listBox.Content.RectTransform), style: null)
+            {
+                CanBeFocused = false
+            };
+            var removeJointButton = new GUIButton(new RectTransform(new Point(jointButtonElement.Rect.Height, jointButtonElement.Rect.Height), jointButtonElement.RectTransform), "-")
+            {
+                OnClicked = (b, d) =>
+                {
+                    var element = jointGUIElements.LastOrDefault();
+                    if (element == null) { return false; }
+                    element.RectTransform.Parent = null;
+                    jointGUIElements.Remove(element);
+                    return true;
+                }
+            };
+            var addJointButton = new GUIButton(new RectTransform(new Point(jointButtonElement.Rect.Height, jointButtonElement.Rect.Height), jointButtonElement.RectTransform)
+            {
+                AbsoluteOffset = new Point(removeJointButton.Rect.Width + 10, 0)
+            }, "+")
+            {
+                OnClicked = (b, d) =>
+                {
+                    var jointElement = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 6 + 20), listBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
+                    {
+                        CanBeFocused = false
+                    };
+                    var group = new GUILayoutGroup(new RectTransform(Vector2.One, jointElement.RectTransform)) { AbsoluteSpacing = 2 };
+                    string jointName = string.Empty;
+                    var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), jointName);
+                    var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
+                    new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopLeft), "Name");
+                    new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), string.Empty)
+                    {
+                        OnTextChanged = (textB, text) =>
+                        {
+                            jointName = text;
+                            label.Text = jointName;
+                            return true;
+                        }
+                    };
+                    var limb1Field = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
+                    new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), limb1Field.RectTransform, Anchor.TopLeft), "Limb 1");
+                    var limb1InputField = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), limb1Field.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
+                    {
+                        MinValueInt = 0,
+                        MaxValueInt = byte.MaxValue,
+                    };
+                    var limb2Field = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
+                    new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), limb2Field.RectTransform, Anchor.TopLeft), "Limb 2");
+                    var limb2InputField = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), limb2Field.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
+                    {
+                        MinValueInt = 0,
+                        MaxValueInt = byte.MaxValue,
+                    };
+                    GUI.CreateVector2Field(Vector2.Zero, elementSize, "Limb 1 Anchor", group.RectTransform, font: GUI.Font, decimalsToDisplay: 2);
+                    GUI.CreateVector2Field(Vector2.Zero, elementSize, "Limb 2 Anchor", group.RectTransform, font: GUI.Font, decimalsToDisplay: 2);
+                    label.Text = GetJointName(jointName);
+                    limb1InputField.OnValueChanged += nInput => label.Text = GetJointName(jointName);
+                    limb2InputField.OnValueChanged += nInput => label.Text = GetJointName(jointName);
+                    jointGUIElements.Add(jointElement);
+                    string GetJointName(string n) => string.IsNullOrWhiteSpace(n) ? $"Joint {limb1InputField.IntValue} - {limb2InputField.IntValue}" : n;
+                    return true;
+                }
+            };
             box.Buttons[0].OnClicked += (b, d) =>
             {
                 box.Close();
@@ -1312,7 +1377,7 @@ namespace Barotrauma
             };
             box.Buttons[1].OnClicked += (b, d) =>
             {
-                // Parse the data from the GUI elements and store in XElements
+                // Parse the limb data from the GUI elements and store in XElements
                 for (int i = 0; i < limbGUIElements.Count; i++)
                 {
                     var limbGUIElement = limbGUIElements[i];
@@ -1326,26 +1391,38 @@ namespace Barotrauma
                         new XAttribute("id", id),
                         new XAttribute("name", limbName),
                         new XAttribute("type", limbType.ToString()),
-                        new XAttribute("radius", size / 10),    // Placeholder value
-                        new XAttribute("height", size / 5),     // Placeholder value
+                        new XAttribute("radius", size / 5),    // Placeholder value
+                        new XAttribute("height", size / 8),    // Placeholder value
                         new XElement("sprite",
                             new XAttribute("texture", texturePathElement.Text),
                             new XAttribute("sourcerect", $"{rectInputs[0].IntValue}, {rectInputs[1].IntValue}, {rectInputs[2].IntValue}, {rectInputs[3].IntValue}"))
                         ));
                 }
-                // TODO: parse the joint params from the gui elements
+                // Parse the joint data from the GUI elements and store in XElements
+                for (int i = 0; i < jointGUIElements.Count; i++)
+                {
+                    var jointGUIElement = jointGUIElements[i];
+                    var allChildren = jointGUIElement.GetAllChildren();
+                    GUITextBlock GetField(string n) => allChildren.First(c => c is GUITextBlock textBlock && textBlock.Text == n) as GUITextBlock;
+                    string jointName = GetField("Name").Parent.GetChild<GUITextBox>().Text;
+                    int limb1ID = GetField("Limb 1").Parent.GetChild<GUINumberInput>().IntValue;
+                    int limb2ID = GetField("Limb 2").Parent.GetChild<GUINumberInput>().IntValue;
+                    var anchor1Inputs = GetField("Limb 1 Anchor").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).ToArray();
+                    var anchor2Inputs = GetField("Limb 2 Anchor").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).ToArray();
+                    jointXElements.Add(new XElement("joint",
+                        new XAttribute("name", jointName),
+                        new XAttribute("limb1", limb1ID),
+                        new XAttribute("limb2", limb2ID),
+                        new XAttribute("limb1anchor", $"{anchor1Inputs[0].FloatValue}, {anchor1Inputs[1].FloatValue}"),
+                        new XAttribute("limb2anchor", $"{anchor2Inputs[0].FloatValue}, {anchor2Inputs[1].FloatValue}")));
+                }
                 // TODO: parse from css/html file
                 var ragdollParams = new object[]
                 {
                     new XAttribute("type", name),
                     new XElement("collider", new XAttribute("radius", size)),   // TODO: if we set the radius, the collider cannot be a rectangle
                     limbXElements,
-                    new XElement("joint",
-                        new XAttribute("name", "Head to Torso"),
-                        new XAttribute("limb1", 0),
-                        new XAttribute("limb2", 1),
-                        new XAttribute("limb1anchor", "-12.24539,-62.17848"),   // create from ids
-                        new XAttribute("limb2anchor", "0,20"))                  // create from ids
+                    jointXElements
                 };
                 CreateCharacter(name, isHumanoid, ragdollParams);
                 GUI.AddMessage($"New Character Created with the Name {name}", Color.Green, font: GUI.Font);
