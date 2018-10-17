@@ -1160,180 +1160,184 @@ namespace Barotrauma
             };
             new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Create New Character (WIP)")
             {
-                OnClicked = (button, data) =>
-                {
-                    string name = string.Empty;
-                    float size = 10;
-                    bool isHumanoid = false;
+                OnClicked = OnNewCharacterButtonClicked
+            };
+        }
 
-                    var box = new GUIMessageBox("Create New Character", string.Empty, new string[] { "Cancel", "Create" }, messageBoxWidth, messageBoxHeight * 2);
-                    box.Content.ChildAnchor = Anchor.TopCenter;
-                    box.Content.AbsoluteSpacing = 20;
-                    int elementSize = 30;
-                    var listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.9f), box.Content.RectTransform));
-                    var topGroup = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 4 + 20), listBox.Content.RectTransform)) { AbsoluteSpacing = 2};
-                    var fields = new List<GUIComponent>();
-                    GUITextBox texturePathElement = null;
-                    void UpdateTexturePathElement() => texturePathElement.Text = $"Content/Characters/{name}.png";
-                    for (int i = 0; i < 4; i++)
-                    {
-                        var mainElement = new GUIFrame(new RectTransform(new Point(topGroup.RectTransform.Rect.Width, elementSize), topGroup.RectTransform), style: null, color: Color.Gray * 0.25f);
-                        fields.Add(mainElement);
-                        RectTransform leftElement = new RectTransform(new Vector2(0.5f, 1), mainElement.RectTransform, Anchor.TopLeft);
-                        RectTransform rightElement = new RectTransform(new Vector2(0.5f, 1), mainElement.RectTransform, Anchor.TopRight);
-                        switch (i)
+        private bool OnNewCharacterButtonClicked(GUIButton button, object data)
+        {
+            string name = string.Empty;
+            float size = 10;
+            bool isHumanoid = false;
+
+            var box = new GUIMessageBox("Create New Character", string.Empty, new string[] { "Cancel", "Create" }, GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight);
+            box.Content.ChildAnchor = Anchor.TopCenter;
+            box.Content.AbsoluteSpacing = 20;
+            int elementSize = 30;
+            var listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.9f), box.Content.RectTransform));
+            var topGroup = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 4 + 20), listBox.Content.RectTransform)) { AbsoluteSpacing = 2 };
+            var fields = new List<GUIComponent>();
+            GUITextBox texturePathElement = null;
+            void UpdateTexturePathElement() => texturePathElement.Text = $"Content/Characters/{name}.png";
+            for (int i = 0; i < 4; i++)
+            {
+                var mainElement = new GUIFrame(new RectTransform(new Point(topGroup.RectTransform.Rect.Width, elementSize), topGroup.RectTransform), style: null, color: Color.Gray * 0.25f);
+                fields.Add(mainElement);
+                RectTransform leftElement = new RectTransform(new Vector2(0.5f, 1), mainElement.RectTransform, Anchor.TopLeft);
+                RectTransform rightElement = new RectTransform(new Vector2(0.5f, 1), mainElement.RectTransform, Anchor.TopRight);
+                switch (i)
+                {
+                    case 0:
+                        new GUITextBlock(leftElement, "Name");
+                        var nameField = new GUITextBox(rightElement, "Worm X");
+                        string ProcessText(string text) => text.RemoveWhitespace().CapitaliseFirstInvariant();
+                        name = ProcessText(nameField.Text);
+                        nameField.OnTextChanged += (tb, text) =>
                         {
-                            case 0:
-                                new GUITextBlock(leftElement, "Name");
-                                var nameField = new GUITextBox(rightElement, "Worm X");
-                                string ProcessText(string text) => text.RemoveWhitespace().CapitaliseFirstInvariant();
-                                name = ProcessText(nameField.Text);
-                                nameField.OnTextChanged += (tb, text) =>
-                                {
-                                    name = ProcessText(text);
-                                    UpdateTexturePathElement();
-                                    return true;
-                                };
-                                break;
-                            case 1:
-                                new GUITextBlock(leftElement, "Size");
-                                new GUINumberInput(rightElement, GUINumberInput.NumberType.Float)
-                                {
-                                    MinValueFloat = 1,
-                                    MaxValueFloat = 1000,
-                                    FloatValue = size,
-                                    OnValueChanged = (nInput) => size = nInput.FloatValue
-                                };
-                                break;
-                            case 2:
-                                new GUITextBlock(leftElement, "Is Humanoid?");
-                                new GUITickBox(rightElement, string.Empty)
-                                {
-                                    Selected = isHumanoid,
-                                    OnSelected = (tB) => isHumanoid = tB.Selected
-                                };
-                                break;
-                            case 3:
-                                new GUITextBlock(leftElement, "Texture Path");
-                                texturePathElement = new GUITextBox(rightElement, string.Empty);
-                                UpdateTexturePathElement();
-                                break;
-                        }
-                    }
-                    var codeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), listBox.Content.RectTransform), style: null) { CanBeFocused = false };
-                    new GUITextBlock(new RectTransform(new Vector2(1, 0.05f), codeArea.RectTransform), "Custom code:");
-                    new GUITextBox(new RectTransform(new Vector2(1, 1 - 0.05f), codeArea.RectTransform, Anchor.BottomLeft), string.Empty, textAlignment: Alignment.TopLeft);
-                    // Spacing
-                    new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), style: null);
-                    // Limbs
-                    new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), "Limbs:") { CanBeFocused = false };
-                    var limbs = new Dictionary<XElement, object[]>();
-                    var limbElements = new List<GUIComponent>();
-                    var buttonElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), listBox.Content.RectTransform), style: null)
-                    {
-                        CanBeFocused = false
-                    };
-                    var minusButton = new GUIButton(new RectTransform(new Point(buttonElement.Rect.Height, buttonElement.Rect.Height), buttonElement.RectTransform), "-")
-                    {
-                        OnClicked = (b, d) =>
-                        {
-                            var element = limbElements.LastOrDefault();
-                            if (element == null) { return false; }
-                            element.RectTransform.Parent = null;
-                            limbElements.Remove(element);
+                            name = ProcessText(text);
+                            UpdateTexturePathElement();
                             return true;
-                        }
-                    };
-                    var plusButton = new GUIButton(new RectTransform(new Point(buttonElement.Rect.Height, buttonElement.Rect.Height), buttonElement.RectTransform)
-                    {
-                        AbsoluteOffset = new Point(minusButton.Rect.Width + 10, 0)
-                    }, "+")
-                    {
-                        OnClicked = (b, d) =>
-                        {
-                            var limbElement = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 5 + 20), listBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
-                            {
-                                CanBeFocused = false
-                            };
-                            int id = limbElements.Count;
-                            var group = new GUILayoutGroup(new RectTransform(Vector2.One, limbElement.RectTransform)) { AbsoluteSpacing = 2 };
-                            var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), $"Limb {id}");
-                            var idField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
-                            var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
-                            var limbTypeField = GUI.CreateEnumField(LimbType.None, elementSize, "Limb Type", group.RectTransform, font: GUI.Font);
-                            var sourceRectField = GUI.CreateRectangleField(Rectangle.Empty, elementSize, "Source Rect", group.RectTransform, font: GUI.Font);
-                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopLeft), "ID");
-                            new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
-                            {
-                                MinValueInt = 0,
-                                MaxValueInt = byte.MaxValue,
-                                IntValue = id,
-                                OnValueChanged = numInput =>
-                                {
-                                    id = numInput.IntValue;
-                                    string text = nameField.GetChild<GUITextBox>().Text;
-                                    string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
-                                    label.Text = $"Limb {t}";
-                                }
-                            };
-                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopLeft), "Name");
-                            new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), string.Empty)
-                                .OnTextChanged += (tB, text) =>
-                                {
-                                    string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
-                                    label.Text = $"Limb {t}";
-                                    return true;
-                                };
-                            limbElements.Add(limbElement);
-                            return true;
-                        }
-                    };
-                    // TODO: add and remove joints
-                    box.Buttons[0].OnClicked += (b, d) =>
-                    {
-                        box.Close();
-                        return true;
-                    };
-                    box.Buttons[1].OnClicked += (b, d) =>
-                    {
-                        // TODO: parse the params from the gui elements
-                        // TODO: parse from css/html file
-                        var ragdollParams = new object[]
-                        {
-                            new XAttribute("type", name),
-                            new XElement("collider", new XAttribute("radius", size)),
-                            new XElement("limb",
-                                new XAttribute("id", 0),
-                                new XAttribute("type", LimbType.Head),
-                                new XAttribute("radius", 30),
-                                new XAttribute("height", 86),
-                                new XAttribute("steerforce", 1),
-                                new XElement("sprite",
-                                    new XAttribute("texture", texturePathElement.Text),
-                                    new XAttribute("sourcerect", "0,0,101,168"))),
-                            new XElement("limb",
-                                new XAttribute("id", 1),
-                                new XAttribute("type", LimbType.Torso),
-                                new XAttribute("width", 42),
-                                new XAttribute("height", 61),
-                                new XElement("sprite",
-                                    new XAttribute("texture", texturePathElement.Text),
-                                    new XAttribute("sourcerect", "3,168,59,64"))),
-                            new XElement("joint",
-                                new XAttribute("name", "Head to Torso"),
-                                new XAttribute("limb1", 0),
-                                new XAttribute("limb2", 1),
-                                new XAttribute("limb1anchor", "-12.24539,-62.17848"),
-                                new XAttribute("limb2anchor", "0,20"))
                         };
-                        CreateCharacter(name, isHumanoid, ragdollParams);
-                        GUI.AddMessage($"New Character Created with the Name {name}", Color.Green, font: GUI.Font);
-                        box.Close();
-                        return true;
-                    };
+                        break;
+                    case 1:
+                        new GUITextBlock(leftElement, "Size");
+                        new GUINumberInput(rightElement, GUINumberInput.NumberType.Float)
+                        {
+                            MinValueFloat = 1,
+                            MaxValueFloat = 1000,
+                            FloatValue = size,
+                            OnValueChanged = (nInput) => size = nInput.FloatValue
+                        };
+                        break;
+                    case 2:
+                        new GUITextBlock(leftElement, "Is Humanoid?");
+                        new GUITickBox(rightElement, string.Empty)
+                        {
+                            Selected = isHumanoid,
+                            OnSelected = (tB) => isHumanoid = tB.Selected
+                        };
+                        break;
+                    case 3:
+                        new GUITextBlock(leftElement, "Texture Path");
+                        texturePathElement = new GUITextBox(rightElement, string.Empty);
+                        UpdateTexturePathElement();
+                        break;
+                }
+            }
+            var codeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), listBox.Content.RectTransform), style: null) { CanBeFocused = false };
+            new GUITextBlock(new RectTransform(new Vector2(1, 0.05f), codeArea.RectTransform), "Custom code:");
+            new GUITextBox(new RectTransform(new Vector2(1, 1 - 0.05f), codeArea.RectTransform, Anchor.BottomLeft), string.Empty, textAlignment: Alignment.TopLeft);
+            // Spacing
+            new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), style: null);
+            // Limbs
+            new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), "Limbs:") { CanBeFocused = false };
+            var limbs = new List<XElement>();
+            var limbElements = new List<GUIComponent>();
+            var buttonElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), listBox.Content.RectTransform), style: null)
+            {
+                CanBeFocused = false
+            };
+            var minusButton = new GUIButton(new RectTransform(new Point(buttonElement.Rect.Height, buttonElement.Rect.Height), buttonElement.RectTransform), "-")
+            {
+                OnClicked = (b, d) =>
+                {
+                    var element = limbElements.LastOrDefault();
+                    if (element == null) { return false; }
+                    element.RectTransform.Parent = null;
+                    limbElements.Remove(element);
                     return true;
                 }
             };
+            var plusButton = new GUIButton(new RectTransform(new Point(buttonElement.Rect.Height, buttonElement.Rect.Height), buttonElement.RectTransform)
+            {
+                AbsoluteOffset = new Point(minusButton.Rect.Width + 10, 0)
+            }, "+")
+            {
+                OnClicked = (b, d) =>
+                {
+                    var limbElement = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 5 + 20), listBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
+                    {
+                        CanBeFocused = false
+                    };
+                    int id = limbElements.Count;
+                    string limbName = string.Empty;
+                    LimbType limbType = LimbType.None;
+                    Rectangle sourceRect = Rectangle.Empty;
+                    var group = new GUILayoutGroup(new RectTransform(Vector2.One, limbElement.RectTransform)) { AbsoluteSpacing = 2 };
+                    var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), $"Limb {id}");
+                    var idField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
+                    var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
+                    var limbTypeField = GUI.CreateEnumField(limbType, elementSize, "Limb Type", group.RectTransform, font: GUI.Font);
+                    var sourceRectField = GUI.CreateRectangleField(sourceRect, elementSize, "Source Rect", group.RectTransform, font: GUI.Font);
+                    new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopLeft), "ID");
+                    new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
+                    {
+                        MinValueInt = 0,
+                        MaxValueInt = byte.MaxValue,
+                        IntValue = id,
+                        OnValueChanged = numInput =>
+                        {
+                            id = numInput.IntValue;
+                            string text = nameField.GetChild<GUITextBox>().Text;
+                            string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
+                            label.Text = $"Limb {t}";
+                        }
+                    };
+                    new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopLeft), "Name");
+                    new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), string.Empty)
+                        .OnTextChanged += (tB, text) =>
+                        {
+                            string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
+                            label.Text = $"Limb {t}";
+                            return true;
+                        };
+                    limbElements.Add(limbElement);
+                    limbs.Add(new XElement("limb",
+                        new XAttribute("id", id),
+                        new XAttribute("name", limbName),
+                        new XAttribute("type", limbType.ToString()),
+                        new XElement("sprite",
+                            new XAttribute("texture", texturePathElement.Text),
+                            new XAttribute("sourcerect", $"{sourceRect.X}, {sourceRect.Y}, {sourceRect.Width}, {sourceRect.Height}"))
+                        ));
+                    return true;
+                }
+            };
+            // Joints
+            new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), style: null);
+            // TODO
+            box.Buttons[0].OnClicked += (b, d) =>
+            {
+                box.Close();
+                return true;
+            };
+            box.Buttons[1].OnClicked += (b, d) =>
+            {
+                foreach (var limbElement in limbElements)
+                {
+
+                }
+
+                // TODO: parse the params from the gui elements
+                // TODO: parse from css/html file
+                var ragdollParams = new object[]
+                {
+                                new XAttribute("type", name),
+                                new XElement("collider", new XAttribute("radius", size)),   // TODO: if we set the radius, the collider cannot be a rectangle
+                                limbs,
+                                new XElement("joint",
+                                    new XAttribute("name", "Head to Torso"),
+                                    new XAttribute("limb1", 0),
+                                    new XAttribute("limb2", 1),
+                                    new XAttribute("limb1anchor", "-12.24539,-62.17848"),   // create from ids
+                                    new XAttribute("limb2anchor", "0,20"))                  // create from ids
+                };
+                CreateCharacter(name, isHumanoid, ragdollParams);
+                GUI.AddMessage($"New Character Created with the Name {name}", Color.Green, font: GUI.Font);
+                box.Close();
+                return true;
+            };
+            return true;
         }
         #endregion
 
