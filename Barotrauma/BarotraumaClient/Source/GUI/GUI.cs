@@ -25,6 +25,10 @@ namespace Barotrauma
     {
         public static GUICanvas Canvas => GUICanvas.Instance;
 
+        public static readonly string[] vectorComponentLabels = { "X", "Y", "Z", "W" };
+        public static readonly string[] rectComponentLabels = { "X", "Y", "W", "H" };
+        public static readonly string[] colorComponentLabels = { "R", "G", "B", "A" };
+
         // TODO: obsolate?
         public static float Scale
         {
@@ -1049,6 +1053,72 @@ namespace Barotrauma
             where T : GUIComponent
         {
             return CreateElements(count, parent, constructor, null, absoluteSize, anchor, pivot, null, null, absoluteSpacing, relativeSpacing, extraSpacing, startOffsetAbsolute, startOffsetRelative, isHorizontal);
+        }
+
+        public static GUIComponent CreateEnumField(Enum value, int elementHeight, string name, RectTransform parent, string toolTip = null, ScalableFont font = null)
+        {
+            font = font ?? SmallFont;
+            var frame = new GUIFrame(new RectTransform(new Point(parent.Rect.Width, elementHeight), parent), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), name, font: font)
+            {
+                ToolTip = toolTip
+            };
+            GUIDropDown enumDropDown = new GUIDropDown(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform, Anchor.TopRight),
+                elementCount: Enum.GetValues(value.GetType()).Length)
+            {
+                ToolTip = toolTip
+            };
+            foreach (object enumValue in Enum.GetValues(value.GetType()))
+            {
+                enumDropDown.AddItem(enumValue.ToString(), enumValue);
+            }
+            enumDropDown.SelectItem(value);
+            return frame;
+        }
+
+        public static GUIComponent CreateRectangleField(Rectangle value, int elementHeight, string name, RectTransform parent, string toolTip = null, ScalableFont font = null)
+        {
+            var frame = new GUIFrame(new RectTransform(new Point(parent.Rect.Width, Math.Max(elementHeight, 26)), parent), color: Color.Transparent);
+            font = font ?? SmallFont;
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), frame.RectTransform), name, font: font)
+            {
+                ToolTip = toolTip
+            };
+            var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 1), frame.RectTransform, Anchor.TopRight), isHorizontal: true, childAnchor: Anchor.CenterRight)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.01f
+            };
+            for (int i = 3; i >= 0; i--)
+            {
+                var element = new GUIFrame(new RectTransform(new Vector2(0.22f, 1), inputArea.RectTransform) { MinSize = new Point(50, 0), MaxSize = new Point(150, 50) }, style: null);
+                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), rectComponentLabels[i], font: font, textAlignment: Alignment.CenterLeft);
+                GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight),
+                    GUINumberInput.NumberType.Int)
+                {
+                    Font = font
+                };
+                // Not sure if the min value could in any case be negative.
+                numberInput.MinValueInt = 0;
+                // Just something reasonable to keep the value in the input rect.
+                numberInput.MaxValueInt = 9999;
+                switch (i)
+                {
+                    case 0:
+                        numberInput.IntValue = value.X;
+                        break;
+                    case 1:
+                        numberInput.IntValue = value.Y;
+                        break;
+                    case 2:
+                        numberInput.IntValue = value.Width;
+                        break;
+                    case 3:
+                        numberInput.IntValue = value.Height;
+                        break;
+                }
+            }
+            return frame;
         }
         #endregion
 
