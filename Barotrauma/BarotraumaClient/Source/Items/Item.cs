@@ -117,10 +117,10 @@ namespace Barotrauma
 
                     if (prefab.ResizeHorizontal || prefab.ResizeVertical || flipHorizontal || flipVertical)
                     {
-                        activeSprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color);
+                        activeSprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color,
+                            depth: depth);
                         fadeInBrokenSprite?.Sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color * fadeInBrokenSpriteAlpha,
-                            depth: activeSprite.Depth - 0.000001f);
-
+                            depth: depth - 0.000001f);
                     }
                     else
                     {
