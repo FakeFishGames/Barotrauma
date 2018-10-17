@@ -51,8 +51,8 @@ VertexShaderOutput mainVS(in VertexShaderInput input)
     float2 deformBottomLeft = deformArray[deformIndexTopLeft.x + deformIndexBottomRight.y * deformArrayWidth];
     float2 deformBottomRight = deformArray[deformIndexBottomRight.x + deformIndexBottomRight.y * deformArrayWidth];
 
-	float divX = 1.0 / deformArrayWidth;
-	float divY = 1.0 / deformArrayHeight;
+    float divX = 1.0 / (deformArrayWidth - 1);
+    float divY = 1.0 / (deformArrayHeight - 1);
 
 	float2 vertexOffset = 
 	{
