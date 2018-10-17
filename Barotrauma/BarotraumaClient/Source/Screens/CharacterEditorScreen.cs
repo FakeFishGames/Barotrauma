@@ -1170,7 +1170,7 @@ namespace Barotrauma
             float size = 10;
             bool isHumanoid = false;
 
-            var box = new GUIMessageBox("Create New Character", string.Empty, new string[] { "Cancel", "Create" }, GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight);
+            var box = new GUIMessageBox("Create New Character", string.Empty, new string[] { "Cancel", "Create (from selection)", "Create (from html)" }, GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight);
             box.Content.ChildAnchor = Anchor.TopCenter;
             box.Content.AbsoluteSpacing = 20;
             int elementSize = 30;
@@ -1416,7 +1416,6 @@ namespace Barotrauma
                         new XAttribute("limb1anchor", $"{anchor1Inputs[0].FloatValue}, {anchor1Inputs[1].FloatValue}"),
                         new XAttribute("limb2anchor", $"{anchor2Inputs[0].FloatValue}, {anchor2Inputs[1].FloatValue}")));
                 }
-                // TODO: parse from css/html file
                 var ragdollParams = new object[]
                 {
                     new XAttribute("type", name),
@@ -1426,6 +1425,146 @@ namespace Barotrauma
                 };
                 CreateCharacter(name, isHumanoid, ragdollParams);
                 GUI.AddMessage($"New Character Created with the Name {name}", Color.Green, font: GUI.Font);
+                box.Close();
+                return true;
+            };
+            box.Buttons[2].OnClicked += (b, d) =>
+            {
+                // Parse ragdoll data from html
+                limbXElements.Clear();
+                jointXElements.Clear();
+                string path = $"Content/Characters/{name}/{name.ToLowerInvariant()}.html";
+                try
+                {
+                    // TODO: parse as xml?
+                    //XDocument doc = XMLExtensions.TryLoadXml(path);
+                    //var xElements = doc.Elements().ToArray();
+
+                    string html = File.ReadAllText(path);
+                    var lines = html.Split(new string[] { "<div", "</div>", Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+                                    .Where(s => s.Contains("left") && s.Contains("top") && s.Contains("width") && s.Contains("height"));
+                    int id = 0;
+                    foreach (var line in lines)
+                    {
+                        string codeName = new string(line.SkipWhile(c => c != '>').Skip(1).ToArray());
+                        // TODO: handle multiple limbs that share the same source rect
+                        if (string.IsNullOrWhiteSpace(codeName)) { continue; }
+                        string limbName = new string(codeName.SkipWhile(c => c != '_').Skip(1).ToArray());
+                        if (string.IsNullOrWhiteSpace(limbName)) { continue; }
+                        var parts = line.Split(' ');
+                        int ParseToInt(string selector)
+                        {
+                            string part = parts.First(p => p.Contains(selector));
+                            string s = new string(part.SkipWhile(c => c != ':').Skip(1).TakeWhile(c => char.IsNumber(c)).ToArray());
+                            int.TryParse(s, out int v);
+                            return v;
+
+                        };
+                        int x = ParseToInt("left");
+                        int y = ParseToInt("top");
+                        int width = ParseToInt("width");
+                        int height = ParseToInt("height");
+                        limbXElements.Add(new XElement("limb",
+                            new XAttribute("id", id),
+                            new XAttribute("name", limbName),
+                            new XAttribute("type", ParseLimbType(limbName).ToString()),
+                            new XAttribute("radius", size / 5),    // Placeholder value
+                            new XAttribute("height", size / 8),    // Placeholder value
+                            new XElement("sprite",
+                                new XAttribute("texture", texturePathElement.Text),
+                                new XAttribute("sourcerect", $"{x}, {y}, {width}, {height}"))
+                            ));
+                        id++;
+                    }
+                    // TODO: use the codeName for joint definitions
+                    for (int i = 1; i < lines.Count() - 1; i++)
+                    {
+                        jointXElements.Add(new XElement("joint",
+                            new XAttribute("limb1", i - 1),
+                            new XAttribute("limb2", i)
+                            ));
+                    }
+                    var ragdollParams = new object[]
+                    {
+                        new XAttribute("type", name),
+                        new XElement("collider", new XAttribute("radius", size)),   // TODO: if we set the radius, the collider cannot be a rectangle
+                        limbXElements,
+                        jointXElements
+                    };
+                    CreateCharacter(name, isHumanoid, ragdollParams);
+                    GUI.AddMessage($"New Character Created with the Name {name}", Color.Green, font: GUI.Font);
+                    LimbType ParseLimbType(string limbName)
+                    {
+                        var limbType = LimbType.None;
+                        string n = limbName.ToLowerInvariant();
+                        switch (n)
+                        {
+                            case "head":
+                                limbType = LimbType.Head;
+                                break;
+                            case "torso":
+                            case "chest":
+                                limbType = LimbType.Torso;
+                                break;
+                            case "waist":
+                                limbType = LimbType.Waist;
+                                break;
+                            case "tail":
+                                limbType = LimbType.Tail;
+                                break;
+                        }
+                        if (limbType == LimbType.None)
+                        {
+                            if (n.Contains("tail"))
+                            {
+                                limbType = LimbType.Tail;
+                            }
+                            else if (n.Contains("hand") || n.Contains("palm"))
+                            {
+                                if (n.Contains("right"))
+                                {
+                                    limbType = LimbType.RightHand;
+                                }
+                                else if (n.Contains("left"))
+                                {
+                                    limbType = LimbType.LeftHand;
+                                }
+                            }
+                            else if (n.Contains("arm"))
+                            {
+                                if (n.Contains("right"))
+                                {
+                                    limbType = LimbType.RightArm;
+                                }
+                                else if (n.Contains("left"))
+                                {
+                                    limbType = LimbType.LeftArm;
+                                }
+                            }
+                            else if (n.Contains("leg"))
+                            {
+                                if (n.Contains("right"))
+                                {
+                                    limbType = LimbType.RightLeg;
+                                }
+                                else if (n.Contains("left"))
+                                {
+                                    limbType = LimbType.LeftLeg;
+                                }
+                            }
+                            else if (n.Contains("tail"))
+                            {
+                                limbType = LimbType.Tail;
+                            }
+                        }
+                        return limbType;
+                    }
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Failed to parse html from " + path, e);
+                }
+
                 box.Close();
                 return true;
             };
