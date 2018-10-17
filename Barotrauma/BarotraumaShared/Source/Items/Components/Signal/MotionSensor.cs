@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FarseerPhysics;
+using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
 using System.Xml.Linq;
@@ -98,16 +99,28 @@ namespace Barotrauma.Items.Components
             }
 
             Vector2 detectPos = item.WorldPosition + detectOffset;
+            Rectangle detectRect = new Rectangle((int)(detectPos.X - rangeX), (int)(detectPos.Y - rangeY), (int)(rangeX * 2), (int)(rangeY * 2));
+            float broadRangeX = Math.Max(rangeX * 2, 500);
+            float broadRangeY = Math.Max(rangeY * 2, 500);
+
             foreach (Character c in Character.CharacterList)
             {
-                if (Math.Abs(c.WorldPosition.X - detectPos.X) < rangeX &&
-                    Math.Abs(c.WorldPosition.Y - detectPos.Y) < rangeY)
+                //do a rough check based on the position of the character's collider first
+                //before the more accurate limb-based check
+                if (Math.Abs(c.WorldPosition.X - detectPos.X) > broadRangeX || Math.Abs(c.WorldPosition.Y - detectPos.Y) > broadRangeY)
                 {
-                    if (!c.AnimController.Limbs.Any(l => l.body.FarseerBody.Awake)) continue;
+                    continue;
+                }
 
-                    motionDetected = true;
-                    break;
-                }                
+                if (!c.AnimController.Limbs.Any(l => l.body.FarseerBody.Awake)) continue;
+                foreach (Limb limb in c.AnimController.Limbs)
+                {
+                    if (MathUtils.CircleIntersectsRectangle(limb.WorldPosition, ConvertUnits.ToDisplayUnits(limb.body.GetMaxExtent()), detectRect))
+                    {
+                        motionDetected = true;
+                        break;
+                    }
+                }
             }
         }
     }
