@@ -1162,14 +1162,20 @@ namespace Barotrauma
             {
                 OnClicked = (button, data) =>
                 {
+                    string name = string.Empty;
+                    float size = 10;
+                    bool isHumanoid = false;
+
                     var box = new GUIMessageBox("Create New Character", string.Empty, new string[] { "Cancel", "Create" }, messageBoxWidth, messageBoxHeight * 2);
                     box.Content.ChildAnchor = Anchor.TopCenter;
                     box.Content.AbsoluteSpacing = 20;
                     int elementSize = 30;
                     var listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.9f), box.Content.RectTransform));
-                    var topGroup = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 3 + 20), listBox.Content.RectTransform)) { AbsoluteSpacing = 2};
+                    var topGroup = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 4 + 20), listBox.Content.RectTransform)) { AbsoluteSpacing = 2};
                     var fields = new List<GUIComponent>();
-                    for (int i = 0; i < 3; i++)
+                    GUITextBox texturePathElement = null;
+                    void UpdateTexturePathElement() => texturePathElement.Text = $"Content/Characters/{name}.png";
+                    for (int i = 0; i < 4; i++)
                     {
                         var mainElement = new GUIFrame(new RectTransform(new Point(topGroup.RectTransform.Rect.Width, elementSize), topGroup.RectTransform), style: null, color: Color.Gray * 0.25f);
                         fields.Add(mainElement);
@@ -1179,17 +1185,37 @@ namespace Barotrauma
                         {
                             case 0:
                                 new GUITextBlock(leftElement, "Name");
-                                new GUITextBox(rightElement, "Worm X");
+                                var nameField = new GUITextBox(rightElement, "Worm X");
+                                string ProcessText(string text) => text.RemoveWhitespace().CapitaliseFirstInvariant();
+                                name = ProcessText(nameField.Text);
+                                nameField.OnTextChanged += (tb, text) =>
+                                {
+                                    name = ProcessText(text);
+                                    UpdateTexturePathElement();
+                                    return true;
+                                };
                                 break;
                             case 1:
                                 new GUITextBlock(leftElement, "Size");
-                                new GUINumberInput(rightElement, GUINumberInput.NumberType.Float) { FloatValue = 10 };
+                                new GUINumberInput(rightElement, GUINumberInput.NumberType.Float)
+                                {
+                                    FloatValue = size,
+                                    OnValueChanged = (nInput) => size = nInput.FloatValue
+                                };
                                 break;
                             case 2:
                                 new GUITextBlock(leftElement, "Is Humanoid?");
-                                new GUITickBox(rightElement, string.Empty);
+                                new GUITickBox(rightElement, string.Empty)
+                                {
+                                    Selected = isHumanoid,
+                                    OnSelected = (tB) => isHumanoid = tB.Selected
+                                };
                                 break;
-                                // TODO: texture path
+                            case 3:
+                                new GUITextBlock(leftElement, "Texture Path");
+                                texturePathElement = new GUITextBox(rightElement, string.Empty);
+                                UpdateTexturePathElement();
+                                break;
                         }
                     }
                     var codeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), listBox.Content.RectTransform), style: null) { CanBeFocused = false };
@@ -1268,9 +1294,6 @@ namespace Barotrauma
                     };
                     box.Buttons[1].OnClicked += (b, d) =>
                     {
-                        string name = fields[0].GetChild<GUITextBox>().Text.RemoveWhitespace().CapitaliseFirstInvariant();
-                        float size = fields[1].GetChild<GUINumberInput>().FloatValue;
-                        bool isHumanoid = fields[2].GetChild<GUITickBox>().Selected;
                         // TODO: gui elements for adding and removing limbs and joints
                         // TODO: parse from the code field and gui elements
                         // TODO: parse from css/html file
