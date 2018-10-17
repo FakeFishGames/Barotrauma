@@ -60,7 +60,11 @@ namespace Barotrauma
         /// <summary>
         /// Capitalises the first letter (invariant) and forces the rest to lower case (invariant).
         /// </summary>
-        public static string CapitaliseFirstInvariant(this string s) => s.Substring(0, 1).ToUpperInvariant() + s.Substring(1, s.Length - 1).ToLowerInvariant();
+        public static string CapitaliseFirstInvariant(this string s)
+        {
+            if (string.IsNullOrEmpty(s)) { return string.Empty; }
+            return s.Substring(0, 1).ToUpperInvariant() + s.Substring(1, s.Length - 1).ToLowerInvariant();
+        }
 
         /// <summary>
         /// Adds spaces into a CamelCase string.
