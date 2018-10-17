@@ -15,6 +15,8 @@ namespace Barotrauma.Items.Components
 
         private float rangeX, rangeY;
 
+        private Vector2 detectOffset;
+
         private float updateTimer;
         
         [InGameEditable, Serialize(0.0f, true)]
@@ -36,6 +38,18 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        [Serialize("0,0", true), Editable(ToolTip = "The position to detect the movement at relative to the item. For example, 0,100 would detect movement 100 units above the item.")]
+        public Vector2 DetectOffset
+        {
+            get { return detectOffset; }
+            set
+            {
+                detectOffset = value;
+                detectOffset.X = MathHelper.Clamp(value.X, -rangeX, rangeX);
+                detectOffset.Y = MathHelper.Clamp(value.Y, -rangeY, rangeY);
+            }
+        }
+
         [InGameEditable, Serialize("1", true)]
         public string Output
         {
@@ -49,6 +63,7 @@ namespace Barotrauma.Items.Components
             get { return falseOutput; }
             set { falseOutput = value; }
         }
+
 
         public MotionSensor(Item item, XElement element)
             : base (item, element)
@@ -82,10 +97,11 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            Vector2 detectPos = item.WorldPosition + detectOffset;
             foreach (Character c in Character.CharacterList)
             {
-                if (Math.Abs(c.WorldPosition.X - item.WorldPosition.X) < rangeX &&
-                    Math.Abs(c.WorldPosition.Y - item.WorldPosition.Y) < rangeY)
+                if (Math.Abs(c.WorldPosition.X - detectPos.X) < rangeX &&
+                    Math.Abs(c.WorldPosition.Y - detectPos.Y) < rangeY)
                 {
                     if (!c.AnimController.Limbs.Any(l => l.body.FarseerBody.Awake)) continue;
 
