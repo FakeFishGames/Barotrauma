@@ -1189,6 +1189,7 @@ namespace Barotrauma
                                 new GUITextBlock(leftElement, "Is Humanoid?");
                                 new GUITickBox(rightElement, string.Empty);
                                 break;
+                                // TODO: texture path
                         }
                     }
                     var codeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), listBox.Content.RectTransform), style: null) { CanBeFocused = false };
@@ -1197,10 +1198,10 @@ namespace Barotrauma
                     // Spacing
                     new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), style: null);
                     // Limbs
+                    new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), "Limbs:") { CanBeFocused = false };
                     var limbs = new Dictionary<XElement, object[]>();
                     var limbElements = new List<GUIComponent>();
-                    // TODO: add a label
-                    var buttonElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), listBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
+                    var buttonElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), listBox.Content.RectTransform), style: null)
                     {
                         CanBeFocused = false
                     };
@@ -1222,25 +1223,40 @@ namespace Barotrauma
                     {
                         OnClicked = (b, d) =>
                         {
-                            var limbElement = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 3), listBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
+                            var limbElement = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 4 + 20), listBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
                             {
                                 CanBeFocused = false
                             };
-                            var group = new GUILayoutGroup(new RectTransform(Vector2.One, limbElement.RectTransform)) { AbsoluteSpacing = 2 };
                             int id = limbElements.Count;
-                            var label = new GUITextBlock(new RectTransform(new Vector2(1, 0.3f), group.RectTransform), $"Limb {id}");
-                            var field = new GUIFrame(new RectTransform(new Vector2(1, 0.3f), group.RectTransform), style: null);
-                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), field.RectTransform, Anchor.TopLeft), $"ID");
-                            // TODO: name, source rect
-                            new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), field.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
+                            var group = new GUILayoutGroup(new RectTransform(Vector2.One, limbElement.RectTransform)) { AbsoluteSpacing = 2 };
+                            var label = new GUITextBlock(new RectTransform(new Vector2(1, 0.2f), group.RectTransform), $"Limb {id}");
+                            var idField = new GUIFrame(new RectTransform(new Vector2(1, 0.2f), group.RectTransform), style: null);
+                            var nameField = new GUIFrame(new RectTransform(new Vector2(1, 0.2f), group.RectTransform), style: null);
+                            var sourceRectField = new GUIFrame(new RectTransform(new Vector2(1, 0.2f), group.RectTransform), style: null);
+                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopLeft), "ID");
+                            new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
                             {
+                                MinValueInt = 0,
+                                MaxValueInt = byte.MaxValue,
                                 IntValue = id,
                                 OnValueChanged = numInput =>
                                 {
                                     id = numInput.IntValue;
-                                    label.Text = $"Limb {id}";
+                                    string text = nameField.GetChild<GUITextBox>().Text;
+                                    string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
+                                    label.Text = $"Limb {t}";
                                 }
                             };
+                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopLeft), "Name");
+                            new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), string.Empty)
+                                .OnTextChanged += (tB, text) =>
+                                {
+                                    string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
+                                    label.Text = $"Limb {t}";
+                                    return true;
+                                };
+                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), sourceRectField.RectTransform, Anchor.TopLeft), "Source Rect");
+                            // TODO: rect field
                             limbElements.Add(limbElement);
                             return true;
                         }
