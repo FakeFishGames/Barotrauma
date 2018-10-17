@@ -17,14 +17,59 @@ namespace Barotrauma
     {
         public void UpdateDeformations(float deltaTime)
         {
-            #region Experimental
-            //var start = LimbA.WorldPosition;
-            //var end = LimbB.WorldPosition;
-            //var jointAPos = ConvertUnits.ToDisplayUnits(LocalAnchorA);
-            //var control = start + Vector2.Transform(jointAPos, Matrix.CreateRotationZ(LimbA.Rotation));
-            #endregion
+            float jointAngle = this.JointAngle;
 
-            void UpdateBezier(Limb limb)
+            BezierDeformation limbADeformation = LimbA.Deformations.Find(d => d is BezierDeformation) as BezierDeformation;
+            BezierDeformation limbBDeformation = LimbB.Deformations.Find(d => d is BezierDeformation) as BezierDeformation;
+
+            if (limbADeformation != null && limbBDeformation != null)
+            {
+                UpdateBend(LimbA, limbADeformation, this.LocalAnchorA, -jointAngle);// (float)(Math.Sin(Timing.TotalTime)));
+                UpdateBend(LimbB, limbBDeformation, this.LocalAnchorB, jointAngle);// (float)(Math.Sin(Timing.TotalTime)));
+
+            }
+            
+            void UpdateBend(Limb limb, BezierDeformation deformation, Vector2 localAnchor, float angle)
+            {
+                deformation.Scale = limb.DeformSprite.Size;
+
+                Vector2 displayAnchor = ConvertUnits.ToDisplayUnits(localAnchor);
+                displayAnchor.Y = -displayAnchor.Y;
+                Vector2 refPos = displayAnchor + limb.DeformSprite.Origin;// Vector2.Transform(localAnchor, )
+                //refPos.Y = -refPos.Y;
+
+                refPos.X /= limb.DeformSprite.Size.X;
+                refPos.Y /= limb.DeformSprite.Size.Y;
+
+                if (Math.Abs(localAnchor.X) > Math.Abs(localAnchor.Y))
+                {
+                    if (localAnchor.X > 0.0f)
+                    {
+                        deformation.BendRightRefPos = refPos;
+                        deformation.BendRight = angle;
+                    }
+                    else
+                    {
+                        deformation.BendLeftRefPos = refPos;
+                        deformation.BendLeft = angle;
+                    }
+                }
+                else
+                {
+                    if (localAnchor.Y > 0.0f)
+                    {
+                        deformation.BendUpRefPos = refPos;
+                        deformation.BendUp = angle;
+                    }
+                    else
+                    {
+                        deformation.BendDownRefPos = refPos;
+                        deformation.BendDown = angle;
+                    }
+                }
+            }
+
+            /*void UpdateBezier(Limb limb)
             {
                 if (limb.DeformSprite == null) { return; }
 
@@ -75,7 +120,7 @@ namespace Barotrauma
                 }
             }
             UpdateBezier(LimbA);
-            UpdateBezier(LimbB);
+            UpdateBezier(LimbB);*/
         }
 
         public void Draw(SpriteBatch spriteBatch)
@@ -285,7 +330,7 @@ namespace Barotrauma
             }
 
             body.Dir = Dir;
-            
+
             bool hideLimb = wearingItems.Any(w => w != null && w.HideLimb);
             body.UpdateDrawPosition();
 
