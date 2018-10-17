@@ -648,8 +648,15 @@ namespace Barotrauma.Networking
                     break;
             }
 
-            GameServer.Log(c.Name+" has reported an error: "+errorStr, ServerLog.MessageType.Error);
-            KickClient(c, errorStr);
+            if (c == null)
+            {
+                KickClient(inc.SenderConnection, errorStr);
+            }
+            else
+            {
+				GameServer.Log(c.Name + " has reported an error: " + errorStr, ServerLog.MessageType.Error);
+				KickClient(c, errorStr);
+            }
         }
 
         private void ClientReadLobby(NetIncomingMessage inc)
