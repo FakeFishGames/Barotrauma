@@ -1199,6 +1199,8 @@ namespace Barotrauma
                                 new GUITextBlock(leftElement, "Size");
                                 new GUINumberInput(rightElement, GUINumberInput.NumberType.Float)
                                 {
+                                    MinValueFloat = 1,
+                                    MaxValueFloat = 1000,
                                     FloatValue = size,
                                     OnValueChanged = (nInput) => size = nInput.FloatValue
                                 };
@@ -1249,16 +1251,17 @@ namespace Barotrauma
                     {
                         OnClicked = (b, d) =>
                         {
-                            var limbElement = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 4 + 20), listBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
+                            var limbElement = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 5 + 20), listBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
                             {
                                 CanBeFocused = false
                             };
                             int id = limbElements.Count;
                             var group = new GUILayoutGroup(new RectTransform(Vector2.One, limbElement.RectTransform)) { AbsoluteSpacing = 2 };
-                            var label = new GUITextBlock(new RectTransform(new Vector2(1, 0.2f), group.RectTransform), $"Limb {id}");
-                            var idField = new GUIFrame(new RectTransform(new Vector2(1, 0.2f), group.RectTransform), style: null);
-                            var nameField = new GUIFrame(new RectTransform(new Vector2(1, 0.2f), group.RectTransform), style: null);
-                            var sourceRectField = new GUIFrame(new RectTransform(new Vector2(1, 0.2f), group.RectTransform), style: null);
+                            var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), $"Limb {id}");
+                            var idField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
+                            var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
+                            var limbTypeField = GUI.CreateEnumField(LimbType.None, elementSize, "Limb Type", group.RectTransform, font: GUI.Font);
+                            var sourceRectField = GUI.CreateRectangleField(Rectangle.Empty, elementSize, "Source Rect", group.RectTransform, font: GUI.Font);
                             new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopLeft), "ID");
                             new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
                             {
@@ -1281,12 +1284,11 @@ namespace Barotrauma
                                     label.Text = $"Limb {t}";
                                     return true;
                                 };
-                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), sourceRectField.RectTransform, Anchor.TopLeft), "Source Rect");
-                            // TODO: rect field
                             limbElements.Add(limbElement);
                             return true;
                         }
                     };
+                    // TODO: add and remove joints
                     box.Buttons[0].OnClicked += (b, d) =>
                     {
                         box.Close();
@@ -1294,8 +1296,7 @@ namespace Barotrauma
                     };
                     box.Buttons[1].OnClicked += (b, d) =>
                     {
-                        // TODO: gui elements for adding and removing limbs and joints
-                        // TODO: parse from the code field and gui elements
+                        // TODO: parse the params from the gui elements
                         // TODO: parse from css/html file
                         var ragdollParams = new object[]
                         {
