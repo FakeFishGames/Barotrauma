@@ -146,7 +146,8 @@ namespace Barotrauma
                         new Vector3(new Vector2(obj.Position.X, obj.Position.Y) - camDiff * obj.Position.Z / 10000.0f, z * 10.0f),
                         obj.ActivePrefab.DeformableSprite.Origin,
                         obj.CurrentRotation,
-                        scale);
+                        scale,
+                        Color.Lerp(Color.White, Level.Loaded.BackgroundTextureColor, obj.Position.Z / 5000.0f));
                 }
 
                 

@@ -302,7 +302,7 @@ namespace Barotrauma
                     {
                         DeformSprite.Reset();
                     }
-                    body.Draw(DeformSprite, cam, Vector2.One * Scale);
+                    body.Draw(DeformSprite, cam, Vector2.One * Scale, color);
                 }
                 else
                 {
