@@ -169,7 +169,10 @@ namespace Barotrauma
         {
             deformArrayWidth = deform.GetLength(0);
             deformArrayHeight = deform.GetLength(1);
-            deformAmount = new Vector2[deformArrayWidth * deformArrayHeight];
+            if (deformAmount == null || deformAmount.Length != deformArrayWidth * deformArrayHeight)
+            {
+                deformAmount = new Vector2[deformArrayWidth * deformArrayHeight];
+            }
             for (int x = 0; x < deformArrayWidth; x++)
             {
                 for (int y = 0; y < deformArrayHeight; y++)
