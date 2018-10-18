@@ -254,6 +254,12 @@ namespace Barotrauma
             return false;
         }
 
+        public static Point GetAttributePoint(this XElement element, string name, Point defaultValue)
+        {
+            if (element?.Attribute(name) == null) return defaultValue;
+            return ParsePoint(element.Attribute(name).Value);
+        }
+
         public static Vector2 GetAttributeVector2(this XElement element, string name, Vector2 defaultValue)
         {
             if (element?.Attribute(name) == null) return defaultValue;
@@ -325,6 +331,25 @@ namespace Barotrauma
         public static string RectToString(Rectangle rect)
         {
             return rect.X + "," + rect.Y + "," + rect.Width + "," + rect.Height;
+        }
+
+        public static Point ParsePoint(string stringPoint2, bool errorMessages = true)
+        {
+            string[] components = stringPoint2.Split(',');
+
+            Point point = Point.Zero;
+
+            if (components.Length != 2)
+            {
+                if (!errorMessages) return point;
+                DebugConsole.ThrowError("Failed to parse the string \"" + stringPoint2 + "\" to Vector2");
+                return point;
+            }
+
+            int.TryParse(components[0], NumberStyles.Any, CultureInfo.InvariantCulture, out point.X);
+            int.TryParse(components[1], NumberStyles.Any, CultureInfo.InvariantCulture, out point.Y);
+
+            return point;
         }
 
         public static Vector2 ParseVector2(string stringVector2, bool errorMessages = true)
