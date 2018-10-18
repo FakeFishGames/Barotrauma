@@ -1734,14 +1734,16 @@ namespace Barotrauma
                     {
                         if (idToHierarchy.TryGetValue(i, out string hierarchy))
                         {
-                            if (hierarchy != "0")
+                            if (hierarchy.Length > 1)
                             {
                                 string parent = hierarchy.Remove(hierarchy.Length - 1, 1);
                                 if (hierarchyToID.TryGetValue(parent, out int parentID))
                                 {
                                     jointXElements.Add(new XElement("joint",
                                         new XAttribute("limb1", parentID),
-                                        new XAttribute("limb2", i)
+                                        new XAttribute("limb2", i),
+                                        new XAttribute("limb1anchor", "0,0"),
+                                        new XAttribute("limb2anchor", "0,0")
                                         ));
                                 }
                             }
