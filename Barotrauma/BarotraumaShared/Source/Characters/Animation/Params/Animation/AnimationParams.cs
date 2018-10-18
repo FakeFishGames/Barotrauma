@@ -27,10 +27,10 @@ namespace Barotrauma
             set;
         }
 
-        [Serialize(float.NaN, true), Editable(DecimalCount = 2, ToolTip = "How high above the ground the character's head is positioned.")]
+        [Serialize(0f, true), Editable(DecimalCount = 2, ToolTip = "How high above the ground the character's head is positioned.")]
         public float HeadPosition { get; set; }
 
-        [Serialize(float.NaN, true), Editable(DecimalCount = 2, ToolTip = "How high above the ground the character's torso is positioned.")]
+        [Serialize(0f, true), Editable(DecimalCount = 2, ToolTip = "How high above the ground the character's torso is positioned.")]
         public float TorsoPosition { get; set; }
 
         [Serialize(0.75f, true), Editable(MinValueFloat = 0.1f, MaxValueFloat = 0.99f, DecimalCount = 2, ToolTip = "The character's movement speed is multiplied with this value when moving backwards.")]
