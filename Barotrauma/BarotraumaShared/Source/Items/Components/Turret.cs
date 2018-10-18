@@ -12,7 +12,7 @@ namespace Barotrauma.Items.Components
 {
     partial class Turret : Powered, IDrawableComponent, IServerSerializable
     {
-        private Sprite barrelSprite;
+        private Sprite barrelSprite, railSprite;
 
         private Vector2 barrelPos;
 
@@ -119,19 +119,18 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             IsActive = true;
-
-            string barrelSpritePath = element.GetAttributeString("barrelsprite", "");
-
-            if (!string.IsNullOrWhiteSpace(barrelSpritePath))
+            
+            foreach (XElement subElement in element.Elements())
             {
-                if (!barrelSpritePath.Contains("/"))
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    barrelSpritePath = Path.Combine(Path.GetDirectoryName(item.Prefab.ConfigFile), barrelSpritePath);
+                    case "barrelsprite":
+                        barrelSprite = new Sprite(subElement);
+                        break;
+                    case "railsprite":
+                        railSprite = new Sprite(subElement);
+                        break;
                 }
-
-                barrelSprite = new Sprite(
-                    barrelSpritePath,
-                    element.GetAttributeVector2("origin", Vector2.Zero));
             }
 
             hasLight = null;
@@ -460,6 +459,7 @@ namespace Barotrauma.Items.Components
             base.RemoveComponentSpecific();
 
             if (barrelSprite != null) barrelSprite.Remove();
+            if (railSprite != null) railSprite.Remove();
 
 #if CLIENT
             moveSoundChannel?.Dispose(); moveSoundChannel = null;

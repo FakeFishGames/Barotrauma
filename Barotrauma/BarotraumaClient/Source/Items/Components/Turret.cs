@@ -203,15 +203,19 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (barrelSprite != null)
-            {
-                barrelSprite.Draw(spriteBatch,
-                    drawPos + barrelPos - new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation)) * recoilOffset, 
-                    Color.White,
-                    rotation + MathHelper.PiOver2, 1.0f,
-                    SpriteEffects.None, item.SpriteDepth + 0.01f);
-            }
+            railSprite?.Draw(spriteBatch,
+                drawPos + barrelPos,
+                Color.White,
+                rotation + MathHelper.PiOver2, 1.0f,
+                SpriteEffects.None, item.SpriteDepth + 0.01f);
 
+            barrelSprite?.Draw(spriteBatch,
+                drawPos + barrelPos - new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation)) * recoilOffset, 
+                Color.White,
+                rotation + MathHelper.PiOver2, 1.0f,
+                SpriteEffects.None, item.SpriteDepth + 0.015f);
+            
+    
             if (!editing) return;
 
             GUI.DrawLine(spriteBatch,
