@@ -157,8 +157,7 @@ namespace Barotrauma
                         dequeuedInput = memInput[memInput.Count - 1].states;
 
                         double aimAngle = ((double)memInput[memInput.Count - 1].intAim / 65535.0) * 2.0 * Math.PI;
-                        cursorPosition = (ViewTarget == null ? AnimController.AimSourcePos : ViewTarget.Position)
-                            + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 60.0f;
+                        cursorPosition = AimRefPosition + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 60.0f;
 
                         //reset focus when attempting to use/select something
                         if (memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Use) ||
@@ -231,7 +230,7 @@ namespace Barotrauma
 
                 if (AnimController.TargetDir == Direction.Left) newInput |= InputNetFlags.FacingLeft;
 
-                Vector2 relativeCursorPos = cursorPosition - (ViewTarget == null ? AnimController.AimSourcePos : ViewTarget.Position);
+                Vector2 relativeCursorPos = cursorPosition - AimRefPosition;
                 relativeCursorPos.Normalize();
                 UInt16 intAngle = (UInt16)(65535.0 * Math.Atan2(relativeCursorPos.Y, relativeCursorPos.X) / (2.0 * Math.PI));
 
@@ -487,7 +486,7 @@ namespace Barotrauma
 
                     if (aiming)
                     {
-                        Vector2 relativeCursorPos = cursorPosition - (ViewTarget == null ? AnimController.AimSourcePos : ViewTarget.Position);
+                        Vector2 relativeCursorPos = cursorPosition - AimRefPosition;
                         tempBuffer.Write((UInt16)(65535.0 * Math.Atan2(relativeCursorPos.Y, relativeCursorPos.X) / (2.0 * Math.PI)));
                     }
                     tempBuffer.Write(IsRagdolled);
