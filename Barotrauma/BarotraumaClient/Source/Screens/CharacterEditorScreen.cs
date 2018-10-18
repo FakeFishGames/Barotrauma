@@ -1472,7 +1472,7 @@ namespace Barotrauma
             new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), style: null);
             // Limbs
             new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), "Limbs:") { CanBeFocused = false };
-            var limbXElements = new List<XElement>();
+            var limbXElements = new Dictionary<string, XElement>();
             var limbGUIElements = new List<GUIComponent>();
             var limbButtonElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), listBox.Content.RectTransform), style: null)
             {
@@ -1628,12 +1628,12 @@ namespace Barotrauma
                     string limbName = GetField("Name").Parent.GetChild<GUITextBox>().Text;
                     LimbType limbType = (LimbType)GetField("Limb Type").Parent.GetChild<GUIDropDown>().SelectedData;
                     var rectInputs = GetField("Source Rect").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).ToArray();
-                    limbXElements.Add(new XElement("limb",
+                    limbXElements.Add(id.ToString(), new XElement("limb",
                         new XAttribute("id", id),
                         new XAttribute("name", limbName),
                         new XAttribute("type", limbType.ToString()),
-                        new XAttribute("radius", size / 5),    // Placeholder value
-                        new XAttribute("height", size / 8),    // Placeholder value
+                        new XAttribute("width", rectInputs[2].IntValue),
+                        new XAttribute("height", rectInputs[3].IntValue),
                         new XElement("sprite",
                             new XAttribute("texture", texturePathElement.Text),
                             new XAttribute("sourcerect", $"{rectInputs[0].IntValue}, {rectInputs[1].IntValue}, {rectInputs[2].IntValue}, {rectInputs[3].IntValue}"))
@@ -1661,7 +1661,7 @@ namespace Barotrauma
                 {
                     new XAttribute("type", name),
                     new XElement("collider", new XAttribute("radius", size)),   // TODO: if we set the radius, the collider cannot be a rectangle
-                    limbXElements,
+                    limbXElements.Values,
                     jointXElements
                 };
                 CreateCharacter(name, isHumanoid, ragdollParams);
@@ -1705,20 +1705,6 @@ namespace Barotrauma
                                 int.TryParse(s, out int v);
                                 return v;
                             };
-                            int x = ParseToInt("left");
-                            int y = ParseToInt("top");
-                            int width = ParseToInt("width");
-                            int height = ParseToInt("height");
-                            limbXElements.Add(new XElement("limb",
-                                new XAttribute("id", id),
-                                new XAttribute("name", limbName),
-                                new XAttribute("type", ParseLimbType(limbName).ToString()),
-                                new XAttribute("radius", size / 5),    // Placeholder value
-                                new XAttribute("height", size / 8),    // Placeholder value
-                                new XElement("sprite",
-                                    new XAttribute("texture", texturePathElement.Text),
-                                    new XAttribute("sourcerect", $"{x}, {y}, {width}, {height}"))
-                                ));
                             // example: 111311cr -> 111311
                             string hierarchy = new string(codeName.TakeWhile(c => char.IsNumber(c)).ToArray());
                             if (hierarchyToID.ContainsKey(hierarchy))
@@ -1730,6 +1716,20 @@ namespace Barotrauma
                             idToHierarchy.Add(id, hierarchy);
                             string positionCode = new string(codeName.SkipWhile(c => char.IsNumber(c)).TakeWhile(c => c != '_').ToArray());
                             idToPositionCode.Add(id, positionCode.ToLowerInvariant());
+                            int x = ParseToInt("left");
+                            int y = ParseToInt("top");
+                            int width = ParseToInt("width");
+                            int height = ParseToInt("height");
+                            limbXElements.Add(hierarchy, new XElement("limb",
+                                new XAttribute("id", id),
+                                new XAttribute("name", limbName),
+                                new XAttribute("type", ParseLimbType(limbName).ToString()),
+                                new XAttribute("width", width),
+                                new XAttribute("height", height),
+                                new XElement("sprite",
+                                    new XAttribute("texture", texturePathElement.Text),
+                                    new XAttribute("sourcerect", $"{x}, {y}, {width}, {height}"))
+                                ));
                             id++;
                         }
                     }
@@ -1746,34 +1746,46 @@ namespace Barotrauma
                                     Vector2 anchor2 = Vector2.Zero;
                                     if (idToPositionCode.TryGetValue(i, out string positionCode))
                                     {
-                                        switch (positionCode)
+                                        if (limbXElements.TryGetValue(parent, out XElement parentElement))
                                         {
-                                            //TODO
-                                            case "tl":
-                                                break;
-                                            case "tc":
-                                                break;
-                                            case "tr":
-                                                break;
-                                            case "cl":
-                                                break;
-                                            case "cc":
-                                                break;
-                                            case "cr":
-                                                break;
-                                            case "bl":
-                                                break;
-                                            case "bc":
-                                                break;
-                                            case "br":
-                                                break;
+                                            float scalar = 0.8f;
+                                            Rectangle sourceRect = parentElement.Element("sprite").GetAttributeRect("sourcerect", Rectangle.Empty);
+                                            float width = sourceRect.Width / 2 * scalar;
+                                            float height = sourceRect.Height / 2 * scalar;
+                                            switch (positionCode)
+                                            {
+                                                case "tl":  // -1, 1
+                                                    anchor1 = new Vector2(-width, height);
+                                                    break;
+                                                case "tc":  // 0, 1
+                                                    anchor1 = new Vector2(0, height);
+                                                    break;
+                                                case "tr":  // -1, 1
+                                                    anchor1 = new Vector2(-width, height);
+                                                    break;
+                                                case "cl":  // 0, -1
+                                                    anchor1 = new Vector2(0, -height);
+                                                    break;
+                                                case "cr":  // 0, 1
+                                                    anchor1 = new Vector2(0, height);
+                                                    break;
+                                                case "bl":  // -1, -1
+                                                    anchor1 = new Vector2(-width, -height);
+                                                    break;
+                                                case "bc":  // 0, -1
+                                                    anchor1 = new Vector2(0, -height);
+                                                    break;
+                                                case "br":  // 1, -1
+                                                    anchor1 = new Vector2(width, -height);
+                                                    break;
+                                            }
                                         }
                                     }
                                     jointXElements.Add(new XElement("joint",
                                         new XAttribute("limb1", parentID),
                                         new XAttribute("limb2", i),
-                                        new XAttribute("limb1anchor", anchor1),
-                                        new XAttribute("limb2anchor", anchor2)
+                                        new XAttribute("limb1anchor", $"{anchor1.X}, {anchor1.Y}"),
+                                        new XAttribute("limb2anchor", $"{anchor2.X}, {anchor2.Y}")
                                         ));
                                 }
                             }
@@ -1783,7 +1795,7 @@ namespace Barotrauma
                     {
                         new XAttribute("type", name),
                         new XElement("collider", new XAttribute("radius", size)),   // TODO: if we set the radius, the collider cannot be a rectangle
-                        limbXElements,
+                        limbXElements.Values,
                         jointXElements
                     };
                     CreateCharacter(name, isHumanoid, ragdollParams);
@@ -1798,7 +1810,6 @@ namespace Barotrauma
                                 limbType = LimbType.Head;
                                 break;
                             case "torso":
-                            case "chest":
                                 limbType = LimbType.Torso;
                                 break;
                             case "waist":
