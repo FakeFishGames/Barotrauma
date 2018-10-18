@@ -1687,38 +1687,42 @@ namespace Barotrauma
                     int id = 0;
                     foreach (var line in lines)
                     {
-                        string codeName = new string(line.SkipWhile(c => c != '>').Skip(1).ToArray());
-                        // TODO: handle multiple limbs that share the same source rect
-                        if (string.IsNullOrWhiteSpace(codeName)) { continue; }
-                        string limbName = new string(codeName.SkipWhile(c => c != '_').Skip(1).ToArray());
-                        if (string.IsNullOrWhiteSpace(limbName)) { continue; }
-                        var parts = line.Split(' ');
-                        int ParseToInt(string selector)
+                        //string codeName = new string(line.SkipWhile(c => c != '>').Skip(1).ToArray()); // 1113tr_TentacleMouthTop1, 1114cr_TentacleMouthCenter1, 11121cr_TentacleJaw1,
+                        var codeNames = new string(line.SkipWhile(c => c != '>').Skip(1).ToArray()).Split(',');
+                        for (int i = 0; i < codeNames.Length; i++)
                         {
-                            string part = parts.First(p => p.Contains(selector));
-                            string s = new string(part.SkipWhile(c => c != ':').Skip(1).TakeWhile(c => char.IsNumber(c)).ToArray());
-                            int.TryParse(s, out int v);
-                            return v;
+                            string codeName = codeNames[i].Trim();
+                            if (string.IsNullOrWhiteSpace(codeName)) { continue; }
+                            string limbName = new string(codeName.SkipWhile(c => c != '_').Skip(1).ToArray());
+                            if (string.IsNullOrWhiteSpace(limbName)) { continue; }
+                            var parts = line.Split(' ');
+                            int ParseToInt(string selector)
+                            {
+                                string part = parts.First(p => p.Contains(selector));
+                                string s = new string(part.SkipWhile(c => c != ':').Skip(1).TakeWhile(c => char.IsNumber(c)).ToArray());
+                                int.TryParse(s, out int v);
+                                return v;
 
-                        };
-                        int x = ParseToInt("left");
-                        int y = ParseToInt("top");
-                        int width = ParseToInt("width");
-                        int height = ParseToInt("height");
-                        limbXElements.Add(new XElement("limb",
-                            new XAttribute("id", id),
-                            new XAttribute("name", limbName),
-                            new XAttribute("type", ParseLimbType(limbName).ToString()),
-                            new XAttribute("radius", size / 5),    // Placeholder value
-                            new XAttribute("height", size / 8),    // Placeholder value
-                            new XElement("sprite",
-                                new XAttribute("texture", texturePathElement.Text),
-                                new XAttribute("sourcerect", $"{x}, {y}, {width}, {height}"))
-                            ));
-                        id++;
+                            };
+                            int x = ParseToInt("left");
+                            int y = ParseToInt("top");
+                            int width = ParseToInt("width");
+                            int height = ParseToInt("height");
+                            limbXElements.Add(new XElement("limb",
+                                new XAttribute("id", id),
+                                new XAttribute("name", limbName),
+                                new XAttribute("type", ParseLimbType(limbName).ToString()),
+                                new XAttribute("radius", size / 5),    // Placeholder value
+                                new XAttribute("height", size / 8),    // Placeholder value
+                                new XElement("sprite",
+                                    new XAttribute("texture", texturePathElement.Text),
+                                    new XAttribute("sourcerect", $"{x}, {y}, {width}, {height}"))
+                                ));
+                            id++;
+                        }
                     }
                     // TODO: use the codeName for joint definitions
-                    for (int i = 1; i < lines.Count() - 1; i++)
+                    for (int i = 1; i < id; i++)
                     {
                         jointXElements.Add(new XElement("joint",
                             new XAttribute("limb1", i - 1),
