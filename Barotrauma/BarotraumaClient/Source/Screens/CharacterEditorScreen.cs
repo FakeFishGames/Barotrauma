@@ -1734,7 +1734,11 @@ namespace Barotrauma
                     {
                         if (idToHierarchy.TryGetValue(i, out string hierarchy))
                         {
+<<<<<<< HEAD
                             if (hierarchy.Length > 1)
+=======
+                            if (hierarchy.Length > 0)
+>>>>>>> a6ba95c78134ca3d694c957d07e4e5d3f83e8dba
                             {
                                 string parent = hierarchy.Remove(hierarchy.Length - 1, 1);
                                 if (hierarchyToID.TryGetValue(parent, out int parentID))
