@@ -234,10 +234,12 @@ namespace Barotrauma
                 relativeCursorPos.Normalize();
                 UInt16 intAngle = (UInt16)(65535.0 * Math.Atan2(relativeCursorPos.Y, relativeCursorPos.X) / (2.0 * Math.PI));
 
-                NetInputMem newMem = new NetInputMem();
-                newMem.states = newInput;
-                newMem.intAim = intAngle;
-                if (focusedItem != null)
+                NetInputMem newMem = new NetInputMem
+                {
+                    states = newInput,
+                    intAim = intAngle
+                };
+                if (focusedItem != null && (!newMem.states.HasFlag(InputNetFlags.Grab) && !newMem.states.HasFlag(InputNetFlags.Health)))
                 {
                     newMem.interact = focusedItem.ID;
                 }
