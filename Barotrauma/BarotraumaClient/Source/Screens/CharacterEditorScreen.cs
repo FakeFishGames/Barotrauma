@@ -1687,6 +1687,7 @@ namespace Barotrauma
                     int id = 0;
                     Dictionary<string, int> hierarchyToID = new Dictionary<string, int>();
                     Dictionary<int, string> idToHierarchy = new Dictionary<int, string>();
+                    Dictionary<int, string> idToPositionCode = new Dictionary<int, string>();
                     foreach (var line in lines)
                     {
                         var codeNames = new string(line.SkipWhile(c => c != '>').Skip(1).ToArray()).Split(',');
@@ -1727,6 +1728,8 @@ namespace Barotrauma
                             }
                             hierarchyToID.Add(hierarchy, id);
                             idToHierarchy.Add(id, hierarchy);
+                            string positionCode = new string(codeName.SkipWhile(c => char.IsNumber(c)).TakeWhile(c => c != '_').ToArray());
+                            idToPositionCode.Add(id, positionCode.ToLowerInvariant());
                             id++;
                         }
                     }
@@ -1739,11 +1742,38 @@ namespace Barotrauma
                                 string parent = hierarchy.Remove(hierarchy.Length - 1, 1);
                                 if (hierarchyToID.TryGetValue(parent, out int parentID))
                                 {
+                                    Vector2 anchor1 = Vector2.Zero;
+                                    Vector2 anchor2 = Vector2.Zero;
+                                    if (idToPositionCode.TryGetValue(i, out string positionCode))
+                                    {
+                                        switch (positionCode)
+                                        {
+                                            //TODO
+                                            case "tl":
+                                                break;
+                                            case "tc":
+                                                break;
+                                            case "tr":
+                                                break;
+                                            case "cl":
+                                                break;
+                                            case "cc":
+                                                break;
+                                            case "cr":
+                                                break;
+                                            case "bl":
+                                                break;
+                                            case "bc":
+                                                break;
+                                            case "br":
+                                                break;
+                                        }
+                                    }
                                     jointXElements.Add(new XElement("joint",
                                         new XAttribute("limb1", parentID),
                                         new XAttribute("limb2", i),
-                                        new XAttribute("limb1anchor", "0,0"),
-                                        new XAttribute("limb2anchor", "0,0")
+                                        new XAttribute("limb1anchor", anchor1),
+                                        new XAttribute("limb2anchor", anchor2)
                                         ));
                                 }
                             }
