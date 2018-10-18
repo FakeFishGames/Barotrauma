@@ -103,7 +103,7 @@ namespace Barotrauma.Items.Components
 
             if (crosshairSprite != null)
             {
-                Vector2 itemPos = cam.WorldToScreen(item.WorldPosition);
+                Vector2 itemPos = cam.WorldToScreen(new Vector2(item.WorldRect.X + barrelPos.X, item.WorldRect.Y - barrelPos.Y));
                 Vector2 turretDir = new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation));
 
                 Vector2 mouseDiff = itemPos - PlayerInput.MousePosition;
