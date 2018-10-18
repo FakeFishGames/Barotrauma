@@ -209,15 +209,14 @@ namespace Barotrauma
                     }
                 }
 
-                foreach (List<Vector2> nodeList in level.SmallTunnels)
+                foreach (List<Point> nodeList in level.SmallTunnels)
                 {
-                    for (int i = 1; i<nodeList.Count; i++)
+                    for (int i = 1; i < nodeList.Count; i++)
                     {
-                        GUI.DrawLine(spriteBatch, 
-                            new Vector2(nodeList[i-1].X, -nodeList[i - 1].Y),
-                            new Vector2(nodeList[i].X, -nodeList[i].Y), 
+                        GUI.DrawLine(spriteBatch,
+                            new Vector2(nodeList[i - 1].X, -nodeList[i - 1].Y),
+                            new Vector2(nodeList[i].X, -nodeList[i].Y),
                             Color.Lerp(Color.Yellow, Color.Red, i / (float)nodeList.Count), 0, 10);
-
                     }
                 }
             }

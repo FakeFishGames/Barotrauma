@@ -128,8 +128,8 @@ namespace Barotrauma
         public void PlaceSprites(Level level, int amount)
         {
             spriteGrid = new List<BackgroundSprite>[
-                (int)Math.Ceiling(level.Size.X / GridSize),
-                (int)Math.Ceiling((level.Size.Y - level.BottomPos) / GridSize)];
+                (level.Size.X / GridSize),
+                (level.Size.Y - level.BottomPos) / GridSize];
 
             sprites = new List<BackgroundSprite>();
             

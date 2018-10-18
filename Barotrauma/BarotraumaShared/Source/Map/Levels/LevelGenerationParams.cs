@@ -56,20 +56,20 @@ namespace Barotrauma
             private set;
         }
 
-        private float width, height;
+        private int width, height;
 
-        private Vector2 voronoiSiteInterval;
+        private Point voronoiSiteInterval;
         //how much the sites are "scattered" on x- and y-axis
         //if Vector2.Zero, the sites will just be placed in a regular grid pattern
-        private Vector2 voronoiSiteVariance;
+        private Point voronoiSiteVariance;
 
         //how far apart the nodes of the main path can be
         //x = min interval, y = max interval
-        private Vector2 mainPathNodeIntervalRange;
+        private Point mainPathNodeIntervalRange;
 
         private int smallTunnelCount;
         //x = min length, y = max length
-        private Vector2 smallTunnelLengthRange;
+        private Point smallTunnelLengthRange;
 
         //how large portion of the bottom of the level should be "carved out"
         //if 0.0f, the bottom will be completely solid (making the abyss unreachable)
@@ -77,13 +77,13 @@ namespace Barotrauma
         private float bottomHoleProbability;
 
         //the y-position of the ocean floor (= the position from which the bottom formations extend upwards)
-        private float seaFloorBaseDepth;
+        private int seaFloorBaseDepth;
         //how much random variance there can be in the height of the formations
-        private float seaFloorVariance;
+        private int seaFloorVariance;
 
         private int mountainCountMin, mountainCountMax;
         
-        private float mountainHeightMin, mountainHeightMax;
+        private int mountainHeightMin, mountainHeightMax;
 
         private int ruinCount;
 
@@ -115,47 +115,47 @@ namespace Barotrauma
             set;
         }
 
-        [Serialize(100000.0f, false)]
-        public float Width
+        [Serialize(100000, false)]
+        public int Width
         {
             get { return width; }
-            set { width = Math.Max(value, 2000.0f); }
+            set { width = Math.Max(value, 2000); }
         }
 
-        [Serialize(50000.0f, false)]
-        public float Height
+        [Serialize(50000, false)]
+        public int Height
         {
             get { return height; }
-            set { height = Math.Max(value, 2000.0f); }
+            set { height = Math.Max(value, 2000); }
         }
 
-        public Vector2 VoronoiSiteInterval
+        public Point VoronoiSiteInterval
         {
             get { return voronoiSiteInterval; }
             set
             {
-                voronoiSiteInterval.X = MathHelper.Clamp(value.X, 100.0f, width / 2);
-                voronoiSiteInterval.Y = MathHelper.Clamp(value.Y, 100.0f, height / 2);
+                voronoiSiteInterval.X = MathHelper.Clamp(value.X, 100, width / 2);
+                voronoiSiteInterval.Y = MathHelper.Clamp(value.Y, 100, height / 2);
             }
         }
 
-        public Vector2 VoronoiSiteVariance
+        public Point VoronoiSiteVariance
         {
             get { return voronoiSiteVariance; }
             set
             {
-                voronoiSiteVariance = new Vector2(
+                voronoiSiteVariance = new Point(
                     MathHelper.Clamp(value.X, 0, voronoiSiteInterval.X),
                     MathHelper.Clamp(value.Y, 0, voronoiSiteInterval.Y));
             }
         }
 
-        public Vector2 MainPathNodeIntervalRange
+        public Point MainPathNodeIntervalRange
         {
             get { return mainPathNodeIntervalRange; }
             set
             {
-                mainPathNodeIntervalRange.X = MathHelper.Clamp(value.X, 100.0f, width / 2);
+                mainPathNodeIntervalRange.X = MathHelper.Clamp(value.X, 100, width / 2);
                 mainPathNodeIntervalRange.Y = MathHelper.Clamp(value.Y, mainPathNodeIntervalRange.X, width / 2);
             }
         }
@@ -167,25 +167,25 @@ namespace Barotrauma
             set { smallTunnelCount = MathHelper.Clamp(value, 0, 100); }
         }
 
-        public Vector2 SmallTunnelLengthRange
+        public Point SmallTunnelLengthRange
         {
             get { return smallTunnelLengthRange; }
             set
             {
-                smallTunnelLengthRange.X = MathHelper.Clamp(value.X, 100.0f, width);
+                smallTunnelLengthRange.X = MathHelper.Clamp(value.X, 100, width);
                 smallTunnelLengthRange.Y = MathHelper.Clamp(value.Y, smallTunnelLengthRange.X, width);
             }
         }
 
-        [Serialize(-300000.0f, false)]
-        public float SeaFloorDepth
+        [Serialize(300000, false)]
+        public int SeaFloorDepth
         {
             get { return seaFloorBaseDepth; }
-            set { seaFloorBaseDepth = MathHelper.Clamp(value, Level.MaxEntityDepth, 0.0f); }
+            set { seaFloorBaseDepth = MathHelper.Clamp(value, Level.MaxEntityDepth, 0); }
         }
 
-        [Serialize(1000.0f, false)]
-        public float SeaFloorVariance
+        [Serialize(1000, false)]
+        public int SeaFloorVariance
         {
             get { return seaFloorVariance; }
             set { seaFloorVariance = value; }
@@ -211,8 +211,8 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(1000.0f, false)]
-        public float MountainHeightMin
+        [Serialize(1000, false)]
+        public int MountainHeightMin
         {
             get { return mountainHeightMin; }
             set
@@ -221,8 +221,8 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(5000.0f, false)]
-        public float MountainHeightMax
+        [Serialize(5000, false)]
+        public int MountainHeightMax
         {
             get { return mountainHeightMax; }
             set
@@ -286,13 +286,13 @@ namespace Barotrauma
             colorVector = element.GetAttributeVector3("WallColor", new Vector3(255,255,255));
             WallColor = new Color((int)colorVector.X, (int)colorVector.Y, (int)colorVector.Z);
 
-            VoronoiSiteInterval = element.GetAttributeVector2("VoronoiSiteInterval", new Vector2(3000, 3000));
+            VoronoiSiteInterval = element.GetAttributePoint("VoronoiSiteInterval", new Point(3000, 3000));
 
-            VoronoiSiteVariance = element.GetAttributeVector2("VoronoiSiteVariance", new Vector2(voronoiSiteInterval.X, voronoiSiteInterval.Y) * 0.4f);
+            VoronoiSiteVariance = element.GetAttributePoint("VoronoiSiteVariance", new Point(voronoiSiteInterval.X / 2, voronoiSiteInterval.Y / 2));
 
-            MainPathNodeIntervalRange = element.GetAttributeVector2("MainPathNodeIntervalRange", new Vector2(5000.0f, 10000.0f));
+            MainPathNodeIntervalRange = element.GetAttributePoint("MainPathNodeIntervalRange", new Point(5000, 10000));
 
-            SmallTunnelLengthRange = element.GetAttributeVector2("SmallTunnelLengthRange", new Vector2(5000.0f, 10000.0f));
+            SmallTunnelLengthRange = element.GetAttributePoint("SmallTunnelLengthRange", new Point(5000, 10000));
             
             string biomeStr = element.GetAttributeString("biomes", "");
 

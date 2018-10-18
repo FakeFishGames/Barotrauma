@@ -38,7 +38,7 @@
     BackgroundSpriteAmount="1000"
     MountainCountMin="0"
     MountainCountMax="3"
-    SeaFloorDepth="-300000.0"
+    SeaFloorDepth="-300000"
     MountainHeightMin="10000"
     MountainHeightMax="20000"    
     />
@@ -73,8 +73,8 @@
     BackgroundSpriteAmount="1000"
     MountainCountMin="1"
     MountainCountMax="2"
-    SeaFloorDepth="-150000.0"
-    SeaFloorVariance="10000.0"
+    SeaFloorDepth="-150000"
+    SeaFloorVariance="10000"
     MountainHeightMin="50000"
     MountainHeightMax="100000"
     />
@@ -92,7 +92,7 @@
     RuinCount="1"
     BottomHoleProbability="0.0"
     BackgroundSpriteAmount="1000"
-    SeaFloorVariance="10000.0"
+    SeaFloorVariance="10000"
     />
 
   <Maze
@@ -110,7 +110,7 @@
     BackgroundSpriteAmount="1000"
     MountainCountMin="2"
     MountainCountMax="3"
-    SeaFloorDepth="-300000.0"
+    SeaFloorDepth="-300000"
     SeaFloorVariance="20000"
     MountainHeightMin="10000"
     MountainHeightMax="20000" 
@@ -132,7 +132,7 @@
     BackgroundSpriteAmount="1000"
     MountainCountMin="2"
     MountainCountMax="3"
-    SeaFloorDepth="-50000.0"
+    SeaFloorDepth="-50000"
     SeaFloorVariance="2000"
     MountainHeightMin="40000"
     MountainHeightMax="50000" 
@@ -154,7 +154,7 @@
     BackgroundSpriteAmount="1500"
     MountainCountMin="1"
     MountainCountMax="1"
-    SeaFloorDepth="-100000.0"
+    SeaFloorDepth="-100000"
     SeaFloorVariance="2000"
     MountainHeightMin="80000"
     MountainHeightMax="120000"

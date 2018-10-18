@@ -362,9 +362,9 @@ namespace Voronoi2
             return ( PQcount == 0 );
         }
         
-        private Point PQ_min ()
+        private DoubleVector2 PQ_min ()
         {
-            Point answer = new Point ();
+            DoubleVector2 answer = new DoubleVector2 ();
             
             while ( PQhash[PQmin].PQnext == null  )
             {
@@ -474,7 +474,7 @@ namespace Voronoi2
             return null;
         }
         
-        private Halfedge ELleftbnd( Point p )
+        private Halfedge ELleftbnd( DoubleVector2 p )
         {
             int bucket;
             Halfedge he;
@@ -673,7 +673,7 @@ namespace Voronoi2
         }
         
         /* returns true if p is to right of halfedge e */
-        private bool right_of(Halfedge el, Point p)
+        private bool right_of(Halfedge el, DoubleVector2 p)
         {
             Edge e;
             Site topsite;
@@ -817,7 +817,7 @@ namespace Voronoi2
         {
             Site newsite, bot, top, temp, p;
             Site v;
-            Point newintstar = null;
+            DoubleVector2 newintstar = null;
             int pm;
             Halfedge lbnd, rbnd, llbnd, rrbnd, bisector;
             Edge e;
@@ -969,19 +969,7 @@ namespace Voronoi2
 
             return true;
         }
-
-        public List<GraphEdge> MakeVoronoiGraph(List<Vector2> sites, float minX, float minY, float maxX, float maxY)
-        {
-            double[] xVal = new double[sites.Count];
-            double[] yVal = new double[sites.Count];
-            for (int i = 0; i < sites.Count; i++)
-            {
-                xVal[i] = sites[i].X;
-                yVal[i] = sites[i].Y;
-            }
-            return generateVoronoi(xVal, yVal, minX, maxX, minY, maxY);
-        }
-
+        
         public List<GraphEdge> MakeVoronoiGraph(List<Vector2> sites, int width, int height)
         {
             double[] xVal = new double[sites.Count];
@@ -991,6 +979,11 @@ namespace Voronoi2
                 xVal[i] = sites[i].X;
                 yVal[i] = sites[i].Y;
             }
+            return generateVoronoi(xVal, yVal, 0, width, 0, height);
+        }
+
+        public List<GraphEdge> MakeVoronoiGraph(double[] xVal, double[] yVal, int width, int height)
+        {
             return generateVoronoi(xVal, yVal, 0, width, 0, height);
         }
 
