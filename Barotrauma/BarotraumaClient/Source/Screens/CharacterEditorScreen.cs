@@ -82,6 +82,247 @@ namespace Barotrauma
             CreateGUI();
         }
 
+        #region Main methods
+        public override void AddToGUIUpdateList()
+        {
+            //base.AddToGUIUpdateList();
+            rightPanel.AddToGUIUpdateList();
+            generalControls.AddToGUIUpdateList();
+            if (showAnimControls)
+            {
+                animationControls.AddToGUIUpdateList();
+            }
+            if (showSpritesheet)
+            {
+                spriteSheetControls.AddToGUIUpdateList();
+            }
+            if (editRagdoll)
+            {
+                ragdollControls.AddToGUIUpdateList();
+            }
+            if (editSpriteDimensions)
+            {
+                spriteControls.AddToGUIUpdateList();
+            }
+            if (showParamsEditor)
+            {
+                ParamsEditor.Instance.EditorBox.AddToGUIUpdateList();
+            }
+        }
+
+        public override void Update(double deltaTime)
+        {
+            base.Update(deltaTime);
+            // Handle shortcut keys
+            if (GUI.KeyboardDispatcher.Subscriber == null)
+            {
+                if (PlayerInput.KeyHit(Keys.T) || PlayerInput.KeyHit(Keys.X))
+                {
+                    animTestPoseToggle.Selected = !animTestPoseToggle.Selected;
+                }
+                if (PlayerInput.KeyHit(InputType.Run))
+                {
+                    // TODO: refactor this horrible hacky index manipulation mess
+                    int index = 0;
+                    bool isSwimming = character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast || character.AnimController.ForceSelectAnimationType == AnimationType.SwimSlow;
+                    bool isMovingFast = character.AnimController.ForceSelectAnimationType == AnimationType.Run || character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast;
+                    if (isMovingFast)
+                    {
+                        if (isSwimming || !character.AnimController.CanWalk)
+                        {
+                            index = !character.AnimController.CanWalk ? 0 : (int)AnimationType.SwimSlow - 1;
+                        }
+                        else
+                        {
+                            index = (int)AnimationType.Walk - 1;
+                        }
+                    }
+                    else
+                    {
+                        if (isSwimming || !character.AnimController.CanWalk)
+                        {
+                            index = !character.AnimController.CanWalk ? 1 : (int)AnimationType.SwimFast - 1;
+                        }
+                        else
+                        {
+                            index = (int)AnimationType.Run - 1;
+                        }
+                    }
+                    if (animSelection.SelectedIndex != index)
+                    {
+                        animSelection.Select(index);
+                    }
+                }
+                if (PlayerInput.KeyHit(Keys.E))
+                {
+                    bool isSwimming = character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast || character.AnimController.ForceSelectAnimationType == AnimationType.SwimSlow;
+                    if (isSwimming)
+                    {
+                        animSelection.Select((int)AnimationType.Walk - 1);
+                    }
+                    else
+                    {
+                        animSelection.Select((int)AnimationType.SwimSlow - 1);
+                    }
+                }
+                if (PlayerInput.KeyHit(Keys.F))
+                {
+                    freezeToggle.Selected = !freezeToggle.Selected;
+                }
+            }
+            if (!isFreezed)
+            {
+                Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
+                Submarine.MainSub.Update((float)deltaTime);
+                PhysicsBody.List.ForEach(pb => pb.SetPrevTransform(pb.SimPosition, pb.Rotation));
+                // Handle ragdolling here, because we are not calling the Character.Update() method.
+                if (!Character.DisableControls)
+                {
+                    character.IsRagdolled = PlayerInput.KeyDown(InputType.Ragdoll);
+                }
+                if (character.IsRagdolled)
+                {
+                    character.AnimController.ResetPullJoints();
+                }
+                character.ControlLocalPlayer((float)deltaTime, Cam, false);
+                character.Control((float)deltaTime, Cam);
+                character.AnimController.UpdateAnim((float)deltaTime);
+                character.AnimController.Update((float)deltaTime, Cam);
+                if (character.Position.X < min)
+                {
+                    UpdateWalls(false);
+                }
+                else if (character.Position.X > max)
+                {
+                    UpdateWalls(true);
+                }
+                GameMain.World.Step((float)deltaTime);
+            }
+            //Cam.TargetPos = Vector2.Zero;
+            Cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
+            Cam.Position = character.Position;
+            widgets.Values.ForEach(w => w.Update((float)deltaTime));
+        }
+
+        /// <summary>
+        /// Fps independent mouse input. The draw method is called multiple times per frame.
+        /// </summary>
+        private Vector2 scaledMouseSpeed;
+        public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
+        {
+            if (isFreezed)
+            {
+                Timing.Alpha = 0.0f;
+            }
+
+            base.Draw(deltaTime, graphics, spriteBatch);
+            scaledMouseSpeed = PlayerInput.MouseSpeedPerSecond * (float)deltaTime;
+            graphics.Clear(backgroundColor);
+            Cam.UpdateTransform(true);
+
+            // Submarine
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: Cam.Transform);
+            Submarine.Draw(spriteBatch, true);
+            spriteBatch.End();
+
+            // Character
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: Cam.Transform);
+            character.Draw(spriteBatch, Cam);
+            if (GameMain.DebugDraw)
+            {
+                character.AnimController.DebugDraw(spriteBatch);
+            }
+            else if (displayColliders)
+            {
+                character.AnimController.Limbs.ForEach(l => l.body.DebugDraw(spriteBatch, Color.LightGreen));
+            }
+            spriteBatch.End();
+
+            // GUI
+            spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+            if (showAnimControls)
+            {
+                DrawAnimationControls(spriteBatch);
+            }
+            if (editSpriteDimensions)
+            {
+                DrawSpriteOriginEditor(spriteBatch);
+            }
+            if (editRagdoll)
+            {
+                DrawRagdollEditor(spriteBatch, (float)deltaTime);
+            }
+            if (showSpritesheet)
+            {
+                DrawSpritesheetEditor(spriteBatch, (float)deltaTime);
+            }
+            Structure wall = CurrentWall.walls.FirstOrDefault();
+            Vector2 indicatorPos = wall == null ? originalWall.walls.First().DrawPosition : wall.DrawPosition;
+            GUI.DrawIndicator(spriteBatch, indicatorPos, Cam, 700, GUI.SubmarineIcon, Color.White);
+            GUI.Draw(Cam, spriteBatch);
+            if (isFreezed)
+            {
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 35, 100), "FREEZED", Color.Blue, Color.White * 0.5f, 10, GUI.Font);
+            }
+            if (animTestPoseToggle.Selected)
+            {
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 100, 150), "Animation Test Pose Enabled", Color.Blue, Color.White * 0.5f, 10, GUI.Font);
+            }
+            if (showSpritesheet)
+            {
+                var topLeft = leftPanel.RectTransform.TopLeft;
+                GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 200, 50), "Spritesheet Orientation:", Color.White, Color.Gray * 0.5f, 10, GUI.Font);
+                DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 410, 60), spriteSheetOrientation, string.Empty, Color.White,
+                    angle => spriteSheetOrientation = angle, circleRadius: 40, widgetSize: 20, rotationOffset: MathHelper.Pi, autoFreeze: false);
+            }
+            // Debug
+            if (GameMain.DebugDraw)
+            {
+                // Limb positions
+                foreach (Limb limb in character.AnimController.Limbs)
+                {
+                    Vector2 limbDrawPos = Cam.WorldToScreen(limb.WorldPosition);
+                    GUI.DrawLine(spriteBatch, limbDrawPos + Vector2.UnitY * 5.0f, limbDrawPos - Vector2.UnitY * 5.0f, Color.White);
+                    GUI.DrawLine(spriteBatch, limbDrawPos + Vector2.UnitX * 5.0f, limbDrawPos - Vector2.UnitX * 5.0f, Color.White);
+                }
+
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 0), $"Cursor World Pos: {character.CursorWorldPosition}", Color.White, font: GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 20), $"Cursor Pos: {character.CursorPosition}", Color.White, font: GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 40), $"Cursor Screen Pos: {PlayerInput.MousePosition}", Color.White, font: GUI.SmallFont);
+
+
+                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 80), $"Character World Pos: {character.WorldPosition}", Color.White, font: GUI.SmallFont);
+                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 100), $"Character Pos: {character.Position}", Color.White, font: GUI.SmallFont);
+                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 120), $"Character Sim Pos: {character.SimPosition}", Color.White, font: GUI.SmallFont);
+                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 140), $"Character Draw Pos: {character.DrawPosition}", Color.White, font: GUI.SmallFont);
+
+                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 180), $"Submarine World Pos: {Submarine.MainSub.WorldPosition}", Color.White, font: GUI.SmallFont);
+                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 200), $"Submarine Pos: {Submarine.MainSub.Position}", Color.White, font: GUI.SmallFont);
+                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 220), $"Submarine Sim Pos: {Submarine.MainSub.Position}", Color.White, font: GUI.SmallFont);
+                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 240), $"Submarine Draw Pos: {Submarine.MainSub.DrawPosition}", Color.White, font: GUI.SmallFont);
+
+                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 280), $"Movement Limits: MIN: {min} MAX: {max}", Color.White, font: GUI.SmallFont);
+                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 300), $"Clones: {clones.Length}", Color.White, font: GUI.SmallFont);
+                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 320), $"Total amount of walls: {Structure.WallList.Count}", Color.White, font: GUI.SmallFont);
+
+                // Collider
+                var collider = character.AnimController.Collider;
+                var colliderDrawPos = SimToScreen(collider.SimPosition);
+                Vector2 forward = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation));
+                var endPos = SimToScreen(collider.SimPosition + forward * collider.radius);
+                GUI.DrawLine(spriteBatch, colliderDrawPos, endPos, Color.LightGreen);
+                GUI.DrawLine(spriteBatch, colliderDrawPos, SimToScreen(collider.SimPosition + forward * 0.25f), Color.Blue);
+                //Vector2 left = Vector2.Transform(-Vector2.UnitX, Matrix.CreateRotationZ(collider.Rotation));
+                //Vector2 left = -Vector2.UnitX.TransformVector(forward);
+                Vector2 left = forward.Left();
+                GUI.DrawLine(spriteBatch, colliderDrawPos, SimToScreen(collider.SimPosition + left * 0.25f), Color.Red);
+                ShapeExtensions.DrawCircle(spriteBatch, colliderDrawPos, (endPos - colliderDrawPos).Length(), 40, Color.LightGreen);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 300, 0), $"Collider rotation: {MathHelper.ToDegrees(MathUtils.WrapAngleTwoPi(collider.Rotation))}", Color.White, font: GUI.SmallFont);
+            }
+            spriteBatch.End();
+        }
+        #endregion
+
         #region Inifinite runner
         private int min;
         private int max;
@@ -1628,245 +1869,6 @@ namespace Barotrauma
             }
         }
         #endregion
-
-        public override void AddToGUIUpdateList()
-        {
-            //base.AddToGUIUpdateList();
-            rightPanel.AddToGUIUpdateList();
-            generalControls.AddToGUIUpdateList();
-            if (showAnimControls)
-            {
-                animationControls.AddToGUIUpdateList();
-            }
-            if (showSpritesheet)
-            {
-                spriteSheetControls.AddToGUIUpdateList();
-            }
-            if (editRagdoll)
-            {
-                ragdollControls.AddToGUIUpdateList();
-            }
-            if (editSpriteDimensions)
-            {
-                spriteControls.AddToGUIUpdateList();
-            }
-            if (showParamsEditor)
-            {
-                ParamsEditor.Instance.EditorBox.AddToGUIUpdateList();
-            }
-        }
-
-        public override void Update(double deltaTime)
-        {
-            base.Update(deltaTime);
-            // Handle shortcut keys
-            if (GUI.KeyboardDispatcher.Subscriber == null)
-            {
-                if (PlayerInput.KeyHit(Keys.T) || PlayerInput.KeyHit(Keys.X))
-                {
-                    animTestPoseToggle.Selected = !animTestPoseToggle.Selected;
-                }
-                if (PlayerInput.KeyHit(InputType.Run))
-                {
-                    // TODO: refactor this horrible hacky index manipulation mess
-                    int index = 0;
-                    bool isSwimming = character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast || character.AnimController.ForceSelectAnimationType == AnimationType.SwimSlow;
-                    bool isMovingFast = character.AnimController.ForceSelectAnimationType == AnimationType.Run || character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast;
-                    if (isMovingFast)
-                    {
-                        if (isSwimming || !character.AnimController.CanWalk)
-                        {
-                            index = !character.AnimController.CanWalk ? 0 : (int)AnimationType.SwimSlow - 1;
-                        }
-                        else
-                        {
-                            index = (int)AnimationType.Walk - 1;
-                        }
-                    }
-                    else
-                    {
-                        if (isSwimming || !character.AnimController.CanWalk)
-                        {
-                            index = !character.AnimController.CanWalk ? 1 : (int)AnimationType.SwimFast - 1; 
-                        }
-                        else
-                        {
-                            index = (int)AnimationType.Run - 1;
-                        }
-                    }
-                    if (animSelection.SelectedIndex != index)
-                    {
-                        animSelection.Select(index);
-                    }
-                }
-                if (PlayerInput.KeyHit(Keys.E))
-                {
-                    bool isSwimming = character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast || character.AnimController.ForceSelectAnimationType == AnimationType.SwimSlow;
-                    if (isSwimming)
-                    {
-                        animSelection.Select((int)AnimationType.Walk - 1);
-                    }
-                    else
-                    {
-                        animSelection.Select((int)AnimationType.SwimSlow - 1);
-                    }
-                }
-                if (PlayerInput.KeyHit(Keys.F))
-                {
-                    freezeToggle.Selected = !freezeToggle.Selected;
-                }
-            }
-            if (!isFreezed)
-            {
-                Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
-                Submarine.MainSub.Update((float)deltaTime);
-                PhysicsBody.List.ForEach(pb => pb.SetPrevTransform(pb.SimPosition, pb.Rotation));
-                // Handle ragdolling here, because we are not calling the Character.Update() method.
-                if (!Character.DisableControls)
-                {
-                    character.IsRagdolled = PlayerInput.KeyDown(InputType.Ragdoll);
-                }
-                if (character.IsRagdolled)
-                {
-                    character.AnimController.ResetPullJoints();
-                }
-                character.ControlLocalPlayer((float)deltaTime, Cam, false);
-                character.Control((float)deltaTime, Cam);
-                character.AnimController.UpdateAnim((float)deltaTime);
-                character.AnimController.Update((float)deltaTime, Cam);
-                if (character.Position.X < min)
-                {
-                    UpdateWalls(false);
-                }
-                else if (character.Position.X > max)
-                {
-                    UpdateWalls(true);
-                }
-                GameMain.World.Step((float)deltaTime);
-            }
-            //Cam.TargetPos = Vector2.Zero;
-            Cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
-            Cam.Position = character.Position;
-            widgets.Values.ForEach(w => w.Update((float)deltaTime));
-        }
-
-        /// <summary>
-        /// Fps independent mouse input. The draw method is called multiple times per frame.
-        /// </summary>
-        private Vector2 scaledMouseSpeed;
-        public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
-        {
-            if (isFreezed)
-            {
-                Timing.Alpha = 0.0f;
-            }
-
-            base.Draw(deltaTime, graphics, spriteBatch);
-            scaledMouseSpeed = PlayerInput.MouseSpeedPerSecond * (float)deltaTime;
-            graphics.Clear(backgroundColor);
-            Cam.UpdateTransform(true);
-
-            // Submarine
-            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: Cam.Transform);
-            Submarine.Draw(spriteBatch, true);
-            spriteBatch.End();
-
-            // Character
-            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: Cam.Transform);
-            character.Draw(spriteBatch, Cam);
-            if (GameMain.DebugDraw)
-            {
-                character.AnimController.DebugDraw(spriteBatch);
-            }
-            else if (displayColliders)
-            {
-                character.AnimController.Limbs.ForEach(l => l.body.DebugDraw(spriteBatch, Color.LightGreen));
-            }
-            spriteBatch.End();
-
-            // GUI
-            spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
-            if (showAnimControls)
-            {
-                DrawAnimationControls(spriteBatch);
-            }
-            if (editSpriteDimensions)
-            {
-                DrawSpriteOriginEditor(spriteBatch);
-            }
-            if (editRagdoll)
-            {
-                DrawRagdollEditor(spriteBatch, (float)deltaTime);
-            }
-            if (showSpritesheet)
-            {
-                DrawSpritesheetEditor(spriteBatch, (float)deltaTime);
-            }
-            Structure wall = CurrentWall.walls.FirstOrDefault();
-            Vector2 indicatorPos = wall == null ? originalWall.walls.First().DrawPosition : wall.DrawPosition;
-            GUI.DrawIndicator(spriteBatch, indicatorPos, Cam, 700, GUI.SubmarineIcon, Color.White);
-            GUI.Draw(Cam, spriteBatch);
-            if (isFreezed)
-            {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 35, 100), "FREEZED", Color.Blue, Color.White * 0.5f, 10, GUI.Font);
-            }
-            if (animTestPoseToggle.Selected)
-            {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 100, 150), "Animation Test Pose Enabled", Color.Blue, Color.White * 0.5f, 10, GUI.Font);
-            }
-            if (showSpritesheet)
-            {
-                var topLeft = leftPanel.RectTransform.TopLeft;
-                GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 200, 50), "Spritesheet Orientation:", Color.White, Color.Gray * 0.5f, 10, GUI.Font);
-                DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 410, 60), spriteSheetOrientation, string.Empty, Color.White, 
-                    angle => spriteSheetOrientation = angle, circleRadius: 40, widgetSize: 20, rotationOffset: MathHelper.Pi, autoFreeze: false);
-            }
-            // Debug
-            if (GameMain.DebugDraw)
-            {
-                // Limb positions
-                foreach (Limb limb in character.AnimController.Limbs)
-                {
-                    Vector2 limbDrawPos = Cam.WorldToScreen(limb.WorldPosition);
-                    GUI.DrawLine(spriteBatch, limbDrawPos + Vector2.UnitY * 5.0f, limbDrawPos - Vector2.UnitY * 5.0f, Color.White);
-                    GUI.DrawLine(spriteBatch, limbDrawPos + Vector2.UnitX * 5.0f, limbDrawPos - Vector2.UnitX * 5.0f, Color.White);
-                }
-
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 0), $"Cursor World Pos: {character.CursorWorldPosition}", Color.White, font: GUI.SmallFont);
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 20), $"Cursor Pos: {character.CursorPosition}", Color.White, font: GUI.SmallFont);
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 40), $"Cursor Screen Pos: {PlayerInput.MousePosition}", Color.White, font: GUI.SmallFont);
-
-
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 80), $"Character World Pos: {character.WorldPosition}", Color.White, font: GUI.SmallFont);
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 100), $"Character Pos: {character.Position}", Color.White, font: GUI.SmallFont);
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 120), $"Character Sim Pos: {character.SimPosition}", Color.White, font: GUI.SmallFont);
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 140), $"Character Draw Pos: {character.DrawPosition}", Color.White, font: GUI.SmallFont);
-
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 180), $"Submarine World Pos: {Submarine.MainSub.WorldPosition}", Color.White, font: GUI.SmallFont);
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 200), $"Submarine Pos: {Submarine.MainSub.Position}", Color.White, font: GUI.SmallFont);
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 220), $"Submarine Sim Pos: {Submarine.MainSub.Position}", Color.White, font: GUI.SmallFont);
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 240), $"Submarine Draw Pos: {Submarine.MainSub.DrawPosition}", Color.White, font: GUI.SmallFont);
-
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 280), $"Movement Limits: MIN: {min} MAX: {max}", Color.White, font: GUI.SmallFont);
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 300), $"Clones: {clones.Length}", Color.White, font: GUI.SmallFont);
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 320), $"Total amount of walls: {Structure.WallList.Count}", Color.White, font: GUI.SmallFont);
-
-                // Collider
-                var collider = character.AnimController.Collider;
-                var colliderDrawPos = SimToScreen(collider.SimPosition);
-                Vector2 forward = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation));
-                var endPos = SimToScreen(collider.SimPosition + forward * collider.radius);
-                GUI.DrawLine(spriteBatch, colliderDrawPos, endPos, Color.LightGreen);
-                GUI.DrawLine(spriteBatch, colliderDrawPos, SimToScreen(collider.SimPosition + forward * 0.25f), Color.Blue);
-                //Vector2 left = Vector2.Transform(-Vector2.UnitX, Matrix.CreateRotationZ(collider.Rotation));
-                //Vector2 left = -Vector2.UnitX.TransformVector(forward);
-                Vector2 left = forward.Left();
-                GUI.DrawLine(spriteBatch, colliderDrawPos, SimToScreen(collider.SimPosition + left * 0.25f), Color.Red);
-                ShapeExtensions.DrawCircle(spriteBatch, colliderDrawPos, (endPos - colliderDrawPos).Length(), 40, Color.LightGreen);
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 300, 0), $"Collider rotation: {MathHelper.ToDegrees(MathUtils.WrapAngleTwoPi(collider.Rotation))}", Color.White, font: GUI.SmallFont);
-            }
-            spriteBatch.End();
-        }
 
         #region Helpers
         private Vector2 ScreenToSim(float x, float y) => ScreenToSim(new Vector2(x, y));
