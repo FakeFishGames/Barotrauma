@@ -882,20 +882,22 @@ namespace Barotrauma
                     dir.y = (dir.y + prevDir.y) / 2.0;
                 }
 
-                int avoidDist = 20000;
-                int avoidDistSqr = avoidDist * avoidDist;
+                double avoidDist = 20000;
+                double avoidDistSqr = avoidDist * avoidDist;
                 foreach (Point pathNode in avoidNodes)
                 {
-                    Point diff = tunnelNodes[tunnelNodes.Count - 1] - pathNode;
-                    if (diff == Point.Zero) continue;
+                    double diffX =  tunnelNodes[tunnelNodes.Count - 1].X - pathNode.X;
+                    double diffY = tunnelNodes[tunnelNodes.Count - 1].Y - pathNode.Y;
+                    if (Math.Abs(diffX) < 1.0f || Math.Abs(diffY) < 1.0f) continue;
 
-                    int distSqr = diff.X * diff.X + diff.Y * diff.Y;
+                    double distSqr = (diffX * diffX + diffY * diffY);
+                    Debug.Assert(distSqr > 0);
                     if (distSqr < avoidDistSqr)
                     {
                         double dist = Math.Sqrt(distSqr);
 
-                        dir.x += (diff.X / dist) * (1.0f - dist / avoidDist);
-                        dir.y += (diff.Y / dist) * (1.0f - dist / avoidDist);
+                        dir.x += (diffX / dist) * (1.0f - dist / avoidDist);
+                        dir.y += (diffY / dist) * (1.0f - dist / avoidDist);
                     }
                 }
 
@@ -913,7 +915,7 @@ namespace Barotrauma
                     dir.y = -dir.y;
                 }
 
-                Point nextNode = tunnelNodes.Last() + new Point((int)dir.x * sectionLength, (int)dir.y * sectionLength);
+                Point nextNode = tunnelNodes.Last() + new Point((int)(dir.x * sectionLength), (int)(dir.y * sectionLength));
 
                 nextNode.X = MathHelper.Clamp(nextNode.X, 500, Size.X - 500);
                 nextNode.Y = MathHelper.Clamp(nextNode.Y, SeaFloorTopPos, Size.Y - 500);
@@ -943,11 +945,11 @@ namespace Barotrauma
             ruinPos.Y = Math.Min(ruinPos.Y, borders.Y + borders.Height - ruinSize.Y / 2);
             ruinPos.Y = Math.Max(ruinPos.Y, SeaFloorTopPos + ruinSize.Y / 2);
 
-            int minDist = ruinRadius * 2;
-            int minDistSqr = minDist * minDist;
+            double minDist = ruinRadius * 2;
+            double minDistSqr = minDist * minDist;
             
             int iter = 0;
-            while (mainPath.Any(p => MathUtils.DistanceSquared(ruinPos.X, ruinPos.Y, p.Center.X, p.Center.Y) < minDistSqr))
+            while (mainPath.Any(p => MathUtils.DistanceSquared(ruinPos.X, ruinPos.Y, p.site.coord.x, p.site.coord.y) < minDistSqr))
             {
                 double weighedPathPosX = ruinPos.X;
                 double weighedPathPosY = ruinPos.Y;
