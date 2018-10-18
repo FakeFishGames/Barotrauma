@@ -1685,9 +1685,10 @@ namespace Barotrauma
                     var lines = html.Split(new string[] { "<div", "</div>", Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
                                     .Where(s => s.Contains("left") && s.Contains("top") && s.Contains("width") && s.Contains("height"));
                     int id = 0;
+                    Dictionary<string, int> hierarchyToID = new Dictionary<string, int>();
+                    Dictionary<int, string> idToHierarchy = new Dictionary<int, string>();
                     foreach (var line in lines)
                     {
-                        //string codeName = new string(line.SkipWhile(c => c != '>').Skip(1).ToArray()); // 1113tr_TentacleMouthTop1, 1114cr_TentacleMouthCenter1, 11121cr_TentacleJaw1,
                         var codeNames = new string(line.SkipWhile(c => c != '>').Skip(1).ToArray()).Split(',');
                         for (int i = 0; i < codeNames.Length; i++)
                         {
@@ -1702,7 +1703,6 @@ namespace Barotrauma
                                 string s = new string(part.SkipWhile(c => c != ':').Skip(1).TakeWhile(c => char.IsNumber(c)).ToArray());
                                 int.TryParse(s, out int v);
                                 return v;
-
                             };
                             int x = ParseToInt("left");
                             int y = ParseToInt("top");
@@ -1718,16 +1718,34 @@ namespace Barotrauma
                                     new XAttribute("texture", texturePathElement.Text),
                                     new XAttribute("sourcerect", $"{x}, {y}, {width}, {height}"))
                                 ));
+                            // example: 111311cr -> 111311
+                            string hierarchy = new string(codeName.TakeWhile(c => char.IsNumber(c)).ToArray());
+                            if (hierarchyToID.ContainsKey(hierarchy))
+                            {
+                                DebugConsole.ThrowError($"Multiple items with the same hierarchy \"{hierarchy}\" found ({codeName}). Cannot continue.");
+                                return false;
+                            }
+                            hierarchyToID.Add(hierarchy, id);
+                            idToHierarchy.Add(id, hierarchy);
                             id++;
                         }
                     }
-                    // TODO: use the codeName for joint definitions
-                    for (int i = 1; i < id; i++)
+                    for (int i = 0; i < id; i++)
                     {
-                        jointXElements.Add(new XElement("joint",
-                            new XAttribute("limb1", i - 1),
-                            new XAttribute("limb2", i)
-                            ));
+                        if (idToHierarchy.TryGetValue(i, out string hierarchy))
+                        {
+                            if (hierarchy != "0")
+                            {
+                                string parent = hierarchy.Remove(hierarchy.Length - 1, 1);
+                                if (hierarchyToID.TryGetValue(parent, out int parentID))
+                                {
+                                    jointXElements.Add(new XElement("joint",
+                                        new XAttribute("limb1", parentID),
+                                        new XAttribute("limb2", i)
+                                        ));
+                                }
+                            }
+                        }
                     }
                     var ragdollParams = new object[]
                     {
