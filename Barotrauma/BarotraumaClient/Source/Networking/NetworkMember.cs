@@ -123,6 +123,8 @@ namespace Barotrauma.Networking
 
         public virtual void AddToGUIUpdateList()
         {
+            if (GUI.DisableHUD) return;
+
             if (gameStarted && 
                 Screen.Selected == GameMain.GameScreen)
             {
