@@ -11,7 +11,7 @@
     linkable="true"
     allowedlinks="railgunammosource">
 
-    <Sprite texture="railgunbase.png" depth="0.01" sourcerect="0,0,256,256"/>
+    <Sprite texture="railgunbase.png" depth="0.01" sourcerect="0,0,256,256" canflipy="false"/>
 
     <StaticBody width="80" radius="80"/>
 
