@@ -69,13 +69,17 @@ namespace Barotrauma
             currentCharacterConfig = Character.HumanConfigFile;
             SpawnCharacter(currentCharacterConfig);
             GameMain.Instance.OnResolutionChanged += OnResolutionChanged;
+            instance = this;
         }
+
+        private static CharacterEditorScreen instance;
 
         public override void Deselect()
         {
             base.Deselect();
             Submarine.MainSub.Remove();
             GameMain.Instance.OnResolutionChanged -= OnResolutionChanged;
+            instance = null;
         }
 
         private void OnResolutionChanged()
@@ -1417,484 +1421,12 @@ namespace Barotrauma
             };
             new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Create New Character (WIP)")
             {
-                OnClicked = OnNewCharacterButtonClicked
-            };
-        }
-
-        private bool OnNewCharacterButtonClicked(GUIButton button, object data)
-        {
-            Wizard.Instance.SelectTab(Wizard.Tab.Character);
-            return true;
-            string name = string.Empty;
-            float size = 10;
-            bool isHumanoid = false;
-
-            var box = new GUIMessageBox("Create New Character", string.Empty, new string[] { "Cancel", "Load html", "Create" }, GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight);
-            box.Content.ChildAnchor = Anchor.TopCenter;
-            box.Content.AbsoluteSpacing = 20;
-            int elementSize = 30;
-            var listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.9f), box.Content.RectTransform));
-            var topGroup = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 4 + 20), listBox.Content.RectTransform)) { AbsoluteSpacing = 2 };
-            var fields = new List<GUIComponent>();
-            GUITextBox texturePathElement = null;
-            void UpdateTexturePathElement() => texturePathElement.Text = $"Content/Characters/{name}/{name}.png";
-            for (int i = 0; i < 4; i++)
-            {
-                var mainElement = new GUIFrame(new RectTransform(new Point(topGroup.RectTransform.Rect.Width, elementSize), topGroup.RectTransform), style: null, color: Color.Gray * 0.25f);
-                fields.Add(mainElement);
-                RectTransform leftElement = new RectTransform(new Vector2(0.5f, 1), mainElement.RectTransform, Anchor.TopLeft);
-                RectTransform rightElement = new RectTransform(new Vector2(0.5f, 1), mainElement.RectTransform, Anchor.TopRight);
-                switch (i)
+                OnClicked = (button, data) =>
                 {
-                    case 0:
-                        new GUITextBlock(leftElement, "Name");
-                        var nameField = new GUITextBox(rightElement, "Worm X");
-                        string ProcessText(string text) => text.RemoveWhitespace().CapitaliseFirstInvariant();
-                        name = ProcessText(nameField.Text);
-                        nameField.OnTextChanged += (tb, text) =>
-                        {
-                            name = ProcessText(text);
-                            UpdateTexturePathElement();
-                            return true;
-                        };
-                        break;
-                    case 1:
-                        new GUITextBlock(leftElement, "Size");
-                        new GUINumberInput(rightElement, GUINumberInput.NumberType.Float)
-                        {
-                            MinValueFloat = 1,
-                            MaxValueFloat = 1000,
-                            FloatValue = size,
-                            OnValueChanged = (nInput) => size = nInput.FloatValue
-                        };
-                        break;
-                    case 2:
-                        new GUITextBlock(leftElement, "Is Humanoid?");
-                        new GUITickBox(rightElement, string.Empty)
-                        {
-                            Selected = isHumanoid,
-                            OnSelected = (tB) => isHumanoid = tB.Selected
-                        };
-                        break;
-                    case 3:
-                        new GUITextBlock(leftElement, "Texture Path");
-                        texturePathElement = new GUITextBox(rightElement, string.Empty);
-                        UpdateTexturePathElement();
-                        break;
-                }
-            }
-            var codeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), listBox.Content.RectTransform), style: null) { CanBeFocused = false };
-            new GUITextBlock(new RectTransform(new Vector2(1, 0.05f), codeArea.RectTransform), "Custom code:");
-            new GUITextBox(new RectTransform(new Vector2(1, 1 - 0.05f), codeArea.RectTransform, Anchor.BottomLeft), string.Empty, textAlignment: Alignment.TopLeft);
-            // Spacing
-            new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), style: null);
-            // Limbs
-            new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), "Limbs:") { CanBeFocused = false };
-            var limbXElements = new Dictionary<string, XElement>();
-            var limbGUIElements = new List<GUIComponent>();
-            var limbButtonElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), listBox.Content.RectTransform), style: null)
-            {
-                CanBeFocused = false
-            };
-            var removeLimbButton = new GUIButton(new RectTransform(new Point(limbButtonElement.Rect.Height, limbButtonElement.Rect.Height), limbButtonElement.RectTransform), "-")
-            {
-                OnClicked = (b, d) =>
-                {
-                    var element = limbGUIElements.LastOrDefault();
-                    if (element == null) { return false; }
-                    element.RectTransform.Parent = null;
-                    limbGUIElements.Remove(element);
+                    Wizard.Instance.SelectTab(Wizard.Tab.Character);
                     return true;
                 }
             };
-            var addLimbButton = new GUIButton(new RectTransform(new Point(limbButtonElement.Rect.Height, limbButtonElement.Rect.Height), limbButtonElement.RectTransform)
-            {
-                AbsoluteOffset = new Point(removeLimbButton.Rect.Width + 10, 0)
-            }, "+")
-            {
-                OnClicked = (b, d) =>
-                {
-                    var limbElement = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 5 + 20), listBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
-                    {
-                        CanBeFocused = false
-                    };
-                    int id = limbGUIElements.Count;
-                    var group = new GUILayoutGroup(new RectTransform(Vector2.One, limbElement.RectTransform)) { AbsoluteSpacing = 2 };
-                    var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), $"Limb {id}");
-                    var idField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
-                    var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
-                    var limbType = LimbType.None;
-                    switch (limbGUIElements.Count)
-                    {
-                        case 0:
-                            limbType = LimbType.Head;
-                            break;
-                        case 1:
-                            limbType = LimbType.Torso;
-                            break;
-                    }
-                    var limbTypeField = GUI.CreateEnumField(limbType, elementSize, "Limb Type", group.RectTransform, font: GUI.Font);
-                    var sourceRectField = GUI.CreateRectangleField(Rectangle.Empty, elementSize, "Source Rect", group.RectTransform, font: GUI.Font);
-                    new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopLeft), "ID");
-                    new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
-                    {
-                        MinValueInt = 0,
-                        MaxValueInt = byte.MaxValue,
-                        IntValue = id,
-                        OnValueChanged = numInput =>
-                        {
-                            id = numInput.IntValue;
-                            string text = nameField.GetChild<GUITextBox>().Text;
-                            string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
-                            label.Text = $"Limb {t}";
-                        }
-                    };
-                    new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopLeft), "Name");
-                    new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), string.Empty)
-                        .OnTextChanged += (tB, text) =>
-                        {
-                            string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
-                            label.Text = $"Limb {t}";
-                            return true;
-                        };
-                    limbGUIElements.Add(limbElement);
-                    return true;
-                }
-            };
-            // Joints
-            new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), "Joints:") { CanBeFocused = false };
-            var jointXElements = new List<XElement>();
-            var jointGUIElements = new List<GUIComponent>();
-            var jointButtonElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), listBox.Content.RectTransform), style: null)
-            {
-                CanBeFocused = false
-            };
-            var removeJointButton = new GUIButton(new RectTransform(new Point(jointButtonElement.Rect.Height, jointButtonElement.Rect.Height), jointButtonElement.RectTransform), "-")
-            {
-                OnClicked = (b, d) =>
-                {
-                    var element = jointGUIElements.LastOrDefault();
-                    if (element == null) { return false; }
-                    element.RectTransform.Parent = null;
-                    jointGUIElements.Remove(element);
-                    return true;
-                }
-            };
-            var addJointButton = new GUIButton(new RectTransform(new Point(jointButtonElement.Rect.Height, jointButtonElement.Rect.Height), jointButtonElement.RectTransform)
-            {
-                AbsoluteOffset = new Point(removeJointButton.Rect.Width + 10, 0)
-            }, "+")
-            {
-                OnClicked = (b, d) =>
-                {
-                    var jointElement = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 6 + 20), listBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
-                    {
-                        CanBeFocused = false
-                    };
-                    var group = new GUILayoutGroup(new RectTransform(Vector2.One, jointElement.RectTransform)) { AbsoluteSpacing = 2 };
-                    string jointName = string.Empty;
-                    var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), jointName);
-                    var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
-                    new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopLeft), "Name");
-                    new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), string.Empty)
-                    {
-                        OnTextChanged = (textB, text) =>
-                        {
-                            jointName = text;
-                            label.Text = jointName;
-                            return true;
-                        }
-                    };
-                    var limb1Field = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
-                    new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), limb1Field.RectTransform, Anchor.TopLeft), "Limb 1");
-                    var limb1InputField = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), limb1Field.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
-                    {
-                        MinValueInt = 0,
-                        MaxValueInt = byte.MaxValue,
-                    };
-                    var limb2Field = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
-                    new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), limb2Field.RectTransform, Anchor.TopLeft), "Limb 2");
-                    var limb2InputField = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), limb2Field.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
-                    {
-                        MinValueInt = 0,
-                        MaxValueInt = byte.MaxValue,
-                    };
-                    GUI.CreateVector2Field(Vector2.Zero, elementSize, "Limb 1 Anchor", group.RectTransform, font: GUI.Font, decimalsToDisplay: 2);
-                    GUI.CreateVector2Field(Vector2.Zero, elementSize, "Limb 2 Anchor", group.RectTransform, font: GUI.Font, decimalsToDisplay: 2);
-                    label.Text = GetJointName(jointName);
-                    limb1InputField.OnValueChanged += nInput => label.Text = GetJointName(jointName);
-                    limb2InputField.OnValueChanged += nInput => label.Text = GetJointName(jointName);
-                    jointGUIElements.Add(jointElement);
-                    string GetJointName(string n) => string.IsNullOrWhiteSpace(n) ? $"Joint {limb1InputField.IntValue} - {limb2InputField.IntValue}" : n;
-                    return true;
-                }
-            };
-            // Cancel
-            box.Buttons[0].OnClicked += (b, d) =>
-            {
-                box.Close();
-                return true;
-            };
-            // Load from html
-            box.Buttons[1].OnClicked += (b, d) =>
-            {
-                // Parse ragdoll data from html
-                limbXElements.Clear();
-                jointXElements.Clear();
-                string path = $"Content/Characters/{name}/{name.ToLowerInvariant()}.html";
-                try
-                {
-                    // TODO: parse as xml?
-                    //XDocument doc = XMLExtensions.TryLoadXml(path);
-                    //var xElements = doc.Elements().ToArray();
-
-                    string html = File.ReadAllText(path);
-                    var lines = html.Split(new string[] { "<div", "</div>", Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
-                                    .Where(s => s.Contains("left") && s.Contains("top") && s.Contains("width") && s.Contains("height"));
-                    int id = 0;
-                    Dictionary<string, int> hierarchyToID = new Dictionary<string, int>();
-                    Dictionary<int, string> idToHierarchy = new Dictionary<int, string>();
-                    Dictionary<int, string> idToPositionCode = new Dictionary<int, string>();
-                    foreach (var line in lines)
-                    {
-                        var codeNames = new string(line.SkipWhile(c => c != '>').Skip(1).ToArray()).Split(',');
-                        for (int i = 0; i < codeNames.Length; i++)
-                        {
-                            string codeName = codeNames[i].Trim();
-                            if (string.IsNullOrWhiteSpace(codeName)) { continue; }
-                            string limbName = new string(codeName.SkipWhile(c => c != '_').Skip(1).ToArray());
-                            if (string.IsNullOrWhiteSpace(limbName)) { continue; }
-                            var parts = line.Split(' ');
-                            int ParseToInt(string selector)
-                            {
-                                string part = parts.First(p => p.Contains(selector));
-                                string s = new string(part.SkipWhile(c => c != ':').Skip(1).TakeWhile(c => char.IsNumber(c)).ToArray());
-                                int.TryParse(s, out int v);
-                                return v;
-                            };
-                            // example: 111311cr -> 111311
-                            string hierarchy = new string(codeName.TakeWhile(c => char.IsNumber(c)).ToArray());
-                            if (hierarchyToID.ContainsKey(hierarchy))
-                            {
-                                DebugConsole.ThrowError($"Multiple items with the same hierarchy \"{hierarchy}\" found ({codeName}). Cannot continue.");
-                                return false;
-                            }
-                            hierarchyToID.Add(hierarchy, id);
-                            idToHierarchy.Add(id, hierarchy);
-                            string positionCode = new string(codeName.SkipWhile(c => char.IsNumber(c)).TakeWhile(c => c != '_').ToArray());
-                            idToPositionCode.Add(id, positionCode.ToLowerInvariant());
-                            int x = ParseToInt("left");
-                            int y = ParseToInt("top");
-                            int width = ParseToInt("width");
-                            int height = ParseToInt("height");
-                            limbXElements.Add(hierarchy, new XElement("limb",
-                                new XAttribute("id", id),
-                                new XAttribute("name", limbName),
-                                new XAttribute("type", ParseLimbType(limbName).ToString()),
-                                new XAttribute("width", width),
-                                new XAttribute("height", height),
-                                new XElement("sprite",
-                                    new XAttribute("texture", texturePathElement.Text),
-                                    new XAttribute("sourcerect", $"{x}, {y}, {width}, {height}"))
-                                ));
-                            id++;
-                        }
-                    }
-                    for (int i = 0; i < id; i++)
-                    {
-                        if (idToHierarchy.TryGetValue(i, out string hierarchy))
-                        {
-                            if (hierarchy.Length > 1)
-                            {
-                                string parent = hierarchy.Remove(hierarchy.Length - 1, 1);
-                                if (hierarchyToID.TryGetValue(parent, out int parentID))
-                                {
-                                    Vector2 anchor1 = Vector2.Zero;
-                                    if (idToPositionCode.TryGetValue(i, out string positionCode))
-                                    {
-                                        if (limbXElements.TryGetValue(parent, out XElement parentElement))
-                                        {
-                                            float scalar = 0.8f;
-                                            Rectangle sourceRect = parentElement.Element("sprite").GetAttributeRect("sourcerect", Rectangle.Empty);
-                                            float width = sourceRect.Width / 2 * scalar;
-                                            float height = sourceRect.Height / 2 * scalar;
-                                            switch (positionCode)
-                                            {
-                                                case "tl":  // -1, 1
-                                                    anchor1 = new Vector2(-width, height);
-                                                    break;
-                                                case "tc":  // 0, 1
-                                                    anchor1 = new Vector2(0, height);
-                                                    break;
-                                                case "tr":  // -1, 1
-                                                    anchor1 = new Vector2(-width, height);
-                                                    break;
-                                                case "cl":  // 0, -1
-                                                    anchor1 = new Vector2(0, -height);
-                                                    break;
-                                                case "cr":  // 0, 1
-                                                    anchor1 = new Vector2(0, height);
-                                                    break;
-                                                case "bl":  // -1, -1
-                                                    anchor1 = new Vector2(-width, -height);
-                                                    break;
-                                                case "bc":  // 0, -1
-                                                    anchor1 = new Vector2(0, -height);
-                                                    break;
-                                                case "br":  // 1, -1
-                                                    anchor1 = new Vector2(width, -height);
-                                                    break;
-                                            }
-                                        }
-                                    }
-                                    jointXElements.Add(new XElement("joint",
-                                        new XAttribute("limb1", parentID),
-                                        new XAttribute("limb2", i),
-                                        new XAttribute("limb1anchor", $"{anchor1.X}, {anchor1.Y}"),
-                                        new XAttribute("limb2anchor", "0, 0")
-                                        ));
-                                }
-                            }
-                        }
-                    }
-                    var ragdollParams = new object[]
-                    {
-                        new XAttribute("type", name),
-                        new XElement("collider", new XAttribute("radius", size)),   // TODO: if we set the radius, the collider cannot be a rectangle
-                        limbXElements.Values,
-                        jointXElements
-                    };
-                    CreateCharacter(name, isHumanoid, ragdollParams);
-                    GUI.AddMessage($"New Character Created with the Name {name}", Color.Green, font: GUI.Font);
-                    LimbType ParseLimbType(string limbName)
-                    {
-                        var limbType = LimbType.None;
-                        string n = limbName.ToLowerInvariant();
-                        switch (n)
-                        {
-                            case "head":
-                                limbType = LimbType.Head;
-                                break;
-                            case "torso":
-                                limbType = LimbType.Torso;
-                                break;
-                            case "waist":
-                                limbType = LimbType.Waist;
-                                break;
-                            case "tail":
-                                limbType = LimbType.Tail;
-                                break;
-                        }
-                        if (limbType == LimbType.None)
-                        {
-                            if (n.Contains("tail"))
-                            {
-                                limbType = LimbType.Tail;
-                            }
-                            else if (n.Contains("hand") || n.Contains("palm"))
-                            {
-                                if (n.Contains("right"))
-                                {
-                                    limbType = LimbType.RightHand;
-                                }
-                                else if (n.Contains("left"))
-                                {
-                                    limbType = LimbType.LeftHand;
-                                }
-                            }
-                            else if (n.Contains("arm"))
-                            {
-                                if (n.Contains("right"))
-                                {
-                                    limbType = LimbType.RightArm;
-                                }
-                                else if (n.Contains("left"))
-                                {
-                                    limbType = LimbType.LeftArm;
-                                }
-                            }
-                            else if (n.Contains("leg"))
-                            {
-                                if (n.Contains("right"))
-                                {
-                                    limbType = LimbType.RightLeg;
-                                }
-                                else if (n.Contains("left"))
-                                {
-                                    limbType = LimbType.LeftLeg;
-                                }
-                            }
-                            else if (n.Contains("tail"))
-                            {
-                                limbType = LimbType.Tail;
-                            }
-                        }
-                        return limbType;
-                    }
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("Failed to parse html from " + path, e);
-                }
-
-                box.Close();
-                return true;
-            };
-            // Create
-            box.Buttons[2].OnClicked += (b, d) =>
-            {
-                // Parse the limb data from the GUI elements and store in XElements
-                for (int i = 0; i < limbGUIElements.Count; i++)
-                {
-                    var limbGUIElement = limbGUIElements[i];
-                    var allChildren = limbGUIElement.GetAllChildren();
-                    GUITextBlock GetField(string n) => allChildren.First(c => c is GUITextBlock textBlock && textBlock.Text == n) as GUITextBlock;
-                    int id = GetField("ID").Parent.GetChild<GUINumberInput>().IntValue;
-                    string limbName = GetField("Name").Parent.GetChild<GUITextBox>().Text;
-                    LimbType limbType = (LimbType)GetField("Limb Type").Parent.GetChild<GUIDropDown>().SelectedData;
-                    var rectInputs = GetField("Source Rect").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).ToArray();
-                    limbXElements.Add(id.ToString(), new XElement("limb",
-                        new XAttribute("id", id),
-                        new XAttribute("name", limbName),
-                        new XAttribute("type", limbType.ToString()),
-                        new XAttribute("width", rectInputs[2].IntValue),
-                        new XAttribute("height", rectInputs[3].IntValue),
-                        new XElement("sprite",
-                            new XAttribute("texture", texturePathElement.Text),
-                            new XAttribute("sourcerect", $"{rectInputs[0].IntValue}, {rectInputs[1].IntValue}, {rectInputs[2].IntValue}, {rectInputs[3].IntValue}"))
-                        ));
-                }
-                // Parse the joint data from the GUI elements and store in XElements
-                for (int i = 0; i < jointGUIElements.Count; i++)
-                {
-                    var jointGUIElement = jointGUIElements[i];
-                    var allChildren = jointGUIElement.GetAllChildren();
-                    GUITextBlock GetField(string n) => allChildren.First(c => c is GUITextBlock textBlock && textBlock.Text == n) as GUITextBlock;
-                    string jointName = GetField("Name").Parent.GetChild<GUITextBox>().Text;
-                    int limb1ID = GetField("Limb 1").Parent.GetChild<GUINumberInput>().IntValue;
-                    int limb2ID = GetField("Limb 2").Parent.GetChild<GUINumberInput>().IntValue;
-                    var anchor1Inputs = GetField("Limb 1 Anchor").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).ToArray();
-                    var anchor2Inputs = GetField("Limb 2 Anchor").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).ToArray();
-                    jointXElements.Add(new XElement("joint",
-                        new XAttribute("name", jointName),
-                        new XAttribute("limb1", limb1ID),
-                        new XAttribute("limb2", limb2ID),
-                        new XAttribute("limb1anchor", $"{anchor1Inputs[0].FloatValue}, {anchor1Inputs[1].FloatValue}"),
-                        new XAttribute("limb2anchor", $"{anchor2Inputs[0].FloatValue}, {anchor2Inputs[1].FloatValue}")));
-                }
-                var ragdollParams = new object[]
-                {
-                    new XAttribute("type", name),
-                    new XElement("collider", new XAttribute("radius", size)),   // TODO: if we set the radius, the collider cannot be a rectangle
-                    limbXElements.Values,
-                    jointXElements
-                };
-                CreateCharacter(name, isHumanoid, ragdollParams);
-                GUI.AddMessage($"New Character Created with the Name {name}", Color.Green, font: GUI.Font);
-                box.Close();
-                return true;
-            };
-            return true;
         }
         #endregion
 
@@ -3134,6 +2666,10 @@ namespace Barotrauma
             private string texturePath;
             private string xmlPath;
             private string htmlPath;
+            private Dictionary<string, XElement> limbXElements = new Dictionary<string, XElement>();
+            private List<GUIComponent> limbGUIElements = new List<GUIComponent>();
+            private List<XElement> jointXElements = new List<XElement>();
+            private List<GUIComponent> jointGUIElements = new List<GUIComponent>();
 
             private static Wizard instance;
             public static Wizard Instance
@@ -3169,7 +2705,8 @@ namespace Barotrauma
                         break;
                     case Tab.None:
                     default:
-                        activeView = null;
+                        //activeView = null;
+                        instance = null;
                         break;
                 }
             }
@@ -3247,7 +2784,23 @@ namespace Barotrauma
                     }
                     var codeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), listBox.Content.RectTransform), style: null) { CanBeFocused = false };
                     new GUITextBlock(new RectTransform(new Vector2(1, 0.05f), codeArea.RectTransform), "Custom code:");
-                    new GUITextBox(new RectTransform(new Vector2(1, 1 - 0.05f), codeArea.RectTransform, Anchor.BottomLeft), string.Empty, textAlignment: Alignment.TopLeft);
+                    var inputBox = new GUITextBox(new RectTransform(new Vector2(1, 1 - 0.05f), codeArea.RectTransform, Anchor.BottomLeft), string.Empty, textAlignment: Alignment.TopLeft);
+                    new GUIButton(new RectTransform(new Point(topGroup.RectTransform.Rect.Width, elementSize), topGroup.RectTransform), "Load html")
+                    {
+                        OnClicked = (b, d) =>
+                        {
+                            ParseRagdollFromHTML();
+                            // TODO: display the parsed html in a separate box that can be toggled on and off
+                            inputBox.Text = new XDocument(new XElement("Ragdoll", new object[]
+                            {
+                                new XAttribute("type", Name),
+                                new XElement("collider", new XAttribute("radius", Size)),
+                                    LimbXElements.Values,
+                                    JointXElements
+                            })).ToString();
+                            return true;
+                        }
+                    };
                     // Cancel
                     box.Buttons[0].OnClicked += (b, d) =>
                     {
@@ -3277,9 +2830,6 @@ namespace Barotrauma
                     int elementSize = 30;
                     var listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.9f), box.Content.RectTransform));
                     var topGroup = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 4 + 20), listBox.Content.RectTransform)) { AbsoluteSpacing = 2 };
-
-                    var limbXElements = new Dictionary<string, XElement>();
-                    var limbGUIElements = new List<GUIComponent>();
                     var limbButtonElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), listBox.Content.RectTransform), style: null)
                     {
                         CanBeFocused = false
@@ -3288,10 +2838,10 @@ namespace Barotrauma
                     {
                         OnClicked = (b, d) =>
                         {
-                            var element = limbGUIElements.LastOrDefault();
+                            var element = LimbGUIElements.LastOrDefault();
                             if (element == null) { return false; }
                             element.RectTransform.Parent = null;
-                            limbGUIElements.Remove(element);
+                            LimbGUIElements.Remove(element);
                             return true;
                         }
                     };
@@ -3306,13 +2856,13 @@ namespace Barotrauma
                             {
                                 CanBeFocused = false
                             };
-                            int id = limbGUIElements.Count;
+                            int id = LimbGUIElements.Count;
                             var group = new GUILayoutGroup(new RectTransform(Vector2.One, limbElement.RectTransform)) { AbsoluteSpacing = 2 };
                             var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), $"Limb {id}");
                             var idField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                             var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                             var limbType = LimbType.None;
-                            switch (limbGUIElements.Count)
+                            switch (LimbGUIElements.Count)
                             {
                                 case 0:
                                     limbType = LimbType.Head;
@@ -3345,7 +2895,7 @@ namespace Barotrauma
                                     label.Text = $"Limb {t}";
                                     return true;
                                 };
-                            limbGUIElements.Add(limbElement);
+                            LimbGUIElements.Add(limbElement);
                             return true;
                         }
                     };
@@ -3381,9 +2931,6 @@ namespace Barotrauma
                     int elementSize = 30;
                     var listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.9f), box.Content.RectTransform));
                     var topGroup = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 4 + 20), listBox.Content.RectTransform)) { AbsoluteSpacing = 2 };
-
-                    var jointXElements = new List<XElement>();
-                    var jointGUIElements = new List<GUIComponent>();
                     var jointButtonElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), listBox.Content.RectTransform), style: null)
                     {
                         CanBeFocused = false
@@ -3392,10 +2939,10 @@ namespace Barotrauma
                     {
                         OnClicked = (b, d) =>
                         {
-                            var element = jointGUIElements.LastOrDefault();
+                            var element = JointGUIElements.LastOrDefault();
                             if (element == null) { return false; }
                             element.RectTransform.Parent = null;
-                            jointGUIElements.Remove(element);
+                            JointGUIElements.Remove(element);
                             return true;
                         }
                     };
@@ -3443,7 +2990,7 @@ namespace Barotrauma
                             label.Text = GetJointName(jointName);
                             limb1InputField.OnValueChanged += nInput => label.Text = GetJointName(jointName);
                             limb2InputField.OnValueChanged += nInput => label.Text = GetJointName(jointName);
-                            jointGUIElements.Add(jointElement);
+                            JointGUIElements.Add(jointElement);
                             string GetJointName(string n) => string.IsNullOrWhiteSpace(n) ? $"Joint {limb1InputField.IntValue} - {limb2InputField.IntValue}" : n;
                             return true;
                         }
@@ -3460,6 +3007,25 @@ namespace Barotrauma
                     // Parse and create
                     box.Buttons[1].OnClicked += (b, d) =>
                     {
+                        // Currently these are additive to the data defined in the html and in the code fields.
+                        ParseLimbsFromGUIElements();
+                        ParseJointsFromGUIElements();
+                        try
+                        {
+                            var ragdollParams = new object[]
+                            {
+                                new XAttribute("type", Name),
+                                new XElement("collider", new XAttribute("radius", Size)),   // TODO: if we set the radius, the collider cannot be a rectangle
+                                    LimbXElements.Values,
+                                    JointXElements
+                            };
+                            CharacterEditorScreen.instance.CreateCharacter(Name, IsHumanoid, ragdollParams);
+                            GUI.AddMessage($"Character {Name} Created", Color.Green, font: GUI.Font);
+                        }
+                        catch (Exception e)
+                        {
+                            DebugConsole.ThrowError("Failed to parse html from " + HTMLPath, e);
+                        }
                         Instance.SelectTab(Tab.None);
                         return true;
                     };
@@ -3500,6 +3066,26 @@ namespace Barotrauma
                     get => Instance.htmlPath;
                     set => Instance.htmlPath = value;
                 }
+                public Dictionary<string, XElement> LimbXElements
+                {
+                    get => Instance.limbXElements;
+                    set => Instance.limbXElements = value;
+                }
+                public List<GUIComponent> LimbGUIElements
+                {
+                    get => Instance.limbGUIElements;
+                    set => Instance.limbGUIElements = value;
+                }
+                public List<XElement> JointXElements
+                {
+                    get => Instance.jointXElements;
+                    set => Instance.jointXElements = value;
+                }
+                public List<GUIComponent> JointGUIElements
+                {
+                    get => Instance.jointGUIElements;
+                    set => Instance.jointGUIElements = value;
+                }
 
                 private GUIMessageBox box;
                 public GUIMessageBox Box
@@ -3522,6 +3108,237 @@ namespace Barotrauma
                         instance = new T();
                     }
                     return instance;
+                }
+
+                protected void ParseLimbsFromGUIElements()
+                {
+                    for (int i = 0; i < LimbGUIElements.Count; i++)
+                    {
+                        var limbGUIElement = LimbGUIElements[i];
+                        var allChildren = limbGUIElement.GetAllChildren();
+                        GUITextBlock GetField(string n) => allChildren.First(c => c is GUITextBlock textBlock && textBlock.Text == n) as GUITextBlock;
+                        int id = GetField("ID").Parent.GetChild<GUINumberInput>().IntValue;
+                        string limbName = GetField("Name").Parent.GetChild<GUITextBox>().Text;
+                        LimbType limbType = (LimbType)GetField("Limb Type").Parent.GetChild<GUIDropDown>().SelectedData;
+                        var rectInputs = GetField("Source Rect").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).ToArray();
+                        LimbXElements.Add(id.ToString(), new XElement("limb",
+                            new XAttribute("id", id),
+                            new XAttribute("name", limbName),
+                            new XAttribute("type", limbType.ToString()),
+                            new XAttribute("width", rectInputs[2].IntValue),
+                            new XAttribute("height", rectInputs[3].IntValue),
+                            new XElement("sprite",
+                                new XAttribute("texture", TexturePath),
+                                new XAttribute("sourcerect", $"{rectInputs[0].IntValue}, {rectInputs[1].IntValue}, {rectInputs[2].IntValue}, {rectInputs[3].IntValue}"))
+                            ));
+                    }
+                }
+
+                protected void ParseJointsFromGUIElements()
+                {
+                    for (int i = 0; i < JointGUIElements.Count; i++)
+                    {
+                        var jointGUIElement = JointGUIElements[i];
+                        var allChildren = jointGUIElement.GetAllChildren();
+                        GUITextBlock GetField(string n) => allChildren.First(c => c is GUITextBlock textBlock && textBlock.Text == n) as GUITextBlock;
+                        string jointName = GetField("Name").Parent.GetChild<GUITextBox>().Text;
+                        int limb1ID = GetField("Limb 1").Parent.GetChild<GUINumberInput>().IntValue;
+                        int limb2ID = GetField("Limb 2").Parent.GetChild<GUINumberInput>().IntValue;
+                        var anchor1Inputs = GetField("Limb 1 Anchor").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).ToArray();
+                        var anchor2Inputs = GetField("Limb 2 Anchor").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).ToArray();
+                        JointXElements.Add(new XElement("joint",
+                            new XAttribute("name", jointName),
+                            new XAttribute("limb1", limb1ID),
+                            new XAttribute("limb2", limb2ID),
+                            new XAttribute("limb1anchor", $"{anchor1Inputs[0].FloatValue}, {anchor1Inputs[1].FloatValue}"),
+                            new XAttribute("limb2anchor", $"{anchor2Inputs[0].FloatValue}, {anchor2Inputs[1].FloatValue}")));
+                    }
+                }
+
+                protected void ParseRagdollFromHTML()
+                {
+                    // TODO: parse as xml?
+                    //XDocument doc = XMLExtensions.TryLoadXml(HTMLPath);
+                    //var xElements = doc.Elements().ToArray();
+
+                    // TODO: add a field
+                    HTMLPath = $"Content/Characters/{Name}/{Name.ToLowerInvariant()}.html";
+
+                    string html = File.ReadAllText(HTMLPath);
+                    var lines = html.Split(new string[] { "<div", "</div>", Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+                                    .Where(s => s.Contains("left") && s.Contains("top") && s.Contains("width") && s.Contains("height"));
+                    int id = 0;
+                    Dictionary<string, int> hierarchyToID = new Dictionary<string, int>();
+                    Dictionary<int, string> idToHierarchy = new Dictionary<int, string>();
+                    Dictionary<int, string> idToPositionCode = new Dictionary<int, string>();
+                    foreach (var line in lines)
+                    {
+                        var codeNames = new string(line.SkipWhile(c => c != '>').Skip(1).ToArray()).Split(',');
+                        for (int i = 0; i < codeNames.Length; i++)
+                        {
+                            string codeName = codeNames[i].Trim();
+                            if (string.IsNullOrWhiteSpace(codeName)) { continue; }
+                            string limbName = new string(codeName.SkipWhile(c => c != '_').Skip(1).ToArray());
+                            if (string.IsNullOrWhiteSpace(limbName)) { continue; }
+                            var parts = line.Split(' ');
+                            int ParseToInt(string selector)
+                            {
+                                string part = parts.First(p => p.Contains(selector));
+                                string s = new string(part.SkipWhile(c => c != ':').Skip(1).TakeWhile(c => char.IsNumber(c)).ToArray());
+                                int.TryParse(s, out int v);
+                                return v;
+                            };
+                            // example: 111311cr -> 111311
+                            string hierarchy = new string(codeName.TakeWhile(c => char.IsNumber(c)).ToArray());
+                            if (hierarchyToID.ContainsKey(hierarchy))
+                            {
+                                DebugConsole.ThrowError($"Multiple items with the same hierarchy \"{hierarchy}\" found ({codeName}). Cannot continue.");
+                                return;
+                            }
+                            hierarchyToID.Add(hierarchy, id);
+                            idToHierarchy.Add(id, hierarchy);
+                            string positionCode = new string(codeName.SkipWhile(c => char.IsNumber(c)).TakeWhile(c => c != '_').ToArray());
+                            idToPositionCode.Add(id, positionCode.ToLowerInvariant());
+                            int x = ParseToInt("left");
+                            int y = ParseToInt("top");
+                            int width = ParseToInt("width");
+                            int height = ParseToInt("height");
+                            LimbXElements.Add(hierarchy, new XElement("limb",
+                                new XAttribute("id", id),
+                                new XAttribute("name", limbName),
+                                new XAttribute("type", ParseLimbType(limbName).ToString()),
+                                new XAttribute("width", width),
+                                new XAttribute("height", height),
+                                new XElement("sprite",
+                                    new XAttribute("texture", TexturePath),
+                                    new XAttribute("sourcerect", $"{x}, {y}, {width}, {height}"))
+                                ));
+                            id++;
+                        }
+                    }
+                    for (int i = 0; i < id; i++)
+                    {
+                        if (idToHierarchy.TryGetValue(i, out string hierarchy))
+                        {
+                            if (hierarchy.Length > 1)
+                            {
+                                string parent = hierarchy.Remove(hierarchy.Length - 1, 1);
+                                if (hierarchyToID.TryGetValue(parent, out int parentID))
+                                {
+                                    Vector2 anchor1 = Vector2.Zero;
+                                    if (idToPositionCode.TryGetValue(i, out string positionCode))
+                                    {
+                                        if (LimbXElements.TryGetValue(parent, out XElement parentElement))
+                                        {
+                                            float scalar = 0.8f;
+                                            Rectangle sourceRect = parentElement.Element("sprite").GetAttributeRect("sourcerect", Rectangle.Empty);
+                                            float width = sourceRect.Width / 2 * scalar;
+                                            float height = sourceRect.Height / 2 * scalar;
+                                            switch (positionCode)
+                                            {
+                                                case "tl":  // -1, 1
+                                                    anchor1 = new Vector2(-width, height);
+                                                    break;
+                                                case "tc":  // 0, 1
+                                                    anchor1 = new Vector2(0, height);
+                                                    break;
+                                                case "tr":  // -1, 1
+                                                    anchor1 = new Vector2(-width, height);
+                                                    break;
+                                                case "cl":  // 0, -1
+                                                    anchor1 = new Vector2(0, -height);
+                                                    break;
+                                                case "cr":  // 0, 1
+                                                    anchor1 = new Vector2(0, height);
+                                                    break;
+                                                case "bl":  // -1, -1
+                                                    anchor1 = new Vector2(-width, -height);
+                                                    break;
+                                                case "bc":  // 0, -1
+                                                    anchor1 = new Vector2(0, -height);
+                                                    break;
+                                                case "br":  // 1, -1
+                                                    anchor1 = new Vector2(width, -height);
+                                                    break;
+                                            }
+                                        }
+                                    }
+                                    JointXElements.Add(new XElement("joint",
+                                        new XAttribute("limb1", parentID),
+                                        new XAttribute("limb2", i),
+                                        new XAttribute("limb1anchor", $"{anchor1.X}, {anchor1.Y}"),
+                                        new XAttribute("limb2anchor", "0, 0")
+                                        ));
+                                }
+                            }
+                        }
+                    }
+                }
+
+                protected LimbType ParseLimbType(string limbName)
+                {
+                    var limbType = LimbType.None;
+                    string n = limbName.ToLowerInvariant();
+                    switch (n)
+                    {
+                        case "head":
+                            limbType = LimbType.Head;
+                            break;
+                        case "torso":
+                            limbType = LimbType.Torso;
+                            break;
+                        case "waist":
+                            limbType = LimbType.Waist;
+                            break;
+                        case "tail":
+                            limbType = LimbType.Tail;
+                            break;
+                    }
+                    if (limbType == LimbType.None)
+                    {
+                        if (n.Contains("tail"))
+                        {
+                            limbType = LimbType.Tail;
+                        }
+                        else if (n.Contains("hand") || n.Contains("palm"))
+                        {
+                            if (n.Contains("right"))
+                            {
+                                limbType = LimbType.RightHand;
+                            }
+                            else if (n.Contains("left"))
+                            {
+                                limbType = LimbType.LeftHand;
+                            }
+                        }
+                        else if (n.Contains("arm"))
+                        {
+                            if (n.Contains("right"))
+                            {
+                                limbType = LimbType.RightArm;
+                            }
+                            else if (n.Contains("left"))
+                            {
+                                limbType = LimbType.LeftArm;
+                            }
+                        }
+                        else if (n.Contains("leg"))
+                        {
+                            if (n.Contains("right"))
+                            {
+                                limbType = LimbType.RightLeg;
+                            }
+                            else if (n.Contains("left"))
+                            {
+                                limbType = LimbType.LeftLeg;
+                            }
+                        }
+                        else if (n.Contains("tail"))
+                        {
+                            limbType = LimbType.Tail;
+                        }
+                    }
+                    return limbType;
                 }
             }
         }
