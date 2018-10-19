@@ -39,6 +39,8 @@ namespace Barotrauma
             "Disclaimer: It's possible or even likely that the views block each other, if they were not designed to be viewed together!")]
         public bool DisplaySideBySideWhenLinked { get; set; }
 
+        public float SpriteRotation;
+
         public Color GetSpriteColor()
         {
             Color color = spriteColor;
@@ -115,7 +117,7 @@ namespace Barotrauma
                     bool flipHorizontal = (SpriteEffects & SpriteEffects.FlipHorizontally) != 0;
                     bool flipVertical = (SpriteEffects & SpriteEffects.FlipVertically) != 0;
 
-                    if (prefab.ResizeHorizontal || prefab.ResizeVertical || flipHorizontal || flipVertical)
+                    if (prefab.ResizeHorizontal || prefab.ResizeVertical)
                     {
                         activeSprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color,
                             depth: depth);
@@ -124,8 +126,8 @@ namespace Barotrauma
                     }
                     else
                     {
-                        activeSprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, 0.0f, SpriteScale, SpriteEffects.None, depth);
-                        fadeInBrokenSprite?.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color * fadeInBrokenSpriteAlpha, 0.0f, SpriteScale, SpriteEffects.None, depth - 0.000001f);
+                        activeSprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, SpriteRotation, SpriteScale, activeSprite.effects, depth);
+                        fadeInBrokenSprite?.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color * fadeInBrokenSpriteAlpha, SpriteRotation, SpriteScale, activeSprite.effects, depth - 0.000001f);
                     }
 
                 }

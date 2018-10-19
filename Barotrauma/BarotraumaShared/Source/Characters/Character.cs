@@ -124,7 +124,7 @@ namespace Barotrauma
                     Turret turret = targetItem.GetComponent<Turret>();
                     if (turret != null)
                     {
-                        return new Vector2(targetItem.Rect.X + turret.BarrelPos.X, targetItem.Rect.Y - turret.BarrelPos.Y);
+                        return new Vector2(targetItem.Rect.X + turret.TransformedBarrelPos.X, targetItem.Rect.Y - turret.TransformedBarrelPos.Y);
                     }
                 }
                 return ViewTarget.Position;
