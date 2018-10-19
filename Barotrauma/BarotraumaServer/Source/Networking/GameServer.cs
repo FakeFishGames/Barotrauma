@@ -11,7 +11,7 @@ namespace Barotrauma.Networking
 
         void InitUPnP()
         {
-            server.UPnP.ForwardPort(config.Port, "barotrauma");
+            server.UPnP.ForwardPort(NetPeerConfiguration.Port, "barotrauma");
         }
 
         bool DiscoveringUPnP()
