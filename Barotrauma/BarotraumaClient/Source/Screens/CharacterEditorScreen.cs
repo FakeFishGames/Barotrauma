@@ -88,6 +88,7 @@ namespace Barotrauma
         {
             //base.AddToGUIUpdateList();
             rightPanel.AddToGUIUpdateList();
+            Wizard.Instance.AddToGUIUpdateList();
             if (displayBackgroundColor)
             {
                 backgroundColorPanel.AddToGUIUpdateList();
@@ -1422,11 +1423,13 @@ namespace Barotrauma
 
         private bool OnNewCharacterButtonClicked(GUIButton button, object data)
         {
+            Wizard.Instance.SelectTab(Wizard.Tab.Character);
+            return true;
             string name = string.Empty;
             float size = 10;
             bool isHumanoid = false;
 
-            var box = new GUIMessageBox("Create New Character", string.Empty, new string[] { "Cancel", "Create (from selection)", "Create (from html)" }, GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight);
+            var box = new GUIMessageBox("Create New Character", string.Empty, new string[] { "Cancel", "Load html", "Create" }, GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight);
             box.Content.ChildAnchor = Anchor.TopCenter;
             box.Content.AbsoluteSpacing = 20;
             int elementSize = 30;
@@ -1626,65 +1629,14 @@ namespace Barotrauma
                     return true;
                 }
             };
+            // Cancel
             box.Buttons[0].OnClicked += (b, d) =>
             {
                 box.Close();
                 return true;
             };
+            // Load from html
             box.Buttons[1].OnClicked += (b, d) =>
-            {
-                // Parse the limb data from the GUI elements and store in XElements
-                for (int i = 0; i < limbGUIElements.Count; i++)
-                {
-                    var limbGUIElement = limbGUIElements[i];
-                    var allChildren = limbGUIElement.GetAllChildren();
-                    GUITextBlock GetField(string n) => allChildren.First(c => c is GUITextBlock textBlock && textBlock.Text == n) as GUITextBlock;
-                    int id = GetField("ID").Parent.GetChild<GUINumberInput>().IntValue;
-                    string limbName = GetField("Name").Parent.GetChild<GUITextBox>().Text;
-                    LimbType limbType = (LimbType)GetField("Limb Type").Parent.GetChild<GUIDropDown>().SelectedData;
-                    var rectInputs = GetField("Source Rect").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).ToArray();
-                    limbXElements.Add(id.ToString(), new XElement("limb",
-                        new XAttribute("id", id),
-                        new XAttribute("name", limbName),
-                        new XAttribute("type", limbType.ToString()),
-                        new XAttribute("width", rectInputs[2].IntValue),
-                        new XAttribute("height", rectInputs[3].IntValue),
-                        new XElement("sprite",
-                            new XAttribute("texture", texturePathElement.Text),
-                            new XAttribute("sourcerect", $"{rectInputs[0].IntValue}, {rectInputs[1].IntValue}, {rectInputs[2].IntValue}, {rectInputs[3].IntValue}"))
-                        ));
-                }
-                // Parse the joint data from the GUI elements and store in XElements
-                for (int i = 0; i < jointGUIElements.Count; i++)
-                {
-                    var jointGUIElement = jointGUIElements[i];
-                    var allChildren = jointGUIElement.GetAllChildren();
-                    GUITextBlock GetField(string n) => allChildren.First(c => c is GUITextBlock textBlock && textBlock.Text == n) as GUITextBlock;
-                    string jointName = GetField("Name").Parent.GetChild<GUITextBox>().Text;
-                    int limb1ID = GetField("Limb 1").Parent.GetChild<GUINumberInput>().IntValue;
-                    int limb2ID = GetField("Limb 2").Parent.GetChild<GUINumberInput>().IntValue;
-                    var anchor1Inputs = GetField("Limb 1 Anchor").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).ToArray();
-                    var anchor2Inputs = GetField("Limb 2 Anchor").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).ToArray();
-                    jointXElements.Add(new XElement("joint",
-                        new XAttribute("name", jointName),
-                        new XAttribute("limb1", limb1ID),
-                        new XAttribute("limb2", limb2ID),
-                        new XAttribute("limb1anchor", $"{anchor1Inputs[0].FloatValue}, {anchor1Inputs[1].FloatValue}"),
-                        new XAttribute("limb2anchor", $"{anchor2Inputs[0].FloatValue}, {anchor2Inputs[1].FloatValue}")));
-                }
-                var ragdollParams = new object[]
-                {
-                    new XAttribute("type", name),
-                    new XElement("collider", new XAttribute("radius", size)),   // TODO: if we set the radius, the collider cannot be a rectangle
-                    limbXElements.Values,
-                    jointXElements
-                };
-                CreateCharacter(name, isHumanoid, ragdollParams);
-                GUI.AddMessage($"New Character Created with the Name {name}", Color.Green, font: GUI.Font);
-                box.Close();
-                return true;
-            };
-            box.Buttons[2].OnClicked += (b, d) =>
             {
                 // Parse ragdoll data from html
                 limbXElements.Clear();
@@ -1758,7 +1710,6 @@ namespace Barotrauma
                                 if (hierarchyToID.TryGetValue(parent, out int parentID))
                                 {
                                     Vector2 anchor1 = Vector2.Zero;
-                                    Vector2 anchor2 = Vector2.Zero;
                                     if (idToPositionCode.TryGetValue(i, out string positionCode))
                                     {
                                         if (limbXElements.TryGetValue(parent, out XElement parentElement))
@@ -1800,7 +1751,7 @@ namespace Barotrauma
                                         new XAttribute("limb1", parentID),
                                         new XAttribute("limb2", i),
                                         new XAttribute("limb1anchor", $"{anchor1.X}, {anchor1.Y}"),
-                                        new XAttribute("limb2anchor", $"{anchor2.X}, {anchor2.Y}")
+                                        new XAttribute("limb2anchor", "0, 0")
                                         ));
                                 }
                             }
@@ -1886,6 +1837,60 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Failed to parse html from " + path, e);
                 }
 
+                box.Close();
+                return true;
+            };
+            // Create
+            box.Buttons[2].OnClicked += (b, d) =>
+            {
+                // Parse the limb data from the GUI elements and store in XElements
+                for (int i = 0; i < limbGUIElements.Count; i++)
+                {
+                    var limbGUIElement = limbGUIElements[i];
+                    var allChildren = limbGUIElement.GetAllChildren();
+                    GUITextBlock GetField(string n) => allChildren.First(c => c is GUITextBlock textBlock && textBlock.Text == n) as GUITextBlock;
+                    int id = GetField("ID").Parent.GetChild<GUINumberInput>().IntValue;
+                    string limbName = GetField("Name").Parent.GetChild<GUITextBox>().Text;
+                    LimbType limbType = (LimbType)GetField("Limb Type").Parent.GetChild<GUIDropDown>().SelectedData;
+                    var rectInputs = GetField("Source Rect").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).ToArray();
+                    limbXElements.Add(id.ToString(), new XElement("limb",
+                        new XAttribute("id", id),
+                        new XAttribute("name", limbName),
+                        new XAttribute("type", limbType.ToString()),
+                        new XAttribute("width", rectInputs[2].IntValue),
+                        new XAttribute("height", rectInputs[3].IntValue),
+                        new XElement("sprite",
+                            new XAttribute("texture", texturePathElement.Text),
+                            new XAttribute("sourcerect", $"{rectInputs[0].IntValue}, {rectInputs[1].IntValue}, {rectInputs[2].IntValue}, {rectInputs[3].IntValue}"))
+                        ));
+                }
+                // Parse the joint data from the GUI elements and store in XElements
+                for (int i = 0; i < jointGUIElements.Count; i++)
+                {
+                    var jointGUIElement = jointGUIElements[i];
+                    var allChildren = jointGUIElement.GetAllChildren();
+                    GUITextBlock GetField(string n) => allChildren.First(c => c is GUITextBlock textBlock && textBlock.Text == n) as GUITextBlock;
+                    string jointName = GetField("Name").Parent.GetChild<GUITextBox>().Text;
+                    int limb1ID = GetField("Limb 1").Parent.GetChild<GUINumberInput>().IntValue;
+                    int limb2ID = GetField("Limb 2").Parent.GetChild<GUINumberInput>().IntValue;
+                    var anchor1Inputs = GetField("Limb 1 Anchor").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).ToArray();
+                    var anchor2Inputs = GetField("Limb 2 Anchor").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).ToArray();
+                    jointXElements.Add(new XElement("joint",
+                        new XAttribute("name", jointName),
+                        new XAttribute("limb1", limb1ID),
+                        new XAttribute("limb2", limb2ID),
+                        new XAttribute("limb1anchor", $"{anchor1Inputs[0].FloatValue}, {anchor1Inputs[1].FloatValue}"),
+                        new XAttribute("limb2anchor", $"{anchor2Inputs[0].FloatValue}, {anchor2Inputs[1].FloatValue}")));
+                }
+                var ragdollParams = new object[]
+                {
+                    new XAttribute("type", name),
+                    new XElement("collider", new XAttribute("radius", size)),   // TODO: if we set the radius, the collider cannot be a rectangle
+                    limbXElements.Values,
+                    jointXElements
+                };
+                CreateCharacter(name, isHumanoid, ragdollParams);
+                GUI.AddMessage($"New Character Created with the Name {name}", Color.Green, font: GUI.Font);
                 box.Close();
                 return true;
             };
@@ -3117,6 +3122,409 @@ namespace Barotrauma
         //        }
         //    }
         //}
+        #endregion
+
+        #region Character Wizard
+        private class Wizard
+        {
+            // Ragdoll data
+            private string name = string.Empty;
+            private float size = 10;
+            private bool isHumanoid = false;
+            private string texturePath;
+            private string xmlPath;
+            private string htmlPath;
+
+            private static Wizard instance;
+            public static Wizard Instance
+            {
+                get
+                {
+                    if (instance == null)
+                    {
+                        instance = new Wizard();
+                    }
+                    return instance;
+                }
+            }
+
+            public enum Tab { None, Character, Limbs, Joints }
+            private View activeView;
+            private Tab currentTab;
+
+            public void SelectTab(Tab tab)
+            {
+                currentTab = tab;
+                activeView?.Box.Close();
+                switch (currentTab)
+                {
+                    case Tab.Character:
+                        activeView = CharacterView.Get();
+                        break;
+                    case Tab.Joints:
+                        activeView = JointView.Get();
+                        break;
+                    case Tab.Limbs:
+                        activeView = LimbView.Get();
+                        break;
+                    case Tab.None:
+                    default:
+                        activeView = null;
+                        break;
+                }
+            }
+
+            public void AddToGUIUpdateList()
+            {
+                activeView?.Box.AddToGUIUpdateList();
+            }
+
+            private class CharacterView : View
+            {
+                private static CharacterView instance;
+                public static CharacterView Get() => Get(instance);
+
+                protected override GUIMessageBox Create()
+                {
+                    var box = new GUIMessageBox("Create New Character", string.Empty, new string[] { "Cancel", "Next" }, GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight);
+                    box.Content.ChildAnchor = Anchor.TopCenter;
+                    box.Content.AbsoluteSpacing = 20;
+                    int elementSize = 30;
+                    var listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.9f), box.Content.RectTransform));
+                    var topGroup = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 4 + 20), listBox.Content.RectTransform)) { AbsoluteSpacing = 2 };
+                    var fields = new List<GUIComponent>();
+                    GUITextBox texturePathElement = null;
+                    void UpdateTexturePath()
+                    {
+                        TexturePath = $"Content/Characters/{Name}/{Name}.png";
+                        texturePathElement.Text = TexturePath;
+                    }
+                    // TODO: xml path
+                    for (int i = 0; i < 4; i++)
+                    {
+                        var mainElement = new GUIFrame(new RectTransform(new Point(topGroup.RectTransform.Rect.Width, elementSize), topGroup.RectTransform), style: null, color: Color.Gray * 0.25f);
+                        fields.Add(mainElement);
+                        RectTransform leftElement = new RectTransform(new Vector2(0.5f, 1), mainElement.RectTransform, Anchor.TopLeft);
+                        RectTransform rightElement = new RectTransform(new Vector2(0.5f, 1), mainElement.RectTransform, Anchor.TopRight);
+                        switch (i)
+                        {
+                            case 0:
+                                new GUITextBlock(leftElement, "Name");
+                                var nameField = new GUITextBox(rightElement, "Worm X");
+                                string ProcessText(string text) => text.RemoveWhitespace().CapitaliseFirstInvariant();
+                                Name = ProcessText(nameField.Text);
+                                nameField.OnTextChanged += (tb, text) =>
+                                {
+                                    Name = ProcessText(text);
+                                    UpdateTexturePath();
+                                    return true;
+                                };
+                                break;
+                            case 1:
+                                new GUITextBlock(leftElement, "Size");
+                                new GUINumberInput(rightElement, GUINumberInput.NumberType.Float)
+                                {
+                                    MinValueFloat = 1,
+                                    MaxValueFloat = 1000,
+                                    FloatValue = Size,
+                                    OnValueChanged = (nInput) => Size = nInput.FloatValue
+                                };
+                                break;
+                            case 2:
+                                new GUITextBlock(leftElement, "Is Humanoid?");
+                                new GUITickBox(rightElement, string.Empty)
+                                {
+                                    Selected = IsHumanoid,
+                                    OnSelected = (tB) => IsHumanoid = tB.Selected
+                                };
+                                break;
+                            case 3:
+                                new GUITextBlock(leftElement, "Texture Path");
+                                texturePathElement = new GUITextBox(rightElement, string.Empty);
+                                UpdateTexturePath();
+                                break;
+                        }
+                    }
+                    var codeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), listBox.Content.RectTransform), style: null) { CanBeFocused = false };
+                    new GUITextBlock(new RectTransform(new Vector2(1, 0.05f), codeArea.RectTransform), "Custom code:");
+                    new GUITextBox(new RectTransform(new Vector2(1, 1 - 0.05f), codeArea.RectTransform, Anchor.BottomLeft), string.Empty, textAlignment: Alignment.TopLeft);
+                    // Cancel
+                    box.Buttons[0].OnClicked += (b, d) =>
+                    {
+                        Instance.SelectTab(Tab.None);
+                        return true;
+                    };
+                    // Next
+                    box.Buttons[1].OnClicked += (b, d) =>
+                    {
+                        Instance.SelectTab(Tab.Limbs);
+                        return true;
+                    };
+                    return box;
+                }
+            }
+
+            private class LimbView : View
+            {
+                private static LimbView instance;
+                public static LimbView Get() => Get(instance);
+
+                protected override GUIMessageBox Create()
+                {
+                    var box = new GUIMessageBox("Define Limbs", string.Empty, new string[] { "Previous", "Next" }, GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight);
+                    box.Content.ChildAnchor = Anchor.TopCenter;
+                    box.Content.AbsoluteSpacing = 20;
+                    int elementSize = 30;
+                    var listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.9f), box.Content.RectTransform));
+                    var topGroup = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 4 + 20), listBox.Content.RectTransform)) { AbsoluteSpacing = 2 };
+
+                    var limbXElements = new Dictionary<string, XElement>();
+                    var limbGUIElements = new List<GUIComponent>();
+                    var limbButtonElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), listBox.Content.RectTransform), style: null)
+                    {
+                        CanBeFocused = false
+                    };
+                    var removeLimbButton = new GUIButton(new RectTransform(new Point(limbButtonElement.Rect.Height, limbButtonElement.Rect.Height), limbButtonElement.RectTransform), "-")
+                    {
+                        OnClicked = (b, d) =>
+                        {
+                            var element = limbGUIElements.LastOrDefault();
+                            if (element == null) { return false; }
+                            element.RectTransform.Parent = null;
+                            limbGUIElements.Remove(element);
+                            return true;
+                        }
+                    };
+                    var addLimbButton = new GUIButton(new RectTransform(new Point(limbButtonElement.Rect.Height, limbButtonElement.Rect.Height), limbButtonElement.RectTransform)
+                    {
+                        AbsoluteOffset = new Point(removeLimbButton.Rect.Width + 10, 0)
+                    }, "+")
+                    {
+                        OnClicked = (b, d) =>
+                        {
+                            var limbElement = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 5 + 20), listBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
+                            {
+                                CanBeFocused = false
+                            };
+                            int id = limbGUIElements.Count;
+                            var group = new GUILayoutGroup(new RectTransform(Vector2.One, limbElement.RectTransform)) { AbsoluteSpacing = 2 };
+                            var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), $"Limb {id}");
+                            var idField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
+                            var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
+                            var limbType = LimbType.None;
+                            switch (limbGUIElements.Count)
+                            {
+                                case 0:
+                                    limbType = LimbType.Head;
+                                    break;
+                                case 1:
+                                    limbType = LimbType.Torso;
+                                    break;
+                            }
+                            var limbTypeField = GUI.CreateEnumField(limbType, elementSize, "Limb Type", group.RectTransform, font: GUI.Font);
+                            var sourceRectField = GUI.CreateRectangleField(Rectangle.Empty, elementSize, "Source Rect", group.RectTransform, font: GUI.Font);
+                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopLeft), "ID");
+                            new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
+                            {
+                                MinValueInt = 0,
+                                MaxValueInt = byte.MaxValue,
+                                IntValue = id,
+                                OnValueChanged = numInput =>
+                                {
+                                    id = numInput.IntValue;
+                                    string text = nameField.GetChild<GUITextBox>().Text;
+                                    string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
+                                    label.Text = $"Limb {t}";
+                                }
+                            };
+                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopLeft), "Name");
+                            new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), string.Empty)
+                                .OnTextChanged += (tB, text) =>
+                                {
+                                    string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
+                                    label.Text = $"Limb {t}";
+                                    return true;
+                                };
+                            limbGUIElements.Add(limbElement);
+                            return true;
+                        }
+                    };
+                    var codeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), listBox.Content.RectTransform), style: null) { CanBeFocused = false };
+                    new GUITextBlock(new RectTransform(new Vector2(1, 0.05f), codeArea.RectTransform), "Custom code:");
+                    new GUITextBox(new RectTransform(new Vector2(1, 1 - 0.05f), codeArea.RectTransform, Anchor.BottomLeft), string.Empty, textAlignment: Alignment.TopLeft);
+                    // Previous
+                    box.Buttons[0].OnClicked += (b, d) =>
+                    {
+                        Instance.SelectTab(Tab.Character);
+                        return true;
+                    };
+                    // Next
+                    box.Buttons[1].OnClicked += (b, d) =>
+                    {
+                        Instance.SelectTab(Tab.Joints);
+                        return true;
+                    };
+                    return box;
+                }
+            }
+
+            private class JointView : View
+            {
+                private static JointView instance;
+                public static JointView Get() => Get(instance);
+
+                protected override GUIMessageBox Create()
+                {
+                    var box = new GUIMessageBox("Define Joints", string.Empty, new string[] { "Previous", "Create" }, GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight);
+                    box.Content.ChildAnchor = Anchor.TopCenter;
+                    box.Content.AbsoluteSpacing = 20;
+                    int elementSize = 30;
+                    var listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.9f), box.Content.RectTransform));
+                    var topGroup = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 4 + 20), listBox.Content.RectTransform)) { AbsoluteSpacing = 2 };
+
+                    var jointXElements = new List<XElement>();
+                    var jointGUIElements = new List<GUIComponent>();
+                    var jointButtonElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), listBox.Content.RectTransform), style: null)
+                    {
+                        CanBeFocused = false
+                    };
+                    var removeJointButton = new GUIButton(new RectTransform(new Point(jointButtonElement.Rect.Height, jointButtonElement.Rect.Height), jointButtonElement.RectTransform), "-")
+                    {
+                        OnClicked = (b, d) =>
+                        {
+                            var element = jointGUIElements.LastOrDefault();
+                            if (element == null) { return false; }
+                            element.RectTransform.Parent = null;
+                            jointGUIElements.Remove(element);
+                            return true;
+                        }
+                    };
+                    var addJointButton = new GUIButton(new RectTransform(new Point(jointButtonElement.Rect.Height, jointButtonElement.Rect.Height), jointButtonElement.RectTransform)
+                    {
+                        AbsoluteOffset = new Point(removeJointButton.Rect.Width + 10, 0)
+                    }, "+")
+                    {
+                        OnClicked = (b, d) =>
+                        {
+                            var jointElement = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 6 + 20), listBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
+                            {
+                                CanBeFocused = false
+                            };
+                            var group = new GUILayoutGroup(new RectTransform(Vector2.One, jointElement.RectTransform)) { AbsoluteSpacing = 2 };
+                            string jointName = string.Empty;
+                            var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), jointName);
+                            var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
+                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopLeft), "Name");
+                            new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), string.Empty)
+                            {
+                                OnTextChanged = (textB, text) =>
+                                {
+                                    jointName = text;
+                                    label.Text = jointName;
+                                    return true;
+                                }
+                            };
+                            var limb1Field = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
+                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), limb1Field.RectTransform, Anchor.TopLeft), "Limb 1");
+                            var limb1InputField = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), limb1Field.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
+                            {
+                                MinValueInt = 0,
+                                MaxValueInt = byte.MaxValue,
+                            };
+                            var limb2Field = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
+                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), limb2Field.RectTransform, Anchor.TopLeft), "Limb 2");
+                            var limb2InputField = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), limb2Field.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
+                            {
+                                MinValueInt = 0,
+                                MaxValueInt = byte.MaxValue,
+                            };
+                            GUI.CreateVector2Field(Vector2.Zero, elementSize, "Limb 1 Anchor", group.RectTransform, font: GUI.Font, decimalsToDisplay: 2);
+                            GUI.CreateVector2Field(Vector2.Zero, elementSize, "Limb 2 Anchor", group.RectTransform, font: GUI.Font, decimalsToDisplay: 2);
+                            label.Text = GetJointName(jointName);
+                            limb1InputField.OnValueChanged += nInput => label.Text = GetJointName(jointName);
+                            limb2InputField.OnValueChanged += nInput => label.Text = GetJointName(jointName);
+                            jointGUIElements.Add(jointElement);
+                            string GetJointName(string n) => string.IsNullOrWhiteSpace(n) ? $"Joint {limb1InputField.IntValue} - {limb2InputField.IntValue}" : n;
+                            return true;
+                        }
+                    };
+                    var codeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), listBox.Content.RectTransform), style: null) { CanBeFocused = false };
+                    new GUITextBlock(new RectTransform(new Vector2(1, 0.05f), codeArea.RectTransform), "Custom code:");
+                    new GUITextBox(new RectTransform(new Vector2(1, 1 - 0.05f), codeArea.RectTransform, Anchor.BottomLeft), string.Empty, textAlignment: Alignment.TopLeft);
+                    // Previous
+                    box.Buttons[0].OnClicked += (b, d) =>
+                    {
+                        Instance.SelectTab(Tab.Limbs);
+                        return true;
+                    };
+                    // Parse and create
+                    box.Buttons[1].OnClicked += (b, d) =>
+                    {
+                        Instance.SelectTab(Tab.None);
+                        return true;
+                    };
+                    return box;
+                }
+            }
+
+            private abstract class View
+            {
+                // Easy accessors to the common data.
+                public string Name
+                {
+                    get => Instance.name;
+                    set => Instance.name = value;
+                }
+                public float Size
+                {
+                    get => Instance.size;
+                    set => Instance.size = value;
+                }
+                public bool IsHumanoid
+                {
+                    get => Instance.isHumanoid;
+                    set => Instance.isHumanoid = value;
+                }
+                public string TexturePath
+                {
+                    get => Instance.texturePath;
+                    set => Instance.texturePath = value;
+                }
+                public string XMLPath
+                {
+                    get => Instance.xmlPath;
+                    set => Instance.xmlPath = value;
+                }
+                public string HTMLPath
+                {
+                    get => Instance.htmlPath;
+                    set => Instance.htmlPath = value;
+                }
+
+                private GUIMessageBox box;
+                public GUIMessageBox Box
+                {
+                    get
+                    {
+                        if (box == null)
+                        {
+                            box = Create();
+                        }
+                        return box;
+                    }
+                }
+
+                protected abstract GUIMessageBox Create();
+                protected static T Get<T>(T instance) where T : View, new()
+                {
+                    if (instance == null)
+                    {
+                        instance = new T();
+                    }
+                    return instance;
+                }
+            }
+        }
         #endregion
     }
 }
