@@ -173,6 +173,8 @@ namespace Barotrauma
                 {
                     freezeToggle.Selected = !freezeToggle.Selected;
                 }
+                Widget.EnableMultiSelect = PlayerInput.KeyDown(Keys.LeftControl);
+
             }
             if (!isFreezed)
             {
