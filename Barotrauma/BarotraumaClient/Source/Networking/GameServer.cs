@@ -53,8 +53,8 @@ namespace Barotrauma.Networking
 
         public override void AddToGUIUpdateList()
         {
+            if (GUI.DisableHUD) return;
             base.AddToGUIUpdateList();
-
             settingsFrame?.AddToGUIUpdateList();
         }
 
