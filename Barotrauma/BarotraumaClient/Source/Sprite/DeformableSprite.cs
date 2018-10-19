@@ -199,7 +199,7 @@ namespace Barotrauma
 
         private Point spritePos;
         private Point spriteSize;
-        public void Draw(Camera cam, Vector3 pos, Vector2 origin, float rotate, Vector2 scale, bool flip = false)
+        public void Draw(Camera cam, Vector3 pos, Vector2 origin, float rotate, Vector2 scale, Color color, bool flip = false)
         {
             // If the source rect is modified, we should recalculate the vertex buffer.
             if (sprite.SourceRect.Location != spritePos || sprite.SourceRect.Size != spriteSize)
@@ -225,10 +225,12 @@ namespace Barotrauma
                     }
                 }
             }
+            
             Matrix matrix = GetTransform(pos, origin, rotate, scale);
             effect.Parameters["xTransform"].SetValue(matrix * cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f);
             effect.Parameters["xTexture"].SetValue(sprite.Texture);
+            effect.Parameters["tintColor"].SetValue(color.ToVector4());
             effect.Parameters["deformArray"].SetValue(deformAmount);
             effect.Parameters["deformArrayWidth"].SetValue(deformArrayWidth);
             effect.Parameters["deformArrayHeight"].SetValue(deformArrayHeight);

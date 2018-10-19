@@ -224,7 +224,7 @@ namespace Barotrauma.Items.Components
                     Turret turret = targetItem.GetComponent<Turret>();
                     if (turret != null)
                     {
-                        centerPos = new Vector2(targetItem.WorldRect.X + turret.BarrelPos.X, targetItem.WorldRect.Y - turret.BarrelPos.Y);
+                        centerPos = new Vector2(targetItem.WorldRect.X + turret.TransformedBarrelPos.X, targetItem.WorldRect.Y - turret.TransformedBarrelPos.Y);
                     }
                 }
 

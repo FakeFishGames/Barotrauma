@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FarseerPhysics;
+using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
 using System.Xml.Linq;
@@ -13,17 +14,40 @@ namespace Barotrauma.Items.Components
 
         private bool motionDetected;
 
-        private float range;
+        private float rangeX, rangeY;
+
+        private Vector2 detectOffset;
 
         private float updateTimer;
-
+        
         [InGameEditable, Serialize(0.0f, true)]
-        public float Range
+        public float RangeX
         {
-            get { return range; }
+            get { return rangeX; }
             set
             {
-                range = MathHelper.Clamp(value, 0.0f, 500.0f);
+                rangeX = MathHelper.Clamp(value, 0.0f, 1000.0f);
+            }
+        }
+        [InGameEditable, Serialize(0.0f, true)]
+        public float RangeY
+        {
+            get { return rangeY; }
+            set
+            {
+                rangeY = MathHelper.Clamp(value, 0.0f, 1000.0f);
+            }
+        }
+
+        [Serialize("0,0", true), Editable(ToolTip = "The position to detect the movement at relative to the item. For example, 0,100 would detect movement 100 units above the item.")]
+        public Vector2 DetectOffset
+        {
+            get { return detectOffset; }
+            set
+            {
+                detectOffset = value;
+                detectOffset.X = MathHelper.Clamp(value.X, -rangeX, rangeX);
+                detectOffset.Y = MathHelper.Clamp(value.Y, -rangeY, rangeY);
             }
         }
 
@@ -41,10 +65,17 @@ namespace Barotrauma.Items.Components
             set { falseOutput = value; }
         }
 
+
         public MotionSensor(Item item, XElement element)
             : base (item, element)
         {
             IsActive = true;
+
+            //backwards compatibility
+            if (element.Attribute("range") != null)
+            {
+                rangeX = rangeY = element.GetAttributeFloat("range", 0.0f);
+            }
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -67,16 +98,29 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            Vector2 detectPos = item.WorldPosition + detectOffset;
+            Rectangle detectRect = new Rectangle((int)(detectPos.X - rangeX), (int)(detectPos.Y - rangeY), (int)(rangeX * 2), (int)(rangeY * 2));
+            float broadRangeX = Math.Max(rangeX * 2, 500);
+            float broadRangeY = Math.Max(rangeY * 2, 500);
+
             foreach (Character c in Character.CharacterList)
             {
-                if (Math.Abs(c.WorldPosition.X - item.WorldPosition.X) < range &&
-                    Math.Abs(c.WorldPosition.Y - item.WorldPosition.Y) < range)
+                //do a rough check based on the position of the character's collider first
+                //before the more accurate limb-based check
+                if (Math.Abs(c.WorldPosition.X - detectPos.X) > broadRangeX || Math.Abs(c.WorldPosition.Y - detectPos.Y) > broadRangeY)
                 {
-                    if (!c.AnimController.Limbs.Any(l => l.body.FarseerBody.Awake)) continue;
+                    continue;
+                }
 
-                    motionDetected = true;
-                    break;
-                }                
+                if (!c.AnimController.Limbs.Any(l => l.body.FarseerBody.Awake)) continue;
+                foreach (Limb limb in c.AnimController.Limbs)
+                {
+                    if (MathUtils.CircleIntersectsRectangle(limb.WorldPosition, ConvertUnits.ToDisplayUnits(limb.body.GetMaxExtent()), detectRect))
+                    {
+                        motionDetected = true;
+                        break;
+                    }
+                }
             }
         }
     }

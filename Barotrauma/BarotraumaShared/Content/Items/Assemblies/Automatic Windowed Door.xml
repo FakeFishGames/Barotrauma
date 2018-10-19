@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ItemAssembly name="Automatic Door" description="A door that closes automatically after 5 seconds if there's no-one in the doorway.">
-  <Item name="Door" identifier="door" ID="3" rect="-96,-16,48,208" displaysidebysidewhenlinked="False" description="" spritecolor="1,1,1,1" tags="door" spritescale="1" spritedepth="0.01">
+<ItemAssembly name="Automatic Windowed Door" description="A door that closes automatically after 5 seconds if there's no-one in the doorway.">
+  <Item name="Door" identifier="windoweddoor" ID="3" rect="-96,-16,48,208" displaysidebysidewhenlinked="False" description="" spritecolor="1,1,1,1" tags="door" spritescale="1" spritedepth="0.01">
     <Door isopen="False" pickingtime="10" canbepicked="True" msg="Force open [Crowbar]">
       <requireditem identifiers="crowbar" type="Equipped" msg="" />
     </Door>

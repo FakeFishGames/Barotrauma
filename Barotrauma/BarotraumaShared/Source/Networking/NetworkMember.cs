@@ -162,13 +162,13 @@ namespace Barotrauma.Networking
         {
             get { return serverSettings; }
         }
-
-        partial void InitProjSpecific();
-        public NetworkMember()
+        
+        public NetPeerConfiguration NetPeerConfiguration
         {
-            InitProjSpecific();
+            get;
+            protected set;
         }
-
+        
         public bool CanUseRadio(Character sender)
         {
             if (sender == null) return false;

@@ -101,7 +101,7 @@ namespace Barotrauma.Networking
             if (incMsg.ReadBoolean())
             {
                 isPublic = incMsg.ReadBoolean();
-                EnableUPnP = incMsg.ReadBoolean();
+                //EnableUPnP = incMsg.ReadBoolean();
                 incMsg.ReadPadBits();
                 QueryPort = incMsg.ReadUInt16();
 
@@ -185,6 +185,8 @@ namespace Barotrauma.Networking
 
         public void AddToGUIUpdateList()
         {
+            if (GUI.DisableHUD) return;
+
             settingsFrame?.AddToGUIUpdateList();
         }
 

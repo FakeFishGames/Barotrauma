@@ -40,6 +40,7 @@
   <Item file="Content/Items/Legacy/legacyoxygengenerator.xml" />
   <Item file="Content/Items/Legacy/legacypoweritems.xml" />
   <Item file="Content/Items/Legacy/legacypump.xml" />
+  <Item file="Content/Items/Legacy/legacyrailgun.xml" />
   <Character file="Content/Characters/Carrier/carrier.xml" />
   <Character file="Content/Characters/Charybdis/charybdis.xml" />
   <Character file="Content/Characters/Coelanth/coelanth.xml" />
