@@ -13,6 +13,8 @@ namespace Barotrauma
 {
     class CharacterEditorScreen : Screen
     {
+        private static CharacterEditorScreen instance;
+
         private Camera cam;
         public override Camera Cam
         {
@@ -71,8 +73,6 @@ namespace Barotrauma
             GameMain.Instance.OnResolutionChanged += OnResolutionChanged;
             instance = this;
         }
-
-        private static CharacterEditorScreen instance;
 
         public override void Deselect()
         {
@@ -2665,7 +2665,6 @@ namespace Barotrauma
             private bool isHumanoid = false;
             private string texturePath;
             private string xmlPath;
-            private string htmlPath;
             private Dictionary<string, XElement> limbXElements = new Dictionary<string, XElement>();
             private List<GUIComponent> limbGUIElements = new List<GUIComponent>();
             private List<XElement> jointXElements = new List<XElement>();
@@ -2684,7 +2683,7 @@ namespace Barotrauma
                 }
             }
 
-            public enum Tab { None, Character, Limbs, Joints }
+            public enum Tab { None, Character, Ragdoll }
             private View activeView;
             private Tab currentTab;
 
@@ -2697,11 +2696,8 @@ namespace Barotrauma
                     case Tab.Character:
                         activeView = CharacterView.Get();
                         break;
-                    case Tab.Joints:
-                        activeView = JointView.Get();
-                        break;
-                    case Tab.Limbs:
-                        activeView = LimbView.Get();
+                    case Tab.Ragdoll:
+                        activeView = RagdollView.Get();
                         break;
                     case Tab.None:
                     default:
@@ -2728,16 +2724,19 @@ namespace Barotrauma
                     box.Content.AbsoluteSpacing = 20;
                     int elementSize = 30;
                     var listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.9f), box.Content.RectTransform));
-                    var topGroup = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 4 + 20), listBox.Content.RectTransform)) { AbsoluteSpacing = 2 };
+                    var topGroup = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 6 + 20), listBox.Content.RectTransform)) { AbsoluteSpacing = 2 };
                     var fields = new List<GUIComponent>();
                     GUITextBox texturePathElement = null;
-                    void UpdateTexturePath()
+                    GUITextBox xmlPathElement = null;
+                    void UpdatePaths()
                     {
-                        TexturePath = $"Content/Characters/{Name}/{Name}.png";
+                        string pathBase = $"Content/Characters/{Name}/{Name}";
+                        XMLPath = $"{pathBase}.xml";
+                        TexturePath = $"{pathBase}.png";
                         texturePathElement.Text = TexturePath;
+                        xmlPathElement.Text = XMLPath;
                     }
-                    // TODO: xml path
-                    for (int i = 0; i < 4; i++)
+                    for (int i = 0; i < 5; i++)
                     {
                         var mainElement = new GUIFrame(new RectTransform(new Point(topGroup.RectTransform.Rect.Width, elementSize), topGroup.RectTransform), style: null, color: Color.Gray * 0.25f);
                         fields.Add(mainElement);
@@ -2753,7 +2752,7 @@ namespace Barotrauma
                                 nameField.OnTextChanged += (tb, text) =>
                                 {
                                     Name = ProcessText(text);
-                                    UpdateTexturePath();
+                                    UpdatePaths();
                                     return true;
                                 };
                                 break;
@@ -2776,31 +2775,19 @@ namespace Barotrauma
                                 };
                                 break;
                             case 3:
+                                new GUITextBlock(leftElement, "Config File Output");
+                                xmlPathElement = new GUITextBox(rightElement, string.Empty);
+                                break;
+                            case 4:
                                 new GUITextBlock(leftElement, "Texture Path");
                                 texturePathElement = new GUITextBox(rightElement, string.Empty);
-                                UpdateTexturePath();
                                 break;
                         }
                     }
-                    var codeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), listBox.Content.RectTransform), style: null) { CanBeFocused = false };
-                    new GUITextBlock(new RectTransform(new Vector2(1, 0.05f), codeArea.RectTransform), "Custom code:");
-                    var inputBox = new GUITextBox(new RectTransform(new Vector2(1, 1 - 0.05f), codeArea.RectTransform, Anchor.BottomLeft), string.Empty, textAlignment: Alignment.TopLeft);
-                    new GUIButton(new RectTransform(new Point(topGroup.RectTransform.Rect.Width, elementSize), topGroup.RectTransform), "Load html")
-                    {
-                        OnClicked = (b, d) =>
-                        {
-                            ParseRagdollFromHTML();
-                            // TODO: display the parsed html in a separate box that can be toggled on and off
-                            inputBox.Text = new XDocument(new XElement("Ragdoll", new object[]
-                            {
-                                new XAttribute("type", Name),
-                                new XElement("collider", new XAttribute("radius", Size)),
-                                    LimbXElements.Values,
-                                    JointXElements
-                            })).ToString();
-                            return true;
-                        }
-                    };
+                    UpdatePaths();
+                    //var codeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), listBox.Content.RectTransform), style: null) { CanBeFocused = false };
+                    //new GUITextBlock(new RectTransform(new Vector2(1, 0.05f), codeArea.RectTransform), "Custom code:");
+                    //var inputBox = new GUITextBox(new RectTransform(new Vector2(1, 1 - 0.05f), codeArea.RectTransform, Anchor.BottomLeft), string.Empty, textAlignment: Alignment.TopLeft);
                     // Cancel
                     box.Buttons[0].OnClicked += (b, d) =>
                     {
@@ -2810,30 +2797,75 @@ namespace Barotrauma
                     // Next
                     box.Buttons[1].OnClicked += (b, d) =>
                     {
-                        Instance.SelectTab(Tab.Limbs);
+                        Instance.SelectTab(Tab.Ragdoll);
                         return true;
                     };
                     return box;
                 }
             }
 
-            private class LimbView : View
+            private class RagdollView : View
             {
-                private static LimbView instance;
-                public static LimbView Get() => Get(instance);
+                private static RagdollView instance;
+                public static RagdollView Get() => Get(instance);
 
                 protected override GUIMessageBox Create()
                 {
-                    var box = new GUIMessageBox("Define Limbs", string.Empty, new string[] { "Previous", "Next" }, GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight);
+                    var box = new GUIMessageBox("Define Ragdoll", string.Empty, new string[] { "Previous", "Create" }, GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight);
                     box.Content.ChildAnchor = Anchor.TopCenter;
                     box.Content.AbsoluteSpacing = 20;
                     int elementSize = 30;
-                    var listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.9f), box.Content.RectTransform));
-                    var topGroup = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 4 + 20), listBox.Content.RectTransform)) { AbsoluteSpacing = 2 };
-                    var limbButtonElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), listBox.Content.RectTransform), style: null)
+                    var topGroup = new GUILayoutGroup(new RectTransform(new Vector2(1, 0.05f), box.Content.RectTransform)) { AbsoluteSpacing = 2 };
+                    var bottomGroup = new GUILayoutGroup(new RectTransform(new Vector2(1, 0.75f), box.Content.RectTransform)) { AbsoluteSpacing = 10 };
+                    // HTML
+                    GUIMessageBox htmlBox = null;
+                    new GUIButton(new RectTransform(new Point(topGroup.RectTransform.Rect.Width, elementSize), topGroup.RectTransform), "Load Ragdoll from HTML")
                     {
-                        CanBeFocused = false
+                        OnClicked = (b, d) =>
+                        {
+                            if (htmlBox == null)
+                            {
+                                htmlBox = new GUIMessageBox("Load HTML", string.Empty, new string[] { "Close", "Load" }, GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight);
+                                var element = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.05f), htmlBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f);
+                                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), element.RectTransform), "HTML Path");
+                                var htmlPathElement = new GUITextBox(new RectTransform(new Vector2(0.5f, 1), element.RectTransform, Anchor.TopRight), $"Content/Characters/{Name}/{Name}.html");
+                                var list = new GUIListBox(new RectTransform(new Vector2(1, 0.8f), htmlBox.Content.RectTransform));
+                                var htmlOutput = new GUITextBlock(new RectTransform(Vector2.One, list.Content.RectTransform), string.Empty) { CanBeFocused = false };
+                                htmlBox.Buttons[0].OnClicked += (_b, _d) =>
+                                {
+                                    htmlBox.Close();
+                                    return true;
+                                };
+                                htmlBox.Buttons[1].OnClicked += (_b, _d) =>
+                                {
+                                    LimbXElements.Clear();
+                                    JointXElements.Clear();
+                                    ParseRagdollFromHTML(htmlPathElement.Text);
+                                    htmlOutput.Text = new XDocument(new XElement("Ragdoll", new object[]
+                                    {
+                                        new XAttribute("type", Name),
+                                        new XElement("collider", new XAttribute("radius", Size)),
+                                            LimbXElements.Values,
+                                            JointXElements
+                                    })).ToString();
+                                    htmlOutput.CalculateHeightFromText();
+                                    list.UpdateScrollBarSize();
+                                    return true;
+                                };
+                            }
+                            else
+                            {
+                                GUIMessageBox.MessageBoxes.Add(htmlBox);
+                            }
+                            return true;
+                        }
                     };
+                    // Limbs
+                    var limbsElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), bottomGroup.RectTransform), style: null) { CanBeFocused = false };
+                    new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), limbsElement.RectTransform), "Limbs:");
+                    var limbButtonElement = new GUIFrame(new RectTransform(new Vector2(0.5f, 1f), limbsElement.RectTransform)
+                        { RelativeOffset = new Vector2(0.25f, 0) }, style: null) { CanBeFocused = false };
+                    var limbsList = new GUIListBox(new RectTransform(new Vector2(1, 0.45f), bottomGroup.RectTransform));
                     var removeLimbButton = new GUIButton(new RectTransform(new Point(limbButtonElement.Rect.Height, limbButtonElement.Rect.Height), limbButtonElement.RectTransform), "-")
                     {
                         OnClicked = (b, d) =>
@@ -2852,7 +2884,7 @@ namespace Barotrauma
                     {
                         OnClicked = (b, d) =>
                         {
-                            var limbElement = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 5 + 20), listBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
+                            var limbElement = new GUIFrame(new RectTransform(new Point(limbsList.Content.Rect.Width, elementSize * 5 + 40), limbsList.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
                             {
                                 CanBeFocused = false
                             };
@@ -2899,42 +2931,13 @@ namespace Barotrauma
                             return true;
                         }
                     };
-                    var codeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), listBox.Content.RectTransform), style: null) { CanBeFocused = false };
-                    new GUITextBlock(new RectTransform(new Vector2(1, 0.05f), codeArea.RectTransform), "Custom code:");
-                    new GUITextBox(new RectTransform(new Vector2(1, 1 - 0.05f), codeArea.RectTransform, Anchor.BottomLeft), string.Empty, textAlignment: Alignment.TopLeft);
-                    // Previous
-                    box.Buttons[0].OnClicked += (b, d) =>
-                    {
-                        Instance.SelectTab(Tab.Character);
-                        return true;
-                    };
-                    // Next
-                    box.Buttons[1].OnClicked += (b, d) =>
-                    {
-                        Instance.SelectTab(Tab.Joints);
-                        return true;
-                    };
-                    return box;
-                }
-            }
-
-            private class JointView : View
-            {
-                private static JointView instance;
-                public static JointView Get() => Get(instance);
-
-                protected override GUIMessageBox Create()
-                {
-                    var box = new GUIMessageBox("Define Joints", string.Empty, new string[] { "Previous", "Create" }, GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight);
-                    box.Content.ChildAnchor = Anchor.TopCenter;
-                    box.Content.AbsoluteSpacing = 20;
-                    int elementSize = 30;
-                    var listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.9f), box.Content.RectTransform));
-                    var topGroup = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 4 + 20), listBox.Content.RectTransform)) { AbsoluteSpacing = 2 };
-                    var jointButtonElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), listBox.Content.RectTransform), style: null)
-                    {
-                        CanBeFocused = false
-                    };
+                    // Joints
+                    new GUIFrame(new RectTransform(new Vector2(1, 0.05f), bottomGroup.RectTransform), style: null) { CanBeFocused = false };
+                    var jointsElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), bottomGroup.RectTransform), style: null) { CanBeFocused = false };
+                    new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), jointsElement.RectTransform), "Joints:");
+                    var jointButtonElement = new GUIFrame(new RectTransform(new Vector2(0.5f, 1f), jointsElement.RectTransform)
+                        { RelativeOffset = new Vector2(0.25f, 0) }, style: null) { CanBeFocused = false };
+                    var jointsList = new GUIListBox(new RectTransform(new Vector2(1, 0.45f), bottomGroup.RectTransform));
                     var removeJointButton = new GUIButton(new RectTransform(new Point(jointButtonElement.Rect.Height, jointButtonElement.Rect.Height), jointButtonElement.RectTransform), "-")
                     {
                         OnClicked = (b, d) =>
@@ -2953,7 +2956,7 @@ namespace Barotrauma
                     {
                         OnClicked = (b, d) =>
                         {
-                            var jointElement = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 6 + 20), listBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
+                            var jointElement = new GUIFrame(new RectTransform(new Point(jointsList.Content.Rect.Width, elementSize * 6 + 40), jointsList.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
                             {
                                 CanBeFocused = false
                             };
@@ -2995,13 +2998,13 @@ namespace Barotrauma
                             return true;
                         }
                     };
-                    var codeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), listBox.Content.RectTransform), style: null) { CanBeFocused = false };
-                    new GUITextBlock(new RectTransform(new Vector2(1, 0.05f), codeArea.RectTransform), "Custom code:");
-                    new GUITextBox(new RectTransform(new Vector2(1, 1 - 0.05f), codeArea.RectTransform, Anchor.BottomLeft), string.Empty, textAlignment: Alignment.TopLeft);
+                    //var codeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), listBox.Content.RectTransform), style: null) { CanBeFocused = false };
+                    //new GUITextBlock(new RectTransform(new Vector2(1, 0.05f), codeArea.RectTransform), "Custom code:");
+                    //new GUITextBox(new RectTransform(new Vector2(1, 1 - 0.05f), codeArea.RectTransform, Anchor.BottomLeft), string.Empty, textAlignment: Alignment.TopLeft);
                     // Previous
                     box.Buttons[0].OnClicked += (b, d) =>
                     {
-                        Instance.SelectTab(Tab.Limbs);
+                        Instance.SelectTab(Tab.Character);
                         return true;
                     };
                     // Parse and create
@@ -3010,22 +3013,15 @@ namespace Barotrauma
                         // Currently these are additive to the data defined in the html and in the code fields.
                         ParseLimbsFromGUIElements();
                         ParseJointsFromGUIElements();
-                        try
+                        var ragdollParams = new object[]
                         {
-                            var ragdollParams = new object[]
-                            {
-                                new XAttribute("type", Name),
-                                new XElement("collider", new XAttribute("radius", Size)),   // TODO: if we set the radius, the collider cannot be a rectangle
-                                    LimbXElements.Values,
-                                    JointXElements
-                            };
-                            CharacterEditorScreen.instance.CreateCharacter(Name, IsHumanoid, ragdollParams);
-                            GUI.AddMessage($"Character {Name} Created", Color.Green, font: GUI.Font);
-                        }
-                        catch (Exception e)
-                        {
-                            DebugConsole.ThrowError("Failed to parse html from " + HTMLPath, e);
-                        }
+                            new XAttribute("type", Name),
+                            new XElement("collider", new XAttribute("radius", Size)),   // TODO: if we set the radius, the collider cannot be a rectangle
+                                LimbXElements.Values,
+                                JointXElements
+                        };
+                        CharacterEditorScreen.instance.CreateCharacter(Name, IsHumanoid, ragdollParams);
+                        GUI.AddMessage($"Character {Name} Created", Color.Green, font: GUI.Font);
                         Instance.SelectTab(Tab.None);
                         return true;
                     };
@@ -3060,11 +3056,6 @@ namespace Barotrauma
                 {
                     get => Instance.xmlPath;
                     set => Instance.xmlPath = value;
-                }
-                public string HTMLPath
-                {
-                    get => Instance.htmlPath;
-                    set => Instance.htmlPath = value;
                 }
                 public Dictionary<string, XElement> LimbXElements
                 {
@@ -3155,16 +3146,13 @@ namespace Barotrauma
                     }
                 }
 
-                protected void ParseRagdollFromHTML()
+                protected void ParseRagdollFromHTML(string path)
                 {
                     // TODO: parse as xml?
-                    //XDocument doc = XMLExtensions.TryLoadXml(HTMLPath);
+                    //XDocument doc = XMLExtensions.TryLoadXml(path);
                     //var xElements = doc.Elements().ToArray();
 
-                    // TODO: add a field
-                    HTMLPath = $"Content/Characters/{Name}/{Name.ToLowerInvariant()}.html";
-
-                    string html = File.ReadAllText(HTMLPath);
+                    string html = File.ReadAllText(path);
                     var lines = html.Split(new string[] { "<div", "</div>", Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
                                     .Where(s => s.Contains("left") && s.Contains("top") && s.Contains("width") && s.Contains("height"));
                     int id = 0;
