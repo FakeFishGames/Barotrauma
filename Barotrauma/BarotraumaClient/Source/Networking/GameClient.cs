@@ -176,21 +176,12 @@ namespace Barotrauma.Networking
             ChatMessage.LastID = 0;
 
             // Create new instance of configs. Parameter is "application Id". It has to be same on client and server.
-            NetPeerConfiguration config = new NetPeerConfiguration("barotrauma");
-
-#if DEBUG
-            config.SimulatedLoss = 0.05f;
-            config.SimulatedDuplicatesChance = 0.05f;
-            config.SimulatedMinimumLatency = 0.1f;
-            config.SimulatedRandomLatency = 0.05f;
-
-            config.ConnectionTimeout = 600.0f;
-#endif 
-
-            config.DisableMessageType(NetIncomingMessageType.DebugMessage | NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt
+            NetPeerConfiguration = new NetPeerConfiguration("barotrauma");
+            
+            NetPeerConfiguration.DisableMessageType(NetIncomingMessageType.DebugMessage | NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt
                 | NetIncomingMessageType.ErrorMessage | NetIncomingMessageType.Error);
 
-            client = new NetClient(config);
+            client = new NetClient(NetPeerConfiguration);
             NetPeer = client;
             client.Start();
 

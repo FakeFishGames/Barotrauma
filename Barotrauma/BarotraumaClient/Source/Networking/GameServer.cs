@@ -206,7 +206,7 @@ namespace Barotrauma.Networking
         private GUIMessageBox upnpBox;
         void InitUPnP()
         {
-            server.UPnP.ForwardPort(config.Port, "barotrauma");
+            server.UPnP.ForwardPort(NetPeerConfiguration.Port, "barotrauma");
 
             upnpBox = new GUIMessageBox(TextManager.Get("PleaseWaitUPnP"), TextManager.Get("AttemptingUPnP"), new string[] { TextManager.Get("Cancel") });
             upnpBox.Buttons[0].OnClicked = upnpBox.Close;
