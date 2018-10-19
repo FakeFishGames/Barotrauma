@@ -26,7 +26,6 @@ namespace Barotrauma.Networking
         private bool started;
 
         private NetServer server;
-        private NetPeerConfiguration config;
        
         private DateTime refreshMasterTimer;
 
@@ -95,39 +94,28 @@ namespace Barotrauma.Networking
                 SetPassword(password);
             }
 
-            config = new NetPeerConfiguration("barotrauma");
+            NetPeerConfiguration = new NetPeerConfiguration("barotrauma");
 
 #if CLIENT
             netStats = new NetStats();
 #endif
-
-#if DEBUG
-            config.SimulatedLoss = 0.05f;
-            config.SimulatedRandomLatency = 0.05f;
-            config.SimulatedDuplicatesChance = 0.05f;
-            config.SimulatedMinimumLatency = 0.1f;
-
-            config.ConnectionTimeout = 60.0f;
-
-            NetIdUtils.Test();
-#endif
-            config.Port = port;
+            NetPeerConfiguration.Port = port;
             Port = port;
             QueryPort = queryPort;
 
             if (attemptUPnP)
             {
-                config.EnableUPnP = true;
+                NetPeerConfiguration.EnableUPnP = true;
             }
 
-            config.MaximumConnections = maxPlayers * 2; //double the lidgren connections for unauthenticated players            
+            NetPeerConfiguration.MaximumConnections = maxPlayers * 2; //double the lidgren connections for unauthenticated players            
 
-            config.DisableMessageType(NetIncomingMessageType.DebugMessage |
+            NetPeerConfiguration.DisableMessageType(NetIncomingMessageType.DebugMessage |
                 NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt |
                 NetIncomingMessageType.ErrorMessage | NetIncomingMessageType.Error |
                 NetIncomingMessageType.UnconnectedData);
 
-            config.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
+            NetPeerConfiguration.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
 
             ServerLog = new ServerLog(name);
 
@@ -156,7 +144,7 @@ namespace Barotrauma.Networking
             try
             {
                 Log("Starting the server...", ServerLog.MessageType.ServerMessage);
-                server = new NetServer(config);
+                server = new NetServer(NetPeerConfiguration);
                 NetPeer = server;
 
                 fileSender = new FileSender(this);
@@ -197,7 +185,7 @@ namespace Barotrauma.Networking
                 yield return CoroutineStatus.Success;
             }
             
-            if (config.EnableUPnP)
+            if (NetPeerConfiguration.EnableUPnP)
             {
                 InitUPnP();
 
@@ -1071,7 +1059,7 @@ namespace Barotrauma.Networking
 
             //write as many position updates as the message can fit (only after midround syncing is done)
             while (!c.NeedsMidRoundSync &&
-                outmsg.LengthBytes < config.MaximumTransmissionUnit - 20 && 
+                outmsg.LengthBytes < NetPeerConfiguration.MaximumTransmissionUnit - 20 && 
                 c.PendingPositionUpdates.Count > 0)
             {
                 var entity = c.PendingPositionUpdates.Dequeue();
@@ -1091,9 +1079,9 @@ namespace Barotrauma.Networking
 
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
             
-            if (outmsg.LengthBytes > config.MaximumTransmissionUnit)
+            if (outmsg.LengthBytes > NetPeerConfiguration.MaximumTransmissionUnit)
             {
-                DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + config.MaximumTransmissionUnit + ")");
+                DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + NetPeerConfiguration.MaximumTransmissionUnit + ")");
             }
 
             CompressOutgoingMessage(outmsg);
@@ -1212,9 +1200,9 @@ namespace Barotrauma.Networking
             }
             else
             {
-                if (outmsg.LengthBytes > config.MaximumTransmissionUnit)
+                if (outmsg.LengthBytes > NetPeerConfiguration.MaximumTransmissionUnit)
                 {
-                    DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + config.MaximumTransmissionUnit + ")");
+                    DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + NetPeerConfiguration.MaximumTransmissionUnit + ")");
                 }
 
                 server.SendMessage(outmsg, c.Connection, NetDeliveryMethod.Unreliable);
@@ -1226,7 +1214,7 @@ namespace Barotrauma.Networking
             c.ChatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, c.LastRecvChatMsgID));
             for (int i = 0; i < c.ChatMsgQueue.Count && i < ChatMessage.MaxMessagesPerPacket; i++)
             {
-                if (outmsg.LengthBytes + c.ChatMsgQueue[i].EstimateLengthBytesServer(c) > config.MaximumTransmissionUnit - 5)
+                if (outmsg.LengthBytes + c.ChatMsgQueue[i].EstimateLengthBytesServer(c) > NetPeerConfiguration.MaximumTransmissionUnit - 5)
                 {
                     //not enough room in this packet
                     return;

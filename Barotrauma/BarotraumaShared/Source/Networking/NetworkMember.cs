@@ -152,6 +152,12 @@ namespace Barotrauma.Networking
             protected set;
         }
 
+        public NetPeerConfiguration NetPeerConfiguration
+        {
+            get;
+            protected set;
+        }
+
         public NetworkMember()
         {
             InitProjSpecific();

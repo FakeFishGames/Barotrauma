@@ -372,10 +372,10 @@ namespace Barotrauma.Networking
 
             doc.Root.SetAttributeValue("name", name);
             doc.Root.SetAttributeValue("public", isPublic);
-            doc.Root.SetAttributeValue("port", config.Port);
+            doc.Root.SetAttributeValue("port", NetPeerConfiguration.Port);
             if (Steam.SteamManager.USE_STEAM) doc.Root.SetAttributeValue("queryport", QueryPort);
             doc.Root.SetAttributeValue("maxplayers", maxPlayers);
-            doc.Root.SetAttributeValue("enableupnp", config.EnableUPnP);
+            doc.Root.SetAttributeValue("enableupnp", NetPeerConfiguration.EnableUPnP);
 
             doc.Root.SetAttributeValue("autorestart", autoRestart);
 
