@@ -81,7 +81,7 @@
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
     <ItemContainer canbeselected="true" capacity="1" itempos="0,0" hideitems="false">
-      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,204,110,226" />
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,204,110,27" />
       <Containable identifiers="explosive" />
     </ItemContainer>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
