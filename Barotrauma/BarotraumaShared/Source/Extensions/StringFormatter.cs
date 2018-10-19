@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System.Linq;
 using System;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -60,26 +61,33 @@ namespace Barotrauma
         /// <summary>
         /// Capitalises the first letter (invariant) and forces the rest to lower case (invariant).
         /// </summary>
-        public static string CapitaliseFirstInvariant(this string s) => s.Substring(0, 1).ToUpperInvariant() + s.Substring(1, s.Length - 1).ToLowerInvariant();
+        public static string CapitaliseFirstInvariant(this string s)
+        {
+            if (string.IsNullOrEmpty(s)) { return string.Empty; }
+            return s.Substring(0, 1).ToUpperInvariant() + s.Substring(1, s.Length - 1).ToLowerInvariant();
+        }
 
         /// <summary>
         /// Adds spaces into a CamelCase string.
         /// </summary>
         public static string FormatCamelCaseWithSpaces(this string str)
         {
-            string original = str;
-            var separators = original.Where(c => char.IsUpper(c));
-            var splitted = original.Split(separators.ToArray()).Where(s => !string.IsNullOrEmpty(s));
-            string joined = string.Empty;
-            for (int i = 0; i < splitted.Count(); i++)
+            return new string(InsertSpacesBeforeCaps(str).ToArray());
+            IEnumerable<char> InsertSpacesBeforeCaps(IEnumerable<char> input)
             {
-                joined += separators.ElementAt(i).ToString() + splitted.ElementAt(i);
-                if (i < splitted.Count() - 1)
+                int i = 0;
+                int lastChar = input.Count() - 1;
+                foreach (char c in input)
                 {
-                    joined += " ";
+                    if (char.IsUpper(c) && i > 0)
+                    {
+                        yield return ' ';
+                    }
+
+                    yield return c;
+                    i++;
                 }
             }
-            return joined;
         }
     }
 }

@@ -111,6 +111,23 @@ namespace Barotrauma
             set;
         }
 
+        public Vector2 AimRefPosition
+        {
+            get
+            {
+                if (ViewTarget == null) return AnimController.AimSourcePos;
+                if (ViewTarget is Item targetItem)
+                {
+                    Turret turret = targetItem.GetComponent<Turret>();
+                    if (turret != null)
+                    {
+                        return new Vector2(targetItem.Rect.X + turret.TransformedBarrelPos.X, targetItem.Rect.Y - turret.TransformedBarrelPos.Y);
+                    }
+                }
+                return ViewTarget.Position;
+            }
+        }
+
         private CharacterInfo info;
         public CharacterInfo Info
         {

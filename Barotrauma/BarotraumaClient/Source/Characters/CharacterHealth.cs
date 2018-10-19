@@ -584,7 +584,7 @@ namespace Barotrauma
                 Rectangle.Union(HUDLayoutSettings.AfflictionAreaLeft, HUDLayoutSettings.HealthBarAreaLeft) :
                 Rectangle.Union(HUDLayoutSettings.AfflictionAreaRight, HUDLayoutSettings.HealthBarAreaRight);
 
-            if (character.AllowInput && UseHealthWindow && hoverArea.Contains(PlayerInput.MousePosition))
+            if (character.AllowInput && UseHealthWindow && hoverArea.Contains(PlayerInput.MousePosition) && Inventory.SelectedSlot == null)
             {
                 healthBar.State = GUIComponent.ComponentState.Hover;
                 if (PlayerInput.LeftButtonClicked())

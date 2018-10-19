@@ -377,6 +377,13 @@ namespace Barotrauma.Items.Components
             UpdateSections();
         }
 
+        public void MoveNode(int index, Vector2 amount)
+        {
+            if (index < 0 || index >= nodes.Count) return;
+            nodes[index] += amount;            
+            UpdateSections();
+        }
+
         public void MoveNodes(Vector2 amount)
         {
             for (int i = 0; i < nodes.Count; i++)

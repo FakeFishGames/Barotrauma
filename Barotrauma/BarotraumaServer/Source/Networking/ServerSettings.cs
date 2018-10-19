@@ -44,7 +44,7 @@ namespace Barotrauma.Networking
             {
                 outMsg.Write(true);
                 outMsg.Write(isPublic);
-                outMsg.Write(EnableUPnP);
+                //outMsg.Write(EnableUPnP);
                 outMsg.WritePadBits();
                 outMsg.Write((UInt16)QueryPort);
 
@@ -98,10 +98,10 @@ namespace Barotrauma.Networking
 
             doc.Root.SetAttributeValue("name", ServerName);
             doc.Root.SetAttributeValue("public", isPublic);
-            doc.Root.SetAttributeValue("port", Port);
+            doc.Root.SetAttributeValue("port", GameMain.Server.NetPeerConfiguration.Port);
             if (Steam.SteamManager.USE_STEAM) doc.Root.SetAttributeValue("queryport", QueryPort);
             doc.Root.SetAttributeValue("maxplayers", maxPlayers);
-            doc.Root.SetAttributeValue("enableupnp", EnableUPnP);
+            doc.Root.SetAttributeValue("enableupnp", GameMain.Server.NetPeerConfiguration.EnableUPnP);
 
             doc.Root.SetAttributeValue("autorestart", autoRestart);
 

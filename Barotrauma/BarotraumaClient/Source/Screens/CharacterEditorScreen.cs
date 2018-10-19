@@ -13,6 +13,8 @@ namespace Barotrauma
 {
     class CharacterEditorScreen : Screen
     {
+        private static CharacterEditorScreen instance;
+
         private Camera cam;
         public override Camera Cam
         {
@@ -48,6 +50,7 @@ namespace Barotrauma
         private bool lockSpritePosition;
         private bool lockSpriteSize;
         private bool displayColliders;
+        private bool displayBackgroundColor;
 
         private float spriteSheetZoom;
         private int spriteSheetOffsetY = 100;
@@ -68,6 +71,7 @@ namespace Barotrauma
             currentCharacterConfig = Character.HumanConfigFile;
             SpawnCharacter(currentCharacterConfig);
             GameMain.Instance.OnResolutionChanged += OnResolutionChanged;
+            instance = this;
         }
 
         public override void Deselect()
@@ -75,12 +79,260 @@ namespace Barotrauma
             base.Deselect();
             Submarine.MainSub.Remove();
             GameMain.Instance.OnResolutionChanged -= OnResolutionChanged;
+            instance = null;
         }
 
         private void OnResolutionChanged()
         {
             CreateGUI();
         }
+
+        #region Main methods
+        public override void AddToGUIUpdateList()
+        {
+            //base.AddToGUIUpdateList();
+            rightPanel.AddToGUIUpdateList();
+            Wizard.Instance.AddToGUIUpdateList();
+            if (displayBackgroundColor)
+            {
+                backgroundColorPanel.AddToGUIUpdateList();
+            }
+            if (showAnimControls)
+            {
+                animationControls.AddToGUIUpdateList();
+            }
+            if (showSpritesheet)
+            {
+                spriteSheetControls.AddToGUIUpdateList();
+            }
+            if (editRagdoll)
+            {
+                ragdollControls.AddToGUIUpdateList();
+            }
+            if (editSpriteDimensions)
+            {
+                spriteControls.AddToGUIUpdateList();
+            }
+            if (showParamsEditor)
+            {
+                ParamsEditor.Instance.EditorBox.AddToGUIUpdateList();
+            }
+        }
+
+        public override void Update(double deltaTime)
+        {
+            base.Update(deltaTime);
+            // Handle shortcut keys
+            if (GUI.KeyboardDispatcher.Subscriber == null)
+            {
+                if (PlayerInput.KeyHit(Keys.T) || PlayerInput.KeyHit(Keys.X))
+                {
+                    animTestPoseToggle.Selected = !animTestPoseToggle.Selected;
+                }
+                if (PlayerInput.KeyHit(InputType.Run))
+                {
+                    // TODO: refactor this horrible hacky index manipulation mess
+                    int index = 0;
+                    bool isSwimming = character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast || character.AnimController.ForceSelectAnimationType == AnimationType.SwimSlow;
+                    bool isMovingFast = character.AnimController.ForceSelectAnimationType == AnimationType.Run || character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast;
+                    if (isMovingFast)
+                    {
+                        if (isSwimming || !character.AnimController.CanWalk)
+                        {
+                            index = !character.AnimController.CanWalk ? 0 : (int)AnimationType.SwimSlow - 1;
+                        }
+                        else
+                        {
+                            index = (int)AnimationType.Walk - 1;
+                        }
+                    }
+                    else
+                    {
+                        if (isSwimming || !character.AnimController.CanWalk)
+                        {
+                            index = !character.AnimController.CanWalk ? 1 : (int)AnimationType.SwimFast - 1;
+                        }
+                        else
+                        {
+                            index = (int)AnimationType.Run - 1;
+                        }
+                    }
+                    if (animSelection.SelectedIndex != index)
+                    {
+                        animSelection.Select(index);
+                    }
+                }
+                if (PlayerInput.KeyHit(Keys.E))
+                {
+                    bool isSwimming = character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast || character.AnimController.ForceSelectAnimationType == AnimationType.SwimSlow;
+                    if (isSwimming)
+                    {
+                        animSelection.Select((int)AnimationType.Walk - 1);
+                    }
+                    else
+                    {
+                        animSelection.Select((int)AnimationType.SwimSlow - 1);
+                    }
+                }
+                if (PlayerInput.KeyHit(Keys.F))
+                {
+                    freezeToggle.Selected = !freezeToggle.Selected;
+                }
+                Widget.EnableMultiSelect = PlayerInput.KeyDown(Keys.LeftControl);
+
+            }
+            if (!isFreezed)
+            {
+                Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
+                Submarine.MainSub.Update((float)deltaTime);
+                PhysicsBody.List.ForEach(pb => pb.SetPrevTransform(pb.SimPosition, pb.Rotation));
+                // Handle ragdolling here, because we are not calling the Character.Update() method.
+                if (!Character.DisableControls)
+                {
+                    character.IsRagdolled = PlayerInput.KeyDown(InputType.Ragdoll);
+                }
+                if (character.IsRagdolled)
+                {
+                    character.AnimController.ResetPullJoints();
+                }
+                character.ControlLocalPlayer((float)deltaTime, Cam, false);
+                character.Control((float)deltaTime, Cam);
+                character.AnimController.UpdateAnim((float)deltaTime);
+                character.AnimController.Update((float)deltaTime, Cam);
+                if (character.Position.X < min)
+                {
+                    UpdateWalls(false);
+                }
+                else if (character.Position.X > max)
+                {
+                    UpdateWalls(true);
+                }
+                GameMain.World.Step((float)deltaTime);
+            }
+            //Cam.TargetPos = Vector2.Zero;
+            Cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
+            Cam.Position = character.Position;
+            widgets.Values.ForEach(w => w.Update((float)deltaTime));
+        }
+
+        /// <summary>
+        /// Fps independent mouse input. The draw method is called multiple times per frame.
+        /// </summary>
+        private Vector2 scaledMouseSpeed;
+        public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
+        {
+            if (isFreezed)
+            {
+                Timing.Alpha = 0.0f;
+            }
+
+            base.Draw(deltaTime, graphics, spriteBatch);
+            scaledMouseSpeed = PlayerInput.MouseSpeedPerSecond * (float)deltaTime;
+            graphics.Clear(backgroundColor);
+            Cam.UpdateTransform(true);
+
+            // Submarine
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: Cam.Transform);
+            Submarine.Draw(spriteBatch, true);
+            spriteBatch.End();
+
+            // Character
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: Cam.Transform);
+            character.Draw(spriteBatch, Cam);
+            if (GameMain.DebugDraw)
+            {
+                character.AnimController.DebugDraw(spriteBatch);
+            }
+            else if (displayColliders)
+            {
+                character.AnimController.Limbs.ForEach(l => l.body.DebugDraw(spriteBatch, Color.LightGreen));
+            }
+            spriteBatch.End();
+
+            // GUI
+            spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+            if (showAnimControls)
+            {
+                DrawAnimationControls(spriteBatch);
+            }
+            if (editSpriteDimensions)
+            {
+                DrawSpriteOriginEditor(spriteBatch);
+            }
+            if (editRagdoll)
+            {
+                DrawRagdollEditor(spriteBatch, (float)deltaTime);
+            }
+            if (showSpritesheet)
+            {
+                DrawSpritesheetEditor(spriteBatch, (float)deltaTime);
+            }
+            Structure wall = CurrentWall.walls.FirstOrDefault();
+            Vector2 indicatorPos = wall == null ? originalWall.walls.First().DrawPosition : wall.DrawPosition;
+            GUI.DrawIndicator(spriteBatch, indicatorPos, Cam, 700, GUI.SubmarineIcon, Color.White);
+            GUI.Draw(Cam, spriteBatch);
+            if (isFreezed)
+            {
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 35, 100), "FREEZED", Color.Blue, Color.White * 0.5f, 10, GUI.Font);
+            }
+            if (animTestPoseToggle.Selected)
+            {
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 100, 150), "Animation Test Pose Enabled", Color.Blue, Color.White * 0.5f, 10, GUI.Font);
+            }
+            if (showSpritesheet)
+            {
+                var topLeft = leftPanel.RectTransform.TopLeft;
+                GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 200, 50), "Spritesheet Orientation:", Color.White, Color.Gray * 0.5f, 10, GUI.Font);
+                DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 410, 60), spriteSheetOrientation, string.Empty, Color.White,
+                    angle => spriteSheetOrientation = angle, circleRadius: 40, widgetSize: 20, rotationOffset: MathHelper.Pi, autoFreeze: false);
+            }
+            // Debug
+            if (GameMain.DebugDraw)
+            {
+                // Limb positions
+                foreach (Limb limb in character.AnimController.Limbs)
+                {
+                    Vector2 limbDrawPos = Cam.WorldToScreen(limb.WorldPosition);
+                    GUI.DrawLine(spriteBatch, limbDrawPos + Vector2.UnitY * 5.0f, limbDrawPos - Vector2.UnitY * 5.0f, Color.White);
+                    GUI.DrawLine(spriteBatch, limbDrawPos + Vector2.UnitX * 5.0f, limbDrawPos - Vector2.UnitX * 5.0f, Color.White);
+                }
+
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 0), $"Cursor World Pos: {character.CursorWorldPosition}", Color.White, font: GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 20), $"Cursor Pos: {character.CursorPosition}", Color.White, font: GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 40), $"Cursor Screen Pos: {PlayerInput.MousePosition}", Color.White, font: GUI.SmallFont);
+
+
+                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 80), $"Character World Pos: {character.WorldPosition}", Color.White, font: GUI.SmallFont);
+                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 100), $"Character Pos: {character.Position}", Color.White, font: GUI.SmallFont);
+                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 120), $"Character Sim Pos: {character.SimPosition}", Color.White, font: GUI.SmallFont);
+                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 140), $"Character Draw Pos: {character.DrawPosition}", Color.White, font: GUI.SmallFont);
+
+                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 180), $"Submarine World Pos: {Submarine.MainSub.WorldPosition}", Color.White, font: GUI.SmallFont);
+                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 200), $"Submarine Pos: {Submarine.MainSub.Position}", Color.White, font: GUI.SmallFont);
+                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 220), $"Submarine Sim Pos: {Submarine.MainSub.Position}", Color.White, font: GUI.SmallFont);
+                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 240), $"Submarine Draw Pos: {Submarine.MainSub.DrawPosition}", Color.White, font: GUI.SmallFont);
+
+                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 280), $"Movement Limits: MIN: {min} MAX: {max}", Color.White, font: GUI.SmallFont);
+                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 300), $"Clones: {clones.Length}", Color.White, font: GUI.SmallFont);
+                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 320), $"Total amount of walls: {Structure.WallList.Count}", Color.White, font: GUI.SmallFont);
+
+                // Collider
+                var collider = character.AnimController.Collider;
+                var colliderDrawPos = SimToScreen(collider.SimPosition);
+                Vector2 forward = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation));
+                var endPos = SimToScreen(collider.SimPosition + forward * collider.radius);
+                GUI.DrawLine(spriteBatch, colliderDrawPos, endPos, Color.LightGreen);
+                GUI.DrawLine(spriteBatch, colliderDrawPos, SimToScreen(collider.SimPosition + forward * 0.25f), Color.Blue);
+                //Vector2 left = Vector2.Transform(-Vector2.UnitX, Matrix.CreateRotationZ(collider.Rotation));
+                //Vector2 left = -Vector2.UnitX.TransformVector(forward);
+                Vector2 left = forward.Left();
+                GUI.DrawLine(spriteBatch, colliderDrawPos, SimToScreen(collider.SimPosition + left * 0.25f), Color.Red);
+                ShapeExtensions.DrawCircle(spriteBatch, colliderDrawPos, (endPos - colliderDrawPos).Length(), 40, Color.LightGreen);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 300, 0), $"Collider rotation: {MathHelper.ToDegrees(MathUtils.WrapAngleTwoPi(collider.Rotation))}", Color.White, font: GUI.SmallFont);
+            }
+            spriteBatch.End();
+        }
+        #endregion
 
         #region Inifinite runner
         private int min;
@@ -333,7 +585,7 @@ namespace Barotrauma
         private GUIFrame animationControls;
         private GUIFrame spriteControls;
         private GUIFrame spriteSheetControls;
-        private GUIFrame generalControls;
+        private GUIFrame backgroundColorPanel;
         private GUIDropDown animSelection;
         private GUITickBox freezeToggle;
         private GUITickBox animTestPoseToggle;
@@ -360,8 +612,8 @@ namespace Barotrauma
             int textAreaHeight = 20;
             centerPanel = new GUIFrame(new RectTransform(new Vector2(0.45f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.Center), style: null) { CanBeFocused = false };
             // General controls
-            generalControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerPanel.RectTransform, Anchor.TopRight), style: null) { CanBeFocused = false };
-            var layoutGroupGeneral = new GUILayoutGroup(new RectTransform(Vector2.One, generalControls.RectTransform), childAnchor: Anchor.TopRight)
+            backgroundColorPanel = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerPanel.RectTransform, Anchor.TopRight), style: null) { CanBeFocused = false };
+            var layoutGroupGeneral = new GUILayoutGroup(new RectTransform(Vector2.One, backgroundColorPanel.RectTransform), childAnchor: Anchor.TopRight)
             {
                 AbsoluteSpacing = 5, CanBeFocused = false
             };
@@ -646,7 +898,7 @@ namespace Barotrauma
             {
                 rightPanel.RectTransform.Parent = null;
             }
-            Vector2 buttonSize = new Vector2(1, 0.05f);
+            Vector2 buttonSize = new Vector2(1, 0.04f);
             Vector2 toggleSize = new Vector2(0.03f, 0.03f);
             Point margin = new Point(40, 60);
             rightPanel = new GUIFrame(new RectTransform(new Vector2(0.15f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.CenterRight) { RelativeOffset = new Vector2(0.01f, 0) });
@@ -812,6 +1064,15 @@ namespace Barotrauma
                 OnSelected = box =>
                 {
                     displayColliders = box.Selected;
+                    return true;
+                }
+            };
+            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Background Color")
+            {
+                Selected = displayBackgroundColor,
+                OnSelected = box =>
+                {
+                    displayBackgroundColor = box.Selected;
                     return true;
                 }
             };
@@ -1162,135 +1423,7 @@ namespace Barotrauma
             {
                 OnClicked = (button, data) =>
                 {
-                    var box = new GUIMessageBox("Create New Character", string.Empty, new string[] { "Cancel", "Create" }, messageBoxWidth, messageBoxHeight * 2);
-                    box.Content.ChildAnchor = Anchor.TopCenter;
-                    box.Content.AbsoluteSpacing = 20;
-                    int elementSize = 30;
-                    var listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.9f), box.Content.RectTransform));
-                    var topGroup = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 3 + 20), listBox.Content.RectTransform)) { AbsoluteSpacing = 2};
-                    var fields = new List<GUIComponent>();
-                    for (int i = 0; i < 3; i++)
-                    {
-                        var mainElement = new GUIFrame(new RectTransform(new Point(topGroup.RectTransform.Rect.Width, elementSize), topGroup.RectTransform), style: null, color: Color.Gray * 0.25f);
-                        fields.Add(mainElement);
-                        RectTransform leftElement = new RectTransform(new Vector2(0.5f, 1), mainElement.RectTransform, Anchor.TopLeft);
-                        RectTransform rightElement = new RectTransform(new Vector2(0.5f, 1), mainElement.RectTransform, Anchor.TopRight);
-                        switch (i)
-                        {
-                            case 0:
-                                new GUITextBlock(leftElement, "Name");
-                                new GUITextBox(rightElement, "Worm X");
-                                break;
-                            case 1:
-                                new GUITextBlock(leftElement, "Size");
-                                new GUINumberInput(rightElement, GUINumberInput.NumberType.Float) { FloatValue = 10 };
-                                break;
-                            case 2:
-                                new GUITextBlock(leftElement, "Is Humanoid?");
-                                new GUITickBox(rightElement, string.Empty);
-                                break;
-                        }
-                    }
-                    var codeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), listBox.Content.RectTransform), style: null) { CanBeFocused = false };
-                    new GUITextBlock(new RectTransform(new Vector2(1, 0.05f), codeArea.RectTransform), "Custom code:");
-                    new GUITextBox(new RectTransform(new Vector2(1, 1 - 0.05f), codeArea.RectTransform, Anchor.BottomLeft), string.Empty, textAlignment: Alignment.TopLeft);
-                    // Spacing
-                    new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), style: null);
-                    // Limbs
-                    var limbs = new Dictionary<XElement, object[]>();
-                    var limbElements = new List<GUIComponent>();
-                    // TODO: add a label
-                    var buttonElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), listBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
-                    {
-                        CanBeFocused = false
-                    };
-                    var minusButton = new GUIButton(new RectTransform(new Point(buttonElement.Rect.Height, buttonElement.Rect.Height), buttonElement.RectTransform), "-")
-                    {
-                        OnClicked = (b, d) =>
-                        {
-                            var element = limbElements.LastOrDefault();
-                            if (element == null) { return false; }
-                            element.RectTransform.Parent = null;
-                            limbElements.Remove(element);
-                            return true;
-                        }
-                    };
-                    var plusButton = new GUIButton(new RectTransform(new Point(buttonElement.Rect.Height, buttonElement.Rect.Height), buttonElement.RectTransform)
-                    {
-                        AbsoluteOffset = new Point(minusButton.Rect.Width + 10, 0)
-                    }, "+")
-                    {
-                        OnClicked = (b, d) =>
-                        {
-                            var limbElement = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 3), listBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
-                            {
-                                CanBeFocused = false
-                            };
-                            var group = new GUILayoutGroup(new RectTransform(Vector2.One, limbElement.RectTransform)) { AbsoluteSpacing = 2 };
-                            int id = limbElements.Count;
-                            var label = new GUITextBlock(new RectTransform(new Vector2(1, 0.3f), group.RectTransform), $"Limb {id}");
-                            var field = new GUIFrame(new RectTransform(new Vector2(1, 0.3f), group.RectTransform), style: null);
-                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), field.RectTransform, Anchor.TopLeft), $"ID");
-                            // TODO: name, source rect
-                            new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), field.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
-                            {
-                                IntValue = id,
-                                OnValueChanged = numInput =>
-                                {
-                                    id = numInput.IntValue;
-                                    label.Text = $"Limb {id}";
-                                }
-                            };
-                            limbElements.Add(limbElement);
-                            return true;
-                        }
-                    };
-                    box.Buttons[0].OnClicked += (b, d) =>
-                    {
-                        box.Close();
-                        return true;
-                    };
-                    box.Buttons[1].OnClicked += (b, d) =>
-                    {
-                        string name = fields[0].GetChild<GUITextBox>().Text.RemoveWhitespace().CapitaliseFirstInvariant();
-                        float size = fields[1].GetChild<GUINumberInput>().FloatValue;
-                        bool isHumanoid = fields[2].GetChild<GUITickBox>().Selected;
-                        // TODO: gui elements for adding and removing limbs and joints
-                        // TODO: parse from the code field and gui elements
-                        // TODO: parse from css/html file
-                        var ragdollParams = new object[]
-                        {
-                            new XAttribute("type", name),
-                            new XElement("collider", new XAttribute("radius", size)),
-                            new XElement("limb",
-                                new XAttribute("id", 0),
-                                new XAttribute("type", LimbType.Head),
-                                new XAttribute("radius", 30),
-                                new XAttribute("height", 86),
-                                new XAttribute("steerforce", 1),
-                                new XElement("sprite",
-                                    new XAttribute("texture", "Content/Characters/Mantis/mantis.png"),
-                                    new XAttribute("sourcerect", "0,0,101,168"))),
-                            new XElement("limb",
-                                new XAttribute("id", 1),
-                                new XAttribute("type", LimbType.Torso),
-                                new XAttribute("width", 42),
-                                new XAttribute("height", 61),
-                                new XElement("sprite",
-                                    new XAttribute("texture", "Content/Characters/Mantis/mantis.png"),
-                                    new XAttribute("sourcerect", "3,168,59,64"))),
-                            new XElement("joint",
-                                new XAttribute("name", "Head to Torso"),
-                                new XAttribute("limb1", 0),
-                                new XAttribute("limb2", 1),
-                                new XAttribute("limb1anchor", "-12.24539,-62.17848"),
-                                new XAttribute("limb2anchor", "0,20"))
-                        };
-                        CreateCharacter(name, isHumanoid, ragdollParams);
-                        GUI.AddMessage($"New Character Created with the Name {name}", Color.Green, font: GUI.Font);
-                        box.Close();
-                        return true;
-                    };
+                    Wizard.Instance.SelectTab(Wizard.Tab.Character);
                     return true;
                 }
             };
@@ -1353,245 +1486,6 @@ namespace Barotrauma
             }
         }
         #endregion
-
-        public override void AddToGUIUpdateList()
-        {
-            //base.AddToGUIUpdateList();
-            rightPanel.AddToGUIUpdateList();
-            generalControls.AddToGUIUpdateList();
-            if (showAnimControls)
-            {
-                animationControls.AddToGUIUpdateList();
-            }
-            if (showSpritesheet)
-            {
-                spriteSheetControls.AddToGUIUpdateList();
-            }
-            if (editRagdoll)
-            {
-                ragdollControls.AddToGUIUpdateList();
-            }
-            if (editSpriteDimensions)
-            {
-                spriteControls.AddToGUIUpdateList();
-            }
-            if (showParamsEditor)
-            {
-                ParamsEditor.Instance.EditorBox.AddToGUIUpdateList();
-            }
-        }
-
-        public override void Update(double deltaTime)
-        {
-            base.Update(deltaTime);
-            // Handle shortcut keys
-            if (GUI.KeyboardDispatcher.Subscriber == null)
-            {
-                if (PlayerInput.KeyHit(Keys.T) || PlayerInput.KeyHit(Keys.X))
-                {
-                    animTestPoseToggle.Selected = !animTestPoseToggle.Selected;
-                }
-                if (PlayerInput.KeyHit(InputType.Run))
-                {
-                    // TODO: refactor this horrible hacky index manipulation mess
-                    int index = 0;
-                    bool isSwimming = character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast || character.AnimController.ForceSelectAnimationType == AnimationType.SwimSlow;
-                    bool isMovingFast = character.AnimController.ForceSelectAnimationType == AnimationType.Run || character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast;
-                    if (isMovingFast)
-                    {
-                        if (isSwimming || !character.AnimController.CanWalk)
-                        {
-                            index = !character.AnimController.CanWalk ? 0 : (int)AnimationType.SwimSlow - 1;
-                        }
-                        else
-                        {
-                            index = (int)AnimationType.Walk - 1;
-                        }
-                    }
-                    else
-                    {
-                        if (isSwimming || !character.AnimController.CanWalk)
-                        {
-                            index = !character.AnimController.CanWalk ? 1 : (int)AnimationType.SwimFast - 1; 
-                        }
-                        else
-                        {
-                            index = (int)AnimationType.Run - 1;
-                        }
-                    }
-                    if (animSelection.SelectedIndex != index)
-                    {
-                        animSelection.Select(index);
-                    }
-                }
-                if (PlayerInput.KeyHit(Keys.E))
-                {
-                    bool isSwimming = character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast || character.AnimController.ForceSelectAnimationType == AnimationType.SwimSlow;
-                    if (isSwimming)
-                    {
-                        animSelection.Select((int)AnimationType.Walk - 1);
-                    }
-                    else
-                    {
-                        animSelection.Select((int)AnimationType.SwimSlow - 1);
-                    }
-                }
-                if (PlayerInput.KeyHit(Keys.F))
-                {
-                    freezeToggle.Selected = !freezeToggle.Selected;
-                }
-            }
-            if (!isFreezed)
-            {
-                Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
-                Submarine.MainSub.Update((float)deltaTime);
-                PhysicsBody.List.ForEach(pb => pb.SetPrevTransform(pb.SimPosition, pb.Rotation));
-                // Handle ragdolling here, because we are not calling the Character.Update() method.
-                if (!Character.DisableControls)
-                {
-                    character.IsRagdolled = PlayerInput.KeyDown(InputType.Ragdoll);
-                }
-                if (character.IsRagdolled)
-                {
-                    character.AnimController.ResetPullJoints();
-                }
-                character.ControlLocalPlayer((float)deltaTime, Cam, false);
-                character.Control((float)deltaTime, Cam);
-                character.AnimController.UpdateAnim((float)deltaTime);
-                character.AnimController.Update((float)deltaTime, Cam);
-                if (character.Position.X < min)
-                {
-                    UpdateWalls(false);
-                }
-                else if (character.Position.X > max)
-                {
-                    UpdateWalls(true);
-                }
-                GameMain.World.Step((float)deltaTime);
-            }
-            //Cam.TargetPos = Vector2.Zero;
-            Cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
-            Cam.Position = character.Position;
-            widgets.Values.ForEach(w => w.Update((float)deltaTime));
-        }
-
-        /// <summary>
-        /// Fps independent mouse input. The draw method is called multiple times per frame.
-        /// </summary>
-        private Vector2 scaledMouseSpeed;
-        public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
-        {
-            if (isFreezed)
-            {
-                Timing.Alpha = 0.0f;
-            }
-
-            base.Draw(deltaTime, graphics, spriteBatch);
-            scaledMouseSpeed = PlayerInput.MouseSpeedPerSecond * (float)deltaTime;
-            graphics.Clear(backgroundColor);
-            Cam.UpdateTransform(true);
-
-            // Submarine
-            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: Cam.Transform);
-            Submarine.Draw(spriteBatch, true);
-            spriteBatch.End();
-
-            // Character
-            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: Cam.Transform);
-            character.Draw(spriteBatch, Cam);
-            if (GameMain.DebugDraw)
-            {
-                character.AnimController.DebugDraw(spriteBatch);
-            }
-            else if (displayColliders)
-            {
-                character.AnimController.Limbs.ForEach(l => l.body.DebugDraw(spriteBatch, Color.LightGreen));
-            }
-            spriteBatch.End();
-
-            // GUI
-            spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
-            if (showAnimControls)
-            {
-                DrawAnimationControls(spriteBatch);
-            }
-            if (editSpriteDimensions)
-            {
-                DrawSpriteOriginEditor(spriteBatch);
-            }
-            if (editRagdoll)
-            {
-                DrawRagdollEditor(spriteBatch, (float)deltaTime);
-            }
-            if (showSpritesheet)
-            {
-                DrawSpritesheetEditor(spriteBatch, (float)deltaTime);
-            }
-            Structure wall = CurrentWall.walls.FirstOrDefault();
-            Vector2 indicatorPos = wall == null ? originalWall.walls.First().DrawPosition : wall.DrawPosition;
-            GUI.DrawIndicator(spriteBatch, indicatorPos, Cam, 700, GUI.SubmarineIcon, Color.White);
-            GUI.Draw(Cam, spriteBatch);
-            if (isFreezed)
-            {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 35, 100), "FREEZED", Color.Blue, Color.White * 0.5f, 10, GUI.Font);
-            }
-            if (animTestPoseToggle.Selected)
-            {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 100, 150), "Animation Test Pose Enabled", Color.Blue, Color.White * 0.5f, 10, GUI.Font);
-            }
-            if (showSpritesheet)
-            {
-                var topLeft = leftPanel.RectTransform.TopLeft;
-                GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 200, 50), "Spritesheet Orientation:", Color.White, Color.Gray * 0.5f, 10, GUI.Font);
-                DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 410, 60), spriteSheetOrientation, string.Empty, Color.White, 
-                    angle => spriteSheetOrientation = angle, circleRadius: 40, widgetSize: 20, rotationOffset: MathHelper.Pi, autoFreeze: false);
-            }
-            // Debug
-            if (GameMain.DebugDraw)
-            {
-                // Limb positions
-                foreach (Limb limb in character.AnimController.Limbs)
-                {
-                    Vector2 limbDrawPos = Cam.WorldToScreen(limb.WorldPosition);
-                    GUI.DrawLine(spriteBatch, limbDrawPos + Vector2.UnitY * 5.0f, limbDrawPos - Vector2.UnitY * 5.0f, Color.White);
-                    GUI.DrawLine(spriteBatch, limbDrawPos + Vector2.UnitX * 5.0f, limbDrawPos - Vector2.UnitX * 5.0f, Color.White);
-                }
-
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 0), $"Cursor World Pos: {character.CursorWorldPosition}", Color.White, font: GUI.SmallFont);
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 20), $"Cursor Pos: {character.CursorPosition}", Color.White, font: GUI.SmallFont);
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 40), $"Cursor Screen Pos: {PlayerInput.MousePosition}", Color.White, font: GUI.SmallFont);
-
-
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 80), $"Character World Pos: {character.WorldPosition}", Color.White, font: GUI.SmallFont);
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 100), $"Character Pos: {character.Position}", Color.White, font: GUI.SmallFont);
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 120), $"Character Sim Pos: {character.SimPosition}", Color.White, font: GUI.SmallFont);
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 140), $"Character Draw Pos: {character.DrawPosition}", Color.White, font: GUI.SmallFont);
-
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 180), $"Submarine World Pos: {Submarine.MainSub.WorldPosition}", Color.White, font: GUI.SmallFont);
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 200), $"Submarine Pos: {Submarine.MainSub.Position}", Color.White, font: GUI.SmallFont);
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 220), $"Submarine Sim Pos: {Submarine.MainSub.Position}", Color.White, font: GUI.SmallFont);
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 240), $"Submarine Draw Pos: {Submarine.MainSub.DrawPosition}", Color.White, font: GUI.SmallFont);
-
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 280), $"Movement Limits: MIN: {min} MAX: {max}", Color.White, font: GUI.SmallFont);
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 300), $"Clones: {clones.Length}", Color.White, font: GUI.SmallFont);
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 320), $"Total amount of walls: {Structure.WallList.Count}", Color.White, font: GUI.SmallFont);
-
-                // Collider
-                var collider = character.AnimController.Collider;
-                var colliderDrawPos = SimToScreen(collider.SimPosition);
-                Vector2 forward = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation));
-                var endPos = SimToScreen(collider.SimPosition + forward * collider.radius);
-                GUI.DrawLine(spriteBatch, colliderDrawPos, endPos, Color.LightGreen);
-                GUI.DrawLine(spriteBatch, colliderDrawPos, SimToScreen(collider.SimPosition + forward * 0.25f), Color.Blue);
-                //Vector2 left = Vector2.Transform(-Vector2.UnitX, Matrix.CreateRotationZ(collider.Rotation));
-                //Vector2 left = -Vector2.UnitX.TransformVector(forward);
-                Vector2 left = forward.Left();
-                GUI.DrawLine(spriteBatch, colliderDrawPos, SimToScreen(collider.SimPosition + left * 0.25f), Color.Red);
-                ShapeExtensions.DrawCircle(spriteBatch, colliderDrawPos, (endPos - colliderDrawPos).Length(), 40, Color.LightGreen);
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 300, 0), $"Collider rotation: {MathHelper.ToDegrees(MathUtils.WrapAngleTwoPi(collider.Rotation))}", Color.White, font: GUI.SmallFont);
-            }
-            spriteBatch.End();
-        }
 
         #region Helpers
         private Vector2 ScreenToSim(float x, float y) => ScreenToSim(new Vector2(x, y));
@@ -2760,6 +2654,682 @@ namespace Barotrauma
         //        }
         //    }
         //}
+        #endregion
+
+        #region Character Wizard
+        private class Wizard
+        {
+            // Ragdoll data
+            private string name = string.Empty;
+            private float size = 10;
+            private bool isHumanoid = false;
+            private string texturePath;
+            private string xmlPath;
+            private Dictionary<string, XElement> limbXElements = new Dictionary<string, XElement>();
+            private List<GUIComponent> limbGUIElements = new List<GUIComponent>();
+            private List<XElement> jointXElements = new List<XElement>();
+            private List<GUIComponent> jointGUIElements = new List<GUIComponent>();
+
+            private static Wizard instance;
+            public static Wizard Instance
+            {
+                get
+                {
+                    if (instance == null)
+                    {
+                        instance = new Wizard();
+                    }
+                    return instance;
+                }
+            }
+
+            public enum Tab { None, Character, Ragdoll }
+            private View activeView;
+            private Tab currentTab;
+
+            public void SelectTab(Tab tab)
+            {
+                currentTab = tab;
+                activeView?.Box.Close();
+                switch (currentTab)
+                {
+                    case Tab.Character:
+                        activeView = CharacterView.Get();
+                        break;
+                    case Tab.Ragdoll:
+                        activeView = RagdollView.Get();
+                        break;
+                    case Tab.None:
+                    default:
+                        //activeView = null;
+                        instance = null;
+                        break;
+                }
+            }
+
+            public void AddToGUIUpdateList()
+            {
+                activeView?.Box.AddToGUIUpdateList();
+            }
+
+            private class CharacterView : View
+            {
+                private static CharacterView instance;
+                public static CharacterView Get() => Get(instance);
+
+                protected override GUIMessageBox Create()
+                {
+                    var box = new GUIMessageBox("Create New Character", string.Empty, new string[] { "Cancel", "Next" }, GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight);
+                    box.Content.ChildAnchor = Anchor.TopCenter;
+                    box.Content.AbsoluteSpacing = 20;
+                    int elementSize = 30;
+                    var listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.9f), box.Content.RectTransform));
+                    var topGroup = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 6 + 20), listBox.Content.RectTransform)) { AbsoluteSpacing = 2 };
+                    var fields = new List<GUIComponent>();
+                    GUITextBox texturePathElement = null;
+                    GUITextBox xmlPathElement = null;
+                    void UpdatePaths()
+                    {
+                        string pathBase = $"Content/Characters/{Name}/{Name}";
+                        XMLPath = $"{pathBase}.xml";
+                        TexturePath = $"{pathBase}.png";
+                        texturePathElement.Text = TexturePath;
+                        xmlPathElement.Text = XMLPath;
+                    }
+                    for (int i = 0; i < 5; i++)
+                    {
+                        var mainElement = new GUIFrame(new RectTransform(new Point(topGroup.RectTransform.Rect.Width, elementSize), topGroup.RectTransform), style: null, color: Color.Gray * 0.25f);
+                        fields.Add(mainElement);
+                        RectTransform leftElement = new RectTransform(new Vector2(0.5f, 1), mainElement.RectTransform, Anchor.TopLeft);
+                        RectTransform rightElement = new RectTransform(new Vector2(0.5f, 1), mainElement.RectTransform, Anchor.TopRight);
+                        switch (i)
+                        {
+                            case 0:
+                                new GUITextBlock(leftElement, "Name");
+                                var nameField = new GUITextBox(rightElement, "Worm X");
+                                string ProcessText(string text) => text.RemoveWhitespace().CapitaliseFirstInvariant();
+                                Name = ProcessText(nameField.Text);
+                                nameField.OnTextChanged += (tb, text) =>
+                                {
+                                    Name = ProcessText(text);
+                                    UpdatePaths();
+                                    return true;
+                                };
+                                break;
+                            case 1:
+                                new GUITextBlock(leftElement, "Size");
+                                new GUINumberInput(rightElement, GUINumberInput.NumberType.Float)
+                                {
+                                    MinValueFloat = 1,
+                                    MaxValueFloat = 1000,
+                                    FloatValue = Size,
+                                    OnValueChanged = (nInput) => Size = nInput.FloatValue
+                                };
+                                break;
+                            case 2:
+                                new GUITextBlock(leftElement, "Is Humanoid?");
+                                new GUITickBox(rightElement, string.Empty)
+                                {
+                                    Selected = IsHumanoid,
+                                    OnSelected = (tB) => IsHumanoid = tB.Selected
+                                };
+                                break;
+                            case 3:
+                                new GUITextBlock(leftElement, "Config File Output");
+                                xmlPathElement = new GUITextBox(rightElement, string.Empty);
+                                break;
+                            case 4:
+                                new GUITextBlock(leftElement, "Texture Path");
+                                texturePathElement = new GUITextBox(rightElement, string.Empty);
+                                break;
+                        }
+                    }
+                    UpdatePaths();
+                    //var codeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), listBox.Content.RectTransform), style: null) { CanBeFocused = false };
+                    //new GUITextBlock(new RectTransform(new Vector2(1, 0.05f), codeArea.RectTransform), "Custom code:");
+                    //var inputBox = new GUITextBox(new RectTransform(new Vector2(1, 1 - 0.05f), codeArea.RectTransform, Anchor.BottomLeft), string.Empty, textAlignment: Alignment.TopLeft);
+                    // Cancel
+                    box.Buttons[0].OnClicked += (b, d) =>
+                    {
+                        Instance.SelectTab(Tab.None);
+                        return true;
+                    };
+                    // Next
+                    box.Buttons[1].OnClicked += (b, d) =>
+                    {
+                        Instance.SelectTab(Tab.Ragdoll);
+                        return true;
+                    };
+                    return box;
+                }
+            }
+
+            private class RagdollView : View
+            {
+                private static RagdollView instance;
+                public static RagdollView Get() => Get(instance);
+
+                protected override GUIMessageBox Create()
+                {
+                    var box = new GUIMessageBox("Define Ragdoll", string.Empty, new string[] { "Previous", "Create" }, GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight);
+                    box.Content.ChildAnchor = Anchor.TopCenter;
+                    box.Content.AbsoluteSpacing = 20;
+                    int elementSize = 30;
+                    var topGroup = new GUILayoutGroup(new RectTransform(new Vector2(1, 0.05f), box.Content.RectTransform)) { AbsoluteSpacing = 2 };
+                    var bottomGroup = new GUILayoutGroup(new RectTransform(new Vector2(1, 0.75f), box.Content.RectTransform)) { AbsoluteSpacing = 10 };
+                    // HTML
+                    GUIMessageBox htmlBox = null;
+                    new GUIButton(new RectTransform(new Point(topGroup.RectTransform.Rect.Width, elementSize), topGroup.RectTransform), "Load Ragdoll from HTML")
+                    {
+                        OnClicked = (b, d) =>
+                        {
+                            if (htmlBox == null)
+                            {
+                                htmlBox = new GUIMessageBox("Load HTML", string.Empty, new string[] { "Close", "Load" }, GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight);
+                                var element = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.05f), htmlBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f);
+                                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), element.RectTransform), "HTML Path");
+                                var htmlPathElement = new GUITextBox(new RectTransform(new Vector2(0.5f, 1), element.RectTransform, Anchor.TopRight), $"Content/Characters/{Name}/{Name}.html");
+                                var list = new GUIListBox(new RectTransform(new Vector2(1, 0.8f), htmlBox.Content.RectTransform));
+                                var htmlOutput = new GUITextBlock(new RectTransform(Vector2.One, list.Content.RectTransform), string.Empty) { CanBeFocused = false };
+                                htmlBox.Buttons[0].OnClicked += (_b, _d) =>
+                                {
+                                    htmlBox.Close();
+                                    return true;
+                                };
+                                htmlBox.Buttons[1].OnClicked += (_b, _d) =>
+                                {
+                                    LimbXElements.Clear();
+                                    JointXElements.Clear();
+                                    ParseRagdollFromHTML(htmlPathElement.Text);
+                                    htmlOutput.Text = new XDocument(new XElement("Ragdoll", new object[]
+                                    {
+                                        new XAttribute("type", Name),
+                                        new XElement("collider", new XAttribute("radius", Size)),
+                                            LimbXElements.Values,
+                                            JointXElements
+                                    })).ToString();
+                                    htmlOutput.CalculateHeightFromText();
+                                    list.UpdateScrollBarSize();
+                                    return true;
+                                };
+                            }
+                            else
+                            {
+                                GUIMessageBox.MessageBoxes.Add(htmlBox);
+                            }
+                            return true;
+                        }
+                    };
+                    // Limbs
+                    var limbsElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), bottomGroup.RectTransform), style: null) { CanBeFocused = false };
+                    new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), limbsElement.RectTransform), "Limbs:");
+                    var limbButtonElement = new GUIFrame(new RectTransform(new Vector2(0.5f, 1f), limbsElement.RectTransform)
+                        { RelativeOffset = new Vector2(0.25f, 0) }, style: null) { CanBeFocused = false };
+                    var limbsList = new GUIListBox(new RectTransform(new Vector2(1, 0.45f), bottomGroup.RectTransform));
+                    var removeLimbButton = new GUIButton(new RectTransform(new Point(limbButtonElement.Rect.Height, limbButtonElement.Rect.Height), limbButtonElement.RectTransform), "-")
+                    {
+                        OnClicked = (b, d) =>
+                        {
+                            var element = LimbGUIElements.LastOrDefault();
+                            if (element == null) { return false; }
+                            element.RectTransform.Parent = null;
+                            LimbGUIElements.Remove(element);
+                            return true;
+                        }
+                    };
+                    var addLimbButton = new GUIButton(new RectTransform(new Point(limbButtonElement.Rect.Height, limbButtonElement.Rect.Height), limbButtonElement.RectTransform)
+                    {
+                        AbsoluteOffset = new Point(removeLimbButton.Rect.Width + 10, 0)
+                    }, "+")
+                    {
+                        OnClicked = (b, d) =>
+                        {
+                            var limbElement = new GUIFrame(new RectTransform(new Point(limbsList.Content.Rect.Width, elementSize * 5 + 40), limbsList.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
+                            {
+                                CanBeFocused = false
+                            };
+                            int id = LimbGUIElements.Count;
+                            var group = new GUILayoutGroup(new RectTransform(Vector2.One, limbElement.RectTransform)) { AbsoluteSpacing = 2 };
+                            var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), $"Limb {id}");
+                            var idField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
+                            var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
+                            var limbType = LimbType.None;
+                            switch (LimbGUIElements.Count)
+                            {
+                                case 0:
+                                    limbType = LimbType.Head;
+                                    break;
+                                case 1:
+                                    limbType = LimbType.Torso;
+                                    break;
+                            }
+                            var limbTypeField = GUI.CreateEnumField(limbType, elementSize, "Limb Type", group.RectTransform, font: GUI.Font);
+                            var sourceRectField = GUI.CreateRectangleField(Rectangle.Empty, elementSize, "Source Rect", group.RectTransform, font: GUI.Font);
+                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopLeft), "ID");
+                            new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
+                            {
+                                MinValueInt = 0,
+                                MaxValueInt = byte.MaxValue,
+                                IntValue = id,
+                                OnValueChanged = numInput =>
+                                {
+                                    id = numInput.IntValue;
+                                    string text = nameField.GetChild<GUITextBox>().Text;
+                                    string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
+                                    label.Text = $"Limb {t}";
+                                }
+                            };
+                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopLeft), "Name");
+                            new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), string.Empty)
+                                .OnTextChanged += (tB, text) =>
+                                {
+                                    string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
+                                    label.Text = $"Limb {t}";
+                                    return true;
+                                };
+                            LimbGUIElements.Add(limbElement);
+                            return true;
+                        }
+                    };
+                    // Joints
+                    new GUIFrame(new RectTransform(new Vector2(1, 0.05f), bottomGroup.RectTransform), style: null) { CanBeFocused = false };
+                    var jointsElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), bottomGroup.RectTransform), style: null) { CanBeFocused = false };
+                    new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), jointsElement.RectTransform), "Joints:");
+                    var jointButtonElement = new GUIFrame(new RectTransform(new Vector2(0.5f, 1f), jointsElement.RectTransform)
+                        { RelativeOffset = new Vector2(0.25f, 0) }, style: null) { CanBeFocused = false };
+                    var jointsList = new GUIListBox(new RectTransform(new Vector2(1, 0.45f), bottomGroup.RectTransform));
+                    var removeJointButton = new GUIButton(new RectTransform(new Point(jointButtonElement.Rect.Height, jointButtonElement.Rect.Height), jointButtonElement.RectTransform), "-")
+                    {
+                        OnClicked = (b, d) =>
+                        {
+                            var element = JointGUIElements.LastOrDefault();
+                            if (element == null) { return false; }
+                            element.RectTransform.Parent = null;
+                            JointGUIElements.Remove(element);
+                            return true;
+                        }
+                    };
+                    var addJointButton = new GUIButton(new RectTransform(new Point(jointButtonElement.Rect.Height, jointButtonElement.Rect.Height), jointButtonElement.RectTransform)
+                    {
+                        AbsoluteOffset = new Point(removeJointButton.Rect.Width + 10, 0)
+                    }, "+")
+                    {
+                        OnClicked = (b, d) =>
+                        {
+                            var jointElement = new GUIFrame(new RectTransform(new Point(jointsList.Content.Rect.Width, elementSize * 6 + 40), jointsList.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
+                            {
+                                CanBeFocused = false
+                            };
+                            var group = new GUILayoutGroup(new RectTransform(Vector2.One, jointElement.RectTransform)) { AbsoluteSpacing = 2 };
+                            string jointName = string.Empty;
+                            var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), jointName);
+                            var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
+                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopLeft), "Name");
+                            new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), string.Empty)
+                            {
+                                OnTextChanged = (textB, text) =>
+                                {
+                                    jointName = text;
+                                    label.Text = jointName;
+                                    return true;
+                                }
+                            };
+                            var limb1Field = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
+                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), limb1Field.RectTransform, Anchor.TopLeft), "Limb 1");
+                            var limb1InputField = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), limb1Field.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
+                            {
+                                MinValueInt = 0,
+                                MaxValueInt = byte.MaxValue,
+                            };
+                            var limb2Field = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
+                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), limb2Field.RectTransform, Anchor.TopLeft), "Limb 2");
+                            var limb2InputField = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), limb2Field.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
+                            {
+                                MinValueInt = 0,
+                                MaxValueInt = byte.MaxValue,
+                            };
+                            GUI.CreateVector2Field(Vector2.Zero, elementSize, "Limb 1 Anchor", group.RectTransform, font: GUI.Font, decimalsToDisplay: 2);
+                            GUI.CreateVector2Field(Vector2.Zero, elementSize, "Limb 2 Anchor", group.RectTransform, font: GUI.Font, decimalsToDisplay: 2);
+                            label.Text = GetJointName(jointName);
+                            limb1InputField.OnValueChanged += nInput => label.Text = GetJointName(jointName);
+                            limb2InputField.OnValueChanged += nInput => label.Text = GetJointName(jointName);
+                            JointGUIElements.Add(jointElement);
+                            string GetJointName(string n) => string.IsNullOrWhiteSpace(n) ? $"Joint {limb1InputField.IntValue} - {limb2InputField.IntValue}" : n;
+                            return true;
+                        }
+                    };
+                    //var codeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), listBox.Content.RectTransform), style: null) { CanBeFocused = false };
+                    //new GUITextBlock(new RectTransform(new Vector2(1, 0.05f), codeArea.RectTransform), "Custom code:");
+                    //new GUITextBox(new RectTransform(new Vector2(1, 1 - 0.05f), codeArea.RectTransform, Anchor.BottomLeft), string.Empty, textAlignment: Alignment.TopLeft);
+                    // Previous
+                    box.Buttons[0].OnClicked += (b, d) =>
+                    {
+                        Instance.SelectTab(Tab.Character);
+                        return true;
+                    };
+                    // Parse and create
+                    box.Buttons[1].OnClicked += (b, d) =>
+                    {
+                        // Currently these are additive to the data defined in the html and in the code fields.
+                        ParseLimbsFromGUIElements();
+                        ParseJointsFromGUIElements();
+                        var ragdollParams = new object[]
+                        {
+                            new XAttribute("type", Name),
+                            new XElement("collider", new XAttribute("radius", Size)),   // TODO: if we set the radius, the collider cannot be a rectangle
+                                LimbXElements.Values,
+                                JointXElements
+                        };
+                        CharacterEditorScreen.instance.CreateCharacter(Name, IsHumanoid, ragdollParams);
+                        GUI.AddMessage($"Character {Name} Created", Color.Green, font: GUI.Font);
+                        Instance.SelectTab(Tab.None);
+                        return true;
+                    };
+                    return box;
+                }
+            }
+
+            private abstract class View
+            {
+                // Easy accessors to the common data.
+                public string Name
+                {
+                    get => Instance.name;
+                    set => Instance.name = value;
+                }
+                public float Size
+                {
+                    get => Instance.size;
+                    set => Instance.size = value;
+                }
+                public bool IsHumanoid
+                {
+                    get => Instance.isHumanoid;
+                    set => Instance.isHumanoid = value;
+                }
+                public string TexturePath
+                {
+                    get => Instance.texturePath;
+                    set => Instance.texturePath = value;
+                }
+                public string XMLPath
+                {
+                    get => Instance.xmlPath;
+                    set => Instance.xmlPath = value;
+                }
+                public Dictionary<string, XElement> LimbXElements
+                {
+                    get => Instance.limbXElements;
+                    set => Instance.limbXElements = value;
+                }
+                public List<GUIComponent> LimbGUIElements
+                {
+                    get => Instance.limbGUIElements;
+                    set => Instance.limbGUIElements = value;
+                }
+                public List<XElement> JointXElements
+                {
+                    get => Instance.jointXElements;
+                    set => Instance.jointXElements = value;
+                }
+                public List<GUIComponent> JointGUIElements
+                {
+                    get => Instance.jointGUIElements;
+                    set => Instance.jointGUIElements = value;
+                }
+
+                private GUIMessageBox box;
+                public GUIMessageBox Box
+                {
+                    get
+                    {
+                        if (box == null)
+                        {
+                            box = Create();
+                        }
+                        return box;
+                    }
+                }
+
+                protected abstract GUIMessageBox Create();
+                protected static T Get<T>(T instance) where T : View, new()
+                {
+                    if (instance == null)
+                    {
+                        instance = new T();
+                    }
+                    return instance;
+                }
+
+                protected void ParseLimbsFromGUIElements()
+                {
+                    for (int i = 0; i < LimbGUIElements.Count; i++)
+                    {
+                        var limbGUIElement = LimbGUIElements[i];
+                        var allChildren = limbGUIElement.GetAllChildren();
+                        GUITextBlock GetField(string n) => allChildren.First(c => c is GUITextBlock textBlock && textBlock.Text == n) as GUITextBlock;
+                        int id = GetField("ID").Parent.GetChild<GUINumberInput>().IntValue;
+                        string limbName = GetField("Name").Parent.GetChild<GUITextBox>().Text;
+                        LimbType limbType = (LimbType)GetField("Limb Type").Parent.GetChild<GUIDropDown>().SelectedData;
+                        var rectInputs = GetField("Source Rect").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).ToArray();
+                        LimbXElements.Add(id.ToString(), new XElement("limb",
+                            new XAttribute("id", id),
+                            new XAttribute("name", limbName),
+                            new XAttribute("type", limbType.ToString()),
+                            new XAttribute("width", rectInputs[2].IntValue),
+                            new XAttribute("height", rectInputs[3].IntValue),
+                            new XElement("sprite",
+                                new XAttribute("texture", TexturePath),
+                                new XAttribute("sourcerect", $"{rectInputs[0].IntValue}, {rectInputs[1].IntValue}, {rectInputs[2].IntValue}, {rectInputs[3].IntValue}"))
+                            ));
+                    }
+                }
+
+                protected void ParseJointsFromGUIElements()
+                {
+                    for (int i = 0; i < JointGUIElements.Count; i++)
+                    {
+                        var jointGUIElement = JointGUIElements[i];
+                        var allChildren = jointGUIElement.GetAllChildren();
+                        GUITextBlock GetField(string n) => allChildren.First(c => c is GUITextBlock textBlock && textBlock.Text == n) as GUITextBlock;
+                        string jointName = GetField("Name").Parent.GetChild<GUITextBox>().Text;
+                        int limb1ID = GetField("Limb 1").Parent.GetChild<GUINumberInput>().IntValue;
+                        int limb2ID = GetField("Limb 2").Parent.GetChild<GUINumberInput>().IntValue;
+                        var anchor1Inputs = GetField("Limb 1 Anchor").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).ToArray();
+                        var anchor2Inputs = GetField("Limb 2 Anchor").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).ToArray();
+                        JointXElements.Add(new XElement("joint",
+                            new XAttribute("name", jointName),
+                            new XAttribute("limb1", limb1ID),
+                            new XAttribute("limb2", limb2ID),
+                            new XAttribute("limb1anchor", $"{anchor1Inputs[0].FloatValue}, {anchor1Inputs[1].FloatValue}"),
+                            new XAttribute("limb2anchor", $"{anchor2Inputs[0].FloatValue}, {anchor2Inputs[1].FloatValue}")));
+                    }
+                }
+
+                protected void ParseRagdollFromHTML(string path)
+                {
+                    // TODO: parse as xml?
+                    //XDocument doc = XMLExtensions.TryLoadXml(path);
+                    //var xElements = doc.Elements().ToArray();
+
+                    string html = File.ReadAllText(path);
+                    var lines = html.Split(new string[] { "<div", "</div>", Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+                                    .Where(s => s.Contains("left") && s.Contains("top") && s.Contains("width") && s.Contains("height"));
+                    int id = 0;
+                    Dictionary<string, int> hierarchyToID = new Dictionary<string, int>();
+                    Dictionary<int, string> idToHierarchy = new Dictionary<int, string>();
+                    Dictionary<int, string> idToPositionCode = new Dictionary<int, string>();
+                    foreach (var line in lines)
+                    {
+                        var codeNames = new string(line.SkipWhile(c => c != '>').Skip(1).ToArray()).Split(',');
+                        for (int i = 0; i < codeNames.Length; i++)
+                        {
+                            string codeName = codeNames[i].Trim();
+                            if (string.IsNullOrWhiteSpace(codeName)) { continue; }
+                            string limbName = new string(codeName.SkipWhile(c => c != '_').Skip(1).ToArray());
+                            if (string.IsNullOrWhiteSpace(limbName)) { continue; }
+                            var parts = line.Split(' ');
+                            int ParseToInt(string selector)
+                            {
+                                string part = parts.First(p => p.Contains(selector));
+                                string s = new string(part.SkipWhile(c => c != ':').Skip(1).TakeWhile(c => char.IsNumber(c)).ToArray());
+                                int.TryParse(s, out int v);
+                                return v;
+                            };
+                            // example: 111311cr -> 111311
+                            string hierarchy = new string(codeName.TakeWhile(c => char.IsNumber(c)).ToArray());
+                            if (hierarchyToID.ContainsKey(hierarchy))
+                            {
+                                DebugConsole.ThrowError($"Multiple items with the same hierarchy \"{hierarchy}\" found ({codeName}). Cannot continue.");
+                                return;
+                            }
+                            hierarchyToID.Add(hierarchy, id);
+                            idToHierarchy.Add(id, hierarchy);
+                            string positionCode = new string(codeName.SkipWhile(c => char.IsNumber(c)).TakeWhile(c => c != '_').ToArray());
+                            idToPositionCode.Add(id, positionCode.ToLowerInvariant());
+                            int x = ParseToInt("left");
+                            int y = ParseToInt("top");
+                            int width = ParseToInt("width");
+                            int height = ParseToInt("height");
+                            LimbXElements.Add(hierarchy, new XElement("limb",
+                                new XAttribute("id", id),
+                                new XAttribute("name", limbName),
+                                new XAttribute("type", ParseLimbType(limbName).ToString()),
+                                new XAttribute("width", width),
+                                new XAttribute("height", height),
+                                new XElement("sprite",
+                                    new XAttribute("texture", TexturePath),
+                                    new XAttribute("sourcerect", $"{x}, {y}, {width}, {height}"))
+                                ));
+                            id++;
+                        }
+                    }
+                    for (int i = 0; i < id; i++)
+                    {
+                        if (idToHierarchy.TryGetValue(i, out string hierarchy))
+                        {
+                            if (hierarchy.Length > 1)
+                            {
+                                string parent = hierarchy.Remove(hierarchy.Length - 1, 1);
+                                if (hierarchyToID.TryGetValue(parent, out int parentID))
+                                {
+                                    Vector2 anchor1 = Vector2.Zero;
+                                    if (idToPositionCode.TryGetValue(i, out string positionCode))
+                                    {
+                                        if (LimbXElements.TryGetValue(parent, out XElement parentElement))
+                                        {
+                                            float scalar = 0.8f;
+                                            Rectangle sourceRect = parentElement.Element("sprite").GetAttributeRect("sourcerect", Rectangle.Empty);
+                                            float width = sourceRect.Width / 2 * scalar;
+                                            float height = sourceRect.Height / 2 * scalar;
+                                            switch (positionCode)
+                                            {
+                                                case "tl":  // -1, 1
+                                                    anchor1 = new Vector2(-width, height);
+                                                    break;
+                                                case "tc":  // 0, 1
+                                                    anchor1 = new Vector2(0, height);
+                                                    break;
+                                                case "tr":  // -1, 1
+                                                    anchor1 = new Vector2(-width, height);
+                                                    break;
+                                                case "cl":  // 0, -1
+                                                    anchor1 = new Vector2(0, -height);
+                                                    break;
+                                                case "cr":  // 0, 1
+                                                    anchor1 = new Vector2(0, height);
+                                                    break;
+                                                case "bl":  // -1, -1
+                                                    anchor1 = new Vector2(-width, -height);
+                                                    break;
+                                                case "bc":  // 0, -1
+                                                    anchor1 = new Vector2(0, -height);
+                                                    break;
+                                                case "br":  // 1, -1
+                                                    anchor1 = new Vector2(width, -height);
+                                                    break;
+                                            }
+                                        }
+                                    }
+                                    JointXElements.Add(new XElement("joint",
+                                        new XAttribute("limb1", parentID),
+                                        new XAttribute("limb2", i),
+                                        new XAttribute("limb1anchor", $"{anchor1.X}, {anchor1.Y}"),
+                                        new XAttribute("limb2anchor", "0, 0")
+                                        ));
+                                }
+                            }
+                        }
+                    }
+                }
+
+                protected LimbType ParseLimbType(string limbName)
+                {
+                    var limbType = LimbType.None;
+                    string n = limbName.ToLowerInvariant();
+                    switch (n)
+                    {
+                        case "head":
+                            limbType = LimbType.Head;
+                            break;
+                        case "torso":
+                            limbType = LimbType.Torso;
+                            break;
+                        case "waist":
+                            limbType = LimbType.Waist;
+                            break;
+                        case "tail":
+                            limbType = LimbType.Tail;
+                            break;
+                    }
+                    if (limbType == LimbType.None)
+                    {
+                        if (n.Contains("tail"))
+                        {
+                            limbType = LimbType.Tail;
+                        }
+                        else if (n.Contains("hand") || n.Contains("palm"))
+                        {
+                            if (n.Contains("right"))
+                            {
+                                limbType = LimbType.RightHand;
+                            }
+                            else if (n.Contains("left"))
+                            {
+                                limbType = LimbType.LeftHand;
+                            }
+                        }
+                        else if (n.Contains("arm"))
+                        {
+                            if (n.Contains("right"))
+                            {
+                                limbType = LimbType.RightArm;
+                            }
+                            else if (n.Contains("left"))
+                            {
+                                limbType = LimbType.LeftArm;
+                            }
+                        }
+                        else if (n.Contains("leg"))
+                        {
+                            if (n.Contains("right"))
+                            {
+                                limbType = LimbType.RightLeg;
+                            }
+                            else if (n.Contains("left"))
+                            {
+                                limbType = LimbType.LeftLeg;
+                            }
+                        }
+                        else if (n.Contains("tail"))
+                        {
+                            limbType = LimbType.Tail;
+                        }
+                    }
+                    return limbType;
+                }
+            }
+        }
         #endregion
     }
 }

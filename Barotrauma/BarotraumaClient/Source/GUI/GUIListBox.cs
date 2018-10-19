@@ -524,6 +524,7 @@ namespace Barotrauma
             Content.DrawManually(spriteBatch, alsoChildren: false);
             
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
+            RasterizerState prevRasterizerState = spriteBatch.GraphicsDevice.RasterizerState;
             if (HideChildrenOutsideFrame)
             {                    
                 spriteBatch.End();
@@ -552,7 +553,7 @@ namespace Barotrauma
             {
                 spriteBatch.End();
                 spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
-                spriteBatch.Begin(SpriteSortMode.Deferred);
+                spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: prevRasterizerState);
             }
 
             if (ScrollBar.Visible) ScrollBar.DrawManually(spriteBatch, alsoChildren: true, recursive: true);

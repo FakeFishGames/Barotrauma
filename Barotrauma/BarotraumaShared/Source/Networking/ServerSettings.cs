@@ -210,7 +210,7 @@ namespace Barotrauma.Networking
             ServerName = serverName;
             Port = port;
             QueryPort = queryPort;
-            EnableUPnP = enableUPnP;
+            //EnableUPnP = enableUPnP;
             this.maxPlayers = maxPlayers;
             this.isPublic = isPublic;
             
@@ -265,9 +265,7 @@ namespace Barotrauma.Networking
         public int Port;
 
         public int QueryPort;
-
-        public bool EnableUPnP;
-
+        
         public ServerLog ServerLog;
 
         public Voting Voting;

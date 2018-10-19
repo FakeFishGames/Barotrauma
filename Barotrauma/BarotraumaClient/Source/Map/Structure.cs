@@ -23,7 +23,7 @@ namespace Barotrauma
         {
             get
             {
-                return ShowStructures && (ShowWalls || !HasBody);
+                return HasBody ? ShowWalls : ShowStructures;;
             }
         }
 
@@ -150,7 +150,7 @@ namespace Barotrauma
             if (prefab.sprite == null) return;
             if (editing)
             {
-                if (!ShowStructures) return;
+                if (!HasBody && !ShowStructures) return;
                 if (HasBody && !ShowWalls) return;
             }
 
@@ -167,7 +167,7 @@ namespace Barotrauma
             if (prefab.sprite == null) return;
             if (editing)
             {
-                if (!ShowStructures) return;
+                if (!HasBody && !ShowStructures) return;
                 if (HasBody && !ShowWalls) return;
             }
 

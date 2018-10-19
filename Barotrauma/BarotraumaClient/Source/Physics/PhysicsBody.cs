@@ -15,11 +15,17 @@ namespace Barotrauma
             get { return bodyShapeTexture; }
         }
 
-        public void Draw(DeformableSprite deformSprite, Camera cam, Vector2 scale)
+        public void Draw(DeformableSprite deformSprite, Camera cam, Vector2 scale, Color color)
         {
             if (!Enabled) return;
             UpdateDrawPosition();
-            deformSprite?.Draw(cam, new Vector3(DrawPosition, MathHelper.Clamp(deformSprite.Sprite.Depth, 0, 1)), deformSprite.Origin, -DrawRotation, scale, flip: Dir < 0);
+            deformSprite?.Draw(cam, 
+                new Vector3(DrawPosition, MathHelper.Clamp(deformSprite.Sprite.Depth, 0, 1)), 
+                deformSprite.Origin, 
+                -DrawRotation, 
+                scale, 
+                color,
+                flip: Dir < 0);
         }
 
         public void Draw(SpriteBatch spriteBatch, Sprite sprite, Color color, float? depth = null, float scale = 1.0f)

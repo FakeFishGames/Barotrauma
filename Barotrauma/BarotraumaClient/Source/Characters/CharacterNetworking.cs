@@ -56,14 +56,16 @@ namespace Barotrauma
 
                     if (AnimController.TargetDir == Direction.Left) newInput |= InputNetFlags.FacingLeft;
 
-                    Vector2 relativeCursorPos = cursorPosition - (ViewTarget == null ? AnimController.AimSourcePos : ViewTarget.Position);
+                    Vector2 relativeCursorPos = cursorPosition - AimRefPosition;
                     relativeCursorPos.Normalize();
                     UInt16 intAngle = (UInt16)(65535.0 * Math.Atan2(relativeCursorPos.Y, relativeCursorPos.X) / (2.0 * Math.PI));
 
-                    NetInputMem newMem = new NetInputMem();
-                    newMem.states = newInput;
-                    newMem.intAim = intAngle;
-                    if (focusedItem != null)
+                    NetInputMem newMem = new NetInputMem
+                    {
+                        states = newInput,
+                        intAim = intAngle
+                    };
+                    if (focusedItem != null && (!newMem.states.HasFlag(InputNetFlags.Grab) && !newMem.states.HasFlag(InputNetFlags.Health)))
                     {
                         newMem.interact = focusedItem.ID;
                     }
@@ -181,9 +183,7 @@ namespace Barotrauma
                         if (aimInput)
                         {
                             double aimAngle = ((double)msg.ReadUInt16() / 65535.0) * 2.0 * Math.PI;
-                            cursorPosition = (ViewTarget == null ? AnimController.AimSourcePos : ViewTarget.Position)
-                                + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 60.0f;
-
+                            cursorPosition = AimRefPosition + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 60.0f;
                             TransformCursorPos();
                         }
                         bool ragdollInput = msg.ReadBoolean();

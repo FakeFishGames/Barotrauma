@@ -103,7 +103,7 @@ namespace Barotrauma.Items.Components
 
             if (crosshairSprite != null)
             {
-                Vector2 itemPos = cam.WorldToScreen(item.WorldPosition);
+                Vector2 itemPos = cam.WorldToScreen(new Vector2(item.WorldRect.X + transformedBarrelPos.X, item.WorldRect.Y - transformedBarrelPos.Y));
                 Vector2 turretDir = new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation));
 
                 Vector2 mouseDiff = itemPos - PlayerInput.MousePosition;
@@ -184,7 +184,7 @@ namespace Barotrauma.Items.Components
 
         public void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
-            Vector2 drawPos = new Vector2(item.Rect.X, item.Rect.Y);
+            Vector2 drawPos = new Vector2(item.Rect.X + transformedBarrelPos.X, item.Rect.Y - transformedBarrelPos.Y);
             if (item.Submarine != null) drawPos += item.Submarine.DrawPosition;
             drawPos.Y = -drawPos.Y;
 
@@ -203,30 +203,34 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (barrelSprite != null)
-            {
-                barrelSprite.Draw(spriteBatch,
-                    drawPos + barrelPos - new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation)) * recoilOffset, 
-                    Color.White,
-                    rotation + MathHelper.PiOver2, 1.0f,
-                    SpriteEffects.None, item.SpriteDepth + 0.01f);
-            }
+            railSprite?.Draw(spriteBatch,
+                drawPos,
+                Color.White,
+                rotation + MathHelper.PiOver2, 1.0f,
+                SpriteEffects.None, item.SpriteDepth + 0.01f);
 
+            barrelSprite?.Draw(spriteBatch,
+                drawPos - new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation)) * recoilOffset, 
+                Color.White,
+                rotation + MathHelper.PiOver2, 1.0f,
+                SpriteEffects.None, item.SpriteDepth + 0.015f);
+            
+    
             if (!editing) return;
 
             GUI.DrawLine(spriteBatch,
-                drawPos + barrelPos,
-                drawPos + barrelPos + new Vector2((float)Math.Cos(minRotation), (float)Math.Sin(minRotation)) * 60.0f,
+                drawPos,
+                drawPos + new Vector2((float)Math.Cos(minRotation), (float)Math.Sin(minRotation)) * 60.0f,
                 Color.Green);
 
             GUI.DrawLine(spriteBatch,
-                drawPos + barrelPos,
-                drawPos + barrelPos + new Vector2((float)Math.Cos(maxRotation), (float)Math.Sin(maxRotation)) * 60.0f,
+                drawPos,
+                drawPos + new Vector2((float)Math.Cos(maxRotation), (float)Math.Sin(maxRotation)) * 60.0f,
                 Color.Green);
 
             GUI.DrawLine(spriteBatch,
-                drawPos + barrelPos,
-                drawPos + barrelPos + new Vector2((float)Math.Cos((maxRotation + minRotation) / 2), (float)Math.Sin((maxRotation + minRotation) / 2)) * 60.0f,
+                drawPos,
+                drawPos + new Vector2((float)Math.Cos((maxRotation + minRotation) / 2), (float)Math.Sin((maxRotation + minRotation) / 2)) * 60.0f,
                 Color.LightGreen);
         }
 

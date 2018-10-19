@@ -169,12 +169,18 @@ namespace Barotrauma
             this.Text = text ?? "";
             if (rectT.Rect.Height == 0 && !string.IsNullOrEmpty(text))
             {
-                rectT.Resize(new Point(rectT.Rect.Width, (int)Font.MeasureString(wrappedText).Y));
+                CalculateHeightFromText();
             }
             SetTextPos();
 
             RectTransform.ScaleChanged += SetTextPos;
             RectTransform.SizeChanged += SetTextPos;
+        }
+
+        public void CalculateHeightFromText()
+        {
+            if (wrappedText == null) { return; }
+            RectTransform.Resize(new Point(RectTransform.Rect.Width, (int)Font.MeasureString(wrappedText).Y));
         }
         
         public override void ApplyStyle(GUIComponentStyle style)

@@ -10,10 +10,6 @@ namespace Barotrauma
 {
     class SerializableEntityEditor : GUIComponent
     {
-        private static readonly string[] vectorComponentLabels = { "X", "Y", "Z", "W" };
-        private static readonly string[] rectComponentLabels = { "X", "Y", "W", "H" };
-        private static readonly string[] colorComponentLabels = { "R", "G", "B", "A" };
-
         private int elementHeight;
         private GUILayoutGroup layoutGroup;
 
@@ -282,7 +278,6 @@ namespace Barotrauma
             layoutGroup.RectTransform.NonScaledSize = new Point(layoutGroup.RectTransform.NonScaledSize.X, contentHeight);
         }
 
-        // TODO: decouple gui element creation from serializable entities -> create static methods for creating fields (that can be used also in other gui elements)
         private GUIComponent CreateNewField(SerializableProperty property, ISerializableEntity entity)
         {
             object value = property.GetValue();
@@ -490,7 +485,7 @@ namespace Barotrauma
             for (int i = 1; i >= 0; i--)
             {
                 var element = new GUIFrame(new RectTransform(new Vector2(0.45f, 1), inputArea.RectTransform), style: null);
-                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), vectorComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
+                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), GUI.vectorComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
                 GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight),
                     GUINumberInput.NumberType.Float)
                 {
@@ -541,7 +536,7 @@ namespace Barotrauma
             for (int i = 2; i >= 0; i--)
             {
                 var element = new GUIFrame(new RectTransform(new Vector2(0.33f, 1), inputArea.RectTransform), style: null);
-                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), vectorComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
+                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), GUI.vectorComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
                 GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight),
                     GUINumberInput.NumberType.Float)
                 {
@@ -596,7 +591,7 @@ namespace Barotrauma
             for (int i = 3; i >= 0; i--)
             {
                 var element = new GUIFrame(new RectTransform(new Vector2(0.22f, 1), inputArea.RectTransform) { MinSize = new Point(50, 0), MaxSize = new Point(150, 50) }, style: null);
-                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), vectorComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
+                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), GUI.vectorComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
                 GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight),
                     GUINumberInput.NumberType.Float)
                 {
@@ -659,7 +654,7 @@ namespace Barotrauma
             for (int i = 3; i >= 0; i--)
             {
                 var element = new GUIFrame(new RectTransform(new Vector2(0.2f, 1), inputArea.RectTransform) { MinSize = new Point(40, 0), MaxSize = new Point(100, 50) }, style: null);
-                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), colorComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
+                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), GUI.colorComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
                 GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight),
                     GUINumberInput.NumberType.Int)
                 {
@@ -721,7 +716,7 @@ namespace Barotrauma
             for (int i = 3; i >= 0; i--)
             {
                 var element = new GUIFrame(new RectTransform(new Vector2(0.22f, 1), inputArea.RectTransform) { MinSize = new Point(50, 0), MaxSize = new Point(150, 50) }, style: null);
-                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), rectComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
+                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), GUI.rectComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
                 GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight),
                     GUINumberInput.NumberType.Int)
                 {
