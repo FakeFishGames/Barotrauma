@@ -345,6 +345,8 @@ namespace Barotrauma
                 {
                     depth -= depthStep;
                 }
+                //if there are multiple sprites on this limb, make the successive ones be drawn in front
+                depthStep += 0.000001f;
 
                 Color wearableColor = wearable.WearableComponent.Item.GetSpriteColor();
                 wearable.Sprite.Draw(spriteBatch,
