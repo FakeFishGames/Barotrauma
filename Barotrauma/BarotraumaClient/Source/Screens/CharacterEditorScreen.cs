@@ -48,6 +48,7 @@ namespace Barotrauma
         private bool lockSpritePosition;
         private bool lockSpriteSize;
         private bool displayColliders;
+        private bool displayBackgroundColor;
 
         private float spriteSheetZoom;
         private int spriteSheetOffsetY = 100;
@@ -87,7 +88,10 @@ namespace Barotrauma
         {
             //base.AddToGUIUpdateList();
             rightPanel.AddToGUIUpdateList();
-            generalControls.AddToGUIUpdateList();
+            if (displayBackgroundColor)
+            {
+                backgroundColorPanel.AddToGUIUpdateList();
+            }
             if (showAnimControls)
             {
                 animationControls.AddToGUIUpdateList();
@@ -574,7 +578,7 @@ namespace Barotrauma
         private GUIFrame animationControls;
         private GUIFrame spriteControls;
         private GUIFrame spriteSheetControls;
-        private GUIFrame generalControls;
+        private GUIFrame backgroundColorPanel;
         private GUIDropDown animSelection;
         private GUITickBox freezeToggle;
         private GUITickBox animTestPoseToggle;
@@ -601,8 +605,8 @@ namespace Barotrauma
             int textAreaHeight = 20;
             centerPanel = new GUIFrame(new RectTransform(new Vector2(0.45f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.Center), style: null) { CanBeFocused = false };
             // General controls
-            generalControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerPanel.RectTransform, Anchor.TopRight), style: null) { CanBeFocused = false };
-            var layoutGroupGeneral = new GUILayoutGroup(new RectTransform(Vector2.One, generalControls.RectTransform), childAnchor: Anchor.TopRight)
+            backgroundColorPanel = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerPanel.RectTransform, Anchor.TopRight), style: null) { CanBeFocused = false };
+            var layoutGroupGeneral = new GUILayoutGroup(new RectTransform(Vector2.One, backgroundColorPanel.RectTransform), childAnchor: Anchor.TopRight)
             {
                 AbsoluteSpacing = 5, CanBeFocused = false
             };
@@ -887,7 +891,7 @@ namespace Barotrauma
             {
                 rightPanel.RectTransform.Parent = null;
             }
-            Vector2 buttonSize = new Vector2(1, 0.05f);
+            Vector2 buttonSize = new Vector2(1, 0.04f);
             Vector2 toggleSize = new Vector2(0.03f, 0.03f);
             Point margin = new Point(40, 60);
             rightPanel = new GUIFrame(new RectTransform(new Vector2(0.15f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.CenterRight) { RelativeOffset = new Vector2(0.01f, 0) });
@@ -1053,6 +1057,15 @@ namespace Barotrauma
                 OnSelected = box =>
                 {
                     displayColliders = box.Selected;
+                    return true;
+                }
+            };
+            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Background Color")
+            {
+                Selected = displayBackgroundColor,
+                OnSelected = box =>
+                {
+                    displayBackgroundColor = box.Selected;
                     return true;
                 }
             };
