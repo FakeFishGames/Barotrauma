@@ -363,27 +363,7 @@ namespace Barotrauma
             SetupDrawOrder();
         }
 
-        protected void SetupDrawOrder()
-        {
-            //make sure every character gets drawn at a distinct "layer" 
-            //(instead of having some of the limbs appear behind and some in front of other characters)
-            float startDepth = 0.1f;
-            float increment = 0.001f;
-            foreach (Character otherCharacter in Character.CharacterList)
-            {
-                if (otherCharacter == character) continue;
-                startDepth += increment;
-            }
-            //make sure each limb has a distinct depth value 
-            List<Limb> depthSortedLimbs = Limbs.OrderBy(l => l.ActiveSprite == null ? 0.0f : l.ActiveSprite.Depth).ToList();
-            foreach (Limb limb in Limbs)
-            {
-                if (limb.ActiveSprite != null)
-                    limb.ActiveSprite.Depth = startDepth + depthSortedLimbs.IndexOf(limb) * 0.00001f;
-            }
-            depthSortedLimbs.Reverse();
-            inversedLimbDrawOrder = depthSortedLimbs.ToArray();
-        }
+        partial void SetupDrawOrder();
 
         /// <summary>
         /// Inversed draw order, which is used for drawing the limbs in 3d (deformable sprites).
@@ -717,7 +697,7 @@ namespace Barotrauma
                 }
             }
         }
-        
+
         partial void ImpactProjSpecific(float impact, Body body);
 
         public bool IsFlipped { get; private set; }
@@ -726,7 +706,7 @@ namespace Barotrauma
         {
             IsFlipped = !IsFlipped;
             dir = (dir == Direction.Left) ? Direction.Right : Direction.Left;
-            
+
             for (int i = 0; i < LimbJoints.Length; i++)
             {
                 float lowerLimit = -LimbJoints[i].UpperLimit;
@@ -739,21 +719,12 @@ namespace Barotrauma
                 LimbJoints[i].LocalAnchorB = new Vector2(-LimbJoints[i].LocalAnchorB.X, LimbJoints[i].LocalAnchorB.Y);
             }
 
-
             foreach (Limb limb in Limbs)
             {
                 if (limb == null || limb.IsSevered) continue;
-                
+
                 limb.Dir = Dir;
 
-                if (limb.ActiveSprite != null)
-                {
-                    Vector2 spriteOrigin = limb.ActiveSprite.Origin;
-                    spriteOrigin.X = limb.ActiveSprite.SourceRect.Width - spriteOrigin.X;
-                    limb.ActiveSprite.Origin = spriteOrigin;
-                }
-
-                
                 if (limb.MouthPos.HasValue)
                 {
                     limb.MouthPos = new Vector2(
@@ -762,8 +733,12 @@ namespace Barotrauma
                 }
 
                 limb.MirrorPullJoint();
-            }            
+            }
+
+            FlipProjSpecific();
         }
+
+        partial void FlipProjSpecific();
 
         public Vector2 GetCenterOfMass()
         {

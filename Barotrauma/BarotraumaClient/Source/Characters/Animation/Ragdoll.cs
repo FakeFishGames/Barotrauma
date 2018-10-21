@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using Barotrauma.Particles;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -93,12 +94,45 @@ namespace Barotrauma
             }
         }
 
+        partial void SetupDrawOrder()
+        {
+            //make sure every character gets drawn at a distinct "layer" 
+            //(instead of having some of the limbs appear behind and some in front of other characters)
+            float startDepth = 0.1f;
+            float increment = 0.001f;
+            foreach (Character otherCharacter in Character.CharacterList)
+            {
+                if (otherCharacter == character) continue;
+                startDepth += increment;
+            }
+            //make sure each limb has a distinct depth value 
+            List<Limb> depthSortedLimbs = Limbs.OrderBy(l => l.ActiveSprite == null ? 0.0f : l.ActiveSprite.Depth).ToList();
+            foreach (Limb limb in Limbs)
+            {
+                if (limb.ActiveSprite != null)
+                    limb.ActiveSprite.Depth = startDepth + depthSortedLimbs.IndexOf(limb) * 0.00001f;
+            }
+            depthSortedLimbs.Reverse();
+            inversedLimbDrawOrder = depthSortedLimbs.ToArray();
+        }
+
         partial void UpdateProjSpecific(float deltaTime)
         {
             LimbJoints.ForEach(j => j.UpdateDeformations(deltaTime));
             SpriteDeformations.ForEach(sd => sd.Update(deltaTime));
         }
 
+        partial void FlipProjSpecific()
+        {
+            foreach (Limb limb in Limbs)
+            {
+                if (limb == null || limb.IsSevered || limb.ActiveSprite == null) continue;
+
+                Vector2 spriteOrigin = limb.ActiveSprite.Origin;
+                spriteOrigin.X = limb.ActiveSprite.SourceRect.Width - spriteOrigin.X;
+                limb.ActiveSprite.Origin = spriteOrigin;                
+            }
+        }
 
         partial void SeverLimbJointProjSpecific(LimbJoint limbJoint)
         {

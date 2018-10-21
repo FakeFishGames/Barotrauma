@@ -1,15 +1,16 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Lights;
+using Barotrauma.Particles;
+using Barotrauma.SpriteDeformations;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.SpriteDeformations;
-using Barotrauma.Particles;
 
 namespace Barotrauma
 {
@@ -106,6 +107,12 @@ namespace Barotrauma
         /// </summary>
         public List<SpriteDeformation> Deformations { get; private set; } = new List<SpriteDeformation>();
 
+        public Sprite Sprite { get; protected set; }
+        public DeformableSprite DeformSprite { get; protected set; }
+        public Sprite ActiveSprite => DeformSprite != null ? DeformSprite.Sprite : Sprite;
+
+        public Sprite DamagedSprite { get; set; }
+
         public Color InitialLightSourceColor
         {
             get;
@@ -140,8 +147,14 @@ namespace Barotrauma
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
+                    case "sprite":
+                        Sprite = new Sprite(subElement, "", GetSpritePath(subElement));
+                        break;
+                    case "damagedsprite":
+                        DamagedSprite = new Sprite(subElement, "", GetSpritePath(subElement));
+                        break;
                     case "deformablesprite":
-                        DeformSprite = new DeformableSprite(subElement);
+                        DeformSprite = new DeformableSprite(subElement, filePath: GetSpritePath(subElement));
                         foreach (XElement animationElement in subElement.Elements())
                         {
                             int sync = animationElement.GetAttributeInt("sync", -1);
@@ -178,6 +191,40 @@ namespace Barotrauma
                         break;
                 }
             }
+        }
+
+        /// <summary>
+        /// Get the full path of a limb sprite, taking into account tags, gender and head id
+        /// </summary>
+        private string GetSpritePath(XElement element)
+        {
+            string spritePath = element.Attribute("texture").Value;
+            string spritePathWithTags = spritePath;
+            if (character.Info != null)
+            {
+                spritePath = spritePath.Replace("[GENDER]", (character.Info.Gender == Gender.Female) ? "f" : "");
+                spritePath = spritePath.Replace("[HEADID]", character.Info.HeadSpriteId.ToString());
+
+                if (character.Info.HeadSprite != null && character.Info.SpriteTags.Any())
+                {
+                    string tags = "";
+                    character.Info.SpriteTags.ForEach(tag => tags += "[" + tag + "]");
+
+                    spritePathWithTags = Path.Combine(
+                        Path.GetDirectoryName(spritePath),
+                        Path.GetFileNameWithoutExtension(spritePath) + tags + Path.GetExtension(spritePath));
+                }
+            }
+
+            return File.Exists(spritePathWithTags) ? spritePathWithTags : spritePath;
+        }
+
+        partial void LoadParamsProjSpecific()
+        {
+            bool isFlipped = dir == Direction.Left;
+            Sprite?.LoadParams(limbParams.normalSpriteParams, isFlipped);
+            DamagedSprite?.LoadParams(limbParams.damagedSpriteParams, isFlipped);
+            DeformSprite?.Sprite.LoadParams(limbParams.deformSpriteParams, isFlipped);
         }
 
         partial void AddDamageProjSpecific(Vector2 position, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers)
@@ -367,6 +414,21 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.Red, true);
                 }
             }
+        }
+
+        partial void RemoveProjSpecific()
+        {
+            Sprite?.Remove();
+            Sprite = null;            
+
+            DamagedSprite?.Remove();
+            DamagedSprite = null;            
+
+            DeformSprite?.Sprite?.Remove();
+            DeformSprite = null;
+
+            LightSource?.Remove();
+            LightSource = null;
         }
     }
 }
