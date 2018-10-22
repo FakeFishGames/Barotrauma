@@ -2746,7 +2746,7 @@ namespace Barotrauma
                         {
                             case 0:
                                 new GUITextBlock(leftElement, "Name");
-                                var nameField = new GUITextBox(rightElement, "Worm X");
+                                var nameField = new GUITextBox(rightElement, "Worm X") { CaretColor = Color.White };
                                 string ProcessText(string text) => text.RemoveWhitespace().CapitaliseFirstInvariant();
                                 Name = ProcessText(nameField.Text);
                                 nameField.OnTextChanged += (tb, text) =>
@@ -2778,6 +2778,7 @@ namespace Barotrauma
                                 new GUITextBlock(leftElement, "Config File Output");
                                 xmlPathElement = new GUITextBox(rightElement, string.Empty)
                                 {
+                                    CaretColor = Color.White,
                                     OnTextChanged = (tb, text) =>
                                     {
                                         XMLPath = text;
@@ -2789,6 +2790,7 @@ namespace Barotrauma
                                 new GUITextBlock(leftElement, "Texture Path");
                                 texturePathElement = new GUITextBox(rightElement, string.Empty)
                                 {
+                                    CaretColor = Color.White,
                                     OnTextChanged = (tb, text) =>
                                     {
                                         TexturePath = text;
@@ -3025,6 +3027,7 @@ namespace Barotrauma
                     new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopLeft), "Name");
                     new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), jointName)
                     {
+                        CaretColor = Color.White,
                         OnTextChanged = (textB, text) =>
                         {
                             jointName = text;
