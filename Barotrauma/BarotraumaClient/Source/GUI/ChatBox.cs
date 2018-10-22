@@ -185,17 +185,17 @@ namespace Barotrauma
             GUITextBlock senderNameBlock = null;
             if (!string.IsNullOrEmpty(senderName))
             {
-                senderNameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), msgHolder.RectTransform)
+                senderNameBlock = new GUITextBlock(new RectTransform(new Vector2(0.98f, 0.0f), msgHolder.RectTransform)
                 { AbsoluteOffset = new Point((int)(5 * GUI.Scale), 0) },
-                    senderName, textColor: Color.White, font: GUI.SmallFont, style: null)
+                    senderName, textColor: Color.White, font: GUI.SmallFont, textAlignment: Alignment.TopLeft, style: null)
                 {
                     CanBeFocused = true
                 };
             }
 
-            new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.0f), msgHolder.RectTransform)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), msgHolder.RectTransform)
             { AbsoluteOffset = new Point((int)(10 * GUI.Scale), senderNameBlock == null ? 0 : senderNameBlock.Rect.Height) },
-                displayedText, textColor: message.Color, font: GUI.SmallFont, style: null, wrap: true,
+                displayedText, textColor: message.Color, font: GUI.SmallFont, textAlignment: Alignment.TopLeft, style: null, wrap: true,
                 color: ((chatBox.Content.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f)
             {
                 UserData = message.SenderName,
