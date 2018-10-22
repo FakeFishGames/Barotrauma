@@ -22,21 +22,21 @@ namespace Barotrauma.Items.Components
 
         private float fixDurationLowSkill, fixDurationHighSkill;
 
-        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, ToolTip = "How fast the condition of the item deteriorates per second.")]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, DecimalCount = 2, ToolTip = "How fast the condition of the item deteriorates per second.")]
         public float DeteriorationSpeed
         {
             get;
             set;
         }
 
-        [Serialize(50.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, ToolTip = "The minimum condition of the item for it to spontaneously deteriorate.")]
+        [Serialize(50.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, ToolTip = "The item won't deteriorate spontaneously if the condition is below this value. For example, if set to 10, the condition will spontaneously drop to 10 and then stop dropping (unless the item is damaged further by external factors).")]
         public float MinDeteriorationCondition
         {
             get;
             set;
         }
 
-        [Serialize(80.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, ToolTip = "The condition of the item has to be below this before the repair UI becomes usable.")]
+        [Serialize(80.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, ToolTip = "The condition of the item has to be below this before the repair UI becomes usable.")]
         public float ShowRepairUIThreshold
         {
             get;
