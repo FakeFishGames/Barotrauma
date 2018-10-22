@@ -235,8 +235,8 @@ namespace Barotrauma.Items.Components
                 Visible = false
             };
 
-            tipContainer = new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.15f), GuiFrame.RectTransform, Anchor.BottomLeft)
-            { MinSize = new Point(150, 0), RelativeOffset = new Vector2(-0.05f, -0.05f) }, "", wrap: true, style: "GUIToolTip")
+            tipContainer = new GUITextBlock(new RectTransform(new Vector2(0.25f, 0.12f), GuiFrame.RectTransform, Anchor.BottomLeft)
+            { MinSize = new Point(150, 0), RelativeOffset = new Vector2(0.0f, -0.05f) }, "", wrap: true, style: "GUIToolTip")
             {
                 AutoScale = true
             };
