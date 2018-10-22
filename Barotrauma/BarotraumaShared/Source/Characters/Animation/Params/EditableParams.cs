@@ -51,6 +51,7 @@ namespace Barotrauma
         {
             UpdatePath(file);
             doc = XMLExtensions.TryLoadXml(FullPath);
+            if (doc == null) { return false; }
             IsLoaded = Deserialize(doc.Root);
             return IsLoaded;
         }
