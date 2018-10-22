@@ -2776,11 +2776,25 @@ namespace Barotrauma
                                 break;
                             case 3:
                                 new GUITextBlock(leftElement, "Config File Output");
-                                xmlPathElement = new GUITextBox(rightElement, string.Empty);
+                                xmlPathElement = new GUITextBox(rightElement, string.Empty)
+                                {
+                                    OnTextChanged = (tb, text) =>
+                                    {
+                                        XMLPath = text;
+                                        return true;
+                                    }
+                                };
                                 break;
                             case 4:
                                 new GUITextBlock(leftElement, "Texture Path");
-                                texturePathElement = new GUITextBox(rightElement, string.Empty);
+                                texturePathElement = new GUITextBox(rightElement, string.Empty)
+                                {
+                                    OnTextChanged = (tb, text) =>
+                                    {
+                                        TexturePath = text;
+                                        return true;
+                                    }
+                                };
                                 break;
                         }
                     }
