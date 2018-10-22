@@ -3,7 +3,7 @@
   <Item name="Coilgun" identifier="coilgun" Tags="turret" category="Machine" interactthroughwalls="true" interactdistance="10" spritecolor="1.0,1.0,1.0,1.0" focusonselected="true" offsetonselected="700" linkable="true" allowedlinks="coligunequipment">
     <Sprite texture="coilgunbase.png" depth="0.01" sourcerect="0,0,256,256" canflipy="false"/>
     <StaticBody width="80" radius="80" />
-    <Turret canbeselected="false" characterusable="false" linkable="true" barrelpos="128,88" rotationlimits="180,360" powerconsumption="200.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="50" reload="0.25" springstiffnesslowskill="2" springstiffnesshighskill="50" springdampinglowskill="0.5" springdampinghighskill="10" rotationspeedlowskill="1" rotationspeedhighskill="8">
+    <Turret canbeselected="false" characterusable="false" linkable="true" barrelpos="128,88" rotationlimits="180,360" powerconsumption="1000.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="50" reload="0.25" springstiffnesslowskill="2" springstiffnesshighskill="50" springdampinglowskill="0.5" springdampinghighskill="10" rotationspeedlowskill="1" rotationspeedhighskill="8">
       <sound file="Content/Items/Weapons/coilgun.ogg" range="10000" type="OnUse" />
       <BarrelSprite texture="Content/Items/Weapons/coilgunbarrel.png" origin="0.6, 0.8"/>
       <RailSprite texture="Content/Items/Weapons/coilgunrail.png" origin="0.64, 0.7"/>
@@ -41,7 +41,9 @@
     <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="76,3,51,42" />
     <Body width="51" height="42" density="50" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false" />
-    <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false">
+    <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" 
+                   ShowConditionInContainedStateIndicator="true">
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <!-- we cheat a bit with ammunition boxes - they don't actually contain hundreds of rounds, 
       but spawn a new round every time the OnUse effect is triggered. OnUse also reduces the condition
       of the item, and when the condition is 0, the box is considered empty. -->
@@ -60,9 +62,9 @@
     <Body width="64" height="5" density="20" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
     <Projectile characterusable="false" launchimpulse="80.0">
-      <Attack structuredamage="20" severlimbsprobability="0.5">
-        <Affliction identifier="internaldamage" strength="20" />
-        <Affliction identifier="bleeding" strength="5" />
+      <Attack structuredamage="5" severlimbsprobability="0.5">
+        <Affliction identifier="internaldamage" strength="10" />
+        <Affliction identifier="bleeding" strength="0.5" />
       </Attack>
       <StatusEffect type="OnActive" target="This">
         <ParticleEmitter particle="ammotrailwater" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />

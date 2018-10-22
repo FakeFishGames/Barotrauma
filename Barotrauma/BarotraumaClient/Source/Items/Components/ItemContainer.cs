@@ -31,6 +31,13 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
+        [Serialize(false, false)]
+        public bool ShowConditionInContainedStateIndicator
+        {
+            get;
+            set;
+        }
+
         partial void InitProjSpecific(XElement element)
         {
             foreach (XElement subElement in element.Elements())
