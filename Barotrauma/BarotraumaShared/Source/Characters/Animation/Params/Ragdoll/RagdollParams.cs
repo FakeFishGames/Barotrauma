@@ -136,17 +136,20 @@ namespace Barotrauma
             return (T)ragdoll;
         }
 
-        public static T CreateDummy<T>(string fullPath, string speciesName, params object[] ragdollConfig) where T : RagdollParams, new()
+        /// <summary>
+        /// Creates a default ragdoll for the species using a predefined configuration.
+        /// Note: Use only to create ragdolls for new characters, because this overrides the old ragdoll!
+        /// </summary>
+        public static T CreateDefault<T>(string fullPath, string speciesName, params object[] ragdollConfig) where T : RagdollParams, new()
         {
-            if (!allRagdolls.TryGetValue(speciesName, out Dictionary<string, RagdollParams> ragdolls))
+            // Remove the old ragdolls, if found.
+            if (allRagdolls.ContainsKey(speciesName))
             {
-                ragdolls = new Dictionary<string, RagdollParams>();
-                allRagdolls.Add(speciesName, ragdolls);
+                DebugConsole.NewMessage($"[RagdollParams] Removing the old ragdolls from {speciesName}.", Color.Red);
+                allRagdolls.Remove(speciesName);
             }
-            if (ragdolls.TryGetValue(Path.GetFileNameWithoutExtension(fullPath), out RagdollParams ragdoll))
-            {
-                return ragdoll as T;
-            }
+            var ragdolls = new Dictionary<string, RagdollParams>();
+            allRagdolls.Add(speciesName, ragdolls);
             var instance = new T();
             XElement ragdollElement = new XElement("Ragdoll", ragdollConfig);
             instance.doc = new XDocument(ragdollElement);
@@ -155,7 +158,7 @@ namespace Barotrauma
             instance.Save();
             instance.Load(fullPath, speciesName);
             ragdolls.Add(instance.Name, instance);
-            DebugConsole.NewMessage("[RagdollParams] Dummy file successfully created.", Color.NavajoWhite);
+            DebugConsole.NewMessage("[RagdollParams] New default ragdoll params successfully created at " + fullPath, Color.NavajoWhite);
             return instance as T;
         }
 

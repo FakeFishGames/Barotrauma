@@ -557,7 +557,7 @@ namespace Barotrauma
             // Ragdoll
             string ragdollFolder = RagdollParams.GetDefaultFolder(speciesName);
             string ragdollPath = RagdollParams.GetDefaultFile(speciesName);
-            RagdollParams ragdollParams = RagdollParams.CreateDummy<FishRagdollParams>(ragdollPath, speciesName, ragdollConfig);
+            RagdollParams ragdollParams = RagdollParams.CreateDefault<FishRagdollParams>(ragdollPath, speciesName, ragdollConfig);
             // Animations
             string animFolder = AnimationParams.GetDefaultFolder(speciesName);
             foreach (AnimationType animType in Enum.GetValues(typeof(AnimationType)))
@@ -566,7 +566,7 @@ namespace Barotrauma
                 {
                     Type type = AnimationParams.GetParamTypeFromAnimType(animType, false);
                     string fullPath = AnimationParams.GetDefaultFile(speciesName, animType);
-                    AnimationParams.CreateDummy(fullPath, speciesName, animType, type);
+                    AnimationParams.Create(fullPath, speciesName, animType, type);
                 }
             }
             if (!AllFiles.Contains(configFilePath))
