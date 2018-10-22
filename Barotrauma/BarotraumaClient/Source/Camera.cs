@@ -43,6 +43,10 @@ namespace Barotrauma
 
         private Vector2 targetPos;
 
+        //used to smooth out the movement when in freecam
+        private float targetZoom;
+        private Vector2 velocity;
+
         public float Zoom
         {
             get { return zoom; }
@@ -204,22 +208,26 @@ namespace Barotrauma
             prevPosition = position;
             prevZoom = zoom;
 
-            float moveSpeed = 20.0f/zoom;
+            float moveSpeed = 20.0f / zoom;
 
             Vector2 moveCam = Vector2.Zero;
             if (targetPos == Vector2.Zero)
             {
+                Vector2 moveInput = Vector2.Zero;
                 if (allowMove && GUI.KeyboardDispatcher.Subscriber == null)
                 {
                     if (PlayerInput.KeyDown(Keys.LeftShift)) moveSpeed *= 2.0f;
                     if (PlayerInput.KeyDown(Keys.LeftControl)) moveSpeed *= 0.5f;
 
-                    if (GameMain.Config.KeyBind(InputType.Left).IsDown())   moveCam.X -= moveSpeed;
-                    if (GameMain.Config.KeyBind(InputType.Right).IsDown())  moveCam.X += moveSpeed;
-                    if (GameMain.Config.KeyBind(InputType.Down).IsDown())   moveCam.Y -= moveSpeed;
-                    if (GameMain.Config.KeyBind(InputType.Up).IsDown())     moveCam.Y += moveSpeed;
+                    if (GameMain.Config.KeyBind(InputType.Left).IsDown())   moveInput.X -= 1.0f;
+                    if (GameMain.Config.KeyBind(InputType.Right).IsDown())  moveInput.X += 1.0f;
+                    if (GameMain.Config.KeyBind(InputType.Down).IsDown())   moveInput.Y -= 1.0f;
+                    if (GameMain.Config.KeyBind(InputType.Up).IsDown())     moveInput.Y += 1.0f;
                 }
 
+                velocity = Vector2.Lerp(velocity, moveInput, deltaTime * 10.0f);
+                moveCam = velocity * moveSpeed * deltaTime * 60.0f;
+                
                 if (Screen.Selected == GameMain.GameScreen && FollowSub)
                 {
                     var closestSub = Submarine.FindClosest(WorldViewCenter);
@@ -229,17 +237,17 @@ namespace Barotrauma
                     }
                 }
                  
-                moveCam = moveCam * deltaTime * 60.0f;
-
                 if (allowZoom)
                 {
                     Vector2 mouseInWorld = ScreenToWorld(PlayerInput.MousePosition);
                     Vector2 diffViewCenter;
                     diffViewCenter = ((mouseInWorld - Position) * Zoom);
-                    Zoom = MathHelper.Clamp(
-                        zoom + (PlayerInput.ScrollWheelSpeed / 1000.0f) * zoom, 
+                    targetZoom = MathHelper.Clamp(
+                        targetZoom + (PlayerInput.ScrollWheelSpeed / 1000.0f) * zoom, 
                         GameMain.DebugDraw ? MinZoom * 0.1f : MinZoom, 
                         MaxZoom);
+
+                    Zoom = MathHelper.Lerp(Zoom, targetZoom, deltaTime * 10.0f);
                     if (!PlayerInput.KeyDown(Keys.F)) Position = mouseInWorld - (diffViewCenter / Zoom);
                 }
             }
@@ -284,6 +292,9 @@ namespace Barotrauma
                 float newZoom = MathHelper.Lerp(unscaledZoom, scaledZoom, (float)Math.Sqrt(zoomOutAmount));
 
                 Zoom += (newZoom - zoom) / ZoomSmoothness;
+
+                //force targetzoom to the current zoom value, so the camera stays at the same zoom when switching to freecam
+                targetZoom = Zoom;
 
                 Vector2 diff = (targetPos + offset) - position;
 
