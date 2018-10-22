@@ -744,7 +744,7 @@ namespace Barotrauma
 
                 if (item != null && drawItem)
                 {
-                    if (item.Condition < item.Prefab.Health && !itemContainer.ShowConditionInContainedStateIndicator)
+                    if (item.Condition < item.Prefab.Health && (itemContainer == null || !itemContainer.ShowConditionInContainedStateIndicator))
                     {
                         GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, rect.Bottom - 8, rect.Width, 8), Color.Black * 0.8f, true);
                         GUI.DrawRectangle(spriteBatch,
