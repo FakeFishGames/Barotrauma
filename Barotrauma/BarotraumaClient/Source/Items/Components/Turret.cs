@@ -241,7 +241,7 @@ namespace Barotrauma.Items.Components
                 GUI.DrawRectangle(spriteBatch, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
                     new Color(HudTint.R, HudTint.G, HudTint.B) * (HudTint.A / 255.0f), true);
             }
-
+            
             GetAvailablePower(out float batteryCharge, out float batteryCapacity);
 
             List<Item> availableAmmo = new List<Item>();
@@ -255,26 +255,25 @@ namespace Barotrauma.Items.Components
                 
                 availableAmmo.AddRange(itemContainer.Inventory.Items);                
             }            
-
+                        
             float chargeRate = powerConsumption <= 0.0f ? 1.0f : batteryCharge / batteryCapacity;
             bool charged = batteryCharge * 3600.0f > powerConsumption;
             bool readyToFire = reload <= 0.0f && charged && availableAmmo.Any(p => p != null);
-
-            powerIndicator.Color = charged ? Color.Green : Color.Red;
-            if (flashLowPower)
-            {
-                powerIndicator.BarSize = 1;
-                powerIndicator.Color *= (float)Math.Sin(flashTimer * 12);
-                powerIndicator.RectTransform.ChangeScale(Vector2.Lerp(Vector2.One, Vector2.One * 1.01f, 2 * (float)Math.Sin(flashTimer * 15)));
-            }
-            else
-            {
-                powerIndicator.BarSize = chargeRate;
-            }
-            powerIndicator.DrawManually(spriteBatch, true);
-
             if (ShowChargeIndicator && PowerConsumption > 0.0f)
             {
+                powerIndicator.Color = charged ? Color.Green : Color.Red;
+                if (flashLowPower)
+                {
+                    powerIndicator.BarSize = 1;
+                    powerIndicator.Color *= (float)Math.Sin(flashTimer * 12);
+                    powerIndicator.RectTransform.ChangeScale(Vector2.Lerp(Vector2.One, Vector2.One * 1.01f, 2 * (float)Math.Sin(flashTimer * 15)));
+                }
+                else
+                {
+                    powerIndicator.BarSize = chargeRate;
+                }
+                powerIndicator.DrawManually(spriteBatch, true);
+
                 int requiredChargeIndicatorPos = (int)((powerConsumption / (batteryCapacity * 3600.0f)) * powerIndicator.Rect.Width);
                 GUI.DrawRectangle(spriteBatch,
                     new Rectangle(powerIndicator.Rect.X + requiredChargeIndicatorPos, powerIndicator.Rect.Y, 3, powerIndicator.Rect.Height),
