@@ -23,6 +23,7 @@
       <input name="power_in" />
       <input name="position_in" />
       <input name="trigger_in" />
+      <input name="toggle_light" />
     </ConnectionPanel>
   </Item>
   <Item name="Coilgun Loader" identifier="coilgunloader" tags="coilgunequipment" category="Machine" linkable="true" allowedlinks="coilgun">

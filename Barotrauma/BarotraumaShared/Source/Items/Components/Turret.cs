@@ -88,39 +88,39 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(5.0f, false), Editable(0.0f, 1000.0f)]
+        [Serialize(5.0f, false), Editable(0.0f, 1000.0f, DecimalCount = 2)]
         public float SpringStiffnessLowSkill
         {
             get;
             private set;
         }
-        [Serialize(2.0f, false), Editable(0.0f, 1000.0f)]
+        [Serialize(2.0f, false), Editable(0.0f, 1000.0f, DecimalCount = 2)]
         public float SpringStiffnessHighSkill
         {
             get;
             private set;
         }
 
-        [Serialize(50.0f, false), Editable(0.0f, 1000.0f)]
+        [Serialize(50.0f, false), Editable(0.0f, 1000.0f, DecimalCount = 2)]
         public float SpringDampingLowSkill
         {
             get;
             private set;
         }
-        [Serialize(10.0f, false), Editable(0.0f, 1000.0f)]
+        [Serialize(10.0f, false), Editable(0.0f, 1000.0f, DecimalCount = 2)]
         public float SpringDampingHighSkill
         {
             get;
             private set;
         }
 
-        [Serialize(1.0f, false), Editable(0.0f, 100.0f)]
+        [Serialize(1.0f, false), Editable(0.0f, 100.0f, DecimalCount = 2)]
         public float RotationSpeedLowSkill
         {
             get;
             private set;
         }
-        [Serialize(5.0f, false), Editable(0.0f, 100.0f)]
+        [Serialize(5.0f, false), Editable(0.0f, 100.0f, DecimalCount = 2)]
         public float RotationSpeedHighSkill
         {
             get;
@@ -604,6 +604,16 @@ namespace Barotrauma.Items.Components
                     if (!characterUsable && sender != null)
                     {
                         TryLaunch((float)Timing.Step, sender);
+                    }
+                    break;
+                case "toggle":
+                case "toggle_light":
+                    foreach (ItemComponent component in item.components)
+                    {
+                        if (component.Parent == this && component is LightComponent lightComponent)
+                        {
+                            lightComponent.IsOn = !lightComponent.IsOn;
+                        }
                     }
                     break;
             }
