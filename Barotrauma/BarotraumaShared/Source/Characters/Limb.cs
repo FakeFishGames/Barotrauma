@@ -359,7 +359,7 @@ namespace Barotrauma
                 {
                     // DeformableSprites handled by client only
                     case "sprite":
-                        string spritePath = subElement.Attribute("texture").Value;
+                        string spritePath = subElement.Attribute("texture")?.Value;
                         string spritePathWithTags = spritePath;
                         if (character.Info != null)
                         {

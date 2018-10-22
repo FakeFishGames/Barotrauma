@@ -5,7 +5,6 @@ using System.Xml.Linq;
 using System.Linq;
 using System.IO;
 using Barotrauma.Extensions;
-using FarseerPhysics.Dynamics;
 using System.Xml;
 
 namespace Barotrauma
@@ -57,6 +56,19 @@ namespace Barotrauma
         public static string GetDefaultFileName(string speciesName) => $"{speciesName.CapitaliseFirstInvariant()}DefaultRagdoll";
         public static string GetDefaultFolder(string speciesName) => $"Content/Characters/{speciesName.CapitaliseFirstInvariant()}/Ragdolls/";
         public static string GetDefaultFile(string speciesName) => $"{GetDefaultFolder(speciesName)}{GetDefaultFileName(speciesName)}.xml";
+
+        private static readonly object[] dummyParams = new object[]
+        {
+            new XAttribute("type", "Dummy"),
+            new XElement("collider", new XAttribute("radius", 1)),
+            new XElement("limb",
+                new XAttribute("id", 0),
+                new XAttribute("type", LimbType.Head.ToString()),
+                new XAttribute("width", 1),
+                new XAttribute("height", 1),
+                new XElement("sprite",
+                    new XAttribute("sourcerect", $"{0}, {0}, {1}, {1}")))
+        };
 
         protected static string GetFolder(string speciesName)
         {
@@ -126,12 +138,13 @@ namespace Barotrauma
                     {
                         ragdolls.Add(r.Name, r);
                     }
+                    return r;
                 }
                 else
                 {
-                    DebugConsole.ThrowError($"[RagdollParams] Failed to load ragdoll {r} at {selectedFile} for the character {speciesName}");
+                    DebugConsole.ThrowError($"[RagdollParams] Failed to load ragdoll {r} at {selectedFile} for the character {speciesName}. Creating a dummy file.");
+                    return CreateDefault<T>(GetDefaultFile(speciesName), speciesName, dummyParams);
                 }
-                return r;
             }
             return (T)ragdoll;
         }
