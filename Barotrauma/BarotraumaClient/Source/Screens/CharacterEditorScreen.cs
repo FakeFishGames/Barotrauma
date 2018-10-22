@@ -3125,16 +3125,19 @@ namespace Barotrauma
                         int id = GetField("ID").Parent.GetChild<GUINumberInput>().IntValue;
                         string limbName = GetField("Name").Parent.GetChild<GUITextBox>().Text;
                         LimbType limbType = (LimbType)GetField("Limb Type").Parent.GetChild<GUIDropDown>().SelectedData;
-                        var rectInputs = GetField("Source Rect").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).ToArray();
+                        // Reverse, because the elements are created from right to left
+                        var rectInputs = GetField("Source Rect").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).Reverse().ToArray();
+                        int width = rectInputs[2].IntValue;
+                        int height = rectInputs[3].IntValue;
                         LimbXElements.Add(id.ToString(), new XElement("limb",
                             new XAttribute("id", id),
                             new XAttribute("name", limbName),
                             new XAttribute("type", limbType.ToString()),
-                            new XAttribute("width", rectInputs[2].IntValue),
-                            new XAttribute("height", rectInputs[3].IntValue),
+                            new XAttribute("width", width),
+                            new XAttribute("height", height),
                             new XElement("sprite",
                                 new XAttribute("texture", TexturePath),
-                                new XAttribute("sourcerect", $"{rectInputs[0].IntValue}, {rectInputs[1].IntValue}, {rectInputs[2].IntValue}, {rectInputs[3].IntValue}"))
+                                new XAttribute("sourcerect", $"{rectInputs[0].IntValue}, {rectInputs[1].IntValue}, {width}, {height}"))
                             ));
                     }
                 }
