@@ -148,6 +148,14 @@ namespace Barotrauma
 
         static void CrashDump(GameMain game, string filePath, Exception exception)
         {
+            int existingFiles = 0;
+            string originalFilePath = filePath;
+            while (File.Exists(filePath))
+            {
+                existingFiles++;
+                filePath = Path.GetFileNameWithoutExtension(originalFilePath) + " (" + (existingFiles + 1) + ")" + Path.GetExtension(originalFilePath);
+            }
+
             DebugConsole.DequeueMessages();
 
             StreamWriter sw = new StreamWriter(filePath);
@@ -162,8 +170,14 @@ namespace Barotrauma
 #else
             sb.AppendLine("Game version " + GameMain.Version);
 #endif
-            sb.AppendLine("Graphics mode: " + GameMain.Config.GraphicsWidth + "x" + GameMain.Config.GraphicsHeight + " (" + GameMain.Config.WindowMode.ToString() + ")");
-            sb.AppendLine("Selected content packages: " + (!GameMain.SelectedPackages.Any() ? "None" : string.Join(", ", GameMain.SelectedPackages.Select(c => c.Name))));
+            if (GameMain.Config != null)
+            {
+                sb.AppendLine("Graphics mode: " + GameMain.Config.GraphicsWidth + "x" + GameMain.Config.GraphicsHeight + " (" + GameMain.Config.WindowMode.ToString() + ")");
+            }
+            if (GameMain.SelectedPackages != null)
+            {
+                sb.AppendLine("Selected content packages: " + (!GameMain.SelectedPackages.Any() ? "None" : string.Join(", ", GameMain.SelectedPackages.Select(c => c.Name))));
+            }
             sb.AppendLine("Level seed: " + ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
             sb.AppendLine("Loaded submarine: " + ((Submarine.MainSub == null) ? "None" : Submarine.MainSub.Name + " (" + Submarine.MainSub.MD5Hash + ")"));
             sb.AppendLine("Selected screen: " + (Screen.Selected == null ? "None" : Screen.Selected.ToString()));
@@ -221,21 +235,21 @@ namespace Barotrauma
             }
 
             string crashReport = sb.ToString();
-            
+
             sw.WriteLine(crashReport);
             sw.Close();
-            
+
             if (GameSettings.SaveDebugConsoleLogs) DebugConsole.SaveLogs();
 
             if (GameSettings.SendUserStatistics)
             {
-                CrashMessageBox( "A crash report (\"crashreport.log\") was saved in the root folder of the game and sent to the developers.");
+                CrashMessageBox("A crash report (\"" + filePath + "\") was saved in the root folder of the game and sent to the developers.");
                 GameAnalytics.AddErrorEvent(EGAErrorSeverity.Critical, crashReport);
                 GameAnalytics.OnStop();
             }
             else
             {
-                CrashMessageBox("A crash report (\"crashreport.log\") was saved in the root folder of the game. The error was not sent to the developers because user statistics have been disabled, but" +
+                CrashMessageBox("A crash report (\"" + filePath + "\") was saved in the root folder of the game. The error was not sent to the developers because user statistics have been disabled, but" +
                     " if you'd like to help fix this bug, you may post it on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/");
             }
         }
