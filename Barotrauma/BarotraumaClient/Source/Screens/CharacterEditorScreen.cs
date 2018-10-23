@@ -3327,6 +3327,7 @@ namespace Barotrauma
                             limbType = LimbType.Torso;
                             break;
                         case "waist":
+                        case "pelvis":
                             limbType = LimbType.Waist;
                             break;
                         case "tail":
@@ -3339,7 +3340,7 @@ namespace Barotrauma
                         {
                             limbType = LimbType.Tail;
                         }
-                        else if (n.Contains("arm"))
+                        else if (n.Contains("arm") && !n.Contains("lower"))
                         {
                             if (n.Contains("right"))
                             {
@@ -3361,7 +3362,7 @@ namespace Barotrauma
                                 limbType = LimbType.LeftHand;
                             }
                         }
-                        else if (n.Contains("thigh"))
+                        else if (n.Contains("thigh") || n.Contains("upperleg"))
                         {
                             if (n.Contains("right"))
                             {
@@ -3372,7 +3373,7 @@ namespace Barotrauma
                                 limbType = LimbType.LeftThigh;
                             }
                         }
-                        else if (n.Contains("leg"))
+                        else if (n.Contains("shin") || n.Contains("lowerleg"))
                         {
                             if (n.Contains("right"))
                             {
