@@ -2922,7 +2922,9 @@ namespace Barotrauma
                             };
                             htmlBox.Buttons[1].OnClicked += (_b, _d) =>
                             {
+                                LimbGUIElements.ForEach(l => l.RectTransform.Parent = null);
                                 LimbGUIElements.Clear();
+                                JointGUIElements.ForEach(j => j.RectTransform.Parent = null);
                                 JointGUIElements.Clear();
                                 LimbXElements.Clear();
                                 JointXElements.Clear();
