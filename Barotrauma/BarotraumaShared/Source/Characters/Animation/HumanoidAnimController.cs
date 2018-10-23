@@ -263,7 +263,7 @@ namespace Barotrauma
                 var leftHand = GetLimb(LimbType.LeftHand);
                 var rightHand = GetLimb(LimbType.RightHand);
 
-                var waist = GetLimb(LimbType.Waist);
+                var waist = GetLimb(LimbType.Waist) ?? GetLimb(LimbType.Torso);
 
                 rightHand.Disabled = true;
                 leftHand.Disabled = true;
@@ -282,7 +282,7 @@ namespace Barotrauma
             {
                 var leftHand = GetLimb(LimbType.LeftHand);
                 var rightHand = GetLimb(LimbType.RightHand);
-                var waist = GetLimb(LimbType.Waist);
+                var waist = GetLimb(LimbType.Waist) ?? GetLimb(LimbType.Torso);
                 rightHand.Disabled = true;
                 leftHand.Disabled = true;
                 Vector2 midPos = waist.SimPosition;
@@ -483,7 +483,10 @@ namespace Barotrauma
 
             torso.PullJointEnabled = true;
             head.PullJointEnabled = true;
-            waist.PullJointEnabled = true;
+            if (waist != null)
+            {
+                waist.PullJointEnabled = true;
+            }
             
             float floorPos = GetFloorY(colliderPos + new Vector2(Math.Sign(movement.X) * 0.5f, 1.0f));
             bool onSlope = floorPos > GetColliderBottom().Y + 0.05f;
@@ -498,7 +501,10 @@ namespace Barotrauma
                     MathHelper.SmoothStep(head.SimPosition.X, footMid + movement.X * CurrentGroundedParams.HeadLeanAmount, getUpForce * 0.8f),
                     MathHelper.SmoothStep(head.SimPosition.Y, colliderPos.Y + HeadPosition.Value - Math.Abs(walkPosX * 0.05f), getUpForce * 2.0f));
 
-                waist.PullJointWorldAnchorB = waist.SimPosition - movement * 0.06f;
+                if (waist != null)
+                {
+                    waist.PullJointWorldAnchorB = waist.SimPosition - movement * 0.06f;
+                }
             }
             else
             {
@@ -522,7 +528,10 @@ namespace Barotrauma
                     MathUtils.SmoothStep(head.SimPosition,
                     new Vector2(footMid + movement.X * CurrentGroundedParams.HeadLeanAmount, y), getUpForce * 1.2f);
 
-                waist.PullJointWorldAnchorB = waist.SimPosition + movement * 0.06f;
+                if (waist != null)
+                {
+                    waist.PullJointWorldAnchorB = waist.SimPosition + movement * 0.06f;
+                }
             }
 
             if (TorsoAngle.HasValue) torso.body.SmoothRotate(TorsoAngle.Value * Dir, 50.0f);
@@ -539,6 +548,8 @@ namespace Barotrauma
 
                 return;
             }
+
+            Vector2 waistPos = waist != null ? waist.SimPosition : torso.SimPosition;
 
             //moving horizontally
             if (TargetMovement.X != 0.0f)
@@ -564,7 +575,7 @@ namespace Barotrauma
                     {
                         footPos.Y *= 2.0f;
                     }
-                    footPos.Y = Math.Min(waist.SimPosition.Y - colliderPos.Y - 0.4f, footPos.Y);
+                    footPos.Y = Math.Min(waistPos.Y - colliderPos.Y - 0.4f, footPos.Y);
 
                     if (!foot.Disabled)
                     {
@@ -621,7 +632,7 @@ namespace Barotrauma
                     if (Crouching)
                     {
                         footPos = new Vector2(
-                            waist.SimPosition.X + Math.Sign(stepSize.X * i) * Dir * 0.3f * RagdollParams.JointScale,
+                            waistPos.X + Math.Sign(stepSize.X * i) * Dir * 0.3f * RagdollParams.JointScale,
                             colliderPos.Y - 0.1f * RagdollParams.JointScale);
                     }
                     else
@@ -1009,7 +1020,10 @@ namespace Barotrauma
 
             MoveLimb(head, new Vector2(ladderSimPos.X - 0.27f * Dir, Collider.SimPosition.Y + 0.9f - ColliderHeightFromFloor), 10.5f);
             MoveLimb(torso, new Vector2(ladderSimPos.X - 0.27f * Dir, Collider.SimPosition.Y + 0.7f - ColliderHeightFromFloor), 10.5f);
-            MoveLimb(waist, new Vector2(ladderSimPos.X - 0.35f * Dir, Collider.SimPosition.Y + 0.6f - ColliderHeightFromFloor), 10.5f);
+            if (waist != null)
+            {
+                MoveLimb(waist, new Vector2(ladderSimPos.X - 0.35f * Dir, Collider.SimPosition.Y + 0.6f - ColliderHeightFromFloor), 10.5f);
+            }
 
             Collider.MoveToPos(new Vector2(ladderSimPos.X - 0.2f * Dir, Collider.SimPosition.Y), 10.5f);            
             
