@@ -3333,6 +3333,17 @@ namespace Barotrauma
                         {
                             limbType = LimbType.Tail;
                         }
+                        else if (n.Contains("arm"))
+                        {
+                            if (n.Contains("right"))
+                            {
+                                limbType = LimbType.RightArm;
+                            }
+                            else if (n.Contains("left"))
+                            {
+                                limbType = LimbType.LeftArm;
+                            }
+                        }
                         else if (n.Contains("hand") || n.Contains("palm"))
                         {
                             if (n.Contains("right"))
@@ -3344,15 +3355,15 @@ namespace Barotrauma
                                 limbType = LimbType.LeftHand;
                             }
                         }
-                        else if (n.Contains("arm"))
+                        else if (n.Contains("thigh"))
                         {
                             if (n.Contains("right"))
                             {
-                                limbType = LimbType.RightArm;
+                                limbType = LimbType.RightThigh;
                             }
                             else if (n.Contains("left"))
                             {
-                                limbType = LimbType.LeftArm;
+                                limbType = LimbType.LeftThigh;
                             }
                         }
                         else if (n.Contains("leg"))
@@ -3366,9 +3377,16 @@ namespace Barotrauma
                                 limbType = LimbType.LeftLeg;
                             }
                         }
-                        else if (n.Contains("tail"))
+                        else if (n.Contains("foot"))
                         {
-                            limbType = LimbType.Tail;
+                            if (n.Contains("right"))
+                            {
+                                limbType = LimbType.RightFoot;
+                            }
+                            else if (n.Contains("left"))
+                            {
+                                limbType = LimbType.LeftFoot;
+                            }
                         }
                     }
                     return limbType;
