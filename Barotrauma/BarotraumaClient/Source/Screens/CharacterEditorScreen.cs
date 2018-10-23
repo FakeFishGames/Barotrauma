@@ -2931,9 +2931,9 @@ namespace Barotrauma
                                 ParseRagdollFromHTML(htmlPathElement.Text, (id, limbName, limbType, rect) =>
                                 {
                                     CreateLimbGUIElement(limbsList.Content.RectTransform, elementSize, id, limbName, limbType, rect);
-                                }, (id1, id2, anchor1, anchor2) =>
+                                }, (id1, id2, anchor1, anchor2, jointName) =>
                                 {
-                                    CreateJointGUIElement(jointsList.Content.RectTransform, elementSize, "", id1, id2, anchor1, anchor2);
+                                    CreateJointGUIElement(jointsList.Content.RectTransform, elementSize, id1, id2, anchor1, anchor2, jointName);
                                 });
                                 htmlOutput.Text = new XDocument(new XElement("Ragdoll", new object[]
                                 {
@@ -3019,7 +3019,7 @@ namespace Barotrauma
                     LimbGUIElements.Add(limbElement);
                 }
 
-                private void CreateJointGUIElement(RectTransform parent, int elementSize, string jointName = "", int id1 = 0, int id2 = 1, Vector2? anchor1 = null, Vector2?  anchor2 = null)
+                private void CreateJointGUIElement(RectTransform parent, int elementSize, int id1 = 0, int id2 = 1, Vector2? anchor1 = null, Vector2?  anchor2 = null, string jointName = "")
                 {
                     var jointElement = new GUIFrame(new RectTransform(new Point(parent.Rect.Width, elementSize * 6 + 40), parent), style: null, color: Color.Gray * 0.25f)
                     {
@@ -3188,7 +3188,7 @@ namespace Barotrauma
                     }
                 }
 
-                protected void ParseRagdollFromHTML(string path, Action<int, string, LimbType, Rectangle> limbCallback = null, Action<int, int, Vector2, Vector2> jointCallback = null)
+                protected void ParseRagdollFromHTML(string path, Action<int, string, LimbType, Rectangle> limbCallback = null, Action<int, int, Vector2, Vector2, string> jointCallback = null)
                 {
                     // TODO: parse as xml?
                     //XDocument doc = XMLExtensions.TryLoadXml(path);
@@ -3252,13 +3252,16 @@ namespace Barotrauma
                     {
                         if (idToHierarchy.TryGetValue(i, out string hierarchy))
                         {
-                            if (hierarchy.Length > 1)
+                            if (hierarchy != "0")
                             {
-                                string parent = hierarchy.Remove(hierarchy.Length - 1, 1);
+                                // If the bone is at the root hierarchy, parent the bone to the last sibling (1 is parented to 0, 2 to 1 etc)
+                                // Else parent to the last bone in the current hierarchy (11 is parented to 1, 212 is parented to 21 etc)
+                                string parent = hierarchy.Length > 1 ? hierarchy.Remove(hierarchy.Length - 1, 1) : (int.Parse(hierarchy) - 1).ToString();
                                 if (hierarchyToID.TryGetValue(parent, out int parentID))
                                 {
                                     Vector2 anchor1 = Vector2.Zero;
                                     Vector2 anchor2 = Vector2.Zero;
+                                    string jointName = $"Joint {parent} - {hierarchy}";
                                     if (idToPositionCode.TryGetValue(i, out string positionCode))
                                     {
                                         if (LimbXElements.TryGetValue(parent, out XElement parentElement))
@@ -3298,12 +3301,13 @@ namespace Barotrauma
                                     }
                                     // This is overridden when the data is loaded from the gui fields.
                                     JointXElements.Add(new XElement("joint",
+                                        new XAttribute("name", jointName),
                                         new XAttribute("limb1", parentID),
                                         new XAttribute("limb2", i),
                                         new XAttribute("limb1anchor", $"{anchor1.X.Format(2)}, {anchor1.Y.Format(2)}"),
                                         new XAttribute("limb2anchor", $"{anchor2.X.Format(2)}, {anchor2.Y.Format(2)}")
                                         ));
-                                    jointCallback?.Invoke(parentID, i, anchor1, anchor2);
+                                    jointCallback?.Invoke(parentID, i, anchor1, anchor2, jointName);
                                 }
                             }
                         }
