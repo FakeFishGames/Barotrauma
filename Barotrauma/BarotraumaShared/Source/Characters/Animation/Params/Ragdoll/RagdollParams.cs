@@ -359,13 +359,13 @@ namespace Barotrauma
         /// <summary>
         /// Note that editing this in-game doesn't currently have any effect. It should be visible, but readonly.
         /// </summary>
-        [Serialize(-1, true)]
+        [Serialize(-1, true), Editable]
         public int ID { get; set; }
 
         [Serialize(LimbType.None, true), Editable]
         public LimbType Type { get; set; } 
 
-        [Serialize(false, true), Editable]
+        [Serialize(true, true), Editable]
         public bool Flip { get; set; }
 
         [Serialize(0, true), Editable]
