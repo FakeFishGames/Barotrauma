@@ -557,14 +557,16 @@ namespace Barotrauma
             // Ragdoll
             string ragdollFolder = RagdollParams.GetDefaultFolder(speciesName);
             string ragdollPath = RagdollParams.GetDefaultFile(speciesName);
-            RagdollParams ragdollParams = RagdollParams.CreateDefault<FishRagdollParams>(ragdollPath, speciesName, ragdollConfig);
+            RagdollParams ragdollParams = isHumanoid
+                ? RagdollParams.CreateDefault<HumanRagdollParams>(ragdollPath, speciesName, ragdollConfig)
+                : RagdollParams.CreateDefault<FishRagdollParams>(ragdollPath, speciesName, ragdollConfig) as RagdollParams;
             // Animations
             string animFolder = AnimationParams.GetDefaultFolder(speciesName);
             foreach (AnimationType animType in Enum.GetValues(typeof(AnimationType)))
             {
                 if (animType != AnimationType.NotDefined)
                 {
-                    Type type = AnimationParams.GetParamTypeFromAnimType(animType, false);
+                    Type type = AnimationParams.GetParamTypeFromAnimType(animType, isHumanoid);
                     string fullPath = AnimationParams.GetDefaultFile(speciesName, animType);
                     AnimationParams.Create(fullPath, speciesName, animType, type);
                 }
