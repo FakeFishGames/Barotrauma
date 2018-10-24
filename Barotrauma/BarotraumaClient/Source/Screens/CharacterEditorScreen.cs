@@ -261,7 +261,7 @@ namespace Barotrauma
             }
             if (editRagdoll)
             {
-                DrawRagdollEditor(spriteBatch, (float)deltaTime);
+                //DrawRagdollEditor(spriteBatch, (float)deltaTime);
             }
             if (showSpritesheet)
             {
@@ -1960,7 +1960,7 @@ namespace Barotrauma
                     if (editJointLimits)
                     {
                         if (joint.BodyA != limb.body.FarseerBody) { continue; }
-                        var toggleWidget = GetToggleWidget($"{joint.jointParams.Name} limits toggle ragdoll", $"{joint.jointParams.Name} limits toggle spritesheet", joint);
+                        var toggleWidget = GetJointSelectionWidget($"{joint.jointParams.Name} limits toggle ragdoll", $"{joint.jointParams.Name} limits toggle spritesheet", joint);
                         toggleWidget.DrawPos = tformedJointPos;
                         toggleWidget.Draw(spriteBatch, deltaTime);
                         if (joint.LimitEnabled)
@@ -2266,13 +2266,19 @@ namespace Barotrauma
                 Vector2 jointPos = Vector2.Zero;
                 Vector2 anchorPosA = ConvertUnits.ToDisplayUnits(joint.LocalAnchorA);
                 Vector2 anchorPosB = ConvertUnits.ToDisplayUnits(joint.LocalAnchorB);
+                string anchorID;
+                string otherID;
                 if (joint.BodyA == limb.body.FarseerBody)
                 {
                     jointPos = anchorPosA;
+                    anchorID = "1";
+                    otherID = "2";
                 }
                 else if (joint.BodyB == limb.body.FarseerBody)
                 {
                     jointPos = anchorPosB;
+                    anchorID = "2";
+                    otherID = "1";
                 }
                 else
                 {
@@ -2282,17 +2288,30 @@ namespace Barotrauma
                 tformedJointPos.Y = -tformedJointPos.Y;
                 tformedJointPos.X *= character.AnimController.Dir;
                 tformedJointPos += limbScreenPos;
+                var jointSelectionWidget = GetJointSelectionWidget($"{joint.jointParams.Name} selection widget {anchorID}", $"{joint.jointParams.Name} selection widget {otherID} ", joint);
+                jointSelectionWidget.DrawPos = tformedJointPos;
+                jointSelectionWidget.Draw(spriteBatch, deltaTime);
+                var otherWidget = GetJointSelectionWidget($"{joint.jointParams.Name} selection widget {otherID}", $"{joint.jointParams.Name} selection widget {anchorID}", joint);
+                if (anchorID == "2")
+                {
+                    bool isSelected = selectedJointWidgets.Contains(jointSelectionWidget) || selectedJointWidgets.Contains(otherWidget);
+                    bool isHovered = jointSelectionWidget.IsSelected || otherWidget.IsSelected;
+                    if (isSelected || isHovered)
+                    {
+                        GUI.DrawLine(spriteBatch, jointSelectionWidget.DrawPos, otherWidget.DrawPos, jointSelectionWidget.color, width: 3);
+                    }
+                }
                 if (editJointLimits)
                 {
                     if (joint.BodyA == limb.body.FarseerBody)
                     {
-                        var toggleWidget = GetToggleWidget($"{joint.jointParams.Name} limits toggle spritesheet", $"{joint.jointParams.Name} limits toggle ragdoll", joint);
-                        toggleWidget.DrawPos = tformedJointPos;
-                        toggleWidget.Draw(spriteBatch, deltaTime);
-                        if (joint.LimitEnabled)
-                        {
-                            DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: false, allowPairEditing: true);
-                        }
+                        //var toggleWidget = GetToggleWidget($"{joint.jointParams.Name} limits toggle spritesheet", $"{joint.jointParams.Name} limits toggle ragdoll", joint);
+                        //toggleWidget.DrawPos = tformedJointPos;
+                        //toggleWidget.Draw(spriteBatch, deltaTime);
+                        //if (joint.LimitEnabled)
+                        //{
+                        //    DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: false, allowPairEditing: true);
+                        //}
                     }
                 }
                 else if (editJointPositions)
@@ -2480,182 +2499,56 @@ namespace Barotrauma
 
         #region Widgets as classes (experimental)
         private Dictionary<string, Widget> widgets = new Dictionary<string, Widget>();
+        private HashSet<Widget> selectedJointWidgets = new HashSet<Widget>();
 
-        private Widget GetToggleWidget(string id, string linkedId, LimbJoint joint)
+        private Widget GetJointSelectionWidget(string id, string linkedId, LimbJoint joint)
         {
-            // Joint creation method
+            // Widget creation method
             Widget CreateJointLimitToggle(string ID, LimbJoint j)
             {
                 var widget = new Widget(ID, 10, Widget.Shape.Circle);
                 widget.refresh = () =>
                 {
-                    if (j.LimitEnabled)
-                    {
-                        widget.tooltip = j.jointParams.Name + " Disable Joint Limits";
-                        widget.color = Color.LightGreen;
-                    }
-                    else
-                    {
-                        widget.tooltip = j.jointParams.Name + " Enable Joint Limits";
-                        widget.color = Color.Red;
-                    }
+                    widget.color = selectedJointWidgets.Contains(widget) ? Color.LightGreen : Color.Red;
                 };
                 widget.refresh();
                 widget.Clicked += () =>
                 {
-                    j.LimitEnabled = !j.LimitEnabled;
-                    TryUpdateJointParam(j, "limitenabled", j.LimitEnabled);
-                    if (j.LimitEnabled)
+                    if (selectedJointWidgets.Contains(widget))
                     {
-                        if (float.IsNaN(j.jointParams.UpperLimit))
+                        selectedJointWidgets.Remove(widget);
+                        if (widget.linkedWidget != null)
                         {
-                            joint.UpperLimit = 0;
-                            TryUpdateJointParam(j, "upperlimit", 0);
+                            selectedJointWidgets.Remove(widget.linkedWidget);
                         }
-                        if (float.IsNaN(j.jointParams.LowerLimit))
+                    }
+                    else
+                    {
+                        selectedJointWidgets.Add(widget);
+                        if (widget.linkedWidget != null)
                         {
-                            joint.LowerLimit = 0;
-                            TryUpdateJointParam(j, "lowerlimit", 0);
+                            selectedJointWidgets.Add(widget.linkedWidget);
                         }
                     }
                     widget.refresh();
                     widget.linkedWidget?.refresh();
-                    if (limbPairEditing)
-                    {
-                        UpdateOtherJoints(j.LimbA, (otherLimb, otherJoint) =>
-                        {
-                            if (IsMatchingLimb(j.LimbA, otherLimb, joint, otherJoint))
-                            {
-                                if (widgets.TryGetValue($"{otherJoint.jointParams.Name} limits toggle spritesheet", out Widget otherWidget))
-                                {
-                                    otherJoint.LimitEnabled = joint.LimitEnabled;
-                                    TryUpdateJointParam(otherJoint, "limitenabled", joint.LimitEnabled);
-                                    if (joint.LimitEnabled)
-                                    {
-                                        if (float.IsNaN(otherJoint.jointParams.UpperLimit))
-                                        {
-                                            otherJoint.UpperLimit = 0;
-                                            TryUpdateJointParam(otherJoint, "upperlimit", 0);
-                                        }
-                                        if (float.IsNaN(otherJoint.jointParams.LowerLimit))
-                                        {
-                                            otherJoint.LowerLimit = 0;
-                                            TryUpdateJointParam(otherJoint, "lowerlimit", 0);
-                                        }
-                                    }
-                                    otherWidget.refresh();
-                                    otherWidget.linkedWidget?.refresh();
-                                }
-                            }
-                        });
-                    }
                 };
-                widget.PreUpdate += dTime => widget.Enabled = editJointLimits;
                 widgets.Add(ID, widget);
                 return widget;
             }
-            // Handle joint linking and create the joints
+            // Handle widget linking and create the widgets
             if (!widgets.TryGetValue(id, out Widget toggleWidget))
             {
+                toggleWidget = CreateJointLimitToggle(id, joint);
                 if (!widgets.TryGetValue(linkedId, out Widget linkedWidget))
                 {
                     linkedWidget = CreateJointLimitToggle(linkedId, joint);
                 }
-                toggleWidget = CreateJointLimitToggle(id, joint);
                 toggleWidget.linkedWidget = linkedWidget;
                 linkedWidget.linkedWidget = toggleWidget;
             }
             return toggleWidget;
         }
-
-        //// TODO: test and fix
-        //private class RadialWidget : Widget
-        //{
-        //    public float angle;
-        //    public float circleRadius = 30;
-        //    public float rotationOffset;
-        //    public bool clockWise = true;
-        //    public bool displayAngle = true;
-        //    public Vector2 center;
-
-        //    public RadialWidget(string id, Shape shape, Vector2 center) : base(id, center, shape)
-        //    {
-        //        this.center = center;
-        //    }
-
-        //    public override void Update(float deltaTime)
-        //    {
-        //        if (!MathUtils.IsValid(angle))
-        //        {
-        //            angle = 0;
-        //        }
-        //        var up = -VectorExtensions.Forward(rotationOffset, circleRadius);
-        //        drawPos = center + up;
-        //        drawPos = MathUtils.RotatePointAroundTarget(drawPos, center, angle, clockWise);
-        //        base.Update(deltaTime);
-        //        if (IsControlled)
-        //        {
-        //            var rotationOffsetInDegrees = MathHelper.ToDegrees(MathUtils.WrapAngleTwoPi(rotationOffset));
-        //            // Collider rotation is counter-clockwise, todo: this should be handled before passing the arguments
-        //            var transformedRot = clockWise ? angle - rotationOffsetInDegrees : angle + rotationOffsetInDegrees;
-        //            if (transformedRot > 360)
-        //            {
-        //                transformedRot -= 360;
-        //            }
-        //            else if (transformedRot < -360)
-        //            {
-        //                transformedRot += 360;
-        //            }
-        //            var input = PlayerInput.MouseSpeed * 1.5f;
-        //            float x = input.X;
-        //            float y = input.Y;
-        //            if (clockWise)
-        //            {
-        //                if ((transformedRot > 90 && transformedRot < 270) || (transformedRot < -90 && transformedRot > -270))
-        //                {
-        //                    x = -x;
-        //                }
-        //                if (transformedRot > 180 || (transformedRot < 0 && transformedRot > -180))
-        //                {
-        //                    y = -y;
-        //                }
-        //            }
-        //            else
-        //            {
-        //                if (transformedRot < 90 && transformedRot > -90)
-        //                {
-        //                    x = -x;
-        //                }
-        //                if (transformedRot < 0 && transformedRot > -180)
-        //                {
-        //                    y = -y;
-        //                }
-        //            }
-        //            angle += x + y;
-        //            if (angle > 360 || angle < -360)
-        //            {
-        //                angle = 0;
-        //            }
-        //        }
-        //    }
-
-        //    public override void Draw(SpriteBatch spriteBatch, float deltaTime)
-        //    {
-        //        base.Draw(spriteBatch, deltaTime);
-        //        GUI.DrawLine(spriteBatch, drawPos, drawPos, color);
-        //        // Draw controller widget
-        //        if (IsSelected)
-        //        {
-        //            //var up = -VectorExtensions.Forward(rotationOffset, circleRadius);
-        //            //GUI.DrawLine(spriteBatch, drawPos, drawPos + up, Color.Red);
-        //            ShapeExtensions.DrawCircle(spriteBatch, drawPos, circleRadius, sides, color, thickness: 1);
-        //            if (displayAngle)
-        //            {
-        //                GUI.DrawString(spriteBatch, drawPos, angle.FormatAsInt(), textColor, textBackgroundColor, font: GUI.SmallFont);
-        //            }
-        //        }
-        //    }
-        //}
         #endregion
 
         #region Character Wizard
