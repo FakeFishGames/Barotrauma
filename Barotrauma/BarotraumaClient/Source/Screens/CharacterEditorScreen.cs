@@ -179,7 +179,6 @@ namespace Barotrauma
                     freezeToggle.Selected = !freezeToggle.Selected;
                 }
                 Widget.EnableMultiSelect = PlayerInput.KeyDown(Keys.LeftControl);
-
             }
             if (!isFreezed)
             {
@@ -212,7 +211,12 @@ namespace Barotrauma
             //Cam.TargetPos = Vector2.Zero;
             Cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
             Cam.Position = character.Position;
-            jointSelectionWidgets.Values.ForEach(w => w.Update((float)deltaTime));
+            // Update widgets
+            foreach (var widget in jointSelectionWidgets.Values)
+            {
+                widget.Enabled = editJointLimits;
+                widget.Update((float)deltaTime);
+            }
         }
 
         /// <summary>
@@ -261,7 +265,7 @@ namespace Barotrauma
             }
             if (editRagdoll)
             {
-                //DrawRagdollEditor(spriteBatch, (float)deltaTime);
+                DrawRagdollEditor(spriteBatch, (float)deltaTime);
             }
             if (showSpritesheet)
             {
@@ -1960,10 +1964,10 @@ namespace Barotrauma
                     if (editJointLimits)
                     {
                         if (joint.BodyA != limb.body.FarseerBody) { continue; }
-                        var toggleWidget = GetJointSelectionWidget($"{joint.jointParams.Name} limits toggle ragdoll", $"{joint.jointParams.Name} limits toggle spritesheet", joint);
+                        var toggleWidget = GetJointSelectionWidget($"{joint.jointParams.Name} selection widget ragdoll", joint);
                         toggleWidget.DrawPos = tformedJointPos;
                         toggleWidget.Draw(spriteBatch, deltaTime);
-                        if (joint.LimitEnabled)
+                        if (selectedJoint == joint && joint.LimitEnabled)
                         {
                             Vector2 to = tformedJointPos + VectorExtensions.Forward(joint.LimbB.Rotation + MathHelper.ToRadians(-spriteSheetOrientation), 20);
                             DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: true, allowPairEditing: true, rotationOffset: limb.Rotation);
@@ -2288,30 +2292,24 @@ namespace Barotrauma
                 tformedJointPos.Y = -tformedJointPos.Y;
                 tformedJointPos.X *= character.AnimController.Dir;
                 tformedJointPos += limbScreenPos;
-                var jointSelectionWidget = GetJointSelectionWidget($"{joint.jointParams.Name} selection widget {anchorID}", $"{joint.jointParams.Name} selection widget {otherID} ", joint);
-                jointSelectionWidget.DrawPos = tformedJointPos;
-                jointSelectionWidget.Draw(spriteBatch, deltaTime);
-                var otherWidget = GetJointSelectionWidget($"{joint.jointParams.Name} selection widget {otherID}", $"{joint.jointParams.Name} selection widget {anchorID}", joint);
-                if (anchorID == "2")
-                {
-                    bool isSelected = selectedJoint == joint; //selectedJointWidgets.Contains(jointSelectionWidget) || selectedJointWidgets.Contains(otherWidget);
-                    bool isHovered = jointSelectionWidget.IsSelected || otherWidget.IsSelected;
-                    if (isSelected || isHovered)
-                    {
-                        GUI.DrawLine(spriteBatch, jointSelectionWidget.DrawPos, otherWidget.DrawPos, jointSelectionWidget.color, width: 3);
-                    }
-                }
                 if (editJointLimits)
                 {
-                    if (joint.BodyA == limb.body.FarseerBody)
+                    var jointSelectionWidget = GetJointSelectionWidget($"{joint.jointParams.Name} selection widget {anchorID}", joint, $"{joint.jointParams.Name} selection widget {otherID}");
+                    jointSelectionWidget.DrawPos = tformedJointPos;
+                    jointSelectionWidget.Draw(spriteBatch, deltaTime);
+                    var otherWidget = GetJointSelectionWidget($"{joint.jointParams.Name} selection widget {otherID}", joint, $"{joint.jointParams.Name} selection widget {anchorID}");
+                    if (anchorID == "2")
                     {
-                        //var toggleWidget = GetToggleWidget($"{joint.jointParams.Name} limits toggle spritesheet", $"{joint.jointParams.Name} limits toggle ragdoll", joint);
-                        //toggleWidget.DrawPos = tformedJointPos;
-                        //toggleWidget.Draw(spriteBatch, deltaTime);
-                        //if (joint.LimitEnabled)
-                        //{
-                        //    DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: false, allowPairEditing: true);
-                        //}
+                        bool isSelected = selectedJoint == joint;
+                        bool isHovered = jointSelectionWidget.IsSelected || otherWidget.IsSelected;
+                        if (isSelected || isHovered)
+                        {
+                            GUI.DrawLine(spriteBatch, jointSelectionWidget.DrawPos, otherWidget.DrawPos, jointSelectionWidget.color, width: 2);
+                        }
+                    }
+                    if (selectedJoint == joint && joint.LimitEnabled)
+                    {
+                        DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: false, allowPairEditing: true);
                     }
                 }
                 else if (editJointPositions)
@@ -2497,11 +2495,11 @@ namespace Barotrauma
         }
         #endregion
 
-        #region Widgets as classes (experimental)
+        #region Widgets as classes
         private Dictionary<string, Widget> jointSelectionWidgets = new Dictionary<string, Widget>();
         private LimbJoint selectedJoint;
 
-        private Widget GetJointSelectionWidget(string id, string linkedId, LimbJoint joint)
+        private Widget GetJointSelectionWidget(string id, LimbJoint joint, string linkedId = null)
         {
             // Widget creation method
             Widget CreateJointSelectionWidget(string ID, LimbJoint j)
@@ -2535,12 +2533,15 @@ namespace Barotrauma
             if (!jointSelectionWidgets.TryGetValue(id, out Widget toggleWidget))
             {
                 toggleWidget = CreateJointSelectionWidget(id, joint);
-                if (!jointSelectionWidgets.TryGetValue(linkedId, out Widget linkedWidget))
+                if (linkedId != null)
                 {
-                    linkedWidget = CreateJointSelectionWidget(linkedId, joint);
+                    if (!jointSelectionWidgets.TryGetValue(linkedId, out Widget linkedWidget))
+                    {
+                        linkedWidget = CreateJointSelectionWidget(linkedId, joint);
+                    }
+                    toggleWidget.linkedWidget = linkedWidget;
+                    linkedWidget.linkedWidget = toggleWidget;
                 }
-                toggleWidget.linkedWidget = linkedWidget;
-                linkedWidget.linkedWidget = toggleWidget;
             }
             return toggleWidget;
         }
