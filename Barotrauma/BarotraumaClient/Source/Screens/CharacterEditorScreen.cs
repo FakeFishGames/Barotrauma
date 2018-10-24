@@ -212,7 +212,7 @@ namespace Barotrauma
             //Cam.TargetPos = Vector2.Zero;
             Cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
             Cam.Position = character.Position;
-            widgets.Values.ForEach(w => w.Update((float)deltaTime));
+            jointSelectionWidgets.Values.ForEach(w => w.Update((float)deltaTime));
         }
 
         /// <summary>
@@ -517,7 +517,7 @@ namespace Barotrauma
             this.character = character;
             CreateTextures();
             CreateGUI();
-            widgets.Clear();
+            jointSelectionWidgets.Clear();
             ResetParamsEditor();
             return character;
         }
@@ -1107,7 +1107,7 @@ namespace Barotrauma
                 character.AnimController.ResetRagdoll();
                 CreateCenterPanel();
                 ResetParamsEditor();
-                widgets.Values.ForEach(w => w.refresh?.Invoke());
+                jointSelectionWidgets.Values.ForEach(w => w.refresh?.Invoke());
                 GUI.AddMessage($"Ragdoll reset", Color.WhiteSmoke, font: GUI.Font);
                 return true;
             };
@@ -2294,7 +2294,7 @@ namespace Barotrauma
                 var otherWidget = GetJointSelectionWidget($"{joint.jointParams.Name} selection widget {otherID}", $"{joint.jointParams.Name} selection widget {anchorID}", joint);
                 if (anchorID == "2")
                 {
-                    bool isSelected = selectedJointWidgets.Contains(jointSelectionWidget) || selectedJointWidgets.Contains(otherWidget);
+                    bool isSelected = selectedJoint == joint; //selectedJointWidgets.Contains(jointSelectionWidget) || selectedJointWidgets.Contains(otherWidget);
                     bool isHovered = jointSelectionWidget.IsSelected || otherWidget.IsSelected;
                     if (isSelected || isHovered)
                     {
@@ -2498,51 +2498,46 @@ namespace Barotrauma
         #endregion
 
         #region Widgets as classes (experimental)
-        private Dictionary<string, Widget> widgets = new Dictionary<string, Widget>();
-        private HashSet<Widget> selectedJointWidgets = new HashSet<Widget>();
+        private Dictionary<string, Widget> jointSelectionWidgets = new Dictionary<string, Widget>();
+        private LimbJoint selectedJoint;
 
         private Widget GetJointSelectionWidget(string id, string linkedId, LimbJoint joint)
         {
             // Widget creation method
-            Widget CreateJointLimitToggle(string ID, LimbJoint j)
+            Widget CreateJointSelectionWidget(string ID, LimbJoint j)
             {
                 var widget = new Widget(ID, 10, Widget.Shape.Circle);
                 widget.refresh = () =>
                 {
-                    widget.color = selectedJointWidgets.Contains(widget) ? Color.LightGreen : Color.Red;
+                    widget.color = selectedJoint == joint ? Color.LightGreen : Color.Red;
                 };
                 widget.refresh();
                 widget.Clicked += () =>
                 {
-                    if (selectedJointWidgets.Contains(widget))
+                    if (selectedJoint != joint)
                     {
-                        selectedJointWidgets.Remove(widget);
-                        if (widget.linkedWidget != null)
-                        {
-                            selectedJointWidgets.Remove(widget.linkedWidget);
-                        }
+                        selectedJoint = joint;
                     }
                     else
                     {
-                        selectedJointWidgets.Add(widget);
-                        if (widget.linkedWidget != null)
-                        {
-                            selectedJointWidgets.Add(widget.linkedWidget);
-                        }
+                        selectedJoint = null;
                     }
-                    widget.refresh();
-                    widget.linkedWidget?.refresh();
+                    foreach (var w in jointSelectionWidgets.Values)
+                    {
+                        w.refresh();
+                        w.linkedWidget?.refresh();
+                    }
                 };
-                widgets.Add(ID, widget);
+                jointSelectionWidgets.Add(ID, widget);
                 return widget;
             }
             // Handle widget linking and create the widgets
-            if (!widgets.TryGetValue(id, out Widget toggleWidget))
+            if (!jointSelectionWidgets.TryGetValue(id, out Widget toggleWidget))
             {
-                toggleWidget = CreateJointLimitToggle(id, joint);
-                if (!widgets.TryGetValue(linkedId, out Widget linkedWidget))
+                toggleWidget = CreateJointSelectionWidget(id, joint);
+                if (!jointSelectionWidgets.TryGetValue(linkedId, out Widget linkedWidget))
                 {
-                    linkedWidget = CreateJointLimitToggle(linkedId, joint);
+                    linkedWidget = CreateJointSelectionWidget(linkedId, joint);
                 }
                 toggleWidget.linkedWidget = linkedWidget;
                 linkedWidget.linkedWidget = toggleWidget;
