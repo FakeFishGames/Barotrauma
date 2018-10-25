@@ -47,9 +47,8 @@ namespace Barotrauma
         public event Action Selected;
         public event Action Deselected;
         public event Action Hovered;
-        public event Action Clicked;
-        public event Action MouseDown;
         public event Action MouseUp;
+        public event Action MouseDown;
         public event Action<float> MouseHeld;
         public event Action<float> PreUpdate;
         public event Action<float> PostUpdate;
@@ -121,21 +120,17 @@ namespace Barotrauma
             }
             if (IsSelected)
             {
-                if (PlayerInput.LeftButtonHeld())
-                {
-                    MouseHeld?.Invoke(deltaTime);
-                }
                 if (PlayerInput.LeftButtonDown())
                 {
                     MouseDown?.Invoke();
                 }
-                if (PlayerInput.LeftButtonReleased())
+                if (PlayerInput.LeftButtonHeld())
                 {
-                    MouseUp?.Invoke();
+                    MouseHeld?.Invoke(deltaTime);
                 }
                 if (PlayerInput.LeftButtonClicked())
                 {
-                    Clicked?.Invoke();
+                    MouseUp?.Invoke();
                 }
             }
             PostUpdate?.Invoke(deltaTime);
