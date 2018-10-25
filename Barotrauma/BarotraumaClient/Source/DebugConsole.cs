@@ -283,12 +283,12 @@ namespace Barotrauma
                 GameMain.SubEditorScreen.Select();
             }));
 
-            commands.Add(new Command("editparticles", "", (string[] args) =>
+            commands.Add(new Command("editparticles|particleeditor", "", (string[] args) =>
             {
                 GameMain.ParticleEditorScreen.Select();
             }));
 
-            commands.Add(new Command("editlevels", "", (string[] args) =>
+            commands.Add(new Command("editlevels|editlevel|leveleditor", "", (string[] args) =>
             {
                 GameMain.LevelEditorScreen.Select();
             }));
