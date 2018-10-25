@@ -179,6 +179,19 @@ namespace Barotrauma
                     freezeToggle.Selected = !freezeToggle.Selected;
                 }
                 Widget.EnableMultiSelect = PlayerInput.KeyDown(Keys.LeftControl);
+                if (PlayerInput.RightButtonClicked())
+                {
+                    if (selectedJoints.Any())
+                    {
+                        selectedJoints.Clear();
+                        foreach (var w in jointSelectionWidgets.Values)
+                        {
+                            w.refresh();
+                            w.linkedWidget?.refresh();
+                        }
+                        ResetParamsEditor();
+                    }
+                }
             }
             if (!isFreezed)
             {
@@ -214,7 +227,7 @@ namespace Barotrauma
             // Update widgets
             foreach (var widget in jointSelectionWidgets.Values)
             {
-                widget.Enabled = editJointLimits;
+                widget.Enabled = editJointLimits || editJointPositions;
                 widget.Update((float)deltaTime);
             }
         }
@@ -522,7 +535,7 @@ namespace Barotrauma
             CreateTextures();
             CreateGUI();
             jointSelectionWidgets.Clear();
-            selectedJoint = null;
+            selectedJoints.Clear();
             ResetParamsEditor();
             return character;
         }
@@ -1116,6 +1129,7 @@ namespace Barotrauma
             {
                 character.AnimController.ResetRagdoll();
                 CreateCenterPanel();
+                selectedJoints.Clear();
                 ResetParamsEditor();
                 jointSelectionWidgets.Values.ForEach(w => w.refresh?.Invoke());
                 GUI.AddMessage($"Ragdoll reset", Color.WhiteSmoke, font: GUI.Font);
@@ -1452,10 +1466,15 @@ namespace Barotrauma
             ParamsEditor.Instance.Clear();
             if (editRagdoll || editSpriteDimensions)
             {
-                if (selectedJoint != null)
+                if (selectedJoints.Any())
                 {
-                    var jointParams = RagdollParams.Joints.FirstOrDefault(j => j == selectedJoint.jointParams);
-                    jointParams?.AddToEditor(ParamsEditor.Instance);
+                    foreach (var jointParams in RagdollParams.Joints)
+                    {
+                        if (selectedJoints.Any(j => j.jointParams == jointParams))
+                        {
+                            jointParams?.AddToEditor(ParamsEditor.Instance);
+                        }
+                    }
                 }
                 else
                 {
@@ -1978,10 +1997,10 @@ namespace Barotrauma
                     if (editJointLimits)
                     {
                         if (joint.BodyA != limb.body.FarseerBody) { continue; }
-                        var toggleWidget = GetJointSelectionWidget($"{joint.jointParams.Name} selection widget ragdoll", joint);
-                        toggleWidget.DrawPos = tformedJointPos;
-                        toggleWidget.Draw(spriteBatch, deltaTime);
-                        if (selectedJoint == joint && joint.LimitEnabled)
+                        var selectionWidget = GetJointSelectionWidget($"{joint.jointParams.Name} selection widget ragdoll", joint);
+                        selectionWidget.DrawPos = tformedJointPos;
+                        selectionWidget.Draw(spriteBatch, deltaTime);
+                        if (selectedJoints.Contains(joint) && joint.LimitEnabled)
                         {
                             Vector2 to = tformedJointPos + VectorExtensions.Forward(joint.LimbB.Rotation + MathHelper.ToRadians(-spriteSheetOrientation), 20);
                             DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: true, allowPairEditing: true, rotationOffset: limb.Rotation);
@@ -1998,59 +2017,67 @@ namespace Barotrauma
                         {
                             continue;
                         }
-                        Color color = joint.BodyA == limb.body.FarseerBody ? Color.Red : Color.Blue;
-                        var widgetSize = new Vector2(5, 5);
-                        var rect = new Rectangle((tformedJointPos - widgetSize / 2).ToPoint(), widgetSize.ToPoint());
-                        GUI.DrawRectangle(spriteBatch, tformedJointPos - widgetSize / 2, widgetSize, color, true);
+                        //Color color = joint.BodyA == limb.body.FarseerBody ? Color.Red : Color.Blue;
+
+                        var selectionWidget = GetJointSelectionWidget($"{joint.jointParams.Name} selection widget ragdoll", joint);
+                        selectionWidget.DrawPos = tformedJointPos;
+                        selectionWidget.Draw(spriteBatch, deltaTime);
+
+                        var dotSize = new Vector2(5, 5);
+                        var rect = new Rectangle((tformedJointPos - dotSize / 2).ToPoint(), dotSize.ToPoint());
+                        //GUI.DrawRectangle(spriteBatch, tformedJointPos - dotSize / 2, dotSize, color, true);
                         var inputRect = rect;
-                        inputRect.Inflate(widgetSize.X, widgetSize.Y);
+                        inputRect.Inflate(dotSize.X, dotSize.Y);
                         //GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + up * 20, Color.White);
                         if (inputRect.Contains(PlayerInput.MousePosition))
                         {
                             //GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + up * 20, Color.White, width: 3);
                             GUI.DrawLine(spriteBatch, limbScreenPos, tformedJointPos, Color.Yellow, width: 3);
-                            GUI.DrawRectangle(spriteBatch, inputRect, Color.Red);
-                            GUI.DrawString(spriteBatch, tformedJointPos + new Vector2(widgetSize.X, -widgetSize.Y) * 2, $"{joint.jointParams.Name} {jointPos.FormatZeroDecimal()}", Color.White, Color.Black * 0.5f);
-                            if (PlayerInput.LeftButtonHeld())
+                            //GUI.DrawRectangle(spriteBatch, inputRect, Color.Red);
+                            GUI.DrawString(spriteBatch, tformedJointPos + new Vector2(dotSize.X, -dotSize.Y) * 2, $"{joint.jointParams.Name} {jointPos.FormatZeroDecimal()}", Color.White, Color.Black * 0.5f);
+                            if (selectedJoints.Contains(joint))
                             {
-                                if (autoFreeze)
+                                if (PlayerInput.LeftButtonHeld())
                                 {
-                                    isFreezed = true;
-                                }
-                                Vector2 input = ConvertUnits.ToSimUnits(scaledMouseSpeed) / Cam.Zoom;
-                                input.Y = -input.Y;
-                                input = input.TransformVector(VectorExtensions.Forward(limb.Rotation));
-                                if (joint.BodyA == limb.body.FarseerBody)
-                                {
-                                    joint.LocalAnchorA += input;
-                                    TryUpdateJointParam(joint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
+                                    if (autoFreeze)
+                                    {
+                                        isFreezed = true;
+                                    }
+                                    Vector2 input = ConvertUnits.ToSimUnits(scaledMouseSpeed) / Cam.Zoom;
+                                    input.Y = -input.Y;
+                                    input = input.TransformVector(VectorExtensions.Forward(limb.Rotation));
+                                    if (joint.BodyA == limb.body.FarseerBody)
+                                    {
+                                        joint.LocalAnchorA += input;
+                                        TryUpdateJointParam(joint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
+                                    }
+                                    else
+                                    {
+                                        joint.LocalAnchorB += input;
+                                        TryUpdateJointParam(joint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
+                                    }
+                                    // Edit the other joints
+                                    if (limbPairEditing)
+                                    {
+                                        UpdateOtherJoints(limb, (otherLimb, otherJoint) =>
+                                        {
+                                            if (joint.BodyA == limb.body.FarseerBody && otherJoint.BodyA == otherLimb.body.FarseerBody)
+                                            {
+                                                otherJoint.LocalAnchorA = joint.LocalAnchorA;
+                                                TryUpdateJointParam(otherJoint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
+                                            }
+                                            else if (joint.BodyB == limb.body.FarseerBody && otherJoint.BodyB == otherLimb.body.FarseerBody)
+                                            {
+                                                otherJoint.LocalAnchorB = joint.LocalAnchorB;
+                                                TryUpdateJointParam(otherJoint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
+                                            }
+                                        });
+                                    }
                                 }
                                 else
                                 {
-                                    joint.LocalAnchorB += input;
-                                    TryUpdateJointParam(joint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
+                                    isFreezed = freezeToggle.Selected;
                                 }
-                                // Edit the other joints
-                                if (limbPairEditing)
-                                {
-                                    UpdateOtherJoints(limb, (otherLimb, otherJoint) =>
-                                    {
-                                        if (joint.BodyA == limb.body.FarseerBody && otherJoint.BodyA == otherLimb.body.FarseerBody)
-                                        {
-                                            otherJoint.LocalAnchorA = joint.LocalAnchorA;
-                                            TryUpdateJointParam(otherJoint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
-                                        }
-                                        else if (joint.BodyB == limb.body.FarseerBody && otherJoint.BodyB == otherLimb.body.FarseerBody)
-                                        {
-                                            otherJoint.LocalAnchorB = joint.LocalAnchorB;
-                                            TryUpdateJointParam(otherJoint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
-                                        }
-                                    });
-                                }
-                            }
-                            else
-                            {
-                                isFreezed = freezeToggle.Selected;
                             }
                         }
                     }
@@ -2306,7 +2333,7 @@ namespace Barotrauma
                 tformedJointPos.Y = -tformedJointPos.Y;
                 tformedJointPos.X *= character.AnimController.Dir;
                 tformedJointPos += limbScreenPos;
-                if (editJointLimits)
+                if (editJointLimits || editJointPositions)
                 {
                     var jointSelectionWidget = GetJointSelectionWidget($"{joint.jointParams.Name} selection widget {anchorID}", joint, $"{joint.jointParams.Name} selection widget {otherID}");
                     jointSelectionWidget.DrawPos = tformedJointPos;
@@ -2314,45 +2341,63 @@ namespace Barotrauma
                     var otherWidget = GetJointSelectionWidget($"{joint.jointParams.Name} selection widget {otherID}", joint, $"{joint.jointParams.Name} selection widget {anchorID}");
                     if (anchorID == "2")
                     {
-                        bool isSelected = selectedJoint == joint;
+                        bool isSelected = selectedJoints.Contains(joint);
                         bool isHovered = jointSelectionWidget.IsSelected || otherWidget.IsSelected;
                         if (isSelected || isHovered)
                         {
                             GUI.DrawLine(spriteBatch, jointSelectionWidget.DrawPos, otherWidget.DrawPos, jointSelectionWidget.color, width: 2);
                         }
                     }
-                    if (selectedJoint == joint && joint.LimitEnabled)
+                    if (selectedJoints.Contains(joint))
                     {
-                        DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: false, allowPairEditing: true);
-                    }
-                }
-                else if (editJointPositions)
-                {
-                    Color color = joint.BodyA == limb.body.FarseerBody ? Color.Red : Color.Blue;
-                    Vector2 widgetSize = new Vector2(5.0f, 5.0f); ;
-                    var rect = new Rectangle((tformedJointPos - widgetSize / 2).ToPoint(), widgetSize.ToPoint());
-                    var inputRect = rect;
-                    inputRect.Inflate(widgetSize.X * 0.75f, widgetSize.Y * 0.75f);
-                    GUI.DrawRectangle(spriteBatch, rect, color, isFilled: true);
-                    if (inputRect.Contains(PlayerInput.MousePosition))
-                    {          
-                        GUI.DrawString(spriteBatch, tformedJointPos + Vector2.One * 10.0f, $"{joint.jointParams.Name} {jointPos.FormatZeroDecimal()}", Color.White, Color.Black * 0.5f);
-                        GUI.DrawRectangle(spriteBatch, inputRect, color);
-                        if (PlayerInput.LeftButtonHeld())
+                        if (editJointLimits && joint.LimitEnabled)
                         {
-                            Vector2 input = ConvertUnits.ToSimUnits(scaledMouseSpeed);
-                            input.Y = -input.Y;
-                            input.X *= character.AnimController.Dir;
-                            input *= limb.Scale / spriteSheetZoom;
-                            if (joint.BodyA == limb.body.FarseerBody)
+                            DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: false, allowPairEditing: true);
+                        }
+                        if (editJointPositions)
+                        {
+                            Vector2 dotSize = new Vector2(5.0f, 5.0f); ;
+                            var rect = new Rectangle((tformedJointPos - dotSize / 2).ToPoint(), dotSize.ToPoint());
+                            var inputRect = rect;
+                            inputRect.Inflate(dotSize.X * 0.75f, dotSize.Y * 0.75f);
+                            //GUI.DrawRectangle(spriteBatch, rect, color, isFilled: true);
+                            if (inputRect.Contains(PlayerInput.MousePosition))
                             {
-                                joint.LocalAnchorA += input;
-                                TryUpdateJointParam(joint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
-                            }
-                            else
-                            {
-                                joint.LocalAnchorB += input;
-                                TryUpdateJointParam(joint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
+                                GUI.DrawString(spriteBatch, tformedJointPos + new Vector2(dotSize.X, -dotSize.Y) * 2, $"{joint.jointParams.Name} {jointPos.FormatZeroDecimal()}", Color.White, Color.Black * 0.5f);
+                                //GUI.DrawRectangle(spriteBatch, inputRect, color);
+                                if (PlayerInput.LeftButtonHeld())
+                                {
+                                    Vector2 input = ConvertUnits.ToSimUnits(scaledMouseSpeed);
+                                    input.Y = -input.Y;
+                                    input.X *= character.AnimController.Dir;
+                                    input *= limb.Scale / spriteSheetZoom;
+                                    if (joint.BodyA == limb.body.FarseerBody)
+                                    {
+                                        joint.LocalAnchorA += input;
+                                        TryUpdateJointParam(joint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
+                                    }
+                                    else
+                                    {
+                                        joint.LocalAnchorB += input;
+                                        TryUpdateJointParam(joint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
+                                    }
+                                    if (limbPairEditing)
+                                    {
+                                        UpdateOtherJoints(limb, (otherLimb, otherJoint) =>
+                                        {
+                                            if (joint.BodyA == limb.body.FarseerBody && otherJoint.BodyA == otherLimb.body.FarseerBody)
+                                            {
+                                                otherJoint.LocalAnchorA = joint.LocalAnchorA;
+                                                TryUpdateJointParam(otherJoint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
+                                            }
+                                            else if (joint.BodyB == limb.body.FarseerBody && otherJoint.BodyB == otherLimb.body.FarseerBody)
+                                            {
+                                                otherJoint.LocalAnchorB = joint.LocalAnchorB;
+                                                TryUpdateJointParam(otherJoint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
+                                            }
+                                        });
+                                    }
+                                }
                             }
                         }
                     }
@@ -2511,7 +2556,7 @@ namespace Barotrauma
 
         #region Widgets as classes
         private Dictionary<string, Widget> jointSelectionWidgets = new Dictionary<string, Widget>();
-        private LimbJoint selectedJoint;
+        private HashSet<LimbJoint> selectedJoints = new HashSet<LimbJoint>();
 
         private Widget GetJointSelectionWidget(string id, LimbJoint joint, string linkedId = null)
         {
@@ -2521,44 +2566,51 @@ namespace Barotrauma
                 var widget = new Widget(ID, 10, Widget.Shape.Circle);
                 widget.refresh = () =>
                 {
-                    widget.color = selectedJoint == joint ? Color.LightGreen : Color.Red;
+                    widget.color = selectedJoints.Contains(joint) ? Color.Yellow : Color.Red;
                 };
                 widget.refresh();
-                widget.Clicked += () =>
+                widget.MouseDown += () =>
                 {
-                    if (selectedJoint != joint)
+                    if (!selectedJoints.Contains(joint))
                     {
-                        selectedJoint = joint;
+                        if (!Widget.EnableMultiSelect)
+                        {
+                            selectedJoints.Clear();
+                        }
+                        selectedJoints.Add(joint);
                     }
-                    else
+                    else if (Widget.EnableMultiSelect)
                     {
-                        selectedJoint = null;
+                        selectedJoints.Clear();
                     }
-                    ResetParamsEditor();
                     foreach (var w in jointSelectionWidgets.Values)
                     {
                         w.refresh();
                         w.linkedWidget?.refresh();
                     }
                 };
+                widget.MouseUp += () =>
+                {
+                    ResetParamsEditor();
+                };
                 jointSelectionWidgets.Add(ID, widget);
                 return widget;
             }
             // Handle widget linking and create the widgets
-            if (!jointSelectionWidgets.TryGetValue(id, out Widget toggleWidget))
+            if (!jointSelectionWidgets.TryGetValue(id, out Widget jointWidget))
             {
-                toggleWidget = CreateJointSelectionWidget(id, joint);
+                jointWidget = CreateJointSelectionWidget(id, joint);
                 if (linkedId != null)
                 {
                     if (!jointSelectionWidgets.TryGetValue(linkedId, out Widget linkedWidget))
                     {
                         linkedWidget = CreateJointSelectionWidget(linkedId, joint);
                     }
-                    toggleWidget.linkedWidget = linkedWidget;
-                    linkedWidget.linkedWidget = toggleWidget;
+                    jointWidget.linkedWidget = linkedWidget;
+                    linkedWidget.linkedWidget = jointWidget;
                 }
             }
-            return toggleWidget;
+            return jointWidget;
         }
         #endregion
 
