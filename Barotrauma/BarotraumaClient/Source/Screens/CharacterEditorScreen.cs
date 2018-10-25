@@ -34,7 +34,7 @@ namespace Barotrauma
 
         private Character character;
         private Vector2 spawnPosition;
-        private bool showAnimControls;
+        private bool editAnimations;
         private bool editSpriteDimensions;
         private bool editRagdoll;
         private bool editJointPositions;
@@ -97,7 +97,7 @@ namespace Barotrauma
             {
                 backgroundColorPanel.AddToGUIUpdateList();
             }
-            if (showAnimControls)
+            if (editAnimations)
             {
                 animationControls.AddToGUIUpdateList();
             }
@@ -255,7 +255,7 @@ namespace Barotrauma
 
             // GUI
             spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
-            if (showAnimControls)
+            if (editAnimations)
             {
                 DrawAnimationControls(spriteBatch);
             }
@@ -522,6 +522,7 @@ namespace Barotrauma
             CreateTextures();
             CreateGUI();
             jointSelectionWidgets.Clear();
+            selectedJoint = null;
             ResetParamsEditor();
             return character;
         }
@@ -924,7 +925,7 @@ namespace Barotrauma
             };
             var paramsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Parameters") { Selected = showParamsEditor };
             var spritesheetToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Spritesheet") { Selected = showSpritesheet };
-            var editAnimsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Animations") { Selected = showAnimControls };
+            var editAnimsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Animations") { Selected = editAnimations };
             var spriteDimensionsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Sprite Dimensions") { Selected = editSpriteDimensions };
             var ragdollToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Ragdoll") { Selected = editRagdoll };
             var jointPositionsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joint Positions") { Selected = editJointPositions };
@@ -936,8 +937,8 @@ namespace Barotrauma
             animTestPoseToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Animation Test Pose") { Selected = character.AnimController.AnimationTestPose };
             editAnimsToggle.OnSelected = box =>
             {
-                showAnimControls = box.Selected;
-                if (showAnimControls)
+                editAnimations = box.Selected;
+                if (editAnimations)
                 {
                     spritesheetToggle.Selected = false;
                     spriteDimensionsToggle.Selected = false;
@@ -1004,6 +1005,11 @@ namespace Barotrauma
                     spritesheetToggle.Selected = !paramsToggle.Selected;
                     jointPositionsToggle.Selected = false;
                     ikToggle.Selected = false;
+                }
+                else
+                {
+                    //selectedJoint = null;
+                    //ResetParamsEditor();
                 }
                 return true;
             };
@@ -1446,9 +1452,17 @@ namespace Barotrauma
             ParamsEditor.Instance.Clear();
             if (editRagdoll || editSpriteDimensions)
             {
-                RagdollParams.AddToEditor(ParamsEditor.Instance);
+                if (selectedJoint != null)
+                {
+                    var jointParams = RagdollParams.Joints.FirstOrDefault(j => j == selectedJoint.jointParams);
+                    jointParams?.AddToEditor(ParamsEditor.Instance);
+                }
+                else
+                {
+                    RagdollParams.AddToEditor(ParamsEditor.Instance);
+                }
             }
-            else
+            else if (editAnimations)
             {
                 AnimParams.ForEach(p => p.AddToEditor(ParamsEditor.Instance));
             }
@@ -2520,6 +2534,7 @@ namespace Barotrauma
                     {
                         selectedJoint = null;
                     }
+                    ResetParamsEditor();
                     foreach (var w in jointSelectionWidgets.Values)
                     {
                         w.refresh();
