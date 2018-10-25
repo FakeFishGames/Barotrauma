@@ -705,16 +705,17 @@ namespace Barotrauma
             };
             lockSpriteSizeToggle.TextColor = Color.White;
             // Ragdoll
+            Point sliderSize = new Point(300, 20);
             ragdollControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupRagdoll = new GUILayoutGroup(new RectTransform(Vector2.One, ragdollControls.RectTransform)) { CanBeFocused = false };
-            var jointScaleElement = new GUIFrame(new RectTransform(elementSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
+            var jointScaleElement = new GUIFrame(new RectTransform(sliderSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
             var jointScaleText = new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), jointScaleElement.RectTransform), $"Joint Scale: {RagdollParams.JointScale.FormatDoubleDecimal()}", Color.WhiteSmoke, textAlignment: Alignment.Center);
-            var limbScaleElement = new GUIFrame(new RectTransform(elementSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
+            var limbScaleElement = new GUIFrame(new RectTransform(sliderSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
             var limbScaleText = new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), limbScaleElement.RectTransform), $"Limb Scale: {RagdollParams.LimbScale.FormatDoubleDecimal()}", Color.WhiteSmoke, textAlignment: Alignment.Center);
-            jointScaleBar = new GUIScrollBar(new RectTransform(elementSize, jointScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.2f)
+            jointScaleBar = new GUIScrollBar(new RectTransform(sliderSize, jointScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.1f)
             {
                 BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE, RagdollParams.JointScale)),
-                Step = 0.01f,
+                Step = 0.001f,
                 OnMoved = (scrollBar, value) =>
                 {
                     float v = MathHelper.Lerp(RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE, value);
@@ -727,10 +728,10 @@ namespace Barotrauma
                     return true;
                 }
             };
-            limbScaleBar = new GUIScrollBar(new RectTransform(elementSize, limbScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.2f)
+            limbScaleBar = new GUIScrollBar(new RectTransform(sliderSize, limbScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.1f)
             {
                 BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE, RagdollParams.LimbScale)),
-                Step = 0.01f,
+                Step = 0.001f,
                 OnMoved = (scrollBar, value) =>
                 {
                     float v = MathHelper.Lerp(RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE, value);
