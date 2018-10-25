@@ -55,7 +55,7 @@ namespace Barotrauma
         private float spriteSheetZoom;
         private int spriteSheetOffsetY = 100;
         private int spriteSheetOffsetX = 20;
-        private Color backgroundColor = new Color(0.12f, 0.298f, 0.542f, 1.0f);
+        private Color backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1.0f);
 
         private float spriteSheetOrientation;
 
