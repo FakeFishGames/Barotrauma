@@ -1868,10 +1868,13 @@ namespace Barotrauma
                 //GUI.DrawLine(spriteBatch, limbScreenPos, limbScreenPos + up * 20, Color.White, width: 3);
                 //GUI.DrawLine(spriteBatch, limbScreenPos, limbScreenPos + up * 20, Color.Red);
                 // Limb positions
-                GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.White, width: 3);
-                GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.White, width: 3);
-                GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.Red);
-                GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.Red);
+                if (!lockSpriteOrigin)
+                {
+                    GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.White, width: 3);
+                    GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.White, width: 3);
+                    GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.Red);
+                    GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.Red);
+                }
                 if (MathUtils.RectangleContainsPoint(corners, PlayerInput.MousePosition))
                 {
                     // Select limbs
@@ -1895,7 +1898,7 @@ namespace Barotrauma
                         ResetParamsEditor();
                     }
                     // Origin
-                    if (PlayerInput.LeftButtonHeld() && selectedLimbs.Contains(limb))
+                    if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && selectedLimbs.Contains(limb))
                     {
                         float multiplier = 0.5f;
                         Vector2 forward = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(limb.Rotation));
@@ -1925,6 +1928,11 @@ namespace Barotrauma
                                 TryUpdateLimbParam(otherLimb, "origin", relativeOrigin);
                             });
                         }
+                        GUI.DrawString(spriteBatch, limbScreenPos + new Vector2(10, -10), relativeOrigin.FormatDoubleDecimal(), Color.White, Color.Black * 0.5f);
+                    }
+                    else
+                    {
+                        GUI.DrawString(spriteBatch, limbScreenPos + new Vector2(10, -10), limb.Name, Color.White, Color.Black * 0.5f);
                     }
                 }
             }
@@ -2182,25 +2190,25 @@ namespace Barotrauma
 
                     GUI.DrawRectangle(spriteBatch, rect, selectedLimbs.Contains(limb) ? Color.Yellow : Color.Red);
                     Vector2 origin = limb.ActiveSprite.Origin;
-                    Vector2 limbBodyPos = new Vector2(rect.X + origin.X * spriteSheetZoom, rect.Y + origin.Y * spriteSheetZoom);
+                    Vector2 limbScreenPos = new Vector2(rect.X + origin.X * spriteSheetZoom, rect.Y + origin.Y * spriteSheetZoom);
                     // The origin is manipulated when the character is flipped. We have to undo it here.
                     if (character.AnimController.Dir < 0)
                     {
-                        limbBodyPos.X = rect.X + rect.Width - (float)Math.Round(origin.X * spriteSheetZoom);
+                        limbScreenPos.X = rect.X + rect.Width - (float)Math.Round(origin.X * spriteSheetZoom);
                     }
                     if (editJoints)
                     {
-                        DrawSpritesheetJointEditor(spriteBatch, deltaTime, limb, limbBodyPos);
+                        DrawSpritesheetJointEditor(spriteBatch, deltaTime, limb, limbScreenPos);
                     }
                     if (editLimbs)
                     {
                         if (!lockSpriteOrigin)
                         {
                             // Draw the sprite origins
-                            GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitY * 5.0f, limbBodyPos - Vector2.UnitY * 5.0f, Color.White, width: 3);
-                            GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.White, width: 3);
-                            GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitY * 5.0f, limbBodyPos - Vector2.UnitY * 5.0f, Color.Red);
-                            GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.Red);
+                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.White, width: 3);
+                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.White, width: 3);
+                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.Red);
+                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.Red);
                         }
                         // Draw the source rect widgets
                         int widgetSize = 8;
@@ -2256,7 +2264,7 @@ namespace Barotrauma
                                 }
                                 var relativeOrigin = new Vector2(origin.X / sourceRect.Width, origin.Y / sourceRect.Height);
                                 TryUpdateLimbParam(limb, "origin", relativeOrigin);
-                                GUI.DrawString(spriteBatch, limbBodyPos + new Vector2(10, -10), relativeOrigin.FormatDoubleDecimal(), Color.White, Color.Black * 0.5f);
+                                GUI.DrawString(spriteBatch, limbScreenPos + new Vector2(10, -10), relativeOrigin.FormatDoubleDecimal(), Color.White, Color.Black * 0.5f);
                             }
                             if (!lockSpritePosition)
                             {
@@ -2306,6 +2314,10 @@ namespace Barotrauma
                                     GUI.DrawString(spriteBatch, bottomRight + stringOffset, limb.ActiveSprite.size.FormatZeroDecimal(), Color.White, Color.Black * 0.5f);
                                 }, autoFreeze: false);
                             }
+                        }
+                        else if (isMouseOnRect)
+                        {
+                            GUI.DrawString(spriteBatch, limbScreenPos + new Vector2(10, -10), limb.Name, Color.White, Color.Black * 0.5f);
                         }
                     }
                 }
@@ -2568,6 +2580,7 @@ namespace Barotrauma
                 var widget = new Widget(ID, 10, Widget.Shape.Circle);
                 widget.refresh = () =>
                 {
+                    widget.showTooltip = !selectedJoints.Contains(joint);
                     widget.color = selectedJoints.Contains(joint) ? Color.Yellow : Color.Red;
                 };
                 widget.refresh();
@@ -2591,6 +2604,7 @@ namespace Barotrauma
                         w.linkedWidget?.refresh();
                     }
                 };
+                widget.tooltip = joint.jointParams.Name;
                 widget.MouseUp += () =>
                 {
                     ResetParamsEditor();
