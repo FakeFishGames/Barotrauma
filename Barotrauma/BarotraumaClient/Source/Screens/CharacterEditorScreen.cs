@@ -35,7 +35,7 @@ namespace Barotrauma
         private Character character;
         private Vector2 spawnPosition;
         private bool editAnimations;
-        private bool editSpriteDimensions;
+        private bool editLimbs;
         private bool editJoints;
         private bool editIK;
         private bool showRagdoll;
@@ -51,12 +51,13 @@ namespace Barotrauma
         private bool displayColliders;
         private bool displayBackgroundColor;
 
-        private bool EditRagdoll => editJoints || editIK || editSpriteDimensions;
-
         private float spriteSheetZoom;
         private int spriteSheetOffsetY = 100;
         private int spriteSheetOffsetX = 20;
         private Color backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1.0f);
+
+        private HashSet<LimbJoint> selectedJoints = new HashSet<LimbJoint>();
+        private HashSet<Limb> selectedLimbs = new HashSet<Limb>();
 
         private float spriteSheetOrientation;
 
@@ -106,13 +107,13 @@ namespace Barotrauma
             {
                 spriteSheetControls.AddToGUIUpdateList();
             }
-            if (EditRagdoll)
+            if (editJoints)
             {
                 ragdollControls.AddToGUIUpdateList();
             }
-            if (editSpriteDimensions)
+            if (editLimbs)
             {
-                spriteControls.AddToGUIUpdateList();
+                limbControls.AddToGUIUpdateList();
             }
             if (showParamsEditor)
             {
@@ -190,6 +191,12 @@ namespace Barotrauma
                 }
                 if (PlayerInput.RightButtonClicked())
                 {
+                    bool reset = false;
+                    if (selectedLimbs.Any())
+                    {
+                        selectedLimbs.Clear();
+                        reset = true;
+                    }
                     if (selectedJoints.Any())
                     {
                         selectedJoints.Clear();
@@ -198,6 +205,10 @@ namespace Barotrauma
                             w.refresh();
                             w.linkedWidget?.refresh();
                         }
+                        reset = true;
+                    }
+                    if (reset)
+                    {
                         ResetParamsEditor();
                     }
                 }
@@ -281,13 +292,13 @@ namespace Barotrauma
             {
                 DrawAnimationControls(spriteBatch);
             }
-            if (editSpriteDimensions)
+            if (editLimbs)
             {
-                DrawSpriteOriginEditor(spriteBatch);
+                DrawLimbEditor(spriteBatch);
             }
             if (showRagdoll)
             {
-                DrawRagdollEditor(spriteBatch, (float)deltaTime);
+                DrawRagdoll(spriteBatch, (float)deltaTime);
             }
             if (showSpritesheet)
             {
@@ -545,6 +556,7 @@ namespace Barotrauma
             CreateGUI();
             jointSelectionWidgets.Clear();
             selectedJoints.Clear();
+            selectedLimbs.Clear();
             ResetParamsEditor();
             return character;
         }
@@ -552,6 +564,7 @@ namespace Barotrauma
         private void RecreateRagdoll()
         {
             jointSelectionWidgets.Clear();
+            selectedLimbs.Clear();
             selectedJoints.Clear();
             character.AnimController.Recreate(RagdollParams);
             TeleportTo(spawnPosition);
@@ -621,7 +634,7 @@ namespace Barotrauma
         private GUIFrame centerPanel;
         private GUIFrame ragdollControls;
         private GUIFrame animationControls;
-        private GUIFrame spriteControls;
+        private GUIFrame limbControls;
         private GUIFrame spriteSheetControls;
         private GUIFrame backgroundColorPanel;
         private GUIDropDown animSelection;
@@ -704,13 +717,13 @@ namespace Barotrauma
                         break;
                 }
             }
-            // Sprite controls
-            spriteControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
-            var layoutGroupSpriteControls = new GUILayoutGroup(new RectTransform(Vector2.One, spriteControls.RectTransform)) { CanBeFocused = false };
+            // Limb controls
+            limbControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
+            var layoutGroupLimbControls = new GUILayoutGroup(new RectTransform(Vector2.One, limbControls.RectTransform)) { CanBeFocused = false };
             // Spacing
-            new GUIFrame(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteControls.RectTransform), style: null) { CanBeFocused = false };
+            new GUIFrame(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupLimbControls.RectTransform), style: null) { CanBeFocused = false };
 
-            var lockSpriteOriginToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteControls.RectTransform), "Lock Sprite Origin")
+            var lockSpriteOriginToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupLimbControls.RectTransform), "Lock Sprite Origin")
             {
                 Selected = lockSpriteOrigin,
                 OnSelected = (GUITickBox box) =>
@@ -720,7 +733,7 @@ namespace Barotrauma
                 }
             };
             lockSpriteOriginToggle.TextColor = Color.White;
-            var lockSpritePositionToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteControls.RectTransform), "Lock Sprite Position")
+            var lockSpritePositionToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupLimbControls.RectTransform), "Lock Sprite Position")
             {
                 Selected = lockSpritePosition,
                 OnSelected = (GUITickBox box) =>
@@ -730,7 +743,7 @@ namespace Barotrauma
                 }
             };
             lockSpritePositionToggle.TextColor = Color.White;
-            var lockSpriteSizeToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteControls.RectTransform), "Lock Sprite Size")
+            var lockSpriteSizeToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupLimbControls.RectTransform), "Lock Sprite Size")
             {
                 Selected = lockSpriteSize,
                 OnSelected = (GUITickBox box) =>
@@ -954,9 +967,9 @@ namespace Barotrauma
             };
             var paramsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Parameters") { Selected = showParamsEditor };
             var spritesheetToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Spritesheet") { Selected = showSpritesheet };
-            var editAnimsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Animations") { Selected = editAnimations };
-            var spriteDimensionsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Sprite Dimensions") { Selected = editSpriteDimensions };
             var ragdollToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Ragdoll") { Selected = showRagdoll };
+            var editAnimsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Animations") { Selected = editAnimations };       
+            var editLimbsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Limbs") { Selected = this.editLimbs };
             var jointsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joints") { Selected = editJoints };
             var ikToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit IK Targets") { Selected = editIK };
             freezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Freeze") { Selected = isFreezed };
@@ -969,7 +982,7 @@ namespace Barotrauma
                 if (editAnimations)
                 {
                     spritesheetToggle.Selected = false;
-                    spriteDimensionsToggle.Selected = false;
+                    editLimbsToggle.Selected = false;
                     jointsToggle.Selected = false;
                     ResetParamsEditor();
                 }
@@ -984,10 +997,10 @@ namespace Barotrauma
                 }
                 return true;
             };
-            spriteDimensionsToggle.OnSelected = box =>
+            editLimbsToggle.OnSelected = box =>
             {
-                editSpriteDimensions = box.Selected;
-                if (editSpriteDimensions)
+                this.editLimbs = box.Selected;
+                if (this.editLimbs)
                 {
                     editAnimsToggle.Selected = false;
                     jointsToggle.Selected = false;
@@ -1002,7 +1015,7 @@ namespace Barotrauma
                 editJoints = box.Selected;
                 if (editJoints)
                 {
-                    spriteDimensionsToggle.Selected = false;
+                    editLimbsToggle.Selected = false;
                     editAnimsToggle.Selected = false;
                     ikToggle.Selected = false;
                     spritesheetToggle.Selected = !paramsToggle.Selected;
@@ -1116,8 +1129,9 @@ namespace Barotrauma
                 character.AnimController.ResetRagdoll();
                 CreateCenterPanel();
                 selectedJoints.Clear();
+                selectedLimbs.Clear();
+                jointSelectionWidgets.Clear();
                 ResetParamsEditor();
-                jointSelectionWidgets.Values.ForEach(w => w.refresh?.Invoke());
                 GUI.AddMessage($"Ragdoll reset", Color.WhiteSmoke, font: GUI.Font);
                 return true;
             };
@@ -1451,7 +1465,7 @@ namespace Barotrauma
             {
                 AnimParams.ForEach(p => p.AddToEditor(ParamsEditor.Instance));
             }
-            else if (EditRagdoll)
+            else if (editJoints || editLimbs)
             {
                 if (selectedJoints.Any())
                 {
@@ -1463,7 +1477,17 @@ namespace Barotrauma
                         }
                     }
                 }
-                else
+                if (selectedLimbs.Any())
+                {
+                    foreach (var limbParams in RagdollParams.Limbs)
+                    {
+                        if (selectedLimbs.Any(l => l.limbParams == limbParams))
+                        {
+                            limbParams?.AddToEditor(ParamsEditor.Instance);
+                        }
+                    }
+                }
+                if (selectedJoints.None() && selectedLimbs.None())
                 {
                     RagdollParams.AddToEditor(ParamsEditor.Instance);
                 }
@@ -1846,10 +1870,9 @@ namespace Barotrauma
 
         #region Ragdoll
         private Vector2[] corners = new Vector2[4];
-        private void DrawSpriteOriginEditor(SpriteBatch spriteBatch)
+        private void DrawLimbEditor(SpriteBatch spriteBatch)
         {
             float inputMultiplier = 0.5f;
-            Limb selectedLimb = null;
             foreach (Limb limb in character.AnimController.Limbs)
             {
                 if (limb == null || limb.ActiveSprite == null) { continue; }
@@ -1867,7 +1890,7 @@ namespace Barotrauma
                 Vector2 center = limbScreenPos + offset * 1.8f;
                 corners = MathUtils.GetImaginaryRect(corners, up, center, size);
                 //GUI.DrawRectangle(spriteBatch, center - Vector2.One * 2, Vector2.One * 4, Color.Black, isFilled: true);
-                GUI.DrawRectangle(spriteBatch, corners, Color.Red);
+                GUI.DrawRectangle(spriteBatch, corners, selectedLimbs.Contains(limb) ? Color.Yellow : Color.Red);
                 //GUI.DrawLine(spriteBatch, limbScreenPos, limbScreenPos + up * 20, Color.White, width: 3);
                 //GUI.DrawLine(spriteBatch, limbScreenPos, limbScreenPos + up * 20, Color.Red);
                 // Limb positions
@@ -1875,55 +1898,65 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.White, width: 3);
                 GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.Red);
                 GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.Red);
-                if (PlayerInput.LeftButtonHeld() && selectedWidget == null && MathUtils.RectangleContainsPoint(corners, PlayerInput.MousePosition))
+                if (MathUtils.RectangleContainsPoint(corners, PlayerInput.MousePosition))
                 {
-                    if (selectedLimb == null)
+                    // Select limbs
+                    if (PlayerInput.LeftButtonDown())
                     {
-                        selectedLimb = limb;
-                    }
-                }
-                else if (selectedLimb == limb)
-                {
-                    selectedLimb = null;
-                }
-            }
-            if (selectedLimb != null)
-            {
-                float multiplier = 0.5f;
-                Vector2 up = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(selectedLimb.Rotation));
-                var input = -scaledMouseSpeed * inputMultiplier * Cam.Zoom / selectedLimb.Scale * multiplier;
-                var sprite = selectedLimb.ActiveSprite;
-                var origin = sprite.Origin;
-                origin += input.TransformVector(up);
-                var sourceRect = sprite.SourceRect;
-                var max = new Vector2(sourceRect.Width, sourceRect.Height);
-                sprite.Origin = origin.Clamp(Vector2.Zero, max);
-                if (selectedLimb.DamagedSprite != null)
-                {
-                    selectedLimb.DamagedSprite.Origin = sprite.Origin;
-                }
-                if (character.AnimController.IsFlipped)
-                {
-                    origin.X = Math.Abs(origin.X - sourceRect.Width);
-                }
-                var relativeOrigin = new Vector2(origin.X / sourceRect.Width, origin.Y / sourceRect.Height);
-                TryUpdateLimbParam(selectedLimb, "origin", relativeOrigin);
-                if (limbPairEditing)
-                {
-                    UpdateOtherJoints(selectedLimb, (otherLimb, otherJoint) =>
-                    {
-                        otherLimb.ActiveSprite.Origin = sprite.Origin;
-                        if (otherLimb.DamagedSprite != null)
+                        if (!selectedLimbs.Contains(limb))
                         {
-                            otherLimb.DamagedSprite.Origin = sprite.Origin;
+                            if (!Widget.EnableMultiSelect)
+                            {
+                                selectedLimbs.Clear();
+                            }
+                            selectedLimbs.Add(limb);
                         }
-                        TryUpdateLimbParam(otherLimb, "origin", relativeOrigin);
-                    });
+                        else if (Widget.EnableMultiSelect)
+                        {
+                            selectedLimbs.Remove(limb);
+                        }
+                    }
+                    if (PlayerInput.LeftButtonClicked())
+                    {
+                        ResetParamsEditor();
+                    }
+                    // Origin
+                    if (PlayerInput.LeftButtonHeld() && selectedLimbs.Contains(limb))
+                    {
+                        float multiplier = 0.5f;
+                        Vector2 forward = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(limb.Rotation));
+                        var input = -scaledMouseSpeed * inputMultiplier * Cam.Zoom / limb.Scale * multiplier;
+                        var sprite = limb.ActiveSprite;
+                        origin += input.TransformVector(forward);
+                        var max = new Vector2(sourceRect.Width, sourceRect.Height);
+                        sprite.Origin = origin.Clamp(Vector2.Zero, max);
+                        if (limb.DamagedSprite != null)
+                        {
+                            limb.DamagedSprite.Origin = sprite.Origin;
+                        }
+                        if (character.AnimController.IsFlipped)
+                        {
+                            origin.X = Math.Abs(origin.X - sourceRect.Width);
+                        }
+                        TryUpdateLimbParam(limb, "origin", relativeOrigin);
+                        if (limbPairEditing)
+                        {
+                            UpdateOtherJoints(limb, (otherLimb, otherJoint) =>
+                            {
+                                otherLimb.ActiveSprite.Origin = sprite.Origin;
+                                if (otherLimb.DamagedSprite != null)
+                                {
+                                    otherLimb.DamagedSprite.Origin = sprite.Origin;
+                                }
+                                TryUpdateLimbParam(otherLimb, "origin", relativeOrigin);
+                            });
+                        }
+                    }
                 }
             }
         }
 
-        private void DrawRagdollEditor(SpriteBatch spriteBatch, float deltaTime)
+        private void DrawRagdoll(SpriteBatch spriteBatch, float deltaTime)
         {
             bool altDown = PlayerInput.KeyDown(Keys.LeftAlt);
             if (!altDown && editJoints)
@@ -2173,7 +2206,7 @@ namespace Barotrauma
                     rect.X += offsetX;
                     rect.Y += offsetY;
 
-                    GUI.DrawRectangle(spriteBatch, rect, Color.Red);
+                    GUI.DrawRectangle(spriteBatch, rect, selectedLimbs.Contains(limb) ? Color.Yellow : Color.Red);
                     Vector2 origin = limb.ActiveSprite.Origin;
                     Vector2 limbBodyPos = new Vector2(rect.X + origin.X * spriteSheetZoom, rect.Y + origin.Y * spriteSheetZoom);
                     // The origin is manipulated when the character is flipped. We have to undo it here.
@@ -2185,7 +2218,7 @@ namespace Barotrauma
                     {
                         DrawSpritesheetJointEditor(spriteBatch, deltaTime, limb, limbBodyPos);
                     }
-                    if (editSpriteDimensions)
+                    if (editLimbs)
                     {
                         if (!lockSpriteOrigin)
                         {
@@ -2203,57 +2236,32 @@ namespace Barotrauma
                         var topRight = new Vector2(topLeft.X + rect.Width, topLeft.Y);
                         var bottomRight = new Vector2(topRight.X, topRight.Y + rect.Height);
                         //var bottomLeft = new Vector2(topLeft.X, bottomRight.Y);
-                        if (!lockSpritePosition)
+                        // Select limbs
+                        if (rect.Contains(PlayerInput.MousePosition))
                         {
-                            DrawWidget(spriteBatch, topLeft - new Vector2(halfSize), WidgetType.Rectangle, widgetSize, Color.Red, "Position", () =>
+                            if (PlayerInput.LeftButtonDown())
                             {
-                                // Adjust the source rect location
-                                var newRect = limb.ActiveSprite.SourceRect;
-                                newRect.Location = new Point(
-                                    (int)((PlayerInput.MousePosition.X + halfSize - offsetX) / spriteSheetZoom), 
-                                    (int)((PlayerInput.MousePosition.Y + halfSize - offsetY) / spriteSheetZoom));
-                                limb.ActiveSprite.SourceRect = newRect;
-                                if (limb.DamagedSprite != null)
+                                if (!selectedLimbs.Contains(limb))
                                 {
-                                    limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
+                                    if (!Widget.EnableMultiSelect)
+                                    {
+                                        selectedLimbs.Clear();
+                                    }
+                                    selectedLimbs.Add(limb);
                                 }
-                                TryUpdateLimbParam(limb, "sourcerect", newRect);
-                                GUI.DrawString(spriteBatch, topLeft + new Vector2(stringOffset.X, -stringOffset.Y * 1.5f), limb.ActiveSprite.SourceRect.Location.ToString(), Color.White, Color.Black * 0.5f);
-                            }, autoFreeze: false);
-                        }
-                        if (!lockSpriteSize)
-                        {
-                            DrawWidget(spriteBatch, bottomRight, WidgetType.Rectangle, widgetSize, Color.White, "Size", () =>
+                                else if (Widget.EnableMultiSelect)
+                                {
+                                    selectedLimbs.Remove(limb);
+                                }
+                            }
+                            if (PlayerInput.LeftButtonClicked())
                             {
-                                // Adjust the source rect width and height, and the sprite size.
-                                var newRect = limb.ActiveSprite.SourceRect;
-                                int width = (int)((PlayerInput.MousePosition.X - rect.X) / spriteSheetZoom);
-                                int height = (int)((PlayerInput.MousePosition.Y - rect.Y) / spriteSheetZoom);
-                                int dx = newRect.Width - width;
-                                newRect.Width = width;
-                                newRect.Height = height;
-                                limb.ActiveSprite.SourceRect = newRect;
-                                limb.ActiveSprite.size = new Vector2(width, height);
-                                // Also the origin should be adjusted to the new width, so that it will remain at the same position relative to the source rect location.
-                                limb.ActiveSprite.Origin = new Vector2(origin.X - dx, origin.Y);
-                                if (limb.DamagedSprite != null)
-                                {
-                                    limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
-                                    limb.DamagedSprite.Origin = limb.ActiveSprite.Origin;
-                                }
-                                if (character.AnimController.IsFlipped)
-                                {
-                                    origin.X = Math.Abs(origin.X - newRect.Width);
-                                }
-                                var relativeOrigin = new Vector2(origin.X / newRect.Width, origin.Y / newRect.Height);
-                                TryUpdateLimbParam(limb, "origin", relativeOrigin);
-                                TryUpdateLimbParam(limb, "sourcerect", newRect);
-                                GUI.DrawString(spriteBatch, bottomRight + stringOffset, limb.ActiveSprite.size.FormatZeroDecimal(), Color.White, Color.Black * 0.5f);
-                            }, autoFreeze: false);
+                                ResetParamsEditor();
+                            }
                         }
-                        if (PlayerInput.LeftButtonHeld() && selectedWidget == null)
+                        if (selectedLimbs.Contains(limb))
                         {
-                            if (!lockSpriteOrigin && rect.Contains(PlayerInput.MousePosition))
+                            if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld())
                             {
                                 var input = scaledMouseSpeed;
                                 input.X *= character.AnimController.Dir;
@@ -2274,6 +2282,54 @@ namespace Barotrauma
                                 var relativeOrigin = new Vector2(origin.X / sourceRect.Width, origin.Y / sourceRect.Height);
                                 TryUpdateLimbParam(limb, "origin", relativeOrigin);
                                 GUI.DrawString(spriteBatch, limbBodyPos + new Vector2(10, -10), relativeOrigin.FormatDoubleDecimal(), Color.White, Color.Black * 0.5f);
+                            }
+                            if (!lockSpritePosition)
+                            {
+                                DrawWidget(spriteBatch, topLeft - new Vector2(halfSize), WidgetType.Rectangle, widgetSize, Color.Red, "Position", () =>
+                                {
+                                    // Adjust the source rect location
+                                    var newRect = limb.ActiveSprite.SourceRect;
+                                    newRect.Location = new Point(
+                                        (int)((PlayerInput.MousePosition.X + halfSize - offsetX) / spriteSheetZoom),
+                                        (int)((PlayerInput.MousePosition.Y + halfSize - offsetY) / spriteSheetZoom));
+                                    limb.ActiveSprite.SourceRect = newRect;
+                                    if (limb.DamagedSprite != null)
+                                    {
+                                        limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
+                                    }
+                                    TryUpdateLimbParam(limb, "sourcerect", newRect);
+                                    GUI.DrawString(spriteBatch, topLeft + new Vector2(stringOffset.X, -stringOffset.Y * 1.5f), limb.ActiveSprite.SourceRect.Location.ToString(), Color.White, Color.Black * 0.5f);
+                                }, autoFreeze: false);
+                            }
+                            if (!lockSpriteSize)
+                            {
+                                DrawWidget(spriteBatch, bottomRight, WidgetType.Rectangle, widgetSize, Color.White, "Size", () =>
+                                {
+                                    // Adjust the source rect width and height, and the sprite size.
+                                    var newRect = limb.ActiveSprite.SourceRect;
+                                    int width = (int)((PlayerInput.MousePosition.X - rect.X) / spriteSheetZoom);
+                                    int height = (int)((PlayerInput.MousePosition.Y - rect.Y) / spriteSheetZoom);
+                                    int dx = newRect.Width - width;
+                                    newRect.Width = width;
+                                    newRect.Height = height;
+                                    limb.ActiveSprite.SourceRect = newRect;
+                                    limb.ActiveSprite.size = new Vector2(width, height);
+                                    // Also the origin should be adjusted to the new width, so that it will remain at the same position relative to the source rect location.
+                                    limb.ActiveSprite.Origin = new Vector2(origin.X - dx, origin.Y);
+                                    if (limb.DamagedSprite != null)
+                                    {
+                                        limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
+                                        limb.DamagedSprite.Origin = limb.ActiveSprite.Origin;
+                                    }
+                                    if (character.AnimController.IsFlipped)
+                                    {
+                                        origin.X = Math.Abs(origin.X - newRect.Width);
+                                    }
+                                    var relativeOrigin = new Vector2(origin.X / newRect.Width, origin.Y / newRect.Height);
+                                    TryUpdateLimbParam(limb, "origin", relativeOrigin);
+                                    TryUpdateLimbParam(limb, "sourcerect", newRect);
+                                    GUI.DrawString(spriteBatch, bottomRight + stringOffset, limb.ActiveSprite.size.FormatZeroDecimal(), Color.White, Color.Black * 0.5f);
+                                }, autoFreeze: false);
                             }
                         }
                     }
@@ -2528,7 +2584,6 @@ namespace Barotrauma
 
         #region Widgets as classes
         private Dictionary<string, Widget> jointSelectionWidgets = new Dictionary<string, Widget>();
-        private HashSet<LimbJoint> selectedJoints = new HashSet<LimbJoint>();
 
         private Widget GetJointSelectionWidget(string id, LimbJoint joint, string linkedId = null)
         {
