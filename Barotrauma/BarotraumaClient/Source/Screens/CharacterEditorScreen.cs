@@ -3124,6 +3124,8 @@ namespace Barotrauma
                         var rectInputs = GetField("Source Rect").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).Reverse().ToArray();
                         int width = rectInputs[2].IntValue;
                         int height = rectInputs[3].IntValue;
+                        string notes = string.Empty;
+                        idToCodeName.TryGetValue(id, out notes);
                         LimbXElements.Add(id.ToString(), new XElement("limb",
                             new XAttribute("id", id),
                             new XAttribute("name", limbName),
@@ -3132,7 +3134,8 @@ namespace Barotrauma
                             new XAttribute("height", height),
                             new XElement("sprite",
                                 new XAttribute("texture", TexturePath),
-                                new XAttribute("sourcerect", $"{rectInputs[0].IntValue}, {rectInputs[1].IntValue}, {width}, {height}"))
+                                new XAttribute("sourcerect", $"{rectInputs[0].IntValue}, {rectInputs[1].IntValue}, {width}, {height}")),
+                            new XAttribute("notes", notes)
                             ));
                     }
                 }
@@ -3160,6 +3163,7 @@ namespace Barotrauma
                     }
                 }
 
+                Dictionary<int, string> idToCodeName = new Dictionary<int, string>();
                 protected void ParseRagdollFromHTML(string path, Action<int, string, LimbType, Rectangle> limbCallback = null, Action<int, int, Vector2, Vector2, string> jointCallback = null)
                 {
                     // TODO: parse as xml?
@@ -3173,6 +3177,8 @@ namespace Barotrauma
                     Dictionary<string, int> hierarchyToID = new Dictionary<string, int>();
                     Dictionary<int, string> idToHierarchy = new Dictionary<int, string>();
                     Dictionary<int, string> idToPositionCode = new Dictionary<int, string>();
+                    Dictionary<int, string> idToName = new Dictionary<int, string>();
+                    idToCodeName.Clear();
                     foreach (var line in lines)
                     {
                         var codeNames = new string(line.SkipWhile(c => c != '>').Skip(1).ToArray()).Split(',');
@@ -3180,8 +3186,10 @@ namespace Barotrauma
                         {
                             string codeName = codeNames[i].Trim();
                             if (string.IsNullOrWhiteSpace(codeName)) { continue; }
+                            idToCodeName.Add(id, codeName);
                             string limbName = new string(codeName.SkipWhile(c => c != '_').Skip(1).ToArray());
                             if (string.IsNullOrWhiteSpace(limbName)) { continue; }
+                            idToName.Add(id, limbName);
                             var parts = line.Split(' ');
                             int ParseToInt(string selector)
                             {
@@ -3233,7 +3241,9 @@ namespace Barotrauma
                                 {
                                     Vector2 anchor1 = Vector2.Zero;
                                     Vector2 anchor2 = Vector2.Zero;
-                                    string jointName = $"Joint {parent} - {hierarchy}";
+                                    idToName.TryGetValue(parentID, out string parentName);
+                                    idToName.TryGetValue(i, out string limbName);
+                                    string jointName = $"Joint {parentName} - {limbName}";
                                     if (idToPositionCode.TryGetValue(i, out string positionCode))
                                     {
                                         if (LimbXElements.TryGetValue(parent, out XElement parentElement))

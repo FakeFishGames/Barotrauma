@@ -409,6 +409,9 @@ namespace Barotrauma
 
         [Serialize(false, true), Editable]
         public bool IgnoreCollisions { get; set; }
+
+        [Serialize("", true), Editable]
+        public string Notes { get; set; }
     }
 
     class SpriteParams : RagdollSubParams
