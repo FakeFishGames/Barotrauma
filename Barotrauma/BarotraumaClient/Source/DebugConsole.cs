@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using System.Globalization;
 
 namespace Barotrauma
 {
@@ -283,12 +284,12 @@ namespace Barotrauma
                 GameMain.SubEditorScreen.Select();
             }));
 
-            commands.Add(new Command("editparticles", "", (string[] args) =>
+            commands.Add(new Command("editparticles|particleeditor", "", (string[] args) =>
             {
                 GameMain.ParticleEditorScreen.Select();
             }));
 
-            commands.Add(new Command("editlevels", "", (string[] args) =>
+            commands.Add(new Command("editlevels|editlevel|leveleditor", "", (string[] args) =>
             {
                 GameMain.LevelEditorScreen.Select();
             }));
@@ -697,6 +698,115 @@ namespace Barotrauma
                 }
             }));
 
+            commands.Add(new Command("reloadtextures|reloadtexture", "", (string[] args) =>
+            {
+                var item = Character.Controlled.FocusedItem;
+                var character = Character.Controlled;
+                if (item != null)
+                {
+                    item.Sprite.ReloadTexture();
+                }
+                else if (character != null)
+                {
+                    foreach (var limb in character.AnimController.Limbs)
+                    {
+                        limb.Sprite?.ReloadTexture();
+                        limb.DamagedSprite?.ReloadTexture();
+                        limb.DeformSprite?.Sprite.ReloadTexture();
+                        // update specular
+                    }
+                }
+                else
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+            }, isCheat: true));
+
+            commands.Add(new Command("limbscale", "Note: the changes are not saved!", (string[] args) =>
+            {
+                var character = Character.Controlled;
+                if (character == null)
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+                if (!float.TryParse(args[0], NumberStyles.Number, CultureInfo.InvariantCulture, out float value))
+                {
+                    ThrowError("Failed to parse float value from the arguments");
+                    return;
+                }
+                RagdollParams ragdollParams = character.AnimController.RagdollParams;
+                ragdollParams.LimbScale = value;
+                var pos = character.WorldPosition;
+                character.AnimController.Recreate(ragdollParams);
+                character.TeleportTo(pos);
+            }, isCheat: true));
+
+            commands.Add(new Command("jointscale", "Note: the changes are not saved!", (string[] args) =>
+            {
+                var character = Character.Controlled;
+                if (character == null)
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+                if (!float.TryParse(args[0], NumberStyles.Number, CultureInfo.InvariantCulture, out float value))
+                {
+                    ThrowError("Failed to parse float value from the arguments");
+                    return;
+                }
+                RagdollParams ragdollParams = character.AnimController.RagdollParams;
+                ragdollParams.JointScale = value;
+                var pos = character.WorldPosition;
+                character.AnimController.Recreate(ragdollParams);
+                character.TeleportTo(pos);
+            }, isCheat: true));
+
+            commands.Add(new Command("ragdollscale", "Note: the changes are not saved!", (string[] args) =>
+            {
+                var character = Character.Controlled;
+                if (character == null)
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+                if (!float.TryParse(args[0], NumberStyles.Number, CultureInfo.InvariantCulture, out float value))
+                {
+                    ThrowError("Failed to parse float value from the arguments");
+                    return;
+                }
+                RagdollParams ragdollParams = character.AnimController.RagdollParams;
+                ragdollParams.LimbScale = value;
+                ragdollParams.JointScale = value;
+                var pos = character.WorldPosition;
+                character.AnimController.Recreate(ragdollParams);
+                character.TeleportTo(pos);
+            }, isCheat: true));
+
+            commands.Add(new Command("recreateragdoll", "", (string[] args) =>
+            {
+                var character = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, true);
+                if (character == null)
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+                var pos = character.WorldPosition;
+                character.AnimController.Recreate(character.AnimController.RagdollParams);
+                character.TeleportTo(pos);
+            }, isCheat: true));
+
+            commands.Add(new Command("resetragdoll", "", (string[] args) =>
+            {
+                var character = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, true);
+                if (character == null)
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+                character.AnimController.ResetRagdoll();
+            }, isCheat: true));
         }
     }
 }
