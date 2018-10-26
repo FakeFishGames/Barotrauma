@@ -43,7 +43,7 @@ namespace Barotrauma
         private bool showSpritesheet;
         private bool isFreezed;
         private bool autoFreeze = true;
-        private bool limbPairEditing;
+        private bool limbPairEditing = true;
         private bool uniformScaling;
         private bool lockSpriteOrigin;
         private bool lockSpritePosition;
@@ -1919,7 +1919,7 @@ namespace Barotrauma
                         TryUpdateLimbParam(limb, "origin", relativeOrigin);
                         if (limbPairEditing)
                         {
-                            UpdateOtherJoints(limb, (otherLimb, otherJoint) =>
+                            UpdateOtherLimbs(limb, otherLimb =>
                             {
                                 otherLimb.ActiveSprite.Origin = sprite.Origin;
                                 if (otherLimb.DamagedSprite != null)
@@ -2079,9 +2079,39 @@ namespace Barotrauma
             }
         }
 
-        private void UpdateOtherJoints(Limb limb, Action<Limb, LimbJoint> updateAction)
+        private void UpdateOtherLimbs(Limb limb, Action<Limb> updateAction)
         {
             // Edit the other limbs
+            if (limbPairEditing)
+            {
+                string limbType = limb.type.ToString();
+                bool isLeft = limbType.Contains("Left");
+                bool isRight = limbType.Contains("Right");
+                if (isLeft || isRight)
+                {
+                    if (character.AnimController.HasMultipleLimbsOfSameType)
+                    {
+                        GetOtherLimbs(limb)?.ForEach(l => UpdateOtherLimbs(l));
+                    }
+                    else
+                    {
+                        Limb otherLimb = GetOtherLimb(limbType, isLeft);
+                        if (otherLimb != null)
+                        {
+                            UpdateOtherLimbs(otherLimb);
+                        }
+                    }
+                    void UpdateOtherLimbs(Limb otherLimb)
+                    {
+                        updateAction(otherLimb);
+                    }
+                }
+            }
+        }
+
+        private void UpdateOtherJoints(Limb limb, Action<Limb, LimbJoint> updateAction)
+        {
+            // Edit the other joints
             if (limbPairEditing)
             {
                 string limbType = limb.type.ToString();
@@ -2266,6 +2296,18 @@ namespace Barotrauma
                                 var relativeOrigin = new Vector2(origin.X / sourceRect.Width, origin.Y / sourceRect.Height);
                                 TryUpdateLimbParam(limb, "origin", relativeOrigin);
                                 GUI.DrawString(spriteBatch, limbScreenPos + new Vector2(10, -10), relativeOrigin.FormatDoubleDecimal(), Color.White, Color.Black * 0.5f);
+                                if (limbPairEditing)
+                                {
+                                    UpdateOtherLimbs(limb, otherLimb =>
+                                    {
+                                        otherLimb.ActiveSprite.Origin = sprite.Origin;
+                                        if (otherLimb.DamagedSprite != null)
+                                        {
+                                            otherLimb.DamagedSprite.Origin = sprite.Origin;
+                                        }
+                                        TryUpdateLimbParam(otherLimb, "origin", relativeOrigin);
+                                    });
+                                }
                             }
                             if (!lockSpritePosition)
                             {
@@ -2283,6 +2325,18 @@ namespace Barotrauma
                                     }
                                     TryUpdateLimbParam(limb, "sourcerect", newRect);
                                     GUI.DrawString(spriteBatch, topLeft + new Vector2(stringOffset.X, -stringOffset.Y * 1.5f), limb.ActiveSprite.SourceRect.Location.ToString(), Color.White, Color.Black * 0.5f);
+                                    if (limbPairEditing)
+                                    {
+                                        UpdateOtherLimbs(limb, otherLimb =>
+                                        {
+                                            otherLimb.ActiveSprite.SourceRect = newRect;
+                                            if (otherLimb.DamagedSprite != null)
+                                            {
+                                                otherLimb.DamagedSprite.SourceRect = newRect;
+                                            }
+                                            TryUpdateLimbParam(otherLimb, "sourcerect", newRect);
+                                        });
+                                    }
                                 }, autoFreeze: false);
                             }
                             if (!lockSpriteSize)
@@ -2313,6 +2367,21 @@ namespace Barotrauma
                                     TryUpdateLimbParam(limb, "origin", relativeOrigin);
                                     TryUpdateLimbParam(limb, "sourcerect", newRect);
                                     GUI.DrawString(spriteBatch, bottomRight + stringOffset, limb.ActiveSprite.size.FormatZeroDecimal(), Color.White, Color.Black * 0.5f);
+                                    if (limbPairEditing)
+                                    {
+                                        UpdateOtherLimbs(limb, otherLimb =>
+                                        {
+                                            otherLimb.ActiveSprite.SourceRect = newRect;
+                                            otherLimb.ActiveSprite.Origin = relativeOrigin;
+                                            if (otherLimb.DamagedSprite != null)
+                                            {
+                                                otherLimb.DamagedSprite.SourceRect = newRect;
+                                                otherLimb.DamagedSprite.Origin = relativeOrigin;
+                                            }
+                                            TryUpdateLimbParam(otherLimb, "origin", relativeOrigin);
+                                            TryUpdateLimbParam(otherLimb, "sourcerect", newRect);
+                                        });
+                                    }
                                 }, autoFreeze: false);
                             }
                         }
