@@ -2211,7 +2211,8 @@ namespace Barotrauma
                         var bottomRight = new Vector2(topRight.X, topRight.Y + rect.Height);
                         //var bottomLeft = new Vector2(topLeft.X, bottomRight.Y);
                         // Select limbs
-                        if (rect.Contains(PlayerInput.MousePosition))
+                        bool isMouseOnRect = rect.Contains(PlayerInput.MousePosition);
+                        if (isMouseOnRect)
                         {
                             if (PlayerInput.LeftButtonDown())
                             {
@@ -2235,7 +2236,7 @@ namespace Barotrauma
                         }
                         if (selectedLimbs.Contains(limb))
                         {
-                            if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld())
+                            if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && isMouseOnRect)
                             {
                                 var input = scaledMouseSpeed;
                                 input.X *= character.AnimController.Dir;
