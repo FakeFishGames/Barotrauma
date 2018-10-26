@@ -17,6 +17,7 @@ namespace Barotrauma
 
         public Shape shape;
         public string tooltip;
+        public bool showTooltip = true;
         public Rectangle DrawRect => new Rectangle((int)(DrawPos.X - (float)size / 2), (int)(DrawPos.Y - (float)size / 2), size, size);
         public Rectangle InputRect
         {
@@ -152,7 +153,7 @@ namespace Barotrauma
             }
             if (IsSelected)
             {
-                if (!string.IsNullOrEmpty(tooltip))
+                if (showTooltip && !string.IsNullOrEmpty(tooltip))
                 {
                     var offset = tooltipOffset ?? new Vector2(size, -size / 2);
                     GUI.DrawString(spriteBatch, DrawPos + offset, tooltip, textColor, textBackgroundColor);
