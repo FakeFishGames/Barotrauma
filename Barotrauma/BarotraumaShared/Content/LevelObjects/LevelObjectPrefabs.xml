@@ -590,6 +590,52 @@
     </Trigger>
     <ParticleEmitter particle="hydrosmokesmall" particlespersecond="10" position="-50,700" anglemin="60" anglemax="120" velocitymin="100" velocitymax="600" />
   </lavavent>
+
+  <geothermalvent_A spawnpos="Wall, SeaFloor" alignment="Top" minsize="1" maxsize="1.2" alignwithsurface="true" randomrotation="-10,10">
+    <overridecommonness commonness="5" />
+    <Sprite texture="Content/LevelObjects/geothermalvents.png" sourcerect="0,0,280,276" origin="0.5,0.9" />
+  </geothermalvent_A>
+
+  <geothermalvent_B spawnpos="Wall, SeaFloor" alignment="Top" minsize="1" maxsize="1.2" alignwithsurface="true" randomrotation="-10,10">
+    <overridecommonness commonness="5" />
+    <Sprite texture="Content/LevelObjects/geothermalvents.png" sourcerect="280,340,276" origin="0.5,0.9" />
+  </geothermalvent_B>
+
+  <geothermalvent_C spawnpos="Wall, SeaFloor" alignment="Top" minsize="1" maxsize="1.2" alignwithsurface="true" randomrotation="-10,10">
+    <overridecommonness commonness="5" />
+    <Sprite texture="Content/LevelObjects/geothermalvents.png" sourcerect="620,0,251,276" origin="0.5,0.9" />
+  </geothermalvent_C>
+
+  <geothermalvent_D spawnpos="Wall, SeaFloor" alignment="Top" minsize="1" maxsize="1.2" alignwithsurface="true" randomrotation="-10,10">
+    <overridecommonness commonness="5" />
+    <Sprite texture="Content/LevelObjects/geothermalvents.png" sourcerect="871,0,196,276" origin="0.5,0.9" />
+  </geothermalvent_D>
+
+  <geothermalvent_E spawnpos="Wall, SeaFloor" alignment="Top" minsize="1" maxsize="1.2" alignwithsurface="true" randomrotation="-10,10">
+    <overridecommonness commonness="5" />
+    <Sprite texture="Content/LevelObjects/geothermalvents.png" sourcerect="1067,0,260,276" origin="0.5,0.9" />
+  </geothermalvent_E>
+
+  <geothermalvent_F spawnpos="Wall, SeaFloor" alignment="Top" minsize="1" maxsize="1.2" alignwithsurface="true" randomrotation="-10,10">
+    <overridecommonness commonness="5" />
+    <Sprite texture="Content/LevelObjects/geothermalvents.png" sourcerect="0,276,280,308" origin="0.5,0.9" />
+  </geothermalvent_F>
+
+  <geothermalvent_G spawnpos="Wall, SeaFloor" alignment="Top" minsize="1" maxsize="1.2" alignwithsurface="true" randomrotation="-10,10">
+    <overridecommonness commonness="5" />
+    <Sprite texture="Content/LevelObjects/geothermalvents.png" sourcerect="280,276,340,308" origin="0.5,0.9" />
+  </geothermalvent_G>
+
+  <geothermalvent_multiple spawnpos="Wall, SeaFloor" alignment="Top" minsize="1" maxsize="1.2" alignwithsurface="true" randomrotation="-10,10">
+    <overridecommonness commonness="5" />
+    <Sprite texture="Content/LevelObjects/geothermalvents.png" sourcerect="0,584,1461,339" origin="0.5,0.9" />
+  </geothermalvent_multiple>
+
+  <geothermalvent_ground spawnpos="Wall, SeaFloor" alignment="Top" minsize="1" maxsize="1.2" alignwithsurface="true" randomrotation="-10,10">
+    <overridecommonness commonness="5" />
+    <Sprite texture="Content/LevelObjects/geothermalvents.png" sourcerect="0,923,1461,204" origin="0.5,0.9" />
+  </geothermalvent_ground>
+
   <watercurrent1 spawnpos="MainPath" alignment="Top, Left, Right, Bottom" minsize="0.5" maxsize="2.0" randomrotation="0,360" commonness="0">
     <overridecommonness commonness="0.5" leveltype="WastesBasic" />
     <overridecommonness commonness="1.5" leveltype="RidgeBasic" />
