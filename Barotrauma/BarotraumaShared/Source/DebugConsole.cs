@@ -697,8 +697,8 @@ namespace Barotrauma
 
                 return new string[][]
                 {
-        GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray(),
-        Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                    GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray(),
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
                 };
             }));
 
@@ -864,7 +864,23 @@ namespace Barotrauma
             }));
 #endif
 
-                InitProjectSpecific();
+            //"dummy commands" that only exist so that the server can give clients permissions to use them
+            //TODO: alphabetical order?
+            commands.Add(new Command("control|controlcharacter", "control [character name]: Start controlling the specified character (client-only).", null, () =>
+            {
+                return new string[][]
+                {
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                };
+            }));
+            commands.Add(new Command("los", "Toggle the line of sight effect on/off (client-only).", null, isCheat: true));
+            commands.Add(new Command("lighting|lights", "Toggle lighting on/off (client-only).", null, isCheat: true));
+            commands.Add(new Command("debugdraw", "Toggle the debug drawing mode on/off (client-only).", null, isCheat: true));
+            commands.Add(new Command("togglehud|hud", "Toggle the character HUD (inventories, icons, buttons, etc) on/off (client-only).", null));
+            commands.Add(new Command("followsub", "Toggle whether the camera should follow the nearest submarine (client-only).", null));
+            commands.Add(new Command("toggleaitargets|aitargets", "Toggle the visibility of AI targets (= targets that enemies can detect and attack/escape from) (client-only).", null, isCheat: true));
+
+            InitProjectSpecific();
 
             commands.Sort((c1, c2) => c1.names[0].CompareTo(c2.names[0]));
         }
@@ -1051,13 +1067,13 @@ namespace Barotrauma
                     if (matchingCommand == null || matchingCommand.RelayToServer)
                     {
                         GameMain.Client.SendConsoleCommand(command);
+                        NewMessage("Server command: " + command, Color.White);
                     }
                     else
                     {
                         matchingCommand.ClientExecute(splitCommand.Skip(1).ToArray());
                     }
-
-                    NewMessage("Server command: " + command, Color.White);
+                    
                     return;
                 }
 #if !DEBUG

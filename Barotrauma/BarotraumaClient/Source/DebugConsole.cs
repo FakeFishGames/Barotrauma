@@ -21,10 +21,7 @@ namespace Barotrauma
             /// </summary>
             public Action<string[]> OnClientExecute;
 
-            public bool RelayToServer
-            {
-                get { return OnClientExecute == null; }
-            }
+            public bool RelayToServer = true;
 
             public void ClientExecute(string[] args)
             {
@@ -264,7 +261,14 @@ namespace Barotrauma
 
         private static void AssignOnClientExecute(string names, Action<string[]> onClientExecute)
         {
-            commands.First(c => c.names.Intersect(names.Split('|')).Count() > 0).OnClientExecute = onClientExecute;
+            Command command = commands.First(c => c.names.Intersect(names.Split('|')).Count() > 0);
+            command.OnClientExecute = onClientExecute;
+            command.RelayToServer = false;
+        }
+
+        private static void AssignRelayToServer(string names, bool relay)
+        {
+            commands.First(c => c.names.Intersect(names.Split('|')).Count() > 0).RelayToServer = relay;
         }
 
         private static void InitProjectSpecific()
@@ -357,7 +361,7 @@ namespace Barotrauma
                 GameMain.CharacterEditorScreen.Select();
             }));
 
-            commands.Add(new Command("control|controlcharacter", "control [character name]: Start controlling the specified character.", (string[] args) =>
+            /*AssignOnExecute("control|controlcharacter", (string[] args) =>
             {
                 if (args.Length < 1) return;
 
@@ -367,31 +371,26 @@ namespace Barotrauma
                 {
                     Character.Controlled = character;
                 }
-            },
-            () =>
-            {
-                return new string[][]
-                {
-                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
-                };
-            }, isCheat: true));
+            });*/ //TODO: relay to server
 
             commands.Add(new Command("shake", "", (string[] args) =>
             {
                 GameMain.GameScreen.Cam.Shake = 10.0f;
             }));
 
-            commands.Add(new Command("los", "los: Toggle the line of sight effect on/off.", (string[] args) =>
+            AssignOnExecute("los",(string[] args) =>
             {
                 GameMain.LightManager.LosEnabled = !GameMain.LightManager.LosEnabled;
                 NewMessage("Line of sight effect " + (GameMain.LightManager.LosEnabled ? "enabled" : "disabled"), Color.White);
-            }, isCheat: true));
+            });
+            AssignRelayToServer("los", false);
 
-            commands.Add(new Command("lighting|lights", "Toggle lighting on/off.", (string[] args) =>
+            AssignOnExecute("lighting|lights", (string[] args) =>
             {
                 GameMain.LightManager.LightingEnabled = !GameMain.LightManager.LightingEnabled;
                 NewMessage("Lighting " + (GameMain.LightManager.LightingEnabled ? "enabled" : "disabled"), Color.White);
-            }, isCheat: true));
+            });
+            AssignRelayToServer("lighting|lights", false);
 
             commands.Add(new Command("multiplylights [color]", "Multiplies the colors of all the static lights in the sub with the given color value.", (string[] args) =>
             {
@@ -485,11 +484,12 @@ namespace Barotrauma
                 new GUIMessageBox("", string.Join(" ", args));
             }));
 
-            commands.Add(new Command("debugdraw", "debugdraw: Toggle the debug drawing mode on/off.", (string[] args) =>
+            AssignOnExecute("debugdraw", (string[] args) =>
             {
                 GameMain.DebugDraw = !GameMain.DebugDraw;
                 NewMessage("Debug draw mode " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.White);
-            }, isCheat: true));
+            });
+            AssignRelayToServer("debugdraw", false);
 
             commands.Add(new Command("fpscounter", "fpscounter: Toggle the FPS counter.", (string[] args) =>
             {
@@ -514,24 +514,27 @@ namespace Barotrauma
                 NewMessage("Interact debug draw mode " + (Character.DebugDrawInteract ? "enabled" : "disabled"), Color.White);
             }, isCheat: true));
 
-            commands.Add(new Command("togglehud|hud", "togglehud/hud: Toggle the character HUD (inventories, icons, buttons, etc) on/off.", (string[] args) =>
+            AssignOnExecute("togglehud|hud", (string[] args) =>
             {
                 GUI.DisableHUD = !GUI.DisableHUD;
                 GameMain.Instance.IsMouseVisible = !GameMain.Instance.IsMouseVisible;
                 NewMessage(GUI.DisableHUD ? "Disabled HUD" : "Enabled HUD", Color.White);
-            }));
+            });
+            AssignRelayToServer("togglehud|hud", false);
 
-            commands.Add(new Command("followsub", "followsub: Toggle whether the camera should follow the nearest submarine.", (string[] args) =>
+            AssignOnExecute("followsub", (string[] args) =>
             {
                 Camera.FollowSub = !Camera.FollowSub;
                 NewMessage(Camera.FollowSub ? "Set the camera to follow the closest submarine" : "Disabled submarine following.", Color.White);
-            }));
+            });
+            AssignRelayToServer("followsub", false);
 
-            commands.Add(new Command("toggleaitargets|aitargets", "toggleaitargets/aitargets: Toggle the visibility of AI targets (= targets that enemies can detect and attack/escape from).", (string[] args) =>
+            AssignOnExecute("toggleaitargets|aitargets", (string[] args) =>
             {
                 AITarget.ShowAITargets = !AITarget.ShowAITargets;
                 NewMessage(AITarget.ShowAITargets ? "Enabled AI target drawing" : "Disabled AI target drawing", Color.White);
-            }, isCheat: true));
+            });
+            AssignRelayToServer("toggleaitargets|aitargets", false);
 #if DEBUG
             commands.Add(new Command("spamchatmessages", "", (string[] args) =>
             {
@@ -550,7 +553,7 @@ namespace Barotrauma
             }));
 #endif
 
-                    commands.Add(new Command("dumptexts", "dumptexts [filepath]: Extracts all the texts from the given text xml and writes them into a file (using the same filename, but with the .txt extension). If the filepath is omitted, the EnglishVanilla.xml file is used.", (string[] args) =>
+            commands.Add(new Command("dumptexts", "dumptexts [filepath]: Extracts all the texts from the given text xml and writes them into a file (using the same filename, but with the .txt extension). If the filepath is omitted, the EnglishVanilla.xml file is used.", (string[] args) =>
             {
                 string filePath = args.Length > 0 ? args[0] : "Content/Texts/EnglishVanilla.xml";
                 var doc = XMLExtensions.TryLoadXml(filePath);
