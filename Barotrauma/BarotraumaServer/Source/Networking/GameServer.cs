@@ -443,7 +443,7 @@ namespace Barotrauma.Networking
                 //constantly increase AFK timer if the client is controlling a character (gets reset to zero every time an input is received)
                 if (gameStarted && c.Character != null && !c.Character.IsDead && !c.Character.IsUnconscious)
                 {
-                    c.KickAFKTimer += deltaTime;
+                    if (c.Connection != OwnerConnection) c.KickAFKTimer += deltaTime;
                 }
             }
 
