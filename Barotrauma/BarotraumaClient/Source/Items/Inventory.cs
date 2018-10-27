@@ -744,7 +744,7 @@ namespace Barotrauma
 
                 if (item != null && drawItem)
                 {
-                    if (item.Condition < item.Prefab.Health)
+                    if (item.Condition < item.Prefab.Health && (itemContainer == null || !itemContainer.ShowConditionInContainedStateIndicator))
                     {
                         GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, rect.Bottom - 8, rect.Width, 8), Color.Black * 0.8f, true);
                         GUI.DrawRectangle(spriteBatch,
@@ -754,9 +754,17 @@ namespace Barotrauma
 
                     if (itemContainer != null)
                     {
-                        float containedState = itemContainer.Inventory.Capacity == 1 ?
-                            (itemContainer.Inventory.Items[0] == null ? 0.0f : itemContainer.Inventory.Items[0].Condition / 100.0f) :
-                            itemContainer.Inventory.Items.Count(i => i != null) / (float)itemContainer.Inventory.capacity;
+                        float containedState = 0.0f;
+                        if (itemContainer.ShowConditionInContainedStateIndicator)
+                        {
+                            containedState = item.Condition / 100.0f;
+                        }
+                        else
+                        {
+                            containedState = itemContainer.Inventory.Capacity == 1 ?
+                                (itemContainer.Inventory.Items[0] == null ? 0.0f : itemContainer.Inventory.Items[0].Condition / 100.0f) :
+                                itemContainer.Inventory.Items.Count(i => i != null) / (float)itemContainer.Inventory.capacity;
+                        }
 
                         int dir = slot.SubInventoryDir;
                         Rectangle containedIndicatorArea = new Rectangle(rect.X,

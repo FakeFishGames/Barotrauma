@@ -2326,5 +2326,13 @@ namespace Barotrauma
             }
         }
         partial void DisposeProjSpecific();
+
+        public void TeleportTo(Vector2 worldPos)
+        {
+            AnimController.CurrentHull = null;
+            Submarine = null;
+            AnimController.SetPosition(ConvertUnits.ToSimUnits(worldPos), false);
+            AnimController.FindHull(worldPos, true);
+        }
     }
 }

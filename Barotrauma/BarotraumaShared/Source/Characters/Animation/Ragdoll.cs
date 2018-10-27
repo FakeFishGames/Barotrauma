@@ -1032,7 +1032,8 @@ namespace Barotrauma
                             if (lowerHull != null) floorY = ConvertUnits.ToSimUnits(lowerHull.Rect.Y - lowerHull.Rect.Height);
                         }
                     }
-                    if (Collider.SimPosition.Y < waterSurface && waterSurface - floorY > HeadPosition * 0.95f)
+                    if (HeadPosition.HasValue &&
+                        Collider.SimPosition.Y < waterSurface && waterSurface - floorY > HeadPosition * 0.95f)
                     {
                         inWater = true;
                     }
@@ -1262,8 +1263,8 @@ namespace Barotrauma
         {
             Vector2 rayStart = simPosition;
             float height = ColliderHeightFromFloor;
-            if (HeadPosition.HasValue) height = Math.Max(height, HeadPosition.Value);
-            if (TorsoPosition.HasValue) height = Math.Max(height, TorsoPosition.Value);
+            if (HeadPosition.HasValue && MathUtils.IsValid(HeadPosition.Value)) height = Math.Max(height, HeadPosition.Value);
+            if (TorsoPosition.HasValue && MathUtils.IsValid(TorsoPosition.Value)) height = Math.Max(height, TorsoPosition.Value);
 
             Vector2 rayEnd = rayStart - new Vector2(0.0f, height);
 

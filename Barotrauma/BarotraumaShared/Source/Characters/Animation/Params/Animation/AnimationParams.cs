@@ -211,44 +211,47 @@ namespace Barotrauma
             return (T)anim;
         }
 
-        public static AnimationParams CreateDummy(string fullPath, string speciesName, AnimationType animationType, Type type)
+        public static AnimationParams Create(string fullPath, string speciesName, AnimationType animationType, Type type)
         {
             if (type == typeof(HumanWalkParams))
             {
-                return CreateDummy<HumanWalkParams>(fullPath, speciesName, animationType);
+                return Create<HumanWalkParams>(fullPath, speciesName, animationType);
             }
             if (type == typeof(HumanRunParams))
             {
-                return CreateDummy<HumanRunParams>(fullPath, speciesName, animationType);
+                return Create<HumanRunParams>(fullPath, speciesName, animationType);
             }
             if (type == typeof(HumanSwimSlowParams))
             {
-                return CreateDummy<HumanSwimSlowParams>(fullPath, speciesName, animationType);
+                return Create<HumanSwimSlowParams>(fullPath, speciesName, animationType);
             }
             if (type == typeof(HumanSwimFastParams))
             {
-                return CreateDummy<HumanSwimFastParams>(fullPath, speciesName, animationType);
+                return Create<HumanSwimFastParams>(fullPath, speciesName, animationType);
             }
             if (type == typeof(FishWalkParams))
             {
-                return CreateDummy<FishWalkParams>(fullPath, speciesName, animationType);
+                return Create<FishWalkParams>(fullPath, speciesName, animationType);
             }
             if (type == typeof(FishRunParams))
             {
-                return CreateDummy<FishRunParams>(fullPath, speciesName, animationType);
+                return Create<FishRunParams>(fullPath, speciesName, animationType);
             }
             if (type == typeof(FishSwimSlowParams))
             {
-                return CreateDummy<FishSwimSlowParams>(fullPath, speciesName, animationType);
+                return Create<FishSwimSlowParams>(fullPath, speciesName, animationType);
             }
             if (type == typeof(FishSwimFastParams))
             {
-                return CreateDummy<FishSwimFastParams>(fullPath, speciesName, animationType);
+                return Create<FishSwimFastParams>(fullPath, speciesName, animationType);
             }
             throw new NotImplementedException(type.ToString());
         }
 
-        public static T CreateDummy<T>(string fullPath, string speciesName, AnimationType animationType) where T : AnimationParams, new()
+        /// <summary>
+        /// Note: Overrides old animations, if found!
+        /// </summary>
+        public static T Create<T>(string fullPath, string speciesName, AnimationType animationType) where T : AnimationParams, new()
         {
             if (animationType == AnimationType.NotDefined)
             {
@@ -259,9 +262,11 @@ namespace Barotrauma
                 anims = new Dictionary<string, AnimationParams>();
                 allAnimations.Add(speciesName, anims);
             }
-            if (anims.TryGetValue(Path.GetFileNameWithoutExtension(fullPath), out AnimationParams anim))
+            var fileName = Path.GetFileNameWithoutExtension(fullPath);
+            if (anims.ContainsKey(fileName))
             {
-                return anim as T;
+                DebugConsole.NewMessage($"[AnimationParams] Removing the old animation of type {animationType}.", Color.Red);
+                anims.Remove(fileName);
             }
             var instance = new T();
             XElement animationElement = new XElement(GetDefaultFileName(speciesName, animationType), new XAttribute("animationtype", animationType.ToString()));
@@ -271,7 +276,7 @@ namespace Barotrauma
             instance.Save();
             instance.Load(fullPath, speciesName);
             anims.Add(instance.Name, instance);
-            DebugConsole.NewMessage($"[AnimationParams] Dummy file of type {animationType} created.", Color.GhostWhite);
+            DebugConsole.NewMessage($"[AnimationParams] New animation file of type {animationType} created.", Color.GhostWhite);
             return instance as T;
         }
 

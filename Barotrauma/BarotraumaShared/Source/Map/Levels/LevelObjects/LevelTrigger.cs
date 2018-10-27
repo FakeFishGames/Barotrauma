@@ -220,7 +220,7 @@ namespace Barotrauma
 
             unrotatedForce = element.GetAttributeVector2("force", Vector2.Zero);
             ForceFluctuationInterval = element.GetAttributeFloat("forcefluctuationinterval", 0.01f);
-            ForceFluctuationStrength = MathHelper.Clamp(element.GetAttributeFloat("forcefluctuationstrength", 0.0f), 0.0f, 1.0f);
+            ForceFluctuationStrength = Math.Max(element.GetAttributeFloat("forcefluctuationstrength", 0.0f), 0.0f);
             ForceFalloff = element.GetAttributeBool("forcefalloff", true);
 
             ForceVelocityLimit = ConvertUnits.ToSimUnits(element.GetAttributeFloat("forcevelocitylimit", float.MaxValue));

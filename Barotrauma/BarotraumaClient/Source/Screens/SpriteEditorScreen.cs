@@ -367,7 +367,13 @@ namespace Barotrauma
 
                     GUI.DrawRectangle(spriteBatch, sourceRect, selectedSprites.Contains(sprite) ? Color.Red : Color.White * 0.5f);
 
-                    string identifier = sprite.SourceElement?.ToString();
+                    string identifier = null;
+                    var sourceElement = sprite.SourceElement;
+                    if (sourceElement != null)
+                    {
+                        var parentElement = sourceElement.Parent;
+                        identifier = parentElement != null ? sourceElement.ToString() + parentElement.ToString() : sourceElement.ToString();
+                    }
                     if (!string.IsNullOrEmpty(identifier))
                     {
                         int widgetSize = 10;
