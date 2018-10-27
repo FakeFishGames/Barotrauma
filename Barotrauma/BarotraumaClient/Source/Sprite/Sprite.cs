@@ -69,6 +69,7 @@ namespace Barotrauma
 
         public static Texture2D LoadTexture(string file, bool preMultiplyAlpha = true)
         {
+            if (string.IsNullOrWhiteSpace(file)) { return new Texture2D(GameMain.GraphicsDeviceManager.GraphicsDevice, 1, 1); }
             file = Path.GetFullPath(file);
             foreach (Sprite s in list)
             {

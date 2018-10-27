@@ -5,7 +5,6 @@ using System.Xml.Linq;
 using System.Linq;
 using System.IO;
 using Barotrauma.Extensions;
-using FarseerPhysics.Dynamics;
 using System.Xml;
 
 namespace Barotrauma
@@ -57,6 +56,19 @@ namespace Barotrauma
         public static string GetDefaultFileName(string speciesName) => $"{speciesName.CapitaliseFirstInvariant()}DefaultRagdoll";
         public static string GetDefaultFolder(string speciesName) => $"Content/Characters/{speciesName.CapitaliseFirstInvariant()}/Ragdolls/";
         public static string GetDefaultFile(string speciesName) => $"{GetDefaultFolder(speciesName)}{GetDefaultFileName(speciesName)}.xml";
+
+        private static readonly object[] dummyParams = new object[]
+        {
+            new XAttribute("type", "Dummy"),
+            new XElement("collider", new XAttribute("radius", 1)),
+            new XElement("limb",
+                new XAttribute("id", 0),
+                new XAttribute("type", LimbType.Head.ToString()),
+                new XAttribute("width", 1),
+                new XAttribute("height", 1),
+                new XElement("sprite",
+                    new XAttribute("sourcerect", $"{0}, {0}, {1}, {1}")))
+        };
 
         protected static string GetFolder(string speciesName)
         {
@@ -126,27 +138,31 @@ namespace Barotrauma
                     {
                         ragdolls.Add(r.Name, r);
                     }
+                    return r;
                 }
                 else
                 {
-                    DebugConsole.ThrowError($"[RagdollParams] Failed to load ragdoll {r} at {selectedFile} for the character {speciesName}");
+                    DebugConsole.ThrowError($"[RagdollParams] Failed to load ragdoll {r} at {selectedFile} for the character {speciesName}. Creating a dummy file.");
+                    return CreateDefault<T>(GetDefaultFile(speciesName), speciesName, dummyParams);
                 }
-                return r;
             }
             return (T)ragdoll;
         }
 
-        public static T CreateDummy<T>(string fullPath, string speciesName, params object[] ragdollConfig) where T : RagdollParams, new()
+        /// <summary>
+        /// Creates a default ragdoll for the species using a predefined configuration.
+        /// Note: Use only to create ragdolls for new characters, because this overrides the old ragdoll!
+        /// </summary>
+        public static T CreateDefault<T>(string fullPath, string speciesName, params object[] ragdollConfig) where T : RagdollParams, new()
         {
-            if (!allRagdolls.TryGetValue(speciesName, out Dictionary<string, RagdollParams> ragdolls))
+            // Remove the old ragdolls, if found.
+            if (allRagdolls.ContainsKey(speciesName))
             {
-                ragdolls = new Dictionary<string, RagdollParams>();
-                allRagdolls.Add(speciesName, ragdolls);
+                DebugConsole.NewMessage($"[RagdollParams] Removing the old ragdolls from {speciesName}.", Color.Red);
+                allRagdolls.Remove(speciesName);
             }
-            if (ragdolls.TryGetValue(Path.GetFileNameWithoutExtension(fullPath), out RagdollParams ragdoll))
-            {
-                return ragdoll as T;
-            }
+            var ragdolls = new Dictionary<string, RagdollParams>();
+            allRagdolls.Add(speciesName, ragdolls);
             var instance = new T();
             XElement ragdollElement = new XElement("Ragdoll", ragdollConfig);
             instance.doc = new XDocument(ragdollElement);
@@ -155,7 +171,7 @@ namespace Barotrauma
             instance.Save();
             instance.Load(fullPath, speciesName);
             ragdolls.Add(instance.Name, instance);
-            DebugConsole.NewMessage("[RagdollParams] Dummy file successfully created.", Color.NavajoWhite);
+            DebugConsole.NewMessage("[RagdollParams] New default ragdoll params successfully created at " + fullPath, Color.NavajoWhite);
             return instance as T;
         }
 
@@ -343,13 +359,13 @@ namespace Barotrauma
         /// <summary>
         /// Note that editing this in-game doesn't currently have any effect. It should be visible, but readonly.
         /// </summary>
-        [Serialize(-1, true)]
+        [Serialize(-1, true), Editable]
         public int ID { get; set; }
 
         [Serialize(LimbType.None, true), Editable]
         public LimbType Type { get; set; } 
 
-        [Serialize(false, true), Editable]
+        [Serialize(true, true), Editable]
         public bool Flip { get; set; }
 
         [Serialize(0, true), Editable]

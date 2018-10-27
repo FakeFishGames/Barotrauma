@@ -557,16 +557,18 @@ namespace Barotrauma
             // Ragdoll
             string ragdollFolder = RagdollParams.GetDefaultFolder(speciesName);
             string ragdollPath = RagdollParams.GetDefaultFile(speciesName);
-            RagdollParams ragdollParams = RagdollParams.CreateDummy<FishRagdollParams>(ragdollPath, speciesName, ragdollConfig);
+            RagdollParams ragdollParams = isHumanoid
+                ? RagdollParams.CreateDefault<HumanRagdollParams>(ragdollPath, speciesName, ragdollConfig)
+                : RagdollParams.CreateDefault<FishRagdollParams>(ragdollPath, speciesName, ragdollConfig) as RagdollParams;
             // Animations
             string animFolder = AnimationParams.GetDefaultFolder(speciesName);
             foreach (AnimationType animType in Enum.GetValues(typeof(AnimationType)))
             {
                 if (animType != AnimationType.NotDefined)
                 {
-                    Type type = AnimationParams.GetParamTypeFromAnimType(animType, false);
+                    Type type = AnimationParams.GetParamTypeFromAnimType(animType, isHumanoid);
                     string fullPath = AnimationParams.GetDefaultFile(speciesName, animType);
-                    AnimationParams.CreateDummy(fullPath, speciesName, animType, type);
+                    AnimationParams.Create(fullPath, speciesName, animType, type);
                 }
             }
             if (!AllFiles.Contains(configFilePath))
@@ -703,16 +705,17 @@ namespace Barotrauma
             };
             lockSpriteSizeToggle.TextColor = Color.White;
             // Ragdoll
+            Point sliderSize = new Point(300, 20);
             ragdollControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupRagdoll = new GUILayoutGroup(new RectTransform(Vector2.One, ragdollControls.RectTransform)) { CanBeFocused = false };
-            var jointScaleElement = new GUIFrame(new RectTransform(elementSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
+            var jointScaleElement = new GUIFrame(new RectTransform(sliderSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
             var jointScaleText = new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), jointScaleElement.RectTransform), $"Joint Scale: {RagdollParams.JointScale.FormatDoubleDecimal()}", Color.WhiteSmoke, textAlignment: Alignment.Center);
-            var limbScaleElement = new GUIFrame(new RectTransform(elementSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
+            var limbScaleElement = new GUIFrame(new RectTransform(sliderSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
             var limbScaleText = new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), limbScaleElement.RectTransform), $"Limb Scale: {RagdollParams.LimbScale.FormatDoubleDecimal()}", Color.WhiteSmoke, textAlignment: Alignment.Center);
-            jointScaleBar = new GUIScrollBar(new RectTransform(elementSize, jointScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.2f)
+            jointScaleBar = new GUIScrollBar(new RectTransform(sliderSize, jointScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.1f)
             {
                 BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE, RagdollParams.JointScale)),
-                Step = 0.01f,
+                Step = 0.001f,
                 OnMoved = (scrollBar, value) =>
                 {
                     float v = MathHelper.Lerp(RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE, value);
@@ -725,10 +728,10 @@ namespace Barotrauma
                     return true;
                 }
             };
-            limbScaleBar = new GUIScrollBar(new RectTransform(elementSize, limbScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.2f)
+            limbScaleBar = new GUIScrollBar(new RectTransform(sliderSize, limbScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.1f)
             {
                 BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE, RagdollParams.LimbScale)),
-                Step = 0.01f,
+                Step = 0.001f,
                 OnMoved = (scrollBar, value) =>
                 {
                     float v = MathHelper.Lerp(RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE, value);
@@ -863,7 +866,7 @@ namespace Barotrauma
             var layoutGroupSpriteSheet = new GUILayoutGroup(new RectTransform(Vector2.One, spriteSheetControls.RectTransform)) { AbsoluteSpacing = 5, CanBeFocused = false };
             new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), "Spritesheet zoom:", Color.White);
             float spriteMinScale = 0.25f;
-            float spriteMaxScale = (leftPanel.Rect.Right - spriteSheetOffsetX) / (float)(Textures.OrderByDescending(t => t.Width).First().Width);
+            float spriteMaxScale = (leftPanel.Rect.Right - spriteSheetOffsetX) / (float)(Textures?.OrderByDescending(t => t.Width).First().Width);
             spriteSheetZoom = MathHelper.Clamp(1, spriteMinScale, spriteMaxScale);
             spriteSheetZoomBar = new GUIScrollBar(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), barSize: 0.2f)
             {
@@ -2746,7 +2749,7 @@ namespace Barotrauma
                         {
                             case 0:
                                 new GUITextBlock(leftElement, "Name");
-                                var nameField = new GUITextBox(rightElement, "Worm X");
+                                var nameField = new GUITextBox(rightElement, "Worm X") { CaretColor = Color.White };
                                 string ProcessText(string text) => text.RemoveWhitespace().CapitaliseFirstInvariant();
                                 Name = ProcessText(nameField.Text);
                                 nameField.OnTextChanged += (tb, text) =>
@@ -2776,11 +2779,27 @@ namespace Barotrauma
                                 break;
                             case 3:
                                 new GUITextBlock(leftElement, "Config File Output");
-                                xmlPathElement = new GUITextBox(rightElement, string.Empty);
+                                xmlPathElement = new GUITextBox(rightElement, string.Empty)
+                                {
+                                    CaretColor = Color.White,
+                                    OnTextChanged = (tb, text) =>
+                                    {
+                                        XMLPath = text;
+                                        return true;
+                                    }
+                                };
                                 break;
                             case 4:
                                 new GUITextBlock(leftElement, "Texture Path");
-                                texturePathElement = new GUITextBox(rightElement, string.Empty);
+                                texturePathElement = new GUITextBox(rightElement, string.Empty)
+                                {
+                                    CaretColor = Color.White,
+                                    OnTextChanged = (tb, text) =>
+                                    {
+                                        TexturePath = text;
+                                        return true;
+                                    }
+                                };
                                 break;
                         }
                     }
@@ -2819,47 +2838,7 @@ namespace Barotrauma
                     var bottomGroup = new GUILayoutGroup(new RectTransform(new Vector2(1, 0.75f), box.Content.RectTransform)) { AbsoluteSpacing = 10 };
                     // HTML
                     GUIMessageBox htmlBox = null;
-                    new GUIButton(new RectTransform(new Point(topGroup.RectTransform.Rect.Width, elementSize), topGroup.RectTransform), "Load Ragdoll from HTML")
-                    {
-                        OnClicked = (b, d) =>
-                        {
-                            if (htmlBox == null)
-                            {
-                                htmlBox = new GUIMessageBox("Load HTML", string.Empty, new string[] { "Close", "Load" }, GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight);
-                                var element = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.05f), htmlBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f);
-                                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), element.RectTransform), "HTML Path");
-                                var htmlPathElement = new GUITextBox(new RectTransform(new Vector2(0.5f, 1), element.RectTransform, Anchor.TopRight), $"Content/Characters/{Name}/{Name}.html");
-                                var list = new GUIListBox(new RectTransform(new Vector2(1, 0.8f), htmlBox.Content.RectTransform));
-                                var htmlOutput = new GUITextBlock(new RectTransform(Vector2.One, list.Content.RectTransform), string.Empty) { CanBeFocused = false };
-                                htmlBox.Buttons[0].OnClicked += (_b, _d) =>
-                                {
-                                    htmlBox.Close();
-                                    return true;
-                                };
-                                htmlBox.Buttons[1].OnClicked += (_b, _d) =>
-                                {
-                                    LimbXElements.Clear();
-                                    JointXElements.Clear();
-                                    ParseRagdollFromHTML(htmlPathElement.Text);
-                                    htmlOutput.Text = new XDocument(new XElement("Ragdoll", new object[]
-                                    {
-                                        new XAttribute("type", Name),
-                                        new XElement("collider", new XAttribute("radius", Size)),
-                                            LimbXElements.Values,
-                                            JointXElements
-                                    })).ToString();
-                                    htmlOutput.CalculateHeightFromText();
-                                    list.UpdateScrollBarSize();
-                                    return true;
-                                };
-                            }
-                            else
-                            {
-                                GUIMessageBox.MessageBoxes.Add(htmlBox);
-                            }
-                            return true;
-                        }
-                    };
+                    var loadHtmlButton = new GUIButton(new RectTransform(new Point(topGroup.RectTransform.Rect.Width, elementSize), topGroup.RectTransform), "Load from HTML");
                     // Limbs
                     var limbsElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), bottomGroup.RectTransform), style: null) { CanBeFocused = false };
                     new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), limbsElement.RectTransform), "Limbs:");
@@ -2884,16 +2863,7 @@ namespace Barotrauma
                     {
                         OnClicked = (b, d) =>
                         {
-                            var limbElement = new GUIFrame(new RectTransform(new Point(limbsList.Content.Rect.Width, elementSize * 5 + 40), limbsList.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
-                            {
-                                CanBeFocused = false
-                            };
-                            int id = LimbGUIElements.Count;
-                            var group = new GUILayoutGroup(new RectTransform(Vector2.One, limbElement.RectTransform)) { AbsoluteSpacing = 2 };
-                            var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), $"Limb {id}");
-                            var idField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
-                            var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
-                            var limbType = LimbType.None;
+                            LimbType limbType = LimbType.None;
                             switch (LimbGUIElements.Count)
                             {
                                 case 0:
@@ -2903,31 +2873,7 @@ namespace Barotrauma
                                     limbType = LimbType.Torso;
                                     break;
                             }
-                            var limbTypeField = GUI.CreateEnumField(limbType, elementSize, "Limb Type", group.RectTransform, font: GUI.Font);
-                            var sourceRectField = GUI.CreateRectangleField(Rectangle.Empty, elementSize, "Source Rect", group.RectTransform, font: GUI.Font);
-                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopLeft), "ID");
-                            new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
-                            {
-                                MinValueInt = 0,
-                                MaxValueInt = byte.MaxValue,
-                                IntValue = id,
-                                OnValueChanged = numInput =>
-                                {
-                                    id = numInput.IntValue;
-                                    string text = nameField.GetChild<GUITextBox>().Text;
-                                    string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
-                                    label.Text = $"Limb {t}";
-                                }
-                            };
-                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopLeft), "Name");
-                            new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), string.Empty)
-                                .OnTextChanged += (tB, text) =>
-                                {
-                                    string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
-                                    label.Text = $"Limb {t}";
-                                    return true;
-                                };
-                            LimbGUIElements.Add(limbElement);
+                            CreateLimbGUIElement(limbsList.Content.RectTransform, elementSize, id: LimbGUIElements.Count, limbType: limbType);
                             return true;
                         }
                     };
@@ -2956,47 +2902,57 @@ namespace Barotrauma
                     {
                         OnClicked = (b, d) =>
                         {
-                            var jointElement = new GUIFrame(new RectTransform(new Point(jointsList.Content.Rect.Width, elementSize * 6 + 40), jointsList.Content.RectTransform), style: null, color: Color.Gray * 0.25f)
-                            {
-                                CanBeFocused = false
-                            };
-                            var group = new GUILayoutGroup(new RectTransform(Vector2.One, jointElement.RectTransform)) { AbsoluteSpacing = 2 };
-                            string jointName = string.Empty;
-                            var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), jointName);
-                            var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
-                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopLeft), "Name");
-                            new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), string.Empty)
-                            {
-                                OnTextChanged = (textB, text) =>
-                                {
-                                    jointName = text;
-                                    label.Text = jointName;
-                                    return true;
-                                }
-                            };
-                            var limb1Field = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
-                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), limb1Field.RectTransform, Anchor.TopLeft), "Limb 1");
-                            var limb1InputField = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), limb1Field.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
-                            {
-                                MinValueInt = 0,
-                                MaxValueInt = byte.MaxValue,
-                            };
-                            var limb2Field = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
-                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), limb2Field.RectTransform, Anchor.TopLeft), "Limb 2");
-                            var limb2InputField = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), limb2Field.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
-                            {
-                                MinValueInt = 0,
-                                MaxValueInt = byte.MaxValue,
-                            };
-                            GUI.CreateVector2Field(Vector2.Zero, elementSize, "Limb 1 Anchor", group.RectTransform, font: GUI.Font, decimalsToDisplay: 2);
-                            GUI.CreateVector2Field(Vector2.Zero, elementSize, "Limb 2 Anchor", group.RectTransform, font: GUI.Font, decimalsToDisplay: 2);
-                            label.Text = GetJointName(jointName);
-                            limb1InputField.OnValueChanged += nInput => label.Text = GetJointName(jointName);
-                            limb2InputField.OnValueChanged += nInput => label.Text = GetJointName(jointName);
-                            JointGUIElements.Add(jointElement);
-                            string GetJointName(string n) => string.IsNullOrWhiteSpace(n) ? $"Joint {limb1InputField.IntValue} - {limb2InputField.IntValue}" : n;
+                            CreateJointGUIElement(jointsList.Content.RectTransform, elementSize);
                             return true;
                         }
+                    };
+                    loadHtmlButton.OnClicked = (b, d) =>
+                    {
+                        if (htmlBox == null)
+                        {
+                            htmlBox = new GUIMessageBox("Load HTML", string.Empty, new string[] { "Close", "Load" }, GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight);
+                            var element = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.05f), htmlBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f);
+                            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), element.RectTransform), "HTML Path");
+                            var htmlPathElement = new GUITextBox(new RectTransform(new Vector2(0.5f, 1), element.RectTransform, Anchor.TopRight), $"Content/Characters/{Name}/{Name}.html");
+                            var list = new GUIListBox(new RectTransform(new Vector2(1, 0.8f), htmlBox.Content.RectTransform));
+                            var htmlOutput = new GUITextBlock(new RectTransform(Vector2.One, list.Content.RectTransform), string.Empty) { CanBeFocused = false };
+                            htmlBox.Buttons[0].OnClicked += (_b, _d) =>
+                            {
+                                htmlBox.Close();
+                                return true;
+                            };
+                            htmlBox.Buttons[1].OnClicked += (_b, _d) =>
+                            {
+                                LimbGUIElements.ForEach(l => l.RectTransform.Parent = null);
+                                LimbGUIElements.Clear();
+                                JointGUIElements.ForEach(j => j.RectTransform.Parent = null);
+                                JointGUIElements.Clear();
+                                LimbXElements.Clear();
+                                JointXElements.Clear();
+                                ParseRagdollFromHTML(htmlPathElement.Text, (id, limbName, limbType, rect) =>
+                                {
+                                    CreateLimbGUIElement(limbsList.Content.RectTransform, elementSize, id, limbName, limbType, rect);
+                                }, (id1, id2, anchor1, anchor2, jointName) =>
+                                {
+                                    CreateJointGUIElement(jointsList.Content.RectTransform, elementSize, id1, id2, anchor1, anchor2, jointName);
+                                });
+                                htmlOutput.Text = new XDocument(new XElement("Ragdoll", new object[]
+                                {
+                                        new XAttribute("type", Name),
+                                        new XElement("collider", new XAttribute("radius", Size)),
+                                            LimbXElements.Values,
+                                            JointXElements
+                                })).ToString();
+                                htmlOutput.CalculateHeightFromText();
+                                list.UpdateScrollBarSize();
+                                return true;
+                            };
+                        }
+                        else
+                        {
+                            GUIMessageBox.MessageBoxes.Add(htmlBox);
+                        }
+                        return true;
                     };
                     //var codeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), listBox.Content.RectTransform), style: null) { CanBeFocused = false };
                     //new GUITextBlock(new RectTransform(new Vector2(1, 0.05f), codeArea.RectTransform), "Custom code:");
@@ -3010,7 +2966,6 @@ namespace Barotrauma
                     // Parse and create
                     box.Buttons[1].OnClicked += (b, d) =>
                     {
-                        // Currently these are additive to the data defined in the html and in the code fields.
                         ParseLimbsFromGUIElements();
                         ParseJointsFromGUIElements();
                         var ragdollParams = new object[]
@@ -3026,6 +2981,88 @@ namespace Barotrauma
                         return true;
                     };
                     return box;
+                }
+
+                private void CreateLimbGUIElement(RectTransform parent, int elementSize, int id, string name = "", LimbType limbType = LimbType.None, Rectangle? sourceRect = null)
+                {
+                    var limbElement = new GUIFrame(new RectTransform(new Point(parent.Rect.Width, elementSize * 5 + 40), parent), style: null, color: Color.Gray * 0.25f)
+                    {
+                        CanBeFocused = false
+                    };
+                    var group = new GUILayoutGroup(new RectTransform(Vector2.One, limbElement.RectTransform)) { AbsoluteSpacing = 2 };
+                    var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), $"Limb {id}");
+                    var idField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
+                    var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
+                    var limbTypeField = GUI.CreateEnumField(limbType, elementSize, "Limb Type", group.RectTransform, font: GUI.Font);
+                    var sourceRectField = GUI.CreateRectangleField(sourceRect ?? new Rectangle(0, 0, 1, 1), elementSize, "Source Rect", group.RectTransform, font: GUI.Font);
+                    new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopLeft), "ID");
+                    new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
+                    {
+                        MinValueInt = 0,
+                        MaxValueInt = byte.MaxValue,
+                        IntValue = id,
+                        OnValueChanged = numInput =>
+                        {
+                            id = numInput.IntValue;
+                            string text = nameField.GetChild<GUITextBox>().Text;
+                            string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
+                            label.Text = $"Limb {t}";
+                        }
+                    };
+                    new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopLeft), "Name");
+                    new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), name)
+                        .OnTextChanged += (tB, text) =>
+                        {
+                            string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
+                            label.Text = $"Limb {t}";
+                            return true;
+                        };
+                    LimbGUIElements.Add(limbElement);
+                }
+
+                private void CreateJointGUIElement(RectTransform parent, int elementSize, int id1 = 0, int id2 = 1, Vector2? anchor1 = null, Vector2?  anchor2 = null, string jointName = "")
+                {
+                    var jointElement = new GUIFrame(new RectTransform(new Point(parent.Rect.Width, elementSize * 6 + 40), parent), style: null, color: Color.Gray * 0.25f)
+                    {
+                        CanBeFocused = false
+                    };
+                    var group = new GUILayoutGroup(new RectTransform(Vector2.One, jointElement.RectTransform)) { AbsoluteSpacing = 2 };
+                    var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), jointName);
+                    var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
+                    new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopLeft), "Name");
+                    new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), jointName)
+                    {
+                        CaretColor = Color.White,
+                        OnTextChanged = (textB, text) =>
+                        {
+                            jointName = text;
+                            label.Text = jointName;
+                            return true;
+                        }
+                    };
+                    var limb1Field = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
+                    new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), limb1Field.RectTransform, Anchor.TopLeft), "Limb 1");
+                    var limb1InputField = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), limb1Field.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
+                    {
+                        MinValueInt = 0,
+                        MaxValueInt = byte.MaxValue,
+                        IntValue = id1
+                    };
+                    var limb2Field = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
+                    new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), limb2Field.RectTransform, Anchor.TopLeft), "Limb 2");
+                    var limb2InputField = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), limb2Field.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
+                    {
+                        MinValueInt = 0,
+                        MaxValueInt = byte.MaxValue,
+                        IntValue = id2
+                    };
+                    GUI.CreateVector2Field(anchor1 ?? Vector2.Zero, elementSize, "Limb 1 Anchor", group.RectTransform, font: GUI.Font, decimalsToDisplay: 2);
+                    GUI.CreateVector2Field(anchor2 ?? Vector2.Zero, elementSize, "Limb 2 Anchor", group.RectTransform, font: GUI.Font, decimalsToDisplay: 2);
+                    label.Text = GetJointName(jointName);
+                    limb1InputField.OnValueChanged += nInput => label.Text = GetJointName(jointName);
+                    limb2InputField.OnValueChanged += nInput => label.Text = GetJointName(jointName);
+                    JointGUIElements.Add(jointElement);
+                    string GetJointName(string n) => string.IsNullOrWhiteSpace(n) ? $"Joint {limb1InputField.IntValue} - {limb2InputField.IntValue}" : n;
                 }
             }
 
@@ -3103,6 +3140,7 @@ namespace Barotrauma
 
                 protected void ParseLimbsFromGUIElements()
                 {
+                    LimbXElements.Clear();
                     for (int i = 0; i < LimbGUIElements.Count; i++)
                     {
                         var limbGUIElement = LimbGUIElements[i];
@@ -3111,22 +3149,26 @@ namespace Barotrauma
                         int id = GetField("ID").Parent.GetChild<GUINumberInput>().IntValue;
                         string limbName = GetField("Name").Parent.GetChild<GUITextBox>().Text;
                         LimbType limbType = (LimbType)GetField("Limb Type").Parent.GetChild<GUIDropDown>().SelectedData;
-                        var rectInputs = GetField("Source Rect").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).ToArray();
+                        // Reverse, because the elements are created from right to left
+                        var rectInputs = GetField("Source Rect").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).Reverse().ToArray();
+                        int width = rectInputs[2].IntValue;
+                        int height = rectInputs[3].IntValue;
                         LimbXElements.Add(id.ToString(), new XElement("limb",
                             new XAttribute("id", id),
                             new XAttribute("name", limbName),
                             new XAttribute("type", limbType.ToString()),
-                            new XAttribute("width", rectInputs[2].IntValue),
-                            new XAttribute("height", rectInputs[3].IntValue),
+                            new XAttribute("width", width),
+                            new XAttribute("height", height),
                             new XElement("sprite",
                                 new XAttribute("texture", TexturePath),
-                                new XAttribute("sourcerect", $"{rectInputs[0].IntValue}, {rectInputs[1].IntValue}, {rectInputs[2].IntValue}, {rectInputs[3].IntValue}"))
+                                new XAttribute("sourcerect", $"{rectInputs[0].IntValue}, {rectInputs[1].IntValue}, {width}, {height}"))
                             ));
                     }
                 }
 
                 protected void ParseJointsFromGUIElements()
                 {
+                    JointXElements.Clear();
                     for (int i = 0; i < JointGUIElements.Count; i++)
                     {
                         var jointGUIElement = JointGUIElements[i];
@@ -3135,18 +3177,19 @@ namespace Barotrauma
                         string jointName = GetField("Name").Parent.GetChild<GUITextBox>().Text;
                         int limb1ID = GetField("Limb 1").Parent.GetChild<GUINumberInput>().IntValue;
                         int limb2ID = GetField("Limb 2").Parent.GetChild<GUINumberInput>().IntValue;
-                        var anchor1Inputs = GetField("Limb 1 Anchor").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).ToArray();
-                        var anchor2Inputs = GetField("Limb 2 Anchor").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).ToArray();
+                        // Reverse, because the elements are created from right to left
+                        var anchor1Inputs = GetField("Limb 1 Anchor").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).Reverse().ToArray();
+                        var anchor2Inputs = GetField("Limb 2 Anchor").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).Reverse().ToArray();
                         JointXElements.Add(new XElement("joint",
                             new XAttribute("name", jointName),
                             new XAttribute("limb1", limb1ID),
                             new XAttribute("limb2", limb2ID),
-                            new XAttribute("limb1anchor", $"{anchor1Inputs[0].FloatValue}, {anchor1Inputs[1].FloatValue}"),
-                            new XAttribute("limb2anchor", $"{anchor2Inputs[0].FloatValue}, {anchor2Inputs[1].FloatValue}")));
+                            new XAttribute("limb1anchor", $"{anchor1Inputs[0].FloatValue.Format(2)}, {anchor1Inputs[1].FloatValue.Format(2)}"),
+                            new XAttribute("limb2anchor", $"{anchor2Inputs[0].FloatValue.Format(2)}, {anchor2Inputs[1].FloatValue.Format(2)}")));
                     }
                 }
 
-                protected void ParseRagdollFromHTML(string path)
+                protected void ParseRagdollFromHTML(string path, Action<int, string, LimbType, Rectangle> limbCallback = null, Action<int, int, Vector2, Vector2, string> jointCallback = null)
                 {
                     // TODO: parse as xml?
                     //XDocument doc = XMLExtensions.TryLoadXml(path);
@@ -3191,6 +3234,7 @@ namespace Barotrauma
                             int y = ParseToInt("top");
                             int width = ParseToInt("width");
                             int height = ParseToInt("height");
+                            // This is overridden when the data is loaded from the gui fields.
                             LimbXElements.Add(hierarchy, new XElement("limb",
                                 new XAttribute("id", id),
                                 new XAttribute("name", limbName),
@@ -3201,6 +3245,7 @@ namespace Barotrauma
                                     new XAttribute("texture", TexturePath),
                                     new XAttribute("sourcerect", $"{x}, {y}, {width}, {height}"))
                                 ));
+                            limbCallback?.Invoke(id, limbName, ParseLimbType(limbName), new Rectangle(x, y, width, height));
                             id++;
                         }
                     }
@@ -3208,12 +3253,16 @@ namespace Barotrauma
                     {
                         if (idToHierarchy.TryGetValue(i, out string hierarchy))
                         {
-                            if (hierarchy.Length > 1)
+                            if (hierarchy != "0")
                             {
-                                string parent = hierarchy.Remove(hierarchy.Length - 1, 1);
+                                // If the bone is at the root hierarchy, parent the bone to the last sibling (1 is parented to 0, 2 to 1 etc)
+                                // Else parent to the last bone in the current hierarchy (11 is parented to 1, 212 is parented to 21 etc)
+                                string parent = hierarchy.Length > 1 ? hierarchy.Remove(hierarchy.Length - 1, 1) : (int.Parse(hierarchy) - 1).ToString();
                                 if (hierarchyToID.TryGetValue(parent, out int parentID))
                                 {
                                     Vector2 anchor1 = Vector2.Zero;
+                                    Vector2 anchor2 = Vector2.Zero;
+                                    string jointName = $"Joint {parent} - {hierarchy}";
                                     if (idToPositionCode.TryGetValue(i, out string positionCode))
                                     {
                                         if (LimbXElements.TryGetValue(parent, out XElement parentElement))
@@ -3251,12 +3300,15 @@ namespace Barotrauma
                                             }
                                         }
                                     }
+                                    // This is overridden when the data is loaded from the gui fields.
                                     JointXElements.Add(new XElement("joint",
+                                        new XAttribute("name", jointName),
                                         new XAttribute("limb1", parentID),
                                         new XAttribute("limb2", i),
-                                        new XAttribute("limb1anchor", $"{anchor1.X}, {anchor1.Y}"),
-                                        new XAttribute("limb2anchor", "0, 0")
+                                        new XAttribute("limb1anchor", $"{anchor1.X.Format(2)}, {anchor1.Y.Format(2)}"),
+                                        new XAttribute("limb2anchor", $"{anchor2.X.Format(2)}, {anchor2.Y.Format(2)}")
                                         ));
+                                    jointCallback?.Invoke(parentID, i, anchor1, anchor2, jointName);
                                 }
                             }
                         }
@@ -3276,6 +3328,7 @@ namespace Barotrauma
                             limbType = LimbType.Torso;
                             break;
                         case "waist":
+                        case "pelvis":
                             limbType = LimbType.Waist;
                             break;
                         case "tail":
@@ -3288,6 +3341,17 @@ namespace Barotrauma
                         {
                             limbType = LimbType.Tail;
                         }
+                        else if (n.Contains("arm") && !n.Contains("lower"))
+                        {
+                            if (n.Contains("right"))
+                            {
+                                limbType = LimbType.RightArm;
+                            }
+                            else if (n.Contains("left"))
+                            {
+                                limbType = LimbType.LeftArm;
+                            }
+                        }
                         else if (n.Contains("hand") || n.Contains("palm"))
                         {
                             if (n.Contains("right"))
@@ -3299,18 +3363,18 @@ namespace Barotrauma
                                 limbType = LimbType.LeftHand;
                             }
                         }
-                        else if (n.Contains("arm"))
+                        else if (n.Contains("thigh") || n.Contains("upperleg"))
                         {
                             if (n.Contains("right"))
                             {
-                                limbType = LimbType.RightArm;
+                                limbType = LimbType.RightThigh;
                             }
                             else if (n.Contains("left"))
                             {
-                                limbType = LimbType.LeftArm;
+                                limbType = LimbType.LeftThigh;
                             }
                         }
-                        else if (n.Contains("leg"))
+                        else if (n.Contains("shin") || n.Contains("lowerleg"))
                         {
                             if (n.Contains("right"))
                             {
@@ -3321,9 +3385,16 @@ namespace Barotrauma
                                 limbType = LimbType.LeftLeg;
                             }
                         }
-                        else if (n.Contains("tail"))
+                        else if (n.Contains("foot"))
                         {
-                            limbType = LimbType.Tail;
+                            if (n.Contains("right"))
+                            {
+                                limbType = LimbType.RightFoot;
+                            }
+                            else if (n.Contains("left"))
+                            {
+                                limbType = LimbType.LeftFoot;
+                            }
                         }
                     }
                     return limbType;

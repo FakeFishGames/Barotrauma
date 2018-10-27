@@ -215,7 +215,8 @@ namespace Barotrauma
                     if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos) < minDist * minDist) return;
                 }
 
-                int amount = Rand.Range(minAmount, maxAmount, Rand.RandSync.Server);
+                //+1 because Range returns an integer less than the max value
+                int amount = Rand.Range(minAmount, maxAmount + 1, Rand.RandSync.Server);
                 monsters = new Character[amount];
 
                 for (int i = 0; i < amount; i++)

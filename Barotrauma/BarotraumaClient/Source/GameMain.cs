@@ -48,7 +48,7 @@ namespace Barotrauma
 
         public static HashSet<ContentPackage> SelectedPackages
         {
-            get { return Config.SelectedContentPackages; }
+            get { return Config?.SelectedContentPackages; }
         }
 
         public static GameSession GameSession;

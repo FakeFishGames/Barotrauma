@@ -102,8 +102,8 @@ namespace Barotrauma
             return v.Value;
         }
 
-        protected override float? HeadPosition => CurrentGroundedParams?.HeadPosition * RagdollParams.JointScale;
-        protected override float? TorsoPosition => CurrentGroundedParams?.TorsoPosition * RagdollParams.JointScale;
+        protected override float? HeadPosition => GetValidOrNull(CurrentGroundedParams, CurrentGroundedParams?.HeadPosition * RagdollParams.JointScale);
+        protected override float? TorsoPosition => GetValidOrNull(CurrentGroundedParams, CurrentGroundedParams?.TorsoPosition * RagdollParams.JointScale);
         protected override float? HeadAngle => GetValidOrNull(CurrentAnimationParams, CurrentAnimationParams?.HeadAngleInRadians);
         protected override float? TorsoAngle => GetValidOrNull(CurrentAnimationParams, CurrentAnimationParams?.TorsoAngleInRadians);
 
