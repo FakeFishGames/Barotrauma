@@ -97,7 +97,7 @@ namespace Barotrauma
             Vector4 sourceVector = element.GetAttributeVector4("sourcerect", Vector4.Zero);
 
             bool shouldReturn = false;
-            LoadTexture(ref sourceVector, ref shouldReturn);
+            LoadTexture(ref sourceVector, ref shouldReturn, element.GetAttributeBool("premultiplyalpha", false));
             if (shouldReturn) return;
 
             sourceRect = new Rectangle(
