@@ -18,10 +18,10 @@
   <limb id="5" name="Torso" type="Torso" width="83" height="142" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False">
     <sprite texture="Content/Characters/Testhuman/Testhuman.png" sourcerect="7,77,85,148" origin="0.5117647,0.4797297" depth="0.005" />
   </limb>
-  <limb id="6" name="LowerArmLeft" type="None" width="51" height="85" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False">
+  <limb id="6" name="LowerArmLeft" type="LeftForearm" width="51" height="85" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False">
     <sprite texture="Content/Characters/Testhuman/Testhuman.png" sourcerect="124,101,45,84" origin="0.4333333,0.5059524" depth="0.11" />
   </limb>
-  <limb id="7" name="LowerArmRight" type="None" width="51" height="85" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False">
+  <limb id="7" name="LowerArmRight" type="RightForearm" width="51" height="85" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False">
     <sprite texture="Content/Characters/Testhuman/Testhuman.png" sourcerect="124,101,45,84" origin="0.4333333,0.5059524" depth="0" />
   </limb>
   <limb id="8" name="LowerLegLeft" type="LeftLeg" width="46" height="95" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False">
