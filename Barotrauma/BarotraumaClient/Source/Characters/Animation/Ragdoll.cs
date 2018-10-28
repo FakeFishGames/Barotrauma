@@ -190,6 +190,14 @@ namespace Barotrauma
                 }
             }
 
+            if (this is HumanoidAnimController humanoid)
+            {
+                Vector2 pos = ConvertUnits.ToDisplayUnits(humanoid.RightHandIKPos);
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 4, 4), Color.Green, true);
+                pos = ConvertUnits.ToDisplayUnits(humanoid.LeftHandIKPos);
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 4, 4), Color.Green, true);
+            }
+
             if (outsideCollisionBlocker.Enabled && currentHull.Submarine != null)
             {
                 var edgeShape = outsideCollisionBlocker.FixtureList[0].Shape as FarseerPhysics.Collision.Shapes.EdgeShape;

@@ -129,6 +129,21 @@ namespace Barotrauma
 
         public bool Crouching;
 
+        private float upperArmLength = 0.0f;
+        private float forearmLength = 0.0f;
+        public Vector2 RightHandIKPos
+        {
+            get;
+            private set;
+        }
+        public Vector2 LeftHandIKPos
+        {
+            get;
+            private set;
+        }
+
+        private LimbJoint shoulder;
+
         private bool aiming;
 
         private float movementLerp;
@@ -183,6 +198,47 @@ namespace Barotrauma
         {
             // TODO: load from the character info file?
             movementLerp = RagdollParams.MainElement.GetAttributeFloat("movementlerp", 0.4f);
+
+            //calculate arm and forearm length (atm this assumes that both arms are the same size)
+            Limb rightForearm = GetLimb(LimbType.RightForearm);
+            Limb rightHand = GetLimb(LimbType.RightHand);
+
+            shoulder = GetJointBetweenLimbs(LimbType.Torso, LimbType.RightArm);
+            LimbJoint rightElbow = rightForearm == null ?
+                GetJointBetweenLimbs(LimbType.RightArm, LimbType.RightHand) :
+                GetJointBetweenLimbs(LimbType.RightArm, LimbType.RightForearm);
+            LimbJoint rightWrist = rightForearm == null ?
+                null : GetJointBetweenLimbs(LimbType.RightForearm, LimbType.RightHand);
+
+            Vector2 localAnchorShoulder = shoulder.LimbA.type == LimbType.RightArm ?
+                shoulder.LocalAnchorA : shoulder.LocalAnchorB;
+            Vector2 localAnchorElbow = rightElbow.LimbA.type == LimbType.RightArm ?
+                rightElbow.LocalAnchorA : rightElbow.LocalAnchorB;
+
+            upperArmLength = Vector2.Distance(localAnchorShoulder, localAnchorElbow);
+            
+            if (rightForearm == null)
+            {
+                forearmLength = Vector2.Distance(
+                    rightHand.PullJointLocalAnchorA,
+                    rightElbow.LimbA.type == LimbType.RightHand ? rightElbow.LocalAnchorA : rightElbow.LocalAnchorB);
+            }
+            else if (rightForearm != null && rightHand != null)
+            {
+                forearmLength = Vector2.Distance(
+                    rightElbow.LimbA.type == LimbType.RightForearm ? rightElbow.LocalAnchorA : rightElbow.LocalAnchorB,
+                    rightWrist.LimbA.type == LimbType.RightForearm ? rightWrist.LocalAnchorA : rightWrist.LocalAnchorB);
+                forearmLength += Vector2.Distance(
+                    rightHand.PullJointLocalAnchorA, 
+                    rightElbow.LimbA.type == LimbType.RightHand ? rightElbow.LocalAnchorA : rightElbow.LocalAnchorB);
+            }
+        }
+
+        private LimbJoint GetJointBetweenLimbs(LimbType limbTypeA, LimbType limbTypeB)
+        {
+            return LimbJoints.First(lj =>
+                (lj.LimbA.type == limbTypeA && lj.LimbB.type == limbTypeB) ||
+                (lj.LimbB.type == limbTypeA && lj.LimbA.type == limbTypeB));
         }
 
         public override void UpdateAnim(float deltaTime)
@@ -580,7 +636,7 @@ namespace Barotrauma
                     if (!foot.Disabled)
                     {
                         MoveLimb(foot, footPos + colliderPos, CurrentGroundedParams.FootMoveStrength, true);
-                        foot.body.SmoothRotate(leg.body.Rotation + MathHelper.PiOver2 * Dir * 1.6f, CurrentGroundedParams.FootRotateStrength);
+                        foot.body.SmoothRotate(leg.body.Rotation + (CurrentGroundedParams.FootAngleInRadians + MathHelper.PiOver2) * Dir * 1.6f, CurrentGroundedParams.FootRotateStrength);
                     }
                 }
 
@@ -655,11 +711,11 @@ namespace Barotrauma
 
                 if (!leftFoot.Disabled)
                 {
-                    leftFoot.body.SmoothRotate(Dir * MathHelper.PiOver2, 50.0f);
+                    leftFoot.body.SmoothRotate(Dir * (MathHelper.PiOver2 + CurrentGroundedParams.FootAngleInRadians), 50.0f);
                 }
-                if(!leftFoot.Disabled)
+                if (!rightFoot.Disabled)
                 {
-                    rightFoot.body.SmoothRotate(Dir * MathHelper.PiOver2, 50.0f);
+                    rightFoot.body.SmoothRotate(Dir * (MathHelper.PiOver2 + CurrentGroundedParams.FootAngleInRadians), 50.0f);
                 }
 
                 if (!rightHand.Disabled)
@@ -1409,7 +1465,7 @@ namespace Barotrauma
                             //arm length
                             float b = 28.0f;
 
-                            Vector2 shoulderPos = LimbJoints[2].WorldAnchorA;
+                            Vector2 shoulderPos = shoulder.WorldAnchorA;
                             Vector2 dragDir = inWater ? Vector2.Normalize(targetLimb.SimPosition - shoulderPos) : Vector2.UnitY;
 
                             targetLimb.PullJointWorldAnchorB = shoulderPos - dragDir * ConvertUnits.ToSimUnits(a + b);
@@ -1537,9 +1593,7 @@ namespace Barotrauma
                 itemAngle = (torso.body.Rotation + holdAngle * Dir);
             }
 
-            Vector2 shoulderPos = LimbJoints[2].WorldAnchorA;
-            Vector2 transformedHoldPos = shoulderPos;
-
+            Vector2 transformedHoldPos = shoulder.WorldAnchorA;
             if (itemPos == Vector2.Zero || Anim == Animation.Climbing || usingController)
             {
                 if (character.SelectedItems[0] == item)
@@ -1637,29 +1691,34 @@ namespace Barotrauma
 
         private void HandIK(Limb hand, Vector2 pos, float force = 1.0f)
         {
-            Vector2 shoulderPos = LimbJoints[2].WorldAnchorA;
+            Vector2 shoulderPos = shoulder.WorldAnchorA;
 
-            Limb arm = (hand.type == LimbType.LeftHand) ? GetLimb(LimbType.LeftArm) : GetLimb(LimbType.RightArm);
-
-            // TODO: the lengths are not constant?
-
-            //hand length
-            float a = 37.0f;
-
-            //arm length
-            float b = 28.0f;
+            Limb arm, forearm;
+            if (hand.type == LimbType.LeftHand)
+            {
+                arm = GetLimb(LimbType.LeftArm);
+                forearm = GetLimb(LimbType.LeftForearm);
+                LeftHandIKPos = pos;
+            }
+            else
+            {
+                arm = GetLimb(LimbType.RightArm);
+                forearm = GetLimb(LimbType.RightForearm);
+                RightHandIKPos = pos;
+            }
 
             //distance from shoulder to holdpos
-            float c = ConvertUnits.ToDisplayUnits(Vector2.Distance(pos, shoulderPos));
-            c = MathHelper.Clamp(a + b - 1, b - a, c);
+            float c = Vector2.Distance(pos, shoulderPos);
+            c = MathHelper.Clamp(forearmLength + upperArmLength - 0.01f, upperArmLength - forearmLength, c);
 
             float ang2 = MathUtils.VectorToAngle(pos - shoulderPos) + MathHelper.PiOver2;
 
-            float armAngle = MathUtils.SolveTriangleSSS(a, b, c);
-            float handAngle = MathUtils.SolveTriangleSSS(b, a, c);
+            float armAngle = MathUtils.SolveTriangleSSS(forearmLength, upperArmLength, c);
+            float handAngle = MathUtils.SolveTriangleSSS(upperArmLength, forearmLength, c);
 
-            arm.body.SmoothRotate((ang2 - armAngle * Dir), 20.0f * force);
-            hand.body.SmoothRotate((ang2 + handAngle * Dir), 100.0f * force);
+            arm.body.SmoothRotate((ang2 - armAngle * Dir), 20.0f * force * arm.Mass);
+            forearm?.body.SmoothRotate((ang2 + handAngle * Dir), 20.0f * force * forearm.Mass);
+            hand.body.SmoothRotate((ang2 + handAngle * Dir), 100.0f * force * hand.Mass);
         }
 
         public override void UpdateUseItem(bool allowMovement, Vector2 handPos)
@@ -1725,8 +1784,10 @@ namespace Barotrauma
                 {
                     case LimbType.LeftHand:
                     case LimbType.LeftArm:
+                    case LimbType.LeftForearm:
                     case LimbType.RightHand:
                     case LimbType.RightArm:
+                    case LimbType.RightForearm:
                         mirror = true;
                         flipAngle = true;
                         break;

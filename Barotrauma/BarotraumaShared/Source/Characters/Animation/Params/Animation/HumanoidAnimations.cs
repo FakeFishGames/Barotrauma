@@ -79,6 +79,20 @@ namespace Barotrauma
         [Serialize(15.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 100, ToolTip = "How much force is used to move the feet to the correct position.")]
         public float FootMoveStrength { get; set; }
 
+        /// <summary>
+        /// In degrees.
+        /// </summary>
+        [Serialize(0.0f, true), Editable(-360f, 360f)]
+        public float FootAngle
+        {
+            get => MathHelper.ToDegrees(FootAngleInRadians);
+            set
+            {
+                FootAngleInRadians = MathHelper.ToRadians(value);                
+            }
+        }
+        public float FootAngleInRadians { get; private set; }
+
         [Serialize(20.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 100, ToolTip = "How much torque is used to rotate the feet to the correct orientation.")]
         public float FootRotateStrength { get; set; }
 
