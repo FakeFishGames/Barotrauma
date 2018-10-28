@@ -174,11 +174,6 @@ namespace Barotrauma.Networking
                                     ? Microsoft.Xna.Framework.Color.Red
                                     : Microsoft.Xna.Framework.Color.Yellow);
                         }
-                        
-                        if (NetIdUtils.IdMoreRecent(thisEventID, (UInt16)(lastReceivedID + 1)))
-                        {
-                            GameMain.Client.ReportError(ClientNetError.MISSING_EVENT, expectedID: (UInt16)(lastReceivedID + 1), eventID: thisEventID);
-                        }
                     }
                     else if (entity == null)
                     {
