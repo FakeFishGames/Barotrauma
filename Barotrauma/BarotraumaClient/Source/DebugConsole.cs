@@ -731,6 +731,11 @@ namespace Barotrauma
                     ThrowError("Not controlling any character!");
                     return;
                 }
+                if (args.Length == 0)
+                {
+                    ThrowError("Please give the value after the command.");
+                    return;
+                }
                 if (!float.TryParse(args[0], NumberStyles.Number, CultureInfo.InvariantCulture, out float value))
                 {
                     ThrowError("Failed to parse float value from the arguments");
@@ -751,6 +756,11 @@ namespace Barotrauma
                     ThrowError("Not controlling any character!");
                     return;
                 }
+                if (args.Length == 0)
+                {
+                    ThrowError("Please give the value after the command.");
+                    return;
+                }
                 if (!float.TryParse(args[0], NumberStyles.Number, CultureInfo.InvariantCulture, out float value))
                 {
                     ThrowError("Failed to parse float value from the arguments");
@@ -769,6 +779,11 @@ namespace Barotrauma
                 if (character == null)
                 {
                     ThrowError("Not controlling any character!");
+                    return;
+                }
+                if (args.Length == 0)
+                {
+                    ThrowError("Please give the value after the command.");
                     return;
                 }
                 if (!float.TryParse(args[0], NumberStyles.Number, CultureInfo.InvariantCulture, out float value))
