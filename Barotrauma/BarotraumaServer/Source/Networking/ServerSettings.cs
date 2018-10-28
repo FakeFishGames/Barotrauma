@@ -34,6 +34,17 @@ namespace Barotrauma.Networking
             }
         }
 
+        public void ServerAdminWrite(NetBuffer outMsg, Client c)
+        {
+            //outMsg.Write(isPublic);
+            //outMsg.Write(EnableUPnP);
+            //outMsg.WritePadBits();
+            //outMsg.Write((UInt16)QueryPort);
+
+            WriteNetProperties(outMsg);
+            WriteMonsterEnabled(outMsg);
+        }
+
         public void ServerWrite(NetBuffer outMsg,Client c)
         {
             SharedWrite(outMsg);
@@ -43,24 +54,21 @@ namespace Barotrauma.Networking
             if (c.HasPermission(Networking.ClientPermissions.ManageSettings))
             {
                 outMsg.Write(true);
-                outMsg.Write(isPublic);
-                //outMsg.Write(EnableUPnP);
                 outMsg.WritePadBits();
-                outMsg.Write((UInt16)QueryPort);
 
-                WriteNetProperties(outMsg);
+                ServerAdminWrite(outMsg, c);
             }
             else
             {
                 outMsg.Write(false);
                 outMsg.WritePadBits();
             }
-
-            WriteMonsterEnabled(outMsg);
         }
         
         public void ServerRead(NetIncomingMessage incMsg,Client c)
         {
+            if (!c.HasPermission(Networking.ClientPermissions.ManageSettings)) return;
+
             SharedRead(incMsg);
 
             UInt32 count = incMsg.ReadUInt32();
@@ -70,7 +78,7 @@ namespace Barotrauma.Networking
             {
                 UInt32 key = incMsg.ReadUInt32();
                 
-                if (c.HasPermission(Networking.ClientPermissions.ManageSettings) && netProperties.ContainsKey(key))
+                if (netProperties.ContainsKey(key))
                 {
                     netProperties[key].Read(incMsg);
                     GameServer.Log(c.Name + " changed " + netProperties[key].Name + " to " + netProperties[key].Value.ToString(),ServerLog.MessageType.ServerMessage);

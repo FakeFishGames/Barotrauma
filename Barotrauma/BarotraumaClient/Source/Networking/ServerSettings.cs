@@ -92,49 +92,52 @@ namespace Barotrauma.Networking
             }
         }
 
+        public void ClientAdminRead(NetBuffer incMsg)
+        {
+            //isPublic = incMsg.ReadBoolean();
+            //EnableUPnP = incMsg.ReadBoolean();
+            //incMsg.ReadPadBits();
+            //QueryPort = incMsg.ReadUInt16();
+
+            int count = incMsg.ReadUInt16();
+            for (int i = 0; i < count; i++)
+            {
+                UInt32 key = incMsg.ReadUInt32();
+                if (netProperties.ContainsKey(key))
+                {
+                    bool changedLocally = netProperties[key].ChangedLocally;
+                    netProperties[key].Read(incMsg);
+                    netProperties[key].TempValue = netProperties[key].Value;
+
+                    if (netProperties[key].GUIComponent != null)
+                    {
+                        if (!changedLocally)
+                        {
+                            netProperties[key].GUIComponentValue = netProperties[key].Value;
+                        }
+                    }
+                }
+                else
+                {
+                    UInt32 size = incMsg.ReadVariableUInt32();
+                    incMsg.Position += 8 * size;
+                }
+            }
+
+            ReadMonsterEnabled(incMsg);
+        }
+
         public void ClientRead(NetBuffer incMsg)
         {
             SharedRead(incMsg);
 
             Voting.ClientRead(incMsg);
 
-            if (incMsg.ReadBoolean())
+            bool isAdmin = incMsg.ReadBoolean();
+            incMsg.ReadPadBits();
+            if (isAdmin)
             {
-                isPublic = incMsg.ReadBoolean();
-                //EnableUPnP = incMsg.ReadBoolean();
-                incMsg.ReadPadBits();
-                QueryPort = incMsg.ReadUInt16();
-
-                int count = incMsg.ReadUInt16();
-                for (int i=0;i<count;i++)
-                {
-                    UInt32 key = incMsg.ReadUInt32();
-                    if (netProperties.ContainsKey(key))
-                    {
-                        bool changedLocally = netProperties[key].ChangedLocally;
-                        netProperties[key].Read(incMsg);
-                        netProperties[key].TempValue = netProperties[key].Value;
-
-                        if (netProperties[key].GUIComponent!=null)
-                        {
-                            if (!changedLocally)
-                            {
-                                netProperties[key].GUIComponentValue = netProperties[key].Value;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        UInt32 size = incMsg.ReadVariableUInt32();
-                        incMsg.Position += 8 * size;
-                    }
-                }
-
-                ReadMonsterEnabled(incMsg);
-            }
-            else
-            {
-                incMsg.ReadPadBits();
+                ClientAdminRead(incMsg);
             }
         }
 
