@@ -1699,9 +1699,9 @@ namespace Barotrauma
                     }
                 }
             }
+            // Foot angle
             if (foot != null)
             {
-                // Fish only
                 if (animParams is IFishAnimation fishParams)
                 {
                     foreach (Limb limb in character.AnimController.Limbs)
@@ -1724,6 +1724,11 @@ namespace Barotrauma
                             },
                             circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0);
                     }
+                }
+                else if (animParams is IHumanAnimation humanParams)
+                {
+                    DrawRadialWidget(spriteBatch, SimToScreen(foot.SimPosition), humanParams.FootAngle, "Foot Angle", Color.White,
+                        angle => TryUpdateAnimParam("footangle", angle), circleRadius: 25, rotationOffset: collider.Rotation + MathHelper.Pi, clockWise: dir < 0);
                 }
                 // Grounded only
                 if (groundedParams != null)
