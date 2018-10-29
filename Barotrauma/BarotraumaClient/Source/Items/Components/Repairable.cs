@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Barotrauma.Particles;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -15,7 +16,11 @@ namespace Barotrauma.Items.Components
     {
         private GUIButton optimizeButton;
         private GUIProgressBar progressBar;
-        
+
+        private List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
+        //the corresponding particle emitter is active when the condition is within this range
+        private List<Vector2> particleEmitterConditionRanges = new List<Vector2>();
+
         [Serialize("", false)]
         public string Description
         {
@@ -66,6 +71,31 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
+
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "emitter":
+                    case "particleemitter":
+                        particleEmitters.Add(new ParticleEmitter(subElement));
+                        particleEmitterConditionRanges.Add(new Vector2(
+                            subElement.GetAttributeFloat("mincondition", 0.0f), 
+                            subElement.GetAttributeFloat("maxcondition", 100.0f)));
+                        break;
+                }
+            }
+        }
+
+        partial void UpdateProjSpecific(float deltaTime)
+        {
+            for (int i = 0; i < particleEmitters.Count; i++)
+            {
+                if (item.Condition >= particleEmitterConditionRanges[i].X && item.Condition <= particleEmitterConditionRanges[i].Y)
+                {
+                    particleEmitters[i].Emit(deltaTime, item.WorldPosition, item.CurrentHull);
+                }
+            }
         }
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)

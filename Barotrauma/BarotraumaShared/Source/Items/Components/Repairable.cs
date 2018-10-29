@@ -114,6 +114,8 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            UpdateProjSpecific(deltaTime);
+
             if (CurrentFixer == null)
             {
                 if (item.Condition <= 0.0f)
@@ -193,6 +195,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        partial void UpdateProjSpecific(float deltaTime);
 
         private void UpdateFixAnimation(Character character)
         {
