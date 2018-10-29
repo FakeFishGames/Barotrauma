@@ -2264,11 +2264,12 @@ namespace Barotrauma
                     {
                         if (!lockSpriteOrigin)
                         {
+                            Color innerColor = selectedLimbs.Contains(limb) ? Color.Yellow : Color.Red;
                             // Draw the sprite origins
                             GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.White, width: 3);
                             GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.White, width: 3);
-                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.Red);
-                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.Red);
+                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, innerColor);
+                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, innerColor);
                         }
                         // Draw the source rect widgets
                         int widgetSize = 8;
@@ -2324,7 +2325,7 @@ namespace Barotrauma
                                 }
                                 var relativeOrigin = new Vector2(origin.X / sourceRect.Width, origin.Y / sourceRect.Height);
                                 TryUpdateLimbParam(limb, "origin", relativeOrigin);
-                                GUI.DrawString(spriteBatch, limbScreenPos + new Vector2(10, -10), relativeOrigin.FormatDoubleDecimal(), Color.White, Color.Black * 0.5f);
+                                GUI.DrawString(spriteBatch, limbScreenPos + new Vector2(10, -10), relativeOrigin.FormatDoubleDecimal(), Color.Yellow, Color.Black * 0.5f);
                                 if (limbPairEditing)
                                 {
                                     UpdateOtherLimbs(limb, otherLimb =>
@@ -2340,7 +2341,7 @@ namespace Barotrauma
                             }
                             if (!lockSpritePosition)
                             {
-                                DrawWidget(spriteBatch, topLeft - new Vector2(halfSize), WidgetType.Rectangle, widgetSize, Color.Red, "Position", () =>
+                                DrawWidget(spriteBatch, topLeft - new Vector2(halfSize), WidgetType.Rectangle, widgetSize, Color.Yellow, "Position", () =>
                                 {
                                     // Adjust the source rect location
                                     var newRect = limb.ActiveSprite.SourceRect;
@@ -2353,7 +2354,7 @@ namespace Barotrauma
                                         limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
                                     }
                                     TryUpdateLimbParam(limb, "sourcerect", newRect);
-                                    GUI.DrawString(spriteBatch, topLeft + new Vector2(stringOffset.X, -stringOffset.Y * 1.5f), limb.ActiveSprite.SourceRect.Location.ToString(), Color.White, Color.Black * 0.5f);
+                                    GUI.DrawString(spriteBatch, topLeft + new Vector2(stringOffset.X, -stringOffset.Y * 1.5f), limb.ActiveSprite.SourceRect.Location.ToString(), Color.Yellow, Color.Black * 0.5f);
                                     if (limbPairEditing)
                                     {
                                         UpdateOtherLimbs(limb, otherLimb =>
@@ -2370,7 +2371,7 @@ namespace Barotrauma
                             }
                             if (!lockSpriteSize)
                             {
-                                DrawWidget(spriteBatch, bottomRight + new Vector2(halfSize), WidgetType.Rectangle, widgetSize, Color.White, "Size", () =>
+                                DrawWidget(spriteBatch, bottomRight + new Vector2(halfSize), WidgetType.Rectangle, widgetSize, Color.Yellow, "Size", () =>
                                 {
                                     // Adjust the source rect width and height, and the sprite size.
                                     var newRect = limb.ActiveSprite.SourceRect;
@@ -2395,7 +2396,7 @@ namespace Barotrauma
                                     var relativeOrigin = new Vector2(origin.X / newRect.Width, origin.Y / newRect.Height);
                                     TryUpdateLimbParam(limb, "origin", relativeOrigin);
                                     TryUpdateLimbParam(limb, "sourcerect", newRect);
-                                    GUI.DrawString(spriteBatch, bottomRight + stringOffset, limb.ActiveSprite.size.FormatZeroDecimal(), Color.White, Color.Black * 0.5f);
+                                    GUI.DrawString(spriteBatch, bottomRight + stringOffset, limb.ActiveSprite.size.FormatZeroDecimal(), Color.Yellow, Color.Black * 0.5f);
                                     if (limbPairEditing)
                                     {
                                         UpdateOtherLimbs(limb, otherLimb =>
