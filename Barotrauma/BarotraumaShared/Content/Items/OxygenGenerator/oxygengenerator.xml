@@ -6,13 +6,6 @@
     linkable="true"
     allowedlinks="vent">
     <Sprite texture ="FF_oxygengenerator.png" depth="0.8" sourcerect="0,0,214,192"/>
-
-    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10"
-                DeteriorationSpeed="0.05" MinDeteriorationCondition="20">
-      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
-      <RequiredSkill identifier="mechanical" level="30"/>
-      <RequiredItem identifier="wrench" type="equipped"/>
-    </Repairable>
   
     <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected = "true">
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1500" loop="false"/>
@@ -41,6 +34,15 @@
       <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="power_in"/>
     </ConnectionPanel>
+
+    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10"
+                DeteriorationSpeed="0.05" MinDeteriorationCondition="20">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="30"/>
+      <RequiredItem identifier="wrench" type="equipped"/>
+      <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="50.0"/>
+      <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="3" mincondition="0.0" maxcondition="0.0"/>
+    </Repairable>
   </Item>
 
   <Item
