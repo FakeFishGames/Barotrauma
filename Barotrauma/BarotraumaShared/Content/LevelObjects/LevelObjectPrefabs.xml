@@ -1,31 +1,31 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <levelobjects>
-  <hanging1 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="5">
+  <!--<hanging1 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="5">
     <Sprite texture="Content/LevelObjects/vegetation.png" sourcerect="0,0,242,543" origin="0.5,0.15" />
   </hanging1>
   <hanging2 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="5">
     <Sprite texture="Content/LevelObjects/vegetation.png" sourcerect="241,0,322,720" origin="0.5,0.15" />
-  </hanging2>
-  <web1 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="5">
-    <Sprite texture="Content/LevelObjects/Webs.png" sourcerect="309,13,307,870" origin="0.5,0.5" />
+  </hanging2>-->
+  <web1 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="3">
+    <Sprite texture="Content/LevelObjects/Webs.png" sourcerect="309,13,307,870" origin="0.5,0.2" />
   </web1>
-  <web2 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="5">
-    <Sprite texture="Content/LevelObjects/Webs.png" sourcerect="627,42,314,1222" origin="0.5,0.5" />
+  <web2 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="3">
+    <Sprite texture="Content/LevelObjects/Webs.png" sourcerect="627,42,314,1222" origin="0.5,0.15" />
   </web2>
-  <web3 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="5">
-    <Sprite texture="Content/LevelObjects/Webs.png" sourcerect="954,66,317,1400" origin="0.5,0.5" />
+  <web3 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="3">
+    <Sprite texture="Content/LevelObjects/Webs.png" sourcerect="954,66,317,1400" origin="0.5,0.15" />
   </web3>
-  <web4 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="5">
-    <Sprite texture="Content/LevelObjects/Webs.png" sourcerect="69,948,353,496" origin="0.5,0.5" />
+  <web4 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="3">
+    <Sprite texture="Content/LevelObjects/Webs.png" sourcerect="69,948,353,496" origin="0.5,0.2" />
   </web4>
-  <web5 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="5">
-    <Sprite texture="Content/LevelObjects/Webs.png" sourcerect="1273,0,779,1638" origin="0.5,0.5" />
+  <web5 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="3">
+    <Sprite texture="Content/LevelObjects/Webs.png" sourcerect="1273,0,779,1638" origin="0.5,0.15" />
   </web5>
-  <web6 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="5">
-    <Sprite texture="Content/LevelObjects/Webs.png" sourcerect="28,1475,443,555" origin="0.5,0.5" />
+  <web6 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="3">
+    <Sprite texture="Content/LevelObjects/Webs.png" sourcerect="28,1475,443,555" origin="0.5,0.2" />
   </web6>
-  <web7 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="5">
-    <Sprite texture="Content/LevelObjects/Webs.png" sourcerect="0,0,307,946" origin="0.5,0.5" />
+  <web7 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="3">
+    <Sprite texture="Content/LevelObjects/Webs.png" sourcerect="0,0,307,946" origin="0.5,0.2" />
   </web7>
   <stalk spawnpos="Wall" alignment="Top" minsize="0.5" maxsize="1.5" commonness="1" swingamount="2" swingfrequency="0.2" randomrotation="-10,10">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
@@ -598,7 +598,7 @@
 
   <geothermalvent_B spawnpos="Wall, SeaFloor" alignment="Top" minsize="1" maxsize="1.2" alignwithsurface="true" randomrotation="-10,10">
     <overridecommonness commonness="5" />
-    <Sprite texture="Content/LevelObjects/geothermalvents.png" sourcerect="280,340,276" origin="0.5,0.9" />
+    <Sprite texture="Content/LevelObjects/geothermalvents.png" sourcerect="280,0,338,275" origin="0.5,0.9" />
   </geothermalvent_B>
 
   <geothermalvent_C spawnpos="Wall, SeaFloor" alignment="Top" minsize="1" maxsize="1.2" alignwithsurface="true" randomrotation="-10,10">
