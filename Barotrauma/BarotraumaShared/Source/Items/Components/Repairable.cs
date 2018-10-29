@@ -22,8 +22,24 @@ namespace Barotrauma.Items.Components
 
         private float fixDurationLowSkill, fixDurationHighSkill;
 
+        private float deteriorationTimer;
+
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, DecimalCount = 2, ToolTip = "How fast the condition of the item deteriorates per second.")]
         public float DeteriorationSpeed
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f, DecimalCount = 2, ToolTip = "Minimum initial delay before the item starts to deteriorate.")]
+        public float MinDeteriorationDelay
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f, DecimalCount = 2, ToolTip = "Maximum initial delay before the item starts to deteriorate.")]
+        public float MaxDeteriorationDelay
         {
             get;
             set;
@@ -76,6 +92,10 @@ namespace Barotrauma.Items.Components
             header = element.GetAttributeString("name", "");
             fixDurationLowSkill = element.GetAttributeFloat("fixdurationlowskill", 100.0f);
             fixDurationHighSkill = element.GetAttributeFloat("fixdurationhighskill", 5.0f);
+            
+            deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
+            //let the clients know the initial deterioration delay
+            item.CreateServerEvent(this);
 
             InitProjSpecific(element);
         }
@@ -102,6 +122,16 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
+                    if (deteriorationTimer > 0.0f)
+                    {
+                        if (GameMain.Client == null)
+                        {
+                            deteriorationTimer -= deltaTime;
+                            if (deteriorationTimer <= 0.0f) { item.CreateServerEvent(this); }
+                        }
+                        return;
+                    }
+
                     if (item.Condition > MinDeteriorationCondition)
                     {
                         item.Condition -= DeteriorationSpeed * deltaTime;
@@ -171,11 +201,13 @@ namespace Barotrauma.Items.Components
 
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
+            msg.Write(deteriorationTimer);
             msg.Write(repairProgress);
         }
 
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
+            deteriorationTimer = msg.ReadSingle();
             repairProgress = msg.ReadSingle();
         }
 
