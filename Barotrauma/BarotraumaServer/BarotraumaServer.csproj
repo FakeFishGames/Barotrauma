@@ -133,6 +133,7 @@
     <Compile Include="Source\Items\Item.cs" />
     <Compile Include="Source\Map\Hull.cs" />
     <Compile Include="Source\Map\Structure.cs" />
+    <Compile Include="Source\Networking\BanList.cs" />
     <Compile Include="Source\Networking\ChatMessage.cs" />
     <Compile Include="Source\Networking\Client.cs" />
     <Compile Include="Source\Networking\EntitySpawner.cs" />

@@ -43,6 +43,7 @@ namespace Barotrauma.Networking
 
             WriteNetProperties(outMsg);
             WriteMonsterEnabled(outMsg);
+            BanList.ServerAdminWrite(outMsg, c);
         }
 
         public void ServerWrite(NetBuffer outMsg,Client c)
