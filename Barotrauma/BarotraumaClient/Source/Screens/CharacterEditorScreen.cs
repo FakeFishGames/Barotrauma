@@ -2306,7 +2306,7 @@ namespace Barotrauma
                         {
                             if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && isMouseOnRect)
                             {
-                                var input = scaledMouseSpeed;
+                                var input = scaledMouseSpeed / spriteSheetZoom;
                                 input.X *= character.AnimController.Dir;
                                 // Adjust the sprite origin
                                 origin += input;
