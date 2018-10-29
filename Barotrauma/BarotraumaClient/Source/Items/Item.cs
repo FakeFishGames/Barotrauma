@@ -381,6 +381,7 @@ namespace Barotrauma
                     (components[containerIndex] as ItemContainer).Inventory.ClientRead(type, msg, sendingTime);
                     break;
                 case NetEntityEvent.Type.Status:
+                    float prevCondition = condition;
                     condition = msg.ReadSingle();
                     if (FixRequirements.Count > 0)
                     {
@@ -394,6 +395,11 @@ namespace Barotrauma
                             for (int i = 0; i < FixRequirements.Count; i++)
                                 FixRequirements[i].Fixed = true;
                         }
+                    }
+
+                    if (prevCondition > 0.0f && condition <= 0.0f)
+                    {
+                        ApplyStatusEffects(ActionType.OnBroken, 1.0f);
                     }
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
