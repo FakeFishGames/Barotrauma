@@ -17,6 +17,7 @@ namespace Barotrauma
 
         public Shape shape;
         public string tooltip;
+        public bool showTooltip = true;
         public Rectangle DrawRect => new Rectangle((int)(DrawPos.X - (float)size / 2), (int)(DrawPos.Y - (float)size / 2), size, size);
         public Rectangle InputRect
         {
@@ -47,9 +48,8 @@ namespace Barotrauma
         public event Action Selected;
         public event Action Deselected;
         public event Action Hovered;
-        public event Action Clicked;
-        public event Action MouseDown;
         public event Action MouseUp;
+        public event Action MouseDown;
         public event Action<float> MouseHeld;
         public event Action<float> PreUpdate;
         public event Action<float> PostUpdate;
@@ -121,21 +121,17 @@ namespace Barotrauma
             }
             if (IsSelected)
             {
-                if (PlayerInput.LeftButtonHeld())
-                {
-                    MouseHeld?.Invoke(deltaTime);
-                }
                 if (PlayerInput.LeftButtonDown())
                 {
                     MouseDown?.Invoke();
                 }
-                if (PlayerInput.LeftButtonReleased())
+                if (PlayerInput.LeftButtonHeld())
                 {
-                    MouseUp?.Invoke();
+                    MouseHeld?.Invoke(deltaTime);
                 }
                 if (PlayerInput.LeftButtonClicked())
                 {
-                    Clicked?.Invoke();
+                    MouseUp?.Invoke();
                 }
             }
             PostUpdate?.Invoke(deltaTime);
@@ -157,7 +153,7 @@ namespace Barotrauma
             }
             if (IsSelected)
             {
-                if (!string.IsNullOrEmpty(tooltip))
+                if (showTooltip && !string.IsNullOrEmpty(tooltip))
                 {
                     var offset = tooltipOffset ?? new Vector2(size, -size / 2);
                     GUI.DrawString(spriteBatch, DrawPos + offset, tooltip, textColor, textBackgroundColor);
