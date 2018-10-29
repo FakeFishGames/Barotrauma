@@ -116,7 +116,7 @@ namespace Barotrauma
             HealthBarAreaLeft = new Rectangle(Padding, GameMain.GraphicsHeight - healthBarHeight - Padding, healthBarWidth, healthBarHeight);
             AfflictionAreaLeft = new Rectangle(Padding, HealthBarAreaLeft.Y - afflictionAreaHeight - Padding, healthBarWidth, afflictionAreaHeight);
             
-            HealthBarAreaRight = new Rectangle(PortraitArea.X + Padding * 3 - healthBarWidth, PortraitArea.Y + Padding * 3, healthBarWidth, HealthBarAreaLeft.Height);
+            HealthBarAreaRight = new Rectangle(PortraitArea.X - Padding - healthBarWidth, PortraitArea.Y + Padding * 3, healthBarWidth, HealthBarAreaLeft.Height);
             AfflictionAreaRight = new Rectangle(HealthBarAreaRight.X, HealthBarAreaRight.Y - Padding - afflictionAreaHeight, healthBarWidth, afflictionAreaHeight);
 
             int messageAreaPos = GameMain.GraphicsWidth - HealthBarAreaRight.X;
