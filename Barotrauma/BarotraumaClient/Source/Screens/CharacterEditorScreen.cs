@@ -2283,7 +2283,7 @@ namespace Barotrauma
                         bool isMouseOnRect = rect.Contains(PlayerInput.MousePosition);
                         if (isMouseOnRect)
                         {
-                            if (PlayerInput.LeftButtonDown())
+                            if (PlayerInput.LeftButtonDown() && selectedWidget == null)
                             {
                                 if (!selectedLimbs.Contains(limb))
                                 {
@@ -2305,7 +2305,7 @@ namespace Barotrauma
                         }
                         if (selectedLimbs.Contains(limb))
                         {
-                            if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && isMouseOnRect)
+                            if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && isMouseOnRect && selectedWidget == null)
                             {
                                 var input = scaledMouseSpeed / spriteSheetZoom;
                                 input.X *= character.AnimController.Dir;
