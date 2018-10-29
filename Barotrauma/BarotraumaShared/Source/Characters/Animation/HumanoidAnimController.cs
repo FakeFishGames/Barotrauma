@@ -962,18 +962,26 @@ namespace Barotrauma
             {
                 var thigh = i == -1 ? GetLimb(LimbType.LeftThigh) : GetLimb(LimbType.RightThigh);
                 var leg = i == -1 ? GetLimb(LimbType.LeftLeg) : GetLimb(LimbType.RightLeg);
-
+                if (leg == null) { continue; }
                 float thighDiff = Math.Abs(MathUtils.GetShortestAngle(torso.Rotation, thigh.Rotation));
-                if (thighDiff > MathHelper.PiOver2)
+                if (thigh != null)
                 {
-                    //thigh bent too close to the torso -> force the leg to extend
-                    float thighTorque = thighDiff * thigh.Mass * Math.Sign(torso.Rotation - thigh.Rotation) * 10.0f;
-                    thigh.body.ApplyTorque(thighTorque);
-                    leg.body.ApplyTorque(thighTorque);
+                    if (thighDiff > MathHelper.PiOver2)
+                    {
+                        //thigh bent too close to the torso -> force the leg to extend
+                        float thighTorque = thighDiff * thigh.Mass * Math.Sign(torso.Rotation - thigh.Rotation) * 10.0f;
+                        thigh.body.ApplyTorque(thighTorque);
+                        leg.body.ApplyTorque(thighTorque);
+                    }
+                    else
+                    {
+                        thigh.body.SmoothRotate(torso.Rotation + (float)Math.Sin(legCyclePos / CurrentSwimParams.LegCycleLength) * i * 0.3f * CurrentAnimationParams.CycleSpeed, 2.0f);
+                    }
                 }
-                else
+                var foot = i == -1 ? GetLimb(LimbType.LeftFoot) : GetLimb(LimbType.RightFoot);
+                if (foot != null)
                 {
-                    thigh.body.SmoothRotate(torso.Rotation + (float)Math.Sin(legCyclePos / CurrentSwimParams.LegCycleLength) * i * 0.3f * CurrentAnimationParams.CycleSpeed, 2.0f);
+                    foot.body.SmoothRotate(leg.body.Rotation + (CurrentSwimParams.FootAngleInRadians + MathHelper.PiOver2) * Dir, CurrentGroundedParams.FootRotateStrength);
                 }
             }
 
