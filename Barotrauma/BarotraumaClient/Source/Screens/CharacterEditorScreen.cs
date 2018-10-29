@@ -866,7 +866,8 @@ namespace Barotrauma
             var layoutGroupSpriteSheet = new GUILayoutGroup(new RectTransform(Vector2.One, spriteSheetControls.RectTransform)) { AbsoluteSpacing = 5, CanBeFocused = false };
             new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), "Spritesheet zoom:", Color.White);
             float spriteMinScale = 0.25f;
-            float spriteMaxScale = (leftPanel.Rect.Right - spriteSheetOffsetX) / (float)(Textures?.OrderByDescending(t => t.Width).First().Width);
+            float spriteMaxScale = Textures == null || Textures.None() ? 1 :
+                (leftPanel.Rect.Right - spriteSheetOffsetX) / (float)(Textures.OrderByDescending(t => t.Width).First().Width);
             spriteSheetZoom = MathHelper.Clamp(1, spriteMinScale, spriteMaxScale);
             spriteSheetZoomBar = new GUIScrollBar(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), barSize: 0.2f)
             {
