@@ -10,7 +10,7 @@
 
     <Sprite texture="Content/Items/Command/navigator.png" depth="0.8" sourcerect="0,0,188,194"/>
 
-    <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10" linkuitocomponent="4">
+    <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10" linkuitocomponent="3">
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" style="OuterGlow" color="0,0,0,0.8" absoluteoffset="30,0"/>
       <StatusEffect type="InWater" target="This" condition="-1.0"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false"/>
