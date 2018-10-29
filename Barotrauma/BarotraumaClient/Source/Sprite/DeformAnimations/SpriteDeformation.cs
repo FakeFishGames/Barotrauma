@@ -54,7 +54,7 @@ namespace Barotrauma.SpriteDeformations
                 case "noise":
                     return new NoiseDeformation(element);
                 case "bezier":
-                    return new BezierDeformation(element);
+                    return new JointBendDeformation(element);
                 case "reacttotriggerers":
                 default:
                     if (Enum.TryParse(typeName, out PositionalDeformation.ReactionType reactionType))

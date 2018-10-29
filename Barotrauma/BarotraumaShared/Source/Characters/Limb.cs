@@ -7,7 +7,6 @@ using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -137,12 +136,6 @@ namespace Barotrauma
         public PhysicsBody body;
                         
         public Vector2 StepOffset => ConvertUnits.ToSimUnits(limbParams.StepOffset) * ragdoll.RagdollParams.JointScale;
-
-        public Sprite Sprite { get; protected set; }
-        public DeformableSprite DeformSprite { get; protected set; }
-        public Sprite ActiveSprite => DeformSprite != null ? DeformSprite.Sprite : Sprite;
-
-        public Sprite DamagedSprite { get; set; }
 
         public bool inWater;
 
@@ -352,43 +345,6 @@ namespace Barotrauma
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    // DeformableSprites handled by client only
-                    case "sprite":
-                        string spritePath = subElement.Attribute("texture")?.Value;
-                        string spritePathWithTags = spritePath;
-                        if (character.Info != null)
-                        {
-                            spritePath = spritePath.Replace("[GENDER]", (character.Info.Gender == Gender.Female) ? "f" : "");
-                            spritePath = spritePath.Replace("[HEADID]", character.Info.HeadSpriteId.ToString());
-
-                            if (character.Info.HeadSprite != null && character.Info.SpriteTags.Any())
-                            {
-                                string tags = "";
-                                character.Info.SpriteTags.ForEach(tag => tags += "[" + tag + "]");
-
-                                spritePathWithTags = Path.Combine(
-                                    Path.GetDirectoryName(spritePath),
-                                    Path.GetFileNameWithoutExtension(spritePath) + tags + Path.GetExtension(spritePath));
-                            }
-                        }
-                        if (File.Exists(spritePathWithTags))
-                        {
-                            Sprite = new Sprite(subElement, "", spritePathWithTags);
-                        }
-                        else
-                        {
-                            Sprite = new Sprite(subElement, "", spritePath);
-                        }
-                        break;
-                    case "damagedsprite":
-                        string damagedSpritePath = subElement.Attribute("texture").Value;
-                        if (character.Info != null)
-                        {
-                            damagedSpritePath = damagedSpritePath.Replace("[GENDER]", (character.Info.Gender == Gender.Female) ? "f" : "");
-                            damagedSpritePath = damagedSpritePath.Replace("[HEADID]", character.Info.HeadSpriteId.ToString());
-                        }
-                        DamagedSprite = new Sprite(subElement, "", damagedSpritePath);
-                        break;
                     case "attack":
                         attack = new Attack(subElement, (character == null ? "null" : character.Name) + ", limb " + type);
                         break;
@@ -625,45 +581,20 @@ namespace Barotrauma
         
         public void Remove()
         {
-            if (Sprite != null)
-            {
-                Sprite.Remove();
-                Sprite = null;
-            }
-            
-            if (DamagedSprite != null)
-            {
-                DamagedSprite.Remove();
-                DamagedSprite = null;
-            }
-
-            if (DeformSprite != null)
-            {
-                DeformSprite.Sprite?.Remove();
-                DeformSprite = null;
-            }
-
-            if (body != null)
-            {
-                body.Remove();
-                body = null;
-            }
-
-#if CLIENT
-            if (LightSource != null)
-            {
-                LightSource.Remove();
-            }
-#endif
+            body?.Remove();
+            body = null;
+            RemoveProjSpecific();
         }
+
+        partial void RemoveProjSpecific();
 
         public void LoadParams()
         {
             bool isFlipped = dir == Direction.Left;
-            Sprite?.LoadParams(limbParams.normalSpriteParams, isFlipped);
-            DamagedSprite?.LoadParams(limbParams.damagedSpriteParams, isFlipped);
-            DeformSprite?.Sprite.LoadParams(limbParams.deformSpriteParams, isFlipped);
             pullJoint.LocalAnchorA = ConvertUnits.ToSimUnits(limbParams.PullPos * Scale);
+            LoadParamsProjSpecific();
         }
+
+        partial void LoadParamsProjSpecific();
     }
 }

@@ -23,9 +23,9 @@ namespace Barotrauma
             get { return sprite; }
         }
 
-        public DeformableSprite(XElement element, int? subdivisionsX = null, int? subdivisionsY = null)
+        public DeformableSprite(XElement element, int? subdivisionsX = null, int? subdivisionsY = null, string filePath = "")
         {
-            sprite = new Sprite(element);
+            sprite = new Sprite(element, file: filePath);
             InitProjSpecific(element, subdivisionsX, subdivisionsY);
         }
 
