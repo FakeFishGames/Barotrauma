@@ -143,7 +143,14 @@ namespace Barotrauma
                 else
                 {
                     DebugConsole.ThrowError($"[RagdollParams] Failed to load ragdoll {r} at {selectedFile} for the character {speciesName}. Creating a dummy file.");
-                    return CreateDefault<T>(GetDefaultFile(speciesName), speciesName, dummyParams);
+                    var defaultFile = GetDefaultFile(speciesName);
+                    if (File.Exists(defaultFile))
+                    {
+                        DebugConsole.ThrowError($"[RagdollParams] Renaming the invalid file as {selectedFile}.invalid");
+                        // Rename the old file so that it's not lost.
+                        File.Move(defaultFile, defaultFile + ".invalid");
+                    }
+                    return CreateDefault<T>(defaultFile, speciesName, dummyParams);
                 }
             }
             return (T)ragdoll;
