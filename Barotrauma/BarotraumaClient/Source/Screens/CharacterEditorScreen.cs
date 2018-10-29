@@ -548,6 +548,7 @@ namespace Barotrauma
         private Character SpawnCharacter(string configFile, RagdollParams ragdoll = null)
         {
             DebugConsole.NewMessage($"Trying to spawn {configFile}", Color.HotPink);
+            currentCharacterConfig = configFile;
             spawnPosition = WayPoint.GetRandom(sub: Submarine.MainSub).WorldPosition;
             character?.Remove();
             character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), hasAi: false, ragdoll: ragdoll);
