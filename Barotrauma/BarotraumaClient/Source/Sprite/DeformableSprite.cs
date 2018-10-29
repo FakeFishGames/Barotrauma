@@ -26,6 +26,9 @@ namespace Barotrauma
         
         private static Effect effect;
 
+        private Point spritePos;
+        private Point spriteSize;
+
         partial void InitProjSpecific(XElement element, int? subdivisionsX, int? subdivisionsY)
         {
             if (effect == null)
@@ -37,9 +40,7 @@ namespace Barotrauma
                 effect = GameMain.Instance.Content.Load<Effect>("Effects/deformshader_opengl");
 #endif
             }
-
-            sprite = new Sprite(element);
-
+            
             //use subdivisions configured in the xml if the arguments passed to the method are null
             Vector2 subdivisionsInXml = element.GetAttributeVector2("subdivisions", Vector2.One);
             subDivX = subdivisionsX ?? (int)subdivisionsInXml.X;
@@ -118,6 +119,8 @@ namespace Barotrauma
             }
             vertexBuffer.SetData(vertices);
             IsFlipped = flip;
+            spritePos = sprite.SourceRect.Location;
+            spriteSize = sprite.SourceRect.Size;
         }
 
         private void SetupIndexBuffer()
@@ -169,7 +172,10 @@ namespace Barotrauma
         {
             deformArrayWidth = deform.GetLength(0);
             deformArrayHeight = deform.GetLength(1);
-            deformAmount = new Vector2[deformArrayWidth * deformArrayHeight];
+            if (deformAmount == null || deformAmount.Length != deformArrayWidth * deformArrayHeight)
+            {
+                deformAmount = new Vector2[deformArrayWidth * deformArrayHeight];
+            }
             for (int x = 0; x < deformArrayWidth; x++)
             {
                 for (int y = 0; y < deformArrayHeight; y++)
@@ -197,33 +203,12 @@ namespace Barotrauma
                 Matrix.CreateTranslation(pos);
         }
 
-        private Point spritePos;
-        private Point spriteSize;
         public void Draw(Camera cam, Vector3 pos, Vector2 origin, float rotate, Vector2 scale, Color color, bool flip = false)
         {
             // If the source rect is modified, we should recalculate the vertex buffer.
-            if (sprite.SourceRect.Location != spritePos || sprite.SourceRect.Size != spriteSize)
+            if (sprite.SourceRect.Location != spritePos || sprite.SourceRect.Size != spriteSize || flip != IsFlipped)
             {
-                spritePos = sprite.SourceRect.Location;
-                spriteSize = sprite.SourceRect.Size;
                 SetupVertexBuffer(flip);
-            }
-            else
-            {
-                if (flip)
-                {
-                    if (!IsFlipped)
-                    {
-                        SetupVertexBuffer(true);
-                    }
-                }
-                else
-                {
-                    if (IsFlipped)
-                    {
-                        SetupVertexBuffer(false);
-                    }
-                }
             }
             
             Matrix matrix = GetTransform(pos, origin, rotate, scale);
