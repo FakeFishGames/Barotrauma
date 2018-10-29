@@ -204,39 +204,44 @@ namespace Barotrauma
             Limb rightHand = GetLimb(LimbType.RightHand);
 
             shoulder = GetJointBetweenLimbs(LimbType.Torso, LimbType.RightArm);
-            LimbJoint rightElbow = rightForearm == null ?
+            Vector2 localAnchorShoulder = Vector2.Zero;
+            Vector2 localAnchorElbow = Vector2.Zero;
+            if (shoulder != null)
+            {
+                localAnchorShoulder = shoulder.LimbA.type == LimbType.RightArm ? shoulder.LocalAnchorA : shoulder.LocalAnchorB;
+            }
+            LimbJoint rightElbow = rightForearm == null ? 
                 GetJointBetweenLimbs(LimbType.RightArm, LimbType.RightHand) :
                 GetJointBetweenLimbs(LimbType.RightArm, LimbType.RightForearm);
-            LimbJoint rightWrist = rightForearm == null ?
-                null : GetJointBetweenLimbs(LimbType.RightForearm, LimbType.RightHand);
-
-            Vector2 localAnchorShoulder = shoulder.LimbA.type == LimbType.RightArm ?
-                shoulder.LocalAnchorA : shoulder.LocalAnchorB;
-            Vector2 localAnchorElbow = rightElbow.LimbA.type == LimbType.RightArm ?
-                rightElbow.LocalAnchorA : rightElbow.LocalAnchorB;
-
-            upperArmLength = Vector2.Distance(localAnchorShoulder, localAnchorElbow);
-            
-            if (rightForearm == null)
+            if (rightElbow != null)
             {
-                forearmLength = Vector2.Distance(
-                    rightHand.PullJointLocalAnchorA,
-                    rightElbow.LimbA.type == LimbType.RightHand ? rightElbow.LocalAnchorA : rightElbow.LocalAnchorB);
+                localAnchorElbow = rightElbow.LimbA.type == LimbType.RightArm ? rightElbow.LocalAnchorA : rightElbow.LocalAnchorB;
             }
-            else if (rightForearm != null && rightHand != null)
+            upperArmLength = Vector2.Distance(localAnchorShoulder, localAnchorElbow);           
+            if (rightElbow != null)
             {
-                forearmLength = Vector2.Distance(
-                    rightElbow.LimbA.type == LimbType.RightForearm ? rightElbow.LocalAnchorA : rightElbow.LocalAnchorB,
-                    rightWrist.LimbA.type == LimbType.RightForearm ? rightWrist.LocalAnchorA : rightWrist.LocalAnchorB);
-                forearmLength += Vector2.Distance(
-                    rightHand.PullJointLocalAnchorA, 
-                    rightElbow.LimbA.type == LimbType.RightHand ? rightElbow.LocalAnchorA : rightElbow.LocalAnchorB);
+                if (rightForearm == null)
+                {
+                    forearmLength = Vector2.Distance(
+                        rightHand.PullJointLocalAnchorA,
+                        rightElbow.LimbA.type == LimbType.RightHand ? rightElbow.LocalAnchorA : rightElbow.LocalAnchorB);
+                }
+                else if (rightForearm != null && rightHand != null)
+                {
+                    LimbJoint rightWrist = rightForearm == null ? null : GetJointBetweenLimbs(LimbType.RightForearm, LimbType.RightHand);
+                    forearmLength = Vector2.Distance(
+                        rightElbow.LimbA.type == LimbType.RightForearm ? rightElbow.LocalAnchorA : rightElbow.LocalAnchorB,
+                        rightWrist.LimbA.type == LimbType.RightForearm ? rightWrist.LocalAnchorA : rightWrist.LocalAnchorB);
+                    forearmLength += Vector2.Distance(
+                        rightHand.PullJointLocalAnchorA,
+                        rightElbow.LimbA.type == LimbType.RightHand ? rightElbow.LocalAnchorA : rightElbow.LocalAnchorB);
+                }
             }
         }
 
         private LimbJoint GetJointBetweenLimbs(LimbType limbTypeA, LimbType limbTypeB)
         {
-            return LimbJoints.First(lj =>
+            return LimbJoints.FirstOrDefault(lj =>
                 (lj.LimbA.type == limbTypeA && lj.LimbB.type == limbTypeB) ||
                 (lj.LimbB.type == limbTypeA && lj.LimbA.type == limbTypeB));
         }
@@ -504,10 +509,13 @@ namespace Barotrauma
 
             movement.Y = 0.0f;
 
+            if (torso == null) { return; }
+
             // Doesn't seem to have much (positive) effect. The ragdoll breaks anyway.
             for (int i = 0; i < 2; i++)
             {
                 Limb leg = GetLimb((i == 0) ? LimbType.LeftThigh : LimbType.RightThigh);// : leftLeg;
+                if (leg == null) { continue; }
 
                 float shortestAngle = leg.Rotation - torso.Rotation;
 
