@@ -33,14 +33,14 @@ namespace Barotrauma
         public float MinZoom
         {
             get { return minZoom;}
-            set { minZoom = MathHelper.Clamp(value, 0.1f, 10.0f);   }
+            set { minZoom = MathHelper.Clamp(value, 0.01f, 10.0f);   }
         }
 
         private float maxZoom = 2.0f;
         public float MaxZoom
         {
             get { return maxZoom; }
-            set { maxZoom = MathHelper.Clamp(value, 0.1f, 10.0f); }
+            set { maxZoom = MathHelper.Clamp(value, 1.0f, 10.0f); }
         }
 
         private float zoom;
