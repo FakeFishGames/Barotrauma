@@ -62,15 +62,23 @@ namespace Barotrauma
 
         private float spriteSheetOrientation;
 
+        private bool isEndlessRunner;
+
         public override void Select()
         {
             base.Select();
-            Submarine.MainSub = new Submarine("Content/AnimEditor.sub");
-            Submarine.MainSub.Load(unloadPrevious: true, showWarningMessages: false);
+            GUI.ForceMouseOn(null);
+            if (Submarine.MainSub == null)
+            {
+                Submarine.MainSub = new Submarine("Content/AnimEditor.sub");
+                Submarine.MainSub.Load(unloadPrevious: false, showWarningMessages: false);
+                originalWall = new WallGroup(new List<Structure>(Structure.WallList));
+                CloneWalls();
+                CalculateMovementLimits();
+                isEndlessRunner = true;
+                GameMain.LightManager.LightingEnabled = false;
+            }
             Submarine.MainSub.GodMode = true;
-            originalWall = new WallGroup(new List<Structure>(Structure.WallList));
-            CloneWalls();
-            CalculateMovementLimits();
             currentCharacterConfig = Character.HumanConfigFile;
             SpawnCharacter(currentCharacterConfig);
             GameMain.Instance.OnResolutionChanged += OnResolutionChanged;
@@ -80,9 +88,20 @@ namespace Barotrauma
         public override void Deselect()
         {
             base.Deselect();
-            Submarine.MainSub.Remove();
+            GUI.ForceMouseOn(null);
+            if (character != null)
+            {
+                character?.Remove();
+                character = null;
+            }
+            if (isEndlessRunner)
+            {
+                Submarine.MainSub.Remove();
+                isEndlessRunner = false;
+            }
+            GameMain.World.ProcessChanges();
             GameMain.Instance.OnResolutionChanged -= OnResolutionChanged;
-            instance = null;
+            GameMain.LightManager.LightingEnabled = true;
         }
 
         private void OnResolutionChanged()
@@ -236,19 +255,21 @@ namespace Barotrauma
                 character.Control((float)deltaTime, Cam);
                 character.AnimController.UpdateAnim((float)deltaTime);
                 character.AnimController.Update((float)deltaTime, Cam);
-                if (character.Position.X < min)
+                if (isEndlessRunner)
                 {
-                    UpdateWalls(false);
-                }
-                else if (character.Position.X > max)
-                {
-                    UpdateWalls(true);
+                    if (character.Position.X < min)
+                    {
+                        UpdateWalls(false);
+                    }
+                    else if (character.Position.X > max)
+                    {
+                        UpdateWalls(true);
+                    }
                 }
                 GameMain.World.Step((float)deltaTime);
             }
-            //Cam.TargetPos = Vector2.Zero;
             Cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
-            Cam.Position = character.Position;
+            Cam.Position = character.WorldPosition;
             // Update widgets
             foreach (var widget in jointSelectionWidgets.Values)
             {
@@ -267,11 +288,19 @@ namespace Barotrauma
             {
                 Timing.Alpha = 0.0f;
             }
-
-            base.Draw(deltaTime, graphics, spriteBatch);
             scaledMouseSpeed = PlayerInput.MouseSpeedPerSecond * (float)deltaTime;
-            graphics.Clear(backgroundColor);
             Cam.UpdateTransform(true);
+
+            // Lightmaps
+            if (GameMain.LightManager.LightingEnabled)
+            {
+                GameMain.LightManager.ObstructVision = Character.Controlled.ObstructVision;
+                GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam);
+                GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled.CursorWorldPosition);
+            }
+            base.Draw(deltaTime, graphics, spriteBatch);
+
+            graphics.Clear(backgroundColor);
 
             // Submarine
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: Cam.Transform);
@@ -291,6 +320,14 @@ namespace Barotrauma
             }
             spriteBatch.End();
 
+            // Lights
+            if (GameMain.LightManager.LightingEnabled)
+            {
+                spriteBatch.Begin(SpriteSortMode.Deferred, Lights.CustomBlendStates.Multiplicative, null, DepthStencilState.None, null, null, null);
+                spriteBatch.Draw(GameMain.LightManager.LightMap, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+                spriteBatch.End();
+            }
+
             // GUI
             spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
             if (editAnimations)
@@ -309,9 +346,12 @@ namespace Barotrauma
             {
                 DrawSpritesheetEditor(spriteBatch, (float)deltaTime);
             }
-            Structure wall = CurrentWall.walls.FirstOrDefault();
-            Vector2 indicatorPos = wall == null ? originalWall.walls.First().DrawPosition : wall.DrawPosition;
-            GUI.DrawIndicator(spriteBatch, indicatorPos, Cam, 700, GUI.SubmarineIcon, Color.White);
+            if (isEndlessRunner)
+            {
+                Structure wall = CurrentWall.walls.FirstOrDefault();
+                Vector2 indicatorPos = wall == null ? originalWall.walls.First().DrawPosition : wall.DrawPosition;
+                GUI.DrawIndicator(spriteBatch, indicatorPos, Cam, 700, GUI.SubmarineIcon, Color.White);
+            }
             GUI.Draw(Cam, spriteBatch);
             if (isFreezed)
             {
@@ -328,6 +368,7 @@ namespace Barotrauma
                 DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 510, 60), spriteSheetOrientation, string.Empty, Color.White,
                     angle => spriteSheetOrientation = angle, circleRadius: 40, widgetSize: 20, rotationOffset: MathHelper.Pi, autoFreeze: false);
             }
+
             // Debug
             if (GameMain.DebugDraw)
             {
@@ -376,7 +417,7 @@ namespace Barotrauma
         }
         #endregion
 
-        #region Inifinite runner
+        #region Endless runner
         private int min;
         private int max;
         private void CalculateMovementLimits()
@@ -473,6 +514,7 @@ namespace Barotrauma
         private bool wallCollisionsEnabled;
         private void SetWallCollisions(bool enabled)
         {
+            if (!isEndlessRunner) { return; }
             wallCollisionsEnabled = enabled;
             var collisionCategory = enabled ? FarseerPhysics.Dynamics.Category.Cat1 : FarseerPhysics.Dynamics.Category.None;
             AllWalls.ForEach(w => w.SetCollisionCategory(collisionCategory));
@@ -549,13 +591,27 @@ namespace Barotrauma
         {
             DebugConsole.NewMessage($"Trying to spawn {configFile}", Color.HotPink);
             currentCharacterConfig = configFile;
-            spawnPosition = WayPoint.GetRandom(sub: Submarine.MainSub).WorldPosition;
-            character?.Remove();
+            WayPoint wayPoint = null;
+            if (!isEndlessRunner)
+            {
+                wayPoint = WayPoint.GetRandom(spawnType: SpawnType.Human, sub: Submarine.MainSub);
+            }
+            if (wayPoint == null)
+            {
+                wayPoint = WayPoint.GetRandom(sub: Submarine.MainSub);
+            }
+            spawnPosition = wayPoint.WorldPosition;
+            bool dontFollowCursor = true;
+            if (character != null)
+            {
+                dontFollowCursor = character.dontFollowCursor;
+                character.Remove();
+            }
             character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), hasAi: false, ragdoll: ragdoll);
             character.Submarine = Submarine.MainSub;
             character.AnimController.forceStanding = character.AnimController.CanWalk;
             character.AnimController.ForceSelectAnimationType = character.AnimController.CanWalk ? AnimationType.Walk : AnimationType.SwimSlow;
-            character.dontFollowCursor = true;
+            character.dontFollowCursor = dontFollowCursor;
             Character.Controlled = character;
             SetWallCollisions(character.AnimController.forceStanding);
             CreateTextures();
@@ -579,7 +635,7 @@ namespace Barotrauma
 
         private void TeleportTo(Vector2 position)
         {
-            character.AnimController.SetPosition(ConvertUnits.ToSimUnits(position), false);
+            character.TeleportTo(position);
         }
 
         private void CreateCharacter(string name, bool isHumanoid, params object[] ragdollConfig)
@@ -1080,6 +1136,7 @@ namespace Barotrauma
             };
             new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Follow Cursor")
             {
+                Selected = !character.dontFollowCursor,
                 OnSelected = box =>
                 {
                     character.dontFollowCursor = !box.Selected;
@@ -1539,9 +1596,9 @@ namespace Barotrauma
 
         #region Helpers
         private Vector2 ScreenToSim(float x, float y) => ScreenToSim(new Vector2(x, y));
-        private Vector2 ScreenToSim(Vector2 p) => ConvertUnits.ToSimUnits(Cam.ScreenToWorld(p));
+        private Vector2 ScreenToSim(Vector2 p) => ConvertUnits.ToSimUnits(Cam.ScreenToWorld(p)) + Submarine.MainSub.SimPosition;
         private Vector2 SimToScreen(float x, float y) => SimToScreen(new Vector2(x, y));
-        private Vector2 SimToScreen(Vector2 p) => Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(p));
+        private Vector2 SimToScreen(Vector2 p) => Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(p + Submarine.MainSub.SimPosition));
 
         private void ValidateJoint(LimbJoint limbJoint)
         {
@@ -1605,7 +1662,7 @@ namespace Barotrauma
                 GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 120, GameMain.GraphicsHeight - 200), "HOLD \"Left Alt\" TO ADJUST THE CYCLE SPEED", Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
             // Widgets for all anims -->
-            Vector2 referencePoint = SimToScreen(head != null ? head.SimPosition : collider.SimPosition);
+            Vector2 referencePoint = SimToScreen(head != null ? head.SimPosition: collider.SimPosition);
             Vector2 drawPos = referencePoint;
             if (altDown)
             {
