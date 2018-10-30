@@ -37,11 +37,6 @@ namespace Barotrauma
             MainPath = 8
         }
         
-        /// <summary>
-        /// Which sides of a wall the object can appear on.
-        /// </summary>
-        public readonly Alignment Alignment;
-        
         public Sprite Sprite
         {
             get;
@@ -60,9 +55,35 @@ namespace Barotrauma
             private set;
         }
 
-        public readonly Vector2 Scale;
+        [Serialize(1.0f, false), Editable(MinValueFloat = 0.01f, MaxValueFloat = 10.0f)]
+        public float MinSize
+        {
+            get;
+            private set;
+        }
+        [Serialize(1.0f, false), Editable(MinValueFloat = 0.01f, MaxValueFloat = 10.0f)]
+        public float MaxSize
+        {
+            get;
+            private set;
+        }
 
-        public SpawnPosType SpawnPos;
+        /// <summary>
+        /// Which sides of a wall the object can appear on.
+        /// </summary>
+        [Serialize((Alignment.Top | Alignment.Bottom | Alignment.Left | Alignment.Right), true), Editable(ToolTip = "Which sides of a wall the object can spawn on.")]
+        public Alignment Alignment
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(SpawnPosType.Wall, false), Editable()]
+        public SpawnPosType SpawnPos
+        {
+            get;
+            private set;
+        }
 
         public readonly XElement Config;
 
@@ -85,14 +106,15 @@ namespace Barotrauma
             private set;
         }
 
-        [Serialize("0.0,1.0", false)]
+        [Serialize("0.0,1.0", false), Editable()]
         public Vector2 DepthRange
         {
             get;
             private set;
         }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, 
+            ToolTip = "The tendency for the prefab to form clusters. Used as an exponent for perlin noise values that are used to determine the probability for an object to spawn at a specific position.")]
         /// <summary>
         /// The tendency for the prefab to form clusters. Used as an exponent for perlin noise values 
         /// that are used to determine the probability for an object to spawn at a specific position.
@@ -103,7 +125,10 @@ namespace Barotrauma
             private set;
         }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f,
+            ToolTip = "A value between 0-1 that determines the z-coordinate to sample perlin noise from when determining the probability " +
+            " for an object to spawn at a specific position. Using the same (or close) value for different objects means the objects tend " +
+            "to form clusters in the same areas.")]
         /// <summary>
         /// A value between 0-1 that determines the z-coordinate to sample perlin noise from when
         /// determining the probability  for an object to spawn at a specific position.
@@ -116,14 +141,15 @@ namespace Barotrauma
             private set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false), Editable(ToolTip = "Should the object be rotated to align it with the wall surface it spawns on.")]
         public bool AlignWithSurface
         {
             get;
             private set;
         }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f, 
+            ToolTip = "Minimum length of a graph edge the object can spawn on.")]
         /// <summary>
         /// Minimum length of a graph edge the object can spawn on.
         /// </summary>
@@ -134,7 +160,7 @@ namespace Barotrauma
         }
 
         private Vector2 randomRotation;
-        [Serialize("0.0,0.0", false)]
+        [Serialize("0.0,0.0", false), Editable(ToolTip = "How much the rotation of the object can vary (min and max values in degrees).")]
         public Vector2 RandomRotation
         {
             get { return randomRotation; }
@@ -145,7 +171,7 @@ namespace Barotrauma
         }
 
         private float swingAmount;
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 360.0f, ToolTip = "How much the object swings (in degrees).")]
         public float SwingAmount
         {
             get { return swingAmount; }
@@ -155,35 +181,38 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, ToolTip = "How fast the object swings.")]
         public float SwingFrequency
         {
             get;
             private set;
         }
 
-        [Serialize("0.0,0.0", false)]
+        [Serialize("0.0,0.0", false), Editable(ToolTip = "How much the scale of the object oscillates on each axis. A value of 0.5,0.5 would make the object's scale oscillate from 100% to 150%.")]
         public Vector2 ScaleOscillation
         {
             get;
             private set;
         }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, ToolTip = "How fast the object's scale oscillates.")]
         public float ScaleOscillationFrequency
         {
             get;
             private set;
         }
 
-        [Serialize(1.0f, false)]
+        [Serialize(1.0f, false), Editable(ToolTip = "How likely it is for the object to spawn in a level. "+
+            "This is relative to the commonness of the other objects - for example, having an object with "+
+            "a commonness of 1 and another with a commonness of 10 would mean the latter appears in levels 10 times as frequently as the former. "+
+            "The commonness value can be overridden on specific level types.")]
         public float Commonness
         {
             get;
             private set;
         }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, ToolTip = "How much the object disrupts submarine's sonar.")]
         public float SonarDisruption
         {
             get;
@@ -265,25 +294,6 @@ namespace Barotrauma
             ChildObjects = new List<ChildObject>();
             LevelTriggerElements = new List<XElement>();
             OverrideProperties = new List<LevelObjectPrefab>();
-
-            string alignmentStr = element.GetAttributeString("alignment", "");
-
-            if (string.IsNullOrEmpty(alignmentStr) || !Enum.TryParse(alignmentStr, out Alignment))
-            {
-                Alignment = Alignment.Top | Alignment.Bottom | Alignment.Left | Alignment.Right;
-            }
-            
-            string[] spawnPosStrs = element.GetAttributeString("spawnpos", "Wall").Split(',');
-            foreach (string spawnPosStr in spawnPosStrs)
-            {
-                if (Enum.TryParse(spawnPosStr.Trim(), out SpawnPosType parsedSpawnPos))
-                {
-                    SpawnPos |= parsedSpawnPos;
-                }
-            }
-
-            Scale.X = element.GetAttributeFloat("minsize", 1.0f);
-            Scale.Y = element.GetAttributeFloat("maxsize", 1.0f);
             
             OverrideCommonness = new Dictionary<string, float>();
 
@@ -296,8 +306,8 @@ namespace Barotrauma
             //use the maximum width of the sprite as the minimum surface width if no value is given
             if (!element.Attributes("minsurfacewidth").Any())
             {
-                if (Sprite != null) MinSurfaceWidth = Sprite.size.X * Scale.Y;
-                if (DeformableSprite != null) MinSurfaceWidth = Math.Max(MinSurfaceWidth, DeformableSprite.Size.X * Scale.Y);
+                if (Sprite != null) MinSurfaceWidth = Sprite.size.X * MaxSize;
+                if (DeformableSprite != null) MinSurfaceWidth = Math.Max(MinSurfaceWidth, DeformableSprite.Size.X * MaxSize);
             }
         }
 
