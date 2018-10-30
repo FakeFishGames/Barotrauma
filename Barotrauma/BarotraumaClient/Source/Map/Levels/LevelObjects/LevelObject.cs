@@ -88,13 +88,13 @@ namespace Barotrauma
                 }
             }
 
-            if (Prefab.LightSourceConfigs != null)
+            if (Prefab.LightSourceParams != null)
             {
-                LightSources = new LightSource[Prefab.LightSourceConfigs.Count];
-                LightSourceTriggers = new LevelTrigger[Prefab.LightSourceConfigs.Count];
-                for (int i = 0; i < Prefab.LightSourceConfigs.Count; i++)
+                LightSources = new LightSource[Prefab.LightSourceParams.Count];
+                LightSourceTriggers = new LevelTrigger[Prefab.LightSourceParams.Count];
+                for (int i = 0; i < Prefab.LightSourceParams.Count; i++)
                 {
-                    LightSources[i] = new LightSource(Prefab.LightSourceConfigs[i])
+                    LightSources[i] = new LightSource(Prefab.LightSourceParams[i])
                     {
                         Position = new Vector2(Position.X, Position.Y),
                         IsBackground = true
@@ -232,7 +232,7 @@ namespace Barotrauma
                     moveAmount /= (ActivePrefab.DeformableSprite.Size * Scale);
                     moveAmount.Y = -moveAmount.Y;
 
-                    positionalDeformation.Deform(triggerer.WorldPosition, moveAmount, deltaTime, Matrix.Invert(matrix) *
+                    positionalDeformation.Deform(trigger.WorldPosition, moveAmount, deltaTime, Matrix.Invert(matrix) *
                         Matrix.CreateScale(1.0f / ActivePrefab.DeformableSprite.Size.X, 1.0f / ActivePrefab.DeformableSprite.Size.Y, 1));
                 }
             }
