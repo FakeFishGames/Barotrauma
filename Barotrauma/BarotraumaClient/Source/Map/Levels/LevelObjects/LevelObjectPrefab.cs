@@ -1,4 +1,5 @@
-﻿using Barotrauma.Particles;
+﻿using Barotrauma.Lights;
+using Barotrauma.Particles;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Globalization;
@@ -48,12 +49,12 @@ namespace Barotrauma
         {
             get;
             private set;
-        }
-        public List<XElement> LightSourceConfigs
+        } = new List<int>();
+        public List<LightSourceParams> LightSourceParams
         {
             get;
             private set;
-        }
+        } = new List<Lights.LightSourceParams>();
 
         partial void InitProjSpecific(XElement element)
         {
@@ -72,14 +73,8 @@ namespace Barotrauma
                         LoadElementsProjSpecific(subElement, LevelTriggerElements.IndexOf(subElement));
                         break;
                     case "lightsource":
-                        if (LightSourceConfigs == null)
-                        {
-                            LightSourceConfigs = new List<XElement>();
-                            LightSourceTriggerIndex = new List<int>();
-                        }
-
                         LightSourceTriggerIndex.Add(parentTriggerIndex);
-                        LightSourceConfigs.Add(subElement);
+                        LightSourceParams.Add(new LightSourceParams(subElement));
                         break;
                     case "particleemitter":
                         if (ParticleEmitterPrefabs == null)
@@ -103,20 +98,29 @@ namespace Barotrauma
         public void Save(XElement element)
         {
             SerializableProperty.DeserializeProperties(this, element);
-            
+
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() == "childobject")
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    subElement.Remove();
-                    break;
+                    case "childobject":
+                    case "lightsource":
+                        subElement.Remove();
+                        break;
                 }
+            }
+            
+            foreach (LightSourceParams lightSourceParams in LightSourceParams)
+            {
+                var lightElement = new XElement("LightSource");
+                SerializableProperty.SerializeProperties(lightSourceParams, lightElement);
+                element.Add(lightElement);
             }
 
             foreach (ChildObject childObj in ChildObjects)
             {
-                element.Add(new XElement("ChildObject", 
-                    new XAttribute("names", string.Join(", ",childObj.AllowedNames)),
+                element.Add(new XElement("ChildObject",
+                    new XAttribute("names", string.Join(", ", childObj.AllowedNames)),
                     new XAttribute("mincount", childObj.MinCount),
                     new XAttribute("maxcount", childObj.MaxCount)));
             }

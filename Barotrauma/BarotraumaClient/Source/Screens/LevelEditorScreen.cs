@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
+using Barotrauma.Lights;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -205,7 +206,8 @@ namespace Barotrauma
                 editor.AddCustomContent(commonnessContainer, 1);
             }
             
-            editor.AddCustomContent(new GUITextBlock(new RectTransform(new Point(editor.Rect.Width, 20)), "Child objects:"), editor.ContentCount);
+            //child object editing
+            new GUITextBlock(new RectTransform(new Point(editor.Rect.Width, 40), editorContainer.Content.RectTransform), "Child objects:", textAlignment: Alignment.BottomCenter);
             foreach (LevelObjectPrefab.ChildObject childObj in levelObjectPrefab.ChildObjects)
             {
                 var childObjFrame = new GUIFrame(new RectTransform(new Point(editor.Rect.Width, 30)));
@@ -257,10 +259,10 @@ namespace Barotrauma
                     }
                 };
 
-                editor.AddCustomContent(childObjFrame, editor.ContentCount);
+                childObjFrame.RectTransform.Parent = editorContainer.Content.RectTransform;
             }
 
-            editor.AddCustomContent(new GUIButton(new RectTransform(new Point(editor.Rect.Width / 2, 20)), "Add new child object")
+            new GUIButton(new RectTransform(new Point(editor.Rect.Width / 2, 20), editorContainer.Content.RectTransform), "Add new child object")
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -268,7 +270,24 @@ namespace Barotrauma
                     CreateLevelObjectEditor(selectedLevelObject);
                     return true;
                 }
-            }, editor.ContentCount);
+            };
+
+            //light editing
+            new GUITextBlock(new RectTransform(new Point(editor.Rect.Width, 40), editorContainer.Content.RectTransform), "Light sources:", textAlignment: Alignment.BottomCenter);
+            foreach (LightSourceParams lightSourceParams in selectedLevelObject.LightSourceParams)
+            {
+                new SerializableEntityEditor(editorContainer.Content.RectTransform, lightSourceParams, inGame: false, showName: true);
+            }
+            new GUIButton(new RectTransform(new Point(editor.Rect.Width / 2, 20), editorContainer.Content.RectTransform), "Add new light source")
+            {
+                OnClicked = (btn, userdata) =>
+                {
+                    selectedLevelObject.LightSourceTriggerIndex.Add(-1);
+                    selectedLevelObject.LightSourceParams.Add(new LightSourceParams(100.0f, Color.White));
+                    CreateLevelObjectEditor(selectedLevelObject);
+                    return true;
+                }
+            };
         }
 
         private void SortLevelObjectsList(LevelGenerationParams selectedParams)
