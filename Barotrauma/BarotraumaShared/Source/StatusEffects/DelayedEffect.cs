@@ -29,6 +29,7 @@ namespace Barotrauma
             if (!Stackable && DelayList.Any(d => d.Parent == this && d.Targets.Count == 1 && d.Targets[0] == target)) return;
 
             if (targetNames != null && !targetNames.Contains(target.Name)) return;
+            if (!HasRequiredConditions(new List<ISerializableEntity>() { target })) return;
 
             DelayedListElement element = new DelayedListElement
             {
@@ -52,6 +53,8 @@ namespace Barotrauma
                 targets.RemoveAll(t => !targetNames.Contains(t.Name));
                 if (targets.Count == 0) return;
             }
+
+            if (!HasRequiredConditions(targets)) return;
 
             DelayedListElement element = new DelayedListElement
             {
