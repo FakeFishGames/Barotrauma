@@ -1,7 +1,20 @@
 ﻿using Microsoft.Xna.Framework;
+using Lidgren.Network;
+using System;
 
 namespace Barotrauma.Networking
 {
+    partial class BannedPlayer
+    {
+        public BannedPlayer(string name, Int32 uniqueIdentifier, string ip, ulong steamID)
+        {
+            this.Name = name;
+            this.SteamID = steamID;
+            this.IP = ip;
+            this.UniqueIdentifier = uniqueIdentifier;
+        }
+    }
+
     partial class BanList
     {
         private GUIComponent banFrame;
@@ -66,12 +79,41 @@ namespace Barotrauma.Networking
             return banFrame;
         }
 
+        public void ClientAdminRead(NetBuffer incMsg)
+        {
+            bool hasPermission = incMsg.ReadBoolean();
+            if (!hasPermission)
+            {
+                incMsg.ReadPadBits();
+                return;
+            }
+
+            bool isOwner = incMsg.ReadBoolean();
+            incMsg.ReadPadBits();
+
+            bannedPlayers.Clear();
+            Int32 bannedPlayerCount = incMsg.ReadVariableInt32();
+            for (int i = 0; i < bannedPlayerCount; i++)
+            {
+                string name = incMsg.ReadString();
+                Int32 uniqueIdentifier = incMsg.ReadInt32();
+                string ip = "";
+                UInt64 steamID = 0;
+                if (isOwner)
+                {
+                    ip = incMsg.ReadString();
+                    steamID = incMsg.ReadUInt64();
+                }
+                bannedPlayers.Add(new BannedPlayer(name, uniqueIdentifier, ip, steamID));
+            }
+        }
+
         private bool RemoveBan(GUIButton button, object obj)
         {
             BannedPlayer banned = obj as BannedPlayer;
             if (banned == null) return false;
 
-            RemoveBan(banned);
+            //RemoveBan(banned);
 
             if (banFrame != null)
             {
@@ -88,7 +130,7 @@ namespace Barotrauma.Networking
             BannedPlayer banned = obj as BannedPlayer;
             if (banned == null) return false;
 
-            RangeBan(banned);
+            //RangeBan(banned);
 
             if (banFrame != null)
             {
