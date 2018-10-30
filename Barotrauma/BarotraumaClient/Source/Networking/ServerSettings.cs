@@ -125,6 +125,7 @@ namespace Barotrauma.Networking
             }
 
             ReadMonsterEnabled(incMsg);
+            BanList.ClientAdminRead(incMsg);
         }
 
         public void ClientRead(NetBuffer incMsg)
