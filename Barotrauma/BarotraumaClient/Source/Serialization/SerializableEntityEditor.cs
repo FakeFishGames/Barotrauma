@@ -302,7 +302,14 @@ namespace Barotrauma
             }
             else if (value.GetType().IsEnum)
             {
-                propertyField = CreateEnumField(entity, property, value, displayName, toolTip);
+                if (value.GetType().IsDefined(typeof(FlagsAttribute), inherit: false))
+                {
+                    propertyField = CreateEnumFlagField(entity, property, value, displayName, toolTip);
+                }
+                else
+                {
+                    propertyField = CreateEnumField(entity, property, value, displayName, toolTip);
+                }
             }
             else if (value is int i)
             {
@@ -437,6 +444,39 @@ namespace Barotrauma
                 return true;
             };
             enumDropDown.SelectItem(value);
+            Fields.Add(property, new GUIComponent[] { enumDropDown });
+            return frame;
+        }
+
+        private GUIComponent CreateEnumFlagField(ISerializableEntity entity, SerializableProperty property, object value, string displayName, string toolTip)
+        {
+            var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, elementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), displayName, font: GUI.SmallFont)
+            {
+                ToolTip = toolTip
+            };
+            GUIDropDown enumDropDown = new GUIDropDown(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform, Anchor.TopRight),
+                elementCount: Enum.GetValues(value.GetType()).Length, selectMultiple: true)
+            {
+                ToolTip = toolTip
+            };
+            foreach (object enumValue in Enum.GetValues(value.GetType()))
+            {
+                enumDropDown.AddItem(enumValue.ToString(), enumValue);
+                if (((int)enumValue != 0 || (int)value == 0) && ((Enum)value).HasFlag((Enum)enumValue))
+                {
+                    enumDropDown.SelectItem(enumValue);
+                }
+            }
+            enumDropDown.OnSelected += (selected, val) =>
+            {
+                if (property.TrySetValue(string.Join(", ", enumDropDown.SelectedDataMultiple.Select(d => d.ToString()))))
+                {
+                    TrySendNetworkUpdate(entity, property);
+                }
+                return true;
+            };
+
             Fields.Add(property, new GUIComponent[] { enumDropDown });
             return frame;
         }

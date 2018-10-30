@@ -211,8 +211,7 @@ namespace Barotrauma
 
             try
             {
-                string typeName;
-                if (!supportedTypes.TryGetValue(propertyDescriptor.PropertyType, out typeName))
+                if (!supportedTypes.TryGetValue(propertyDescriptor.PropertyType, out string typeName))
                 {
                     if (propertyDescriptor.PropertyType.IsEnum)
                     {
