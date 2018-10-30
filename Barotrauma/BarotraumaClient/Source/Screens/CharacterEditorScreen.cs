@@ -3388,38 +3388,80 @@ namespace Barotrauma
                                     string jointName = $"Joint {parentName} - {limbName}";
                                     if (idToPositionCode.TryGetValue(i, out string positionCode))
                                     {
+                                        float scalar = 0.8f;
                                         if (LimbXElements.TryGetValue(parent, out XElement parentElement))
                                         {
-                                            float scalar = 0.8f;
-                                            Rectangle sourceRect = parentElement.Element("sprite").GetAttributeRect("sourcerect", Rectangle.Empty);
-                                            float width = sourceRect.Width / 2 * scalar;
-                                            float height = sourceRect.Height / 2 * scalar;
+                                            Rectangle parentSourceRect = parentElement.Element("sprite").GetAttributeRect("sourcerect", Rectangle.Empty);
+                                            float parentWidth = parentSourceRect.Width / 2 * scalar;
+                                            float parentHeight = parentSourceRect.Height / 2 * scalar;
                                             switch (positionCode)
                                             {
                                                 case "tl":  // -1, 1
-                                                    anchor1 = new Vector2(-width, height);
+                                                    anchor1 = new Vector2(-parentWidth, parentHeight);
                                                     break;
                                                 case "tc":  // 0, 1
-                                                    anchor1 = new Vector2(0, height);
+                                                    anchor1 = new Vector2(0, parentHeight);
                                                     break;
                                                 case "tr":  // -1, 1
-                                                    anchor1 = new Vector2(-width, height);
+                                                    anchor1 = new Vector2(-parentWidth, parentHeight);
                                                     break;
-                                                case "cl":  // 0, -1
-                                                    anchor1 = new Vector2(0, -height);
+                                                case "cl":  // -1, 0
+                                                    anchor1 = new Vector2(-parentWidth, 0);
                                                     break;
-                                                case "cr":  // 0, 1
-                                                    anchor1 = new Vector2(0, height);
+                                                case "cr":  // 1, 0
+                                                    anchor1 = new Vector2(parentWidth, 0);
                                                     break;
                                                 case "bl":  // -1, -1
-                                                    anchor1 = new Vector2(-width, -height);
+                                                    anchor1 = new Vector2(-parentWidth, -parentHeight);
                                                     break;
                                                 case "bc":  // 0, -1
-                                                    anchor1 = new Vector2(0, -height);
+                                                    anchor1 = new Vector2(0, -parentHeight);
                                                     break;
                                                 case "br":  // 1, -1
-                                                    anchor1 = new Vector2(width, -height);
+                                                    anchor1 = new Vector2(parentWidth, -parentHeight);
                                                     break;
+                                            }
+                                            if (LimbXElements.TryGetValue(hierarchy, out XElement element))
+                                            {
+                                                Rectangle sourceRect = element.Element("sprite").GetAttributeRect("sourcerect", Rectangle.Empty);
+                                                float width = sourceRect.Width / 2 * scalar;
+                                                float height = sourceRect.Height / 2 * scalar;
+                                                switch (positionCode)
+                                                {
+                                                    // Inverse
+                                                    case "tl":
+                                                        // br
+                                                        anchor2 = new Vector2(-width, -height);
+                                                        break;
+                                                    case "tc":
+                                                        // bc
+                                                        anchor2 = new Vector2(0, -height);
+                                                        break;
+                                                    case "tr":
+                                                        // bl
+                                                        anchor2 = new Vector2(-width, -height);
+                                                        break;
+                                                    case "cl":
+                                                        // cr
+                                                        anchor2 = new Vector2(width, 0);
+                                                        break;
+                                                    case "cr":
+                                                        // cl
+                                                        anchor2 = new Vector2(-width, 0);
+                                                        break;
+                                                    case "bl":
+                                                        // tr
+                                                        anchor2 = new Vector2(-width, height);
+                                                        break;
+                                                    case "bc":
+                                                        // tc
+                                                        anchor2 = new Vector2(0, height);
+                                                        break;
+                                                    case "br":
+                                                        // tl
+                                                        anchor2 = new Vector2(-width, height);
+                                                        break;
+                                                }
                                             }
                                         }
                                     }
