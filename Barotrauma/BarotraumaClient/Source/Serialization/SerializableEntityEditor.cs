@@ -24,6 +24,11 @@ namespace Barotrauma
             }
         }
 
+        public int ContentCount
+        {
+            get { return layoutGroup.CountChildren; }
+        }
+
         /// <summary>
         /// Holds the references to the input fields.
         /// </summary>
