@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Particles;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -95,6 +96,32 @@ namespace Barotrauma
                     case "sound":
                         Sounds.Add(new SoundConfig(subElement, parentTriggerIndex));
                         break;
+                }
+            }
+        }
+
+        public void Save(XElement element)
+        {
+            SerializableProperty.DeserializeProperties(this, element);
+
+            foreach (KeyValuePair<string, float> overrideCommonness in OverrideCommonness)
+            {
+                bool elementFound = false;
+                foreach (XElement subElement in element.Elements())
+                {
+                    if (subElement.Name.ToString().ToLowerInvariant() == "overridecommonness"
+                        && subElement.GetAttributeString("leveltype", "") == overrideCommonness.Key)
+                    {
+                        subElement.Attribute("commonness").Value = overrideCommonness.Value.ToString("G", CultureInfo.InvariantCulture);
+                        elementFound = true;
+                        break;
+                    }
+                }
+                if (!elementFound)
+                {
+                    element.Add(new XElement("overridecommonness",
+                        new XAttribute("leveltype", overrideCommonness.Key),
+                        new XAttribute("commonness", overrideCommonness.Value.ToString("G", CultureInfo.InvariantCulture))));
                 }
             }
         }
