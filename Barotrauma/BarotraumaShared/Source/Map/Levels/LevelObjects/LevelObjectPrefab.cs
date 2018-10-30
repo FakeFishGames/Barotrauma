@@ -16,8 +16,15 @@ namespace Barotrauma
 
         public class ChildObject
         {
-            public readonly List<string> AllowedNames;
-            public readonly int MinCount, MaxCount;
+            public List<string> AllowedNames;
+            public int MinCount, MaxCount;
+
+            public ChildObject()
+            {
+                AllowedNames = new List<string>();
+                MinCount = 1;
+                MaxCount = 1;
+            }
 
             public ChildObject(XElement element)
             {

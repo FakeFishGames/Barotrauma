@@ -103,6 +103,23 @@ namespace Barotrauma
         public void Save(XElement element)
         {
             SerializableProperty.DeserializeProperties(this, element);
+            
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().ToLowerInvariant() == "childobject")
+                {
+                    subElement.Remove();
+                    break;
+                }
+            }
+
+            foreach (ChildObject childObj in ChildObjects)
+            {
+                element.Add(new XElement("ChildObject", 
+                    new XAttribute("names", string.Join(", ",childObj.AllowedNames)),
+                    new XAttribute("mincount", childObj.MinCount),
+                    new XAttribute("maxcount", childObj.MaxCount)));
+            }
 
             foreach (KeyValuePair<string, float> overrideCommonness in OverrideCommonness)
             {

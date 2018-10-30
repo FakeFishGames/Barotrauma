@@ -115,30 +115,7 @@ namespace Barotrauma
             levelObjectList.OnSelected += (GUIComponent component, object obj) =>
             {
                 selectedLevelObject = obj as LevelObjectPrefab;
-                editorContainer.ClearChildren();
-                var editor = new SerializableEntityEditor(editorContainer.Content.RectTransform, selectedLevelObject, false, true, elementHeight: 20);
-
-                if (selectedParams != null)
-                {
-                    var commonnessContainer = new GUILayoutGroup(new RectTransform(new Point(editor.Rect.Width, 70)), isHorizontal: false, childAnchor: Anchor.TopCenter)
-                    {
-                        AbsoluteSpacing = 5,
-                        Stretch = true
-                    };
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), commonnessContainer.RectTransform), "Commonness in " + selectedParams.Name, textAlignment: Alignment.Center);
-                    new GUINumberInput(new RectTransform(new Vector2(0.5f, 0.4f), commonnessContainer.RectTransform), GUINumberInput.NumberType.Float)
-                    {
-                        MinValueFloat = 0,
-                        MaxValueFloat = 100,
-                        FloatValue = selectedLevelObject.GetCommonness(selectedParams.Name),
-                        OnValueChanged = (numberInput) =>
-                        {
-                            selectedLevelObject.OverrideCommonness[selectedParams.Name] = numberInput.FloatValue;
-                        }
-                    };
-                    new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), commonnessContainer.RectTransform), style: null);
-                    editor.AddCustomContent(commonnessContainer, 1);
-                }
+                CreateLevelObjectEditor(selectedLevelObject);
                 return true;
             };
 
@@ -198,6 +175,100 @@ namespace Barotrauma
                     CanBeFocused = false
                 };
             }
+        }
+
+        private void CreateLevelObjectEditor(LevelObjectPrefab levelObjectPrefab)
+        {
+            editorContainer.ClearChildren();
+
+            var editor = new SerializableEntityEditor(editorContainer.Content.RectTransform, levelObjectPrefab, false, true, elementHeight: 20);
+
+            if (selectedParams != null)
+            {
+                var commonnessContainer = new GUILayoutGroup(new RectTransform(new Point(editor.Rect.Width, 70)), isHorizontal: false, childAnchor: Anchor.TopCenter)
+                {
+                    AbsoluteSpacing = 5,
+                    Stretch = true
+                };
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), commonnessContainer.RectTransform), "Commonness in " + selectedParams.Name, textAlignment: Alignment.Center);
+                new GUINumberInput(new RectTransform(new Vector2(0.5f, 0.4f), commonnessContainer.RectTransform), GUINumberInput.NumberType.Float)
+                {
+                    MinValueFloat = 0,
+                    MaxValueFloat = 100,
+                    FloatValue = levelObjectPrefab.GetCommonness(selectedParams.Name),
+                    OnValueChanged = (numberInput) =>
+                    {
+                        levelObjectPrefab.OverrideCommonness[selectedParams.Name] = numberInput.FloatValue;
+                    }
+                };
+                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), commonnessContainer.RectTransform), style: null);
+                editor.AddCustomContent(commonnessContainer, 1);
+            }
+            
+            editor.AddCustomContent(new GUITextBlock(new RectTransform(new Point(editor.Rect.Width, 20)), "Child objects:"), editor.ContentCount);
+            foreach (LevelObjectPrefab.ChildObject childObj in levelObjectPrefab.ChildObjects)
+            {
+                var childObjFrame = new GUIFrame(new RectTransform(new Point(editor.Rect.Width, 30)));
+                var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), childObjFrame.RectTransform, Anchor.Center), isHorizontal: true)
+                {
+                    Stretch = true,
+                    RelativeSpacing = 0.05f
+                };
+                var selectedChildObj = childObj;
+                var dropdown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1.0f), paddedFrame.RectTransform), elementCount: 10, selectMultiple: true);
+                foreach (LevelObjectPrefab objPrefab in LevelObjectPrefab.List)
+                {
+                    dropdown.AddItem(objPrefab.Name, objPrefab);
+                    if (childObj.AllowedNames.Contains(objPrefab.Name)) dropdown.SelectItem(objPrefab);
+                }
+                dropdown.OnSelected = (selected, obj) =>
+                {
+                    childObj.AllowedNames = dropdown.SelectedDataMultiple.Select(d => ((LevelObjectPrefab)d).Name).ToList();
+                    return true;
+                };
+                new GUINumberInput(new RectTransform(new Vector2(0.2f, 1.0f), paddedFrame.RectTransform), GUINumberInput.NumberType.Int)
+                {
+                    MinValueInt = 0,
+                    MaxValueInt = 10,
+                    OnValueChanged = (numberInput) =>
+                    {
+                        selectedChildObj.MinCount = numberInput.IntValue;
+                        selectedChildObj.MaxCount = Math.Max(selectedChildObj.MaxCount, selectedChildObj.MinCount);
+                    }
+                }.IntValue = childObj.MinCount;
+                new GUINumberInput(new RectTransform(new Vector2(0.2f, 1.0f), paddedFrame.RectTransform), GUINumberInput.NumberType.Int)
+                {
+                    MinValueInt = 0,
+                    MaxValueInt = 10,
+                    OnValueChanged = (numberInput) =>
+                    {
+                        selectedChildObj.MaxCount = numberInput.IntValue;
+                        selectedChildObj.MinCount = Math.Min(selectedChildObj.MaxCount, selectedChildObj.MinCount);
+                    }
+                }.IntValue = childObj.MaxCount;
+
+                new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), paddedFrame.RectTransform), "X")
+                {
+                    OnClicked = (btn, userdata) =>
+                    {
+                        selectedLevelObject.ChildObjects.Remove(selectedChildObj);
+                        CreateLevelObjectEditor(selectedLevelObject);
+                        return true;
+                    }
+                };
+
+                editor.AddCustomContent(childObjFrame, editor.ContentCount);
+            }
+
+            editor.AddCustomContent(new GUIButton(new RectTransform(new Point(editor.Rect.Width / 2, 20)), "Add new child object")
+            {
+                OnClicked = (btn, userdata) =>
+                {
+                    selectedLevelObject.ChildObjects.Add(new LevelObjectPrefab.ChildObject());
+                    CreateLevelObjectEditor(selectedLevelObject);
+                    return true;
+                }
+            }, editor.ContentCount);
         }
 
         private void SortLevelObjectsList(LevelGenerationParams selectedParams)

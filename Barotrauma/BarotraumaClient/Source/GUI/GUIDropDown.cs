@@ -227,7 +227,7 @@ namespace Barotrauma
         {
             if (selectMultiple)
             {
-                SelectItem(null, userData);
+                SelectItem(listBox.Content.FindChild(userData), userData);
             }
             else
             {
