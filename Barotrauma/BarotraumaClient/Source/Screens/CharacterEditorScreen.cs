@@ -276,6 +276,10 @@ namespace Barotrauma
                 widget.Enabled = editJoints;
                 widget.Update((float)deltaTime);
             }
+            foreach (MapEntity e in MapEntity.mapEntityList)
+            {
+                e.IsHighlighted = false;
+            }
         }
 
         /// <summary>
@@ -290,6 +294,12 @@ namespace Barotrauma
             }
             scaledMouseSpeed = PlayerInput.MouseSpeedPerSecond * (float)deltaTime;
             Cam.UpdateTransform(true);
+            Submarine.CullEntities(Cam);
+
+            // TODO: use the same drawing method as in game?
+            //GameMain.GameScreen.DrawMap(graphics, spriteBatch, deltaTime, Cam);
+
+            Submarine.MainSub.UpdateTransform();
 
             // Lightmaps
             if (GameMain.LightManager.LightingEnabled)
@@ -307,9 +317,11 @@ namespace Barotrauma
             Submarine.Draw(spriteBatch, true);
             spriteBatch.End();
 
-            // Character
+            // Character(s)
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: Cam.Transform);
-            character.Draw(spriteBatch, Cam);
+            Submarine.DrawBack(spriteBatch, predicate: s => !(s is Structure) || !(s.ResizeVertical && s.ResizeHorizontal));
+            Character.CharacterList.ForEach(c => c.Draw(spriteBatch, Cam));
+            Submarine.DrawFront(spriteBatch);
             if (GameMain.DebugDraw)
             {
                 character.AnimController.DebugDraw(spriteBatch);
