@@ -39,6 +39,11 @@ namespace Barotrauma
             get { return cam; }
         }
 
+        public GUIComponent TopPanel
+        {
+            get { return topPanel; }
+        }
+
         public SpriteEditorScreen()
         {
             cam = new Camera();
@@ -288,6 +293,14 @@ namespace Barotrauma
             RefreshLists();
         }
 
+        public void SelectSprite(Sprite sprite)
+        {
+            widgets.Clear();
+            textureList.Select(sprite.Texture);
+            selectedSprites.Clear();
+            selectedSprites.Add(sprite);
+        }
+
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
@@ -493,7 +506,7 @@ namespace Barotrauma
             return string.IsNullOrEmpty(identifier) ? Path.GetFileNameWithoutExtension(sprite.FilePath) : identifier;
         }
 
-        private void RefreshLists()
+        public void RefreshLists()
         {
             textureList.ClearChildren();
             spriteList.ClearChildren();

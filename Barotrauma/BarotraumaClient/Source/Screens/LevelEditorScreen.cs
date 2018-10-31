@@ -20,7 +20,7 @@ namespace Barotrauma
             get { return cam; }
         }
 
-        private GUIFrame leftPanel, rightPanel;
+        private GUIFrame leftPanel, rightPanel, bottomPanel;
         
         private LevelGenerationParams selectedParams;
         private LevelObjectPrefab selectedLevelObject;
@@ -28,9 +28,13 @@ namespace Barotrauma
         private GUIListBox paramsList, levelObjectList;
         private GUIListBox editorContainer;
 
+        private GUIButton spriteEditDoneButton;
+
         private GUITextBox seedBox;
 
         private GUITickBox lightingEnabled;
+
+        private Sprite editingSprite;
 
         public LevelEditorScreen()
         {
@@ -117,10 +121,10 @@ namespace Barotrauma
                 }
             };
 
-            var levelObjectContainer = new GUIFrame(new RectTransform(new Vector2(0.75f, 0.2f), Frame.RectTransform, Anchor.BottomLeft)
+            bottomPanel = new GUIFrame(new RectTransform(new Vector2(0.75f, 0.2f), Frame.RectTransform, Anchor.BottomLeft)
             { MaxSize = new Point(GameMain.GraphicsWidth - rightPanel.Rect.Width, 1000) }, style: "GUIFrameBottom");
 
-            levelObjectList = new GUIListBox(new RectTransform(new Vector2(0.99f, 0.85f), levelObjectContainer.RectTransform, Anchor.Center))
+            levelObjectList = new GUIListBox(new RectTransform(new Vector2(0.99f, 0.85f), bottomPanel.RectTransform, Anchor.Center))
             {
                 UseGridLayout = true
             };
@@ -131,11 +135,20 @@ namespace Barotrauma
                 return true;
             };
 
+            spriteEditDoneButton = new GUIButton(new RectTransform(new Point(200, 30), anchor: Anchor.BottomRight) { AbsoluteOffset = new Point(20, 20) }, "Done")
+            {
+                OnClicked = (btn, userdata) =>
+                {
+                    editingSprite = null;
+                    return true;
+                }
+            };
         }
 
         public override void Select()
         {
             base.Select();
+            editingSprite = null;
             UpdateParamsList();
             UpdateLevelObjectsList();
         }
@@ -216,7 +229,22 @@ namespace Barotrauma
                 new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), commonnessContainer.RectTransform), style: null);
                 editor.AddCustomContent(commonnessContainer, 1);
             }
-            
+
+            Sprite sprite = levelObjectPrefab.Sprite ?? levelObjectPrefab.DeformableSprite?.Sprite;
+            if (sprite != null)
+            {
+                editor.AddCustomContent(new GUIButton(new RectTransform(new Point(editor.Rect.Width / 2, 20)), "Edit sprite")
+                {
+                    OnClicked = (btn, userdata) =>
+                    {
+                        GameMain.SpriteEditorScreen.RefreshLists();
+                        editingSprite = sprite;
+                        GameMain.SpriteEditorScreen.SelectSprite(editingSprite);
+                        return true;
+                    }
+                }, 1);
+            }
+
             //child object editing
             new GUITextBlock(new RectTransform(new Point(editor.Rect.Width, 40), editorContainer.Content.RectTransform), "Child objects:", textAlignment: Alignment.BottomCenter);
             foreach (LevelObjectPrefab.ChildObject childObj in levelObjectPrefab.ChildObjects)
@@ -321,6 +349,17 @@ namespace Barotrauma
             });
         }
 
+        public override void AddToGUIUpdateList()
+        {
+            base.AddToGUIUpdateList();
+            rightPanel.Visible = leftPanel.Visible = bottomPanel.Visible = editingSprite == null;
+            if (editingSprite != null)
+            {
+                GameMain.SpriteEditorScreen.TopPanel.AddToGUIUpdateList();
+                spriteEditDoneButton.AddToGUIUpdateList();
+            }
+        }
+
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             if (lightingEnabled.Selected)
@@ -347,9 +386,14 @@ namespace Barotrauma
                 }
             }            
 
+            if (editingSprite != null)
+            {
+                GameMain.SpriteEditorScreen.Draw(deltaTime, graphics, spriteBatch);
+            }
             spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
 
             GUI.Draw(Cam, spriteBatch);
+
 
             spriteBatch.End();
         }
@@ -359,6 +403,11 @@ namespace Barotrauma
             cam.MoveCamera((float)deltaTime);
             cam.UpdateTransform();
             Level.Loaded?.Update((float)deltaTime, cam);
+
+            if (editingSprite != null)
+            {
+                GameMain.SpriteEditorScreen.Update(deltaTime);
+            }
         }
 
         private void SerializeAll()
@@ -552,6 +601,7 @@ namespace Barotrauma
                         break;
                     }
 
+                    LevelObjectPrefab.List.Add(newPrefab);
                     GameMain.LevelEditorScreen.UpdateLevelObjectsList();
 
                     box.Close();
