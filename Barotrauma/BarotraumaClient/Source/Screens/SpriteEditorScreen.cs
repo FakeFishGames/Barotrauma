@@ -297,6 +297,7 @@ namespace Barotrauma
         {
             widgets.Clear();
             textureList.Select(sprite.Texture);
+            CalculateScale();
             selectedSprites.Clear();
             selectedSprites.Add(sprite);
         }
