@@ -307,25 +307,23 @@ namespace Barotrauma
         {
             collider = new List<PhysicsBody>();
             DebugConsole.Log($"Creating colliders from {RagdollParams.Name}.");
-            foreach (XElement cElement in RagdollParams.MainElement.Elements("collider"))
+            foreach (ColliderParams cParams in RagdollParams.ColliderParams)
             {
-                collider.Add(new PhysicsBody(cElement, RagdollParams.LimbScale));
-                collider[collider.Count - 1].UserData = character;
-                collider[collider.Count - 1].FarseerBody.Friction = 0.05f;
-                collider[collider.Count - 1].FarseerBody.Restitution = 0.05f;
-                collider[collider.Count - 1].FarseerBody.FixedRotation = true;
-                collider[collider.Count - 1].CollisionCategories = Physics.CollisionCharacter;
-                collider[collider.Count - 1].FarseerBody.AngularDamping = 5.0f;
-                collider[collider.Count - 1].FarseerBody.FixedRotation = true;
-                collider[collider.Count - 1].FarseerBody.OnCollision += OnLimbCollision;
-                if (collider.Count > 1) collider[collider.Count - 1].PhysEnabled = false;
+                var body = new PhysicsBody(cParams);
+                collider.Add(body);
+                body.UserData = character;
+                body.FarseerBody.OnCollision += OnLimbCollision;
+                if (collider.Count > 1)
+                {
+                    body.PhysEnabled = false;
+                }
             }
         }
 
         protected void CreateJoints()
         {
             DebugConsole.Log($"Creating joints from {RagdollParams.Name}.");
-            LimbJoints = new LimbJoint[RagdollParams.MainElement.Elements("joint").Count()];
+            LimbJoints = new LimbJoint[RagdollParams.Joints.Count];
             RagdollParams.Joints.ForEach(j => AddJoint(j));
             // Check the joints
             for (int i = 0; i < LimbJoints.Length; i++)
@@ -358,7 +356,7 @@ namespace Barotrauma
         {
             DebugConsole.Log($"Creating limbs from {RagdollParams.Name}.");
             limbDictionary = new Dictionary<LimbType, Limb>();
-            limbs = new Limb[RagdollParams.MainElement.Elements("limb").Count()];
+            limbs = new Limb[RagdollParams.Limbs.Count];
             RagdollParams.Limbs.ForEach(l => AddLimb(l));
             SetupDrawOrder();
         }
