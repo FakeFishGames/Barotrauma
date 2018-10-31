@@ -113,14 +113,14 @@ namespace Barotrauma
             private set;
         }
 
-        [Serialize("0.0,1.0", false), Editable()]
+        [Serialize("0.0,1.0", true), Editable()]
         public Vector2 DepthRange
         {
             get;
             private set;
         }
 
-        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, 
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, 
             ToolTip = "The tendency for the prefab to form clusters. Used as an exponent for perlin noise values that are used to determine the probability for an object to spawn at a specific position.")]
         /// <summary>
         /// The tendency for the prefab to form clusters. Used as an exponent for perlin noise values 
@@ -132,7 +132,7 @@ namespace Barotrauma
             private set;
         }
 
-        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f,
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f,
             ToolTip = "A value between 0-1 that determines the z-coordinate to sample perlin noise from when determining the probability " +
             " for an object to spawn at a specific position. Using the same (or close) value for different objects means the objects tend " +
             "to form clusters in the same areas.")]
@@ -148,14 +148,14 @@ namespace Barotrauma
             private set;
         }
 
-        [Serialize(false, false), Editable(ToolTip = "Should the object be rotated to align it with the wall surface it spawns on.")]
+        [Serialize(false, true), Editable(ToolTip = "Should the object be rotated to align it with the wall surface it spawns on.")]
         public bool AlignWithSurface
         {
             get;
             private set;
         }
 
-        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f, 
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f, 
             ToolTip = "Minimum length of a graph edge the object can spawn on.")]
         /// <summary>
         /// Minimum length of a graph edge the object can spawn on.
@@ -167,7 +167,7 @@ namespace Barotrauma
         }
 
         private Vector2 randomRotation;
-        [Serialize("0.0,0.0", false), Editable(ToolTip = "How much the rotation of the object can vary (min and max values in degrees).")]
+        [Serialize("0.0,0.0", true), Editable(ToolTip = "How much the rotation of the object can vary (min and max values in degrees).")]
         public Vector2 RandomRotation
         {
             get { return randomRotation; }
@@ -178,7 +178,7 @@ namespace Barotrauma
         }
 
         private float swingAmount;
-        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 360.0f, ToolTip = "How much the object swings (in degrees).")]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 360.0f, ToolTip = "How much the object swings (in degrees).")]
         public float SwingAmount
         {
             get { return swingAmount; }
@@ -188,28 +188,28 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, ToolTip = "How fast the object swings.")]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, ToolTip = "How fast the object swings.")]
         public float SwingFrequency
         {
             get;
             private set;
         }
 
-        [Serialize("0.0,0.0", false), Editable(ToolTip = "How much the scale of the object oscillates on each axis. A value of 0.5,0.5 would make the object's scale oscillate from 100% to 150%.")]
+        [Serialize("0.0,0.0", true), Editable(ToolTip = "How much the scale of the object oscillates on each axis. A value of 0.5,0.5 would make the object's scale oscillate from 100% to 150%.")]
         public Vector2 ScaleOscillation
         {
             get;
             private set;
         }
 
-        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, ToolTip = "How fast the object's scale oscillates.")]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, ToolTip = "How fast the object's scale oscillates.")]
         public float ScaleOscillationFrequency
         {
             get;
             private set;
         }
 
-        [Serialize(1.0f, false), Editable(ToolTip = "How likely it is for the object to spawn in a level. "+
+        [Serialize(1.0f, true), Editable(ToolTip = "How likely it is for the object to spawn in a level. "+
             "This is relative to the commonness of the other objects - for example, having an object with "+
             "a commonness of 1 and another with a commonness of 10 would mean the latter appears in levels 10 times as frequently as the former. "+
             "The commonness value can be overridden on specific level types.")]
@@ -219,7 +219,7 @@ namespace Barotrauma
             private set;
         }
 
-        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, ToolTip = "How much the object disrupts submarine's sonar.")]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, ToolTip = "How much the object disrupts submarine's sonar.")]
         public float SonarDisruption
         {
             get;
@@ -229,7 +229,7 @@ namespace Barotrauma
         public string Name
         {
             get;
-            private set;
+            set;
         }
 
         public List<ChildObject> ChildObjects
@@ -291,27 +291,25 @@ namespace Barotrauma
                 DebugConsole.ThrowError(String.Format("Failed to load LevelObject prefabs from {0}", configPath), e);
             }
         }
-
+        
         public LevelObjectPrefab(XElement element)
         {
-            Config = element;
-
-            Name = element.Name.ToString();
-
             ChildObjects = new List<ChildObject>();
             LevelTriggerElements = new List<XElement>();
             OverrideProperties = new List<LevelObjectPrefab>();
-            
             OverrideCommonness = new Dictionary<string, float>();
 
-            LoadElements(element, -1);
-
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
-
-            InitProjSpecific(element);
+            if (element != null)
+            {
+                Config = element;
+                Name = element.Name.ToString();
+                LoadElements(element, -1);
+                InitProjSpecific(element);
+            }
 
             //use the maximum width of the sprite as the minimum surface width if no value is given
-            if (!element.Attributes("minsurfacewidth").Any())
+            if (element != null && !element.Attributes("minsurfacewidth").Any())
             {
                 if (Sprite != null) MinSurfaceWidth = Sprite.size.X * MaxSize;
                 if (DeformableSprite != null) MinSurfaceWidth = Math.Max(MinSurfaceWidth, DeformableSprite.Size.X * MaxSize);
