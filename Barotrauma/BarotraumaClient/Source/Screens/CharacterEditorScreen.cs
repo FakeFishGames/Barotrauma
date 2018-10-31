@@ -3400,8 +3400,17 @@ namespace Barotrauma
                     // TODO: parse as xml?
                     //XDocument doc = XMLExtensions.TryLoadXml(path);
                     //var xElements = doc.Elements().ToArray();
+                    string html = string.Empty;
+                    try
+                    {
+                        html = File.ReadAllText(path);
+                    }
+                    catch (Exception e)
+                    {
+                        DebugConsole.ThrowError($"[CharacterEditorScreen] Failed to read html at {path}", e);
+                        return;
+                    }
 
-                    string html = File.ReadAllText(path);
                     var lines = html.Split(new string[] { "<div", "</div>", Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
                                     .Where(s => s.Contains("left") && s.Contains("top") && s.Contains("width") && s.Contains("height"));
                     int id = 0;
