@@ -107,6 +107,7 @@
       <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,384,64,64"/>
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,0,16,16" />
     <AndComponent canbeselected="true" />
     <Body width="16" height="16" density="30" />
@@ -131,6 +132,7 @@
       <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,384,64,64"/>
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,80,16,16" />
     <AdderComponent canbeselected="true" />
     <Body width="16" height="16" density="30" />
@@ -153,6 +155,7 @@
       <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,384,64,64"/>
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,0,16,16" />
     <OrComponent canbeselected="true" />
     <Body width="16" height="16" density="30" />
@@ -177,6 +180,7 @@
       <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,384,64,64"/>
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,0,15,15" />
     <NotComponent canbeselected="true" />
     <Body width="16" height="16" density="30" />
@@ -199,6 +203,7 @@
       <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,384,64,64"/>
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="48,16,16,16" />
     <RelayComponent canbeselected="true" vulnerabletoemp="false">
       <GuiFrame relativesize="0.2,0.15" minsize="350,160" maxsize="420,190" anchor="Center" style="ItemUI" />
@@ -235,6 +240,7 @@
       <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,384,64,64"/>
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,35,16,16" />
     <DelayComponent canbeselected="true" />
     <Body width="16" height="8" density="30" />
@@ -370,6 +376,7 @@
       <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,384,64,64"/>
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,16,16,16" />
     <SignalCheckComponent canbeselected="true" />
     <Body width="16" height="16" density="30" />
@@ -394,6 +401,7 @@
       <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,384,64,64"/>
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,16,16,16" />
     <RegExFindComponent canbeselected="true" />
     <Body width="16" height="16" density="30" />
@@ -416,6 +424,7 @@
       <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,384,64,64"/>
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,64,16,16" />
     <OscillatorComponent canbeselected="true" outputtype="Pulse" frequency="1" />
     <Body width="16" height="16" density="30" />
@@ -439,6 +448,7 @@
       <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,384,64,64"/>
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,35,16,16" />
     <WifiComponent canbeselected="true" MinChatMessageInterval="1.0" DiscardDuplicateChatMessages="true" />
     <Body width="16" height="16" density="30" />
