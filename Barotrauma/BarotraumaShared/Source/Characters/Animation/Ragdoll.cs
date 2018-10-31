@@ -1648,17 +1648,19 @@ namespace Barotrauma
             }
 
             float lowestBound = Collider.SimPosition.Y;
-            for (int i = 0; i < Collider.FarseerBody.FixtureList.Count; i++)
+            if (Collider.FarseerBody.FixtureList != null)
             {
-                FarseerPhysics.Collision.AABB aabb;
-                FarseerPhysics.Common.Transform transform;
-                
-                Collider.FarseerBody.GetTransform(out transform);
-                Collider.FarseerBody.FixtureList[i].Shape.ComputeAABB(out aabb, ref transform, i);
+                for (int i = 0; i < Collider.FarseerBody.FixtureList.Count; i++)
+                {
+                    FarseerPhysics.Collision.AABB aabb;
+                    FarseerPhysics.Common.Transform transform;
 
-                lowestBound = Math.Min(aabb.LowerBound.Y, lowestBound);
+                    Collider.FarseerBody.GetTransform(out transform);
+                    Collider.FarseerBody.FixtureList[i].Shape.ComputeAABB(out aabb, ref transform, i);
+
+                    lowestBound = Math.Min(aabb.LowerBound.Y, lowestBound);
+                }
             }
-
             return new Vector2(Collider.SimPosition.X, lowestBound + offset);
         }
 
