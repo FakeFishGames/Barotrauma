@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -47,7 +48,7 @@ namespace Barotrauma
                 RelativeSpacing = 0.01f
             };
 
-            paramsList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.7f), paddedLeftPanel.RectTransform));
+            paramsList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.6f), paddedLeftPanel.RectTransform));
             paramsList.OnSelected += (GUIComponent component, object obj) =>
             {
                 selectedParams = obj as LevelGenerationParams;
@@ -55,6 +56,16 @@ namespace Barotrauma
                 SortLevelObjectsList(selectedParams);
                 new SerializableEntityEditor(editorContainer.Content.RectTransform, selectedParams, false, true, elementHeight: 20);
                 return true;
+            };
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), paddedLeftPanel.RectTransform),
+                "Create Level Object")
+            {
+                OnClicked = (btn, obj) =>
+                {
+                    Wizard.Instance.Create();
+                    return true;
+                }
             };
 
             lightingEnabled = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform),
@@ -433,5 +444,123 @@ namespace Barotrauma
                 }
             }
         }
+
+        
+        #region LevelObject Wizard
+        private class Wizard
+        {
+            private string name = string.Empty;
+            private float size = 10;
+            private string texturePath;
+            private string xmlPath;
+
+            private LevelObjectPrefab newPrefab;
+
+            private static Wizard instance;
+            public static Wizard Instance
+            {
+                get
+                {
+                    if (instance == null)
+                    {
+                        instance = new Wizard();
+                    }
+                    return instance;
+                }
+            }
+            
+            public void AddToGUIUpdateList()
+            {
+                //activeView?.Box.AddToGUIUpdateList();
+            }
+
+            public GUIMessageBox Create()
+            {
+                var box = new GUIMessageBox("Create New Level Object", string.Empty, 
+                    new string[] { "Cancel", "Done" }, GameMain.GraphicsWidth / 2, (int)(GameMain.GraphicsHeight * 0.8f));
+
+                box.Content.ChildAnchor = Anchor.TopCenter;
+                box.Content.AbsoluteSpacing = 20;
+                int elementSize = 30;
+                var listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.9f), box.Content.RectTransform));
+
+                new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), "Name") { CanBeFocused = false };
+                var nameBox = new GUITextBox(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform));
+
+                new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), "Texture path") { CanBeFocused = false };
+                var texturePathBox = new GUITextBox(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform));
+                foreach (LevelObjectPrefab prefab in LevelObjectPrefab.List)
+                {
+                    if (prefab.Sprite == null) continue;
+                    texturePathBox.Text = Path.GetDirectoryName(prefab.Sprite.FilePath);
+                    break;
+                }
+
+                newPrefab = new LevelObjectPrefab(null);
+
+                new SerializableEntityEditor(listBox.Content.RectTransform, newPrefab, false, false);
+                
+                box.Buttons[0].OnClicked += (b, d) =>
+                {
+                    box.Close();
+                    return true;
+                };
+                // Next
+                box.Buttons[1].OnClicked += (b, d) =>
+                {
+                    if (string.IsNullOrEmpty(nameBox.Text))
+                    {
+                        nameBox.Flash(Color.Red);
+                        GUI.AddMessage("Please enter a name for the Level Object.", Color.Red);
+                        return false;
+                    }
+                    
+                    if (LevelObjectPrefab.List.Any(obj => obj.Name.ToLower() == nameBox.Text.ToLower()))
+                    {
+                        nameBox.Flash(Color.Red);
+                        GUI.AddMessage("The selected name is already in use.", Color.Red);
+                        return false;
+                    }
+
+                    if (!File.Exists(texturePathBox.Text))
+                    {
+                        texturePathBox.Flash(Color.Red);
+                        GUI.AddMessage("Could not find the selected texture file.", Color.Red);
+                        return false;
+                    }
+
+                    newPrefab.Name = nameBox.Text;
+                    
+                    XmlWriterSettings settings = new XmlWriterSettings { Indent = true };
+                    foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.LevelObjectPrefabs))
+                    {
+                        XDocument doc = XMLExtensions.TryLoadXml(configFile);
+                        if (doc?.Root == null) continue;
+                        var newElement = new XElement(newPrefab.Name);
+                        newPrefab.Save(newElement);
+                        newElement.Add(new XElement("Sprite", 
+                            new XAttribute("texture", texturePathBox.Text), 
+                            new XAttribute("sourcerect", "0,0,100,100"),
+                            new XAttribute("origin", "0.5,0.5")));
+
+                        doc.Root.Add(newElement);
+                        using (var writer = XmlWriter.Create(configFile, settings))
+                        {
+                            doc.WriteTo(writer);
+                            writer.Flush();
+                        }
+                        break;
+                    }
+
+                    GameMain.LevelEditorScreen.UpdateLevelObjectsList();
+
+                    box.Close();
+                    return true;
+                };
+                return box;
+            }
+
+        }
+        #endregion
     }
 }

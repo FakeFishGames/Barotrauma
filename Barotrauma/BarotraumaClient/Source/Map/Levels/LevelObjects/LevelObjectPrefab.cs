@@ -43,7 +43,7 @@ namespace Barotrauma
         {
             get;
             private set;
-        }
+        } = new List<SoundConfig>();
 
         public List<int> LightSourceTriggerIndex
         {
@@ -58,7 +58,6 @@ namespace Barotrauma
 
         partial void InitProjSpecific(XElement element)
         {
-            Sounds = new List<SoundConfig>();
             LoadElementsProjSpecific(element, -1);
         }
 
@@ -97,7 +96,7 @@ namespace Barotrauma
 
         public void Save(XElement element)
         {
-            SerializableProperty.DeserializeProperties(this, element);
+            SerializableProperty.SerializeProperties(this, element);
 
             foreach (XElement subElement in element.Elements())
             {
