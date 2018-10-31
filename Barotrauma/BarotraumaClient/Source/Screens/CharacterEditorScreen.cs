@@ -255,6 +255,7 @@ namespace Barotrauma
                 character.Control((float)deltaTime, Cam);
                 character.AnimController.UpdateAnim((float)deltaTime);
                 character.AnimController.Update((float)deltaTime, Cam);
+                character.CurrentHull = character.AnimController.CurrentHull;
                 if (isEndlessRunner)
                 {
                     if (character.Position.X < min)
