@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Items>	
-	<Item
+<Items>
+  <Item
 		name="Fabricator"
     identifier="fabricator"
     category="Machine"
@@ -21,7 +21,7 @@
         <RequiredSkill identifier="mechanical" level="30"/>
         <RequiredItem identifier="steelbar"/>
         <RequiredItem identifier="polycarbonatebar"/>
-        <RequiredItem identifier="aluminium"/>        
+        <RequiredItem identifier="aluminium"/>
       </fabricableitem>
       <fabricableitem identifier="spear" requiredtime="10">
         <RequiredItem identifier="steelbar"/>
@@ -95,7 +95,7 @@
       <fabricableitem identifier="wire" requireditems="Copper Bar" requiredtime="5">
         <RequiredItem identifier="copperbar"/>
       </fabricableitem>
-      
+
       <fabricableitem identifier="button" requiredtime="10">
         <RequiredItem identifier="steelbar"/>
         <RequiredItem identifier="fpgacircuit"/>
@@ -143,7 +143,7 @@
       <fabricableitem identifier="signalcheckcomponent" requiredtime="10">
         <RequiredItem identifier="steelbar"/>
         <RequiredItem identifier="fpgacircuit"/>
-      </fabricableitem> 
+      </fabricableitem>
       <fabricableitem identifier="regexcomponent" requiredtime="10">
         <RequiredItem identifier="steelbar"/>
         <RequiredItem identifier="fpgacircuit"/>
@@ -171,7 +171,7 @@
         <RequiredItem identifier="polycarbonatebar"/>
         <RequiredItem identifier="fpgacircuit"/>
       </fabricableitem>
-      
+
       <fabricableitem identifier="fulguriumbatterycell" requireditems="Steel Bar, Fulgurium Bar" requiredtime="10">
         <RequiredItem identifier="sulphuricacid" mincondition="0.25" usecondition="true"/>
         <RequiredItem identifier="steelbar"/>
@@ -201,7 +201,7 @@
         <RequiredItem identifier="c4block"/>
         <RequiredItem identifier="incendiumbar"/>
       </fabricableitem>
-      
+
       <fabricableitem identifier="batterycell" requiredtime="10">
         <RequiredItem identifier="steelbar"/>
         <RequiredItem identifier="copperbar"/>
@@ -217,7 +217,7 @@
         <RequiredItem identifier="steelbar"/>
         <RequiredItem identifier="incendiumbar"/>
       </fabricableitem>
-      
+
       <fabricableitem identifier="uraniumbar">
         <RequiredItem identifier="uraniumpowder" count="3" mincondition="0.75"/>
       </fabricableitem>
@@ -238,16 +238,23 @@
         <RequiredItem identifier="steelbar"/>
       </fabricableitem>
     </Fabricator>
-		
-		<ConnectionPanel selectkey="Action" canbeselected="true" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-			<RequiredItem identifier="screwdriver" type="Equipped"/>
-			<output name="power_in"/>
-		</ConnectionPanel>
 
-		<ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.15, 0.7" slotsperrow="1" uilabel="Input" allowuioverlap="true"/>
-		<ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.85, 0.7" slotsperrow="1" uilabel="Output" allowuioverlap="true"/>
-	</Item>
+    <ConnectionPanel selectkey="Action" canbeselected="true" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
+      <output name="power_in"/>
+    </ConnectionPanel>
+
+    <Repairable selectkey="Action" name="Electrical repairs"
+        fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.1,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="electrical" level="40"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
+    </Repairable>
+
+    <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.15, 0.7" slotsperrow="1" uilabel="Input" allowuioverlap="true"/>
+    <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.85, 0.7" slotsperrow="1" uilabel="Output" allowuioverlap="true"/>
+  </Item>
 
   <Item
     name="Medical Fabricator"
@@ -258,7 +265,7 @@
     description="A machine that can be used to manufacture various medicines.">
 
     <Sprite texture="Content/Items/Fabricators/FF_medicalFabricator.png" depth="0.8" sourcerect="0,0,139,200"/>
-    
+
     <Fabricator canbeselected = "true" powerconsumption="100.0">
       <GuiFrame relativesize="0.4,0.4" minsize="600,400" maxsize="900,600" anchor="Center" style="ItemUI"/>
       <AlternativeLayout anchor="CenterLeft"/>
@@ -285,7 +292,7 @@
         <RequiredItem identifier="compoundn"/>
         <RequiredItem identifier="flashpowder"/>
       </fabricableitem>
-            
+
       <fabricableitem identifier="antidama1" requiredtime="10">
         <RequiredSkill identifier="medical" level="50"/>
         <RequiredItem identifier="stabilozine"/>
@@ -367,6 +374,12 @@
       <output name="power_in"/>
     </ConnectionPanel>
 
+    <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.1,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="electrical" level="40"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
+    </Repairable>
+
     <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.15, 0.7" slotsperrow="1" uilabel="Input" allowuioverlap="true"/>
     <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.85, 0.7" slotsperrow="1" uilabel="Output" allowuioverlap="true"/>
   </Item>
@@ -393,6 +406,12 @@
       <RequiredItem identifier="screwdriver" type="Equipped"/>
       <output name="power_in"/>
     </ConnectionPanel>
+
+    <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.1,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="electrical" level="40"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
+    </Repairable>
 
     <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.5, 0.4" slotsperrow="5" uilabel="Input" allowuioverlap="true"/>
     <ItemContainer capacity="10" canbeselected="true" hideitems="true" hudpos="0.5, 0.8" slotsperrow="5" uilabel="Output" allowuioverlap="true"/>
