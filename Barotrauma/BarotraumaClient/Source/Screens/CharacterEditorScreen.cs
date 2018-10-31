@@ -79,8 +79,18 @@ namespace Barotrauma
                 GameMain.LightManager.LightingEnabled = false;
             }
             Submarine.MainSub.GodMode = true;
-            currentCharacterConfig = Character.HumanConfigFile;
-            SpawnCharacter(currentCharacterConfig);
+            if (Character.Controlled == null)
+            {
+                currentCharacterConfig = Character.HumanConfigFile;
+                SpawnCharacter(currentCharacterConfig);
+            }
+            else
+            {
+                OnPreSpawn();
+                character = Character.Controlled;
+                TeleportTo(spawnPosition);
+                OnPostSpawn();
+            }
             GameMain.Instance.OnResolutionChanged += OnResolutionChanged;
             instance = this;
         }
@@ -89,17 +99,17 @@ namespace Barotrauma
         {
             base.Deselect();
             GUI.ForceMouseOn(null);
-            if (character != null)
-            {
-                character?.Remove();
-                character = null;
-            }
             if (isEndlessRunner)
             {
                 Submarine.MainSub.Remove();
                 isEndlessRunner = false;
+                if (character != null)
+                {
+                    character?.Remove();
+                    character = null;
+                }
+                GameMain.World.ProcessChanges();
             }
-            GameMain.World.ProcessChanges();
             GameMain.Instance.OnResolutionChanged -= OnResolutionChanged;
             GameMain.LightManager.LightingEnabled = true;
         }
@@ -601,7 +611,22 @@ namespace Barotrauma
         private Character SpawnCharacter(string configFile, RagdollParams ragdoll = null)
         {
             DebugConsole.NewMessage($"Trying to spawn {configFile}", Color.HotPink);
-            currentCharacterConfig = configFile;
+            OnPreSpawn();
+            bool dontFollowCursor = true;
+            if (character != null)
+            {
+                dontFollowCursor = character.dontFollowCursor;
+                character.Remove();
+                character = null;
+            }
+            character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), hasAi: false, ragdoll: ragdoll);
+            character.dontFollowCursor = dontFollowCursor;
+            OnPostSpawn();
+            return character;
+        }
+
+        private void OnPreSpawn()
+        {
             WayPoint wayPoint = null;
             if (!isEndlessRunner)
             {
@@ -612,17 +637,14 @@ namespace Barotrauma
                 wayPoint = WayPoint.GetRandom(sub: Submarine.MainSub);
             }
             spawnPosition = wayPoint.WorldPosition;
-            bool dontFollowCursor = true;
-            if (character != null)
-            {
-                dontFollowCursor = character.dontFollowCursor;
-                character.Remove();
-            }
-            character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), hasAi: false, ragdoll: ragdoll);
+        }
+
+        private void OnPostSpawn()
+        {
+            currentCharacterConfig = character.ConfigPath;
             character.Submarine = Submarine.MainSub;
             character.AnimController.forceStanding = character.AnimController.CanWalk;
             character.AnimController.ForceSelectAnimationType = character.AnimController.CanWalk ? AnimationType.Walk : AnimationType.SwimSlow;
-            character.dontFollowCursor = dontFollowCursor;
             Character.Controlled = character;
             SetWallCollisions(character.AnimController.forceStanding);
             CreateTextures();
@@ -631,7 +653,6 @@ namespace Barotrauma
             selectedJoints.Clear();
             selectedLimbs.Clear();
             ResetParamsEditor();
-            return character;
         }
 
         private void RecreateRagdoll()
