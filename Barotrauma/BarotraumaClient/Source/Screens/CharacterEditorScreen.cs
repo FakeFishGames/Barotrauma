@@ -319,9 +319,7 @@ namespace Barotrauma
 
             // Character(s)
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: Cam.Transform);
-            Submarine.DrawBack(spriteBatch, predicate: s => !(s is Structure) || !(s.ResizeVertical && s.ResizeHorizontal));
             Character.CharacterList.ForEach(c => c.Draw(spriteBatch, Cam));
-            Submarine.DrawFront(spriteBatch);
             if (GameMain.DebugDraw)
             {
                 character.AnimController.DebugDraw(spriteBatch);
