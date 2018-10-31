@@ -135,7 +135,8 @@ namespace Barotrauma
                 return true;
             };
 
-            spriteEditDoneButton = new GUIButton(new RectTransform(new Point(200, 30), anchor: Anchor.BottomRight) { AbsoluteOffset = new Point(20, 20) }, "Done")
+            spriteEditDoneButton = new GUIButton(new RectTransform(new Point(200, 30), anchor: Anchor.BottomRight) { AbsoluteOffset = new Point(20, 20) },
+                TextManager.Get("LevelEditorSpriteEditDone"))
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -215,7 +216,8 @@ namespace Barotrauma
                     AbsoluteSpacing = 5,
                     Stretch = true
                 };
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), commonnessContainer.RectTransform), "Commonness in " + selectedParams.Name, textAlignment: Alignment.Center);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), commonnessContainer.RectTransform),
+                    TextManager.Get("LevelEditorLevelObjCommonness").Replace("[leveltype]", selectedParams.Name), textAlignment: Alignment.Center);
                 new GUINumberInput(new RectTransform(new Vector2(0.5f, 0.4f), commonnessContainer.RectTransform), GUINumberInput.NumberType.Float)
                 {
                     MinValueFloat = 0,
@@ -233,7 +235,8 @@ namespace Barotrauma
             Sprite sprite = levelObjectPrefab.Sprite ?? levelObjectPrefab.DeformableSprite?.Sprite;
             if (sprite != null)
             {
-                editor.AddCustomContent(new GUIButton(new RectTransform(new Point(editor.Rect.Width / 2, 20)), "Edit sprite")
+                editor.AddCustomContent(new GUIButton(new RectTransform(new Point(editor.Rect.Width / 2, 20)), 
+                    TextManager.Get("LevelEditorEditSprite"))
                 {
                     OnClicked = (btn, userdata) =>
                     {
@@ -246,7 +249,8 @@ namespace Barotrauma
             }
 
             //child object editing
-            new GUITextBlock(new RectTransform(new Point(editor.Rect.Width, 40), editorContainer.Content.RectTransform), "Child objects:", textAlignment: Alignment.BottomCenter);
+            new GUITextBlock(new RectTransform(new Point(editor.Rect.Width, 40), editorContainer.Content.RectTransform),
+                TextManager.Get("LevelEditorChildObjects"), textAlignment: Alignment.BottomCenter);
             foreach (LevelObjectPrefab.ChildObject childObj in levelObjectPrefab.ChildObjects)
             {
                 var childObjFrame = new GUIFrame(new RectTransform(new Point(editor.Rect.Width, 30)));
@@ -301,7 +305,8 @@ namespace Barotrauma
                 childObjFrame.RectTransform.Parent = editorContainer.Content.RectTransform;
             }
 
-            new GUIButton(new RectTransform(new Point(editor.Rect.Width / 2, 20), editorContainer.Content.RectTransform), "Add new child object")
+            new GUIButton(new RectTransform(new Point(editor.Rect.Width / 2, 20), editorContainer.Content.RectTransform),
+                TextManager.Get("LevelEditorAddChildObject"))
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -312,12 +317,14 @@ namespace Barotrauma
             };
 
             //light editing
-            new GUITextBlock(new RectTransform(new Point(editor.Rect.Width, 40), editorContainer.Content.RectTransform), "Light sources:", textAlignment: Alignment.BottomCenter);
+            new GUITextBlock(new RectTransform(new Point(editor.Rect.Width, 40), editorContainer.Content.RectTransform),
+                TextManager.Get("LevelEditorLightSources"), textAlignment: Alignment.BottomCenter);
             foreach (LightSourceParams lightSourceParams in selectedLevelObject.LightSourceParams)
             {
                 new SerializableEntityEditor(editorContainer.Content.RectTransform, lightSourceParams, inGame: false, showName: true);
             }
-            new GUIButton(new RectTransform(new Point(editor.Rect.Width / 2, 20), editorContainer.Content.RectTransform), "Add new light source")
+            new GUIButton(new RectTransform(new Point(editor.Rect.Width / 2, 20), editorContainer.Content.RectTransform), 
+                TextManager.Get("LevelEditorAddLightSource"))
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -498,11 +505,6 @@ namespace Barotrauma
         #region LevelObject Wizard
         private class Wizard
         {
-            private string name = string.Empty;
-            private float size = 10;
-            private string texturePath;
-            private string xmlPath;
-
             private LevelObjectPrefab newPrefab;
 
             private static Wizard instance;
@@ -525,18 +527,18 @@ namespace Barotrauma
 
             public GUIMessageBox Create()
             {
-                var box = new GUIMessageBox("Create New Level Object", string.Empty, 
-                    new string[] { "Cancel", "Done" }, GameMain.GraphicsWidth / 2, (int)(GameMain.GraphicsHeight * 0.8f));
+                var box = new GUIMessageBox(TextManager.Get("LevelEditorCreateLevelObj"), string.Empty, 
+                    new string[] { TextManager.Get("Cancel"), TextManager.Get("Done") }, GameMain.GraphicsWidth / 2, (int)(GameMain.GraphicsHeight * 0.8f));
 
                 box.Content.ChildAnchor = Anchor.TopCenter;
                 box.Content.AbsoluteSpacing = 20;
                 int elementSize = 30;
                 var listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.9f), box.Content.RectTransform));
 
-                new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), "Name") { CanBeFocused = false };
+                new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), TextManager.Get("LevelEditorLevelObjName")) { CanBeFocused = false };
                 var nameBox = new GUITextBox(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform));
 
-                new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), "Texture path") { CanBeFocused = false };
+                new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), TextManager.Get("LevelEditorLevelObjTexturePath")) { CanBeFocused = false };
                 var texturePathBox = new GUITextBox(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform));
                 foreach (LevelObjectPrefab prefab in LevelObjectPrefab.List)
                 {
@@ -560,21 +562,21 @@ namespace Barotrauma
                     if (string.IsNullOrEmpty(nameBox.Text))
                     {
                         nameBox.Flash(Color.Red);
-                        GUI.AddMessage("Please enter a name for the Level Object.", Color.Red);
+                        GUI.AddMessage(TextManager.Get("LevelEditorLevelObjNameEmpty"), Color.Red);
                         return false;
                     }
                     
                     if (LevelObjectPrefab.List.Any(obj => obj.Name.ToLower() == nameBox.Text.ToLower()))
                     {
                         nameBox.Flash(Color.Red);
-                        GUI.AddMessage("The selected name is already in use.", Color.Red);
+                        GUI.AddMessage(TextManager.Get("LevelEditorLevelObjNameTaken"), Color.Red);
                         return false;
                     }
 
                     if (!File.Exists(texturePathBox.Text))
                     {
                         texturePathBox.Flash(Color.Red);
-                        GUI.AddMessage("Could not find the selected texture file.", Color.Red);
+                        GUI.AddMessage(TextManager.Get("LevelEditorLevelObjTextureNotFound"), Color.Red);
                         return false;
                     }
 
