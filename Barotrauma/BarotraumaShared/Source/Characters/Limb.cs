@@ -307,7 +307,7 @@ namespace Barotrauma
             this.limbParams = limbParams;
             wearingItems = new List<WearableSprite>();            
             dir = Direction.Right;
-            body = new PhysicsBody(limbParams, Scale);
+            body = new PhysicsBody(limbParams);
             type = limbParams.Type;
             if (limbParams.IgnoreCollisions)
             {
