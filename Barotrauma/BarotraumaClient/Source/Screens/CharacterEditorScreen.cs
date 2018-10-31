@@ -667,7 +667,14 @@ namespace Barotrauma
 
         private void TeleportTo(Vector2 position)
         {
-            character.TeleportTo(position);
+            if (isEndlessRunner)
+            {
+                character.AnimController.SetPosition(ConvertUnits.ToSimUnits(position), false);
+            }
+            else
+            {
+                character.TeleportTo(position);
+            }
         }
 
         private void CreateCharacter(string name, bool isHumanoid, params object[] ragdollConfig)
