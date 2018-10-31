@@ -314,7 +314,7 @@ namespace Barotrauma
 
             // Submarine
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: Cam.Transform);
-            Submarine.Draw(spriteBatch);
+            Submarine.Draw(spriteBatch, isEndlessRunner);
             spriteBatch.End();
 
             // Character(s)
