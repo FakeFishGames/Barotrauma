@@ -2007,7 +2007,7 @@ namespace Barotrauma
                     GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.Red);
                     GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.Red);
                 }
-                if (MathUtils.RectangleContainsPoint(corners, PlayerInput.MousePosition))
+                if (MathUtils.RectangleContainsPoint(corners, PlayerInput.MousePosition) && GUI.MouseOn == null)
                 {
                     // Select limbs
                     if (PlayerInput.LeftButtonDown())
@@ -2396,7 +2396,7 @@ namespace Barotrauma
                         //var bottomLeft = new Vector2(topLeft.X, bottomRight.Y);
                         // Select limbs
                         bool isMouseOnRect = rect.Contains(PlayerInput.MousePosition);
-                        if (isMouseOnRect)
+                        if (isMouseOnRect && GUI.MouseOn == null)
                         {
                             if (PlayerInput.LeftButtonDown() && selectedWidget == null)
                             {
@@ -2420,7 +2420,7 @@ namespace Barotrauma
                         }
                         if (selectedLimbs.Contains(limb))
                         {
-                            if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && isMouseOnRect && selectedWidget == null)
+                            if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && isMouseOnRect && selectedWidget == null && GUI.MouseOn == null)
                             {
                                 var input = scaledMouseSpeed / spriteSheetZoom;
                                 input.X *= character.AnimController.Dir;
