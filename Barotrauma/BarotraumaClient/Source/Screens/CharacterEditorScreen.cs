@@ -2949,7 +2949,7 @@ namespace Barotrauma
                         texturePathElement.Text = TexturePath;
                         xmlPathElement.Text = XMLPath;
                     }
-                    for (int i = 0; i < 5; i++)
+                    for (int i = 0; i < 4; i++)
                     {
                         var mainElement = new GUIFrame(new RectTransform(new Point(topGroup.RectTransform.Rect.Width, elementSize), topGroup.RectTransform), style: null, color: Color.Gray * 0.25f);
                         fields.Add(mainElement);
@@ -2970,16 +2970,6 @@ namespace Barotrauma
                                 };
                                 break;
                             case 1:
-                                new GUITextBlock(leftElement, "Size");
-                                new GUINumberInput(rightElement, GUINumberInput.NumberType.Float)
-                                {
-                                    MinValueFloat = 1,
-                                    MaxValueFloat = 1000,
-                                    FloatValue = Size,
-                                    OnValueChanged = (nInput) => Size = nInput.FloatValue
-                                };
-                                break;
-                            case 2:
                                 new GUITextBlock(leftElement, "Is Humanoid?");
                                 new GUITickBox(rightElement, string.Empty)
                                 {
@@ -2987,7 +2977,7 @@ namespace Barotrauma
                                     OnSelected = (tB) => IsHumanoid = tB.Selected
                                 };
                                 break;
-                            case 3:
+                            case 2:
                                 new GUITextBlock(leftElement, "Config File Output");
                                 xmlPathElement = new GUITextBox(rightElement, string.Empty)
                                 {
@@ -2999,7 +2989,7 @@ namespace Barotrauma
                                     }
                                 };
                                 break;
-                            case 4:
+                            case 3:
                                 new GUITextBlock(leftElement, "Texture Path");
                                 texturePathElement = new GUITextBox(rightElement, string.Empty)
                                 {
@@ -3149,7 +3139,6 @@ namespace Barotrauma
                                 htmlOutput.Text = new XDocument(new XElement("Ragdoll", new object[]
                                 {
                                         new XAttribute("type", Name),
-                                        new XElement("collider", new XAttribute("radius", Size)),
                                             LimbXElements.Values,
                                             JointXElements
                                 })).ToString();
@@ -3178,10 +3167,57 @@ namespace Barotrauma
                     {
                         ParseLimbsFromGUIElements();
                         ParseJointsFromGUIElements();
+                        var torso = LimbXElements.Values.Select(x => x.Attribute("type")).FirstOrDefault(a => a.Value.ToLowerInvariant() == "torso").Parent;
+                        int radius = torso.GetAttributeInt("radius", -1);
+                        int height = torso.GetAttributeInt("height", -1);
+                        int width = torso.GetAttributeInt("width", -1);
+                        int colliderHeight = - 1;
+                        if (radius == -1)
+                        {
+                            // the collider is a box -> calculate the capsule
+                            if (width == height)
+                            {
+                                radius = width / 2;
+                            }
+                            else
+                            {
+                                if (height > width)
+                                {
+                                    radius = width / 2;
+                                    colliderHeight = height;
+                                }
+                                else
+                                {
+                                    radius = height / 2;
+                                    colliderHeight = width;
+                                }
+                            }
+                        }
+                        else if (height > -1 || width > -1)
+                        {
+                            // the collider is a capsule -> use the capsule as it is
+                            colliderHeight = width > height ? width : height;
+                        }
+                        var colliderAttributes = new List<XAttribute>() { new XAttribute("radius", radius) };
+                        if (colliderHeight > -1)
+                        {
+                            colliderAttributes.Add(new XAttribute("height", colliderHeight));
+                        }
+                        var colliderElements = new List<XElement>() { new XElement("collider", colliderAttributes) };
+                        if (IsHumanoid)
+                        {
+                            // For humanoids, we need a secondary, shorter collider for crouching
+                            var secondaryCollider = new XElement("collider", new XAttribute("radius", radius));
+                            if (colliderHeight > -1)
+                            {
+                                secondaryCollider.Add(new XAttribute("height", colliderHeight * 0.75f));
+                            }
+                            colliderElements.Add(secondaryCollider);
+                        }
                         var ragdollParams = new object[]
                         {
                             new XAttribute("type", Name),
-                            new XElement("collider", new XAttribute("radius", Size)),   // TODO: if we set the radius, the collider cannot be a rectangle
+                                colliderElements,
                                 LimbXElements.Values,
                                 JointXElements
                         };
@@ -3283,11 +3319,6 @@ namespace Barotrauma
                 {
                     get => Instance.name;
                     set => Instance.name = value;
-                }
-                public float Size
-                {
-                    get => Instance.size;
-                    set => Instance.size = value;
                 }
                 public bool IsHumanoid
                 {
