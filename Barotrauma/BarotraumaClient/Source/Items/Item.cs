@@ -537,8 +537,16 @@ namespace Barotrauma
                     (components[containerIndex] as ItemContainer).Inventory.ClientRead(type, msg, sendingTime);
                     break;
                 case NetEntityEvent.Type.Status:
+                    float prevCondition = condition;
                     condition = msg.ReadSingle();
-                    SetActiveSprite();
+                    if (prevCondition > 0.0f && condition <= 0.0f)
+                    {
+                        ApplyStatusEffects(ActionType.OnBroken, 1.0f);
+                        foreach (ItemComponent ic in components)
+                        {
+                            ic.PlaySound(ActionType.OnBroken, WorldPosition);
+                        }
+                    }
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     ActionType actionType = (ActionType)msg.ReadRangedInteger(0, Enum.GetValues(typeof(ActionType)).Length - 1);

@@ -56,22 +56,20 @@ namespace Barotrauma.Networking
                         GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
                         "Too much data in network event for entity \"" + e.Entity.ToString() + "\" (" + tempEventBuffer.LengthBytes + " bytes");
 
-                    //write an empty event breaking the event syncing
+                    //write an empty event to prevent breaking the event syncing
                     tempBuffer.Write((UInt16)0);
                     tempBuffer.WritePadBits();
                     eventCount++;
                     continue;
-
                 }
-                
                 //the ID has been taken by another entity (the original entity has been removed) -> write an empty event
-                else if (Entity.FindEntityByID(e.Entity.ID) != e.Entity || e.Entity.IdFreed)
+                /*else if (Entity.FindEntityByID(e.Entity.ID) != e.Entity || e.Entity.IdFreed)
                 {
                     //technically the clients don't have any use for these, but removing events and shifting the IDs of all 
                     //consecutive ones is so error-prone that I think this is a safer option
                     tempBuffer.Write(Entity.NullEntityID);
                     tempBuffer.WritePadBits();
-                }
+                }*/
                 else
                 {
                     tempBuffer.Write((UInt16)e.Entity.ID);

@@ -27,8 +27,9 @@ namespace Barotrauma
         {
             if (this.type != type || !HasRequiredItems(entity)) return;
             if (!Stackable && DelayList.Any(d => d.Parent == this && d.Targets.Count == 1 && d.Targets[0] == target)) return;
-
+            
             if (targetIdentifiers != null && !IsValidTarget(target)) return;
+            if (!HasRequiredConditions(new List<ISerializableEntity>() { target })) return;
 
             DelayedListElement element = new DelayedListElement
             {
@@ -52,6 +53,8 @@ namespace Barotrauma
                 targets.RemoveAll(t => !IsValidTarget(t));
                 if (targets.Count == 0) return;
             }
+
+            if (!HasRequiredConditions(targets)) return;
 
             DelayedListElement element = new DelayedListElement
             {

@@ -654,6 +654,9 @@ namespace Barotrauma.Networking
                         fileSender.ReadFileRequest(inc);
                     }
                     break;
+                case ClientPacketHeader.ERROR:
+                    HandleClientError(inc);
+                    break;
             }            
         }
         
@@ -670,6 +673,60 @@ namespace Barotrauma.Networking
                 userID++;
             }
             return userID;
+        }
+
+        private void HandleClientError(NetIncomingMessage inc)
+        {
+            Client c = ConnectedClients.Find(x => x.Connection == inc.SenderConnection);
+
+            string errorStr = "Unhandled error report";
+
+            ClientNetError error = (ClientNetError)inc.ReadByte();
+            int levelEqualityCheckVal = inc.ReadInt32();
+            switch (error)
+            {
+                case ClientNetError.MISSING_EVENT:
+                    UInt16 expectedID = inc.ReadUInt16();
+                    UInt16 receivedID = inc.ReadUInt16();
+                    errorStr = "Expecting event id " + expectedID.ToString() + ", received " + receivedID.ToString();
+                    break;
+                case ClientNetError.MISSING_ENTITY:
+                    UInt16 eventID = inc.ReadUInt16();
+                    UInt16 entityID = inc.ReadUInt16();
+                    Entity entity = Entity.FindEntityByID(entityID);
+                    if (entity == null)
+                    {
+                        errorStr = "Received an update for an entity that doesn't exist (event id " + eventID.ToString() + ", entity id " + entityID.ToString() + ").";
+                    }
+                    else if (entity is Character character)
+                    {
+                        errorStr = "Missing character " + character.Name + " (event id " + eventID.ToString() + ", entity id " + entityID.ToString() + ").";
+                    }
+                    else if (entity is Item item)
+                    {
+                        errorStr = "Missing item " + item.Name + " (event id " + eventID.ToString() + ", entity id " + entityID.ToString() + ").";
+                    }
+                    else
+                    {
+                        errorStr = "Missing entity " + entity.ToString() + " (event id " + eventID.ToString() + ", entity id " + entityID.ToString() + ").";
+                    }
+                    break;
+            }
+
+            if (Level.Loaded != null && levelEqualityCheckVal != Level.Loaded.EqualityCheckVal)
+            {
+                errorStr += " Level equality check failed, something went wrong during level generation (seed " + Level.Loaded.Seed + ").";
+            }
+
+            if (c == null)
+            {
+                KickClient(inc.SenderConnection, errorStr);
+            }
+            else
+            {
+				Log(c.Name + " has reported an error: " + errorStr, ServerLog.MessageType.Error);
+				KickClient(c, errorStr);
+            }
         }
 
         private void ClientReadLobby(NetIncomingMessage inc)

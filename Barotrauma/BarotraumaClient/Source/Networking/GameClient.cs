@@ -1839,5 +1839,25 @@ namespace Barotrauma.Networking
             Vote(VoteType.EndRound, tickBox.Selected);
             return false;
         }
+
+        public void ReportError(ClientNetError error, UInt16 expectedID = 0, UInt16 eventID = 0, UInt16 entityID = 0)
+        {
+            NetOutgoingMessage outMsg = client.CreateMessage();
+            outMsg.Write((byte)ClientPacketHeader.ERROR);
+            outMsg.Write((byte)error);
+            outMsg.Write(Level.Loaded == null ? 0 : Level.Loaded.EqualityCheckVal);
+            switch (error)
+            {
+                case ClientNetError.MISSING_EVENT:
+                    outMsg.Write(expectedID);
+                    outMsg.Write(eventID);
+                    break;
+                case ClientNetError.MISSING_ENTITY:
+                    outMsg.Write(eventID);
+                    outMsg.Write(entityID);
+                    break;
+            }
+            client.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+        }
     }
 }
