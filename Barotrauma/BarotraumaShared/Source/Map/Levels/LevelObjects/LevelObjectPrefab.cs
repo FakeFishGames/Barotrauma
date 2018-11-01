@@ -92,7 +92,11 @@ namespace Barotrauma
             private set;
         }
 
-        public readonly XElement Config;
+        public XElement Config
+        {
+            get;
+            private set;
+        }
 
         public readonly List<XElement> LevelTriggerElements;
         
@@ -170,23 +174,27 @@ namespace Barotrauma
         [Serialize("0.0,0.0", true), Editable(ToolTip = "How much the rotation of the object can vary (min and max values in degrees).")]
         public Vector2 RandomRotation
         {
-            get { return randomRotation; }
+            get { return new Vector2(MathHelper.ToDegrees(randomRotation.X), MathHelper.ToDegrees(randomRotation.Y)); }
             private set
             {
                 randomRotation = new Vector2(MathHelper.ToRadians(value.X), MathHelper.ToRadians(value.Y));
             }
         }
 
+        public Vector2 RandomRotationRad => randomRotation;
+
         private float swingAmount;
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 360.0f, ToolTip = "How much the object swings (in degrees).")]
         public float SwingAmount
         {
-            get { return swingAmount; }
+            get { return MathHelper.ToDegrees(swingAmount); }
             private set
             {
                 swingAmount = MathHelper.ToRadians(value);
             }
         }
+
+        public float SwingAmountRad => swingAmount;
 
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, ToolTip = "How fast the object swings.")]
         public float SwingFrequency

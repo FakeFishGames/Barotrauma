@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.Linq;
-using Barotrauma.Lights;
+﻿using Barotrauma.Lights;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.IO;
+using System.Linq;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -248,6 +245,16 @@ namespace Barotrauma
                 }, 1);
             }
 
+            if (levelObjectPrefab.DeformableSprite != null)
+            {
+                var deformEditor = levelObjectPrefab.DeformableSprite.CreateEditor(editor, levelObjectPrefab.SpriteDeformations);
+                deformEditor.GetChild<GUIDropDown>().OnSelected += (selected, userdata) =>
+                {
+                    CreateLevelObjectEditor(selectedLevelObject);
+                    return true;
+                };
+                editor.AddCustomContent(deformEditor, editor.ContentCount);
+            }
             //child object editing
             new GUITextBlock(new RectTransform(new Point(editor.Rect.Width, 40), editorContainer.Content.RectTransform),
                 TextManager.Get("LevelEditorChildObjects"), textAlignment: Alignment.BottomCenter);
@@ -397,11 +404,9 @@ namespace Barotrauma
             {
                 GameMain.SpriteEditorScreen.Draw(deltaTime, graphics, spriteBatch);
             }
+
             spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
-
             GUI.Draw(Cam, spriteBatch);
-
-
             spriteBatch.End();
         }
 
@@ -535,10 +540,12 @@ namespace Barotrauma
                 int elementSize = 30;
                 var listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.9f), box.Content.RectTransform));
 
-                new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), TextManager.Get("LevelEditorLevelObjName")) { CanBeFocused = false };
+                new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), 
+                    TextManager.Get("LevelEditorLevelObjName")) { CanBeFocused = false };
                 var nameBox = new GUITextBox(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform));
 
-                new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), TextManager.Get("LevelEditorLevelObjTexturePath")) { CanBeFocused = false };
+                new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), 
+                    TextManager.Get("LevelEditorLevelObjTexturePath")) { CanBeFocused = false };
                 var texturePathBox = new GUITextBox(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform));
                 foreach (LevelObjectPrefab prefab in LevelObjectPrefab.List)
                 {

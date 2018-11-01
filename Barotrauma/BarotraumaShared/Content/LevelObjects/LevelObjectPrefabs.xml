@@ -65,7 +65,7 @@
     <overridecommonness commonness="0" leveltype="PlateauBasic" />
     <Sprite texture="Content/LevelObjects/vegetation2.png" sourcerect="449,500,252,524" origin="0.5,0.95" />
   </thistle>
-  <branch spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.15" minsize="1" maxsize="3" randomrotation="-30,30" swingamount="10" swingfrequency="0.1" commonness="10" depthrange="-0.01,-0.01">
+  <branch1 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.15" minsize="1" maxsize="3" randomrotation="-30,30" swingamount="10" swingfrequency="0.1" commonness="10" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="Pillars" />
@@ -75,8 +75,8 @@
       <SpriteDeformation type="noise" resolution="5,5" frequency="5" amplitude="0.25" changespeed="0.1" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
-  </branch>
-  <branch spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.15" minsize="1" maxsize="3" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" commonness="10" depthrange="-0.01,-0.01">
+  </branch1>
+  <branch2 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.15" minsize="1" maxsize="3" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" commonness="10" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="Pillars" />
@@ -86,13 +86,13 @@
       <SpriteDeformation type="noise" resolution="5,5" frequency="5" amplitude="0.25" changespeed="0.1" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
-  </branch>
+  </branch2>
   <hay spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.15" minsize="0.5" maxsize="1.5" randomrotation="-10,10" swingamount="5" swingfrequency="0.1" commonness="3">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <Sprite texture="Content/LevelObjects/vegetation4.png" sourcerect="820,245,204,779" origin="0.5,0.95" />
   </hay>
-  <branch spawnpos="Wall, RuinWall" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.1" minsize="1" maxsize="3" alignwithsurface="true" randomrotation="-30,30" depthrange="-0.01,-0.01" swingamount="10" swingfrequency="0.1" commonness="0">
+  <branch3 spawnpos="Wall, RuinWall" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.1" minsize="1" maxsize="3" alignwithsurface="true" randomrotation="-30,30" depthrange="-0.01,-0.01" swingamount="10" swingfrequency="0.1" commonness="0">
     <overridecommonness commonness="10" leveltype="Pillars" />
     <overridecommonness commonness="10" leveltype="Slabs" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
@@ -101,8 +101,8 @@
       <SpriteDeformation type="noise" resolution="5,5" frequency="5" amplitude="0.25" changespeed="0.1" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
-  </branch>
-  <branch spawnpos="Wall, RuinWall" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.1" minsize="1" maxsize="3" alignwithsurface="true" randomrotation="-30,30" depthrange="-0.01,-0.01" swingamount="10" swingfrequency="0.1" commonness="0">
+  </branch3>
+  <branch4 spawnpos="Wall, RuinWall" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.1" minsize="1" maxsize="3" alignwithsurface="true" randomrotation="-30,30" depthrange="-0.01,-0.01" swingamount="10" swingfrequency="0.1" commonness="0">
     <overridecommonness commonness="10" leveltype="Pillars" />
     <overridecommonness commonness="10" leveltype="Slabs" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
@@ -111,7 +111,7 @@
       <SpriteDeformation type="noise" resolution="5,5" frequency="5" amplitude="0.25" changespeed="0.1" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
-  </branch>
+  </branch4>
   <fractalplant1 spawnpos="Wall, RuinWall" clusteringamount="5" clusteringgroup="0.4" minsize="1.0" maxsize="1.5" alignwithsurface="true" randomrotation="-10,10" commonness="0">
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <overridecommonness commonness="0.2" leveltype="VoidBasic" />

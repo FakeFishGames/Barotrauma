@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Lights;
 using Barotrauma.Particles;
+using Barotrauma.SpriteDeformations;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Globalization;
@@ -56,6 +57,15 @@ namespace Barotrauma
             private set;
         } = new List<Lights.LightSourceParams>();
 
+        /// <summary>
+        /// Only used for editing sprite deformation parameters. The actual LevelObjects use separate SpriteDeformation instances.
+        /// </summary>
+        public List<SpriteDeformation> SpriteDeformations
+        {
+            get;
+            private set;
+        } = new List<SpriteDeformation>();
+
         partial void InitProjSpecific(XElement element)
         {
             LoadElementsProjSpecific(element, -1);
@@ -90,12 +100,20 @@ namespace Barotrauma
                     case "sound":
                         Sounds.Add(new SoundConfig(subElement, parentTriggerIndex));
                         break;
+                    case "deformablesprite":
+                        foreach (XElement deformElement in subElement.Elements())
+                        {
+                            SpriteDeformations.Add(SpriteDeformation.Load(deformElement));                            
+                        }
+                        break;
                 }
             }
         }
 
         public void Save(XElement element)
         {
+            this.Config = element;
+
             SerializableProperty.SerializeProperties(this, element);
 
             foreach (XElement subElement in element.Elements())
@@ -105,6 +123,15 @@ namespace Barotrauma
                     case "childobject":
                     case "lightsource":
                         subElement.Remove();
+                        break;
+                    case "deformablesprite":
+                        subElement.RemoveNodes();
+                        foreach (SpriteDeformation deformation in SpriteDeformations)
+                        {
+                            var deformationElement = new XElement("SpriteDeformation");
+                            deformation.Save(deformationElement);
+                            subElement.Add(deformationElement);
+                        }
                         break;
                 }
             }

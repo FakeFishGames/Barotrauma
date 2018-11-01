@@ -166,7 +166,7 @@ namespace Barotrauma
                                 deformation = ragdoll.Limbs
                                     .Where(l => l != null)
                                     .SelectMany(l => l.Deformations)
-                                    .Where(d => d.TypeName == typeName && d.sync == sync)
+                                    .Where(d => d.TypeName == typeName && d.Sync == sync)
                                     .FirstOrDefault();
                             }
                             if (deformation == null)

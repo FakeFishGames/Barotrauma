@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -246,34 +247,41 @@ namespace Barotrauma
             indexBuffer?.Dispose();
             indexBuffer = null;
         }
-
-
+        
         #region Editing
 
         public GUIComponent CreateEditor(GUIComponent parent, List<SpriteDeformation> deformations)
         {
-            var container = new GUILayoutGroup(new RectTransform(Vector2.One, parent.RectTransform));
+            var container = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.0f), parent.RectTransform))
+            {
+                AbsoluteSpacing = 5
+            };
 
-            new GUITextBlock(new RectTransform(new Point(container.Rect.Width, 30), container.RectTransform), "Deformations");
+            new GUITextBlock(new RectTransform(new Point(container.Rect.Width, 30), container.RectTransform), "Sprite Deformations");
 
             foreach (SpriteDeformation deformation in deformations)
             {
-                new SerializableEntityEditor(container.RectTransform, deformation, false, true);
+                var deformEditor = new SerializableEntityEditor(container.RectTransform, deformation, false, true);
+                deformEditor.RectTransform.MinSize = new Point(deformEditor.Rect.Width, deformEditor.Rect.Height);
             }
 
-            new GUITextBlock(new RectTransform(new Point(container.Rect.Width, 30), container.RectTransform), "Add new");
-            var deformationDD = new GUIDropDown(new RectTransform(new Point(container.Rect.Width, 30), container.RectTransform))
+            var deformationDD = new GUIDropDown(new RectTransform(new Point(container.Rect.Width, 30), container.RectTransform), "Add new sprite deformation");
+            deformationDD.OnSelected = (selected, userdata) =>
             {
-                OnSelected = (selected, userdata) =>
-                {
-                    deformations.Add(SpriteDeformation.Load((string)userdata));
-                    return false;
-                }
+                deformations.Add(SpriteDeformation.Load((string)userdata));
+                deformationDD.Text = "Add new sprite deformation";
+                return false;
             };
+
             foreach (string deformationType in SpriteDeformation.DeformationTypes)
             {
                 deformationDD.AddItem(deformationType, deformationType);
             }
+
+            container.RectTransform.Resize(new Point(
+                container.Rect.Width, container.Children.Sum(c => c.Rect.Height + container.AbsoluteSpacing)), false);
+            container.RectTransform.MaxSize = new Point(int.MaxValue, container.Rect.Height);
+            container.Recalculate();
 
             return container;
         }
