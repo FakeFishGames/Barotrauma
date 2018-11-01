@@ -49,7 +49,7 @@ namespace Barotrauma.SpriteDeformations
 
         public JointBendDeformation(XElement element) : base(element)
         {
-            maxRotation = MathHelper.ToRadians(element.GetAttributeFloat("maxrotation", 90.0f));
+            maxRotation = MathHelper.ToRadians(element == null ? 90.0f : element.GetAttributeFloat("maxrotation", 90.0f));
         }
 
         protected override void GetDeformation(out Vector2[,] deformation, out float multiplier)

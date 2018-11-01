@@ -6,8 +6,10 @@ namespace Barotrauma.SpriteDeformations
 {
     class Inflate : SpriteDeformation
     {
-        private float frequency;
-        private float scale;
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
+        private float Frequency { get; set; }
+        [Serialize(1.0f, true), Editable(MinValueFloat = 0.01f, MaxValueFloat = 10.0f)]
+        private float Scale { get; set; }
 
         private float phase;
 
@@ -15,9 +17,6 @@ namespace Barotrauma.SpriteDeformations
 
         public Inflate(XElement element) : base(element)
         {
-            frequency = element.GetAttributeFloat("frequency", 0.0f);
-            scale = element.GetAttributeFloat("scale", 1.0f);
-
             deformation = new Vector2[Resolution.X, Resolution.Y];
             for (int x = 0; x < Resolution.X; x++)
             {
@@ -40,12 +39,12 @@ namespace Barotrauma.SpriteDeformations
         protected override void GetDeformation(out Vector2[,] deformation, out float multiplier)
         {
             deformation = this.deformation;
-            multiplier = frequency <= 0.0f ? scale : (float)(Math.Sin(phase)+1.0f) / 2.0f * scale;
+            multiplier = Frequency <= 0.0f ? Scale : (float)(Math.Sin(phase) + 1.0f) / 2.0f * Scale;
         }
 
         public override void Update(float deltaTime)
         {
-            phase += deltaTime * frequency;
+            phase += deltaTime * Frequency;
             phase %= MathHelper.TwoPi;
         }
     }

@@ -7,9 +7,9 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma.SpriteDeformations
 {
-    abstract class SpriteDeformation
+    abstract class SpriteDeformation : ISerializableEntity
     {
-        public enum BlendMode
+        public enum DeformationBlendMode
         {
             Add, 
             Multiply,
@@ -28,38 +28,80 @@ namespace Barotrauma.SpriteDeformations
                 Deformation = new Vector2[_resolution.X, _resolution.Y];
             }
         }
+
+        public string Name => GetType().ToString();
+
+        public Dictionary<string, SerializableProperty> SerializableProperties
+        {
+            get;
+            private set;
+        }
+
         /// <summary>
         /// A negative value means that the deformation is used only by one sprite only (default). 
         /// A positive value means that this deformation is or could be used for multiple sprites.
         /// This behaviour is not automatic, and has to be implemented for any particular case separately (currently only used in Limbs).
         /// </summary>
         public readonly int sync;
-        public readonly string typeName;
-        protected BlendMode blendMode;
+
+        public string TypeName
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(DeformationBlendMode.Add, true), Editable]
+        protected DeformationBlendMode BlendMode
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Defined in the shader.
         /// </summary>
         public static readonly Point shaderMaxResolution = new Point(15, 15);
 
+        private static readonly string[] deformationTypes = new string[] { "Inflate", "Custom", "Noise", "BendJoint", "ReactToTriggerers" };
+        public static IEnumerable<string> DeformationTypes
+        {
+            get { return deformationTypes; }
+        }
+
+        public static SpriteDeformation Load(string deformationType)
+        {
+            return Load(null, deformationType);
+        }
         public static SpriteDeformation Load(XElement element)
         {
-            string typeName = element.GetAttributeString("type", "");
+            return Load(element, null);
+        }
+
+        private static SpriteDeformation Load(XElement element, string deformationType)
+        {
+            string typeName = element == null ? deformationType : element.GetAttributeString("type", "");
+
+            SpriteDeformation newDeformation = null;
             switch (typeName.ToLowerInvariant())
             {
                 case "inflate":
-                    return new Inflate(element);
+                    newDeformation = new Inflate(element);
+                    break;
                 case "custom":
-                    return new CustomDeformation(element);
+                    newDeformation = new CustomDeformation(element);
+                    break;
                 case "noise":
-                    return new NoiseDeformation(element);
-                case "bezier":
-                    return new JointBendDeformation(element);
+                    newDeformation = new NoiseDeformation(element);
+                    break;
+                case "jointbend":
+                case "bendjoint":
+                    newDeformation = new JointBendDeformation(element);
+                    break;
                 case "reacttotriggerers":
                 default:
                     if (Enum.TryParse(typeName, out PositionalDeformation.ReactionType reactionType))
                     {
-                        return new PositionalDeformation(element)
+                        newDeformation = new PositionalDeformation(element)
                         {
                             Type = reactionType
                         };
@@ -68,21 +110,31 @@ namespace Barotrauma.SpriteDeformations
                     {
                         DebugConsole.ThrowError("Could not load sprite deformation animation - \"" + typeName + "\" is not a valid deformation type.");
                     }
-                    return null;
+                    break;
             }
+
+            if (newDeformation != null)
+            {
+                newDeformation.TypeName = typeName;
+            }
+            return newDeformation;
         }
 
         protected SpriteDeformation(XElement element)
         {
-            typeName = element.GetAttributeString("type", "").ToLowerInvariant();
-            sync = element.GetAttributeInt("sync", -1);
-            string blendModeStr = element.GetAttributeString("blendmode", "override");
-            if (!Enum.TryParse(blendModeStr, true, out blendMode))
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            TypeName = element.GetAttributeString("type", "").ToLowerInvariant();
+            if (element == null)
             {
-                DebugConsole.ThrowError("Error in SpriteDeformation - \""+blendModeStr+"\" is not a valid blend mode");
-                blendMode = BlendMode.Add;
+                sync = -1;
+                Resolution = new Point(2, 2);
             }
-            Resolution = element.GetAttributeVector2("resolution", Vector2.One * 2).ToPoint();
+            else
+            {
+                sync = element.GetAttributeInt("sync", -1);
+                Resolution = element.GetAttributeVector2("resolution", Vector2.One * 2).ToPoint();
+            }
+
         }
 
         protected abstract void GetDeformation(out Vector2[,] deformation, out float multiplier);
@@ -109,15 +161,15 @@ namespace Barotrauma.SpriteDeformations
                 {
                     for (int y = 0; y < resolution.Y; y++)
                     {
-                        switch (animation.blendMode)
+                        switch (animation.BlendMode)
                         {
-                            case BlendMode.Override:
+                            case DeformationBlendMode.Override:
                                 deformation[x,y] = animDeformation[x,y] * scale * multiplier;
                                 break;
-                            case BlendMode.Add:
+                            case DeformationBlendMode.Add:
                                 deformation[x, y] += animDeformation[x, y] * scale * multiplier;
                                 break;
-                            case BlendMode.Multiply:
+                            case DeformationBlendMode.Multiply:
                                 deformation[x, y] *= animDeformation[x, y] * multiplier;
                                 break;
                         }

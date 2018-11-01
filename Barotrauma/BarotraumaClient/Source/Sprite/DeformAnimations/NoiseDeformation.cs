@@ -5,20 +5,23 @@ namespace Barotrauma.SpriteDeformations
 {
     class NoiseDeformation : SpriteDeformation
     {
-        private float frequency;
-        private float amplitude;
-        private float changeSpeed;
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f,
+            ToolTip = "The frequency of the noise.")]
+        private float Frequency { get; set; }
 
+        [Serialize(1.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, 
+            ToolTip = "How much the noise distorts the sprite.")]
+        private float Amplitude { get; set; }
+
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f,
+            ToolTip = "How fast the noise changes.")]
+        private float ChangeSpeed { get; set; }
+        
         private float phase;
 
         public NoiseDeformation(XElement element) : base(element)
         {
-            frequency = element.GetAttributeFloat("frequency", 0.0f);
-            amplitude = element.GetAttributeFloat("amplitude", 1.0f);
-            changeSpeed = element.GetAttributeFloat("changespeed", 0.0f);
-
             phase = Rand.Range(0.0f, 255.0f);
-
             UpdateNoise();
         }
 
@@ -32,8 +35,8 @@ namespace Barotrauma.SpriteDeformations
                     float normalizedY = y / (float)(Resolution.X - 1);
                     
                     Deformation[x, y] = new Vector2(
-                        (float)PerlinNoise.Perlin(normalizedX * frequency, normalizedY * frequency, phase) - 0.5f,
-                        (float)PerlinNoise.Perlin(normalizedX * frequency, normalizedY * frequency, phase + 0.5f) - 0.5f);
+                        (float)PerlinNoise.Perlin(normalizedX * Frequency, normalizedY * Frequency, phase) - 0.5f,
+                        (float)PerlinNoise.Perlin(normalizedX * Frequency, normalizedY * Frequency, phase + 0.5f) - 0.5f);
                 }
             }
         }
@@ -41,14 +44,14 @@ namespace Barotrauma.SpriteDeformations
         protected override void GetDeformation(out Vector2[,] deformation, out float multiplier)
         {
             deformation = Deformation;
-            multiplier = amplitude;
+            multiplier = Amplitude;
         }
 
         public override void Update(float deltaTime)
         {
-            if (changeSpeed > 0.0f)
+            if (ChangeSpeed > 0.0f)
             {
-                phase += deltaTime * changeSpeed;
+                phase += deltaTime * ChangeSpeed;
                 phase %= 255;
                 UpdateNoise();
             }

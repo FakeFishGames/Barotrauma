@@ -20,35 +20,39 @@ namespace Barotrauma.SpriteDeformations
         /// 0 = no falloff, the entire sprite is stretched
         /// 1 = stretching the center of the sprite has no effect at the edges
         /// </summary>
-        private float falloff;
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, 
+            ToolTip = "0 = no falloff, the entire sprite is stretched, 1 = stretching the center of the sprite has no effect at the edges.")]
+        private float Falloff { get; set; }
 
         /// <summary>
         /// Maximum stretch per vertex (1 = the size of the sprite)
         /// </summary>
-        private float maxDeformation;
+        [Serialize(1.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, 
+            ToolTip = "Maximum stretch per vertex (1 = the size of the sprite)")]
+        private float MaxDeformation { get; set; }
+
 
         /// <summary>
         /// How fast the sprite reacts to being stretched
         /// </summary>
-        private float reactionSpeed;
+        [Serialize(1.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, 
+            ToolTip = "How fast the sprite reacts to being stretched")]
+        private float ReactionSpeed { get; set; }
 
         /// <summary>
         /// How fast the sprite returns back to normal after stretching ends
         /// </summary>
-        private float recoverSpeed;
+        [Serialize(0.1f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, 
+            ToolTip = "How fast the sprite returns back to normal after stretching ends")]
+        private float RecoverSpeed { get; set; }
 
         public PositionalDeformation(XElement element) : base(element)
         {
-            maxDeformation = element.GetAttributeFloat("maxdeformation", 1.0f);
-            falloff = element.GetAttributeFloat("falloff", 0.0f);
-
-            reactionSpeed = element.GetAttributeFloat("reactionspeed", 0.1f);
-            recoverSpeed = element.GetAttributeFloat("recoverspeed", 0.01f);
         }
 
         public override void Update(float deltaTime)
         {
-            if (recoverSpeed <= 0.0f) return;
+            if (RecoverSpeed <= 0.0f) return;
 
             for (int x = 0; x < Resolution.X; x++)
             {
@@ -61,7 +65,7 @@ namespace Barotrauma.SpriteDeformations
                     }
 
                     Vector2 reduction = Deformation[x, y];
-                    Deformation[x, y] -= reduction.ClampLength(recoverSpeed) * deltaTime;
+                    Deformation[x, y] -= reduction.ClampLength(RecoverSpeed) * deltaTime;
                 }
             }
         }
@@ -74,9 +78,9 @@ namespace Barotrauma.SpriteDeformations
             if (deformIndex.X < 0 || deformIndex.Y < 0) return;
             if (deformIndex.X >= Resolution.X || deformIndex.Y >= Resolution.Y) return;
 
-            amount = amount.ClampLength(maxDeformation);
+            amount = amount.ClampLength(MaxDeformation);
 
-            float invFalloff = 1.0f - falloff;
+            float invFalloff = 1.0f - Falloff;
 
             for (int x = 0; x < Resolution.X; x++)
             {
@@ -84,10 +88,10 @@ namespace Barotrauma.SpriteDeformations
                 for (int y = 0; y < Resolution.Y; y++)
                 {
                     float normalizedDiffY = Math.Abs(y - deformIndex.Y) / (Resolution.Y * 0.5f);
-                    Vector2 targetDeformation = amount * MathHelper.Clamp(1.0f - new Vector2(normalizedDiffX, normalizedDiffY).Length() * falloff, 0.0f, 1.0f);
+                    Vector2 targetDeformation = amount * MathHelper.Clamp(1.0f - new Vector2(normalizedDiffX, normalizedDiffY).Length() * Falloff, 0.0f, 1.0f);
 
                     Vector2 diff = targetDeformation - Deformation[x, y];
-                    Deformation[x, y] += diff.ClampLength(reactionSpeed) * deltaTime;
+                    Deformation[x, y] += diff.ClampLength(ReactionSpeed) * deltaTime;
                 }
             }            
         }

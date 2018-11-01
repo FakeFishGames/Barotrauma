@@ -8,31 +8,42 @@ namespace Barotrauma.SpriteDeformations
 {
     class CustomDeformation : SpriteDeformation
     {
-        private float frequency;
-        private float amplitude;
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, 
+            ToolTip = "How fast the deformation \"oscillates\" back and forth. "+
+            "For example, if the sprite is stretched up, setting this value above zero would make it do a wave-like movement up and down.")]
+        private float Frequency { get; set; }
+
+        [Serialize(1.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, 
+            ToolTip = "The \"strength\" of the deformation.")]
+        private float Amplitude { get; set; }
 
         private float phase;
 
         public CustomDeformation(XElement element) : base(element)
         {
-            frequency = element.GetAttributeFloat("frequency", 0.0f);
-            amplitude = element.GetAttributeFloat("amplitude", 1.0f);
-
             phase = Rand.Range(0.0f, MathHelper.TwoPi);
 
             List<Vector2[]> deformRows = new List<Vector2[]>();
-            for (int i = 0; ; i++)
+            if (element == null)
             {
-                string row = element.GetAttributeString("row" + i, "");
-                if (string.IsNullOrWhiteSpace(row)) break;
-
-                string[] splitRow = row.Split(' ');
-                Vector2[] rowVectors = new Vector2[splitRow.Length];
-                for (int j = 0; j < splitRow.Length; j++)
+                deformRows.Add(new Vector2[] { Vector2.Zero, Vector2.Zero });
+                deformRows.Add(new Vector2[] { Vector2.Zero, Vector2.Zero });
+            }
+            else
+            {
+                for (int i = 0; ; i++)
                 {
-                    rowVectors[j] = XMLExtensions.ParseVector2(splitRow[j]);
+                    string row = element.GetAttributeString("row" + i, "");
+                    if (string.IsNullOrWhiteSpace(row)) break;
+
+                    string[] splitRow = row.Split(' ');
+                    Vector2[] rowVectors = new Vector2[splitRow.Length];
+                    for (int j = 0; j < splitRow.Length; j++)
+                    {
+                        rowVectors[j] = XMLExtensions.ParseVector2(splitRow[j]);
+                    }
+                    deformRows.Add(rowVectors);
                 }
-                deformRows.Add(rowVectors);
             }
 
             if (deformRows.Count() == 0 || deformRows.First() == null || deformRows.First().Length == 0)
@@ -83,12 +94,12 @@ namespace Barotrauma.SpriteDeformations
         protected override void GetDeformation(out Vector2[,] deformation, out float multiplier)
         {
             deformation = Deformation;
-            multiplier = frequency <= 0.0f ? amplitude : (float)Math.Sin(phase) * amplitude;
+            multiplier = Frequency <= 0.0f ? Amplitude : (float)Math.Sin(phase) * Amplitude;
         }
 
         public override void Update(float deltaTime)
         {
-            phase += deltaTime * frequency;
+            phase += deltaTime * Frequency;
             phase %= MathHelper.TwoPi;
         }
     }

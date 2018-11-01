@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.SpriteDeformations;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -245,5 +246,38 @@ namespace Barotrauma
             indexBuffer?.Dispose();
             indexBuffer = null;
         }
+
+
+        #region Editing
+
+        public GUIComponent CreateEditor(GUIComponent parent, List<SpriteDeformation> deformations)
+        {
+            var container = new GUILayoutGroup(new RectTransform(Vector2.One, parent.RectTransform));
+
+            new GUITextBlock(new RectTransform(new Point(container.Rect.Width, 30), container.RectTransform), "Deformations");
+
+            foreach (SpriteDeformation deformation in deformations)
+            {
+                new SerializableEntityEditor(container.RectTransform, deformation, false, true);
+            }
+
+            new GUITextBlock(new RectTransform(new Point(container.Rect.Width, 30), container.RectTransform), "Add new");
+            var deformationDD = new GUIDropDown(new RectTransform(new Point(container.Rect.Width, 30), container.RectTransform))
+            {
+                OnSelected = (selected, userdata) =>
+                {
+                    deformations.Add(SpriteDeformation.Load((string)userdata));
+                    return false;
+                }
+            };
+            foreach (string deformationType in SpriteDeformation.DeformationTypes)
+            {
+                deformationDD.AddItem(deformationType, deformationType);
+            }
+
+            return container;
+        }
+
+        #endregion
     }
 }
