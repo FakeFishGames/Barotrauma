@@ -6,22 +6,31 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma.SpriteDeformations
 {
-    class CustomDeformation : SpriteDeformation
+    class CustomDeformationParams : SpriteDeformationParams
     {
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, 
-            ToolTip = "How fast the deformation \"oscillates\" back and forth. "+
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f,
+            ToolTip = "How fast the deformation \"oscillates\" back and forth. " +
             "For example, if the sprite is stretched up, setting this value above zero would make it do a wave-like movement up and down.")]
         public float Frequency { get; set; }
 
-        [Serialize(1.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, 
+        [Serialize(1.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f,
             ToolTip = "The \"strength\" of the deformation.")]
         public float Amplitude { get; set; }
 
+        public CustomDeformationParams(XElement element) : base(element)
+        {
+        }
+    }
+
+    class CustomDeformation : SpriteDeformation
+    {
         private List<Vector2[]> deformRows = new List<Vector2[]>();
+
+        private CustomDeformationParams CustomDeformationParams => deformationParams as CustomDeformationParams;
 
         private float phase;
 
-        public CustomDeformation(XElement element) : base(element)
+        public CustomDeformation(XElement element) : base(element, new CustomDeformationParams(element))
         {
             phase = Rand.Range(0.0f, MathHelper.TwoPi);
 
@@ -95,12 +104,14 @@ namespace Barotrauma.SpriteDeformations
         protected override void GetDeformation(out Vector2[,] deformation, out float multiplier)
         {
             deformation = Deformation;
-            multiplier = Frequency <= 0.0f ? Amplitude : (float)Math.Sin(phase) * Amplitude;
+            multiplier = CustomDeformationParams.Frequency <= 0.0f ? 
+                CustomDeformationParams.Amplitude : 
+                (float)Math.Sin(phase) * CustomDeformationParams.Amplitude;
         }
 
         public override void Update(float deltaTime)
         {
-            phase += deltaTime * Frequency;
+            phase += deltaTime * CustomDeformationParams.Frequency;
             phase %= MathHelper.TwoPi;
         }
 

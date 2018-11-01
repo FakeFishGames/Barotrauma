@@ -4,6 +4,13 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma.SpriteDeformations
 {
+    class JointBendDeformationParams : SpriteDeformationParams
+    {
+        public JointBendDeformationParams(XElement element) : base(element)
+        {
+        }
+    }
+
     /// <summary>
     /// Does a rotational deformations around pivot points at the edges of the sprite.
     /// </summary>
@@ -47,7 +54,7 @@ namespace Barotrauma.SpriteDeformations
 
         private float maxRotation;
 
-        public JointBendDeformation(XElement element) : base(element)
+        public JointBendDeformation(XElement element) : base(element, new JointBendDeformationParams(element))
         {
             maxRotation = MathHelper.ToRadians(element == null ? 90.0f : element.GetAttributeFloat("maxrotation", 90.0f));
         }

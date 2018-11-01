@@ -4,18 +4,27 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma.SpriteDeformations
 {
-    class Inflate : SpriteDeformation
+    class InflateParams : SpriteDeformationParams
     {
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
         public float Frequency { get; set; }
         [Serialize(1.0f, true), Editable(MinValueFloat = 0.01f, MaxValueFloat = 10.0f)]
         public float Scale { get; set; }
 
+        public InflateParams(XElement element) : base(element)
+        {
+        }
+    }
+
+    class Inflate : SpriteDeformation
+    {
         private float phase;
 
         private Vector2[,] deformation;
 
-        public Inflate(XElement element) : base(element)
+        private InflateParams InflateParams => deformationParams as InflateParams;
+
+        public Inflate(XElement element) : base(element, new InflateParams(element))
         {
             deformation = new Vector2[Resolution.X, Resolution.Y];
             for (int x = 0; x < Resolution.X; x++)
@@ -39,12 +48,12 @@ namespace Barotrauma.SpriteDeformations
         protected override void GetDeformation(out Vector2[,] deformation, out float multiplier)
         {
             deformation = this.deformation;
-            multiplier = Frequency <= 0.0f ? Scale : (float)(Math.Sin(phase) + 1.0f) / 2.0f * Scale;
+            multiplier = InflateParams.Frequency <= 0.0f ? InflateParams.Scale : (float)(Math.Sin(phase) + 1.0f) / 2.0f * InflateParams.Scale;
         }
 
         public override void Update(float deltaTime)
         {
-            phase += deltaTime * Frequency;
+            phase += deltaTime * InflateParams.Frequency;
             phase %= MathHelper.TwoPi;
         }
     }
