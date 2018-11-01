@@ -114,6 +114,10 @@ namespace Barotrauma
                     GameMain.LightManager.ClearLights();
                     Level.CreateRandom(seedBox.Text, generationParams: selectedParams).Generate(mirror: false);
                     cam.Position = new Vector2(Level.Loaded.Size.X / 2, Level.Loaded.Size.Y / 2);
+                    foreach (GUITextBlock param in paramsList.Content.Children)
+                    {
+                        param.TextColor = param.UserData == selectedParams ? Color.LightGreen : param.Style.textColor;
+                    }
                     return true;
                 }
             };
@@ -412,7 +416,7 @@ namespace Barotrauma
 
         public override void Update(double deltaTime)
         {
-            cam.MoveCamera((float)deltaTime);
+            cam.MoveCamera((float)deltaTime, allowZoom: GUI.MouseOn == null);
             cam.UpdateTransform();
             Level.Loaded?.Update((float)deltaTime, cam);
 

@@ -7,38 +7,8 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma.SpriteDeformations
 {
-    abstract class SpriteDeformation : ISerializableEntity
+    abstract class SpriteDeformationParams : ISerializableEntity
     {
-        public enum DeformationBlendMode
-        {
-            Add, 
-            Multiply,
-            Override
-        }
-
-        protected Vector2[,] Deformation { get; private set; }
-        private Point _resolution;
-        
-        [Serialize("2,2", true), Editable]
-        public Point Resolution
-        {
-            get { return _resolution;}
-            set
-            {
-                if (_resolution == value) { return; }
-                _resolution = value.Clamp(new Point(2, 2), shaderMaxResolution);
-                Deformation = new Vector2[_resolution.X, _resolution.Y];
-            }
-        }
-
-        public string Name => GetType().Name;
-
-        public Dictionary<string, SerializableProperty> SerializableProperties
-        {
-            get;
-            private set;
-        }
-
         /// <summary>
         /// A negative value means that the deformation is used only by one sprite only (default). 
         /// A positive value means that this deformation is or could be used for multiple sprites.
@@ -55,14 +25,22 @@ namespace Barotrauma.SpriteDeformations
         public string TypeName
         {
             get;
-            private set;
+            set;
         }
 
-        [Serialize(DeformationBlendMode.Add, true), Editable]
-        public DeformationBlendMode BlendMode
+        [Serialize(SpriteDeformation.DeformationBlendMode.Add, true), Editable]
+        public SpriteDeformation.DeformationBlendMode BlendMode
         {
             get;
             set;
+        }
+
+        public string Name => GetType().Name;
+
+        public Dictionary<string, SerializableProperty> SerializableProperties
+        {
+            get;
+            private set;
         }
 
         /// <summary>
@@ -70,11 +48,63 @@ namespace Barotrauma.SpriteDeformations
         /// </summary>
         public static readonly Point shaderMaxResolution = new Point(15, 15);
 
+        private Point _resolution;
+        [Serialize("2,2", true), Editable]
+        public Point Resolution
+        {
+            get { return _resolution; }
+            set
+            {
+                if (_resolution == value) { return; }
+                _resolution = value.Clamp(new Point(2, 2), shaderMaxResolution);
+                //Deformation = new Vector2[_resolution.X, _resolution.Y];
+            }
+        }
+
+        public SpriteDeformationParams(XElement element)
+        {
+            if (element != null)
+            {
+                TypeName = element.GetAttributeString("type", "").ToLowerInvariant();
+            }
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+        }
+    }
+
+    abstract class SpriteDeformation
+    {
+        public enum DeformationBlendMode
+        {
+            Add, 
+            Multiply,
+            Override
+        }
+
+        protected Vector2[,] Deformation { get; private set; }
+
+        protected SpriteDeformationParams deformationParams;
+
         private static readonly string[] deformationTypes = new string[] { "Inflate", "Custom", "Noise", "BendJoint", "ReactToTriggerers" };
         public static IEnumerable<string> DeformationTypes
         {
             get { return deformationTypes; }
         }
+
+        public Point Resolution
+        {
+            get { return deformationParams.Resolution; }
+            set { deformationParams.Resolution = value; }
+        }
+
+        public SpriteDeformationParams DeformationParams
+        {
+            get { return deformationParams; }
+            set { deformationParams = value; }
+        }
+
+        public string TypeName => deformationParams.TypeName;
+
+        public int Sync => deformationParams.Sync;
 
         public static SpriteDeformation Load(string deformationType)
         {
@@ -128,24 +158,16 @@ namespace Barotrauma.SpriteDeformations
 
             if (newDeformation != null)
             {
-                newDeformation.TypeName = typeName;
+                newDeformation.deformationParams.TypeName = typeName;
             }
             return newDeformation;
         }
 
-        protected SpriteDeformation(XElement element)
+        protected SpriteDeformation(XElement element, SpriteDeformationParams deformationParams)
         {
-            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
-            TypeName = element.GetAttributeString("type", "").ToLowerInvariant();
-            if (element == null)
-            {
-                Resolution = new Point(2, 2);
-            }
-            else
-            {
-                Resolution = element.GetAttributeVector2("resolution", Vector2.One * 2).ToPoint();
-            }
-
+            this.deformationParams = deformationParams;
+            SerializableProperty.DeserializeProperties(deformationParams, element);
+            Deformation = Deformation = new Vector2[deformationParams.Resolution.X, deformationParams.Resolution.Y];
         }
 
         protected abstract void GetDeformation(out Vector2[,] deformation, out float multiplier);
@@ -172,7 +194,7 @@ namespace Barotrauma.SpriteDeformations
                 {
                     for (int y = 0; y < resolution.Y; y++)
                     {
-                        switch (animation.BlendMode)
+                        switch (animation.deformationParams.BlendMode)
                         {
                             case DeformationBlendMode.Override:
                                 deformation[x,y] = animDeformation[x,y] * scale * multiplier;
@@ -192,7 +214,7 @@ namespace Barotrauma.SpriteDeformations
 
         public virtual void Save(XElement element)
         {
-            SerializableProperty.SerializeProperties(this, element);
+            SerializableProperty.SerializeProperties(deformationParams, element);
         }
     }
 }

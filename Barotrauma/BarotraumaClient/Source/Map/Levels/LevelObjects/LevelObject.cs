@@ -103,7 +103,7 @@ namespace Barotrauma
                         Triggers[Prefab.LightSourceTriggerIndex[i]] : null;
                 }
             }
-            
+
             Sounds = new RoundSound[Prefab.Sounds.Count];
             SoundChannels = new SoundChannel[Prefab.Sounds.Count];
             SoundTriggers = new LevelTrigger[Prefab.Sounds.Count];
@@ -113,16 +113,20 @@ namespace Barotrauma
                 SoundTriggers[i] = Prefab.Sounds[i].TriggerIndex > -1 ? Triggers[Prefab.Sounds[i].TriggerIndex] : null;
             }
 
+            int j = 0;
             foreach (XElement subElement in Prefab.Config.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() == "deformablesprite")
+                if (subElement.Name.ToString().ToLowerInvariant() != "deformablesprite") continue;                
+                foreach (XElement animationElement in subElement.Elements())
                 {
-                    foreach (XElement animationElement in subElement.Elements())
+                    var newDeformation = SpriteDeformation.Load(animationElement);
+                    if (newDeformation != null)
                     {
-                        var newDeformation = SpriteDeformation.Load(animationElement);
-                        if (newDeformation != null) spriteDeformations.Add(newDeformation);
+                        newDeformation.DeformationParams = Prefab.SpriteDeformations[j].DeformationParams;
+                        spriteDeformations.Add(newDeformation);
+                        j++;
                     }
-                }
+                }                
             }
         }
 
