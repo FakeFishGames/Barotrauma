@@ -308,6 +308,11 @@ namespace Barotrauma
             return str.ToString();
         }
 
+        public static string PointToString(Point point)
+        {
+            return point.X.ToString() + "," + point.Y.ToString();
+        }
+
         public static string Vector2ToString(Vector2 vector)
         {
             return vector.X.ToString("G", CultureInfo.InvariantCulture) + "," + vector.Y.ToString("G", CultureInfo.InvariantCulture);

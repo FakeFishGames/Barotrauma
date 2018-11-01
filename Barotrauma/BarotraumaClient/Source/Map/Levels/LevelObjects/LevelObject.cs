@@ -70,7 +70,7 @@ namespace Barotrauma
 
         partial void InitProjSpecific()
         {
-            CurrentSwingAmount = Prefab.SwingAmount;
+            CurrentSwingAmount = Prefab.SwingAmountRad;
             CurrentScaleOscillation = Prefab.ScaleOscillation;
 
             SwingTimer = Rand.Range(0.0f, MathHelper.TwoPi);
@@ -146,11 +146,11 @@ namespace Barotrauma
                 SwingTimer = SwingTimer % MathHelper.TwoPi;
                 //lerp the swing amount to the correct value to prevent it from abruptly changing to a different value
                 //when a trigger changes the swing amoung
-                CurrentSwingAmount = MathHelper.Lerp(CurrentSwingAmount, ActivePrefab.SwingAmount, deltaTime * 10.0f);
-                
-                if (ActivePrefab.SwingAmount > 0.0f)
+                CurrentSwingAmount = MathHelper.Lerp(CurrentSwingAmount, ActivePrefab.SwingAmountRad, deltaTime * 10.0f);
+
+                if (ActivePrefab.SwingAmountRad > 0.0f)
                 {
-                    CurrentRotation +=(float)Math.Sin(SwingTimer) * CurrentSwingAmount;
+                    CurrentRotation += (float)Math.Sin(SwingTimer) * CurrentSwingAmount;
                 }
             }
 

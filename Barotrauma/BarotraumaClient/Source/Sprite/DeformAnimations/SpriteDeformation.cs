@@ -18,6 +18,8 @@ namespace Barotrauma.SpriteDeformations
 
         protected Vector2[,] Deformation { get; private set; }
         private Point _resolution;
+        
+        [Serialize("2,2", true), Editable]
         public Point Resolution
         {
             get { return _resolution;}
@@ -29,7 +31,7 @@ namespace Barotrauma.SpriteDeformations
             }
         }
 
-        public string Name => GetType().ToString();
+        public string Name => GetType().Name;
 
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
@@ -42,8 +44,14 @@ namespace Barotrauma.SpriteDeformations
         /// A positive value means that this deformation is or could be used for multiple sprites.
         /// This behaviour is not automatic, and has to be implemented for any particular case separately (currently only used in Limbs).
         /// </summary>
-        public readonly int sync;
+        [Serialize(-1, true)]
+        public int Sync
+        {
+            get;
+            private set;
+        }
 
+        [Serialize("", true)]
         public string TypeName
         {
             get;
@@ -51,7 +59,7 @@ namespace Barotrauma.SpriteDeformations
         }
 
         [Serialize(DeformationBlendMode.Add, true), Editable]
-        protected DeformationBlendMode BlendMode
+        public DeformationBlendMode BlendMode
         {
             get;
             set;
@@ -79,8 +87,13 @@ namespace Barotrauma.SpriteDeformations
 
         private static SpriteDeformation Load(XElement element, string deformationType)
         {
-            string typeName = element == null ? deformationType : element.GetAttributeString("type", "");
+            string typeName = deformationType;
 
+            if (element != null)
+            {
+                typeName = element.GetAttributeString("typename", null) ?? element.GetAttributeString("type", "");
+            }
+            
             SpriteDeformation newDeformation = null;
             switch (typeName.ToLowerInvariant())
             {
@@ -126,12 +139,10 @@ namespace Barotrauma.SpriteDeformations
             TypeName = element.GetAttributeString("type", "").ToLowerInvariant();
             if (element == null)
             {
-                sync = -1;
                 Resolution = new Point(2, 2);
             }
             else
             {
-                sync = element.GetAttributeInt("sync", -1);
                 Resolution = element.GetAttributeVector2("resolution", Vector2.One * 2).ToPoint();
             }
 
@@ -177,6 +188,11 @@ namespace Barotrauma.SpriteDeformations
                 }
             }
             return deformation;
+        }
+
+        public virtual void Save(XElement element)
+        {
+            SerializableProperty.SerializeProperties(this, element);
         }
     }
 }

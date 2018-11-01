@@ -106,7 +106,7 @@ namespace Barotrauma
                 {
                     rotation = MathUtils.VectorToAngle(new Vector2(spawnPosition.Normal.Y, spawnPosition.Normal.X));
                 }
-                rotation += Rand.Range(prefab.RandomRotation.X, prefab.RandomRotation.Y, Rand.RandSync.Server);
+                rotation += Rand.Range(prefab.RandomRotationRad.X, prefab.RandomRotationRad.Y, Rand.RandSync.Server);
 
                 Vector2 position = Vector2.Zero;
                 Vector2 edgeDir = Vector2.UnitX;
@@ -141,7 +141,7 @@ namespace Barotrauma
                         var childObject = new LevelObject(childPrefab,
                             new Vector3(childPos, Rand.Range(childPrefab.DepthRange.X, childPrefab.DepthRange.Y, Rand.RandSync.Server)),
                             Rand.Range(childPrefab.MinSize, childPrefab.MaxSize, Rand.RandSync.Server),
-                            rotation + Rand.Range(childPrefab.RandomRotation.X, childPrefab.RandomRotation.Y, Rand.RandSync.Server));
+                            rotation + Rand.Range(childPrefab.RandomRotationRad.X, childPrefab.RandomRotationRad.Y, Rand.RandSync.Server));
 
                         AddObject(childObject, level);
                     }

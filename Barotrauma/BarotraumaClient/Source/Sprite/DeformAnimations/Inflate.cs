@@ -7,9 +7,9 @@ namespace Barotrauma.SpriteDeformations
     class Inflate : SpriteDeformation
     {
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
-        private float Frequency { get; set; }
+        public float Frequency { get; set; }
         [Serialize(1.0f, true), Editable(MinValueFloat = 0.01f, MaxValueFloat = 10.0f)]
-        private float Scale { get; set; }
+        public float Scale { get; set; }
 
         private float phase;
 

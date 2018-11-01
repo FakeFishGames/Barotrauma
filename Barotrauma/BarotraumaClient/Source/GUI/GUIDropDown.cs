@@ -74,6 +74,12 @@ namespace Barotrauma
             get { return selectedIndexMultiple; }
         }
 
+        public string Text
+        {
+            get { return button.Text; }
+            set { button.Text = value; }
+        }
+
         public override string ToolTip
         {
             get

@@ -11,11 +11,13 @@ namespace Barotrauma.SpriteDeformations
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, 
             ToolTip = "How fast the deformation \"oscillates\" back and forth. "+
             "For example, if the sprite is stretched up, setting this value above zero would make it do a wave-like movement up and down.")]
-        private float Frequency { get; set; }
+        public float Frequency { get; set; }
 
         [Serialize(1.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, 
             ToolTip = "The \"strength\" of the deformation.")]
-        private float Amplitude { get; set; }
+        public float Amplitude { get; set; }
+
+        private List<Vector2[]> deformRows = new List<Vector2[]>();
 
         private float phase;
 
@@ -23,7 +25,6 @@ namespace Barotrauma.SpriteDeformations
         {
             phase = Rand.Range(0.0f, MathHelper.TwoPi);
 
-            List<Vector2[]> deformRows = new List<Vector2[]>();
             if (element == null)
             {
                 deformRows.Add(new Vector2[] { Vector2.Zero, Vector2.Zero });
@@ -101,6 +102,15 @@ namespace Barotrauma.SpriteDeformations
         {
             phase += deltaTime * Frequency;
             phase %= MathHelper.TwoPi;
+        }
+
+        public override void Save(XElement element)
+        {
+            base.Save(element);
+            for (int i = 0; i < deformRows.Count; i++)
+            {
+                element.Add(new XAttribute("row" + i, string.Join(" ", deformRows[i].Select(r => XMLExtensions.Vector2ToString(r)))));
+            }
         }
     }
 }
