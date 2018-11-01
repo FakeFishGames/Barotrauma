@@ -295,7 +295,7 @@ namespace Barotrauma
                     child.State = ComponentState.Hover;
                     if (PlayerInput.LeftButtonClicked())
                     {
-                        Select(i);
+                        Select(i, autoScroll: false);
                     }
                 }
                 else if (selected.Contains(child))
@@ -395,7 +395,7 @@ namespace Barotrauma
             }
         }
 
-        public void Select(int childIndex, bool force = false)
+        public void Select(int childIndex, bool force = false, bool autoScroll = true)
         {
             if (childIndex >= Content.CountChildren || childIndex < 0) return;
 
@@ -422,11 +422,38 @@ namespace Barotrauma
                 selected.Clear();
                 selected.Add(child);
             }
+
             // Ensure that the selected element is visible. This may not be the case, if the selection is run from code. (e.g. if we have two list boxes that are synced)
-            if (!MouseRect.Contains(child.Rect))
+            if (autoScroll)
             {
-                ScrollBar.BarScroll = MathHelper.Lerp(ScrollBar.MinValue, ScrollBar.MaxValue, MathUtils.InverseLerp(0, Content.CountChildren - 1, childIndex));
+                if (ScrollBar.IsHorizontal)
+                {
+                    if (child.Rect.X < MouseRect.X)
+                    {
+                        //child outside the left edge of the frame -> move left
+                        ScrollBar.BarScroll -= (float)(MouseRect.X - child.Rect.X) / (totalSize - Content.Rect.Width);
+                    }
+                    else if (child.Rect.Right > MouseRect.Right)
+                    {
+                        //child outside the right edge of the frame -> move right
+                        ScrollBar.BarScroll += (float)(child.Rect.Right - MouseRect.Right) / (totalSize - Content.Rect.Width);
+                    }
+                }
+                else
+                {
+                    if (child.Rect.Y < MouseRect.Y)
+                    {
+                        //child above the top of the frame -> move up
+                        ScrollBar.BarScroll -= (float)(MouseRect.Y - child.Rect.Y) / (totalSize - Content.Rect.Height);
+                    }
+                    else if (child.Rect.Bottom > MouseRect.Bottom)
+                    {
+                        //child below the bottom of the frame -> move down
+                        ScrollBar.BarScroll += (float)(child.Rect.Bottom - MouseRect.Bottom) / (totalSize - Content.Rect.Height);
+                    }
+                }
             }
+
             // If one of the children is the subscriber, we don't want to register, because it will unregister the child.
             if (RectTransform.GetAllChildren().None(rt => rt.GUIComponent == GUI.KeyboardDispatcher.Subscriber))
             {
