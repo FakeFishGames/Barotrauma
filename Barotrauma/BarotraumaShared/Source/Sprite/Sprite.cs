@@ -53,10 +53,31 @@ namespace Barotrauma
             set { depth = MathHelper.Clamp(value, 0.001f, 0.999f); }
         }
 
+        /// <summary>
+        /// In pixels
+        /// </summary>
         public Vector2 Origin
         {
             get { return origin; }
-            set { origin = value; }
+            set
+            {
+                origin = value;
+                _relativeOrigin = Vector2.Clamp(new Vector2(origin.X / sourceRect.Width, origin.Y / sourceRect.Height), Vector2.Zero, Vector2.One);
+            }
+        }
+
+        private Vector2 _relativeOrigin;
+        /// <summary>
+        /// 0 - 1
+        /// </summary>
+        public Vector2 RelativeOrigin
+        {
+            get => _relativeOrigin;
+            set
+            {
+                _relativeOrigin = Vector2.Clamp(value, Vector2.Zero, Vector2.One);
+                origin = new Vector2(_relativeOrigin.X * sourceRect.Width, _relativeOrigin.Y * sourceRect.Height);
+            }
         }
         
         public string FilePath
@@ -104,13 +125,11 @@ namespace Barotrauma
                 (int)sourceVector.X, (int)sourceVector.Y,
                 (int)sourceVector.Z, (int)sourceVector.W);
 
-            origin = element.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
-            origin.X = origin.X * sourceRect.Width;
-            origin.Y = origin.Y * sourceRect.Height;
-
             size = element.GetAttributeVector2("size", Vector2.One);
             size.X *= sourceRect.Width;
             size.Y *= sourceRect.Height;
+
+            RelativeOrigin = element.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
 
             Depth = element.GetAttributeFloat("depth", 0.001f);
 
@@ -121,13 +140,11 @@ namespace Barotrauma
         {
             SourceElement = spriteParams.Element;
             sourceRect = spriteParams.SourceRect;
-            origin = spriteParams.Origin;
-            origin.X = origin.X * sourceRect.Width;
+            RelativeOrigin = spriteParams.Origin;
             if (isFlipped)
             {
                 origin.X = sourceRect.Width - origin.X;
             }
-            origin.Y = origin.Y * sourceRect.Height;
             depth = spriteParams.Depth;
             // TODO: size?
         }
@@ -161,7 +178,7 @@ namespace Barotrauma
             offset = newOffset ?? Vector2.Zero;
             if (newOrigin.HasValue)
             {
-                origin = new Vector2(sourceRect.Width * newOrigin.Value.X, sourceRect.Height * newOrigin.Value.Y);
+                RelativeOrigin = newOrigin.Value;
             }
             size = new Vector2(sourceRect.Width, sourceRect.Height);
             rotation = newRotation;
