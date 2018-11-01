@@ -1001,6 +1001,7 @@ namespace Barotrauma
             if (ImpactTolerance > 0.0f && impact > ImpactTolerance)
             {
                 ApplyStatusEffects(ActionType.OnImpact, 1.0f);
+                GameMain.Server?.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact });
             }
 
             var containedItems = ContainedItems;
