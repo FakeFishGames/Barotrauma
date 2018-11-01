@@ -50,69 +50,42 @@ namespace Barotrauma
             {
                 jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorA.X, LocalAnchorA.Y) / jointParams.Ragdoll.JointScale);
                 jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorB.X, LocalAnchorB.Y) / jointParams.Ragdoll.JointScale);
-                if (!float.IsNaN(jointParams.LowerLimit))
-                {
-                    jointParams.UpperLimit = MathHelper.ToDegrees(-LowerLimit);
-                }
-                if (!float.IsNaN(jointParams.UpperLimit))
-                {
-                    jointParams.LowerLimit = MathHelper.ToDegrees(-UpperLimit);
-                }
+                jointParams.UpperLimit = MathHelper.ToDegrees(-LowerLimit);
+                jointParams.LowerLimit = MathHelper.ToDegrees(-UpperLimit);
             }
             else
             {
                 jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorA / jointParams.Ragdoll.JointScale);
                 jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorB / jointParams.Ragdoll.JointScale);
-                if (!float.IsNaN(jointParams.UpperLimit))
-                {
-                    jointParams.UpperLimit = MathHelper.ToDegrees(UpperLimit);
-                }
-                if (!float.IsNaN(jointParams.LowerLimit))
-                {
-                    jointParams.LowerLimit = MathHelper.ToDegrees(LowerLimit);
-                }
+                jointParams.UpperLimit = MathHelper.ToDegrees(UpperLimit);
+                jointParams.LowerLimit = MathHelper.ToDegrees(LowerLimit);
             }
         }
 
         public void LoadParams()
         {
-            // If neither of the limits have been defined, disable the limits
-            if (float.IsNaN(jointParams.LowerLimit) && float.IsNaN(jointParams.UpperLimit))
-            {
-                jointParams.LimitEnabled = false;
-            }
             LimitEnabled = jointParams.LimitEnabled;
-            if (LimitEnabled)
+            if (float.IsNaN(jointParams.LowerLimit))
             {
-                // If limits are enabled, don't allow NaN
-                if (float.IsNaN(jointParams.LowerLimit))
-                {
-                    jointParams.LowerLimit = 0;
-                }
-                if (float.IsNaN(jointParams.UpperLimit))
-                {
-                    jointParams.UpperLimit = 0;
-                }
+                jointParams.LowerLimit = 0;
+            }
+            if (float.IsNaN(jointParams.UpperLimit))
+            {
+                jointParams.UpperLimit = 0;
             }
             if (ragdoll.IsFlipped)
             {
                 LocalAnchorA = ConvertUnits.ToSimUnits(new Vector2(-jointParams.Limb1Anchor.X, jointParams.Limb1Anchor.Y) * jointParams.Ragdoll.JointScale);
                 LocalAnchorB = ConvertUnits.ToSimUnits(new Vector2(-jointParams.Limb2Anchor.X, jointParams.Limb2Anchor.Y) * jointParams.Ragdoll.JointScale);
-                if (!float.IsNaN(jointParams.LowerLimit) && !float.IsNaN(jointParams.UpperLimit))
-                {
-                    UpperLimit = MathHelper.ToRadians(-jointParams.LowerLimit);
-                    LowerLimit = MathHelper.ToRadians(-jointParams.UpperLimit);
-                }
+                UpperLimit = MathHelper.ToRadians(-jointParams.LowerLimit);
+                LowerLimit = MathHelper.ToRadians(-jointParams.UpperLimit);
             }
             else
             {
                 LocalAnchorA = ConvertUnits.ToSimUnits(jointParams.Limb1Anchor * jointParams.Ragdoll.JointScale);
                 LocalAnchorB = ConvertUnits.ToSimUnits(jointParams.Limb2Anchor * jointParams.Ragdoll.JointScale);
-                if (!float.IsNaN(jointParams.LowerLimit) && !float.IsNaN(jointParams.UpperLimit))
-                {
-                    UpperLimit = MathHelper.ToRadians(jointParams.UpperLimit);
-                    LowerLimit = MathHelper.ToRadians(jointParams.LowerLimit);
-                }
+                UpperLimit = MathHelper.ToRadians(jointParams.UpperLimit);
+                LowerLimit = MathHelper.ToRadians(jointParams.LowerLimit);
             }
         }
     }
