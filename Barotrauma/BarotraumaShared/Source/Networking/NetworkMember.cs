@@ -203,11 +203,6 @@ namespace Barotrauma.Networking
 
         public virtual void Update(float deltaTime) 
         {
-            if (gameStarted && Screen.Selected == GameMain.GameScreen)
-            {
-                GameMain.GameSession.CrewManager.Update(deltaTime);
-            }
-
 #if CLIENT
             UpdateHUD(deltaTime);            
 #endif
