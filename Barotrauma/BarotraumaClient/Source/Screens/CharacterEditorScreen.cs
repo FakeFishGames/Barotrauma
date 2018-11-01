@@ -2007,7 +2007,7 @@ namespace Barotrauma
                     GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.Red);
                     GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.Red);
                 }
-                if (MathUtils.RectangleContainsPoint(corners, PlayerInput.MousePosition))
+                if (MathUtils.RectangleContainsPoint(corners, PlayerInput.MousePosition) && GUI.MouseOn == null)
                 {
                     // Select limbs
                     if (PlayerInput.LeftButtonDown())
@@ -2396,7 +2396,7 @@ namespace Barotrauma
                         //var bottomLeft = new Vector2(topLeft.X, bottomRight.Y);
                         // Select limbs
                         bool isMouseOnRect = rect.Contains(PlayerInput.MousePosition);
-                        if (isMouseOnRect)
+                        if (isMouseOnRect && GUI.MouseOn == null)
                         {
                             if (PlayerInput.LeftButtonDown() && selectedWidget == null)
                             {
@@ -2420,7 +2420,7 @@ namespace Barotrauma
                         }
                         if (selectedLimbs.Contains(limb))
                         {
-                            if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && isMouseOnRect && selectedWidget == null)
+                            if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && isMouseOnRect && selectedWidget == null && GUI.MouseOn == null)
                             {
                                 var input = scaledMouseSpeed / spriteSheetZoom;
                                 input.X *= character.AnimController.Dir;
@@ -3363,14 +3363,31 @@ namespace Barotrauma
                         var rectInputs = GetField("Source Rect").Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).Reverse().ToArray();
                         int width = rectInputs[2].IntValue;
                         int height = rectInputs[3].IntValue;
+                        var colliderAttributes = new List<XAttribute>();
+                        if (width == height)
+                        {
+                            colliderAttributes.Add(new XAttribute("radius", width / 2));
+                        }
+                        else
+                        {
+                            if (height > width)
+                            {
+                                colliderAttributes.Add(new XAttribute("radius", width / 2));
+                                colliderAttributes.Add(new XAttribute("height", (int)Math.Round(height * 0.75f)));
+                            }
+                            else
+                            {
+                                colliderAttributes.Add(new XAttribute("radius", height / 2));
+                                colliderAttributes.Add(new XAttribute("width", (int)Math.Round(width * 0.75f)));
+                            }
+                        }
                         string notes = string.Empty;
                         idToCodeName.TryGetValue(id, out notes);
                         LimbXElements.Add(id.ToString(), new XElement("limb",
                             new XAttribute("id", id),
                             new XAttribute("name", limbName),
                             new XAttribute("type", limbType.ToString()),
-                            new XAttribute("width", width),
-                            new XAttribute("height", height),
+                            colliderAttributes,
                             new XElement("sprite",
                                 new XAttribute("texture", TexturePath),
                                 new XAttribute("sourcerect", $"{rectInputs[0].IntValue}, {rectInputs[1].IntValue}, {width}, {height}")),
@@ -3466,8 +3483,6 @@ namespace Barotrauma
                                 new XAttribute("id", id),
                                 new XAttribute("name", limbName),
                                 new XAttribute("type", ParseLimbType(limbName).ToString()),
-                                new XAttribute("width", width),
-                                new XAttribute("height", height),
                                 new XElement("sprite",
                                     new XAttribute("texture", TexturePath),
                                     new XAttribute("sourcerect", $"{x}, {y}, {width}, {height}"))
