@@ -305,13 +305,16 @@ namespace Barotrauma
                 itemEditor.AddCustomContent(itemsText, 2);
                 linkText.TextColor = Color.Yellow;
                 itemsText.TextColor = Color.Yellow;
+            }
+            if (!inGame && Sprite != null)
+            {
                 var reloadTextureButton = new GUIButton(new RectTransform(new Point(editingHUD.Rect.Width / 2, 20)), "Reload Texture");
                 reloadTextureButton.OnClicked += (button, data) =>
                 {
                     Sprite.ReloadTexture();
                     return true;
                 };
-                itemEditor.AddCustomContent(reloadTextureButton, 9);
+                itemEditor.AddCustomContent(reloadTextureButton, itemEditor.ContentCount);
             }            
 
             foreach (ItemComponent ic in components)
