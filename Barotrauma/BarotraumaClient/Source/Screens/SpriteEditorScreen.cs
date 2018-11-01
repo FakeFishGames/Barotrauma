@@ -84,6 +84,10 @@ namespace Barotrauma
                         var element = sprite.SourceElement;
                         if (element == null) { continue; }
                         sprite.SourceRect = element.GetAttributeRect("sourcerect", sprite.SourceRect);
+                        sprite.Origin = element.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
+                        sprite.Origin = new Vector2(
+                            sprite.Origin.X * sprite.SourceRect.Width,
+                            sprite.Origin.Y * sprite.SourceRect.Height);
                     }
                     widgets.Clear();
                     xmlPathText.Text = "Changes successfully reset";
@@ -94,7 +98,7 @@ namespace Barotrauma
             new GUIButton(new RectTransform(new Vector2(0.12f, 0.4f), topPanelContents.RectTransform, Anchor.TopLeft)
             {
                 RelativeOffset = new Vector2(0.15f, 0.1f)
-            }, "Save Selected Source Rects")
+            }, "Save Selected Sprites")
             {
                 OnClicked = (button, userData) =>
                 {
@@ -109,6 +113,8 @@ namespace Barotrauma
                             return false;
                         }
                         element.SetAttributeValue("sourcerect", XMLExtensions.RectToString(sprite.SourceRect));
+                        element.SetAttributeValue("origin", XMLExtensions.Vector2ToString(
+                            new Vector2(sprite.Origin.X / sprite.SourceRect.Width, sprite.Origin.Y / sprite.SourceRect.Height)));
                     }
                     var firstSprite = selectedSprites.First();
                     XElement e = firstSprite.SourceElement;
@@ -120,7 +126,7 @@ namespace Barotrauma
                         return false;
                     }
                     e.Document.Save(xmlPath);
-                    xmlPathText.Text = "Selected rects saved to " + xmlPath;
+                    xmlPathText.Text = "Selected sprites saved to " + xmlPath;
                     xmlPathText.TextColor = Color.LightGreen;
                     return true;
                 }
@@ -128,7 +134,7 @@ namespace Barotrauma
             new GUIButton(new RectTransform(new Vector2(0.12f, 0.4f), topPanelContents.RectTransform, Anchor.BottomLeft)
             {
                 RelativeOffset = new Vector2(0.15f, 0.1f)
-            }, "Save Open Source Rects")
+            }, "Save Open Sprites")
             {
                 OnClicked = (button, userData) =>
                 {
@@ -140,6 +146,8 @@ namespace Barotrauma
                         var element = sprite.SourceElement;
                         if (element == null) { continue; }
                         element.SetAttributeValue("sourcerect", XMLExtensions.RectToString(sprite.SourceRect));
+                        element.SetAttributeValue("origin", XMLExtensions.Vector2ToString(
+                            new Vector2(sprite.Origin.X / sprite.SourceRect.Width, sprite.Origin.Y / sprite.SourceRect.Height)));
                         doc = element.Document;
                     }
                     if (doc != null)
@@ -463,8 +471,34 @@ namespace Barotrauma
                                 w.DrawPos = textureRect.Location.ToVector2() + new Vector2(sprite.SourceRect.Right, sprite.SourceRect.Bottom) * zoom + halfSize;
                             }
                         });
+                        var originWidget = GetWidget($"{identifier}_origin", widgetSize, Widget.Shape.Circle, initMethod: w =>
+                        {
+                            w.tooltipOffset = tooltipOffset;
+                            w.tooltip = $"Origin: {sprite.Origin}";
+                            w.inputAreaMargin = new Point(widgetSize / 2);
+                            UpdatePos();
+                            w.MouseDown += () => spriteList.Select(sprite);
+                            w.MouseHeld += dTime =>
+                            {
+                                w.DrawPos = PlayerInput.MousePosition;
+                                sprite.Origin = (w.DrawPos + halfSize - textureRect.Location.ToVector2() - sprite.SourceRect.Location.ToVector2() * zoom) / zoom;
+                                w.tooltip = $"Position: {sprite.Origin}";
+                            };
+                            w.Deselected += UpdatePos;
+                            w.MouseUp += UpdatePos;
+                            w.PostUpdate += dTime =>
+                            {
+                                w.color = selectedSprites.Contains(sprite) ? Color.Red : Color.White;
+                            };
+                            void UpdatePos()
+                            {
+                                w.DrawPos = textureRect.Location.ToVector2() + (sprite.Origin + sprite.SourceRect.Location.ToVector2()) * zoom - halfSize;
+                            };
+                        });
+
                         positionWidget.Draw(spriteBatch, (float)deltaTime);
                         sizeWidget.Draw(spriteBatch, (float)deltaTime);
+                        originWidget.Draw(spriteBatch, (float)deltaTime);
                     }
                 }
             }
