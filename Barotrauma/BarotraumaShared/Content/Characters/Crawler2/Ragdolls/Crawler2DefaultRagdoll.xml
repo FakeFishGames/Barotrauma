@@ -16,7 +16,7 @@
     <deformablesprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="38,0,115,113" depth="0.2" origin="0.4654222,0.5" subdivisions="5,5">
       <SpriteDeformation type="inflate" resolution="5,5" frequency="2" scale="0.2" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply" row0="0,0 0.5,1 1,1 0.5,1 0,0" row1="0,0 0.5,1 1,1 0.5,1 0,0" row2="0,0 0.5,1 1,1 0.5,1 0,0" row3="0,0 0.5,1 1,1 0.5,1 0,0" row4="0,0 0.5,1 1,1 0.5,1 0,0" />
-      <spritedeformation type="bezier" resolution="5,5" blendmode="add" />
+      <spritedeformation type="bendjoint" resolution="5,5" blendmode="add" />
     </deformablesprite>
   </limb>
   <!-- BodyLower1 -->
@@ -26,7 +26,7 @@
     <deformablesprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="167,172,91,87" depth="0.21" origin="0.5135868,0.5523771" subdivisions="5,5">
       <SpriteDeformation type="inflate" resolution="5,5" frequency="2" scale="0.2" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply" row0="0,0 0.5,1 1,1 0.5,1 0,0" row1="0,0 0.5,1 1,1 0.5,1 0,0" row2="0,0 0.5,1 1,1 0.5,1 0,0" row3="0,0 0.5,1 1,1 0.5,1 0,0" row4="0,0 0.5,1 1,1 0.5,1 0,0" />
-      <spritedeformation type="bezier" resolution="5,5" blendmode="add" />
+      <spritedeformation type="bendjoint" resolution="5,5" blendmode="add" />
     </deformablesprite>
   </limb>
   <!-- BodyLower2 -->
@@ -34,7 +34,7 @@
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
     <deformablesprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="71,179,84,78" depth="0.22" origin="0.5427743,0.5" subdivisions="5,5">
-      <spritedeformation type="bezier" resolution="5,5" />
+      <spritedeformation type="bendjoint" resolution="5,5" />
     </deformablesprite>
   </limb>
   <!-- BodyLower3 -->
@@ -42,7 +42,7 @@
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
     <deformablesprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="97,113,70,59" depth="0.023" origin="0.5571429,0.4577771" subdivisions="5,5">
-      <spritedeformation type="bezier" resolution="5,5" />
+      <spritedeformation type="bendjoint" resolution="5,5" />
     </deformablesprite>
   </limb>
   <!-- BodyLower4 -->
@@ -50,7 +50,7 @@
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
     <deformablesprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="0,135,48,36" depth="0.24" origin="0.524421,0.5587717" subdivisions="5,5">
-      <spritedeformation type="bezier" resolution="5,5" />
+      <spritedeformation type="bendjoint" resolution="5,5" />
     </deformablesprite>
   </limb>
   <!-- BodyLower5 -->
@@ -58,7 +58,7 @@
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
     <deformablesprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="50,114,43,30" depth="0.025" origin="0.5984064,0.5294023" subdivisions="5,5">
-      <spritedeformation type="bezier" resolution="5,5" />
+      <spritedeformation type="bendjoint" resolution="5,5" />
     </deformablesprite>
   </limb>
   <!-- BodyLower6 -->
@@ -66,7 +66,7 @@
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
     <deformablesprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="47,142,48,26" depth="0.26" origin="0.7888877,0.5378913" subdivisions="5,5">
-      <spritedeformation type="bezier" resolution="5,5" />
+      <spritedeformation type="bendjoint" resolution="5,5" />
     </deformablesprite>
   </limb>
   <!-- Jaw -->
