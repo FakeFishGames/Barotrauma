@@ -75,11 +75,11 @@
     <joint limb1="1" limb1anchor="0,-17" limb2="12" limb2anchor="0,7" lowerlimit="-10" upperlimit="10" canbesevered="false"/>
 
     <!-- body to left arm -->
-    <joint limb1="1" limb1anchor="-3,14" limb2="2" limb2anchor="0,12"/>
+    <joint limb1="1" limb1anchor="-3,14" limb2="2" limb2anchor="0,12" limitenabled="False"/>
     <joint limb1="2" limb1anchor="0,-16" limb2="3" limb2anchor="-2,19" lowerlimit="5" upperlimit="170" canbesevered="true"/>
     
     <!-- body to right arm -->
-    <joint limb1="1" limb1anchor="-3,14" limb2="4" limb2anchor="0,12"/>
+    <joint limb1="1" limb1anchor="-3,14" limb2="4" limb2anchor="0,12" limitenabled="False"/>
     <joint limb1="4" limb1anchor="0,-16" limb2="5" limb2anchor="-2,19" lowerlimit="5" upperlimit="170" canbesevered="true"/>
 
     <!-- body to left leg -->

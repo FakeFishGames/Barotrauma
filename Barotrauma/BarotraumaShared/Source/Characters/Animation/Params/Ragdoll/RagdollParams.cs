@@ -337,13 +337,13 @@ namespace Barotrauma
         /// <summary>
         /// In degrees.
         /// </summary>
-        [Serialize(float.NaN, true), Editable(-360f, 360f)]
+        [Serialize(0f, true), Editable(-360f, 360f)]
         public float UpperLimit { get; set; }
 
         /// <summary>
         /// In degrees.
         /// </summary>
-        [Serialize(float.NaN, true), Editable(-360f, 360f)]
+        [Serialize(0f, true), Editable(-360f, 360f)]
         public float LowerLimit { get; set; }
     }
 
