@@ -75,7 +75,7 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            if (((Entity)entity).Removed)
+            if (((Entity)entity).Removed && !(entity is Level))
             {
                 DebugConsole.ThrowError("Can't create an entity event for " + entity + " - the entity has been removed.\n"+Environment.StackTrace);
                 return;

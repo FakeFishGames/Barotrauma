@@ -12,7 +12,8 @@ namespace Barotrauma
         public enum Shape
         {
             Rectangle,
-            Circle
+            Circle,
+            Cross
         }
 
         public Shape shape;
@@ -41,6 +42,7 @@ namespace Barotrauma
         public bool isFilled;
         public Point inputAreaMargin;
         public Color color = Color.Red;
+        public Color? secondaryColor;
         public Color textColor = Color.White;
         public Color textBackgroundColor = Color.Black * 0.5f;
         public readonly string id;
@@ -144,10 +146,28 @@ namespace Barotrauma
             switch (shape)
             {
                 case Shape.Rectangle:
+                    if (secondaryColor.HasValue)
+                    {
+                        GUI.DrawRectangle(spriteBatch, drawRect, secondaryColor.Value, isFilled, thickness: 2);
+                    }
                     GUI.DrawRectangle(spriteBatch, drawRect, color, isFilled, thickness: IsSelected ? 3 : 1);
                     break;
                 case Shape.Circle:
+                    if (secondaryColor.HasValue)
+                    {
+                        ShapeExtensions.DrawCircle(spriteBatch, DrawPos, size / 2, sides, secondaryColor.Value, thickness: 2);
+                    }
                     ShapeExtensions.DrawCircle(spriteBatch, DrawPos, size / 2, sides, color, thickness: IsSelected ? 3 : 1);
+                    break;
+                case Shape.Cross:
+                    float halfSize = size / 2;
+                    if (secondaryColor.HasValue)
+                    {
+                        GUI.DrawLine(spriteBatch, DrawPos + Vector2.UnitY * halfSize, DrawPos - Vector2.UnitY * halfSize, secondaryColor.Value, width: 2);
+                        GUI.DrawLine(spriteBatch, DrawPos + Vector2.UnitX * halfSize, DrawPos - Vector2.UnitX * halfSize, secondaryColor.Value, width: 2);
+                    }
+                    GUI.DrawLine(spriteBatch, DrawPos + Vector2.UnitY * halfSize, DrawPos - Vector2.UnitY * halfSize, color, width: IsSelected ? 3 : 1);
+                    GUI.DrawLine(spriteBatch, DrawPos + Vector2.UnitX * halfSize, DrawPos - Vector2.UnitX * halfSize, color, width: IsSelected ? 3 : 1);
                     break;
                 default: throw new NotImplementedException(shape.ToString());
             }

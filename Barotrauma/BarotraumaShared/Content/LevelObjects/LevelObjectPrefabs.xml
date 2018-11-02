@@ -6,26 +6,131 @@
   <hanging2 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="5">
     <Sprite texture="Content/LevelObjects/vegetation.png" sourcerect="241,0,322,720" origin="0.5,0.15" />
   </hanging2>-->
-  <web1 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="3">
-    <Sprite texture="Content/LevelObjects/Webs.png" sourcerect="309,13,307,870" origin="0.5,0.2" />
+  <web1 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="1" maxsize="2" commonness="0" depthrange="-0.01,-0.01">
+    <overridecommonness commonness="1" leveltype="ColdCavernsBasic" />
+    <overridecommonness commonness="1" leveltype="ColdCavernsMaze" />
+    <overridecommonness commonness="2" leveltype="RidgeBasic" />
+    <overridecommonness commonness="4" leveltype="PlateauBasic" />
+    <Trigger position="0,-400" radius="50" triggeredby="Submarine" force="5.0" forcevelocitylimit="100" forcemode="LimitVelocity" forcefalloff="false"
+             forcefluctuationstrength="1.0" forcefluctuationinterval="2"/>
+    <DeformableSprite texture="Content/LevelObjects/Webs.png" sourcerect="309,13,307,870" origin="0.5,0.2" subdivisions="5,5">
+      <SpriteDeformation type="reacttotriggerers" resolution="5,5" maxdeformation="2" reactionspeed="2.0" recoverspeed="0.1"/>
+      <SpriteDeformation type="noise" resolution="5,5" frequency="1" amplitude="1" changespeed="0.1" blendmode="add" />
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply"
+                         row0="0,0 0,0 0,0 0,0 0,0"
+                         row1="0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5"
+                         row2="0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7"
+                         row6="1,1 1,1 1,1 1,1 1,1"
+                         row4="1,1 1,1 1,1 1,1 1,1"/>
+    </DeformableSprite>
   </web1>
-  <web2 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="3">
-    <Sprite texture="Content/LevelObjects/Webs.png" sourcerect="627,42,314,1222" origin="0.5,0.15" />
+  <web2 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="1" maxsize="2" commonness="0" depthrange="-0.01,-0.01">
+    <overridecommonness commonness="1" leveltype="ColdCavernsBasic" />
+    <overridecommonness commonness="1" leveltype="ColdCavernsMaze" />
+    <overridecommonness commonness="2" leveltype="RidgeBasic" />
+    <overridecommonness commonness="4" leveltype="PlateauBasic" />
+    <Trigger position="0,-400" radius="50" triggeredby="Submarine" force="5.0" forcevelocitylimit="100" forcemode="LimitVelocity" forcefalloff="false"
+         forcefluctuationstrength="1.0" forcefluctuationinterval="2"/>
+    <DeformableSprite texture="Content/LevelObjects/Webs.png" sourcerect="627,42,314,1222" origin="0.5,0.15" subdivisions="5,5">
+      <SpriteDeformation type="reacttotriggerers" resolution="5,5" maxdeformation="2" reactionspeed="2.0" recoverspeed="0.1"/>
+      <SpriteDeformation type="noise" resolution="5,5" frequency="1" amplitude="1" changespeed="0.1" blendmode="add" />
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply"
+                         row0="0,0 0,0 0,0 0,0 0,0"
+                         row1="0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5"
+                         row2="0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7"
+                         row6="1,1 1,1 1,1 1,1 1,1"
+                         row4="1,1 1,1 1,1 1,1 1,1"/>
+    </DeformableSprite>
   </web2>
-  <web3 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="3">
-    <Sprite texture="Content/LevelObjects/Webs.png" sourcerect="954,66,317,1400" origin="0.5,0.15" />
+  <web3 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="1" maxsize="2" commonness="0" depthrange="-0.01,-0.01">
+    <overridecommonness commonness="1" leveltype="ColdCavernsBasic" />
+    <overridecommonness commonness="1" leveltype="ColdCavernsMaze" />
+    <overridecommonness commonness="2" leveltype="RidgeBasic" />
+    <overridecommonness commonness="4" leveltype="PlateauBasic" />
+    <Trigger position="0,-400" radius="50" triggeredby="Submarine" force="5.0" forcevelocitylimit="100" forcemode="LimitVelocity" forcefalloff="false"
+         forcefluctuationstrength="1.0" forcefluctuationinterval="2"/>
+    <DeformableSprite texture="Content/LevelObjects/Webs.png" sourcerect="954,66,317,1400" origin="0.5,0.15" subdivisions="5,5">
+      <SpriteDeformation type="reacttotriggerers" resolution="5,5" maxdeformation="2" reactionspeed="2.0" recoverspeed="0.1"/>
+      <SpriteDeformation type="noise" resolution="5,5" frequency="1" amplitude="1" changespeed="0.1" blendmode="add" />
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply"
+                         row0="0,0 0,0 0,0 0,0 0,0"
+                         row1="0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5"
+                         row2="0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7"
+                         row6="1,1 1,1 1,1 1,1 1,1"
+                         row4="1,1 1,1 1,1 1,1 1,1"/>
+    </DeformableSprite>
   </web3>
-  <web4 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="3">
-    <Sprite texture="Content/LevelObjects/Webs.png" sourcerect="69,948,353,496" origin="0.5,0.2" />
+  <web4 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="1" maxsize="2" commonness="0" depthrange="-0.01,-0.01">
+    <overridecommonness commonness="1" leveltype="ColdCavernsBasic" />
+    <overridecommonness commonness="1" leveltype="ColdCavernsMaze" />
+    <overridecommonness commonness="2" leveltype="RidgeBasic" />
+    <overridecommonness commonness="4" leveltype="PlateauBasic" />
+    <Trigger position="0,-400" radius="50" triggeredby="Submarine" force="5.0" forcevelocitylimit="100" forcemode="LimitVelocity" forcefalloff="false"
+         forcefluctuationstrength="1.0" forcefluctuationinterval="2"/>
+    <DeformableSprite texture="Content/LevelObjects/Webs.png" sourcerect="69,948,353,496" origin="0.5,0.2" subdivisions="5,5">
+      <SpriteDeformation type="reacttotriggerers" resolution="5,5" maxdeformation="2" reactionspeed="2.0" recoverspeed="0.1"/>
+      <SpriteDeformation type="noise" resolution="5,5" frequency="1" amplitude="1" changespeed="0.1" blendmode="add" />
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply"
+                         row0="0,0 0,0 0,0 0,0 0,0"
+                         row1="0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5"
+                         row2="0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7"
+                         row6="1,1 1,1 1,1 1,1 1,1"
+                         row4="1,1 1,1 1,1 1,1 1,1"/>
+    </DeformableSprite>
   </web4>
-  <web5 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="3">
-    <Sprite texture="Content/LevelObjects/Webs.png" sourcerect="1273,0,779,1638" origin="0.5,0.15" />
+  <web5 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="1" maxsize="2" commonness="0" depthrange="-0.01,-0.01">
+    <overridecommonness commonness="1" leveltype="ColdCavernsBasic" />
+    <overridecommonness commonness="1" leveltype="ColdCavernsMaze" />
+    <overridecommonness commonness="2" leveltype="RidgeBasic" />
+    <overridecommonness commonness="4" leveltype="PlateauBasic" />
+    <Trigger position="0,-400" radius="50" triggeredby="Submarine" force="5.0" forcevelocitylimit="100" forcemode="LimitVelocity" forcefalloff="false"
+         forcefluctuationstrength="1.0" forcefluctuationinterval="2"/>
+    <DeformableSprite texture="Content/LevelObjects/Webs.png" sourcerect="1273,0,779,1638" origin="0.5,0.15" subdivisions="5,5">
+      <SpriteDeformation type="reacttotriggerers" resolution="5,5" maxdeformation="2" reactionspeed="2.0" recoverspeed="0.1"/>
+      <SpriteDeformation type="noise" resolution="5,5" frequency="1" amplitude="1" changespeed="0.1" blendmode="add" />
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply"
+                         row0="0,0 0,0 0,0 0,0 0,0"
+                         row1="0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5"
+                         row2="0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7"
+                         row6="1,1 1,1 1,1 1,1 1,1"
+                         row4="1,1 1,1 1,1 1,1 1,1"/>
+    </DeformableSprite>
   </web5>
-  <web6 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="3">
-    <Sprite texture="Content/LevelObjects/Webs.png" sourcerect="28,1475,443,555" origin="0.5,0.2" />
+  <web6 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="1" maxsize="2" commonness="0" depthrange="-0.01,-0.01">
+    <overridecommonness commonness="1" leveltype="ColdCavernsBasic" />
+    <overridecommonness commonness="1" leveltype="ColdCavernsMaze" />
+    <overridecommonness commonness="2" leveltype="RidgeBasic" />
+    <overridecommonness commonness="4" leveltype="PlateauBasic" />
+    <Trigger position="0,-400" radius="50" triggeredby="Submarine" force="5.0" forcevelocitylimit="100" forcemode="LimitVelocity" forcefalloff="false"
+         forcefluctuationstrength="1.0" forcefluctuationinterval="2"/>
+    <DeformableSprite texture="Content/LevelObjects/Webs.png" sourcerect="28,1475,443,555" origin="0.5,0.2" subdivisions="5,5">
+      <SpriteDeformation type="reacttotriggerers" resolution="5,5" maxdeformation="2" reactionspeed="2.0" recoverspeed="0.1"/>
+      <SpriteDeformation type="noise" resolution="5,5" frequency="1" amplitude="1" changespeed="0.1" blendmode="add" />
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply"
+                         row0="0,0 0,0 0,0 0,0 0,0"
+                         row1="0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5"
+                         row2="0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7"
+                         row6="1,1 1,1 1,1 1,1 1,1"
+                         row4="1,1 1,1 1,1 1,1 1,1"/>
+    </DeformableSprite>
   </web6>
-  <web7 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="3">
-    <Sprite texture="Content/LevelObjects/Webs.png" sourcerect="0,0,307,946" origin="0.5,0.2" />
+  <web7 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="1" maxsize="2" commonness="0" depthrange="-0.01,-0.01">
+    <overridecommonness commonness="1" leveltype="ColdCavernsBasic" />
+    <overridecommonness commonness="1" leveltype="ColdCavernsMaze" />
+    <overridecommonness commonness="2" leveltype="RidgeBasic" />
+    <overridecommonness commonness="4" leveltype="PlateauBasic" />
+    <Trigger position="0,-400" radius="50" triggeredby="Submarine" force="5.0" forcevelocitylimit="100" forcemode="LimitVelocity" forcefalloff="false"
+         forcefluctuationstrength="1.0" forcefluctuationinterval="2"/>
+    <DeformableSprite texture="Content/LevelObjects/Webs.png" sourcerect="0,0,307,946" origin="0.5,0.2" subdivisions="5,5">
+      <SpriteDeformation type="reacttotriggerers" resolution="5,5" maxdeformation="2" reactionspeed="2.0" recoverspeed="0.1"/>
+      <SpriteDeformation type="noise" resolution="5,5" frequency="1" amplitude="1" changespeed="0.1" blendmode="add" />
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply"
+                         row0="0,0 0,0 0,0 0,0 0,0"
+                         row1="0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5"
+                         row2="0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7"
+                         row6="1,1 1,1 1,1 1,1 1,1"
+                         row4="1,1 1,1 1,1 1,1 1,1"/>
+    </DeformableSprite>
   </web7>
   <stalk spawnpos="Wall" alignment="Top" minsize="0.5" maxsize="1.5" commonness="1" swingamount="2" swingfrequency="0.2" randomrotation="-10,10">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
@@ -399,7 +504,9 @@
       <SpriteDeformation type="inflate" resolution="5,3" frequency="0.5" scale="1" />
       <SpriteDeformation type="custom" resolution="5,3" frequency="0.0" blendmode="multiply" row0="0,0 0,0 0,0" row1="0.1,0.5 1,1 0.1,0.5" />
     </DeformableSprite>
-    <LightSource range="1500" color="1.0,0.85,0.8,0.4" />
+    <LightSource range="1500" color="1.0,0.85,0.8,0.4">
+      <sprite texture="Content/LevelObjects/SonarFloraGlow.png" sourcerect="492,0,521,288" origin="0.5,0.35"/>
+    </LightSource>
     <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0" />
     <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7" />
@@ -419,7 +526,9 @@
       <SpriteDeformation type="inflate" resolution="4,4" frequency="0.5" scale="1" />
       <SpriteDeformation type="custom" resolution="4,4" frequency="0.0" blendmode="multiply" row0="0,0 0,0 0,0" row1="0.5,0.5 1,1 0.5,0.5" />
     </DeformableSprite>
-    <LightSource range="1500" color="1.0,0.85,0.8,0.5" />
+    <LightSource range="1500" color="1.0,0.85,0.8,0.5">
+      <sprite texture="Content/LevelObjects/SonarFloraGlow.png" sourcerect="151,383,488,341" origin="0.5,0.1"/>
+    </LightSource>
     <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0" />
     <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7" />
@@ -439,7 +548,9 @@
       <SpriteDeformation type="inflate" resolution="4,3" frequency="0.5" scale="0.5" />
       <SpriteDeformation type="custom" resolution="4,3" frequency="0.0" blendmode="multiply" row0="0,0 0,0 0,0" row1="1.0,0.1 1,0.1 1.0,0.1" />
     </DeformableSprite>
-    <LightSource range="1200" color="1.0,0.85,0.8,0.4" />
+    <LightSource range="1200" color="1.0,0.85,0.8,0.4">
+      <sprite texture="Content/LevelObjects/SonarFloraGlow.png" sourcerect="644,366,380,357" origin="0.5,0.15"/>
+    </LightSource>
     <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0" />
     <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7" />
@@ -459,7 +570,9 @@
       <SpriteDeformation type="inflate" resolution="3,3" frequency="0.5" scale="1" />
       <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="0,0 0,0 0,0" row1="0.5,0.5 1,1 0.5,0.5" />
     </DeformableSprite>
-    <LightSource range="1000" color="1.0,0.85,0.8,0.4" />
+    <LightSource range="1000" color="1.0,0.85,0.8,0.4">
+      <sprite texture="Content/LevelObjects/SonarFloraGlow.png" sourcerect="47,788,318,236" origin="0.6,0.2"/>
+    </LightSource>
     <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0" />
     <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7" />
@@ -479,7 +592,9 @@
       <SpriteDeformation type="inflate" resolution="3,3" frequency="0.5" scale="1" />
       <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="0,0 0,0 0,0" row1="0.5,0.1 1,0.2 0.5,0.1" />
     </DeformableSprite>
-    <LightSource range="1000" color="1.0,0.85,0.8,0.4" />
+    <LightSource range="1000" color="1.0,0.85,0.8,0.4">
+      <sprite texture="Content/LevelObjects/SonarFloraGlow.png" sourcerect="395,723,309,301" origin="0.5,0.2"/>
+    </LightSource>
     <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0" />
     <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7" />
@@ -499,7 +614,9 @@
       <SpriteDeformation type="inflate" resolution="3,3" frequency="0.5" scale="1" />
       <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="0,0 0,0 0,0" row1="0.5,0.5 1,1 0.5,0.5" />
     </DeformableSprite>
-    <LightSource range="1000" color="1.0,0.85,0.8,0.4" />
+    <LightSource range="1000" color="1.0,0.85,0.8,0.4">
+      <sprite texture="Content/LevelObjects/SonarFloraGlow.png" sourcerect="709,779,304,234" origin="0.5,0.2"/>
+    </LightSource>
     <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0" />
     <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7" />

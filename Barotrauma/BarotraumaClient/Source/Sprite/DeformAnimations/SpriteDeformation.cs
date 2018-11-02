@@ -46,18 +46,17 @@ namespace Barotrauma.SpriteDeformations
         /// <summary>
         /// Defined in the shader.
         /// </summary>
-        public static readonly Point shaderMaxResolution = new Point(15, 15);
+        public static readonly Point ShaderMaxResolution = new Point(15, 15);
 
         private Point _resolution;
-        [Serialize("2,2", true), Editable]
+        [Serialize("2,2", true)]
         public Point Resolution
         {
             get { return _resolution; }
             set
             {
                 if (_resolution == value) { return; }
-                _resolution = value.Clamp(new Point(2, 2), shaderMaxResolution);
-                //Deformation = new Vector2[_resolution.X, _resolution.Y];
+                _resolution = value.Clamp(new Point(2, 2), ShaderMaxResolution);
             }
         }
 
@@ -92,8 +91,15 @@ namespace Barotrauma.SpriteDeformations
 
         public Point Resolution
         {
-            get { return deformationParams.Resolution; }
-            set { deformationParams.Resolution = value; }
+            get
+            {
+                if (deformationParams.Resolution.X != Deformation.GetLength(0) || deformationParams.Resolution.Y != Deformation.GetLength(1))
+                {
+                    Deformation = new Vector2[deformationParams.Resolution.X, deformationParams.Resolution.Y];
+                }
+                return deformationParams.Resolution;
+            }
+            set { SetResolution(value); }
         }
 
         public SpriteDeformationParams DeformationParams
@@ -141,6 +147,7 @@ namespace Barotrauma.SpriteDeformations
                     newDeformation = new JointBendDeformation(element);
                     break;
                 case "reacttotriggerers":
+                    return new PositionalDeformation(element);
                 default:
                     if (Enum.TryParse(typeName, out PositionalDeformation.ReactionType reactionType))
                     {
@@ -167,7 +174,13 @@ namespace Barotrauma.SpriteDeformations
         {
             this.deformationParams = deformationParams;
             SerializableProperty.DeserializeProperties(deformationParams, element);
-            Deformation = Deformation = new Vector2[deformationParams.Resolution.X, deformationParams.Resolution.Y];
+            Deformation = new Vector2[deformationParams.Resolution.X, deformationParams.Resolution.Y];
+        }
+
+        public void SetResolution(Point resolution)
+        {
+            deformationParams.Resolution = resolution;
+            Deformation = new Vector2[deformationParams.Resolution.X, deformationParams.Resolution.Y];
         }
 
         protected abstract void GetDeformation(out Vector2[,] deformation, out float multiplier);
