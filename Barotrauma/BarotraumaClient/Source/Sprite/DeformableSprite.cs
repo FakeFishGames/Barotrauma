@@ -271,14 +271,14 @@ namespace Barotrauma
             GUINumberInput xField = null, yField = null;
             foreach (GUIComponent child in resolutionField.GetAllChildren())
             {
-                if (xField == null)
+                if (yField == null)
                 {
-                    xField = child as GUINumberInput;
+                    yField = child as GUINumberInput;
                 }
                 else
                 {
-                    yField = child as GUINumberInput;
-                    if (yField != null) break;
+                    xField = child as GUINumberInput;
+                    if (xField != null) break;
                 }
             }
             xField.MinValueInt = 2;
