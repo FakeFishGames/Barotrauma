@@ -593,6 +593,7 @@
   <LevelEditorLevelSeed>Level seed</LevelEditorLevelSeed>
   <LevelEditorGenerate>Generate</LevelEditorGenerate>
   <LevelEditorLightingEnabled>Enable lighting</LevelEditorLightingEnabled>
+  <LevelEditorCursorLightEnabled>Enable cursor light</LevelEditorCursorLightEnabled>
   <LevelEditorReloadTextures>Reload textures</LevelEditorReloadTextures>
   <LevelEditorSpriteEditDone>Done</LevelEditorSpriteEditDone>
   <LevelEditorLevelObjCommonness>Commonness in [leveltype]</LevelEditorLevelObjCommonness>

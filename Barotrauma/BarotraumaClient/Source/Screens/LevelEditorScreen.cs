@@ -17,7 +17,7 @@ namespace Barotrauma
             get { return cam; }
         }
 
-        private GUIFrame leftPanel, rightPanel, bottomPanel;
+        private GUIFrame leftPanel, rightPanel, bottomPanel, topPanel;
         
         private LevelGenerationParams selectedParams;
         private LevelObjectPrefab selectedLevelObject;
@@ -29,9 +29,11 @@ namespace Barotrauma
 
         private GUITextBox seedBox;
 
-        private GUITickBox lightingEnabled;
+        private GUITickBox lightingEnabled, cursorLightEnabled;
 
         private Sprite editingSprite;
+
+        private LightSource pointerLightSource;
 
         public LevelEditorScreen()
         {
@@ -49,7 +51,7 @@ namespace Barotrauma
                 RelativeSpacing = 0.01f
             };
 
-            paramsList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.6f), paddedLeftPanel.RectTransform));
+            paramsList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), paddedLeftPanel.RectTransform));
             paramsList.OnSelected += (GUIComponent component, object obj) =>
             {
                 selectedParams = obj as LevelGenerationParams;
@@ -71,6 +73,9 @@ namespace Barotrauma
 
             lightingEnabled = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform),
                 TextManager.Get("LevelEditorLightingEnabled"));
+
+            cursorLightEnabled = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform),
+                TextManager.Get("LevelEditorCursorLightEnabled"));
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), paddedLeftPanel.RectTransform),
                 TextManager.Get("LevelEditorReloadTextures"))
@@ -113,6 +118,7 @@ namespace Barotrauma
                 {
                     GameMain.LightManager.ClearLights();
                     Level.CreateRandom(seedBox.Text, generationParams: selectedParams).Generate(mirror: false);
+                    GameMain.LightManager.AddLight(pointerLightSource);
                     cam.Position = new Vector2(Level.Loaded.Size.X / 2, Level.Loaded.Size.Y / 2);
                     foreach (GUITextBlock param in paramsList.Content.Children)
                     {
@@ -145,14 +151,30 @@ namespace Barotrauma
                     return true;
                 }
             };
+
+            topPanel = new GUIFrame(new RectTransform(new Point(400, 100), GUI.Canvas)
+            { RelativeOffset = new Vector2(leftPanel.RectTransform.RelativeSize.X * 2, 0.0f) }, style: "GUIFrameTop");
         }
 
         public override void Select()
         {
             base.Select();
+
+            pointerLightSource = new LightSource(Vector2.Zero, 1000.0f, Color.White, submarine: null);
+            GameMain.LightManager.AddLight(pointerLightSource);
+            topPanel.ClearChildren();
+            new SerializableEntityEditor(topPanel.RectTransform, pointerLightSource.LightSourceParams, false, true);
+
             editingSprite = null;
             UpdateParamsList();
             UpdateLevelObjectsList();
+        }
+
+        public override void Deselect()
+        {
+            base.Deselect();
+            pointerLightSource?.Remove();
+            pointerLightSource = null;
         }
 
         private void UpdateParamsList()
@@ -376,6 +398,10 @@ namespace Barotrauma
                 GameMain.SpriteEditorScreen.TopPanel.AddToGUIUpdateList();
                 spriteEditDoneButton.AddToGUIUpdateList();
             }
+            else if (lightingEnabled.Selected && cursorLightEnabled.Selected)
+            {
+                topPanel.AddToGUIUpdateList();
+            }
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -416,6 +442,9 @@ namespace Barotrauma
 
         public override void Update(double deltaTime)
         {
+            pointerLightSource.Position = cam.ScreenToWorld(PlayerInput.MousePosition);
+            pointerLightSource.Enabled = cursorLightEnabled.Selected;
+            pointerLightSource.IsBackground = true;
             cam.MoveCamera((float)deltaTime, allowZoom: GUI.MouseOn == null);
             cam.UpdateTransform();
             Level.Loaded?.Update((float)deltaTime, cam);
