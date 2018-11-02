@@ -776,7 +776,7 @@ namespace Barotrauma.Lights
 
                 LightSprite.Draw(
                     spriteBatch, drawPos, 
-                    Color.Green,//new Color(Color, lightSourceParams.OverrideLightSpriteAlpha ?? Color.A / 255.0f),
+                    new Color(Color, lightSourceParams.OverrideLightSpriteAlpha ?? Color.A / 255.0f),
                     origin, -Rotation, SpriteScale, LightSpriteEffect);
             }
         }
