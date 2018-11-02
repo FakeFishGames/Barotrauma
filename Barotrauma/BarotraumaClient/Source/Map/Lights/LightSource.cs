@@ -143,6 +143,8 @@ namespace Barotrauma.Lights
 
         private readonly LightSourceParams lightSourceParams;
 
+        public LightSourceParams LightSourceParams => lightSourceParams;
+
         private Vector2 position;
         public Vector2 Position
         {
