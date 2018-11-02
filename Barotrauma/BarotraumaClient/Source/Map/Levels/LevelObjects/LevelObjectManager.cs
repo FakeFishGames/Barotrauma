@@ -108,25 +108,15 @@ namespace Barotrauma
             {              
                 Vector2 camDiff = new Vector2(obj.Position.X, obj.Position.Y) - cam.WorldViewCenter;
                 camDiff.Y = -camDiff.Y;
-
-                Vector2 scale = Vector2.One * obj.Scale;
-                if (obj.ActivePrefab.ScaleOscillationFrequency > 0.0f)
-                {
-                    float sin = (float)Math.Sin(obj.ScaleOscillateTimer);
-                    scale *= new Vector2(
-                        1.0f + sin * obj.CurrentScaleOscillation.X,
-                        1.0f + sin * obj.CurrentScaleOscillation.Y);
-                }
-
+                
                 Sprite activeSprite = specular ? obj.ActivePrefab.SpecularSprite : obj.ActivePrefab.Sprite;
-
                 activeSprite?.Draw(
                     spriteBatch,
                     new Vector2(obj.Position.X, -obj.Position.Y) - camDiff * obj.Position.Z / 10000.0f,
                     Color.Lerp(Color.White, Level.Loaded.BackgroundTextureColor, obj.Position.Z / 5000.0f),
                     activeSprite.Origin,
                     obj.CurrentRotation,
-                    scale,
+                    obj.CurrentScale,
                     SpriteEffects.None,
                     z);
 
@@ -146,7 +136,7 @@ namespace Barotrauma
                         new Vector3(new Vector2(obj.Position.X, obj.Position.Y) - camDiff * obj.Position.Z / 10000.0f, z * 10.0f),
                         obj.ActivePrefab.DeformableSprite.Origin,
                         obj.CurrentRotation,
-                        scale,
+                        obj.CurrentScale,
                         Color.Lerp(Color.White, Level.Loaded.BackgroundTextureColor, obj.Position.Z / 5000.0f));
                 }
 
