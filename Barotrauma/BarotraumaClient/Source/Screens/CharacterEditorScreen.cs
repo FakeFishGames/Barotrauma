@@ -1986,7 +1986,7 @@ namespace Barotrauma
                 Vector2 left = up.Right();
                 Vector2 limbScreenPos = SimToScreen(limb.SimPosition);
                 var relativeOrigin = new Vector2(origin.X / sourceRect.Width, origin.Y / sourceRect.Height);
-                var relativeOffset = relativeOrigin - new Vector2(0.5f, 0.5f);
+                var relativeOffset = relativeOrigin - limb.ActiveSprite.RelativeOrigin;
                 Vector2 offset = new Vector2(relativeOffset.X * sourceRect.Width, relativeOffset.Y * sourceRect.Height);
                 offset = offset.X * left + offset.Y * up;
                 // There's a calculation error in here somewhere, but the magic number 1.8 seems to do the trick.
