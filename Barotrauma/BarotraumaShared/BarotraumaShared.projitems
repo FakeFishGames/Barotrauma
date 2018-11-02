@@ -293,6 +293,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\LevelObjects\SonarFloraBranches.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\LevelObjects\SonarFloraGlow.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\LevelObjects\SpikePlants1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

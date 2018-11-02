@@ -563,7 +563,7 @@ namespace Barotrauma
 
         private string GetNextConfigFile()
         {
-            CheckAndGetIndex();
+            GetCurrentCharacterIndex();
             IncreaseIndex();
             currentCharacterConfig = AllFiles[characterIndex];
             return currentCharacterConfig;
@@ -571,19 +571,15 @@ namespace Barotrauma
 
         private string GetPreviousConfigFile()
         {
-            CheckAndGetIndex();
+            GetCurrentCharacterIndex();
             ReduceIndex();
             currentCharacterConfig = AllFiles[characterIndex];
             return currentCharacterConfig;
         }
 
-        // Check if the index is not set, in which case we'll get the index from the current species name.
-        private void CheckAndGetIndex()
+        private void GetCurrentCharacterIndex()
         {
-            if (characterIndex == -1)
-            {
-                characterIndex = AllFiles.IndexOf(GetConfigFile(character.SpeciesName));
-            }
+            characterIndex = AllFiles.IndexOf(GetConfigFile(character.SpeciesName));
         }
 
         private void IncreaseIndex()
@@ -643,6 +639,7 @@ namespace Barotrauma
         private void OnPostSpawn()
         {
             currentCharacterConfig = character.ConfigPath;
+            GetCurrentCharacterIndex();
             character.Submarine = Submarine.MainSub;
             character.AnimController.forceStanding = character.AnimController.CanWalk;
             character.AnimController.ForceSelectAnimationType = character.AnimController.CanWalk ? AnimationType.Walk : AnimationType.SwimSlow;
@@ -1989,7 +1986,7 @@ namespace Barotrauma
                 Vector2 left = up.Right();
                 Vector2 limbScreenPos = SimToScreen(limb.SimPosition);
                 var relativeOrigin = new Vector2(origin.X / sourceRect.Width, origin.Y / sourceRect.Height);
-                var relativeOffset = relativeOrigin - new Vector2(0.5f, 0.5f);
+                var relativeOffset = relativeOrigin - limb.ActiveSprite.RelativeOrigin;
                 Vector2 offset = new Vector2(relativeOffset.X * sourceRect.Width, relativeOffset.Y * sourceRect.Height);
                 offset = offset.X * left + offset.Y * up;
                 // There's a calculation error in here somewhere, but the magic number 1.8 seems to do the trick.
@@ -1999,13 +1996,13 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, corners, selectedLimbs.Contains(limb) ? Color.Yellow : Color.Red);
                 //GUI.DrawLine(spriteBatch, limbScreenPos, limbScreenPos + up * 20, Color.White, width: 3);
                 //GUI.DrawLine(spriteBatch, limbScreenPos, limbScreenPos + up * 20, Color.Red);
-                // Limb positions
-                if (!lockSpriteOrigin)
+                // Draw origins
+                if (selectedLimbs.Contains(limb))
                 {
                     GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.White, width: 3);
                     GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.White, width: 3);
-                    GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.Red);
-                    GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.Red);
+                    GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.Yellow);
+                    GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.Yellow);
                 }
                 if (MathUtils.RectangleContainsPoint(corners, PlayerInput.MousePosition) && GUI.MouseOn == null)
                 {
@@ -2032,9 +2029,8 @@ namespace Barotrauma
                     // Origin
                     if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && selectedLimbs.Contains(limb))
                     {
-                        float multiplier = 0.5f;
                         Vector2 forward = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(limb.Rotation));
-                        var input = -scaledMouseSpeed * inputMultiplier * Cam.Zoom / limb.Scale * multiplier;
+                        var input = -scaledMouseSpeed * inputMultiplier / Cam.Zoom / limb.Scale;
                         var sprite = limb.ActiveSprite;
                         origin += input.TransformVector(forward);
                         var max = new Vector2(sourceRect.Width, sourceRect.Height);
@@ -2060,7 +2056,7 @@ namespace Barotrauma
                                 TryUpdateLimbParam(otherLimb, "origin", relativeOrigin);
                             });
                         }
-                        GUI.DrawString(spriteBatch, limbScreenPos + new Vector2(10, -10), relativeOrigin.FormatDoubleDecimal(), Color.White, Color.Black * 0.5f);
+                        GUI.DrawString(spriteBatch, limbScreenPos + new Vector2(10, -10), relativeOrigin.FormatDoubleDecimal(), Color.Yellow, Color.Black * 0.5f);
                     }
                     else
                     {
@@ -2377,15 +2373,6 @@ namespace Barotrauma
                     }
                     if (editLimbs)
                     {
-                        if (!lockSpriteOrigin)
-                        {
-                            Color innerColor = selectedLimbs.Contains(limb) ? Color.Yellow : Color.Red;
-                            // Draw the sprite origins
-                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.White, width: 3);
-                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.White, width: 3);
-                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, innerColor);
-                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, innerColor);
-                        }
                         // Draw the source rect widgets
                         int widgetSize = 8;
                         int halfSize = widgetSize / 2;
@@ -2420,6 +2407,12 @@ namespace Barotrauma
                         }
                         if (selectedLimbs.Contains(limb))
                         {
+                            // Draw the sprite origins
+                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.White, width: 3);
+                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.White, width: 3);
+                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.Yellow);
+                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.Yellow);
+
                             if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && isMouseOnRect && selectedWidget == null && GUI.MouseOn == null)
                             {
                                 var input = scaledMouseSpeed / spriteSheetZoom;
@@ -2497,19 +2490,12 @@ namespace Barotrauma
                                     newRect.Height = height;
                                     limb.ActiveSprite.SourceRect = newRect;
                                     limb.ActiveSprite.size = new Vector2(width, height);
-                                    // Also the origin should be adjusted to the new width, so that it will remain at the same position relative to the source rect location.
-                                    limb.ActiveSprite.Origin = new Vector2(origin.X - dx, origin.Y);
+                                    // Refresh the relative origin, so that the origin in pixels will be recalculated
+                                    limb.ActiveSprite.RelativeOrigin = limb.ActiveSprite.RelativeOrigin;
                                     if (limb.DamagedSprite != null)
                                     {
-                                        limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
-                                        limb.DamagedSprite.Origin = limb.ActiveSprite.Origin;
+                                        limb.DamagedSprite.RelativeOrigin = limb.DamagedSprite.RelativeOrigin;
                                     }
-                                    if (character.AnimController.IsFlipped)
-                                    {
-                                        origin.X = Math.Abs(origin.X - newRect.Width);
-                                    }
-                                    var relativeOrigin = new Vector2(origin.X / newRect.Width, origin.Y / newRect.Height);
-                                    TryUpdateLimbParam(limb, "origin", relativeOrigin);
                                     TryUpdateLimbParam(limb, "sourcerect", newRect);
                                     GUI.DrawString(spriteBatch, bottomRight + stringOffset, limb.ActiveSprite.size.FormatZeroDecimal(), Color.Yellow, Color.Black * 0.5f);
                                     if (limbPairEditing)
@@ -2517,13 +2503,12 @@ namespace Barotrauma
                                         UpdateOtherLimbs(limb, otherLimb =>
                                         {
                                             otherLimb.ActiveSprite.SourceRect = newRect;
-                                            otherLimb.ActiveSprite.Origin = relativeOrigin;
+                                            // Refresh the relative origin, so that the origin in pixels will be recalculated
+                                            otherLimb.ActiveSprite.RelativeOrigin = limb.ActiveSprite.RelativeOrigin;
                                             if (otherLimb.DamagedSprite != null)
                                             {
-                                                otherLimb.DamagedSprite.SourceRect = newRect;
-                                                otherLimb.DamagedSprite.Origin = relativeOrigin;
+                                                otherLimb.DamagedSprite.RelativeOrigin = limb.DamagedSprite.RelativeOrigin;
                                             }
-                                            TryUpdateLimbParam(otherLimb, "origin", relativeOrigin);
                                             TryUpdateLimbParam(otherLimb, "sourcerect", newRect);
                                         });
                                     }

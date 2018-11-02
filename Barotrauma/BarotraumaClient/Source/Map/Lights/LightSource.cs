@@ -12,6 +12,8 @@ namespace Barotrauma.Lights
     {
         public string Name => "LightSource";
 
+        public bool Persistent;
+
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
             get;
@@ -36,7 +38,7 @@ namespace Barotrauma.Lights
                 range = MathHelper.Clamp(value, 0.0f, 2048.0f);
             }
         }
-
+        
         public Sprite OverrideLightTexture
         {
             get;
@@ -57,8 +59,7 @@ namespace Barotrauma.Lights
         public LightSourceParams(XElement element)
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
-
-            //TODO: move sprite & texture to LightSourceParams?
+            
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -176,6 +177,12 @@ namespace Barotrauma.Lights
             }
         }
 
+        public Vector2 SpriteScale
+        {
+            get;
+            set;
+        } = Vector2.One;
+
         public Vector2 WorldPosition
         {
             get { return (ParentSub == null) ? position : position + ParentSub.Position; }
@@ -247,6 +254,7 @@ namespace Barotrauma.Lights
             : this(Vector2.Zero, 100.0f, Color.White, null)
         {
             this.lightSourceParams = lightSourceParams;
+            lightSourceParams.Persistent = true;
         }
 
         public LightSource(Vector2 position, float range, Color color, Submarine submarine, bool addLight=true)
@@ -771,7 +779,7 @@ namespace Barotrauma.Lights
                 LightSprite.Draw(
                     spriteBatch, drawPos, 
                     new Color(Color, lightSourceParams.OverrideLightSpriteAlpha ?? Color.A / 255.0f),
-                    origin, -Rotation, 1, LightSpriteEffect);
+                    origin, -Rotation, SpriteScale, LightSpriteEffect);
             }
         }
 
@@ -858,7 +866,11 @@ namespace Barotrauma.Lights
 
         public void Remove()
         {
-            if (LightSprite != null) LightSprite.Remove();
+            if (!lightSourceParams.Persistent)
+            {
+                LightSprite?.Remove();
+                OverrideLightTexture?.Remove();
+            }
 
             if (lightVolumeBuffer != null)
             {

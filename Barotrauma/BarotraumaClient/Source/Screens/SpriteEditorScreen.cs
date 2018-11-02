@@ -21,7 +21,6 @@ namespace Barotrauma
         private GUIFrame topPanelContents;
         private GUITextBlock texturePathText;
         private GUITextBlock xmlPathText;
-        private GUITickBox pixelPerfectToggle;
         private GUIScrollBar zoomBar;
         private string xmlPath;
         private List<Sprite> selectedSprites = new List<Sprite>();
@@ -86,7 +85,7 @@ namespace Barotrauma
                         sprite.SourceRect = element.GetAttributeRect("sourcerect", sprite.SourceRect);
                         sprite.Origin = element.GetAttributeVector2("origin", sprite.RelativeOrigin);
                     }
-                    widgets.Clear();
+                    ResetWidgets();
                     xmlPathText.Text = "Changes successfully reset";
                     xmlPathText.TextColor = Color.LightGreen;
                     return true;
@@ -178,20 +177,15 @@ namespace Barotrauma
                 OnMoved = (scrollBar, value) =>
                 {
                     zoom = MathHelper.Lerp(minZoom, maxZoom, value);
-                    widgets.Clear();
+                    ResetWidgets();
                     return true;
                 }
             };
-            pixelPerfectToggle = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.35f), topPanelContents.RectTransform, Anchor.BottomCenter, Pivot.BottomRight)
+            new GUIButton(new RectTransform(new Vector2(0.05f, 0.35f), topPanelContents.RectTransform, Anchor.TopCenter, Pivot.CenterLeft) { RelativeOffset = new Vector2(0.055f, 0.3f) }, "Reset Zoom")
             {
-                RelativeOffset = new Vector2(0, 0.1f)
-            }, "Zoom 100%")
-            {
-                OnSelected = (tickBox) =>
+                OnClicked = (box, data) =>
                 {
-                    zoomBar.Enabled = !tickBox.Selected;
-                    CalculateScale();
-                    widgets.Clear();
+                    ResetScale();
                     return true;
                 }
             };
@@ -214,7 +208,7 @@ namespace Barotrauma
                     selectedTexture = userData as Texture2D;
                     if (previousTexture != selectedTexture)
                     {
-                        CalculateScale();
+                        ResetScale();
                     }
                     foreach (GUIComponent child in spriteList.Content.Children)
                     {
@@ -264,7 +258,7 @@ namespace Barotrauma
                     if (sprite == null) return false;
                     if (selectedSprites.Any(s => s.Texture != selectedTexture))
                     {
-                        widgets.Clear();
+                        ResetWidgets();
                     }
                     if (Widget.EnableMultiSelect)
                     {
@@ -290,6 +284,12 @@ namespace Barotrauma
             RefreshLists();
         }
 
+        private void ResetWidgets()
+        {
+            widgets.Clear();
+            Widget.selectedWidgets.Clear();
+        }
+
         public override void Select()
         {
             base.Select();
@@ -298,9 +298,9 @@ namespace Barotrauma
 
         public void SelectSprite(Sprite sprite)
         {
-            widgets.Clear();
+            ResetWidgets();
             textureList.Select(sprite.Texture);
-            CalculateScale();
+            ResetScale();
             selectedSprites.Clear();
             selectedSprites.Add(sprite);
         }
@@ -332,11 +332,11 @@ namespace Barotrauma
                     }
                 }
             }
-            if (!pixelPerfectToggle.Selected && PlayerInput.ScrollWheelSpeed != 0 && viewArea.Contains(PlayerInput.MousePosition))
+            if (PlayerInput.ScrollWheelSpeed != 0 && viewArea.Contains(PlayerInput.MousePosition))
             {
                 zoom = MathHelper.Clamp(zoom + PlayerInput.ScrollWheelSpeed * (float)deltaTime * 0.05f * zoom, minZoom, maxZoom);
                 zoomBar.BarScroll = GetBarScrollValue();
-                widgets.Clear();
+                ResetWidgets();
             }
         }
 
@@ -400,14 +400,15 @@ namespace Barotrauma
                         Vector2 GetTopLeft() => sprite.SourceRect.Location.ToVector2();
                         Vector2 GetTopRight() => new Vector2(GetTopLeft().X + sprite.SourceRect.Width, GetTopLeft().Y);
                         Vector2 GetBottomRight() => new Vector2(GetTopRight().X, GetTopRight().Y + sprite.SourceRect.Height);
-                        var originWidget = GetWidget($"{identifier}_origin", widgetSize, Widget.Shape.Circle, initMethod: w =>
+                        var originWidget = GetWidget($"{identifier}_origin", widgetSize, Widget.Shape.Cross, initMethod: w =>
                         {
                             w.color = Color.Yellow;
+                            w.secondaryColor = Color.Gray;
                             w.tooltipOffset = tooltipOffset;
                             w.tooltip = $"Origin: {sprite.RelativeOrigin.FormatDoubleDecimal()}";
                             w.inputAreaMargin = new Point(widgetSize / 2);
-                            w.refresh = () => 
-                                w.DrawPos = (textureRect.Location.ToVector2() + (sprite.Origin + sprite.SourceRect.Location.ToVector2()) * zoom - halfSize)
+                            w.refresh = () =>
+                                w.DrawPos = (textureRect.Location.ToVector2() + (sprite.Origin + sprite.SourceRect.Location.ToVector2()) * zoom)
                                     .Clamp(textureRect.Location.ToVector2() + GetTopLeft() * zoom, textureRect.Location.ToVector2() + GetBottomRight() * zoom);
                             w.refresh();
                             w.MouseDown += () => spriteList.Select(sprite);
@@ -419,11 +420,12 @@ namespace Barotrauma
                             };
                             w.Deselected += w.refresh;
                             w.MouseUp += w.refresh;
-                            w.PreUpdate += dTime => w.Enabled = selectedSprites.Contains(sprite);
+                            w.PreUpdate += dTime => w.Enabled = isSelected;
                         });
                         var positionWidget = GetWidget($"{identifier}_position", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                         {
                             w.color = Color.Yellow;
+                            w.secondaryColor = Color.Gray;
                             w.tooltipOffset = tooltipOffset;
                             w.tooltip = $"Position: {sprite.SourceRect.Location}";
                             w.DrawPos = textureRect.Location.ToVector2() + GetTopLeft() * zoom - halfSize;
@@ -450,11 +452,12 @@ namespace Barotrauma
                             w.refresh = () => w.DrawPos = textureRect.Location.ToVector2() + sprite.SourceRect.Location.ToVector2() * zoom - halfSize;
                             w.Deselected += w.refresh;
                             w.MouseUp += w.refresh;
-                            w.PreUpdate += dTime => w.Enabled = selectedSprites.Contains(sprite);
+                            w.PreUpdate += dTime => w.Enabled = isSelected;
                         });
                         var sizeWidget = GetWidget($"{identifier}_size", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                         {
                             w.color = Color.Yellow;
+                            w.secondaryColor = Color.Gray;
                             w.tooltipOffset = tooltipOffset;
                             w.tooltip = $"Size: {sprite.SourceRect.Size}";
                             w.DrawPos = textureRect.Location.ToVector2() + GetBottomRight() * zoom + halfSize;
@@ -478,9 +481,9 @@ namespace Barotrauma
                             w.refresh = () => w.DrawPos = textureRect.Location.ToVector2() + new Vector2(sprite.SourceRect.Right, sprite.SourceRect.Bottom) * zoom + halfSize;
                             w.MouseUp += w.refresh;
                             w.Deselected += w.refresh;
-                            w.PreUpdate += dTime => w.Enabled = selectedSprites.Contains(sprite);
+                            w.PreUpdate += dTime => w.Enabled = isSelected;
                         });
-                        if (selectedSprites.Contains(sprite))
+                        if (isSelected)
                         {
                             positionWidget.Draw(spriteBatch, (float)deltaTime);
                             sizeWidget.Draw(spriteBatch, (float)deltaTime);
@@ -499,13 +502,14 @@ namespace Barotrauma
             spriteBatch.End();
         }
 
-        private void CalculateScale()
+        private void ResetScale()
         {
             float width = viewArea.Width / (float)selectedTexture.Width;
             float height = viewArea.Height / (float)selectedTexture.Height;
             maxZoom = Math.Min(width, height);
-            zoom = pixelPerfectToggle.Selected ? 1 : maxZoom;
+            zoom = Math.Min(1, maxZoom);
             zoomBar.BarScroll = GetBarScrollValue();
+            ResetWidgets();
         }
 
         private float GetBarScrollValue() => MathHelper.Lerp(0, 1, MathUtils.InverseLerp(minZoom, maxZoom, zoom));
@@ -532,7 +536,7 @@ namespace Barotrauma
         {
             textureList.ClearChildren();
             spriteList.ClearChildren();
-            widgets.Clear();
+            ResetWidgets();
             HashSet<string> textures = new HashSet<string>();
             foreach (Sprite sprite in Sprite.LoadedSprites.OrderBy(s => Path.GetFileNameWithoutExtension(s.FilePath)))
             {
