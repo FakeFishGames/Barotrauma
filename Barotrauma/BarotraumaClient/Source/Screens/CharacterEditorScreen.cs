@@ -563,7 +563,7 @@ namespace Barotrauma
 
         private string GetNextConfigFile()
         {
-            CheckAndGetIndex();
+            GetCurrentCharacterIndex();
             IncreaseIndex();
             currentCharacterConfig = AllFiles[characterIndex];
             return currentCharacterConfig;
@@ -571,19 +571,15 @@ namespace Barotrauma
 
         private string GetPreviousConfigFile()
         {
-            CheckAndGetIndex();
+            GetCurrentCharacterIndex();
             ReduceIndex();
             currentCharacterConfig = AllFiles[characterIndex];
             return currentCharacterConfig;
         }
 
-        // Check if the index is not set, in which case we'll get the index from the current species name.
-        private void CheckAndGetIndex()
+        private void GetCurrentCharacterIndex()
         {
-            if (characterIndex == -1)
-            {
-                characterIndex = AllFiles.IndexOf(GetConfigFile(character.SpeciesName));
-            }
+            characterIndex = AllFiles.IndexOf(GetConfigFile(character.SpeciesName));
         }
 
         private void IncreaseIndex()
@@ -643,6 +639,7 @@ namespace Barotrauma
         private void OnPostSpawn()
         {
             currentCharacterConfig = character.ConfigPath;
+            GetCurrentCharacterIndex();
             character.Submarine = Submarine.MainSub;
             character.AnimController.forceStanding = character.AnimController.CanWalk;
             character.AnimController.ForceSelectAnimationType = character.AnimController.CanWalk ? AnimationType.Walk : AnimationType.SwimSlow;
