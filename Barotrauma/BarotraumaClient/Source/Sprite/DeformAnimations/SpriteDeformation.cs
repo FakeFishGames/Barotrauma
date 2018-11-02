@@ -147,6 +147,7 @@ namespace Barotrauma.SpriteDeformations
                     newDeformation = new JointBendDeformation(element);
                     break;
                 case "reacttotriggerers":
+                    return new PositionalDeformation(element);
                 default:
                     if (Enum.TryParse(typeName, out PositionalDeformation.ReactionType reactionType))
                     {
