@@ -2494,19 +2494,12 @@ namespace Barotrauma
                                     newRect.Height = height;
                                     limb.ActiveSprite.SourceRect = newRect;
                                     limb.ActiveSprite.size = new Vector2(width, height);
-                                    // Also the origin should be adjusted to the new width, so that it will remain at the same position relative to the source rect location.
-                                    limb.ActiveSprite.Origin = new Vector2(origin.X - dx, origin.Y);
+                                    // Refresh the relative origin, so that the origin in pixels will be recalculated
+                                    limb.ActiveSprite.RelativeOrigin = limb.ActiveSprite.RelativeOrigin;
                                     if (limb.DamagedSprite != null)
                                     {
-                                        limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
-                                        limb.DamagedSprite.Origin = limb.ActiveSprite.Origin;
+                                        limb.DamagedSprite.RelativeOrigin = limb.DamagedSprite.RelativeOrigin;
                                     }
-                                    if (character.AnimController.IsFlipped)
-                                    {
-                                        origin.X = Math.Abs(origin.X - newRect.Width);
-                                    }
-                                    var relativeOrigin = new Vector2(origin.X / newRect.Width, origin.Y / newRect.Height);
-                                    TryUpdateLimbParam(limb, "origin", relativeOrigin);
                                     TryUpdateLimbParam(limb, "sourcerect", newRect);
                                     GUI.DrawString(spriteBatch, bottomRight + stringOffset, limb.ActiveSprite.size.FormatZeroDecimal(), Color.Yellow, Color.Black * 0.5f);
                                     if (limbPairEditing)
@@ -2514,13 +2507,12 @@ namespace Barotrauma
                                         UpdateOtherLimbs(limb, otherLimb =>
                                         {
                                             otherLimb.ActiveSprite.SourceRect = newRect;
-                                            otherLimb.ActiveSprite.Origin = relativeOrigin;
+                                            // Refresh the relative origin, so that the origin in pixels will be recalculated
+                                            otherLimb.ActiveSprite.RelativeOrigin = limb.ActiveSprite.RelativeOrigin;
                                             if (otherLimb.DamagedSprite != null)
                                             {
-                                                otherLimb.DamagedSprite.SourceRect = newRect;
-                                                otherLimb.DamagedSprite.Origin = relativeOrigin;
+                                                otherLimb.DamagedSprite.RelativeOrigin = limb.DamagedSprite.RelativeOrigin;
                                             }
-                                            TryUpdateLimbParam(otherLimb, "origin", relativeOrigin);
                                             TryUpdateLimbParam(otherLimb, "sourcerect", newRect);
                                         });
                                     }
