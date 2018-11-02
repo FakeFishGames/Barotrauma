@@ -2029,9 +2029,8 @@ namespace Barotrauma
                     // Origin
                     if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && selectedLimbs.Contains(limb))
                     {
-                        float multiplier = 0.5f;
                         Vector2 forward = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(limb.Rotation));
-                        var input = -scaledMouseSpeed * inputMultiplier * Cam.Zoom / limb.Scale * multiplier;
+                        var input = -scaledMouseSpeed * inputMultiplier / Cam.Zoom / limb.Scale;
                         var sprite = limb.ActiveSprite;
                         origin += input.TransformVector(forward);
                         var max = new Vector2(sourceRect.Width, sourceRect.Height);
