@@ -400,9 +400,10 @@ namespace Barotrauma
                         Vector2 GetTopLeft() => sprite.SourceRect.Location.ToVector2();
                         Vector2 GetTopRight() => new Vector2(GetTopLeft().X + sprite.SourceRect.Width, GetTopLeft().Y);
                         Vector2 GetBottomRight() => new Vector2(GetTopRight().X, GetTopRight().Y + sprite.SourceRect.Height);
-                        var originWidget = GetWidget($"{identifier}_origin", widgetSize, Widget.Shape.Circle, initMethod: w =>
+                        var originWidget = GetWidget($"{identifier}_origin", widgetSize, Widget.Shape.Cross, initMethod: w =>
                         {
                             w.color = Color.Yellow;
+                            w.secondaryColor = Color.Gray;
                             w.tooltipOffset = tooltipOffset;
                             w.tooltip = $"Origin: {sprite.RelativeOrigin.FormatDoubleDecimal()}";
                             w.inputAreaMargin = new Point(widgetSize / 2);
@@ -424,6 +425,7 @@ namespace Barotrauma
                         var positionWidget = GetWidget($"{identifier}_position", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                         {
                             w.color = Color.Yellow;
+                            w.secondaryColor = Color.Gray;
                             w.tooltipOffset = tooltipOffset;
                             w.tooltip = $"Position: {sprite.SourceRect.Location}";
                             w.DrawPos = textureRect.Location.ToVector2() + GetTopLeft() * zoom - halfSize;
@@ -455,6 +457,7 @@ namespace Barotrauma
                         var sizeWidget = GetWidget($"{identifier}_size", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                         {
                             w.color = Color.Yellow;
+                            w.secondaryColor = Color.Gray;
                             w.tooltipOffset = tooltipOffset;
                             w.tooltip = $"Size: {sprite.SourceRect.Size}";
                             w.DrawPos = textureRect.Location.ToVector2() + GetBottomRight() * zoom + halfSize;
