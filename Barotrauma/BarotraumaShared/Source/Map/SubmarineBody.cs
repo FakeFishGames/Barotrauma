@@ -431,9 +431,13 @@ namespace Barotrauma
         {
             if (f2.Body.UserData is Limb limb)
             {
-                bool collision = CheckLimbCollision(contact, limb);
+                bool collision = CheckCharacterCollision(contact, limb.character);
                 if (collision) HandleLimbCollision(contact, limb);
                 return collision;
+            }
+            if (f2.Body.UserData is Character character)
+            {
+                return CheckCharacterCollision(contact, character);
             }
 
             contact.GetWorldManifold(out Vector2 normal, out FixedArray2<Vector2> points);
@@ -464,16 +468,14 @@ namespace Barotrauma
             return true;
         }
 
-        private bool CheckLimbCollision(Contact contact, Limb limb)
+        private bool CheckCharacterCollision(Contact contact, Character character)
         {
-            if (limb.character.Submarine != null) return false;
+            if (character.Submarine != null) return false;
 
-            Vector2 contactNormal;
-            FixedArray2<Vector2> points;
-            contact.GetWorldManifold(out contactNormal, out points);
+            contact.GetWorldManifold(out Vector2 contactNormal, out FixedArray2<Vector2> points);
 
-            Vector2 normalizedVel = limb.character.AnimController.Collider.LinearVelocity == Vector2.Zero ?
-                Vector2.Zero : Vector2.Normalize(limb.character.AnimController.Collider.LinearVelocity);
+            Vector2 normalizedVel = character.AnimController.Collider.LinearVelocity == Vector2.Zero ?
+                Vector2.Zero : Vector2.Normalize(character.AnimController.Collider.LinearVelocity);
 
             Vector2 targetPos = ConvertUnits.ToDisplayUnits(points[0] - contactNormal);
             Hull newHull = Hull.FindHull(targetPos, null);
@@ -482,16 +484,17 @@ namespace Barotrauma
             {
                 targetPos = ConvertUnits.ToDisplayUnits(points[0] + normalizedVel);
                 newHull = Hull.FindHull(targetPos, null);
-                if (newHull == null) return true;
             }
 
-            var gaps = newHull.ConnectedGaps;
-            targetPos = limb.character.WorldPosition;
+            var gaps = newHull?.ConnectedGaps ?? Gap.GapList.Where(g => g.Submarine == submarine);
+            targetPos = character.WorldPosition;
             Gap adjacentGap = Gap.FindAdjacent(gaps, targetPos, 200.0f);
             if (adjacentGap == null) return true;
 
-            var ragdoll = limb.character.AnimController;
-            ragdoll.FindHull(newHull.WorldPosition, true);
+            if (newHull != null)
+            {
+                character.AnimController.FindHull(newHull.WorldPosition, true);
+            }
 
             return false;
         }
