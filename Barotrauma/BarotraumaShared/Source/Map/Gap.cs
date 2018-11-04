@@ -636,7 +636,7 @@ namespace Barotrauma
             hull2.Oxygen -= deltaOxygen;            
         }
 
-        public static Gap FindAdjacent(List<Gap> gaps, Vector2 worldPos, float allowedOrthogonalDist)
+        public static Gap FindAdjacent(IEnumerable<Gap> gaps, Vector2 worldPos, float allowedOrthogonalDist)
         {
             foreach (Gap gap in gaps)
             {
