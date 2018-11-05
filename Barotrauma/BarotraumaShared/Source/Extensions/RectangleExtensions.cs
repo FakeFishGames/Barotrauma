@@ -34,16 +34,27 @@ namespace Barotrauma.Extensions
             return rect.ScaleSize(rect.CalculateRelativeSize(relativeTo));
         }
 
+        public static Rectangle ScaleSize(this Rectangle rect, float scale)
+        {
+            return rect.ScaleSize(new Vector2(scale));
+        }
+
         public static Rectangle ScaleSize(this Rectangle rect, Vector2 scale)
         {
             var size = rect.MultiplySize(scale);
             return new Rectangle(rect.X, rect.Y, size.X, size.Y);
         }
 
-        public static Rectangle ScaleSize(this Rectangle rect, float scale)
+        public static Rectangle Scale(this Rectangle rect, float scale)
+        {
+            return rect.Scale(new Vector2(scale));
+        }
+
+        public static Rectangle Scale(this Rectangle rect, Vector2 scale)
         {
             var size = rect.MultiplySize(scale);
-            return new Rectangle(rect.X, rect.Y, size.X, size.Y);
+            var pos = rect.Location -= rect.Location.Divide(2);
+            return new Rectangle(pos, size);
         }
     }
 }

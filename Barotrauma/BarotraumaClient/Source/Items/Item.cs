@@ -120,14 +120,16 @@ namespace Barotrauma
                     if (prefab.ResizeHorizontal || prefab.ResizeVertical)
                     {
                         activeSprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color,
-                            depth: depth);
+                            depth: depth,
+                            scaleMultiplier: Scale);
                         fadeInBrokenSprite?.Sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color * fadeInBrokenSpriteAlpha,
-                            depth: depth - 0.000001f);
+                            depth: depth - 0.000001f,
+                            scaleMultiplier: Scale);
                     }
                     else
                     {
-                        activeSprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, SpriteRotation, SpriteScale, activeSprite.effects, depth);
-                        fadeInBrokenSprite?.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color * fadeInBrokenSpriteAlpha, SpriteRotation, SpriteScale, activeSprite.effects, depth - 0.000001f);
+                        activeSprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, SpriteRotation, Scale, activeSprite.effects, depth);
+                        fadeInBrokenSprite?.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color * fadeInBrokenSpriteAlpha, SpriteRotation, Scale, activeSprite.effects, depth - 0.000001f);
                     }
 
                 }
@@ -155,8 +157,8 @@ namespace Barotrauma
                             }
                         }
                     }
-                    body.Draw(spriteBatch, activeSprite, color, depth, SpriteScale);
-                    if (fadeInBrokenSprite != null) body.Draw(spriteBatch, fadeInBrokenSprite.Sprite, color * fadeInBrokenSpriteAlpha, depth - 0.000001f, SpriteScale);
+                    body.Draw(spriteBatch, activeSprite, color, depth, Scale);
+                    if (fadeInBrokenSprite != null) body.Draw(spriteBatch, fadeInBrokenSprite.Sprite, color * fadeInBrokenSpriteAlpha, depth - 0.000001f, Scale);
                 }
 
                 activeSprite.effects = oldEffects;
