@@ -48,7 +48,7 @@ namespace Barotrauma
         private bool lockSpriteOrigin;
         private bool lockSpritePosition;
         private bool lockSpriteSize;
-        private bool copyJoints;
+        private bool copyJointSettings;
         private bool displayColliders;
         private bool displayBackgroundColor;
 
@@ -961,12 +961,12 @@ namespace Barotrauma
             }, "Copy Joint Settings")
             {
                 ToolTip = "Copies the currently tweaked settings to all selected joints.",
-                Selected = copyJoints,
-                TextColor = copyJoints ? Color.Red : Color.White,
+                Selected = copyJointSettings,
+                TextColor = copyJointSettings ? Color.Red : Color.White,
                 OnSelected = (GUITickBox box) =>
                 {
-                    copyJoints = box.Selected;
-                    box.TextColor = copyJoints ? Color.Red : Color.White;
+                    copyJointSettings = box.Selected;
+                    box.TextColor = copyJointSettings ? Color.Red : Color.White;
                     return true;
                 }
             };
@@ -2167,7 +2167,7 @@ namespace Barotrauma
                                         joint.LocalAnchorA += input;
                                         TryUpdateJointParam(joint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
                                         // Snap all selected joints to the first selected
-                                        if (copyJoints)
+                                        if (copyJointSettings)
                                         {
                                             foreach (var j in selectedJoints)
                                             {
@@ -2181,7 +2181,7 @@ namespace Barotrauma
                                         joint.LocalAnchorB += input;
                                         TryUpdateJointParam(joint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
                                         // Snap all selected joints to the first selected
-                                        if (copyJoints)
+                                        if (copyJointSettings)
                                         {
                                             foreach (var j in selectedJoints)
                                             {
@@ -2584,7 +2584,7 @@ namespace Barotrauma
                             joint.LocalAnchorA += input;
                             TryUpdateJointParam(joint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
                             // Snap all selected joints to the first selected
-                            if (copyJoints)
+                            if (copyJointSettings)
                             {
                                 foreach (var j in selectedJoints)
                                 {
@@ -2598,7 +2598,7 @@ namespace Barotrauma
                             joint.LocalAnchorB += input;
                             TryUpdateJointParam(joint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
                             // Snap all selected joints to the first selected
-                            if (copyJoints)
+                            if (copyJointSettings)
                             {
                                 foreach (var j in selectedJoints)
                                 {
@@ -2637,10 +2637,15 @@ namespace Barotrauma
                 joint.UpperLimit = MathHelper.ToRadians(angle);
                 ValidateJoint(joint);
                 TryUpdateJointParam(joint, "upperlimit", angle);
-                if (copyJoints)
+                if (copyJointSettings)
                 {
                     foreach (var j in selectedJoints)
                     {
+                        if (j.LimitEnabled != joint.LimitEnabled)
+                        {
+                            j.LimitEnabled = joint.LimitEnabled;
+                            TryUpdateJointParam(j, "limitenabled", j.LimitEnabled);
+                        }
                         j.UpperLimit = joint.UpperLimit;
                         TryUpdateJointParam(j, "upperlimit", angle);
                     }
@@ -2651,6 +2656,11 @@ namespace Barotrauma
                     {
                         if (IsMatchingLimb(limb, otherLimb, joint, otherJoint))
                         {
+                            if (otherJoint.LimitEnabled != joint.LimitEnabled)
+                            {
+                                otherJoint.LimitEnabled = otherJoint.LimitEnabled;
+                                TryUpdateJointParam(otherJoint, "limitenabled", otherJoint.LimitEnabled);
+                            }
                             otherJoint.UpperLimit = joint.UpperLimit;
                             TryUpdateJointParam(otherJoint, "upperlimit", angle);
                         }
@@ -2665,10 +2675,15 @@ namespace Barotrauma
                 joint.LowerLimit = MathHelper.ToRadians(angle);
                 ValidateJoint(joint);
                 TryUpdateJointParam(joint, "lowerlimit", angle);
-                if (copyJoints)
+                if (copyJointSettings)
                 {
                     foreach (var j in selectedJoints)
                     {
+                        if (j.LimitEnabled != joint.LimitEnabled)
+                        {
+                            j.LimitEnabled = joint.LimitEnabled;
+                            TryUpdateJointParam(j, "limitenabled", j.LimitEnabled);
+                        }
                         j.LowerLimit = joint.LowerLimit;
                         TryUpdateJointParam(j, "lowerlimit", angle);
                     }
@@ -2679,6 +2694,11 @@ namespace Barotrauma
                     {
                         if (IsMatchingLimb(limb, otherLimb, joint, otherJoint))
                         {
+                            if (otherJoint.LimitEnabled != joint.LimitEnabled)
+                            {
+                                otherJoint.LimitEnabled = otherJoint.LimitEnabled;
+                                TryUpdateJointParam(otherJoint, "limitenabled", otherJoint.LimitEnabled);
+                            }
                             otherJoint.LowerLimit = joint.LowerLimit;
                             TryUpdateJointParam(otherJoint, "lowerlimit", angle);
                         }
