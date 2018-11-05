@@ -1540,7 +1540,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Create New Character (WIP)")
+            new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Create New Character")
             {
                 OnClicked = (button, data) =>
                 {
