@@ -10,10 +10,6 @@ namespace Barotrauma
 {
     abstract partial class MapEntity : Entity
     {
-        // TODO: Remove from the release.
-        [Serialize(1f, false), Editable(0.1f, 10f, ToolTip = "Development feature. Not saved. Does not scale the colliders or anything. Only the sprite.")]
-        public float SpriteScale { get; set; } = 1;
-
         protected static Vector2 selectionPos = Vector2.Zero;
         protected static Vector2 selectionSize = Vector2.Zero;
 
