@@ -552,6 +552,28 @@ namespace Barotrauma
                     }
                 }
             }));
+
+            commands.Add(new Command("camerasettings", "camerasettings [defaultzoom] [zoomsmoothness] [movesmoothness] [minzoom] [maxzoom]: debug command for testing camera settings. The values default to 1.1, 8.0, 8.0, 0.1 and 2.0.", (string[] args) =>
+            {
+                float defaultZoom = Screen.Selected.Cam.DefaultZoom;
+                if (args.Length > 0) float.TryParse(args[0], NumberStyles.Number, CultureInfo.InvariantCulture, out defaultZoom);
+
+                float zoomSmoothness = Screen.Selected.Cam.ZoomSmoothness;
+                if (args.Length > 1) float.TryParse(args[1], NumberStyles.Number, CultureInfo.InvariantCulture, out zoomSmoothness);
+                float moveSmoothness = Screen.Selected.Cam.MoveSmoothness;
+                if (args.Length > 2) float.TryParse(args[2], NumberStyles.Number, CultureInfo.InvariantCulture, out moveSmoothness);
+
+                float minZoom = Screen.Selected.Cam.MinZoom;
+                if (args.Length > 3) float.TryParse(args[3], NumberStyles.Number, CultureInfo.InvariantCulture, out minZoom);
+                float maxZoom = Screen.Selected.Cam.MaxZoom;
+                if (args.Length > 4) float.TryParse(args[4], NumberStyles.Number, CultureInfo.InvariantCulture, out maxZoom);
+
+                Screen.Selected.Cam.DefaultZoom = defaultZoom;
+                Screen.Selected.Cam.ZoomSmoothness = zoomSmoothness;
+                Screen.Selected.Cam.MoveSmoothness = moveSmoothness;
+                Screen.Selected.Cam.MinZoom = minZoom;
+                Screen.Selected.Cam.MaxZoom = maxZoom;
+            }));
 #endif
 
             commands.Add(new Command("dumptexts", "dumptexts [filepath]: Extracts all the texts from the given text xml and writes them into a file (using the same filename, but with the .txt extension). If the filepath is omitted, the EnglishVanilla.xml file is used.", (string[] args) =>
@@ -987,6 +1009,11 @@ namespace Barotrauma
                     ThrowError("Not controlling any character!");
                     return;
                 }
+                if (args.Length == 0)
+                {
+                    ThrowError("Please give the value after the command.");
+                    return;
+                }
                 if (!float.TryParse(args[0], NumberStyles.Number, CultureInfo.InvariantCulture, out float value))
                 {
                     ThrowError("Failed to parse float value from the arguments");
@@ -1007,6 +1034,11 @@ namespace Barotrauma
                     ThrowError("Not controlling any character!");
                     return;
                 }
+                if (args.Length == 0)
+                {
+                    ThrowError("Please give the value after the command.");
+                    return;
+                }
                 if (!float.TryParse(args[0], NumberStyles.Number, CultureInfo.InvariantCulture, out float value))
                 {
                     ThrowError("Failed to parse float value from the arguments");
@@ -1025,6 +1057,11 @@ namespace Barotrauma
                 if (character == null)
                 {
                     ThrowError("Not controlling any character!");
+                    return;
+                }
+                if (args.Length == 0)
+                {
+                    ThrowError("Please give the value after the command.");
                     return;
                 }
                 if (!float.TryParse(args[0], NumberStyles.Number, CultureInfo.InvariantCulture, out float value))

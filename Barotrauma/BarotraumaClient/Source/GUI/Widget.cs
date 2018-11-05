@@ -12,11 +12,13 @@ namespace Barotrauma
         public enum Shape
         {
             Rectangle,
-            Circle
+            Circle,
+            Cross
         }
 
         public Shape shape;
         public string tooltip;
+        public bool showTooltip = true;
         public Rectangle DrawRect => new Rectangle((int)(DrawPos.X - (float)size / 2), (int)(DrawPos.Y - (float)size / 2), size, size);
         public Rectangle InputRect
         {
@@ -40,6 +42,7 @@ namespace Barotrauma
         public bool isFilled;
         public Point inputAreaMargin;
         public Color color = Color.Red;
+        public Color? secondaryColor;
         public Color textColor = Color.White;
         public Color textBackgroundColor = Color.Black * 0.5f;
         public readonly string id;
@@ -47,9 +50,8 @@ namespace Barotrauma
         public event Action Selected;
         public event Action Deselected;
         public event Action Hovered;
-        public event Action Clicked;
-        public event Action MouseDown;
         public event Action MouseUp;
+        public event Action MouseDown;
         public event Action<float> MouseHeld;
         public event Action<float> PreUpdate;
         public event Action<float> PostUpdate;
@@ -121,21 +123,17 @@ namespace Barotrauma
             }
             if (IsSelected)
             {
-                if (PlayerInput.LeftButtonHeld())
-                {
-                    MouseHeld?.Invoke(deltaTime);
-                }
                 if (PlayerInput.LeftButtonDown())
                 {
                     MouseDown?.Invoke();
                 }
-                if (PlayerInput.LeftButtonReleased())
+                if (PlayerInput.LeftButtonHeld())
                 {
-                    MouseUp?.Invoke();
+                    MouseHeld?.Invoke(deltaTime);
                 }
                 if (PlayerInput.LeftButtonClicked())
                 {
-                    Clicked?.Invoke();
+                    MouseUp?.Invoke();
                 }
             }
             PostUpdate?.Invoke(deltaTime);
@@ -148,16 +146,34 @@ namespace Barotrauma
             switch (shape)
             {
                 case Shape.Rectangle:
+                    if (secondaryColor.HasValue)
+                    {
+                        GUI.DrawRectangle(spriteBatch, drawRect, secondaryColor.Value, isFilled, thickness: 2);
+                    }
                     GUI.DrawRectangle(spriteBatch, drawRect, color, isFilled, thickness: IsSelected ? 3 : 1);
                     break;
                 case Shape.Circle:
+                    if (secondaryColor.HasValue)
+                    {
+                        ShapeExtensions.DrawCircle(spriteBatch, DrawPos, size / 2, sides, secondaryColor.Value, thickness: 2);
+                    }
                     ShapeExtensions.DrawCircle(spriteBatch, DrawPos, size / 2, sides, color, thickness: IsSelected ? 3 : 1);
+                    break;
+                case Shape.Cross:
+                    float halfSize = size / 2;
+                    if (secondaryColor.HasValue)
+                    {
+                        GUI.DrawLine(spriteBatch, DrawPos + Vector2.UnitY * halfSize, DrawPos - Vector2.UnitY * halfSize, secondaryColor.Value, width: 2);
+                        GUI.DrawLine(spriteBatch, DrawPos + Vector2.UnitX * halfSize, DrawPos - Vector2.UnitX * halfSize, secondaryColor.Value, width: 2);
+                    }
+                    GUI.DrawLine(spriteBatch, DrawPos + Vector2.UnitY * halfSize, DrawPos - Vector2.UnitY * halfSize, color, width: IsSelected ? 3 : 1);
+                    GUI.DrawLine(spriteBatch, DrawPos + Vector2.UnitX * halfSize, DrawPos - Vector2.UnitX * halfSize, color, width: IsSelected ? 3 : 1);
                     break;
                 default: throw new NotImplementedException(shape.ToString());
             }
             if (IsSelected)
             {
-                if (!string.IsNullOrEmpty(tooltip))
+                if (showTooltip && !string.IsNullOrEmpty(tooltip))
                 {
                     var offset = tooltipOffset ?? new Vector2(size, -size / 2);
                     GUI.DrawString(spriteBatch, DrawPos + offset, tooltip, textColor, textBackgroundColor);

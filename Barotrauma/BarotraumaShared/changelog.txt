@@ -1,4 +1,25 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.2.1
+---------------------------------------------------------------------------------------------------------
+
+- Husks or huskified humans don't gain health by attacking corpses.
+- Fixed dragged characters occasionally getting launched away at a high speed when moving from sub to
+another.
+- Fixed dragged characters staying floating mid-air after they've been dragged up/down ladders.
+- Attempt to fix items occasionally dropping client-side when moving them from an inventory to another.
+- Fixed incorrect rotation of welding tools and other 2-handed items that are held in one hand when not 
+aiming. The items were rotated according to the left hand, but positioned on the right hand.
+- Spaces and exclamation marks are allowed in client names by default.
+- Hitscan weapons like the revolver can hit targets outside the sub when firing from the inside and 
+vice versa.
+- Fixed crashing when attempting to clone linked submarines in the sub editor.
+- Fixed crashing when attempting to clone items with non-default required items.
+- Fixed autopilot being unable to navigate to the destination in mirrored levels.
+- Ragdolls can't be dragged through walls or other colliders.
+- Dropped flashlights don't consume and battery and turn off automatically.
+- Oxygenite tanks can be stored in cabinets.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.2.0
 ---------------------------------------------------------------------------------------------------------
 

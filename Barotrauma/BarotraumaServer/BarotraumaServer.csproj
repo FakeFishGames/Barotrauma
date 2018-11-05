@@ -127,6 +127,7 @@
     <Compile Include="Source\Items\Components\Machines\Pump.cs" />
     <Compile Include="Source\Items\Components\Machines\Steering.cs" />
     <Compile Include="Source\Items\Components\Power\PowerContainer.cs" />
+    <Compile Include="Source\Items\Components\Repairable.cs" />
     <Compile Include="Source\Items\Components\Signal\ConnectionPanel.cs" />
     <Compile Include="Source\Items\Components\Signal\Wire.cs" />
     <Compile Include="Source\Items\Inventory.cs" />

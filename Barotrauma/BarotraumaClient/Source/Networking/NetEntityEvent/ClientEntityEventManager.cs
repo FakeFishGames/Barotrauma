@@ -46,6 +46,17 @@ namespace Barotrauma.Networking
                 return;
             }
 
+            if (((Entity)entity).Removed)
+            {
+                DebugConsole.ThrowError("Can't create an entity event for " + entity + " - the entity has been removed.\n" + Environment.StackTrace);
+                return;
+            }
+            if (((Entity)entity).IdFreed)
+            {
+                DebugConsole.ThrowError("Can't create an entity event for " + entity + " - the ID of the entity has been freed.\n" + Environment.StackTrace);
+                return;
+            }
+
             ID++;
             var newEvent = new ClientEntityEvent(entity, ID);
             newEvent.CharacterStateID = GameMain.Client.Character.LastNetworkUpdateID;
@@ -170,9 +181,9 @@ namespace Barotrauma.Networking
                         {
                             DebugConsole.NewMessage(
                                 "Received msg " + thisEventID + " (waiting for " + (lastReceivedID + 1) + ")",
-                                thisEventID < lastReceivedID + 1
-                                    ? Microsoft.Xna.Framework.Color.Yellow
-                                    : Microsoft.Xna.Framework.Color.Red);
+                                NetIdUtils.IdMoreRecent(thisEventID, (UInt16)(lastReceivedID + 1))
+                                    ? Microsoft.Xna.Framework.Color.Red
+                                    : Microsoft.Xna.Framework.Color.Yellow);
                         }
                     }
                     else if (entity == null)
@@ -180,6 +191,7 @@ namespace Barotrauma.Networking
                         DebugConsole.NewMessage(
                             "Received msg " + thisEventID + ", entity " + entityID + " not found",
                             Microsoft.Xna.Framework.Color.Red);
+                        GameMain.Client.ReportError(ClientNetError.MISSING_ENTITY, eventID: thisEventID, entityID: entityID);
                     }
                     
                     msg.Position += msgLength * 8;

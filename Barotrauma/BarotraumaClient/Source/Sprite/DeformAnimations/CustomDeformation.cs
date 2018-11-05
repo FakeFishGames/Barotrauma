@@ -6,33 +6,54 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma.SpriteDeformations
 {
+    class CustomDeformationParams : SpriteDeformationParams
+    {
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f,
+            ToolTip = "How fast the deformation \"oscillates\" back and forth. " +
+            "For example, if the sprite is stretched up, setting this value above zero would make it do a wave-like movement up and down.")]
+        public float Frequency { get; set; }
+
+        [Serialize(1.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f,
+            ToolTip = "The \"strength\" of the deformation.")]
+        public float Amplitude { get; set; }
+
+        public CustomDeformationParams(XElement element) : base(element)
+        {
+        }
+    }
+
     class CustomDeformation : SpriteDeformation
     {
-        private float frequency;
-        private float amplitude;
+        private List<Vector2[]> deformRows = new List<Vector2[]>();
+
+        private CustomDeformationParams CustomDeformationParams => deformationParams as CustomDeformationParams;
 
         private float phase;
 
-        public CustomDeformation(XElement element) : base(element)
+        public CustomDeformation(XElement element) : base(element, new CustomDeformationParams(element))
         {
-            frequency = element.GetAttributeFloat("frequency", 0.0f);
-            amplitude = element.GetAttributeFloat("amplitude", 1.0f);
-
             phase = Rand.Range(0.0f, MathHelper.TwoPi);
 
-            List<Vector2[]> deformRows = new List<Vector2[]>();
-            for (int i = 0; ; i++)
+            if (element == null)
             {
-                string row = element.GetAttributeString("row" + i, "");
-                if (string.IsNullOrWhiteSpace(row)) break;
-
-                string[] splitRow = row.Split(' ');
-                Vector2[] rowVectors = new Vector2[splitRow.Length];
-                for (int j = 0; j < splitRow.Length; j++)
+                deformRows.Add(new Vector2[] { Vector2.Zero, Vector2.Zero });
+                deformRows.Add(new Vector2[] { Vector2.Zero, Vector2.Zero });
+            }
+            else
+            {
+                for (int i = 0; ; i++)
                 {
-                    rowVectors[j] = XMLExtensions.ParseVector2(splitRow[j]);
+                    string row = element.GetAttributeString("row" + i, "");
+                    if (string.IsNullOrWhiteSpace(row)) break;
+
+                    string[] splitRow = row.Split(' ');
+                    Vector2[] rowVectors = new Vector2[splitRow.Length];
+                    for (int j = 0; j < splitRow.Length; j++)
+                    {
+                        rowVectors[j] = XMLExtensions.ParseVector2(splitRow[j]);
+                    }
+                    deformRows.Add(rowVectors);
                 }
-                deformRows.Add(rowVectors);
             }
 
             if (deformRows.Count() == 0 || deformRows.First() == null || deformRows.First().Length == 0)
@@ -83,13 +104,24 @@ namespace Barotrauma.SpriteDeformations
         protected override void GetDeformation(out Vector2[,] deformation, out float multiplier)
         {
             deformation = Deformation;
-            multiplier = frequency <= 0.0f ? amplitude : (float)Math.Sin(phase) * amplitude;
+            multiplier = CustomDeformationParams.Frequency <= 0.0f ? 
+                CustomDeformationParams.Amplitude : 
+                (float)Math.Sin(phase) * CustomDeformationParams.Amplitude;
         }
 
         public override void Update(float deltaTime)
         {
-            phase += deltaTime * frequency;
+            phase += deltaTime * CustomDeformationParams.Frequency;
             phase %= MathHelper.TwoPi;
+        }
+
+        public override void Save(XElement element)
+        {
+            base.Save(element);
+            for (int i = 0; i < deformRows.Count; i++)
+            {
+                element.Add(new XAttribute("row" + i, string.Join(" ", deformRows[i].Select(r => XMLExtensions.Vector2ToString(r)))));
+            }
         }
     }
 }

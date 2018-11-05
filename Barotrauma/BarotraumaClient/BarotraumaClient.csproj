@@ -271,7 +271,7 @@
     <Compile Include="Source\Sprite\DeformAnimations\Inflate.cs" />
     <Compile Include="Source\Sprite\DeformAnimations\NoiseDeformation.cs" />
     <Compile Include="Source\Sprite\DeformAnimations\PositionalDeformation.cs" />
-    <Compile Include="Source\Sprite\DeformAnimations\BezierDeformation.cs" />
+    <Compile Include="Source\Sprite\DeformAnimations\JointBendDeformation.cs" />
     <Compile Include="Source\Sprite\DeformAnimations\SpriteDeformation.cs" />
     <Compile Include="Source\Sprite\Sprite.cs" />
     <Compile Include="Source\Sprite\SpriteSheet.cs" />
@@ -319,7 +319,7 @@
     <Content Include="freetype6.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="OpenAL32.dll">
+    <Content Include="oalinst.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="wrap_oal.dll">

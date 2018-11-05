@@ -361,7 +361,7 @@ namespace Barotrauma.Networking
 
             string respawnDurationLabel = TextManager.Get("ServerSettingsRespawnDuration");
             CreateLabeledSlider(roundsTab, "", out slider, out sliderLabel);
-            slider.ToolTip = minRespawnText.ToolTip;
+            slider.ToolTip = respawnDurationText.ToolTip;
             slider.UserData = respawnDurationText;
             slider.Step = 0.1f;
             slider.Range = new Vector2(60.0f, 660.0f);

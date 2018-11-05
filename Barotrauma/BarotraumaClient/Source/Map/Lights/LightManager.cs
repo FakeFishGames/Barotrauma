@@ -124,7 +124,7 @@ namespace Barotrauma.Lights
 
         public void AddLight(LightSource light)
         {
-            lights.Add(light);
+            if (!lights.Contains(light)) lights.Add(light);
         }
 
         public void RemoveLight(LightSource light)

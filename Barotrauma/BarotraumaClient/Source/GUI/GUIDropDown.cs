@@ -16,6 +16,8 @@ namespace Barotrauma
 
         private RectTransform currentListBoxParent;
 
+        private bool selectMultiple;
+
         public bool Dropped { get; set; }
 
         public object SelectedItemData
@@ -60,6 +62,24 @@ namespace Barotrauma
             }
         }
 
+        private List<object> selectedDataMultiple = new List<object>();
+        public IEnumerable<object> SelectedDataMultiple
+        {
+            get { return selectedDataMultiple; }
+        }
+
+        private List<int> selectedIndexMultiple = new List<int>();
+        public IEnumerable<int> SelectedIndexMultiple
+        {
+            get { return selectedIndexMultiple; }
+        }
+
+        public string Text
+        {
+            get { return button.Text; }
+            set { button.Text = value; }
+        }
+
         public override string ToolTip
         {
             get
@@ -73,9 +93,11 @@ namespace Barotrauma
                 listBox.ToolTip = value;
             }
         }
-        
-        public GUIDropDown(RectTransform rectT, string text = "", int elementCount = 4, string style = "") : base(style, rectT)
+                
+        public GUIDropDown(RectTransform rectT, string text = "", int elementCount = 4, string style = "", bool selectMultiple = false) : base(style, rectT)
         {
+            this.selectMultiple = selectMultiple;
+
             button = new GUIButton(new RectTransform(Vector2.One, rectT), text, Alignment.CenterLeft, style: "GUIDropDown")
             {
                 OnClicked = OnClicked
@@ -83,10 +105,9 @@ namespace Barotrauma
             GUI.Style.Apply(button, "", this);
             
             listBox = new GUIListBox(new RectTransform(new Point(Rect.Width, Rect.Height * MathHelper.Clamp(elementCount, 2, 10)), rectT, Anchor.BottomLeft, Pivot.TopLeft)
+            { IsFixedSize = false }, style: style)
             {
-                IsFixedSize = false
-            }, style: style)
-            {
+                Enabled = !selectMultiple,
                 OnSelected = SelectItem
             };
 
@@ -123,20 +144,54 @@ namespace Barotrauma
             //or just go with the direct parent if there are no listboxes in the hierarchy
             return RectTransform.Parent;
         }
-
-        
+                
         public void AddItem(string text, object userData = null, string toolTip = "")
         {
-            GUITextBlock textBlock = null;
+            if (selectMultiple)
+            {
+                var frame = new GUIFrame(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.Content.RectTransform)
+                { IsFixedSize = false }, style: "ListBoxElement")
+                {
+                    UserData = userData,
+                    ToolTip = toolTip
+                };
 
-            textBlock = new GUITextBlock(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.Content.RectTransform)
+                new GUITickBox(new RectTransform(new Point((int)(button.Rect.Height * 0.8f)), frame.RectTransform, anchor: Anchor.CenterLeft), text)
+                {
+                    UserData = userData,
+                    ToolTip = toolTip,
+                    OnSelected = (GUITickBox tb) =>
+                    {
+                        List<string> texts = new List<string>();
+                        selectedDataMultiple.Clear();
+                        selectedIndexMultiple.Clear();
+                        int i = 0;
+                        foreach (GUIComponent child in ListBox.Content.Children)
+                        {
+                            var tickBox = child.GetChild<GUITickBox>();
+                            if (tickBox.Selected)
+                            {
+                                selectedDataMultiple.Add(child.UserData);
+                                selectedIndexMultiple.Add(i);
+                                texts.Add(tickBox.Text);
+                            }
+                            i++;
+                        }
+                        button.Text = string.Join(", ", texts);
+                        OnSelected?.Invoke(tb.Parent, tb.Parent.UserData);
+                        return true;
+                    }
+                };
+            }
+            else
             {
-                IsFixedSize = false
-            }, text, style: "ListBoxElement")
-            {
-                UserData = userData,
-                ToolTip = toolTip
-            };
+                new GUITextBlock(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.Content.RectTransform)
+                { IsFixedSize = false }, text, style: "ListBoxElement")
+                {
+                    UserData = userData,
+                    ToolTip = toolTip
+                };
+            }
         }
 
         public override void ClearChildren()
@@ -151,13 +206,24 @@ namespace Barotrauma
 
         private bool SelectItem(GUIComponent component, object obj)
         {
-            GUITextBlock textBlock = component as GUITextBlock;
-            if (textBlock == null)
+            if (selectMultiple)
             {
-                textBlock = component.GetChild<GUITextBlock>();
-                if (textBlock == null) return false;
+                foreach (GUIComponent child in ListBox.Content.Children)
+                {
+                    var tickBox = child.GetChild<GUITickBox>();
+                    if (obj == child.UserData) { tickBox.Selected = true; }
+                }
             }
-            button.Text = textBlock.Text;
+            else
+            {
+                GUITextBlock textBlock = component as GUITextBlock;
+                if (textBlock == null)
+                {
+                    textBlock = component.GetChild<GUITextBlock>();
+                    if (textBlock == null) return false;
+                }
+                button.Text = textBlock.Text;
+            }
             Dropped = false;
             OnSelected?.Invoke(component, component.UserData);
             return true;
@@ -165,12 +231,30 @@ namespace Barotrauma
 
         public void SelectItem(object userData)
         {
-            listBox.Select(userData);
+            if (selectMultiple)
+            {
+                SelectItem(listBox.Content.FindChild(userData), userData);
+            }
+            else
+            {
+                listBox.Select(userData);
+            }
         }
 
         public void Select(int index)
         {
-            listBox.Select(index);
+            if (selectMultiple)
+            {
+                var child = listBox.Content.GetChild(index);
+                if (child != null)
+                {
+                    SelectItem(null, child.UserData);
+                }
+            }
+            else
+            {
+                listBox.Select(index);
+            }
         }
 
         private bool wasOpened;

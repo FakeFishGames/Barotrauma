@@ -7,6 +7,7 @@ namespace Barotrauma.Particles
     class ParticleEmitter
     {
         private float emitTimer;
+        private float burstEmitTimer;
 
         public readonly ParticleEmitterPrefab Prefab;
 
@@ -24,6 +25,7 @@ namespace Barotrauma.Particles
         public void Emit(float deltaTime, Vector2 position, Hull hullGuess = null, float angle = 0.0f, float particleRotation = 0.0f, float velocityMultiplier = 1.0f, float sizeMultiplier = 1.0f, float amountMultiplier = 1.0f)
         {
             emitTimer += deltaTime * amountMultiplier;
+            burstEmitTimer += deltaTime;
 
             if (Prefab.ParticlesPerSecond > 0)
             {
@@ -34,6 +36,9 @@ namespace Barotrauma.Particles
                     emitTimer -= emitInterval;
                 }
             }
+
+            if (burstEmitTimer < Prefab.EmitInterval) return;
+            burstEmitTimer = 0.0f;
 
             for (int i = 0; i < Prefab.ParticleAmount * amountMultiplier; i++)
             {
@@ -87,8 +92,10 @@ namespace Barotrauma.Particles
         public readonly float VelocityMin, VelocityMax;
 
         public readonly float ScaleMin, ScaleMax;
-        
+
+        public readonly float EmitInterval;
         public readonly int ParticleAmount;
+
         public readonly float ParticlesPerSecond;
 
         public readonly bool CopyEntityAngle;
@@ -113,14 +120,14 @@ namespace Barotrauma.Particles
             AngleMin = MathHelper.ToRadians(MathHelper.Clamp(AngleMin, -360.0f, 360.0f));
             AngleMax = MathHelper.ToRadians(MathHelper.Clamp(AngleMax, -360.0f, 360.0f));
 
-            if (element.Attribute("scalemin")==null)
+            if (element.Attribute("scalemin") == null)
             {
                 ScaleMin = 1.0f;
                 ScaleMax = 1.0f;
             }
             else
             {
-                ScaleMin = element.GetAttributeFloat("scalemin",1.0f);
+                ScaleMin = element.GetAttributeFloat("scalemin", 1.0f);
                 ScaleMax = Math.Max(ScaleMin, element.GetAttributeFloat("scalemax", 1.0f));
             }
 
@@ -135,6 +142,7 @@ namespace Barotrauma.Particles
                 VelocityMax = VelocityMin;
             }
 
+            EmitInterval = element.GetAttributeFloat("emitinterval", 0.0f);
             ParticlesPerSecond = element.GetAttributeInt("particlespersecond", 0);
             ParticleAmount = element.GetAttributeInt("particleamount", 0);
 

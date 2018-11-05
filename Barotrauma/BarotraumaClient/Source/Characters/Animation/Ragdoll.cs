@@ -10,6 +10,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Barotrauma.Particles;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -290,6 +291,28 @@ namespace Barotrauma
                     0.0f, limbHull);
             }
         }
+
+        partial void SetupDrawOrder()
+        {
+            //make sure every character gets drawn at a distinct "layer" 
+            //(instead of having some of the limbs appear behind and some in front of other characters)
+            float startDepth = 0.1f;
+            float increment = 0.001f;
+            foreach (Character otherCharacter in Character.CharacterList)
+            {
+                if (otherCharacter == character) continue;
+                startDepth += increment;
+            }
+            //make sure each limb has a distinct depth value 
+            List<Limb> depthSortedLimbs = Limbs.OrderBy(l => l.ActiveSprite == null ? 0.0f : l.ActiveSprite.Depth).ToList();
+            foreach (Limb limb in Limbs)
+            {
+                if (limb.ActiveSprite != null)
+                    limb.ActiveSprite.Depth = startDepth + depthSortedLimbs.IndexOf(limb) * 0.00001f;
+            }
+            depthSortedLimbs.Reverse();
+            inversedLimbDrawOrder = depthSortedLimbs.ToArray();
+        }
         
         partial void UpdateProjSpecific(float deltaTime)
         {
@@ -297,6 +320,17 @@ namespace Barotrauma
             SpriteDeformations.ForEach(sd => sd.Update(deltaTime));
         }
 
+        partial void FlipProjSpecific()
+        {
+            foreach (Limb limb in Limbs)
+            {
+                if (limb == null || limb.IsSevered || limb.ActiveSprite == null) continue;
+
+                Vector2 spriteOrigin = limb.ActiveSprite.Origin;
+                spriteOrigin.X = limb.ActiveSprite.SourceRect.Width - spriteOrigin.X;
+                limb.ActiveSprite.Origin = spriteOrigin;                
+            }
+        }
 
         partial void SeverLimbJointProjSpecific(LimbJoint limbJoint)
         {
@@ -386,6 +420,14 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - 10, (int)pos.Y - 10, 20, 20), Color.Cyan, false, 0.01f);
                     GUI.DrawLine(spriteBatch, pos, new Vector2(limb.WorldPosition.X, -limb.WorldPosition.Y), Color.Cyan);
                 }
+            }
+
+            if (this is HumanoidAnimController humanoid)
+            {
+                Vector2 pos = ConvertUnits.ToDisplayUnits(humanoid.RightHandIKPos);
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 4, 4), Color.Green, true);
+                pos = ConvertUnits.ToDisplayUnits(humanoid.LeftHandIKPos);
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 4, 4), Color.Green, true);
             }
 
             if (outsideCollisionBlocker.Enabled && currentHull.Submarine != null)

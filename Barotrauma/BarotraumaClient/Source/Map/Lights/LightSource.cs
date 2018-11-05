@@ -8,26 +8,94 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Lights
 {
-    class LightSource
+    class LightSourceParams : ISerializableEntity
     {
-        private static Texture2D lightTexture;
+        public string Name => "LightSource";
 
-        private List<ConvexHullList> hullsInRange;
+        public bool Persistent;
 
-        private Color color;
+        public Dictionary<string, SerializableProperty> SerializableProperties
+        {
+            get;
+            private set;
+        } = new Dictionary<string, SerializableProperty>();
+
+        [Serialize("1.0,1.0,1.0,1.0", true), Editable]
+        public Color Color
+        {
+            get;
+            set;
+        }
+
         private float range;
+        [Serialize(100.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2048.0f)]
+        public float Range
+        {
+            get { return range; }
+            set
+            {
+
+                range = MathHelper.Clamp(value, 0.0f, 2048.0f);
+            }
+        }
         
-        public Sprite overrideLightTexture;
-        public Texture2D texture;
-        
+        public Sprite OverrideLightTexture
+        {
+            get;
+            private set;
+        }
         //Additional sprite drawn on top of the lightsource. Ignores shadows.
         //Can be used to make lamp sprites glow for example.
-        public Sprite LightSprite;
+        public Sprite LightSprite
+        {
+            get;
+            private set;
+        }
 
         //Override the alpha value of the light sprite (if not set, the alpha of the light color is used)
         //Can be used to make lamp sprites glow at full brightness even if the light itself is dim.
         public float? OverrideLightSpriteAlpha;
 
+        public LightSourceParams(XElement element)
+        {
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "sprite":
+                        LightSprite = new Sprite(subElement);
+
+                        float spriteAlpha = subElement.GetAttributeFloat("alpha", -1.0f);
+                        if (spriteAlpha >= 0.0f)
+                        {
+                            OverrideLightSpriteAlpha = spriteAlpha;
+                        }
+                        break;
+                    case "lighttexture":
+                        OverrideLightTexture = new Sprite(subElement);
+                        break;
+                }
+            }
+        }
+
+        public LightSourceParams(float range, Color color)
+        {
+            SerializableProperties = SerializableProperty.DeserializeProperties(this);
+            Range = range;
+            Color = color;
+        }
+    }
+
+    class LightSource
+    {
+        private static Texture2D lightTexture;
+
+        private List<ConvexHullList> hullsInRange;
+                
+        public Texture2D texture;
+        
         public SpriteEffects LightSpriteEffect;
 
         public Submarine ParentSub;
@@ -74,6 +142,10 @@ namespace Barotrauma.Lights
         private int vertexCount;
         private int indexCount;
 
+        private readonly LightSourceParams lightSourceParams;
+
+        public LightSourceParams LightSourceParams => lightSourceParams;
+
         private Vector2 position;
         public Vector2 Position
         {
@@ -105,6 +177,12 @@ namespace Barotrauma.Lights
             }
         }
 
+        public Vector2 SpriteScale
+        {
+            get;
+            set;
+        } = Vector2.One;
+
         public Vector2 WorldPosition
         {
             get { return (ParentSub == null) ? position : position + ParentSub.Position; }
@@ -123,24 +201,34 @@ namespace Barotrauma.Lights
             }
         }
 
-        public Color Color
+        public Sprite OverrideLightTexture
         {
-            get { return color; }
-            set { color = value; }
+            get { return lightSourceParams.OverrideLightTexture; }
         }
 
+        public Sprite LightSprite
+        {
+            get { return lightSourceParams.LightSprite; }
+        }
+
+        public Color Color
+        {
+            get { return lightSourceParams.Color; }
+            set { lightSourceParams.Color = value; }
+        }
+        
         public float Range
         {
-            get { return range; }
+            get { return lightSourceParams.Range; }
             set
             {
 
-                range = MathHelper.Clamp(value, 0.0f, 2048.0f);
-                if (Math.Abs(prevCalculatedRange - range) < 10.0f) return;
+                lightSourceParams.Range = value;
+                if (Math.Abs(prevCalculatedRange - lightSourceParams.Range) < 10.0f) return;
                 
                 NeedsHullCheck = true;
                 NeedsRecalculation = true;
-                prevCalculatedRange = range;
+                prevCalculatedRange = lightSourceParams.Range;
             }
         }
 
@@ -152,53 +240,32 @@ namespace Barotrauma.Lights
             get;
             set;
         }
-
+        
         public bool Enabled = true;
 
         public LightSource (XElement element)
             : this(Vector2.Zero, 100.0f, Color.White, null)
         {
-            range = element.GetAttributeFloat("range", 100.0f);
-            color = new Color(element.GetAttributeVector4("color", Vector4.One));
-
+            lightSourceParams = new LightSourceParams(element);
             CastShadows = element.GetAttributeBool("castshadows", true);
-            
-            foreach (XElement subElement in element.Elements())
-            {
-                switch (subElement.Name.ToString().ToLowerInvariant())
-                {
-                    case "sprite":
-                        LightSprite = new Sprite(subElement);
+        }
 
-                        float spriteAlpha = subElement.GetAttributeFloat("alpha", -1.0f);
-                        if (spriteAlpha >= 0.0f)
-                        {
-                            OverrideLightSpriteAlpha = spriteAlpha;
-                        }
-                        break;
-                    case "lighttexture":
-                        overrideLightTexture = new Sprite(subElement);
-                        break;
-                }
-            }
+        public LightSource(LightSourceParams lightSourceParams)
+            : this(Vector2.Zero, 100.0f, Color.White, null)
+        {
+            this.lightSourceParams = lightSourceParams;
+            lightSourceParams.Persistent = true;
         }
 
         public LightSource(Vector2 position, float range, Color color, Submarine submarine, bool addLight=true)
         {
             hullsInRange = new List<ConvexHullList>();
-
             this.ParentSub = submarine;
-
             this.position = position;
-            this.range = range;
-            this.color = color;
-
-            CastShadows = true;
-            
+            lightSourceParams = new LightSourceParams(range, color);
+            CastShadows = true;            
             texture = LightTexture;
-
             diffToSub = new Dictionary<Submarine, Vector2>();
-
             if (addLight) GameMain.LightManager.AddLight(this);
         }
         
@@ -210,7 +277,7 @@ namespace Barotrauma.Lights
             var fullChList = ConvexHull.HullLists.Find(x => x.Submarine == sub);
             if (fullChList == null) return;
 
-            chList.List = fullChList.List.FindAll(ch => ch.Enabled && MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox));
+            chList.List = fullChList.List.FindAll(ch => ch.Enabled && MathUtils.CircleIntersectsRectangle(lightPos, Range, ch.BoundingBox));
 
             NeedsHullCheck = true;
         }
@@ -262,7 +329,7 @@ namespace Barotrauma.Lights
                         subBorders.Location += sub.HiddenSubPosition.ToPoint() - new Point(0, sub.Borders.Height);
 
                         //only draw if the light overlaps with the sub
-                        if (!MathUtils.CircleIntersectsRectangle(lightPos, range, subBorders))
+                        if (!MathUtils.CircleIntersectsRectangle(lightPos, Range, subBorders))
                         {
                             if (chList.List.Count > 0) NeedsRecalculation = true;
                             chList.List.Clear();
@@ -296,7 +363,7 @@ namespace Barotrauma.Lights
                         subBorders.Location += sub.HiddenSubPosition.ToPoint() - new Point(0, sub.Borders.Height);
 
                         //don't draw any shadows if the light doesn't overlap with the borders of the sub
-                        if (!MathUtils.CircleIntersectsRectangle(lightPos, range, subBorders))
+                        if (!MathUtils.CircleIntersectsRectangle(lightPos, Range, subBorders))
                         {
                             if (chList.List.Count > 0) NeedsRecalculation = true;
                             chList.List.Clear();
@@ -329,7 +396,7 @@ namespace Barotrauma.Lights
             {
                 return null;
             }
-            if (range < 1.0f || color.A < 0.01f) return null;
+            if (Range < 1.0f || Color.A < 0.01f) return null;
 
             Vector2 drawPos = position;
             if (ParentSub != null) drawPos += ParentSub.DrawPosition;
@@ -349,7 +416,7 @@ namespace Barotrauma.Lights
                 }
             }
 
-            float bounds = range * 2;
+            float bounds = Range * 2;
             //find convexhull segments that are close enough and facing towards the light source
             List<Segment> visibleSegments = new List<Segment>();
             List<SegmentPoint> points = new List<SegmentPoint>();
@@ -568,10 +635,10 @@ namespace Barotrauma.Lights
             
             Vector2 uvOffset = Vector2.Zero;
             Vector2 overrideTextureDims = Vector2.One;
-            if (overrideLightTexture != null)
+            if (OverrideLightTexture != null)
             {
-                overrideTextureDims = new Vector2(overrideLightTexture.SourceRect.Width, overrideLightTexture.SourceRect.Height);
-                uvOffset = (overrideLightTexture.Origin / overrideTextureDims) - new Vector2(0.5f, 0.5f);
+                overrideTextureDims = new Vector2(OverrideLightTexture.SourceRect.Width, OverrideLightTexture.SourceRect.Height);
+                uvOffset = (OverrideLightTexture.Origin / overrideTextureDims) - new Vector2(0.5f, 0.5f);
             }
 
             // Add a vertex for the center of the mesh
@@ -592,15 +659,15 @@ namespace Barotrauma.Lights
                 
                 Vector2 rawDiff = vertex - drawPos;
                 Vector2 diff = rawDiff;
-                diff /= range * 2.0f;
-                if (overrideLightTexture != null)
+                diff /= Range * 2.0f;
+                if (OverrideLightTexture != null)
                 {
                     //calculate texture coordinates based on the light's rotation
                     Vector2 originDiff = diff;
 
                     diff.X = originDiff.X * cosAngle - originDiff.Y * sinAngle;
                     diff.Y = originDiff.X * sinAngle + originDiff.Y * cosAngle;
-                    diff *= (overrideTextureDims / overrideLightTexture.size) * 2.0f;
+                    diff *= (overrideTextureDims / OverrideLightTexture.size) * 2.0f;
 
                     diff += uvOffset;
                 }
@@ -711,8 +778,8 @@ namespace Barotrauma.Lights
 
                 LightSprite.Draw(
                     spriteBatch, drawPos, 
-                    new Color(Color, OverrideLightSpriteAlpha ?? Color.A / 255.0f),
-                    origin, -Rotation, 1, LightSpriteEffect);
+                    new Color(Color, lightSourceParams.OverrideLightSpriteAlpha ?? Color.A / 255.0f),
+                    origin, -Rotation, SpriteScale, LightSpriteEffect);
             }
         }
 
@@ -727,16 +794,16 @@ namespace Barotrauma.Lights
             if (!CastShadows)
             {
                 Texture2D currentTexture = texture ?? LightTexture;
-                if (overrideLightTexture != null) currentTexture = overrideLightTexture.Texture;                
+                if (OverrideLightTexture != null) currentTexture = OverrideLightTexture.Texture;                
 
                 Vector2 center = new Vector2(currentTexture.Width / 2, currentTexture.Height / 2);
-                float scale = range / (currentTexture.Width / 2.0f);
+                float scale = Range / (currentTexture.Width / 2.0f);
 
                 Vector2 drawPos = position;
                 if (ParentSub != null) drawPos += ParentSub.DrawPosition;
                 drawPos.Y = -drawPos.Y;  
 
-                spriteBatch.Draw(currentTexture, drawPos, null, color * (color.A / 255.0f), 0, center, scale, SpriteEffects.None, 1);
+                spriteBatch.Draw(currentTexture, drawPos, null, Color * (Color.A / 255.0f), 0, center, scale, SpriteEffects.None, 1);
                 return;
             }
 
@@ -755,10 +822,10 @@ namespace Barotrauma.Lights
             
             if (vertexCount == 0) return;
 
-            lightEffect.DiffuseColor = (new Vector3(color.R, color.G, color.B) * (color.A / 255.0f)) / 255.0f;
-            if (overrideLightTexture != null)
+            lightEffect.DiffuseColor = (new Vector3(Color.R, Color.G, Color.B) * (Color.A / 255.0f)) / 255.0f;
+            if (OverrideLightTexture != null)
             {
-                lightEffect.Texture = overrideLightTexture.Texture;
+                lightEffect.Texture = OverrideLightTexture.Texture;
             }
             else
             {
@@ -799,7 +866,11 @@ namespace Barotrauma.Lights
 
         public void Remove()
         {
-            if (LightSprite != null) LightSprite.Remove();
+            if (!lightSourceParams.Persistent)
+            {
+                LightSprite?.Remove();
+                OverrideLightTexture?.Remove();
+            }
 
             if (lightVolumeBuffer != null)
             {

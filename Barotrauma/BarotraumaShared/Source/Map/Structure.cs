@@ -47,16 +47,13 @@ namespace Barotrauma
         const float LeakThreshold = 0.1f;
 
         private StructurePrefab prefab;
-
-        //farseer physics bodies, separated by gaps
-        private List<Body> bodies;
-
-        private bool isHorizontal;
-
         private SpriteEffects SpriteEffects = SpriteEffects.None;
-        
+
+        //dimensions of the wall sections' physics bodies (only used for debug rendering)
+        private List<Vector2> bodyDebugDimensions = new List<Vector2>();
+
         //sections of the wall that are supposed to be rendered
-        public WallSection[] sections
+        public WallSection[] Sections
         {
             get;
             private set;
@@ -87,25 +84,19 @@ namespace Barotrauma
         {
             get { return prefab.Body; }
         }
-
-        public List<Body> Bodies
-        {
-            get { return bodies; }
-        }
+        
+        public List<Body> Bodies { get; private set; }
 
         public bool CastShadow
         {
             get { return prefab.CastShadow; }
         }
 
-        public bool IsHorizontal
-        {
-            get { return isHorizontal; }
-        }
+        public bool IsHorizontal { get; private set; }
 
         public int SectionCount
         {
-            get { return sections.Length; }
+            get { return Sections.Length; }
         }
 
         public float Health
@@ -168,7 +159,7 @@ namespace Barotrauma
                 if (prefab.Body) CreateSections();
                 else
                 {
-                    foreach (WallSection sec in sections)
+                    foreach (WallSection sec in Sections)
                     {
                         Rectangle secRect = sec.rect;
                         secRect.X -= oldRect.X; secRect.Y -= oldRect.Y;
@@ -217,18 +208,18 @@ namespace Barotrauma
         {
             base.Move(amount);
 
-            for (int i = 0; i < sections.Length; i++)
+            for (int i = 0; i < Sections.Length; i++)
             {
-                Rectangle r = sections[i].rect;
+                Rectangle r = Sections[i].rect;
                 r.X += (int)amount.X;
                 r.Y += (int)amount.Y;
-                sections[i].rect = r;
+                Sections[i].rect = r;
             }
 
-            if (bodies != null)
+            if (Bodies != null)
             {
                 Vector2 simAmount = ConvertUnits.ToSimUnits(amount);
-                foreach (Body b in bodies)
+                foreach (Body b in Bodies)
                 {
                     b.SetTransform(b.Position + simAmount, b.Rotation);
                 }
@@ -254,15 +245,15 @@ namespace Barotrauma
             spriteColor = prefab.SpriteColor;
             if (ResizeHorizontal && !ResizeVertical)
             {
-                isHorizontal = true;
+                IsHorizontal = true;
             }
             else if (ResizeVertical && !ResizeHorizontal)
             {
-                isHorizontal = false;
+                IsHorizontal = false;
             }
             else
             {
-                isHorizontal = (rect.Width > rect.Height);
+                IsHorizontal = (rect.Width > rect.Height);
             }
 
             StairDirection = prefab.StairDirection;
@@ -271,12 +262,14 @@ namespace Barotrauma
                       
             if (prefab.Body)
             {
-                bodies = new List<Body>();
-                //gaps = new List<Gap>();
+                Bodies = new List<Body>();
+
+                float bodyWidth = ConvertUnits.ToSimUnits(prefab.BodyWidth <= 0.0f ? rect.Width : prefab.BodyWidth);
+                float bodyHeight = ConvertUnits.ToSimUnits(prefab.BodyHeight <= 0.0f ? rect.Height : prefab.BodyHeight);
 
                 Body newBody = BodyFactory.CreateRectangle(GameMain.World,
-                    ConvertUnits.ToSimUnits(prefab.BodyWidth <= 0.0f ? rect.Width : prefab.BodyWidth),
-                    ConvertUnits.ToSimUnits(prefab.BodyHeight <= 0.0f ? rect.Height : prefab.BodyHeight),
+                    bodyWidth,
+                    bodyHeight,
                     1.5f);
                 newBody.BodyType = BodyType.Static;
                 newBody.Position = ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2.0f, rect.Y - rect.Height / 2.0f));
@@ -286,7 +279,8 @@ namespace Barotrauma
                 newBody.UserData = this;
                 newBody.CollisionCategories = (prefab.Platform) ? Physics.CollisionPlatform : Physics.CollisionWall;
 
-                bodies.Add(newBody);
+                Bodies.Add(newBody);
+                bodyDebugDimensions.Add(new Vector2(bodyWidth, bodyHeight));
 
                 WallList.Add(this);
 
@@ -294,8 +288,8 @@ namespace Barotrauma
             }
             else
             {
-                sections = new WallSection[1];
-                sections[0] = new WallSection(rect);
+                Sections = new WallSection[1];
+                Sections[0] = new WallSection(rect);
 
                 if (StairDirection != Direction.None)
                 {
@@ -333,7 +327,7 @@ namespace Barotrauma
 
         private void CreateStairBodies()
         {
-            bodies = new List<Body>();
+            Bodies = new List<Body>();
 
             Body newBody = BodyFactory.CreateRectangle(GameMain.World,
                 ConvertUnits.ToSimUnits(rect.Width * Math.Sqrt(2.0) + Submarine.GridSize.X * 3.0f),
@@ -353,7 +347,7 @@ namespace Barotrauma
             newBody.CollisionCategories = Physics.CollisionStairs;
 
             newBody.UserData = this;
-            bodies.Add(newBody);
+            Bodies.Add(newBody);
         }
 
         private void CreateSections()
@@ -363,12 +357,12 @@ namespace Barotrauma
 
             if (!HasBody)
             {          
-                if (FlippedX && isHorizontal)
+                if (FlippedX && IsHorizontal)
                 {
                     xsections = (int)Math.Ceiling((float)rect.Width / prefab.sprite.SourceRect.Width);
                     width = prefab.sprite.SourceRect.Width;
                 }
-                else if (FlippedY && !isHorizontal)
+                else if (FlippedY && !IsHorizontal)
                 {
                     ysections = (int)Math.Ceiling((float)rect.Height / prefab.sprite.SourceRect.Height);
                     width = prefab.sprite.SourceRect.Height;
@@ -378,20 +372,20 @@ namespace Barotrauma
                     xsections = 1;
                     ysections = 1;
                 }
-                sections = new WallSection[xsections];
+                Sections = new WallSection[xsections];
             }
             else
             {
-                if (isHorizontal)
+                if (IsHorizontal)
                 {
                     xsections = (int)Math.Ceiling((float)rect.Width / WallSectionSize);
-                    sections = new WallSection[xsections];
+                    Sections = new WallSection[xsections];
                     width = (int)WallSectionSize;
                 }
                 else
                 {
                     ysections = (int)Math.Ceiling((float)rect.Height / WallSectionSize);
-                    sections = new WallSection[ysections];
+                    Sections = new WallSection[ysections];
                     height = (int)WallSectionSize;
                 }
             }
@@ -429,9 +423,9 @@ namespace Barotrauma
                         }
 
                         //sectionRect.Height -= (int)Math.Max((rect.Y - rect.Height) - (sectionRect.Y - sectionRect.Height), 0.0f);
-                        int xIndex = FlippedX && isHorizontal ? (xsections - 1 - x) : x;
-                        int yIndex = FlippedY && !isHorizontal ? (ysections - 1 - y) : y;
-                        sections[xIndex + yIndex] = new WallSection(sectionRect);
+                        int xIndex = FlippedX && IsHorizontal ? (xsections - 1 - x) : x;
+                        int yIndex = FlippedY && !IsHorizontal ? (ysections - 1 - y) : y;
+                        Sections[xIndex + yIndex] = new WallSection(sectionRect);
                     }
                     else
                     {
@@ -439,7 +433,7 @@ namespace Barotrauma
                         sectionRect.Width -= (int)Math.Max(sectionRect.Right - rect.Right, 0.0f);
                         sectionRect.Height -= (int)Math.Max((rect.Y - rect.Height) - (sectionRect.Y - sectionRect.Height), 0.0f);
 
-                        sections[x + y] = new WallSection(sectionRect);
+                        Sections[x + y] = new WallSection(sectionRect);
                     }
                 }
             }
@@ -447,7 +441,7 @@ namespace Barotrauma
 
         private Rectangle GenerateMergedRect(List<WallSection> mergedSections)
         {
-            if (isHorizontal)
+            if (IsHorizontal)
                return new Rectangle(mergedSections.Min(x => x.rect.Left), mergedSections.Max(x => x.rect.Top),
                     mergedSections.Sum(x => x.rect.Width), mergedSections.First().rect.Height);
             else
@@ -513,15 +507,15 @@ namespace Barotrauma
 
             if (WallList.Contains(this)) WallList.Remove(this);
 
-            if (bodies != null)
+            if (Bodies != null)
             {
-                foreach (Body b in bodies)
+                foreach (Body b in Bodies)
                     GameMain.World.RemoveBody(b);
             }
 
-            if (sections != null)
+            if (Sections != null)
             {
-                foreach (WallSection s in sections)
+                foreach (WallSection s in Sections)
                 {
                     if (s.gap != null)
                     {
@@ -542,15 +536,15 @@ namespace Barotrauma
 
             if (WallList.Contains(this)) WallList.Remove(this);
 
-            if (bodies != null)
+            if (Bodies != null)
             {
-                foreach (Body b in bodies)
+                foreach (Body b in Bodies)
                     GameMain.World.RemoveBody(b);
             }
 
-            if (sections != null)
+            if (Sections != null)
             {
-                foreach (WallSection s in sections)
+                foreach (WallSection s in Sections)
                 {
                     if (s.gap != null)
                     {
@@ -616,17 +610,17 @@ namespace Barotrauma
 
         public WallSection GetSection(int sectionIndex)
         {
-            if (sectionIndex < 0 || sectionIndex >= sections.Length) return null;
+            if (sectionIndex < 0 || sectionIndex >= Sections.Length) return null;
 
-            return sections[sectionIndex];
+            return Sections[sectionIndex];
 
         }
         
         public bool SectionBodyDisabled(int sectionIndex)
         {
-            if (sectionIndex < 0 || sectionIndex >= sections.Length) return false;
+            if (sectionIndex < 0 || sectionIndex >= Sections.Length) return false;
 
-            return (sections[sectionIndex].damage >= prefab.Health);
+            return (Sections[sectionIndex].damage >= prefab.Health);
         }
 
         /// <summary>
@@ -634,25 +628,25 @@ namespace Barotrauma
         /// </summary>
         public bool SectionIsLeaking(int sectionIndex)
         {
-            if (sectionIndex < 0 || sectionIndex >= sections.Length) return false;
+            if (sectionIndex < 0 || sectionIndex >= Sections.Length) return false;
 
-            return (sections[sectionIndex].damage >= prefab.Health * LeakThreshold);
+            return (Sections[sectionIndex].damage >= prefab.Health * LeakThreshold);
         }
 
         public int SectionLength(int sectionIndex)
         {
-            if (sectionIndex < 0 || sectionIndex >= sections.Length) return 0;
+            if (sectionIndex < 0 || sectionIndex >= Sections.Length) return 0;
 
-            return (isHorizontal ? sections[sectionIndex].rect.Width : sections[sectionIndex].rect.Height);
+            return (IsHorizontal ? Sections[sectionIndex].rect.Width : Sections[sectionIndex].rect.Height);
         }
 
         public void AddDamage(int sectionIndex, float damage, Character attacker = null)
         {
             if (!prefab.Body || prefab.Platform) return;
 
-            if (sectionIndex < 0 || sectionIndex > sections.Length - 1) return;
+            if (sectionIndex < 0 || sectionIndex > Sections.Length - 1) return;
 
-            var section = sections[sectionIndex];
+            var section = Sections[sectionIndex];
 
 #if CLIENT
             float particleAmount = Math.Min(Health - section.damage, damage) * Rand.Range(0.01f, 1.0f);
@@ -683,47 +677,47 @@ namespace Barotrauma
 
         public int FindSectionIndex(Vector2 displayPos)
         {
-            if (!sections.Any()) return -1;
+            if (!Sections.Any()) return -1;
 
             //if the sub has been flipped horizontally, the first section may be smaller than wallSectionSize
             //and we need to adjust the position accordingly
-            if (sections[0].rect.Width < WallSectionSize)
+            if (Sections[0].rect.Width < WallSectionSize)
             {
-                displayPos.X += WallSectionSize - sections[0].rect.Width;
+                displayPos.X += WallSectionSize - Sections[0].rect.Width;
             }
 
-            int index = (isHorizontal) ?
+            int index = (IsHorizontal) ?
                 (int)Math.Floor((displayPos.X - rect.X) / WallSectionSize) :
                 (int)Math.Floor((rect.Y - displayPos.Y) / WallSectionSize);
 
-            if (index < 0 || index > sections.Length - 1) return -1;
+            if (index < 0 || index > Sections.Length - 1) return -1;
             return index;
         }
 
         public float SectionDamage(int sectionIndex)
         {
-            if (sectionIndex < 0 || sectionIndex >= sections.Length) return 0.0f;
+            if (sectionIndex < 0 || sectionIndex >= Sections.Length) return 0.0f;
 
-            return sections[sectionIndex].damage;
+            return Sections[sectionIndex].damage;
         }
 
         public Vector2 SectionPosition(int sectionIndex, bool world = false)
         {
-            if (sectionIndex < 0 || sectionIndex >= sections.Length) return Vector2.Zero;
+            if (sectionIndex < 0 || sectionIndex >= Sections.Length) return Vector2.Zero;
 
             if (prefab.BodyRotation == 0.0f)
             {
                 Vector2 sectionPos = new Vector2(
-                    sections[sectionIndex].rect.X + sections[sectionIndex].rect.Width / 2.0f,
-                    sections[sectionIndex].rect.Y - sections[sectionIndex].rect.Height / 2.0f);
+                    Sections[sectionIndex].rect.X + Sections[sectionIndex].rect.Width / 2.0f,
+                    Sections[sectionIndex].rect.Y - Sections[sectionIndex].rect.Height / 2.0f);
                 if (world && Submarine != null) sectionPos += Submarine.Position;
                 return sectionPos;
             }
             else
             {
-                Rectangle sectionRect = sections[sectionIndex].rect;
+                Rectangle sectionRect = Sections[sectionIndex].rect;
                 float diffFromCenter;
-                if (isHorizontal)
+                if (IsHorizontal)
                 {
                     diffFromCenter = (sectionRect.Center.X - rect.Center.X) / (float)rect.Width * BodyWidth;
                 }
@@ -734,8 +728,8 @@ namespace Barotrauma
                 if (FlippedX) diffFromCenter = -diffFromCenter;
                 
                 Vector2 sectionPos = Position + new Vector2(
-                    (float)Math.Cos(isHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation),
-                    (float)Math.Sin(isHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation)) * diffFromCenter;
+                    (float)Math.Cos(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation),
+                    (float)Math.Sin(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation)) * diffFromCenter;
 
                 if (world && Submarine != null) sectionPos += Submarine.Position;
                 return sectionPos;
@@ -757,8 +751,8 @@ namespace Barotrauma
             float damageAmount = 0.0f;
             for (int i = 0; i < SectionCount; i++)
             {
-                Rectangle sectionRect = sections[i].rect;
-                sectionRect.Y -= sections[i].rect.Height;
+                Rectangle sectionRect = Sections[i].rect;
+                sectionRect.Y -= Sections[i].rect.Height;
                 if (MathUtils.CircleIntersectsRectangle(transformedPos, attack.DamageRange, sectionRect))
                 {
                     damageAmount = attack.GetStructureDamage(deltaTime);
@@ -786,16 +780,16 @@ namespace Barotrauma
             if (!MathUtils.IsValid(damage)) return;
 
             damage = MathHelper.Clamp(damage, 0.0f, prefab.Health);
-
+            
 #if SERVER
-            if (GameMain.Server != null && createNetworkEvent && damage != sections[sectionIndex].damage)
+            if (GameMain.Server != null && createNetworkEvent && damage != Sections[sectionIndex].damage)
             {
                 GameMain.Server.CreateEntityEvent(this);
             }
 #endif
 
             bool noGaps = true;
-            for (int i = 0; i < sections.Length; i++)
+            for (int i = 0; i < Sections.Length; i++)
             {
                 if (i != sectionIndex && SectionIsLeaking(i))
                 {
@@ -806,22 +800,22 @@ namespace Barotrauma
 
             if (damage < prefab.Health * LeakThreshold)
             {
-                if (sections[sectionIndex].gap != null)
+                if (Sections[sectionIndex].gap != null)
                 {
 #if SERVER
                     //the structure doesn't have any other gap, log the structure being fixed
                     if (noGaps && attacker != null)
                     {
-                        GameServer.Log((sections[sectionIndex].gap.IsRoomToRoom ? "Inner" : "Outer") + " wall repaired by " + attacker.Name, ServerLog.MessageType.ItemInteraction);
+                        GameServer.Log((Sections[sectionIndex].gap.IsRoomToRoom ? "Inner" : "Outer") + " wall repaired by " + attacker.Name, ServerLog.MessageType.ItemInteraction);
                     }
 #endif
 
-                    DebugConsole.Log("Removing gap (ID " + sections[sectionIndex].gap.ID + ", section: " + sectionIndex + ") from wall " + ID);
+                    DebugConsole.Log("Removing gap (ID " + Sections[sectionIndex].gap.ID + ", section: " + sectionIndex + ") from wall " + ID);
 
                     //remove existing gap if damage is below leak threshold
-                    sections[sectionIndex].gap.Open = 0.0f;
-                    sections[sectionIndex].gap.Remove();
-                    sections[sectionIndex].gap = null;
+                    Sections[sectionIndex].gap.Open = 0.0f;
+                    Sections[sectionIndex].gap.Remove();
+                    Sections[sectionIndex].gap = null;
 #if CLIENT
                     if (CastShadow) GenerateConvexHull();
 #endif
@@ -829,11 +823,11 @@ namespace Barotrauma
             }
             else
             {
-                if (sections[sectionIndex].gap == null)
+                if (Sections[sectionIndex].gap == null)
                 {
-                    Rectangle gapRect = sections[sectionIndex].rect;
+                    Rectangle gapRect = Sections[sectionIndex].rect;
                     float diffFromCenter;
-                    if (isHorizontal)
+                    if (IsHorizontal)
                     {
                         diffFromCenter = (gapRect.Center.X - this.rect.Center.X) / (float)this.rect.Width * BodyWidth;
                         if (BodyWidth > 0.0f) gapRect.Width = (int)(BodyWidth * (gapRect.Width / (float)this.rect.Width));
@@ -851,8 +845,8 @@ namespace Barotrauma
                     {
                         Vector2 structureCenter = Position;
                         Vector2 gapPos = structureCenter + new Vector2(
-                            (float)Math.Cos(isHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation),
-                            (float)Math.Sin(isHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation)) * diffFromCenter;
+                            (float)Math.Cos(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation),
+                            (float)Math.Sin(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation)) * diffFromCenter;
                         gapRect = new Rectangle((int)(gapPos.X - gapRect.Width / 2), (int)(gapPos.Y + gapRect.Height / 2), gapRect.Width, gapRect.Height);
                     }
 
@@ -875,22 +869,22 @@ namespace Barotrauma
                         }
                     }
 
-                    sections[sectionIndex].gap = new Gap(gapRect, horizontalGap, Submarine);
+                    Sections[sectionIndex].gap = new Gap(gapRect, horizontalGap, Submarine);
 
                     //free the ID, because if we give gaps IDs we have to make sure they always match between the clients and the server and
                     //that clients create them in the correct order along with every other entity created/removed during the round
                     //which COULD be done via entityspawner, but it's unnecessary because we never access these gaps by ID
-                    sections[sectionIndex].gap.FreeID();
-                    sections[sectionIndex].gap.ShouldBeSaved = false;
-                    sections[sectionIndex].gap.ConnectedWall = this;
-                    DebugConsole.Log("Created gap (ID " + sections[sectionIndex].gap.ID + ", section: " + sectionIndex + ") on wall " + ID);
+                    Sections[sectionIndex].gap.FreeID();
+                    Sections[sectionIndex].gap.ShouldBeSaved = false;
+                    Sections[sectionIndex].gap.ConnectedWall = this;
+                    DebugConsole.Log("Created gap (ID " + Sections[sectionIndex].gap.ID + ", section: " + sectionIndex + ") on wall " + ID);
                     //AdjustKarma(attacker, 300);
 
 #if SERVER
                     //the structure didn't have any other gaps yet, log the breach
                     if (noGaps && attacker != null)
                     {
-                        GameServer.Log((sections[sectionIndex].gap.IsRoomToRoom ? "Inner" : "Outer") + " wall breached by " + attacker.Name, ServerLog.MessageType.ItemInteraction);
+                        GameServer.Log((Sections[sectionIndex].gap.IsRoomToRoom ? "Inner" : "Outer") + " wall breached by " + attacker.Name, ServerLog.MessageType.ItemInteraction);
                     }
 #endif
 #if CLIENT
@@ -899,12 +893,12 @@ namespace Barotrauma
                 }
                 
                 float gapOpen = (damage / prefab.Health - LeakThreshold) * (1.0f / (1.0f - LeakThreshold));
-                sections[sectionIndex].gap.Open = gapOpen;
+                Sections[sectionIndex].gap.Open = gapOpen;
             }
 
-            float damageDiff = damage - sections[sectionIndex].damage;
+            float damageDiff = damage - Sections[sectionIndex].damage;
             bool hadHole = SectionBodyDisabled(sectionIndex);
-            sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, prefab.Health);
+            Sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, prefab.Health);
             
             //otherwise it's possible to infinitely gain karma by welding fixed things
             if (attacker != null && damageDiff != 0.0f)
@@ -934,8 +928,8 @@ namespace Barotrauma
 
         public void SetCollisionCategory(Category collisionCategory)
         {
-            if (bodies == null) return;
-            foreach (Body body in bodies)
+            if (Bodies == null) return;
+            foreach (Body body in Bodies)
             {
                 body.CollisionCategories = collisionCategory;
             }
@@ -943,15 +937,16 @@ namespace Barotrauma
 
         private void UpdateSections()
         {
-            foreach (Body b in bodies)
+            foreach (Body b in Bodies)
             {
                 GameMain.World.RemoveBody(b);
             }
-            bodies.Clear();
-
+            Bodies.Clear();
+            bodyDebugDimensions.Clear();
+            
             bool hasHoles = false;
             var mergedSections = new List<WallSection>();
-            for (int i = 0; i < sections.Length; i++ )
+            for (int i = 0; i < Sections.Length; i++ )
             {
                 // if there is a gap and we have sections to merge, do it.
                 if (SectionBodyDisabled(i))
@@ -965,7 +960,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    mergedSections.Add(sections[i]);
+                    mergedSections.Add(Sections[i]);
                 }
             }
 
@@ -978,7 +973,7 @@ namespace Barotrauma
 
             //if the section has holes (or is just one big hole with no bodies),
             //we need a sensor for repairtools to be able to target the structure
-            if (hasHoles || !bodies.Any())
+            if (hasHoles || !Bodies.Any())
             {
                 Body sensorBody = CreateRectBody(rect);
                 sensorBody.CollisionCategories = Physics.CollisionRepair;
@@ -989,7 +984,7 @@ namespace Barotrauma
         private Body CreateRectBody(Rectangle rect)
         {
             float diffFromCenter;
-            if (isHorizontal)
+            if (IsHorizontal)
             {
                 diffFromCenter = (rect.Center.X - this.rect.Center.X) / (float)this.rect.Width * BodyWidth;
                 if (BodyWidth > 0.0f) rect.Width = (int)(BodyWidth * (rect.Width / (float)this.rect.Width));
@@ -1018,27 +1013,28 @@ namespace Barotrauma
             {
                 Vector2 structureCenter = ConvertUnits.ToSimUnits(Position);
                 newBody.Position = structureCenter + new Vector2(
-                    (float)Math.Cos(isHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation),
-                    (float)Math.Sin(isHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation)) * ConvertUnits.ToSimUnits(diffFromCenter);
+                    (float)Math.Cos(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation),
+                    (float)Math.Sin(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation)) * ConvertUnits.ToSimUnits(diffFromCenter);
                 newBody.Rotation = -BodyRotation;
             }
             
-            bodies.Add(newBody);
+            Bodies.Add(newBody);
+            bodyDebugDimensions.Add(new Vector2(ConvertUnits.ToSimUnits(rect.Width), ConvertUnits.ToSimUnits(rect.Height)));
 
             return newBody;
         }
 
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null) 
         {
-            for (int i = 0; i < sections.Length; i++)
+            for (int i = 0; i < Sections.Length; i++)
             {
-                msg.WriteRangedSingle(sections[i].damage / Health, 0.0f, 1.0f, 8);
+                msg.WriteRangedSingle(Sections[i].damage / Health, 0.0f, 1.0f, 8);
             }
         }
 
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime) 
         {
-            for (int i = 0; i < sections.Length; i++)
+            for (int i = 0; i < Sections.Length; i++)
             {
                 float damage = msg.ReadRangedSingle(0.0f, 1.0f, 8) * Health;                
                 SetDamage(i, damage);                
@@ -1056,8 +1052,9 @@ namespace Barotrauma
             if (StairDirection != Direction.None)
             {
                 StairDirection = StairDirection == Direction.Left ? Direction.Right : Direction.Left;
-                bodies.ForEach(b => GameMain.World.RemoveBody(b));
-                bodies.Clear();
+                Bodies.ForEach(b => GameMain.World.RemoveBody(b));
+                Bodies.Clear();
+                bodyDebugDimensions.Clear();
 
                 CreateStairBodies();
             }
@@ -1081,8 +1078,9 @@ namespace Barotrauma
             if (StairDirection != Direction.None)
             {
                 StairDirection = StairDirection == Direction.Left ? Direction.Right : Direction.Left;
-                bodies.ForEach(b => GameMain.World.RemoveBody(b));
-                bodies.Clear();
+                Bodies.ForEach(b => GameMain.World.RemoveBody(b));
+                Bodies.Clear();
+                bodyDebugDimensions.Clear();
 
                 CreateStairBodies();
             }
@@ -1133,7 +1131,7 @@ namespace Barotrauma
                     case "section":
                         int index = subElement.GetAttributeInt("i", -1);
                         if (index == -1) continue;
-                        s.sections[index].damage = subElement.GetAttributeFloat("damage", 0.0f);
+                        s.Sections[index].damage = subElement.GetAttributeFloat("damage", 0.0f);
                         break;
                 }
             }
@@ -1163,13 +1161,13 @@ namespace Barotrauma
             if (FlippedX) element.Add(new XAttribute("flippedx", true));
             if (FlippedY) element.Add(new XAttribute("flippedy", true));
 
-            for (int i = 0; i < sections.Length; i++)
+            for (int i = 0; i < Sections.Length; i++)
             {
-                if (sections[i].damage == 0.0f) continue;
+                if (Sections[i].damage == 0.0f) continue;
                 var sectionElement =
                     new XElement("section",
                         new XAttribute("i", i),
-                        new XAttribute("damage", sections[i].damage));
+                        new XAttribute("damage", Sections[i].damage));
                 element.Add(sectionElement);
             }
 
@@ -1182,9 +1180,9 @@ namespace Barotrauma
 
         public override void OnMapLoaded()
         {
-            for (int i = 0; i < sections.Length; i++)
+            for (int i = 0; i < Sections.Length; i++)
             {
-                SetDamage(i, sections[i].damage, createNetworkEvent: false);
+                SetDamage(i, Sections[i].damage, createNetworkEvent: false);
             }
         }
     }

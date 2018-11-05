@@ -400,8 +400,8 @@ namespace Barotrauma
         public void AddFireSource(FireSource fireSource)
         {
             fireSources.Add(fireSource);
-            
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer) GameMain.NetworkMember.CreateEntityEvent(this);
+
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && !IdFreed) GameMain.NetworkMember.CreateEntityEvent(this);
         }
 
         public override void Update(float deltaTime, Camera cam)

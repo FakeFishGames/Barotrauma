@@ -7,7 +7,6 @@ using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -15,7 +14,7 @@ namespace Barotrauma
 {
     public enum LimbType
     {
-        None, LeftHand, RightHand, LeftArm, RightArm,
+        None, LeftHand, RightHand, LeftArm, RightArm, LeftForearm, RightForearm,
         LeftLeg, RightLeg, LeftFoot, RightFoot, Head, Torso, Tail, Legs, RightThigh, LeftThigh, Waist
     };
     
@@ -51,69 +50,42 @@ namespace Barotrauma
             {
                 jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorA.X, LocalAnchorA.Y) / jointParams.Ragdoll.JointScale);
                 jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorB.X, LocalAnchorB.Y) / jointParams.Ragdoll.JointScale);
-                if (!float.IsNaN(jointParams.LowerLimit))
-                {
-                    jointParams.UpperLimit = MathHelper.ToDegrees(-LowerLimit);
-                }
-                if (!float.IsNaN(jointParams.UpperLimit))
-                {
-                    jointParams.LowerLimit = MathHelper.ToDegrees(-UpperLimit);
-                }
+                jointParams.UpperLimit = MathHelper.ToDegrees(-LowerLimit);
+                jointParams.LowerLimit = MathHelper.ToDegrees(-UpperLimit);
             }
             else
             {
                 jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorA / jointParams.Ragdoll.JointScale);
                 jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorB / jointParams.Ragdoll.JointScale);
-                if (!float.IsNaN(jointParams.UpperLimit))
-                {
-                    jointParams.UpperLimit = MathHelper.ToDegrees(UpperLimit);
-                }
-                if (!float.IsNaN(jointParams.LowerLimit))
-                {
-                    jointParams.LowerLimit = MathHelper.ToDegrees(LowerLimit);
-                }
+                jointParams.UpperLimit = MathHelper.ToDegrees(UpperLimit);
+                jointParams.LowerLimit = MathHelper.ToDegrees(LowerLimit);
             }
         }
 
         public void LoadParams()
         {
-            // If neither of the limits have been defined, disable the limits
-            if (float.IsNaN(jointParams.LowerLimit) && float.IsNaN(jointParams.UpperLimit))
-            {
-                jointParams.LimitEnabled = false;
-            }
             LimitEnabled = jointParams.LimitEnabled;
-            if (LimitEnabled)
+            if (float.IsNaN(jointParams.LowerLimit))
             {
-                // If limits are enabled, don't allow NaN
-                if (float.IsNaN(jointParams.LowerLimit))
-                {
-                    jointParams.LowerLimit = 0;
-                }
-                if (float.IsNaN(jointParams.UpperLimit))
-                {
-                    jointParams.UpperLimit = 0;
-                }
+                jointParams.LowerLimit = 0;
+            }
+            if (float.IsNaN(jointParams.UpperLimit))
+            {
+                jointParams.UpperLimit = 0;
             }
             if (ragdoll.IsFlipped)
             {
                 LocalAnchorA = ConvertUnits.ToSimUnits(new Vector2(-jointParams.Limb1Anchor.X, jointParams.Limb1Anchor.Y) * jointParams.Ragdoll.JointScale);
                 LocalAnchorB = ConvertUnits.ToSimUnits(new Vector2(-jointParams.Limb2Anchor.X, jointParams.Limb2Anchor.Y) * jointParams.Ragdoll.JointScale);
-                if (!float.IsNaN(jointParams.LowerLimit) && !float.IsNaN(jointParams.UpperLimit))
-                {
-                    UpperLimit = MathHelper.ToRadians(-jointParams.LowerLimit);
-                    LowerLimit = MathHelper.ToRadians(-jointParams.UpperLimit);
-                }
+                UpperLimit = MathHelper.ToRadians(-jointParams.LowerLimit);
+                LowerLimit = MathHelper.ToRadians(-jointParams.UpperLimit);
             }
             else
             {
                 LocalAnchorA = ConvertUnits.ToSimUnits(jointParams.Limb1Anchor * jointParams.Ragdoll.JointScale);
                 LocalAnchorB = ConvertUnits.ToSimUnits(jointParams.Limb2Anchor * jointParams.Ragdoll.JointScale);
-                if (!float.IsNaN(jointParams.LowerLimit) && !float.IsNaN(jointParams.UpperLimit))
-                {
-                    UpperLimit = MathHelper.ToRadians(jointParams.UpperLimit);
-                    LowerLimit = MathHelper.ToRadians(jointParams.LowerLimit);
-                }
+                UpperLimit = MathHelper.ToRadians(jointParams.UpperLimit);
+                LowerLimit = MathHelper.ToRadians(jointParams.LowerLimit);
             }
         }
     }
@@ -137,12 +109,6 @@ namespace Barotrauma
         public PhysicsBody body;
                         
         public Vector2 StepOffset => ConvertUnits.ToSimUnits(limbParams.StepOffset) * ragdoll.RagdollParams.JointScale;
-
-        public Sprite Sprite { get; protected set; }
-        public DeformableSprite DeformSprite { get; protected set; }
-        public Sprite ActiveSprite => DeformSprite != null ? DeformSprite.Sprite : Sprite;
-
-        public Sprite DamagedSprite { get; set; }
 
         public bool inWater;
 
@@ -314,7 +280,7 @@ namespace Barotrauma
             this.limbParams = limbParams;
             wearingItems = new List<WearableSprite>();            
             dir = Direction.Right;
-            body = new PhysicsBody(limbParams, Scale);
+            body = new PhysicsBody(limbParams);
             type = limbParams.Type;
             if (limbParams.IgnoreCollisions)
             {
@@ -352,43 +318,6 @@ namespace Barotrauma
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    // DeformableSprites handled by client only
-                    case "sprite":
-                        string spritePath = subElement.Attribute("texture")?.Value;
-                        string spritePathWithTags = spritePath;
-                        if (character.Info != null)
-                        {
-                            spritePath = spritePath.Replace("[GENDER]", (character.Info.Gender == Gender.Female) ? "f" : "");
-                            spritePath = spritePath.Replace("[HEADID]", character.Info.HeadSpriteId.ToString());
-
-                            if (character.Info.HeadSprite != null && character.Info.SpriteTags.Any())
-                            {
-                                string tags = "";
-                                character.Info.SpriteTags.ForEach(tag => tags += "[" + tag + "]");
-
-                                spritePathWithTags = Path.Combine(
-                                    Path.GetDirectoryName(spritePath),
-                                    Path.GetFileNameWithoutExtension(spritePath) + tags + Path.GetExtension(spritePath));
-                            }
-                        }
-                        if (File.Exists(spritePathWithTags))
-                        {
-                            Sprite = new Sprite(subElement, "", spritePathWithTags);
-                        }
-                        else
-                        {
-                            Sprite = new Sprite(subElement, "", spritePath);
-                        }
-                        break;
-                    case "damagedsprite":
-                        string damagedSpritePath = subElement.Attribute("texture").Value;
-                        if (character.Info != null)
-                        {
-                            damagedSpritePath = damagedSpritePath.Replace("[GENDER]", (character.Info.Gender == Gender.Female) ? "f" : "");
-                            damagedSpritePath = damagedSpritePath.Replace("[HEADID]", character.Info.HeadSpriteId.ToString());
-                        }
-                        DamagedSprite = new Sprite(subElement, "", damagedSpritePath);
-                        break;
                     case "attack":
                         attack = new Attack(subElement, (character == null ? "null" : character.Name) + ", limb " + type);
                         break;
@@ -622,44 +551,23 @@ namespace Barotrauma
             }
             return wasHit;
         }
-
-        partial void RemoveProjSpecific();
+        
         public void Remove()
         {
-            if (Sprite != null)
-            {
-                Sprite.Remove();
-                Sprite = null;
-            }
-            
-            if (DamagedSprite != null)
-            {
-                DamagedSprite.Remove();
-                DamagedSprite = null;
-            }
-
-            if (DeformSprite != null)
-            {
-                DeformSprite.Sprite?.Remove();
-                DeformSprite = null;
-            }
-
-            if (body != null)
-            {
-                body.Remove();
-                body = null;
-            }
-            
+            body?.Remove();
+            body = null;
             RemoveProjSpecific();
         }
+
+        partial void RemoveProjSpecific();
 
         public void LoadParams()
         {
             bool isFlipped = dir == Direction.Left;
-            Sprite?.LoadParams(limbParams.normalSpriteParams, isFlipped);
-            DamagedSprite?.LoadParams(limbParams.damagedSpriteParams, isFlipped);
-            DeformSprite?.Sprite.LoadParams(limbParams.deformSpriteParams, isFlipped);
             pullJoint.LocalAnchorA = ConvertUnits.ToSimUnits(limbParams.PullPos * Scale);
+            LoadParamsProjSpecific();
         }
+
+        partial void LoadParamsProjSpecific();
     }
 }

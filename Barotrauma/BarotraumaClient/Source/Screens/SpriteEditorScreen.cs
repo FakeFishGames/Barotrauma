@@ -21,7 +21,6 @@ namespace Barotrauma
         private GUIFrame topPanelContents;
         private GUITextBlock texturePathText;
         private GUITextBlock xmlPathText;
-        private GUITickBox pixelPerfectToggle;
         private GUIScrollBar zoomBar;
         private string xmlPath;
         private List<Sprite> selectedSprites = new List<Sprite>();
@@ -37,6 +36,11 @@ namespace Barotrauma
         public override Camera Cam
         {
             get { return cam; }
+        }
+
+        public GUIComponent TopPanel
+        {
+            get { return topPanel; }
         }
 
         public SpriteEditorScreen()
@@ -79,8 +83,9 @@ namespace Barotrauma
                         var element = sprite.SourceElement;
                         if (element == null) { continue; }
                         sprite.SourceRect = element.GetAttributeRect("sourcerect", sprite.SourceRect);
+                        sprite.Origin = element.GetAttributeVector2("origin", sprite.RelativeOrigin);
                     }
-                    widgets.Clear();
+                    ResetWidgets();
                     xmlPathText.Text = "Changes successfully reset";
                     xmlPathText.TextColor = Color.LightGreen;
                     return true;
@@ -89,7 +94,7 @@ namespace Barotrauma
             new GUIButton(new RectTransform(new Vector2(0.12f, 0.4f), topPanelContents.RectTransform, Anchor.TopLeft)
             {
                 RelativeOffset = new Vector2(0.15f, 0.1f)
-            }, "Save Selected Source Rects")
+            }, "Save Selected Sprites")
             {
                 OnClicked = (button, userData) =>
                 {
@@ -104,6 +109,7 @@ namespace Barotrauma
                             return false;
                         }
                         element.SetAttributeValue("sourcerect", XMLExtensions.RectToString(sprite.SourceRect));
+                        element.SetAttributeValue("origin", XMLExtensions.Vector2ToString(sprite.RelativeOrigin));
                     }
                     var firstSprite = selectedSprites.First();
                     XElement e = firstSprite.SourceElement;
@@ -115,7 +121,7 @@ namespace Barotrauma
                         return false;
                     }
                     e.Document.Save(xmlPath);
-                    xmlPathText.Text = "Selected rects saved to " + xmlPath;
+                    xmlPathText.Text = "Selected sprites saved to " + xmlPath;
                     xmlPathText.TextColor = Color.LightGreen;
                     return true;
                 }
@@ -123,7 +129,7 @@ namespace Barotrauma
             new GUIButton(new RectTransform(new Vector2(0.12f, 0.4f), topPanelContents.RectTransform, Anchor.BottomLeft)
             {
                 RelativeOffset = new Vector2(0.15f, 0.1f)
-            }, "Save Open Source Rects")
+            }, "Save All Sprites")
             {
                 OnClicked = (button, userData) =>
                 {
@@ -135,6 +141,7 @@ namespace Barotrauma
                         var element = sprite.SourceElement;
                         if (element == null) { continue; }
                         element.SetAttributeValue("sourcerect", XMLExtensions.RectToString(sprite.SourceRect));
+                        element.SetAttributeValue("origin", XMLExtensions.Vector2ToString(sprite.RelativeOrigin));
                         doc = element.Document;
                     }
                     if (doc != null)
@@ -170,20 +177,15 @@ namespace Barotrauma
                 OnMoved = (scrollBar, value) =>
                 {
                     zoom = MathHelper.Lerp(minZoom, maxZoom, value);
-                    widgets.Clear();
+                    ResetWidgets();
                     return true;
                 }
             };
-            pixelPerfectToggle = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.35f), topPanelContents.RectTransform, Anchor.BottomCenter, Pivot.BottomRight)
+            new GUIButton(new RectTransform(new Vector2(0.05f, 0.35f), topPanelContents.RectTransform, Anchor.TopCenter, Pivot.CenterLeft) { RelativeOffset = new Vector2(0.055f, 0.3f) }, "Reset Zoom")
             {
-                RelativeOffset = new Vector2(0, 0.1f)
-            }, "Zoom 100%")
-            {
-                OnSelected = (tickBox) =>
+                OnClicked = (box, data) =>
                 {
-                    zoomBar.Enabled = !tickBox.Selected;
-                    CalculateScale();
-                    widgets.Clear();
+                    ResetScale();
                     return true;
                 }
             };
@@ -206,7 +208,7 @@ namespace Barotrauma
                     selectedTexture = userData as Texture2D;
                     if (previousTexture != selectedTexture)
                     {
-                        CalculateScale();
+                        ResetScale();
                     }
                     foreach (GUIComponent child in spriteList.Content.Children)
                     {
@@ -256,7 +258,7 @@ namespace Barotrauma
                     if (sprite == null) return false;
                     if (selectedSprites.Any(s => s.Texture != selectedTexture))
                     {
-                        widgets.Clear();
+                        ResetWidgets();
                     }
                     if (Widget.EnableMultiSelect)
                     {
@@ -282,10 +284,25 @@ namespace Barotrauma
             RefreshLists();
         }
 
+        private void ResetWidgets()
+        {
+            widgets.Clear();
+            Widget.selectedWidgets.Clear();
+        }
+
         public override void Select()
         {
             base.Select();
             RefreshLists();
+        }
+
+        public void SelectSprite(Sprite sprite)
+        {
+            ResetWidgets();
+            textureList.Select(sprite.Texture);
+            ResetScale();
+            selectedSprites.Clear();
+            selectedSprites.Add(sprite);
         }
 
         public override void Update(double deltaTime)
@@ -315,11 +332,11 @@ namespace Barotrauma
                     }
                 }
             }
-            if (!pixelPerfectToggle.Selected && PlayerInput.ScrollWheelSpeed != 0 && viewArea.Contains(PlayerInput.MousePosition))
+            if (PlayerInput.ScrollWheelSpeed != 0 && viewArea.Contains(PlayerInput.MousePosition))
             {
                 zoom = MathHelper.Clamp(zoom + PlayerInput.ScrollWheelSpeed * (float)deltaTime * 0.05f * zoom, minZoom, maxZoom);
                 zoomBar.BarScroll = GetBarScrollValue();
-                widgets.Clear();
+                ResetWidgets();
             }
         }
 
@@ -350,7 +367,7 @@ namespace Barotrauma
                     layerDepth: 0);
 
                 //GUI.DrawRectangle(spriteBatch, viewArea, Color.Green, isFilled: false);
-                GUI.DrawRectangle(spriteBatch, textureRect, Color.Yellow, isFilled: false);
+                GUI.DrawRectangle(spriteBatch, textureRect, Color.Gray, isFilled: false);
 
                 foreach (GUIComponent element in spriteList.Content.Children)
                 {
@@ -365,7 +382,8 @@ namespace Barotrauma
                         (int)(sprite.SourceRect.Width * zoom),
                         (int)(sprite.SourceRect.Height * zoom));
 
-                    GUI.DrawRectangle(spriteBatch, sourceRect, selectedSprites.Contains(sprite) ? Color.Red : Color.White * 0.5f);
+                    bool isSelected = selectedSprites.Contains(sprite);
+                    GUI.DrawRectangle(spriteBatch, sourceRect, isSelected ? Color.Yellow : Color.Red * 0.5f, thickness: isSelected ? 2 : 1);
 
                     string identifier = null;
                     var sourceElement = sprite.SourceElement;
@@ -379,78 +397,98 @@ namespace Barotrauma
                         int widgetSize = 10;
                         Vector2 halfSize = new Vector2(widgetSize) / 2;
                         Vector2 tooltipOffset = new Vector2(15, -10);
-                        var rect = sprite.SourceRect;
-                        var topLeft = rect.Location.ToVector2();
-                        var topRight = new Vector2(topLeft.X + rect.Width, topLeft.Y);
-                        var bottomRight = new Vector2(topRight.X, topRight.Y + rect.Height);
-                        //var bottomLeft = new Vector2(topLeft.X, bottomRight.Y);
+                        Vector2 GetTopLeft() => sprite.SourceRect.Location.ToVector2();
+                        Vector2 GetTopRight() => new Vector2(GetTopLeft().X + sprite.SourceRect.Width, GetTopLeft().Y);
+                        Vector2 GetBottomRight() => new Vector2(GetTopRight().X, GetTopRight().Y + sprite.SourceRect.Height);
+                        var originWidget = GetWidget($"{identifier}_origin", widgetSize, Widget.Shape.Cross, initMethod: w =>
+                        {
+                            w.color = Color.Yellow;
+                            w.secondaryColor = Color.Gray;
+                            w.tooltipOffset = tooltipOffset;
+                            w.tooltip = $"Origin: {sprite.RelativeOrigin.FormatDoubleDecimal()}";
+                            w.inputAreaMargin = new Point(widgetSize / 2);
+                            w.refresh = () =>
+                                w.DrawPos = (textureRect.Location.ToVector2() + (sprite.Origin + sprite.SourceRect.Location.ToVector2()) * zoom)
+                                    .Clamp(textureRect.Location.ToVector2() + GetTopLeft() * zoom, textureRect.Location.ToVector2() + GetBottomRight() * zoom);
+                            w.refresh();
+                            w.MouseDown += () => spriteList.Select(sprite);
+                            w.MouseHeld += dTime =>
+                            {
+                                w.DrawPos = PlayerInput.MousePosition.Clamp(textureRect.Location.ToVector2() + GetTopLeft() * zoom, textureRect.Location.ToVector2() + GetBottomRight() * zoom);
+                                sprite.Origin = (w.DrawPos + halfSize - textureRect.Location.ToVector2() - sprite.SourceRect.Location.ToVector2() * zoom) / zoom;
+                                w.tooltip = $"Origin: {sprite.RelativeOrigin.FormatDoubleDecimal()}";
+                            };
+                            w.Deselected += w.refresh;
+                            w.MouseUp += w.refresh;
+                            w.PreUpdate += dTime => w.Enabled = isSelected;
+                        });
                         var positionWidget = GetWidget($"{identifier}_position", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                         {
+                            w.color = Color.Yellow;
+                            w.secondaryColor = Color.Gray;
                             w.tooltipOffset = tooltipOffset;
                             w.tooltip = $"Position: {sprite.SourceRect.Location}";
-                            w.DrawPos = textureRect.Location.ToVector2() + topLeft * zoom - halfSize;
+                            w.DrawPos = textureRect.Location.ToVector2() + GetTopLeft() * zoom - halfSize;
                             w.inputAreaMargin = new Point(widgetSize / 2);
                             w.MouseDown += () => spriteList.Select(sprite);
                             w.MouseHeld += dTime =>
                             {
                                 w.DrawPos = PlayerInput.MousePosition;
                                 sprite.SourceRect = new Rectangle(((w.DrawPos + halfSize - textureRect.Location.ToVector2()) / zoom).ToPoint(), sprite.SourceRect.Size);
-                                UpdateSizeWidget();
+                                if (widgets.TryGetValue($"{identifier}_size", out Widget sizeW))
+                                {
+                                    sizeW.refresh();
+                                }
+                                if (widgets.TryGetValue($"{identifier}_origin", out Widget originW))
+                                {
+                                    originW.refresh();
+                                }
                                 if (spriteList.SelectedComponent is GUITextBlock textBox)
                                 {
                                     textBox.Text = GetSpriteName(sprite) + " " + sprite.SourceRect;
                                 }
                                 w.tooltip = $"Position: {sprite.SourceRect.Location}";
                             };
-                            w.Deselected += UpdatePos;
-                            w.MouseUp += UpdatePos;
-                            w.PostUpdate += dTime =>
-                            {
-                                w.color = selectedSprites.Contains(sprite) ? Color.Red : Color.White;
-                            };
-                            void UpdatePos()
-                            {
-                                w.DrawPos = textureRect.Location.ToVector2() + sprite.SourceRect.Location.ToVector2() * zoom - halfSize;
-                            };
-                            void UpdateSizeWidget()
-                            {
-                                if (widgets.TryGetValue($"{identifier}_size", out Widget sizeW))
-                                {
-                                    //sizeW.DrawPos = w.DrawPos + new Vector2(widgetSize) + sprite.SourceRect.Size.ToVector2() * zoom;
-                                    sizeW.DrawPos = textureRect.Location.ToVector2() + new Vector2(sprite.SourceRect.Right, sprite.SourceRect.Bottom) * zoom + halfSize;
-                                }
-                            }
+                            w.refresh = () => w.DrawPos = textureRect.Location.ToVector2() + sprite.SourceRect.Location.ToVector2() * zoom - halfSize;
+                            w.Deselected += w.refresh;
+                            w.MouseUp += w.refresh;
+                            w.PreUpdate += dTime => w.Enabled = isSelected;
                         });
                         var sizeWidget = GetWidget($"{identifier}_size", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                         {
+                            w.color = Color.Yellow;
+                            w.secondaryColor = Color.Gray;
                             w.tooltipOffset = tooltipOffset;
                             w.tooltip = $"Size: {sprite.SourceRect.Size}";
-                            w.DrawPos = textureRect.Location.ToVector2() + bottomRight * zoom + halfSize;
+                            w.DrawPos = textureRect.Location.ToVector2() + GetBottomRight() * zoom + halfSize;
                             w.inputAreaMargin = new Point(widgetSize / 2);
                             w.MouseDown += () => spriteList.Select(sprite);
                             w.MouseHeld += dTime =>
                             {
                                 w.DrawPos = PlayerInput.MousePosition;
                                 sprite.SourceRect = new Rectangle(sprite.SourceRect.Location, ((w.DrawPos - new Vector2(widgetSize) - positionWidget.DrawPos) / zoom).ToPoint());
+                                sprite.RelativeOrigin = sprite.RelativeOrigin;
+                                if (widgets.TryGetValue($"{identifier}_origin", out Widget originW))
+                                {
+                                    originW.refresh();
+                                }
                                 if (spriteList.SelectedComponent is GUITextBlock textBox)
                                 {
                                     textBox.Text = GetSpriteName(sprite) + " " + sprite.SourceRect;
                                 }
                                 w.tooltip = $"Size: {sprite.SourceRect.Size}";
                             };
-                            w.MouseUp += UpdatePos;
-                            w.Deselected += UpdatePos;
-                            w.PostUpdate += dTime =>
-                            {
-                                w.color = selectedSprites.Contains(sprite) ? Color.Red : Color.White;
-                            };
-                            void UpdatePos()
-                            {
-                                w.DrawPos = textureRect.Location.ToVector2() + new Vector2(sprite.SourceRect.Right, sprite.SourceRect.Bottom) * zoom + halfSize;
-                            }
+                            w.refresh = () => w.DrawPos = textureRect.Location.ToVector2() + new Vector2(sprite.SourceRect.Right, sprite.SourceRect.Bottom) * zoom + halfSize;
+                            w.MouseUp += w.refresh;
+                            w.Deselected += w.refresh;
+                            w.PreUpdate += dTime => w.Enabled = isSelected;
                         });
-                        positionWidget.Draw(spriteBatch, (float)deltaTime);
-                        sizeWidget.Draw(spriteBatch, (float)deltaTime);
+                        if (isSelected)
+                        {
+                            positionWidget.Draw(spriteBatch, (float)deltaTime);
+                            sizeWidget.Draw(spriteBatch, (float)deltaTime);
+                            originWidget.Draw(spriteBatch, (float)deltaTime);
+                        }
                     }
                 }
             }
@@ -464,13 +502,14 @@ namespace Barotrauma
             spriteBatch.End();
         }
 
-        private void CalculateScale()
+        private void ResetScale()
         {
             float width = viewArea.Width / (float)selectedTexture.Width;
             float height = viewArea.Height / (float)selectedTexture.Height;
             maxZoom = Math.Min(width, height);
-            zoom = pixelPerfectToggle.Selected ? 1 : maxZoom;
+            zoom = Math.Min(1, maxZoom);
             zoomBar.BarScroll = GetBarScrollValue();
+            ResetWidgets();
         }
 
         private float GetBarScrollValue() => MathHelper.Lerp(0, 1, MathUtils.InverseLerp(minZoom, maxZoom, zoom));
@@ -493,11 +532,11 @@ namespace Barotrauma
             return string.IsNullOrEmpty(identifier) ? Path.GetFileNameWithoutExtension(sprite.FilePath) : identifier;
         }
 
-        private void RefreshLists()
+        public void RefreshLists()
         {
             textureList.ClearChildren();
             spriteList.ClearChildren();
-            widgets.Clear();
+            ResetWidgets();
             HashSet<string> textures = new HashSet<string>();
             foreach (Sprite sprite in Sprite.LoadedSprites.OrderBy(s => Path.GetFileNameWithoutExtension(s.FilePath)))
             {

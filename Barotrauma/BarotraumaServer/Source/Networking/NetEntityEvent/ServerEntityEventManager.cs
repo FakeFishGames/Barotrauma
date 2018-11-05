@@ -109,6 +109,17 @@ namespace Barotrauma.Networking
                 return;
             }
 
+            if (((Entity)entity).Removed && !(entity is Level))
+            {
+                DebugConsole.ThrowError("Can't create an entity event for " + entity + " - the entity has been removed.\n"+Environment.StackTrace);
+                return;
+            }
+            if (((Entity)entity).IdFreed)
+            {
+                DebugConsole.ThrowError("Can't create an entity event for " + entity + " - the ID of the entity has been freed.\n"+Environment.StackTrace);
+                return;
+            }
+
             var newEvent = new ServerEntityEvent(entity, (UInt16)(ID + 1));
             if (extraData != null) newEvent.SetData(extraData);
             

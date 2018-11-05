@@ -106,7 +106,7 @@ namespace Barotrauma
                 {
                     rotation = MathUtils.VectorToAngle(new Vector2(spawnPosition.Normal.Y, spawnPosition.Normal.X));
                 }
-                rotation += Rand.Range(prefab.RandomRotation.X, prefab.RandomRotation.Y, Rand.RandSync.Server);
+                rotation += Rand.Range(prefab.RandomRotationRad.X, prefab.RandomRotationRad.Y, Rand.RandSync.Server);
 
                 Vector2 position = Vector2.Zero;
                 Vector2 edgeDir = Vector2.UnitX;
@@ -123,7 +123,7 @@ namespace Barotrauma
                 }
 
                 var newObject = new LevelObject(prefab,
-                    new Vector3(position, Rand.Range(prefab.DepthRange.X, prefab.DepthRange.Y, Rand.RandSync.Server)), Rand.Range(prefab.Scale.X, prefab.Scale.Y, Rand.RandSync.Server), rotation);
+                    new Vector3(position, Rand.Range(prefab.DepthRange.X, prefab.DepthRange.Y, Rand.RandSync.Server)), Rand.Range(prefab.MinSize, prefab.MaxSize, Rand.RandSync.Server), rotation);
                 AddObject(newObject, level);
 
                 foreach (LevelObjectPrefab.ChildObject child in prefab.ChildObjects)
@@ -140,8 +140,8 @@ namespace Barotrauma
 
                         var childObject = new LevelObject(childPrefab,
                             new Vector3(childPos, Rand.Range(childPrefab.DepthRange.X, childPrefab.DepthRange.Y, Rand.RandSync.Server)),
-                            Rand.Range(childPrefab.Scale.X, childPrefab.Scale.Y, Rand.RandSync.Server),
-                            rotation + Rand.Range(childPrefab.RandomRotation.X, childPrefab.RandomRotation.Y, Rand.RandSync.Server));
+                            Rand.Range(childPrefab.MinSize, childPrefab.MaxSize, Rand.RandSync.Server),
+                            rotation + Rand.Range(childPrefab.RandomRotationRad.X, childPrefab.RandomRotationRad.Y, Rand.RandSync.Server));
 
                         AddObject(childObject, level);
                     }

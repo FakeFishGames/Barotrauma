@@ -69,6 +69,7 @@ namespace Barotrauma
             { typeof(int), "int" },
             { typeof(float), "float" },
             { typeof(string), "string" },
+            { typeof(Point), "point" },
             { typeof(Vector2), "vector2" },
             { typeof(Vector3), "vector3" },
             { typeof(Vector4), "vector4" },
@@ -182,6 +183,9 @@ namespace Barotrauma
                     case "string":
                         propertyInfo.SetValue(obj, value, null);
                         break;
+                    case "point":
+                        propertyInfo.SetValue(obj, XMLExtensions.ParsePoint(value));
+                        break;
                     case "vector2":
                         propertyInfo.SetValue(obj, XMLExtensions.ParseVector2(value));
                         break;
@@ -216,8 +220,7 @@ namespace Barotrauma
 
             try
             {
-                string typeName;
-                if (!supportedTypes.TryGetValue(propertyDescriptor.PropertyType, out typeName))
+                if (!supportedTypes.TryGetValue(propertyDescriptor.PropertyType, out string typeName))
                 {
                     if (propertyDescriptor.PropertyType.IsEnum)
                     {
@@ -251,6 +254,9 @@ namespace Barotrauma
                         {
                             case "string":
                                 propertyInfo.SetValue(obj, value, null);
+                                return true;
+                            case "point":
+                                propertyInfo.SetValue(obj, XMLExtensions.ParsePoint((string)value));
                                 return true;
                             case "vector2":
                                 propertyInfo.SetValue(obj, XMLExtensions.ParseVector2((string)value));
@@ -476,8 +482,7 @@ namespace Barotrauma
                 }
 
                 string stringValue;
-                string typeName;
-                if (!supportedTypes.TryGetValue(value.GetType(), out typeName))
+                if (!supportedTypes.TryGetValue(value.GetType(), out string typeName))
                 {
                     if (property.PropertyType.IsEnum)
                     {
@@ -496,6 +501,9 @@ namespace Barotrauma
                         case "float":
                             //make sure the decimal point isn't converted to a comma or anything else
                             stringValue = ((float)value).ToString("G", CultureInfo.InvariantCulture);
+                            break;
+                        case "point":
+                            stringValue = XMLExtensions.PointToString((Point)value);
                             break;
                         case "vector2":
                             stringValue = XMLExtensions.Vector2ToString((Vector2)value);

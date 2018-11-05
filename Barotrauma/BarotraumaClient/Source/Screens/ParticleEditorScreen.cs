@@ -143,7 +143,14 @@ namespace Barotrauma
         public override void Select()
         {
             base.Select();
+            GameMain.ParticleManager.Camera = cam;
             RefreshPrefabList();
+        }
+
+        public override void Deselect()
+        {
+            base.Deselect();
+            GameMain.ParticleManager.Camera = GameMain.GameScreen.Cam;
         }
 
         private void RefreshPrefabList()

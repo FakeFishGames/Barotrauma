@@ -47,9 +47,14 @@ namespace Barotrauma
 
         private static Dictionary<string, Dictionary<string, RagdollParams>> allRagdolls = new Dictionary<string, Dictionary<string, RagdollParams>>();
 
+        public List<ColliderParams> ColliderParams { get; private set; } = new List<ColliderParams>();
         public List<LimbParams> Limbs { get; private set; } = new List<LimbParams>();
         public List<JointParams> Joints { get; private set; } = new List<JointParams>();
-        protected IEnumerable<RagdollSubParams> GetAllSubParams() => Limbs.Select(j => j as RagdollSubParams).Concat(Joints.Select(j => j as RagdollSubParams));
+
+        protected IEnumerable<RagdollSubParams> GetAllSubParams() => 
+            ColliderParams.Select(c => c as RagdollSubParams)
+            .Concat(Limbs.Select(j => j as RagdollSubParams)
+            .Concat(Joints.Select(j => j as RagdollSubParams)));
 
         public XElement MainElement => Doc.Root;
 
@@ -143,7 +148,14 @@ namespace Barotrauma
                 else
                 {
                     DebugConsole.ThrowError($"[RagdollParams] Failed to load ragdoll {r} at {selectedFile} for the character {speciesName}. Creating a dummy file.");
-                    return CreateDefault<T>(GetDefaultFile(speciesName), speciesName, dummyParams);
+                    var defaultFile = GetDefaultFile(speciesName);
+                    if (File.Exists(defaultFile))
+                    {
+                        DebugConsole.ThrowError($"[RagdollParams] Renaming the invalid file as {selectedFile}.invalid");
+                        // Rename the old file so that it's not lost.
+                        File.Move(defaultFile, defaultFile + ".invalid");
+                    }
+                    return CreateDefault<T>(defaultFile, speciesName, dummyParams);
                 }
             }
             return (T)ragdoll;
@@ -214,11 +226,23 @@ namespace Barotrauma
             if (Load(file))
             {
                 SpeciesName = speciesName;
+                CreateColliders();
                 CreateLimbs();
                 CreateJoints();
                 return true;
             }
             return false;
+        }
+
+        protected void CreateColliders()
+        {
+            ColliderParams.Clear();
+            for (int i = 0; i < MainElement.Elements("collider").Count(); i++)
+            {
+                var element = MainElement.Elements("collider").ElementAt(i);
+                string name = i > 0 ? "Secondary Collider" : "Main Collider";
+                ColliderParams.Add(new ColliderParams(element, this, name));
+            }
         }
 
         protected void CreateLimbs()
@@ -313,13 +337,13 @@ namespace Barotrauma
         /// <summary>
         /// In degrees.
         /// </summary>
-        [Serialize(float.NaN, true), Editable(-360f, 360f)]
+        [Serialize(0f, true), Editable(-360f, 360f)]
         public float UpperLimit { get; set; }
 
         /// <summary>
         /// In degrees.
         /// </summary>
-        [Serialize(float.NaN, true), Editable(-360f, 360f)]
+        [Serialize(0f, true), Editable(-360f, 360f)]
         public float LowerLimit { get; set; }
     }
 
@@ -392,12 +416,6 @@ namespace Barotrauma
         [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 10000)]
         public float Mass { get; set; }
 
-        [Serialize(0.3f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
-        public float Friction { get; set; }
-
-        [Serialize(0.05f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1, ToolTip = "The \"bounciness\" of the limb.")]
-        public float Restitution { get; set; }
-
         [Serialize(10f, true), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
         public float Density { get; set; }
 
@@ -409,6 +427,16 @@ namespace Barotrauma
 
         [Serialize(false, true), Editable]
         public bool IgnoreCollisions { get; set; }
+
+        [Serialize("", true), Editable]
+        public string Notes { get; set; }
+
+        // Non-editable ->
+        [Serialize(0.3f, true)]
+        public float Friction { get; set; }
+
+        [Serialize(0.05f, true)]
+        public float Restitution { get; set; }
     }
 
     class SpriteParams : RagdollSubParams
@@ -431,7 +459,23 @@ namespace Barotrauma
         //public string Texture { get; set; }
     }
 
-    // TODO: params for the main collider(s)?
+    class ColliderParams : RagdollSubParams
+    {
+        public ColliderParams(XElement element, RagdollParams ragdoll, string name = null) : base(element, ragdoll)
+        {
+            Name = name ?? element.Name.ToString();
+        }
+
+        [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+        public float Radius { get; set; }
+
+        [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+        public float Height { get; set; }
+
+        [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+        public float Width { get; set; }
+    }
+
     abstract class RagdollSubParams : ISerializableEntity
     {
         public string Name { get; protected set; }

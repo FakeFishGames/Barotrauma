@@ -44,6 +44,39 @@ namespace Barotrauma
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
+            
+#if DEBUG
+            //debug button for quickly starting a new round
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform, Anchor.TopCenter, Pivot.BottomCenter) { AbsoluteOffset = new Point(0, -40) },
+                "Quickstart (dev)", style: "GUIButtonLarge", color: Color.Red)
+            {
+                IgnoreLayoutGroups = true,
+                OnClicked = (tb, userdata) =>
+                {
+                    var subs = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.Shuttle) && !s.HasTag(SubmarineTag.HideInMenus));
+                    var gamesession = new GameSession(
+                        subs.ElementAt(Rand.Int(subs.Count())),
+                        "Data/Saves/test.xml",
+                        GameModePreset.list.Find(gm => gm.Name == "SPSandbox"),
+                        missionPrefab: null);
+                    //(gamesession.GameMode as SinglePlayerCampaign).GenerateMap(ToolBox.RandomSeed(8));
+                    gamesession.StartRound(ToolBox.RandomSeed(8));
+                    GameMain.GameScreen.Select();
+
+                    for (int i = 0; i < 3; i++)
+                    {
+                        var spawnPoint = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
+                        var newCharacter = Character.Create(Character.HumanConfigFile, spawnPoint.WorldPosition, ToolBox.RandomSeed(8));
+                        newCharacter.GiveJobItems(spawnPoint);
+                        gamesession.CrewManager.AddCharacter(newCharacter);
+                        Character.Controlled = newCharacter;
+                    }
+                    return true;
+                }
+            };
+#endif
+
+
             var minButtonSize = new Point(120, 20);
             var maxButtonSize = new Point(240, 40);
 
