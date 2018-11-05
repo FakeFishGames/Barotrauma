@@ -95,6 +95,7 @@ namespace Barotrauma.Networking
             bool changedMonsterSettings = incMsg.ReadBoolean(); incMsg.ReadPadBits();
             changed |= changedMonsterSettings;
             if (changedMonsterSettings) ReadMonsterEnabled(incMsg);
+            changed |= BanList.ServerAdminRead(incMsg, c);
 
             if (changed) GameMain.NetLobbyScreen.LastUpdateID++;
         }
