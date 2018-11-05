@@ -3221,7 +3221,7 @@ namespace Barotrauma
                         CanBeFocused = false
                     };
                     var group = new GUILayoutGroup(new RectTransform(Vector2.One, limbElement.RectTransform)) { AbsoluteSpacing = 2 };
-                    var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), $"Limb {id}");
+                    var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), name);
                     var idField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                     var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                     var limbTypeField = GUI.CreateEnumField(limbType, elementSize, "Limb Type", group.RectTransform, font: GUI.Font);
@@ -3237,17 +3237,20 @@ namespace Barotrauma
                             id = numInput.IntValue;
                             string text = nameField.GetChild<GUITextBox>().Text;
                             string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
-                            label.Text = $"Limb {t}";
+                            label.Text = t;
                         }
                     };
                     new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopLeft), "Name");
                     new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), name)
-                        .OnTextChanged += (tB, text) =>
+                    {
+                        CaretColor = Color.White,
+                        OnTextChanged = (tb, text) =>
                         {
                             string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
-                            label.Text = $"Limb {t}";
+                            label.Text = t;
                             return true;
-                        };
+                        }
+                    };
                     LimbGUIElements.Add(limbElement);
                 }
 
