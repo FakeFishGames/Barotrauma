@@ -227,6 +227,13 @@ namespace Barotrauma
                 deformation.Update(deltaTime);
             }
             CurrentSpriteDeformation = SpriteDeformation.GetDeformation(spriteDeformations, ActivePrefab.DeformableSprite.Size);
+            foreach (LightSource lightSource in LightSources)
+            {
+                if (lightSource?.DeformableLightSprite != null)
+                {
+                    lightSource.DeformableLightSprite.Deform(CurrentSpriteDeformation);
+                }
+            }
         }
 
         private void UpdatePositionalDeformation(PositionalDeformation positionalDeformation, float deltaTime)
