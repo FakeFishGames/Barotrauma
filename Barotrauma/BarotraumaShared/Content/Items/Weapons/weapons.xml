@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Spear" identifier="spear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate">
+  <Item name="Spear" identifier="spear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem">
     <Price locationtype="Military" buyprice="55" />
     <Price locationtype="City" buyprice="60" />
     <Price locationtype="Outpost" buyprice="60" />
@@ -17,7 +17,7 @@
       </Attack>
     </Projectile>
   </Item>
-  <Item name="Harpoon Gun" identifier="harpoongun" category="Equipment" cargocontaineridentifier="metalcrate" tags="weapon">
+  <Item name="Harpoon Gun" identifier="harpoongun" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,weapon">
     <Price locationtype="Military" buyprice="170" />
     <Price locationtype="City" buyprice="200" />
     <Deconstruct time="10">
