@@ -142,7 +142,13 @@ namespace Barotrauma
             get { return seed; }
         }
 
-        public Biome Biome
+        public Biome Biome;
+
+        /// <summary>
+        /// A random integer assigned at the end of level generation. If these values differ between clients/server,
+        /// it means the levels aren't identical for some reason and there will most likely be major ID mismatches.
+        /// </summary>
+        public int EqualityCheckVal
         {
             get;
             private set;
@@ -649,6 +655,9 @@ namespace Barotrauma
             GenerateSeaFloor(mirror);
 
             levelObjectManager.PlaceObjects(this, generationParams.LevelObjectAmount);
+
+            EqualityCheckVal = Rand.Int(int.MaxValue, Rand.RandSync.Server);
+
 #if CLIENT
             backgroundCreatureManager.SpawnSprites(80);
 #endif

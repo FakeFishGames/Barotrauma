@@ -467,9 +467,10 @@ namespace Barotrauma.Items.Components
 
         private void DrawGraph(IList<float> graph, SpriteBatch spriteBatch, Rectangle rect, float maxVal, float xOffset, Color color)
         {
-            //TODO: fix
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
+            spriteBatch.End();
             spriteBatch.GraphicsDevice.ScissorRectangle = rect;
+            spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
 
             float lineWidth = (float)rect.Width / (float)(graph.Count - 2);
             float yScale = (float)rect.Height / maxVal;
@@ -511,7 +512,9 @@ namespace Barotrauma.Items.Components
                 GUI.DrawLine(spriteBatch, graphLine.Texture, prevPoint, lastPoint + (lastPoint - prevPoint), color, 0, 5);
             }
 
+            spriteBatch.End();
             spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
+            spriteBatch.Begin(SpriteSortMode.Deferred);
         }
         
         protected override void RemoveComponentSpecific()

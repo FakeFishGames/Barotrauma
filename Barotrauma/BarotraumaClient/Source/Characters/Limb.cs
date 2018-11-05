@@ -1,15 +1,16 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Lights;
+using Barotrauma.Particles;
+using Barotrauma.SpriteDeformations;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.SpriteDeformations;
-using Barotrauma.Particles;
 
 namespace Barotrauma
 {
@@ -17,65 +18,57 @@ namespace Barotrauma
     {
         public void UpdateDeformations(float deltaTime)
         {
-            #region Experimental
-            //var start = LimbA.WorldPosition;
-            //var end = LimbB.WorldPosition;
-            //var jointAPos = ConvertUnits.ToDisplayUnits(LocalAnchorA);
-            //var control = start + Vector2.Transform(jointAPos, Matrix.CreateRotationZ(LimbA.Rotation));
-            #endregion
+            float jointAngle = this.JointAngle;
 
-            void UpdateBezier(Limb limb)
+            JointBendDeformation limbADeformation = LimbA.Deformations.Find(d => d is JointBendDeformation) as JointBendDeformation;
+            JointBendDeformation limbBDeformation = LimbB.Deformations.Find(d => d is JointBendDeformation) as JointBendDeformation;
+
+            if (limbADeformation != null && limbBDeformation != null)
             {
-                if (limb.DeformSprite == null) { return; }
+                UpdateBend(LimbA, limbADeformation, this.LocalAnchorA, -jointAngle);
+                UpdateBend(LimbB, limbBDeformation, this.LocalAnchorB, jointAngle);
 
-                #region Experimental
-                //var origin = limb.DeformSprite.Origin;
-                //var rotation = limb.Rotation;
-                ////rotation = -rotation;
-                //var pos = limb.WorldPosition;
-                //Matrix matrix = Matrix.CreateTranslation(-origin.X, -origin.Y, 0)
-                //    * Matrix.CreateScale(new Vector3(1, -1, 1))
-                //    * Matrix.CreateRotationZ(rotation)
-                //    * Matrix.CreateTranslation(new Vector3(pos, MathHelper.Clamp(limb.DeformSprite.Sprite.Depth, 0, 1)));
-                #endregion
+            }
+            
+            void UpdateBend(Limb limb, JointBendDeformation deformation, Vector2 localAnchor, float angle)
+            {
+                deformation.Scale = limb.DeformSprite.Size;
 
-                foreach (var deformation in limb.Deformations)
+                Vector2 displayAnchor = ConvertUnits.ToDisplayUnits(localAnchor);
+                displayAnchor.Y = -displayAnchor.Y;
+                Vector2 refPos = displayAnchor + limb.DeformSprite.Origin;
+
+                refPos.X /= limb.DeformSprite.Size.X;
+                refPos.Y /= limb.DeformSprite.Size.Y;
+
+                if (Math.Abs(localAnchor.X) > Math.Abs(localAnchor.Y))
                 {
-                    if (deformation is BezierDeformation bezierDeformation)
+                    if (localAnchor.X > 0.0f)
                     {
-                        bezierDeformation.flipX = limb.character.AnimController.IsFlipped;
-
-                        #region Sine wave
-                        if ((limb.character.AnimController is FishAnimController fishController))
-                        {
-                            var waveLength = fishController.CurrentSwimParams.WaveLength;
-                            var waveAmplitude = fishController.CurrentSwimParams.WaveAmplitude;
-                            if (waveLength > 0 && waveAmplitude > 0)
-                            {
-                                float waveRotation = (float)Math.Sin(fishController.WalkPos / waveLength);
-                                float v = waveRotation * waveAmplitude;
-                                bezierDeformation.start.X = v;
-                                bezierDeformation.start.Y = v;
-                                bezierDeformation.end.X = v;
-                                bezierDeformation.end.Y = v;
-                                bezierDeformation.control.X = v;
-                                bezierDeformation.control.Y = v;
-                            }
-                        }
-                        #endregion
-
-                        #region Experimental
-                        //matrix = Matrix.Invert(matrix);
-                        //matrix = matrix * Matrix.CreateScale(1.0f / limb.DeformSprite.Size.X, 1.0f / limb.DeformSprite.Size.Y, 1);
-                        //bezierDeformation.start = Vector2.Transform(start, matrix) * 1;
-                        //bezierDeformation.end = Vector2.Transform(end, matrix) * 1;
-                        //bezierDeformation.control = Vector2.Transform(control, matrix) * 1;
-                        #endregion
+                        deformation.BendRightRefPos = refPos;
+                        deformation.BendRight = angle;
+                    }
+                    else
+                    {
+                        deformation.BendLeftRefPos = refPos;
+                        deformation.BendLeft = angle;
+                    }
+                }
+                else
+                {
+                    if (localAnchor.Y > 0.0f)
+                    {
+                        deformation.BendUpRefPos = refPos;
+                        deformation.BendUp = angle;
+                    }
+                    else
+                    {
+                        deformation.BendDownRefPos = refPos;
+                        deformation.BendDown = angle;
                     }
                 }
             }
-            UpdateBezier(LimbA);
-            UpdateBezier(LimbB);
+
         }
 
         public void Draw(SpriteBatch spriteBatch)
@@ -114,6 +107,12 @@ namespace Barotrauma
         /// </summary>
         public List<SpriteDeformation> Deformations { get; private set; } = new List<SpriteDeformation>();
 
+        public Sprite Sprite { get; protected set; }
+        public DeformableSprite DeformSprite { get; protected set; }
+        public Sprite ActiveSprite => DeformSprite != null ? DeformSprite.Sprite : Sprite;
+
+        public Sprite DamagedSprite { get; set; }
+
         public Color InitialLightSourceColor
         {
             get;
@@ -148,8 +147,14 @@ namespace Barotrauma
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
+                    case "sprite":
+                        Sprite = new Sprite(subElement, "", GetSpritePath(subElement));
+                        break;
+                    case "damagedsprite":
+                        DamagedSprite = new Sprite(subElement, "", GetSpritePath(subElement));
+                        break;
                     case "deformablesprite":
-                        DeformSprite = new DeformableSprite(subElement);
+                        DeformSprite = new DeformableSprite(subElement, filePath: GetSpritePath(subElement));
                         foreach (XElement animationElement in subElement.Elements())
                         {
                             int sync = animationElement.GetAttributeInt("sync", -1);
@@ -161,13 +166,16 @@ namespace Barotrauma
                                 deformation = ragdoll.Limbs
                                     .Where(l => l != null)
                                     .SelectMany(l => l.Deformations)
-                                    .Where(d => d.typeName == typeName && d.sync == sync)
+                                    .Where(d => d.TypeName == typeName && d.Sync == sync)
                                     .FirstOrDefault();
                             }
                             if (deformation == null)
                             {
                                 deformation = SpriteDeformation.Load(animationElement);
-                                ragdoll.SpriteDeformations.Add(deformation);
+                                if (deformation != null)
+                                {
+                                    ragdoll.SpriteDeformations.Add(deformation);
+                                }
                             }
                             if (deformation != null) Deformations.Add(deformation);
                         }
@@ -186,6 +194,40 @@ namespace Barotrauma
                         break;
                 }
             }
+        }
+
+        /// <summary>
+        /// Get the full path of a limb sprite, taking into account tags, gender and head id
+        /// </summary>
+        private string GetSpritePath(XElement element)
+        {
+            string spritePath = element.Attribute("texture")?.Value ?? "";
+            string spritePathWithTags = spritePath;
+            if (character.Info != null)
+            {
+                spritePath = spritePath.Replace("[GENDER]", (character.Info.Gender == Gender.Female) ? "f" : "");
+                spritePath = spritePath.Replace("[HEADID]", character.Info.HeadSpriteId.ToString());
+
+                if (character.Info.HeadSprite != null && character.Info.SpriteTags.Any())
+                {
+                    string tags = "";
+                    character.Info.SpriteTags.ForEach(tag => tags += "[" + tag + "]");
+
+                    spritePathWithTags = Path.Combine(
+                        Path.GetDirectoryName(spritePath),
+                        Path.GetFileNameWithoutExtension(spritePath) + tags + Path.GetExtension(spritePath));
+                }
+            }
+
+            return File.Exists(spritePathWithTags) ? spritePathWithTags : spritePath;
+        }
+
+        partial void LoadParamsProjSpecific()
+        {
+            bool isFlipped = dir == Direction.Left;
+            Sprite?.LoadParams(limbParams.normalSpriteParams, isFlipped);
+            DamagedSprite?.LoadParams(limbParams.damagedSpriteParams, isFlipped);
+            DeformSprite?.Sprite.LoadParams(limbParams.deformSpriteParams, isFlipped);
         }
 
         partial void AddDamageProjSpecific(Vector2 position, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers)
@@ -285,7 +327,7 @@ namespace Barotrauma
             }
 
             body.Dir = Dir;
-            
+
             bool hideLimb = wearingItems.Any(w => w != null && w.HideLimb);
             body.UpdateDrawPosition();
 
@@ -381,10 +423,17 @@ namespace Barotrauma
 
         partial void RemoveProjSpecific()
         {
-            if (LightSource != null)
-            {
-                LightSource.Remove();
-            }
+            Sprite?.Remove();
+            Sprite = null;            
+
+            DamagedSprite?.Remove();
+            DamagedSprite = null;            
+
+            DeformSprite?.Sprite?.Remove();
+            DeformSprite = null;
+
+            LightSource?.Remove();
+            LightSource = null;
         }
     }
 }

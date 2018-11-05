@@ -38,7 +38,7 @@ namespace Barotrauma
         }
     }
 
-    abstract class HumanSwimParams : SwimParams
+    abstract class HumanSwimParams : SwimParams, IHumanAnimation
     {
         [Serialize(0.5f, true), Editable(DecimalCount = 2)]
         public float LegMoveAmount { get; set; }
@@ -54,9 +54,26 @@ namespace Barotrauma
 
         [Serialize("0.0, 0.0", true), Editable(DecimalCount = 2)]
         public Vector2 HandMoveOffset { get; set; }
+
+        /// <summary>
+        /// In degrees.
+        /// </summary>
+        [Serialize(0.0f, true), Editable(-360f, 360f)]
+        public float FootAngle
+        {
+            get => MathHelper.ToDegrees(FootAngleInRadians);
+            set
+            {
+                FootAngleInRadians = MathHelper.ToRadians(value);
+            }
+        }
+        public float FootAngleInRadians { get; private set; }
+
+        [Serialize(25.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 100, ToolTip = "How much torque is used to rotate the feet to the correct orientation.")]
+        public float FootRotateStrength { get; set; }
     }
 
-    abstract class HumanGroundedParams : GroundedMovementParams
+    abstract class HumanGroundedParams : GroundedMovementParams, IHumanAnimation
     {
         [Serialize(0.3f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2, ToolTip = "How much force is used to force the character upright.")]
         public float GetUpForce { get; set; }
@@ -79,6 +96,20 @@ namespace Barotrauma
         [Serialize(15.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 100, ToolTip = "How much force is used to move the feet to the correct position.")]
         public float FootMoveStrength { get; set; }
 
+        /// <summary>
+        /// In degrees.
+        /// </summary>
+        [Serialize(0.0f, true), Editable(-360f, 360f)]
+        public float FootAngle
+        {
+            get => MathHelper.ToDegrees(FootAngleInRadians);
+            set
+            {
+                FootAngleInRadians = MathHelper.ToRadians(value);                
+            }
+        }
+        public float FootAngleInRadians { get; private set; }
+
         [Serialize(20.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 100, ToolTip = "How much torque is used to rotate the feet to the correct orientation.")]
         public float FootRotateStrength { get; set; }
 
@@ -99,5 +130,12 @@ namespace Barotrauma
 
         [Serialize(-1.0f, true), Editable(DecimalCount = 2, ToolTip = "The position of the hands is clamped below this (relative to the position of the character's torso).")]
         public float HandClampY { get; set; }
+    }
+
+    public interface IHumanAnimation
+    {
+        float FootAngle { get; set; }
+        float FootAngleInRadians { get; }
+        float FootRotateStrength { get; set; }
     }
 }

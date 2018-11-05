@@ -74,6 +74,7 @@ namespace Barotrauma
             {
                 enabled = value;
                 Bar.Enabled = value;
+                if (!enabled) Bar.Selected = false;
             }
         }
 
@@ -181,6 +182,7 @@ namespace Barotrauma
             Bar.OnPressed = SelectBar;
             enabled = true;
             UpdateRect();
+            BarScroll = 0.0f;
 
             rectT.SizeChanged += UpdateRect;
             rectT.ScaleChanged += UpdateRect;

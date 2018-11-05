@@ -9,11 +9,39 @@ namespace Barotrauma
     {
         public static bool FollowSub = true;
 
-        const float DefaultZoom = 1.0f;
-        const float ZoomSmoothness = 8.0f;
-        const float MoveSmoothness = 8.0f;
+        private float defaultZoom = 1.1f;
+        public float DefaultZoom
+        {
+            get { return defaultZoom; }
+            set { defaultZoom = MathHelper.Clamp(value, 0.5f, 2.0f); }
+        }
 
-        public float MinZoom = 0.1f, MaxZoom = 2.0f;
+        private float zoomSmoothness = 8.0f;
+        public float ZoomSmoothness
+        {
+            get { return zoomSmoothness; }
+            set { zoomSmoothness = Math.Max(value, 0.01f); }
+        }
+        private float moveSmoothness = 8.0f;
+        public float MoveSmoothness
+        {
+            get { return moveSmoothness; }
+            set { moveSmoothness = Math.Max(value, 0.01f); }
+        }
+
+        private float minZoom = 0.1f;
+        public float MinZoom
+        {
+            get { return minZoom;}
+            set { minZoom = MathHelper.Clamp(value, 0.01f, 10.0f);   }
+        }
+
+        private float maxZoom = 2.0f;
+        public float MaxZoom
+        {
+            get { return maxZoom; }
+            set { maxZoom = MathHelper.Clamp(value, 1.0f, 10.0f); }
+        }
 
         private float zoom;
 

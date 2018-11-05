@@ -277,6 +277,7 @@
   <None>None</None>
   <Close>Close</Close>
   <Cancel>Cancel</Cancel>
+  <Done>Done</Done>
   <Delete>Delete</Delete>
   <Load>Load</Load>
   <Back>Back</Back>
@@ -594,7 +595,21 @@
   <LevelEditorLevelSeed>Level seed</LevelEditorLevelSeed>
   <LevelEditorGenerate>Generate</LevelEditorGenerate>
   <LevelEditorLightingEnabled>Enable lighting</LevelEditorLightingEnabled>
+  <LevelEditorCursorLightEnabled>Enable cursor light</LevelEditorCursorLightEnabled>
   <LevelEditorReloadTextures>Reload textures</LevelEditorReloadTextures>
+  <LevelEditorSpriteEditDone>Done</LevelEditorSpriteEditDone>
+  <LevelEditorLevelObjCommonness>Commonness in [leveltype]</LevelEditorLevelObjCommonness>
+  <LevelEditorEditSprite>Edit sprite</LevelEditorEditSprite>
+  <LevelEditorChildObjects>Child objects</LevelEditorChildObjects>
+  <LevelEditorAddChildObject>Add child object</LevelEditorAddChildObject>
+  <LevelEditorLightSources>Light sources</LevelEditorLightSources>
+  <LevelEditorAddLightSource>Add light source</LevelEditorAddLightSource>
+  <LevelEditorCreateLevelObj>Create a new level object</LevelEditorCreateLevelObj>
+  <LevelEditorLevelObjName>Name</LevelEditorLevelObjName>
+  <LevelEditorLevelObjTexturePath>Texture path</LevelEditorLevelObjTexturePath>
+  <LevelEditorLevelObjNameEmpty>Please enter a name for the level object.</LevelEditorLevelObjNameEmpty>
+  <LevelEditorLevelObjNameTaken>The selected name is already in use.</LevelEditorLevelObjNameTaken>
+  <LevelEditorLevelObjTextureNotFound>Could not find the selected texture file.</LevelEditorLevelObjTextureNotFound>
   
   <!-- Rooms -->
   <ReactorRoom>Reactor room</ReactorRoom>

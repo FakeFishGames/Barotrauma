@@ -307,25 +307,23 @@ namespace Barotrauma
         {
             collider = new List<PhysicsBody>();
             DebugConsole.Log($"Creating colliders from {RagdollParams.Name}.");
-            foreach (XElement cElement in RagdollParams.MainElement.Elements("collider"))
+            foreach (ColliderParams cParams in RagdollParams.ColliderParams)
             {
-                collider.Add(new PhysicsBody(cElement, RagdollParams.LimbScale));
-                collider[collider.Count - 1].UserData = character;
-                collider[collider.Count - 1].FarseerBody.Friction = 0.05f;
-                collider[collider.Count - 1].FarseerBody.Restitution = 0.05f;
-                collider[collider.Count - 1].FarseerBody.FixedRotation = true;
-                collider[collider.Count - 1].CollisionCategories = Physics.CollisionCharacter;
-                collider[collider.Count - 1].FarseerBody.AngularDamping = 5.0f;
-                collider[collider.Count - 1].FarseerBody.FixedRotation = true;
-                collider[collider.Count - 1].FarseerBody.OnCollision += OnLimbCollision;
-                if (collider.Count > 1) collider[collider.Count - 1].PhysEnabled = false;
+                var body = new PhysicsBody(cParams);
+                collider.Add(body);
+                body.UserData = character;
+                body.FarseerBody.OnCollision += OnLimbCollision;
+                if (collider.Count > 1)
+                {
+                    body.PhysEnabled = false;
+                }
             }
         }
 
         protected void CreateJoints()
         {
             DebugConsole.Log($"Creating joints from {RagdollParams.Name}.");
-            LimbJoints = new LimbJoint[RagdollParams.MainElement.Elements("joint").Count()];
+            LimbJoints = new LimbJoint[RagdollParams.Joints.Count];
             RagdollParams.Joints.ForEach(j => AddJoint(j));
             // Check the joints
             for (int i = 0; i < LimbJoints.Length; i++)
@@ -358,32 +356,12 @@ namespace Barotrauma
         {
             DebugConsole.Log($"Creating limbs from {RagdollParams.Name}.");
             limbDictionary = new Dictionary<LimbType, Limb>();
-            limbs = new Limb[RagdollParams.MainElement.Elements("limb").Count()];
+            limbs = new Limb[RagdollParams.Limbs.Count];
             RagdollParams.Limbs.ForEach(l => AddLimb(l));
             SetupDrawOrder();
         }
 
-        protected void SetupDrawOrder()
-        {
-            //make sure every character gets drawn at a distinct "layer" 
-            //(instead of having some of the limbs appear behind and some in front of other characters)
-            float startDepth = 0.1f;
-            float increment = 0.001f;
-            foreach (Character otherCharacter in Character.CharacterList)
-            {
-                if (otherCharacter == character) continue;
-                startDepth += increment;
-            }
-            //make sure each limb has a distinct depth value 
-            List<Limb> depthSortedLimbs = Limbs.OrderBy(l => l.ActiveSprite == null ? 0.0f : l.ActiveSprite.Depth).ToList();
-            foreach (Limb limb in Limbs)
-            {
-                if (limb.ActiveSprite != null)
-                    limb.ActiveSprite.Depth = startDepth + depthSortedLimbs.IndexOf(limb) * 0.00001f;
-            }
-            depthSortedLimbs.Reverse();
-            inversedLimbDrawOrder = depthSortedLimbs.ToArray();
-        }
+        partial void SetupDrawOrder();
 
         /// <summary>
         /// Inversed draw order, which is used for drawing the limbs in 3d (deformable sprites).
@@ -720,7 +698,7 @@ namespace Barotrauma
                 }
             }
         }
-        
+
         partial void ImpactProjSpecific(float impact, Body body);
 
         public bool IsFlipped { get; private set; }
@@ -729,7 +707,7 @@ namespace Barotrauma
         {
             IsFlipped = !IsFlipped;
             dir = (dir == Direction.Left) ? Direction.Right : Direction.Left;
-            
+
             for (int i = 0; i < LimbJoints.Length; i++)
             {
                 float lowerLimit = -LimbJoints[i].UpperLimit;
@@ -742,21 +720,12 @@ namespace Barotrauma
                 LimbJoints[i].LocalAnchorB = new Vector2(-LimbJoints[i].LocalAnchorB.X, LimbJoints[i].LocalAnchorB.Y);
             }
 
-
             foreach (Limb limb in Limbs)
             {
                 if (limb == null || limb.IsSevered) continue;
-                
+
                 limb.Dir = Dir;
 
-                if (limb.ActiveSprite != null)
-                {
-                    Vector2 spriteOrigin = limb.ActiveSprite.Origin;
-                    spriteOrigin.X = limb.ActiveSprite.SourceRect.Width - spriteOrigin.X;
-                    limb.ActiveSprite.Origin = spriteOrigin;
-                }
-
-                
                 if (limb.MouthPos.HasValue)
                 {
                     limb.MouthPos = new Vector2(
@@ -765,8 +734,12 @@ namespace Barotrauma
                 }
 
                 limb.MirrorPullJoint();
-            }            
+            }
+
+            FlipProjSpecific();
         }
+
+        partial void FlipProjSpecific();
 
         public Vector2 GetCenterOfMass()
         {
@@ -1483,17 +1456,19 @@ namespace Barotrauma
             }
 
             float lowestBound = Collider.SimPosition.Y;
-            for (int i = 0; i < Collider.FarseerBody.FixtureList.Count; i++)
+            if (Collider.FarseerBody.FixtureList != null)
             {
-                FarseerPhysics.Collision.AABB aabb;
-                FarseerPhysics.Common.Transform transform;
-                
-                Collider.FarseerBody.GetTransform(out transform);
-                Collider.FarseerBody.FixtureList[i].Shape.ComputeAABB(out aabb, ref transform, i);
+                for (int i = 0; i < Collider.FarseerBody.FixtureList.Count; i++)
+                {
+                    FarseerPhysics.Collision.AABB aabb;
+                    FarseerPhysics.Common.Transform transform;
 
-                lowestBound = Math.Min(aabb.LowerBound.Y, lowestBound);
+                    Collider.FarseerBody.GetTransform(out transform);
+                    Collider.FarseerBody.FixtureList[i].Shape.ComputeAABB(out aabb, ref transform, i);
+
+                    lowestBound = Math.Min(aabb.LowerBound.Y, lowestBound);
+                }
             }
-
             return new Vector2(Collider.SimPosition.X, lowestBound + offset);
         }
 

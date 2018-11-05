@@ -49,6 +49,7 @@
     <Price locationtype="Military" buyprice="20"/>
     <Price locationtype="Outpost" buyprice="20"/>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,448,64,64"/>
     <Sprite texture ="button.png" sourcerect="24,0,12,16" depth="0.79"/>
 
     <Deconstruct time="10">

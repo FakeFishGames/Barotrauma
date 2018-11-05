@@ -20,11 +20,6 @@ namespace Barotrauma
         private Submarine leavingSub;
         private bool atEndPosition;
 
-        protected CrewManager CrewManager
-        {
-            get { return GameMain.GameSession?.CrewManager; }
-        }
-
         public SinglePlayerCampaign(GameModePreset preset, object param)
             : base(preset, param)
         {
@@ -144,8 +139,6 @@ namespace Barotrauma
             if (!isRunning || GUI.DisableHUD) return;
 
             base.Update(deltaTime);
-
-            CrewManager.Update(deltaTime);
 
             endRoundButton.UpdateManually(deltaTime);
 

@@ -79,7 +79,8 @@
     <Deconstruct time="10">
       <Item identifier="polycarbonatebar"/>
     </Deconstruct>
-    
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,320,64,64"/>
     <Sprite texture ="DivingMask.png" depth="0.55" sourcerect="0,0,37,38"/>
   
     <Body width="26" height="18" density="15"/>
@@ -128,6 +129,7 @@
       <Item identifier="polycarbonatebar"/>
     </Deconstruct>
 
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,320,64,64"/>
     <Sprite texture ="DivingSuit.png" sourcerect="85,0,43,128" depth="0.55"/>
 
     <Body width="37" height="113" density="15"/>

@@ -1045,6 +1045,8 @@ namespace Barotrauma
         public void UpdateSubList(GUIComponent subList, List<Submarine> submarines)
         {
             if (subList == null) return;
+
+            subList.ClearChildren();
             
             /*if (submarines.Count == 0 && GameMain.Server != null)
             {

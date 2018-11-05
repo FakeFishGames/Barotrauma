@@ -12,7 +12,8 @@
     <Price locationtype="Military" buyprice="50"/>
     <Price locationtype="City" buyprice="50"/>
     <Price locationtype="Outpost" buyprice="100"/>
-    
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,320,64,64"/>
     <Sprite texture="engigear.png" sourcerect="0,52,50,25" depth="0.6"/>
 
     <Body width="50" height="17" density="20"/>
@@ -45,7 +46,8 @@
     <Price locationtype="Military" buyprice="50"/>
     <Price locationtype="City" buyprice="50"/>
     <Price locationtype="Outpost" buyprice="100"/>
-    
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,320,64,64"/>
     <Sprite texture="engigear.png" sourcerect="53,50,51,25" depth="0.6"/>
 
     <Body width="50" height="17" density="20"/>

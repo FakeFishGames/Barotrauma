@@ -1,7 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.SpriteDeformations;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -26,6 +28,9 @@ namespace Barotrauma
         
         private static Effect effect;
 
+        private Point spritePos;
+        private Point spriteSize;
+
         partial void InitProjSpecific(XElement element, int? subdivisionsX, int? subdivisionsY)
         {
             if (effect == null)
@@ -37,9 +42,7 @@ namespace Barotrauma
                 effect = GameMain.Instance.Content.Load<Effect>("Effects/deformshader_opengl");
 #endif
             }
-
-            sprite = new Sprite(element);
-
+            
             //use subdivisions configured in the xml if the arguments passed to the method are null
             Vector2 subdivisionsInXml = element.GetAttributeVector2("subdivisions", Vector2.One);
             subDivX = subdivisionsX ?? (int)subdivisionsInXml.X;
@@ -93,10 +96,7 @@ namespace Barotrauma
                 uvTopLeft = Vector2.Divide(pos.ToVector2(), textureSize);
                 uvBottomRight = Vector2.Divide((pos + size).ToVector2(), textureSize);
             }
-
-            //System.Diagnostics.Debug.Assert(uvTopLeft.X < uvBottomRight.X);
-            //System.Diagnostics.Debug.Assert(uvTopLeft.Y < uvBottomRight.Y);
-
+            
             var vertices = new VertexPositionColorTexture[(subDivX + 1) * (subDivY + 1)];
             for (int x = 0; x <= subDivX; x++)
             {
@@ -112,12 +112,20 @@ namespace Barotrauma
                 }
             }
 
+            if (vertexBuffer != null && vertexBuffer.VertexCount != vertices.Length)
+            {
+                vertexBuffer.Dispose();
+                vertexBuffer = null;
+            }
+
             if (vertexBuffer == null)
             {
                 vertexBuffer = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, vertices.Length, BufferUsage.None);
             }
             vertexBuffer.SetData(vertices);
             IsFlipped = flip;
+            spritePos = sprite.SourceRect.Location;
+            spriteSize = sprite.SourceRect.Size;
         }
 
         private void SetupIndexBuffer()
@@ -137,6 +145,10 @@ namespace Barotrauma
 
                 if ((i + 1) % subDivX == 0) offset++;
             }
+
+            indexBuffer?.Dispose();
+            indexBuffer = null;
+
             indexBuffer = new IndexBuffer(GameMain.Instance.GraphicsDevice, IndexElementSize.SixteenBits, indices.Length, BufferUsage.None);
             indexBuffer.SetData(indices);
 
@@ -169,7 +181,10 @@ namespace Barotrauma
         {
             deformArrayWidth = deform.GetLength(0);
             deformArrayHeight = deform.GetLength(1);
-            deformAmount = new Vector2[deformArrayWidth * deformArrayHeight];
+            if (deformAmount == null || deformAmount.Length != deformArrayWidth * deformArrayHeight)
+            {
+                deformAmount = new Vector2[deformArrayWidth * deformArrayHeight];
+            }
             for (int x = 0; x < deformArrayWidth; x++)
             {
                 for (int y = 0; y < deformArrayHeight; y++)
@@ -197,33 +212,12 @@ namespace Barotrauma
                 Matrix.CreateTranslation(pos);
         }
 
-        private Point spritePos;
-        private Point spriteSize;
         public void Draw(Camera cam, Vector3 pos, Vector2 origin, float rotate, Vector2 scale, Color color, bool flip = false)
         {
             // If the source rect is modified, we should recalculate the vertex buffer.
-            if (sprite.SourceRect.Location != spritePos || sprite.SourceRect.Size != spriteSize)
+            if (sprite.SourceRect.Location != spritePos || sprite.SourceRect.Size != spriteSize || flip != IsFlipped)
             {
-                spritePos = sprite.SourceRect.Location;
-                spriteSize = sprite.SourceRect.Size;
                 SetupVertexBuffer(flip);
-            }
-            else
-            {
-                if (flip)
-                {
-                    if (!IsFlipped)
-                    {
-                        SetupVertexBuffer(true);
-                    }
-                }
-                else
-                {
-                    if (IsFlipped)
-                    {
-                        SetupVertexBuffer(false);
-                    }
-                }
             }
             
             Matrix matrix = GetTransform(pos, origin, rotate, scale);
@@ -260,5 +254,80 @@ namespace Barotrauma
             indexBuffer?.Dispose();
             indexBuffer = null;
         }
+        
+        #region Editing
+
+        public GUIComponent CreateEditor(GUIComponent parent, List<SpriteDeformation> deformations)
+        {
+            var container = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.0f), parent.RectTransform))
+            {
+                AbsoluteSpacing = 5
+            };
+
+            new GUITextBlock(new RectTransform(new Point(container.Rect.Width, 30), container.RectTransform), "Sprite Deformations");
+
+            var resolutionField = GUI.CreatePointField(new Point(subDivX + 1, subDivY + 1), 26, "Resolution", container.RectTransform, 
+                "How many vertices the deformable sprite has on the x and y axes. Larger values make the deformations look smoother, but are more performance intensive.");
+            GUINumberInput xField = null, yField = null;
+            foreach (GUIComponent child in resolutionField.GetAllChildren())
+            {
+                if (yField == null)
+                {
+                    yField = child as GUINumberInput;
+                }
+                else
+                {
+                    xField = child as GUINumberInput;
+                    if (xField != null) break;
+                }
+            }
+            xField.MinValueInt = 2;
+            xField.MaxValueInt = SpriteDeformationParams.ShaderMaxResolution.X - 1;
+            xField.OnValueChanged = (numberInput) => { ChangeResolution(); };
+            yField.MinValueInt = 2;
+            yField.MaxValueInt = SpriteDeformationParams.ShaderMaxResolution.Y - 1;
+            yField.OnValueChanged = (numberInput) => { ChangeResolution(); };
+
+            void ChangeResolution()
+            {
+                subDivX = xField.IntValue - 1;
+                subDivY = yField.IntValue - 1;
+
+                foreach (SpriteDeformation deformation in deformations)
+                {
+                    deformation.SetResolution(new Point(xField.IntValue, yField.IntValue));
+                }
+                SetupVertexBuffer(IsFlipped);
+                SetupIndexBuffer();
+            }
+
+            foreach (SpriteDeformation deformation in deformations)
+            {
+                var deformEditor = new SerializableEntityEditor(container.RectTransform, deformation.DeformationParams, false, true);
+                deformEditor.RectTransform.MinSize = new Point(deformEditor.Rect.Width, deformEditor.Rect.Height);
+            }
+
+            var deformationDD = new GUIDropDown(new RectTransform(new Point(container.Rect.Width, 30), container.RectTransform), "Add new sprite deformation");
+            deformationDD.OnSelected = (selected, userdata) =>
+            {
+                deformations.Add(SpriteDeformation.Load((string)userdata));
+                deformationDD.Text = "Add new sprite deformation";
+                return false;
+            };
+
+            foreach (string deformationType in SpriteDeformation.DeformationTypes)
+            {
+                deformationDD.AddItem(deformationType, deformationType);
+            }
+
+            container.RectTransform.Resize(new Point(
+                container.Rect.Width, container.Children.Sum(c => c.Rect.Height + container.AbsoluteSpacing)), false);
+            container.RectTransform.MaxSize = new Point(int.MaxValue, container.Rect.Height);
+            container.Recalculate();
+
+            return container;
+        }
+
+        #endregion
     }
 }

@@ -1783,6 +1783,7 @@ namespace Barotrauma.Networking
             Vote(VoteType.EndRound, tickBox.Selected);
             return false;
         }
+
         protected CharacterInfo characterInfo;
         protected Character myCharacter;
 
@@ -2163,6 +2164,26 @@ namespace Barotrauma.Networking
             };
             banReasonPrompt.Buttons[0].OnClicked += banReasonPrompt.Close;
             banReasonPrompt.Buttons[1].OnClicked += banReasonPrompt.Close;
+        }
+
+        public void ReportError(ClientNetError error, UInt16 expectedID = 0, UInt16 eventID = 0, UInt16 entityID = 0)
+        {
+            NetOutgoingMessage outMsg = client.CreateMessage();
+            outMsg.Write((byte)ClientPacketHeader.ERROR);
+            outMsg.Write((byte)error);
+            outMsg.Write(Level.Loaded == null ? 0 : Level.Loaded.EqualityCheckVal);
+            switch (error)
+            {
+                case ClientNetError.MISSING_EVENT:
+                    outMsg.Write(expectedID);
+                    outMsg.Write(eventID);
+                    break;
+                case ClientNetError.MISSING_ENTITY:
+                    outMsg.Write(eventID);
+                    outMsg.Write(entityID);
+                    break;
+            }
+            client.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
         }
     }
 }

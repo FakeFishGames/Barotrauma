@@ -24,6 +24,11 @@ namespace Barotrauma
             }
         }
 
+        public int ContentCount
+        {
+            get { return layoutGroup.CountChildren; }
+        }
+
         /// <summary>
         /// Holds the references to the input fields.
         /// </summary>
@@ -302,7 +307,14 @@ namespace Barotrauma
             }
             else if (value.GetType().IsEnum)
             {
-                propertyField = CreateEnumField(entity, property, value, displayName, toolTip);
+                if (value.GetType().IsDefined(typeof(FlagsAttribute), inherit: false))
+                {
+                    propertyField = CreateEnumFlagField(entity, property, value, displayName, toolTip);
+                }
+                else
+                {
+                    propertyField = CreateEnumField(entity, property, value, displayName, toolTip);
+                }
             }
             else if (value is int i)
             {
@@ -311,6 +323,10 @@ namespace Barotrauma
             else if (value is float f)
             {
                 propertyField = CreateFloatField(entity, property, f, displayName, toolTip);
+            }
+            else if (value is Point p)
+            {
+                propertyField = CreatePointField(entity, property, p, displayName, toolTip);
             }
             else if (value is Vector2 v2)
             {
@@ -441,6 +457,39 @@ namespace Barotrauma
             return frame;
         }
 
+        private GUIComponent CreateEnumFlagField(ISerializableEntity entity, SerializableProperty property, object value, string displayName, string toolTip)
+        {
+            var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, elementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), displayName, font: GUI.SmallFont)
+            {
+                ToolTip = toolTip
+            };
+            GUIDropDown enumDropDown = new GUIDropDown(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform, Anchor.TopRight),
+                elementCount: Enum.GetValues(value.GetType()).Length, selectMultiple: true)
+            {
+                ToolTip = toolTip
+            };
+            foreach (object enumValue in Enum.GetValues(value.GetType()))
+            {
+                enumDropDown.AddItem(enumValue.ToString(), enumValue);
+                if (((int)enumValue != 0 || (int)value == 0) && ((Enum)value).HasFlag((Enum)enumValue))
+                {
+                    enumDropDown.SelectItem(enumValue);
+                }
+            }
+            enumDropDown.OnSelected += (selected, val) =>
+            {
+                if (property.TrySetValue(string.Join(", ", enumDropDown.SelectedDataMultiple.Select(d => d.ToString()))))
+                {
+                    TrySendNetworkUpdate(entity, property);
+                }
+                return true;
+            };
+
+            Fields.Add(property, new GUIComponent[] { enumDropDown });
+            return frame;
+        }
+
         private GUIComponent CreateStringField(ISerializableEntity entity, SerializableProperty property, string value, string displayName, string toolTip)
         {
             var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, elementHeight), layoutGroup.RectTransform), color: Color.Transparent);
@@ -465,6 +514,55 @@ namespace Barotrauma
                 }
             };
             Fields.Add(property, new GUIComponent[] { propertyBox });
+            return frame;
+        }
+
+        private GUIComponent CreatePointField(ISerializableEntity entity, SerializableProperty property, Point value, string displayName, string toolTip)
+        {
+            var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, Math.Max(elementHeight, 26)), layoutGroup.RectTransform), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), displayName, font: GUI.SmallFont)
+            {
+                ToolTip = toolTip
+            };
+            var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform, Anchor.TopRight), isHorizontal: true, childAnchor: Anchor.CenterRight)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
+            var editableAttribute = property.GetAttribute<Editable>();
+            var fields = new GUIComponent[2];
+            for (int i = 1; i >= 0; i--)
+            {
+                var element = new GUIFrame(new RectTransform(new Vector2(0.45f, 1), inputArea.RectTransform), style: null);
+                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), GUI.vectorComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
+                GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight),
+                    GUINumberInput.NumberType.Int)
+                {
+                    Font = GUI.SmallFont
+                };
+
+                if (i == 0)
+                    numberInput.IntValue = value.X;
+                else
+                    numberInput.IntValue = value.Y;
+                
+                int comp = i;
+                numberInput.OnValueChanged += (numInput) =>
+                {
+                    Point newVal = (Point)property.GetValue();
+                    if (comp == 0)
+                        newVal.X = numInput.IntValue;
+                    else
+                        newVal.Y = numInput.IntValue;
+
+                    if (property.TrySetValue(newVal))
+                    {
+                        TrySendNetworkUpdate(entity, property);
+                    }
+                };
+                fields[i] = numberInput;
+            }
+            Fields.Add(property, fields);
             return frame;
         }
 

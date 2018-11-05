@@ -29,7 +29,8 @@ namespace Barotrauma
         {
             Force, //default, apply a force to the object over time
             Acceleration, //apply an acceleration to the object, ignoring it's mass
-            Impulse //apply an instant force, ignoring deltaTime
+            Impulse, //apply an instant force, ignoring deltaTime
+            LimitVelocity //clamp the velocity of the triggerer to some value
         }
 
         public Action<LevelTrigger, Entity> OnTriggered;
@@ -218,7 +219,11 @@ namespace Barotrauma
 
             UseNetworkSyncing = element.GetAttributeBool("networksyncing", false);
 
-            unrotatedForce = element.GetAttributeVector2("force", Vector2.Zero);
+            unrotatedForce = 
+                element.Attribute("force") != null && element.Attribute("force").Value.Contains(',') ?
+                element.GetAttributeVector2("force", Vector2.Zero) :
+                new Vector2(element.GetAttributeFloat("force", 0.0f), 0.0f);
+
             ForceFluctuationInterval = element.GetAttributeFloat("forcefluctuationinterval", 0.01f);
             ForceFluctuationStrength = Math.Max(element.GetAttributeFloat("forcefluctuationstrength", 0.0f), 0.0f);
             ForceFalloff = element.GetAttributeBool("forcefalloff", true);
@@ -482,7 +487,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (Force != Vector2.Zero)
+                if (Force.LengthSquared() > 0.01f)
                 {
                     if (triggerer is Character character)
                     {
@@ -533,6 +538,15 @@ namespace Barotrauma
                         body.ApplyLinearImpulse(Force * currentForceFluctuation * distFactor, ForceVelocityLimit);
                     else
                         body.ApplyLinearImpulse(Force * currentForceFluctuation * distFactor);
+                    break;
+                case TriggerForceMode.LimitVelocity:
+                    float maxVel = ForceVelocityLimit * currentForceFluctuation * distFactor;
+                    if (body.LinearVelocity.LengthSquared() > maxVel * maxVel)
+                    {
+                        body.ApplyForce(
+                            Vector2.Normalize(-body.LinearVelocity) * 
+                            Force.Length() * body.Mass * currentForceFluctuation * distFactor);
+                    }
                     break;
             }
         }
