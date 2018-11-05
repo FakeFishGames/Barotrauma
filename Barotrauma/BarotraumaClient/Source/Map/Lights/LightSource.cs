@@ -52,6 +52,12 @@ namespace Barotrauma.Lights
             private set;
         }
 
+        public XElement DeformableLightSpriteElement
+        {
+            get;
+            private set;
+        }
+
         //Override the alpha value of the light sprite (if not set, the alpha of the light color is used)
         //Can be used to make lamp sprites glow at full brightness even if the light itself is dim.
         public float? OverrideLightSpriteAlpha;
@@ -65,12 +71,23 @@ namespace Barotrauma.Lights
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":
-                        LightSprite = new Sprite(subElement);
-
-                        float spriteAlpha = subElement.GetAttributeFloat("alpha", -1.0f);
-                        if (spriteAlpha >= 0.0f)
                         {
-                            OverrideLightSpriteAlpha = spriteAlpha;
+                            LightSprite = new Sprite(subElement);
+                            float spriteAlpha = subElement.GetAttributeFloat("alpha", -1.0f);
+                            if (spriteAlpha >= 0.0f)
+                            {
+                                OverrideLightSpriteAlpha = spriteAlpha;
+                            }
+                        }
+                        break;
+                    case "deformablesprite":
+                        {
+                            DeformableLightSpriteElement = subElement;
+                            float spriteAlpha = subElement.GetAttributeFloat("alpha", -1.0f);
+                            if (spriteAlpha >= 0.0f)
+                            {
+                                OverrideLightSpriteAlpha = spriteAlpha;
+                            }
                         }
                         break;
                     case "lighttexture":
@@ -210,7 +227,7 @@ namespace Barotrauma.Lights
         {
             get { return lightSourceParams.LightSprite; }
         }
-
+        
         public Color Color
         {
             get { return lightSourceParams.Color; }
@@ -240,7 +257,13 @@ namespace Barotrauma.Lights
             get;
             set;
         }
-        
+
+        public DeformableSprite DeformableLightSprite
+        {
+            get;
+            private set;
+        }
+
         public bool Enabled = true;
 
         public LightSource (XElement element)
@@ -248,6 +271,11 @@ namespace Barotrauma.Lights
         {
             lightSourceParams = new LightSourceParams(element);
             CastShadows = element.GetAttributeBool("castshadows", true);
+
+            if (lightSourceParams.DeformableLightSpriteElement != null)
+            {
+                DeformableLightSprite = new DeformableSprite(lightSourceParams.DeformableLightSpriteElement);
+            }
         }
 
         public LightSource(LightSourceParams lightSourceParams)
@@ -255,6 +283,10 @@ namespace Barotrauma.Lights
         {
             this.lightSourceParams = lightSourceParams;
             lightSourceParams.Persistent = true;
+            if (lightSourceParams.DeformableLightSpriteElement != null)
+            {
+                DeformableLightSprite = new DeformableSprite(lightSourceParams.DeformableLightSpriteElement);
+            }
         }
 
         public LightSource(Vector2 position, float range, Color color, Submarine submarine, bool addLight=true)
@@ -758,14 +790,27 @@ namespace Barotrauma.Lights
             
             lightVolumeBuffer.SetData<VertexPositionColorTexture>(vertices.ToArray());
             lightVolumeIndexBuffer.SetData<short>(indices.ToArray());
-        } 
-        
+        }
+
         /// <summary>
         /// Draws the optional "light sprite", just a simple sprite with no shadows
         /// </summary>
         /// <param name="spriteBatch"></param>
-        public void DrawSprite(SpriteBatch spriteBatch)
+        public void DrawSprite(SpriteBatch spriteBatch, Camera cam)
         {
+            if (DeformableLightSprite != null)
+            {
+                Vector2 origin = DeformableLightSprite.Origin;
+                Vector2 drawPos = position;
+                if (ParentSub != null) drawPos += ParentSub.DrawPosition;
+
+                DeformableLightSprite.Draw(
+                    cam, new Vector3(drawPos, 0.0f),
+                    origin, -Rotation, SpriteScale,
+                    new Color(Color, lightSourceParams.OverrideLightSpriteAlpha ?? Color.A / 255.0f),
+                    LightSpriteEffect == SpriteEffects.FlipHorizontally);
+            }
+
             if (LightSprite != null)
             {
                 Vector2 origin = LightSprite.Origin;
@@ -872,17 +917,14 @@ namespace Barotrauma.Lights
                 OverrideLightTexture?.Remove();
             }
 
-            if (lightVolumeBuffer != null)
-            {
-                lightVolumeBuffer.Dispose();
-                lightVolumeBuffer = null;
-            }
+            DeformableLightSprite?.Remove();
+            DeformableLightSprite = null;
 
-            if (lightVolumeIndexBuffer != null)
-            {
-                lightVolumeIndexBuffer.Dispose();
-                lightVolumeIndexBuffer = null;
-            }
+            lightVolumeBuffer?.Dispose();
+            lightVolumeBuffer = null;
+
+            lightVolumeIndexBuffer?.Dispose();
+            lightVolumeIndexBuffer = null;
 
             GameMain.LightManager.RemoveLight(this);
         }
