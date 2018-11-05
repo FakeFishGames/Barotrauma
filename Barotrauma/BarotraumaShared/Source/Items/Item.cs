@@ -1504,6 +1504,11 @@ namespace Barotrauma
                     msg.Write(((Vector4)value).Z);
                     msg.Write(((Vector4)value).W);
                 }
+                else if (value is Point)
+                {
+                    msg.Write(((Point)value).X);
+                    msg.Write(((Point)value).Y);
+                }
                 else if (value is Rectangle)
                 {
                     msg.Write(((Rectangle)value).X);
@@ -1526,7 +1531,7 @@ namespace Barotrauma
             }
         }
 
-        private void ReadPropertyChange(NetBuffer msg, bool inGameEditableOnly)
+        private void ReadPropertyChange(NetBuffer msg, bool inGameEditableOnly, Client sender = null)
         {
             var allProperties = inGameEditableOnly ? GetProperties<InGameEditable>() : GetProperties<Editable>();
             if (allProperties.Count == 0) return;
@@ -1534,54 +1539,78 @@ namespace Barotrauma
             int propertyIndex = 0;
             if (allProperties.Count > 1)
             {
-                propertyIndex = msg.ReadRangedInteger(0, allProperties.Count-1);
+                propertyIndex = msg.ReadRangedInteger(0, allProperties.Count - 1);
             }
 
+            bool allowEditing = true;            
             SerializableProperty property = allProperties[propertyIndex];
+            if (inGameEditableOnly && property.ParentObject is ItemComponent ic)
+            {
+                if (!ic.AllowInGameEditing) allowEditing = false;
+            }
+
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && !CanClientAccess(sender))
+            {
+                allowEditing = false;
+            }
 
             Type type = property.PropertyType;
             if (type == typeof(string))
             {
-                property.TrySetValue(msg.ReadString());
+                string val = msg.ReadString();
+                if (allowEditing) property.TrySetValue(val);
             }
             else if (type == typeof(float))
             {
-                property.TrySetValue(msg.ReadFloat());
+                float val = msg.ReadFloat();
+                if (allowEditing) property.TrySetValue(val);
             }
             else if (type == typeof(int))
             {
-                property.TrySetValue(msg.ReadInt32());
+                int val = msg.ReadInt32();
+                if (allowEditing) property.TrySetValue(val);
             }
             else if (type == typeof(bool))
             {
-                property.TrySetValue(msg.ReadBoolean());
+                bool val = msg.ReadBoolean();
+                if (allowEditing) property.TrySetValue(val);
             }
             else if (type == typeof(Color))
             {
-                property.TrySetValue(new Color(msg.ReadByte(), msg.ReadByte(),msg.ReadByte(),msg.ReadByte()));
+                Color val = new Color(msg.ReadByte(), msg.ReadByte(), msg.ReadByte(), msg.ReadByte());
+                if (allowEditing) property.TrySetValue(val);
             }
             else if (type == typeof(Vector2))
             {
-                property.TrySetValue(new Vector2(msg.ReadFloat(), msg.ReadFloat()));
+                Vector2 val = new Vector2(msg.ReadFloat(), msg.ReadFloat());
+                if (allowEditing) property.TrySetValue(val);
             }
             else if (type == typeof(Vector3))
             {
-                property.TrySetValue(new Vector3(msg.ReadFloat(), msg.ReadFloat(), msg.ReadFloat()));
+                Vector3 val = new Vector3(msg.ReadFloat(), msg.ReadFloat(), msg.ReadFloat());
+                if (allowEditing) property.TrySetValue(val);
             }
             else if (type == typeof(Vector4))
             {
-                property.TrySetValue(new Vector4(msg.ReadFloat(), msg.ReadFloat(), msg.ReadFloat(), msg.ReadFloat()));
+                Vector4 val = new Vector4(msg.ReadFloat(), msg.ReadFloat(), msg.ReadFloat(), msg.ReadFloat());
+                if (allowEditing) property.TrySetValue(val);
+            }
+            else if (type == typeof(Point))
+            {
+                Point val = new Point(msg.ReadInt32(), msg.ReadInt32());
+                if (allowEditing) property.TrySetValue(val);
             }
             else if (type == typeof(Rectangle))
             {
-                property.TrySetValue(new Vector4(msg.ReadInt32(), msg.ReadInt32(), msg.ReadInt32(), msg.ReadInt32()));
+                Rectangle val = new Rectangle(msg.ReadInt32(), msg.ReadInt32(), msg.ReadInt32(), msg.ReadInt32());
+                if (allowEditing) property.TrySetValue(val);
             }
             else if (typeof(Enum).IsAssignableFrom(type))
             {
                 int intVal = msg.ReadInt32();
                 try
                 {
-                    property.TrySetValue(Enum.ToObject(type, intVal));
+                    if (allowEditing) property.TrySetValue(Enum.ToObject(type, intVal));
                 }
                 catch (Exception e)
                 {

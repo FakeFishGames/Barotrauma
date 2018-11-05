@@ -48,7 +48,7 @@ namespace Barotrauma
         private bool lockSpriteOrigin;
         private bool lockSpritePosition;
         private bool lockSpriteSize;
-        private bool copyJoints;
+        private bool copyJointSettings;
         private bool displayColliders;
         private bool displayBackgroundColor;
 
@@ -961,12 +961,12 @@ namespace Barotrauma
             }, "Copy Joint Settings")
             {
                 ToolTip = "Copies the currently tweaked settings to all selected joints.",
-                Selected = copyJoints,
-                TextColor = copyJoints ? Color.Red : Color.White,
+                Selected = copyJointSettings,
+                TextColor = copyJointSettings ? Color.Red : Color.White,
                 OnSelected = (GUITickBox box) =>
                 {
-                    copyJoints = box.Selected;
-                    box.TextColor = copyJoints ? Color.Red : Color.White;
+                    copyJointSettings = box.Selected;
+                    box.TextColor = copyJointSettings ? Color.Red : Color.White;
                     return true;
                 }
             };
@@ -1540,7 +1540,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Create New Character (WIP)")
+            new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Create New Character")
             {
                 OnClicked = (button, data) =>
                 {
@@ -1563,7 +1563,7 @@ namespace Barotrauma
             {
                 AnimParams.ForEach(p => p.AddToEditor(ParamsEditor.Instance));
             }
-            else if (editJoints || editLimbs)
+            else if (editJoints || editLimbs || editIK)
             {
                 if (selectedJoints.Any())
                 {
@@ -1606,15 +1606,15 @@ namespace Barotrauma
         private void TryUpdateJointParam(LimbJoint joint, string name, object value) => TryUpdateSubParam(joint.jointParams, name, value);
         private void TryUpdateLimbParam(Limb limb, string name, object value) => TryUpdateSubParam(limb.limbParams, name, value);
 
-        private void TryUpdateSubParam(RagdollSubParams ragdollParams, string name, object value)
+        private void TryUpdateSubParam(RagdollSubParams ragdollSubParams, string name, object value)
         {
-            if (ragdollParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
+            if (ragdollSubParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
             {
-                ragdollParams.SerializableEntityEditor.UpdateValue(p, value);
+                ragdollSubParams.SerializableEntityEditor.UpdateValue(p, value);
             }
             else
             {
-                var subParams = ragdollParams.SubParams.Where(sp => sp.SerializableProperties.ContainsKey(name)).FirstOrDefault();
+                var subParams = ragdollSubParams.SubParams.Where(sp => sp.SerializableProperties.ContainsKey(name)).FirstOrDefault();
                 if (subParams != null)
                 {
                     if (subParams.SerializableProperties.TryGetValue(name, out p))
@@ -2082,9 +2082,13 @@ namespace Barotrauma
                         var pullJointWidgetSize = new Vector2(5, 5);
                         Vector2 tformedPullPos = SimToScreen(limb.PullJointWorldAnchorA);
                         GUI.DrawRectangle(spriteBatch, tformedPullPos - pullJointWidgetSize / 2, pullJointWidgetSize, Color.Red, true);
-                        DrawWidget(spriteBatch, tformedPullPos, WidgetType.Rectangle, 8, Color.Cyan, $"IK ({limb.Name})",
-                        () =>
+                        DrawWidget(spriteBatch, tformedPullPos, WidgetType.Rectangle, 8, Color.Cyan, $"IK ({limb.Name})", () =>
                         {
+                            if (!selectedLimbs.Contains(limb))
+                            {
+                                selectedLimbs.Add(limb);
+                                ResetParamsEditor();
+                            }
                             limb.PullJointWorldAnchorA = ScreenToSim(PlayerInput.MousePosition);
                             TryUpdateLimbParam(limb, "pullpos", ConvertUnits.ToDisplayUnits(limb.PullJointLocalAnchorA / limb.limbParams.Ragdoll.LimbScale));
                             GUI.DrawLine(spriteBatch, SimToScreen(limb.SimPosition), tformedPullPos, Color.MediumPurple);
@@ -2167,7 +2171,7 @@ namespace Barotrauma
                                         joint.LocalAnchorA += input;
                                         TryUpdateJointParam(joint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
                                         // Snap all selected joints to the first selected
-                                        if (copyJoints)
+                                        if (copyJointSettings)
                                         {
                                             foreach (var j in selectedJoints)
                                             {
@@ -2181,7 +2185,7 @@ namespace Barotrauma
                                         joint.LocalAnchorB += input;
                                         TryUpdateJointParam(joint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
                                         // Snap all selected joints to the first selected
-                                        if (copyJoints)
+                                        if (copyJointSettings)
                                         {
                                             foreach (var j in selectedJoints)
                                             {
@@ -2584,7 +2588,7 @@ namespace Barotrauma
                             joint.LocalAnchorA += input;
                             TryUpdateJointParam(joint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
                             // Snap all selected joints to the first selected
-                            if (copyJoints)
+                            if (copyJointSettings)
                             {
                                 foreach (var j in selectedJoints)
                                 {
@@ -2598,7 +2602,7 @@ namespace Barotrauma
                             joint.LocalAnchorB += input;
                             TryUpdateJointParam(joint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
                             // Snap all selected joints to the first selected
-                            if (copyJoints)
+                            if (copyJointSettings)
                             {
                                 foreach (var j in selectedJoints)
                                 {
@@ -2637,10 +2641,15 @@ namespace Barotrauma
                 joint.UpperLimit = MathHelper.ToRadians(angle);
                 ValidateJoint(joint);
                 TryUpdateJointParam(joint, "upperlimit", angle);
-                if (copyJoints)
+                if (copyJointSettings)
                 {
                     foreach (var j in selectedJoints)
                     {
+                        if (j.LimitEnabled != joint.LimitEnabled)
+                        {
+                            j.LimitEnabled = joint.LimitEnabled;
+                            TryUpdateJointParam(j, "limitenabled", j.LimitEnabled);
+                        }
                         j.UpperLimit = joint.UpperLimit;
                         TryUpdateJointParam(j, "upperlimit", angle);
                     }
@@ -2651,6 +2660,11 @@ namespace Barotrauma
                     {
                         if (IsMatchingLimb(limb, otherLimb, joint, otherJoint))
                         {
+                            if (otherJoint.LimitEnabled != joint.LimitEnabled)
+                            {
+                                otherJoint.LimitEnabled = otherJoint.LimitEnabled;
+                                TryUpdateJointParam(otherJoint, "limitenabled", otherJoint.LimitEnabled);
+                            }
                             otherJoint.UpperLimit = joint.UpperLimit;
                             TryUpdateJointParam(otherJoint, "upperlimit", angle);
                         }
@@ -2665,10 +2679,15 @@ namespace Barotrauma
                 joint.LowerLimit = MathHelper.ToRadians(angle);
                 ValidateJoint(joint);
                 TryUpdateJointParam(joint, "lowerlimit", angle);
-                if (copyJoints)
+                if (copyJointSettings)
                 {
                     foreach (var j in selectedJoints)
                     {
+                        if (j.LimitEnabled != joint.LimitEnabled)
+                        {
+                            j.LimitEnabled = joint.LimitEnabled;
+                            TryUpdateJointParam(j, "limitenabled", j.LimitEnabled);
+                        }
                         j.LowerLimit = joint.LowerLimit;
                         TryUpdateJointParam(j, "lowerlimit", angle);
                     }
@@ -2679,6 +2698,11 @@ namespace Barotrauma
                     {
                         if (IsMatchingLimb(limb, otherLimb, joint, otherJoint))
                         {
+                            if (otherJoint.LimitEnabled != joint.LimitEnabled)
+                            {
+                                otherJoint.LimitEnabled = otherJoint.LimitEnabled;
+                                TryUpdateJointParam(otherJoint, "limitenabled", otherJoint.LimitEnabled);
+                            }
                             otherJoint.LowerLimit = joint.LowerLimit;
                             TryUpdateJointParam(otherJoint, "lowerlimit", angle);
                         }
@@ -3221,7 +3245,7 @@ namespace Barotrauma
                         CanBeFocused = false
                     };
                     var group = new GUILayoutGroup(new RectTransform(Vector2.One, limbElement.RectTransform)) { AbsoluteSpacing = 2 };
-                    var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), $"Limb {id}");
+                    var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), name);
                     var idField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                     var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                     var limbTypeField = GUI.CreateEnumField(limbType, elementSize, "Limb Type", group.RectTransform, font: GUI.Font);
@@ -3237,17 +3261,20 @@ namespace Barotrauma
                             id = numInput.IntValue;
                             string text = nameField.GetChild<GUITextBox>().Text;
                             string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
-                            label.Text = $"Limb {t}";
+                            label.Text = t;
                         }
                     };
                     new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopLeft), "Name");
                     new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), name)
-                        .OnTextChanged += (tB, text) =>
+                    {
+                        CaretColor = Color.White,
+                        OnTextChanged = (tb, text) =>
                         {
                             string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
-                            label.Text = $"Limb {t}";
+                            label.Text = t;
                             return true;
-                        };
+                        }
+                    };
                     LimbGUIElements.Add(limbElement);
                 }
 

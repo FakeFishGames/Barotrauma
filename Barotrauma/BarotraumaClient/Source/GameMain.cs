@@ -204,7 +204,8 @@ namespace Barotrauma
             GraphicsDeviceManager.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed && Config.WindowMode != WindowMode.Fullscreen;
 #endif
             GraphicsDeviceManager.IsFullScreen = Config.WindowMode == WindowMode.Fullscreen || Config.WindowMode == WindowMode.BorderlessWindowed;
-            
+            Window.IsBorderless = !GraphicsDeviceManager.HardwareModeSwitch;
+
             GraphicsDeviceManager.ApplyChanges();
         }
 

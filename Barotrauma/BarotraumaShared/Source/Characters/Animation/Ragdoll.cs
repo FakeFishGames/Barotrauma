@@ -1398,7 +1398,7 @@ namespace Barotrauma
                         character.MemState[i].TransformOutToInside(currentHull.Submarine);
                 }
             }
-
+            
             UpdateNetPlayerPositionProjSpecific(deltaTime, lowestSubPos);
         }
         

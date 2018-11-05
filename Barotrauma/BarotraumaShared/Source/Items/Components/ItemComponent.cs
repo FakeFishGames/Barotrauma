@@ -153,6 +153,14 @@ namespace Barotrauma.Items.Components
             set { characterUsable = value; }
         }
 
+        //Remove item if combination results in 0 condition
+        [Serialize(true, false), Editable(ToolTip = "Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties).")]
+        public bool AllowInGameEditing
+        {
+            get;
+            set;
+        }
+
         public InputType PickKey
         {
             get;
