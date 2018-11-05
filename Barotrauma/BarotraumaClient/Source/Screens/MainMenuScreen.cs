@@ -121,7 +121,12 @@ namespace Barotrauma
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("CharacterEditorButton"), style: "GUIButtonLarge")
             {
-                OnClicked = (btn, userdata) => { GameMain.CharacterEditorScreen.Select(); return true; }
+                OnClicked = (btn, userdata) =>
+                {
+                    Submarine.MainSub = null;
+                    GameMain.CharacterEditorScreen.Select();
+                    return true;
+                }
             };
 
             if (Steam.SteamManager.USE_STEAM)

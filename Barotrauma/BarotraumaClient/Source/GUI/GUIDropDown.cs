@@ -267,7 +267,8 @@ namespace Barotrauma
             Dropped = !Dropped;
             if (Dropped && Enabled)
             {
-                OnDropped?.Invoke(this, userData);                
+                OnDropped?.Invoke(this, userData);
+                listBox.UpdateScrollBarSize();
             }
             return true;
         }

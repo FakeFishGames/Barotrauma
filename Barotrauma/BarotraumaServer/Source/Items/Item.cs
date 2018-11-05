@@ -172,7 +172,7 @@ namespace Barotrauma
 
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
-                    ReadPropertyChange(msg, true);
+                    ReadPropertyChange(msg, true, c);
                     break;
             }
         }
