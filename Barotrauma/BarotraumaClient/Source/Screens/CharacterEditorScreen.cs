@@ -1563,7 +1563,7 @@ namespace Barotrauma
             {
                 AnimParams.ForEach(p => p.AddToEditor(ParamsEditor.Instance));
             }
-            else if (editJoints || editLimbs)
+            else if (editJoints || editLimbs || editIK)
             {
                 if (selectedJoints.Any())
                 {
@@ -1606,15 +1606,15 @@ namespace Barotrauma
         private void TryUpdateJointParam(LimbJoint joint, string name, object value) => TryUpdateSubParam(joint.jointParams, name, value);
         private void TryUpdateLimbParam(Limb limb, string name, object value) => TryUpdateSubParam(limb.limbParams, name, value);
 
-        private void TryUpdateSubParam(RagdollSubParams ragdollParams, string name, object value)
+        private void TryUpdateSubParam(RagdollSubParams ragdollSubParams, string name, object value)
         {
-            if (ragdollParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
+            if (ragdollSubParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
             {
-                ragdollParams.SerializableEntityEditor.UpdateValue(p, value);
+                ragdollSubParams.SerializableEntityEditor.UpdateValue(p, value);
             }
             else
             {
-                var subParams = ragdollParams.SubParams.Where(sp => sp.SerializableProperties.ContainsKey(name)).FirstOrDefault();
+                var subParams = ragdollSubParams.SubParams.Where(sp => sp.SerializableProperties.ContainsKey(name)).FirstOrDefault();
                 if (subParams != null)
                 {
                     if (subParams.SerializableProperties.TryGetValue(name, out p))
@@ -2082,9 +2082,13 @@ namespace Barotrauma
                         var pullJointWidgetSize = new Vector2(5, 5);
                         Vector2 tformedPullPos = SimToScreen(limb.PullJointWorldAnchorA);
                         GUI.DrawRectangle(spriteBatch, tformedPullPos - pullJointWidgetSize / 2, pullJointWidgetSize, Color.Red, true);
-                        DrawWidget(spriteBatch, tformedPullPos, WidgetType.Rectangle, 8, Color.Cyan, $"IK ({limb.Name})",
-                        () =>
+                        DrawWidget(spriteBatch, tformedPullPos, WidgetType.Rectangle, 8, Color.Cyan, $"IK ({limb.Name})", () =>
                         {
+                            if (!selectedLimbs.Contains(limb))
+                            {
+                                selectedLimbs.Add(limb);
+                                ResetParamsEditor();
+                            }
                             limb.PullJointWorldAnchorA = ScreenToSim(PlayerInput.MousePosition);
                             TryUpdateLimbParam(limb, "pullpos", ConvertUnits.ToDisplayUnits(limb.PullJointLocalAnchorA / limb.limbParams.Ragdoll.LimbScale));
                             GUI.DrawLine(spriteBatch, SimToScreen(limb.SimPosition), tformedPullPos, Color.MediumPurple);
