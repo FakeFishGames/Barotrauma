@@ -1,15 +1,17 @@
 ﻿using Microsoft.Xna.Framework;
 using Lidgren.Network;
 using System;
+using System.Collections.Generic;
 
 namespace Barotrauma.Networking
 {
     partial class BannedPlayer
     {
-        public BannedPlayer(string name, Int32 uniqueIdentifier, string ip, ulong steamID)
+        public BannedPlayer(string name, Int32 uniqueIdentifier, bool isRangeBan, string ip, ulong steamID)
         {
             this.Name = name;
             this.SteamID = steamID;
+            this.IsRangeBan = isRangeBan;
             this.IP = ip;
             this.UniqueIdentifier = uniqueIdentifier;
         }
@@ -24,12 +26,27 @@ namespace Barotrauma.Networking
             get { return banFrame; }
         }
 
+        public List<Int32> localRemovedBans = new List<Int32>();
+        public List<Int32> localRangeBans = new List<Int32>();
+
+        private void RecreateBanFrame()
+        {
+            if (banFrame != null)
+            {
+                var parent = banFrame.Parent;
+                parent.RemoveChild(banFrame);
+                CreateBanFrame(parent);
+            }
+        }
+
         public GUIComponent CreateBanFrame(GUIComponent parent)
         {
             banFrame = new GUIListBox(new RectTransform(Vector2.One, parent.RectTransform, Anchor.Center));
 
             foreach (BannedPlayer bannedPlayer in bannedPlayers)
             {
+                if (localRemovedBans.Contains(bannedPlayer.UniqueIdentifier)) continue;
+
                 var playerFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.25f), ((GUIListBox)banFrame).Content.RectTransform) { MinSize = new Point(0, 70) }, style: null)
                 {
                     UserData = banFrame
@@ -41,8 +58,10 @@ namespace Barotrauma.Networking
                     RelativeSpacing = 0.05f
                 };
 
+                string ip = bannedPlayer.IP;
+                if (localRangeBans.Contains(bannedPlayer.UniqueIdentifier)) ip = ToRange(ip);
                 GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), paddedPlayerFrame.RectTransform),
-                    bannedPlayer.IP + " (" + bannedPlayer.Name + ")");
+                    bannedPlayer.Name + " (" + ip + ")");
 
                 var removeButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.4f), paddedPlayerFrame.RectTransform, Anchor.TopRight), TextManager.Get("BanListRemove"))
                 {
@@ -97,6 +116,8 @@ namespace Barotrauma.Networking
             {
                 string name = incMsg.ReadString();
                 Int32 uniqueIdentifier = incMsg.ReadInt32();
+                bool isRangeBan = incMsg.ReadBoolean(); incMsg.ReadPadBits();
+                
                 string ip = "";
                 UInt64 steamID = 0;
                 if (isOwner)
@@ -104,7 +125,19 @@ namespace Barotrauma.Networking
                     ip = incMsg.ReadString();
                     steamID = incMsg.ReadUInt64();
                 }
-                bannedPlayers.Add(new BannedPlayer(name, uniqueIdentifier, ip, steamID));
+                else
+                {
+                    ip = "IP concealed by host";
+                    steamID = 0;
+                }
+                bannedPlayers.Add(new BannedPlayer(name, uniqueIdentifier, isRangeBan, ip, steamID));
+            }
+
+            if (banFrame != null)
+            {
+                var parent = banFrame.Parent;
+                parent.RemoveChild(banFrame);
+                CreateBanFrame(parent);
             }
         }
 
@@ -113,14 +146,9 @@ namespace Barotrauma.Networking
             BannedPlayer banned = obj as BannedPlayer;
             if (banned == null) return false;
 
-            //RemoveBan(banned);
+            localRemovedBans.Add(banned.UniqueIdentifier);
 
-            if (banFrame != null)
-            {
-                var parent = banFrame.Parent;
-                parent.RemoveChild(banFrame);
-                CreateBanFrame(parent);
-            }
+            RecreateBanFrame();
 
             return true;
         }
@@ -130,14 +158,9 @@ namespace Barotrauma.Networking
             BannedPlayer banned = obj as BannedPlayer;
             if (banned == null) return false;
 
-            //RangeBan(banned);
+            localRangeBans.Add(banned.UniqueIdentifier);
 
-            if (banFrame != null)
-            {
-                var parent = banFrame.Parent;
-                parent.RemoveChild(banFrame);
-                CreateBanFrame(parent);
-            }
+            RecreateBanFrame();
 
             return true;
         }
@@ -147,6 +170,24 @@ namespace Barotrauma.Networking
             banFrame = null;
 
             return true;
+        }
+
+        public void ClientAdminWrite(NetBuffer outMsg)
+        {
+            outMsg.Write((UInt16)localRemovedBans.Count);
+            foreach (Int32 uniqueId in localRemovedBans)
+            {
+                outMsg.Write(uniqueId);
+            }
+
+            outMsg.Write((UInt16)localRangeBans.Count);
+            foreach (Int32 uniqueId in localRangeBans)
+            {
+                outMsg.Write(uniqueId);
+            }
+
+            localRemovedBans.Clear();
+            localRangeBans.Clear();
         }
     }
 }

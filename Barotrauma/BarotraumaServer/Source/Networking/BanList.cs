@@ -18,6 +18,8 @@ namespace Barotrauma.Networking
             this.Reason = reason;
             this.ExpirationTime = expirationTime;
             this.UniqueIdentifier = CryptoRandom.Instance.Next();
+
+            this.IsRangeBan = IP.IndexOf(".x")>-1;
         }
 
         public BannedPlayer(string name, ulong steamID, string reason, DateTime? expirationTime)
@@ -27,6 +29,22 @@ namespace Barotrauma.Networking
             this.Reason = reason;
             this.ExpirationTime = expirationTime;
             this.UniqueIdentifier = CryptoRandom.Instance.Next();
+
+            this.IsRangeBan = false;
+        }
+
+        public bool CompareTo(string ipCompare)
+        {
+            if (!IsRangeBan)
+            {
+                return ipCompare == IP;
+            }
+            else
+            {
+                int rangeBanIndex = IP.IndexOf(".x");
+                if (ipCompare.Length < rangeBanIndex) return false;
+                return ipCompare.Substring(0, rangeBanIndex) == IP.Substring(0, rangeBanIndex);
+            }
         }
     }
 
@@ -87,7 +105,13 @@ namespace Barotrauma.Networking
                 }
             }
         }
-        
+
+        public bool IsBanned(string IP, ulong steamID)
+        {
+            bannedPlayers.RemoveAll(bp => bp.ExpirationTime.HasValue && DateTime.Now > bp.ExpirationTime.Value);
+            return bannedPlayers.Any(bp => bp.CompareTo(IP) || (steamID != 0 && bp.SteamID == steamID));
+        }
+
         public void BanPlayer(string name, string ip, string reason, TimeSpan? duration)
         {
             BanPlayer(name, ip, 0, reason, duration);
@@ -203,11 +227,51 @@ namespace Barotrauma.Networking
 
                 outMsg.Write(bannedPlayer.Name);
                 outMsg.Write(bannedPlayer.UniqueIdentifier);
+                outMsg.Write(bannedPlayer.IsRangeBan); outMsg.WritePadBits();
                 if (c.Connection == GameMain.Server.OwnerConnection)
                 {
                     outMsg.Write(bannedPlayer.IP);
                     outMsg.Write(bannedPlayer.SteamID);
                 }
+            }
+        }
+
+        public bool ServerAdminRead(NetBuffer incMsg, Client c)
+        {
+            if (!c.HasPermission(ClientPermissions.Ban))
+            {
+                UInt16 removeCount = incMsg.ReadUInt16();
+                incMsg.Position += removeCount * 4 * 8;
+                UInt16 rangeBanCount = incMsg.ReadUInt16();
+                incMsg.Position += rangeBanCount * 4 * 8;
+                return false;
+            }
+            else
+            {
+                UInt16 removeCount = incMsg.ReadUInt16();
+                for (int i = 0; i < removeCount; i++)
+                {
+                    Int32 id = incMsg.ReadInt32();
+                    BannedPlayer bannedPlayer = bannedPlayers.Find(p => p.UniqueIdentifier == id);
+                    if (bannedPlayer != null)
+                    {
+                        GameServer.Log(c.Name + " unbanned " + bannedPlayer.Name + " (" + bannedPlayer.IP + ")", ServerLog.MessageType.ConsoleUsage);
+                        RemoveBan(bannedPlayer);
+                    }
+                }
+                Int16 rangeBanCount = incMsg.ReadInt16();
+                for (int i = 0; i < rangeBanCount; i++)
+                {
+                    Int32 id = incMsg.ReadInt32();
+                    BannedPlayer bannedPlayer = bannedPlayers.Find(p => p.UniqueIdentifier == id);
+                    if (bannedPlayer != null)
+                    {
+                        GameServer.Log(c.Name + " rangebanned " + bannedPlayer.Name + " (" + bannedPlayer.IP + ")", ServerLog.MessageType.ConsoleUsage);
+                        RangeBan(bannedPlayer);
+                    }
+                }
+
+                return removeCount > 0 || rangeBanCount > 0;
             }
         }
     }

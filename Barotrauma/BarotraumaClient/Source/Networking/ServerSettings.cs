@@ -142,7 +142,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ClientWrite()
+        public void ClientAdminWrite()
         {
             NetOutgoingMessage outMsg = GameMain.NetworkMember.NetPeer.CreateMessage();
 
@@ -165,6 +165,7 @@ namespace Barotrauma.Networking
 
             outMsg.Write(changedMonsterSettings); outMsg.WritePadBits();
             if (changedMonsterSettings) WriteMonsterEnabled(outMsg, tempMonsterEnabled);
+            BanList.ClientAdminWrite(outMsg);
             
             (GameMain.NetworkMember.NetPeer as NetClient).SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
         }
@@ -697,7 +698,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                ClientWrite();
+                ClientAdminWrite();
                 foreach (NetPropertyData prop in netProperties.Values)
                 {
                     prop.GUIComponent = null;
