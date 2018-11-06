@@ -57,8 +57,8 @@ namespace Barotrauma
         private int spriteSheetOffsetX = (int)(GameMain.GraphicsWidth * 0.6f);
         private Color backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1.0f);
 
-        private HashSet<LimbJoint> selectedJoints = new HashSet<LimbJoint>();
-        private HashSet<Limb> selectedLimbs = new HashSet<Limb>();
+        private List<LimbJoint> selectedJoints = new List<LimbJoint>();
+        private List<Limb> selectedLimbs = new List<Limb>();
 
         private float spriteSheetOrientation;
 
@@ -245,6 +245,10 @@ namespace Barotrauma
                     {
                         ResetParamsEditor();
                     }
+                }
+                if (PlayerInput.KeyHit(Keys.Delete))
+                {
+                    DeleteSelected();
                 }
             }
             if (!isFreezed)
@@ -436,6 +440,83 @@ namespace Barotrauma
                 GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 300, 0), $"Collider rotation: {MathHelper.ToDegrees(MathUtils.WrapAngleTwoPi(collider.Rotation))}", Color.White, font: GUI.SmallFont);
             }
             spriteBatch.End();
+        }
+        #endregion
+
+        #region Ragdoll Manipulation
+        /// <summary>
+        /// Removes all selected joints and limbs in the params level (-> serializable). The method also recreates the ids and names, when required.
+        /// </summary>
+        private void DeleteSelected()
+        {
+            for (int i = 0; i < selectedJoints.Count; i++)
+            {
+                var joint = selectedJoints[i];
+                RagdollParams.Joints.Remove(joint.jointParams);
+            }
+            var removedIDs = new List<int>();
+            for (int i = 0; i < selectedLimbs.Count; i++)
+            {
+                if (character.IsHumanoid)
+                {
+                    DebugConsole.ThrowError("Deleting limbs from a humanoid is currently disabled, because it will most likely crash the game.");
+                    break;
+                }
+                var limb = selectedLimbs[i];
+                if (limb == character.AnimController.MainLimb)
+                {
+                    DebugConsole.ThrowError("Can't remove the main limb, because it will crash the game.");
+                    continue;
+                }
+                removedIDs.Add(limb.limbParams.ID);
+                RagdollParams.Limbs.Remove(limb.limbParams);
+            }
+            // Recreate ids
+            var renamedIDs = new Dictionary<int, int>();
+            for (int i = 0; i < RagdollParams.Limbs.Count; i++)
+            {
+                int oldID = RagdollParams.Limbs[i].ID;
+                int newID = i;
+                if (oldID != newID)
+                {
+                    var limbParams = RagdollParams.Limbs[i];
+                    limbParams.ID = newID;
+                    limbParams.Name = limbParams.GenerateName();
+                    renamedIDs.Add(oldID, newID);
+                }
+            }
+            // Refresh/recreate joints
+            var jointsToRemove = new List<JointParams>();
+            for (int i = 0; i < RagdollParams.Joints.Count; i++)
+            {
+                var joint = RagdollParams.Joints[i];
+                if (removedIDs.Contains(joint.Limb1) || removedIDs.Contains(joint.Limb2))
+                {
+                    // At least one of the limbs has been removed -> remove the joint
+                    jointsToRemove.Add(joint);
+                }
+                else
+                {
+                    // Both limbs still remains -> update
+                    bool rename = false;
+                    if (renamedIDs.TryGetValue(joint.Limb1, out int newID1))
+                    {
+                        joint.Limb1 = newID1;
+                        rename = true;
+                    }
+                    if (renamedIDs.TryGetValue(joint.Limb2, out int newID2))
+                    {
+                        joint.Limb2 = newID2;
+                        rename = true;
+                    }
+                    if (rename)
+                    {
+                        joint.Name = joint.GenerateName();
+                    }
+                }
+            }
+            jointsToRemove.ForEach(j => RagdollParams.Joints.Remove(j));
+            RecreateRagdoll();
         }
         #endregion
 
@@ -647,17 +728,20 @@ namespace Barotrauma
             SetWallCollisions(character.AnimController.forceStanding);
             CreateTextures();
             CreateGUI();
-            jointSelectionWidgets.Clear();
-            selectedJoints.Clear();
-            selectedLimbs.Clear();
+            ClearWidgets();
             ResetParamsEditor();
+        }
+
+        private void ClearWidgets()
+        {
+            Widget.selectedWidgets.Clear();
+            jointSelectionWidgets.Clear();
+            selectedLimbs.Clear();
+            selectedJoints.Clear();
         }
 
         private void RecreateRagdoll()
         {
-            jointSelectionWidgets.Clear();
-            selectedLimbs.Clear();
-            selectedJoints.Clear();
             character.AnimController.Recreate(RagdollParams);
             TeleportTo(spawnPosition);
             ResetParamsEditor();
@@ -1226,9 +1310,7 @@ namespace Barotrauma
             {
                 character.AnimController.ResetRagdoll();
                 CreateCenterPanel();
-                selectedJoints.Clear();
-                selectedLimbs.Clear();
-                jointSelectionWidgets.Clear();
+                ClearWidgets();
                 ResetParamsEditor();
                 GUI.AddMessage($"Ragdoll reset", Color.WhiteSmoke, font: GUI.Font);
                 return true;
