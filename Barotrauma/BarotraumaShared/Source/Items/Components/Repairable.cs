@@ -118,11 +118,7 @@ namespace Barotrauma.Items.Components
 
             if (CurrentFixer == null)
             {
-                if (item.Condition <= 0.0f)
-                {
-                    repairProgress = 0.0f;
-                }
-                else
+                if (item.Condition > 0.0f)
                 {
                     if (deteriorationTimer > 0.0f)
                     {
