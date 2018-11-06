@@ -47,7 +47,7 @@ namespace Barotrauma
                 foreach (Repairable repairable in item.Repairables)
                 {
                     //ignore ones that are already fixed
-                    if (repairable.Fixed || item.Condition > repairable.ShowRepairUIThreshold) continue;
+                    if (item.Condition > repairable.ShowRepairUIThreshold) continue;
 
                     AddSubObjective(new AIObjectiveRepairItem(character, item));
                     break;
