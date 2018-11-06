@@ -51,6 +51,7 @@ namespace Barotrauma
         private bool copyJointSettings;
         private bool displayColliders;
         private bool displayBackgroundColor;
+        private bool ragdollResetRequiresForceLoading;
 
         private float spriteSheetZoom = 1;
         private int spriteSheetOffsetY = 100;
@@ -261,6 +262,18 @@ namespace Barotrauma
                         }
                     }
                 }
+                if (editJoints && PlayerInput.KeyDown(Keys.LeftControl) && PlayerInput.KeyDown(Keys.LeftAlt))
+                {
+                    // todo draw selection in the draw method
+                    var selectedJoint = selectedJoints.FirstOrDefault();
+                    if (selectedJoint != null)
+                    {
+                        if (PlayerInput.LeftButtonClicked())
+                        {
+                            ExtrudeJoint(selectedJoint);
+                        }
+                    }
+                }
             }
             if (!isFreezed)
             {
@@ -456,8 +469,8 @@ namespace Barotrauma
         #region Ragdoll Manipulation
         private void CopyLimb(Limb limb)
         {
-            // TODO: copy all params and sub params -> use a generic method?, todo: ass a note that this limb was copied from x
-            var rect = limb.limbParams.normalSpriteParams.SourceRect;
+            // TODO: copy all params and sub params -> use a generic method?
+            var rect = limb.ActiveSprite.SourceRect;
             var newLimbElement = new XElement("limb",
                 new XAttribute("id", RagdollParams.Limbs.Last().ID + 1),
                 new XAttribute("radius", limb.limbParams.Radius),
@@ -475,11 +488,41 @@ namespace Barotrauma
             character.AnimController.Recreate(RagdollParams);
             TeleportTo(spawnPosition);
             ClearWidgets();
-            if (newLimbParams != null)
-            {
-                selectedLimbs.Add(character.AnimController.Limbs.Single(l => l.limbParams == newLimbParams));
-            }
+            selectedLimbs.Add(character.AnimController.Limbs.Single(l => l.limbParams == newLimbParams));
             ResetParamsEditor();
+            ragdollResetRequiresForceLoading = true;
+        }
+
+        /// <summary>
+        /// Creates a new joint between the last limb of the selected joint and the limb closest to the cursor.
+        /// </summary>
+        private void ExtrudeJoint(LimbJoint joint)
+        {
+            // first limb is the limb 2 of the selected joint
+            int limb1 = joint.jointParams.Limb2;
+            Vector2 anchor1 = Vector2.Zero;
+            Vector2 anchor2 = Vector2.Zero;
+            // second limb is the limb that's closest to the mouse cursor
+            int limb2 = character.AnimController.Limbs
+                .Where(l => l != joint.LimbB)
+                .OrderBy(l => Vector2.Distance(SimToScreen(l.SimPosition), PlayerInput.MousePosition))
+                .First().limbParams.ID;
+            var newJointElement = new XElement("joint",
+                new XAttribute("limb1", limb1),
+                new XAttribute("limb2", limb2),
+                new XAttribute("limb1anchor", $"{anchor1.X.Format(2)}, {anchor1.Y.Format(2)}"),
+                new XAttribute("limb2anchor", $"{anchor2.X.Format(2)}, {anchor2.Y.Format(2)}")
+                );
+            var lastJointElement = RagdollParams.MainElement.Elements("joint").Last();
+            lastJointElement.AddAfterSelf(newJointElement);
+            var newJointParams = new JointParams(newJointElement, RagdollParams);
+            RagdollParams.Joints.Add(newJointParams);
+            character.AnimController.Recreate(RagdollParams);
+            TeleportTo(spawnPosition);
+            ClearWidgets();
+            selectedJoints.Add(character.AnimController.LimbJoints.Single(j => j.jointParams == newJointParams));
+            ResetParamsEditor();
+            ragdollResetRequiresForceLoading = true;
         }
 
         /// <summary>
@@ -555,6 +598,7 @@ namespace Barotrauma
             }
             jointsToRemove.ForEach(j => RagdollParams.Joints.Remove(j));
             RecreateRagdoll();
+            ragdollResetRequiresForceLoading = true;
         }
         #endregion
 
@@ -753,6 +797,7 @@ namespace Barotrauma
                 wayPoint = WayPoint.GetRandom(sub: Submarine.MainSub);
             }
             spawnPosition = wayPoint.WorldPosition;
+            ragdollResetRequiresForceLoading = false;
         }
 
         private void OnPostSpawn()
@@ -1346,10 +1391,19 @@ namespace Barotrauma
             var resetRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Reset Ragdoll");
             resetRagdollButton.OnClicked += (button, userData) =>
             {
-                character.AnimController.ResetRagdoll();
+                if (ragdollResetRequiresForceLoading)
+                {
+                    character.AnimController.ResetRagdoll(forceReload: true);
+                    RecreateRagdoll();
+                    ragdollResetRequiresForceLoading = false;
+                }
+                else
+                {
+                    character.AnimController.ResetRagdoll(forceReload: false);
+                    ResetParamsEditor();
+                }
                 CreateCenterPanel();
                 ClearWidgets();
-                ResetParamsEditor();
                 GUI.AddMessage($"Ragdoll reset", Color.WhiteSmoke, font: GUI.Font);
                 return true;
             };
@@ -2136,15 +2190,13 @@ namespace Barotrauma
                                 selectedLimbs.Clear();
                             }
                             selectedLimbs.Add(limb);
+                            ResetParamsEditor();
                         }
                         else if (Widget.EnableMultiSelect)
                         {
                             selectedLimbs.Remove(limb);
+                            ResetParamsEditor();
                         }
-                    }
-                    if (PlayerInput.LeftButtonClicked())
-                    {
-                        ResetParamsEditor();
                     }
                     // Origin
                     if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && selectedLimbs.Contains(limb))

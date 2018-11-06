@@ -92,7 +92,7 @@ namespace Barotrauma
             return true;
         }
 
-        public virtual bool Reset()
+        public bool Reset()
         {
             return Deserialize(Doc.Root);
         }

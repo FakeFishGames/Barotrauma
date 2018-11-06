@@ -383,10 +383,11 @@ namespace Barotrauma
 
         /// <summary>
         /// Resets the serializable data to the currently selected ragdoll params.
+        /// Force reloading always loads the xml stored in the disk.
         /// </summary>
-        public void ResetRagdoll()
+        public void ResetRagdoll(bool forceReload = false)
         {
-            RagdollParams.Reset();
+            RagdollParams.Reset(forceReload);
             ResetJoints();
             ResetLimbs();
         }
