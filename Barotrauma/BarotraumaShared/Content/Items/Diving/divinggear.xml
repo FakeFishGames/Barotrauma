@@ -17,7 +17,7 @@
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,0,64,64"/>
-    <Sprite texture ="Content/Items/Tools/tools.png" sourcerect="39,31,12,33" depth="0.55"/>
+    <Sprite texture ="Content/Items/Tools/tools.png" sourcerect="38,31,13,33" depth="0.55"/>
 
     <Body width="12" height="33" density="5"/>
 
@@ -49,7 +49,7 @@
       <Item identifier="liquidoxygenite" mincondition="0.9"/>
     </Deconstruct>
 
-    <Sprite texture ="Content/Items/Tools/tools.png" sourcerect="0,77,12,33" depth="0.55"/>
+    <Sprite texture ="Content/Items/Tools/tools.png" sourcerect="1,91,13,33" depth="0.55"/>
 
     <Body width="12" height="33" density="9.9"/>
 

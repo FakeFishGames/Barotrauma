@@ -139,7 +139,7 @@
       <Item identifier="steelbar" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,0,64,64" />
-    <Sprite texture="tools.png" sourcerect="0,58,31,6" depth="0.55" />
+    <Sprite texture="tools.png" sourcerect="0,57,31,6" depth="0.55" />
     <Body width="31" height="6" density="50" />
     <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0" />
   </Item>
@@ -241,7 +241,7 @@
       <Item identifier="copperbar" />
       <Item identifier="polycarbonatebar" />
     </Deconstruct>
-    <Sprite texture="tools.png" sourcerect="0,34,27,11" depth="0.55" />
+    <Sprite texture="tools.png" sourcerect="0,35,27,12" depth="0.55" />
     <Body width="27" height="10" density="15" />
     <Holdable slots="Any,RightHand,LeftHand,Head" holdpos="30,-15" aimpos="100,0" handle1="-13,0" handle2="-13,0">
       <StatusEffect type="OnActive" target="Contained" Condition="-0.2" />
@@ -269,7 +269,7 @@
       <Item identifier="aluminium" mincondition="0.5" maxcondition="0.9" outcondition="0.1" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,0,64,64" />
-    <Sprite texture="tools.png" sourcerect="20,112,27,9" depth="0.55" />
+    <Sprite texture="tools.png" sourcerect="20,112,26,8" depth="0.55" />
     <Body width="21" height="7" density="12" />
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10" />
     <LightComponent LightColor="1.0,0.0,0.0,1.0" Flicker="0.5" range="600" IsOn="false">
