@@ -119,6 +119,13 @@ namespace Barotrauma
             }
         }
 
+        private float aimAssistAmount;
+        public float AimAssistAmount
+        {
+            get { return aimAssistAmount; }
+            set { aimAssistAmount = MathHelper.Clamp(value, 0.0f, 5.0f); }
+        }
+
         private bool unsavedSettings;
         public bool UnsavedSettings
         {
@@ -322,6 +329,8 @@ namespace Barotrauma
 
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", true);
 
+            AimAssistAmount = doc.Root.GetAttributeFloat("aimassistamount", 0.5f);
+
             keyMapping = new KeyOrMouse[Enum.GetNames(typeof(InputType)).Length];
             keyMapping[(int)InputType.Up] = new KeyOrMouse(Keys.W);
             keyMapping[(int)InputType.Down] = new KeyOrMouse(Keys.S);
@@ -440,7 +449,8 @@ namespace Barotrauma
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
                 new XAttribute("enablesplashscreen", EnableSplashScreen),
                 new XAttribute("usesteammatchmaking", useSteamMatchmaking),
-                new XAttribute("requiresteamauthentication", requireSteamAuthentication));
+                new XAttribute("requiresteamauthentication", requireSteamAuthentication),
+                new XAttribute("aimassistamount", aimAssistAmount));
 
             if (!ShowUserStatisticsPrompt)
             {
