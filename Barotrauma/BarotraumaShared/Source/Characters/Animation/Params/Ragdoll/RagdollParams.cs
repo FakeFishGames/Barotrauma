@@ -72,7 +72,7 @@ namespace Barotrauma
                 new XAttribute("width", 1),
                 new XAttribute("height", 1),
                 new XElement("sprite",
-                    new XAttribute("sourcerect", $"{0}, {0}, {1}, {1}")))
+                    new XAttribute("sourcerect", $"0, 0, 1, 1")))
         };
 
         protected static string GetFolder(string speciesName)
@@ -481,8 +481,8 @@ namespace Barotrauma
         [Serialize(0f, true), Editable(DecimalCount = 3)]
         public float Depth { get; set; }
 
-        //[Serialize("", true)]
-        //public string Texture { get; set; }
+        [Serialize("", true)]
+        public string Texture { get; set; }
     }
 
     class ColliderParams : RagdollSubParams

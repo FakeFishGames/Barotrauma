@@ -250,6 +250,17 @@ namespace Barotrauma
                 {
                     DeleteSelected();
                 }
+                if (editLimbs && PlayerInput.KeyDown(Keys.LeftControl))
+                {
+                    if (PlayerInput.KeyHit(Keys.C))
+                    {
+                        var selectedLimb = selectedLimbs.FirstOrDefault();
+                        if (selectedLimb != null)
+                        {
+                            CopyLimb(selectedLimb);
+                        }
+                    }
+                }
             }
             if (!isFreezed)
             {
@@ -410,7 +421,6 @@ namespace Barotrauma
                 GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 20), $"Cursor Pos: {character.CursorPosition}", Color.White, font: GUI.SmallFont);
                 GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 40), $"Cursor Screen Pos: {PlayerInput.MousePosition}", Color.White, font: GUI.SmallFont);
 
-
                 //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 80), $"Character World Pos: {character.WorldPosition}", Color.White, font: GUI.SmallFont);
                 //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 100), $"Character Pos: {character.Position}", Color.White, font: GUI.SmallFont);
                 //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 120), $"Character Sim Pos: {character.SimPosition}", Color.White, font: GUI.SmallFont);
@@ -444,6 +454,34 @@ namespace Barotrauma
         #endregion
 
         #region Ragdoll Manipulation
+        private void CopyLimb(Limb limb)
+        {
+            // TODO: copy all params and sub params -> use a generic method?, todo: ass a note that this limb was copied from x
+            var rect = limb.limbParams.normalSpriteParams.SourceRect;
+            var newLimbElement = new XElement("limb",
+                new XAttribute("id", RagdollParams.Limbs.Last().ID + 1),
+                new XAttribute("radius", limb.limbParams.Radius),
+                new XAttribute("width", limb.limbParams.Width),
+                new XAttribute("height", limb.limbParams.Height),
+                new XAttribute("mass", limb.limbParams.Mass),
+                new XElement("sprite",
+                    new XAttribute("texture", limb.limbParams.normalSpriteParams.Texture),
+                    new XAttribute("sourcerect", $"{rect.X}, {rect.Y}, {rect.Size.X}, {rect.Size.Y}"))
+                );
+            var lastLimbElement = RagdollParams.MainElement.Elements("limb").Last();
+            lastLimbElement.AddAfterSelf(newLimbElement);
+            var newLimbParams = new LimbParams(newLimbElement, RagdollParams);
+            RagdollParams.Limbs.Add(newLimbParams);
+            character.AnimController.Recreate(RagdollParams);
+            TeleportTo(spawnPosition);
+            ClearWidgets();
+            if (newLimbParams != null)
+            {
+                selectedLimbs.Add(character.AnimController.Limbs.Single(l => l.limbParams == newLimbParams));
+            }
+            ResetParamsEditor();
+        }
+
         /// <summary>
         /// Removes all selected joints and limbs in the params level (-> serializable). The method also recreates the ids and names, when required.
         /// </summary>
@@ -2965,7 +3003,6 @@ namespace Barotrauma
         {
             // Ragdoll data
             private string name = string.Empty;
-            private float size = 10;
             private bool isHumanoid = false;
             private string texturePath;
             private string xmlPath;
