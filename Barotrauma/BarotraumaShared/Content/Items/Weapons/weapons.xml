@@ -74,7 +74,7 @@
     <Body width="8" height="3" density="40" />
     <Pickable slots="Any" />
     <Projectile characterusable="false" hitscan="true" removeonhit="true">
-      <Attack structuredamage="100" stun="0.5" targetforce="50">
+      <Attack structuredamage="100" stun="0.5" targetforce="10">
         <Affliction identifier="gunshotwound" strength="40" />
         <Affliction identifier="internaldamage" strength="30" />
       </Attack>
