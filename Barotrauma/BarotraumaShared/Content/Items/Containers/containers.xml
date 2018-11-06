@@ -8,7 +8,7 @@
     <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,48,80"/>
 
     <ItemContainer capacity="5" canbeselected="true" hideitems="true">
-      <Containable identifiers="smallitem"/>
+      <Containable identifiers="smallitem,mediumitem"/>
     </ItemContainer>
   </Item>
   
@@ -21,7 +21,7 @@
     <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,80,48,80"/>
 
     <ItemContainer capacity="5" canbeselected="true" hideitems="true">
-      <Containable identifiers="smallitem"/>
+      <Containable identifiers="smallitem,mediumitem"/>
     </ItemContainer>
   </Item>
 
@@ -34,7 +34,7 @@
     <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="48,0,48,160"/>
 
     <ItemContainer capacity="10" canbeselected="true" hideitems="true">
-      <Containable identifiers="smallitem"/>
+      <Containable identifiers="smallitem,mediumitem"/>
     </ItemContainer>
   </Item>
 
@@ -47,7 +47,7 @@
     <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="96,0,48,160"/>
 
     <ItemContainer capacity="10" canbeselected="true" hideitems="true">
-      <Containable identifiers="smallitem"/>
+      <Containable identifiers="smallitem,mediumitem"/>
     </ItemContainer>
   </Item>
 
@@ -60,7 +60,7 @@
     <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,148,160"/>
 
     <ItemContainer capacity="30" canbeselected="true" hideitems="true">
-      <Containable identifiers="smallitem"/>
+      <Containable identifiers="smallitem,mediumitem"/>
     </ItemContainer>
   </Item>
 
@@ -75,7 +75,7 @@
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
       <RequiredItem identifiers="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess"/>
-      <Containable identifiers="smallitem"/>
+      <Containable identifiers="smallitem,mediumitem"/>
     </ItemContainer>
   </Item>
 
@@ -152,7 +152,7 @@
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
-      <Containable identifiers="smallitem,spear"/>
+      <Containable identifiers="smallitem,mediumitem"/>
     </ItemContainer>
   </Item>
 
@@ -176,7 +176,7 @@
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
       <RequiredItem identifiers="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess"/>
-      <Containable identifiers="smallitem,spear"/>
+      <Containable identifiers="smallitem,mediumitem"/>
     </ItemContainer>
   </Item>
   
