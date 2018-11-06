@@ -65,6 +65,12 @@ namespace Barotrauma
             get { return useSteamMatchmaking && UseSteam; }
             set { useSteamMatchmaking = value; }
         }
+
+        public string QuickStartSubmarineName
+        {
+            get;
+            set;
+        }
 #else
         //steam functionality determined at compile time
         public bool UseSteam
@@ -268,6 +274,7 @@ namespace Barotrauma
 
 #if DEBUG
             UseSteam = doc.Root.GetAttributeBool("usesteam", true);
+            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
 #endif
 
             if (doc == null)
@@ -330,6 +337,7 @@ namespace Barotrauma
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", true);
 
             AimAssistAmount = doc.Root.GetAttributeFloat("aimassistamount", 0.5f);
+
 
             keyMapping = new KeyOrMouse[Enum.GetNames(typeof(InputType)).Length];
             keyMapping[(int)InputType.Up] = new KeyOrMouse(Keys.W);
