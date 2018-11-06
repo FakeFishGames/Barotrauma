@@ -234,6 +234,15 @@ namespace Barotrauma
             return false;
         }
 
+        public bool Reset(bool forceReload = false)
+        {
+            if (forceReload)
+            {
+                return Load(FullPath, SpeciesName);
+            }
+            return base.Reset();
+        }
+
         protected void CreateColliders()
         {
             ColliderParams.Clear();
