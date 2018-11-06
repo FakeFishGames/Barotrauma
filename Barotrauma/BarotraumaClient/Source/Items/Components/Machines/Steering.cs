@@ -277,7 +277,13 @@ namespace Barotrauma.Items.Components
 
             if (!AutoPilot)
             {
-                Vector2 steeringInputPos = new Vector2(velRect.Center.X + steeringInput.X, velRect.Center.Y - steeringInput.Y);
+                Vector2 unitSteeringInput = steeringInput / 100.0f;
+                //map input from rectangle to circle
+                Vector2 steeringInputPos = new Vector2(
+                    steeringInput.X * (float)Math.Sqrt(1.0f - 0.5f * unitSteeringInput.Y * unitSteeringInput.Y),
+                    -steeringInput.Y * (float)Math.Sqrt(1.0f - 0.5f * unitSteeringInput.X * unitSteeringInput.X));
+                steeringInputPos.X += velRect.Center.X;
+                steeringInputPos.Y += velRect.Center.Y;
 
                 GUI.DrawLine(spriteBatch,
                     new Vector2(velRect.Center.X, velRect.Center.Y),
@@ -307,7 +313,13 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            Vector2 steeringPos = new Vector2(velRect.Center.X + targetVelocity.X * 0.9f, velRect.Center.Y - targetVelocity.Y * 0.9f);
+            //map velocity from rectangle to circle
+            Vector2 unitTargetVel = targetVelocity / 100.0f;
+            Vector2 steeringPos = new Vector2(
+                targetVelocity.X * 0.9f * (float)Math.Sqrt(1.0f - 0.5f * unitTargetVel.Y * unitTargetVel.Y),
+                -targetVelocity.Y * 0.9f * (float)Math.Sqrt(1.0f - 0.5f * unitTargetVel.X * unitTargetVel.X));
+            steeringPos.X += velRect.Center.X;
+            steeringPos.Y += velRect.Center.Y;
 
             GUI.DrawLine(spriteBatch,
                 new Vector2(velRect.Center.X, velRect.Center.Y),
