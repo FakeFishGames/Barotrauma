@@ -24,6 +24,12 @@ namespace Barotrauma
 
         private List<SpriteDeformation> spriteDeformations = new List<SpriteDeformation>();
 
+        public Vector2 CurrentScale
+        {
+            get;
+            private set;
+        } = Vector2.One;
+
         public LightSource[] LightSources
         {
             get;
@@ -158,11 +164,17 @@ namespace Barotrauma
                 }
             }
 
+            CurrentScale = Vector2.One * Scale;
             if (ActivePrefab.ScaleOscillationFrequency > 0.0f)
             {
                 ScaleOscillateTimer += deltaTime * ActivePrefab.ScaleOscillationFrequency;
                 ScaleOscillateTimer = ScaleOscillateTimer % MathHelper.TwoPi;
                 CurrentScaleOscillation = Vector2.Lerp(CurrentScaleOscillation, ActivePrefab.ScaleOscillation, deltaTime * 10.0f);
+                
+                float sin = (float)Math.Sin(ScaleOscillateTimer);
+                CurrentScale *= new Vector2(
+                    1.0f + sin * CurrentScaleOscillation.X,
+                    1.0f + sin * CurrentScaleOscillation.Y);                
             }
 
             if (LightSources != null)
@@ -170,7 +182,8 @@ namespace Barotrauma
                 for (int i = 0; i < LightSources.Length; i++)
                 {
                     if (LightSourceTriggers[i] != null) LightSources[i].Enabled = LightSourceTriggers[i].IsTriggered;
-                    LightSources[i].Rotation = CurrentRotation;
+                    LightSources[i].Rotation = -CurrentRotation;
+                    LightSources[i].SpriteScale = CurrentScale;
                 }
             }
 
@@ -214,6 +227,13 @@ namespace Barotrauma
                 deformation.Update(deltaTime);
             }
             CurrentSpriteDeformation = SpriteDeformation.GetDeformation(spriteDeformations, ActivePrefab.DeformableSprite.Size);
+            foreach (LightSource lightSource in LightSources)
+            {
+                if (lightSource?.DeformableLightSprite != null)
+                {
+                    lightSource.DeformableLightSprite.Deform(CurrentSpriteDeformation);
+                }
+            }
         }
 
         private void UpdatePositionalDeformation(PositionalDeformation positionalDeformation, float deltaTime)

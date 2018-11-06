@@ -48,7 +48,7 @@ namespace Barotrauma
         private bool lockSpriteOrigin;
         private bool lockSpritePosition;
         private bool lockSpriteSize;
-        private bool copyJoints;
+        private bool copyJointSettings;
         private bool displayColliders;
         private bool displayBackgroundColor;
 
@@ -563,7 +563,7 @@ namespace Barotrauma
 
         private string GetNextConfigFile()
         {
-            CheckAndGetIndex();
+            GetCurrentCharacterIndex();
             IncreaseIndex();
             currentCharacterConfig = AllFiles[characterIndex];
             return currentCharacterConfig;
@@ -571,19 +571,15 @@ namespace Barotrauma
 
         private string GetPreviousConfigFile()
         {
-            CheckAndGetIndex();
+            GetCurrentCharacterIndex();
             ReduceIndex();
             currentCharacterConfig = AllFiles[characterIndex];
             return currentCharacterConfig;
         }
 
-        // Check if the index is not set, in which case we'll get the index from the current species name.
-        private void CheckAndGetIndex()
+        private void GetCurrentCharacterIndex()
         {
-            if (characterIndex == -1)
-            {
-                characterIndex = AllFiles.IndexOf(GetConfigFile(character.SpeciesName));
-            }
+            characterIndex = AllFiles.IndexOf(GetConfigFile(character.SpeciesName));
         }
 
         private void IncreaseIndex()
@@ -643,6 +639,7 @@ namespace Barotrauma
         private void OnPostSpawn()
         {
             currentCharacterConfig = character.ConfigPath;
+            GetCurrentCharacterIndex();
             character.Submarine = Submarine.MainSub;
             character.AnimController.forceStanding = character.AnimController.CanWalk;
             character.AnimController.ForceSelectAnimationType = character.AnimController.CanWalk ? AnimationType.Walk : AnimationType.SwimSlow;
@@ -964,12 +961,12 @@ namespace Barotrauma
             }, "Copy Joint Settings")
             {
                 ToolTip = "Copies the currently tweaked settings to all selected joints.",
-                Selected = copyJoints,
-                TextColor = copyJoints ? Color.Red : Color.White,
+                Selected = copyJointSettings,
+                TextColor = copyJointSettings ? Color.Red : Color.White,
                 OnSelected = (GUITickBox box) =>
                 {
-                    copyJoints = box.Selected;
-                    box.TextColor = copyJoints ? Color.Red : Color.White;
+                    copyJointSettings = box.Selected;
+                    box.TextColor = copyJointSettings ? Color.Red : Color.White;
                     return true;
                 }
             };
@@ -1543,7 +1540,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Create New Character (WIP)")
+            new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Create New Character")
             {
                 OnClicked = (button, data) =>
                 {
@@ -1566,7 +1563,7 @@ namespace Barotrauma
             {
                 AnimParams.ForEach(p => p.AddToEditor(ParamsEditor.Instance));
             }
-            else if (editJoints || editLimbs)
+            else if (editJoints || editLimbs || editIK)
             {
                 if (selectedJoints.Any())
                 {
@@ -1609,15 +1606,15 @@ namespace Barotrauma
         private void TryUpdateJointParam(LimbJoint joint, string name, object value) => TryUpdateSubParam(joint.jointParams, name, value);
         private void TryUpdateLimbParam(Limb limb, string name, object value) => TryUpdateSubParam(limb.limbParams, name, value);
 
-        private void TryUpdateSubParam(RagdollSubParams ragdollParams, string name, object value)
+        private void TryUpdateSubParam(RagdollSubParams ragdollSubParams, string name, object value)
         {
-            if (ragdollParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
+            if (ragdollSubParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
             {
-                ragdollParams.SerializableEntityEditor.UpdateValue(p, value);
+                ragdollSubParams.SerializableEntityEditor.UpdateValue(p, value);
             }
             else
             {
-                var subParams = ragdollParams.SubParams.Where(sp => sp.SerializableProperties.ContainsKey(name)).FirstOrDefault();
+                var subParams = ragdollSubParams.SubParams.Where(sp => sp.SerializableProperties.ContainsKey(name)).FirstOrDefault();
                 if (subParams != null)
                 {
                     if (subParams.SerializableProperties.TryGetValue(name, out p))
@@ -1989,7 +1986,7 @@ namespace Barotrauma
                 Vector2 left = up.Right();
                 Vector2 limbScreenPos = SimToScreen(limb.SimPosition);
                 var relativeOrigin = new Vector2(origin.X / sourceRect.Width, origin.Y / sourceRect.Height);
-                var relativeOffset = relativeOrigin - new Vector2(0.5f, 0.5f);
+                var relativeOffset = relativeOrigin - limb.ActiveSprite.RelativeOrigin;
                 Vector2 offset = new Vector2(relativeOffset.X * sourceRect.Width, relativeOffset.Y * sourceRect.Height);
                 offset = offset.X * left + offset.Y * up;
                 // There's a calculation error in here somewhere, but the magic number 1.8 seems to do the trick.
@@ -1999,13 +1996,13 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, corners, selectedLimbs.Contains(limb) ? Color.Yellow : Color.Red);
                 //GUI.DrawLine(spriteBatch, limbScreenPos, limbScreenPos + up * 20, Color.White, width: 3);
                 //GUI.DrawLine(spriteBatch, limbScreenPos, limbScreenPos + up * 20, Color.Red);
-                // Limb positions
-                if (!lockSpriteOrigin)
+                // Draw origins
+                if (selectedLimbs.Contains(limb))
                 {
                     GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.White, width: 3);
                     GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.White, width: 3);
-                    GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.Red);
-                    GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.Red);
+                    GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.Yellow);
+                    GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.Yellow);
                 }
                 if (MathUtils.RectangleContainsPoint(corners, PlayerInput.MousePosition) && GUI.MouseOn == null)
                 {
@@ -2032,9 +2029,8 @@ namespace Barotrauma
                     // Origin
                     if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && selectedLimbs.Contains(limb))
                     {
-                        float multiplier = 0.5f;
                         Vector2 forward = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(limb.Rotation));
-                        var input = -scaledMouseSpeed * inputMultiplier * Cam.Zoom / limb.Scale * multiplier;
+                        var input = -scaledMouseSpeed * inputMultiplier / Cam.Zoom / limb.Scale;
                         var sprite = limb.ActiveSprite;
                         origin += input.TransformVector(forward);
                         var max = new Vector2(sourceRect.Width, sourceRect.Height);
@@ -2060,7 +2056,7 @@ namespace Barotrauma
                                 TryUpdateLimbParam(otherLimb, "origin", relativeOrigin);
                             });
                         }
-                        GUI.DrawString(spriteBatch, limbScreenPos + new Vector2(10, -10), relativeOrigin.FormatDoubleDecimal(), Color.White, Color.Black * 0.5f);
+                        GUI.DrawString(spriteBatch, limbScreenPos + new Vector2(10, -10), relativeOrigin.FormatDoubleDecimal(), Color.Yellow, Color.Black * 0.5f);
                     }
                     else
                     {
@@ -2086,9 +2082,13 @@ namespace Barotrauma
                         var pullJointWidgetSize = new Vector2(5, 5);
                         Vector2 tformedPullPos = SimToScreen(limb.PullJointWorldAnchorA);
                         GUI.DrawRectangle(spriteBatch, tformedPullPos - pullJointWidgetSize / 2, pullJointWidgetSize, Color.Red, true);
-                        DrawWidget(spriteBatch, tformedPullPos, WidgetType.Rectangle, 8, Color.Cyan, $"IK ({limb.Name})",
-                        () =>
+                        DrawWidget(spriteBatch, tformedPullPos, WidgetType.Rectangle, 8, Color.Cyan, $"IK ({limb.Name})", () =>
                         {
+                            if (!selectedLimbs.Contains(limb))
+                            {
+                                selectedLimbs.Add(limb);
+                                ResetParamsEditor();
+                            }
                             limb.PullJointWorldAnchorA = ScreenToSim(PlayerInput.MousePosition);
                             TryUpdateLimbParam(limb, "pullpos", ConvertUnits.ToDisplayUnits(limb.PullJointLocalAnchorA / limb.limbParams.Ragdoll.LimbScale));
                             GUI.DrawLine(spriteBatch, SimToScreen(limb.SimPosition), tformedPullPos, Color.MediumPurple);
@@ -2171,7 +2171,7 @@ namespace Barotrauma
                                         joint.LocalAnchorA += input;
                                         TryUpdateJointParam(joint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
                                         // Snap all selected joints to the first selected
-                                        if (copyJoints)
+                                        if (copyJointSettings)
                                         {
                                             foreach (var j in selectedJoints)
                                             {
@@ -2185,7 +2185,7 @@ namespace Barotrauma
                                         joint.LocalAnchorB += input;
                                         TryUpdateJointParam(joint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
                                         // Snap all selected joints to the first selected
-                                        if (copyJoints)
+                                        if (copyJointSettings)
                                         {
                                             foreach (var j in selectedJoints)
                                             {
@@ -2377,15 +2377,6 @@ namespace Barotrauma
                     }
                     if (editLimbs)
                     {
-                        if (!lockSpriteOrigin)
-                        {
-                            Color innerColor = selectedLimbs.Contains(limb) ? Color.Yellow : Color.Red;
-                            // Draw the sprite origins
-                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.White, width: 3);
-                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.White, width: 3);
-                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, innerColor);
-                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, innerColor);
-                        }
                         // Draw the source rect widgets
                         int widgetSize = 8;
                         int halfSize = widgetSize / 2;
@@ -2420,6 +2411,12 @@ namespace Barotrauma
                         }
                         if (selectedLimbs.Contains(limb))
                         {
+                            // Draw the sprite origins
+                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.White, width: 3);
+                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.White, width: 3);
+                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.Yellow);
+                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.Yellow);
+
                             if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && isMouseOnRect && selectedWidget == null && GUI.MouseOn == null)
                             {
                                 var input = scaledMouseSpeed / spriteSheetZoom;
@@ -2497,19 +2494,12 @@ namespace Barotrauma
                                     newRect.Height = height;
                                     limb.ActiveSprite.SourceRect = newRect;
                                     limb.ActiveSprite.size = new Vector2(width, height);
-                                    // Also the origin should be adjusted to the new width, so that it will remain at the same position relative to the source rect location.
-                                    limb.ActiveSprite.Origin = new Vector2(origin.X - dx, origin.Y);
+                                    // Refresh the relative origin, so that the origin in pixels will be recalculated
+                                    limb.ActiveSprite.RelativeOrigin = limb.ActiveSprite.RelativeOrigin;
                                     if (limb.DamagedSprite != null)
                                     {
-                                        limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
-                                        limb.DamagedSprite.Origin = limb.ActiveSprite.Origin;
+                                        limb.DamagedSprite.RelativeOrigin = limb.DamagedSprite.RelativeOrigin;
                                     }
-                                    if (character.AnimController.IsFlipped)
-                                    {
-                                        origin.X = Math.Abs(origin.X - newRect.Width);
-                                    }
-                                    var relativeOrigin = new Vector2(origin.X / newRect.Width, origin.Y / newRect.Height);
-                                    TryUpdateLimbParam(limb, "origin", relativeOrigin);
                                     TryUpdateLimbParam(limb, "sourcerect", newRect);
                                     GUI.DrawString(spriteBatch, bottomRight + stringOffset, limb.ActiveSprite.size.FormatZeroDecimal(), Color.Yellow, Color.Black * 0.5f);
                                     if (limbPairEditing)
@@ -2517,13 +2507,12 @@ namespace Barotrauma
                                         UpdateOtherLimbs(limb, otherLimb =>
                                         {
                                             otherLimb.ActiveSprite.SourceRect = newRect;
-                                            otherLimb.ActiveSprite.Origin = relativeOrigin;
+                                            // Refresh the relative origin, so that the origin in pixels will be recalculated
+                                            otherLimb.ActiveSprite.RelativeOrigin = limb.ActiveSprite.RelativeOrigin;
                                             if (otherLimb.DamagedSprite != null)
                                             {
-                                                otherLimb.DamagedSprite.SourceRect = newRect;
-                                                otherLimb.DamagedSprite.Origin = relativeOrigin;
+                                                otherLimb.DamagedSprite.RelativeOrigin = limb.DamagedSprite.RelativeOrigin;
                                             }
-                                            TryUpdateLimbParam(otherLimb, "origin", relativeOrigin);
                                             TryUpdateLimbParam(otherLimb, "sourcerect", newRect);
                                         });
                                     }
@@ -2599,7 +2588,7 @@ namespace Barotrauma
                             joint.LocalAnchorA += input;
                             TryUpdateJointParam(joint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
                             // Snap all selected joints to the first selected
-                            if (copyJoints)
+                            if (copyJointSettings)
                             {
                                 foreach (var j in selectedJoints)
                                 {
@@ -2613,7 +2602,7 @@ namespace Barotrauma
                             joint.LocalAnchorB += input;
                             TryUpdateJointParam(joint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
                             // Snap all selected joints to the first selected
-                            if (copyJoints)
+                            if (copyJointSettings)
                             {
                                 foreach (var j in selectedJoints)
                                 {
@@ -2652,10 +2641,15 @@ namespace Barotrauma
                 joint.UpperLimit = MathHelper.ToRadians(angle);
                 ValidateJoint(joint);
                 TryUpdateJointParam(joint, "upperlimit", angle);
-                if (copyJoints)
+                if (copyJointSettings)
                 {
                     foreach (var j in selectedJoints)
                     {
+                        if (j.LimitEnabled != joint.LimitEnabled)
+                        {
+                            j.LimitEnabled = joint.LimitEnabled;
+                            TryUpdateJointParam(j, "limitenabled", j.LimitEnabled);
+                        }
                         j.UpperLimit = joint.UpperLimit;
                         TryUpdateJointParam(j, "upperlimit", angle);
                     }
@@ -2666,6 +2660,11 @@ namespace Barotrauma
                     {
                         if (IsMatchingLimb(limb, otherLimb, joint, otherJoint))
                         {
+                            if (otherJoint.LimitEnabled != joint.LimitEnabled)
+                            {
+                                otherJoint.LimitEnabled = otherJoint.LimitEnabled;
+                                TryUpdateJointParam(otherJoint, "limitenabled", otherJoint.LimitEnabled);
+                            }
                             otherJoint.UpperLimit = joint.UpperLimit;
                             TryUpdateJointParam(otherJoint, "upperlimit", angle);
                         }
@@ -2680,10 +2679,15 @@ namespace Barotrauma
                 joint.LowerLimit = MathHelper.ToRadians(angle);
                 ValidateJoint(joint);
                 TryUpdateJointParam(joint, "lowerlimit", angle);
-                if (copyJoints)
+                if (copyJointSettings)
                 {
                     foreach (var j in selectedJoints)
                     {
+                        if (j.LimitEnabled != joint.LimitEnabled)
+                        {
+                            j.LimitEnabled = joint.LimitEnabled;
+                            TryUpdateJointParam(j, "limitenabled", j.LimitEnabled);
+                        }
                         j.LowerLimit = joint.LowerLimit;
                         TryUpdateJointParam(j, "lowerlimit", angle);
                     }
@@ -2694,6 +2698,11 @@ namespace Barotrauma
                     {
                         if (IsMatchingLimb(limb, otherLimb, joint, otherJoint))
                         {
+                            if (otherJoint.LimitEnabled != joint.LimitEnabled)
+                            {
+                                otherJoint.LimitEnabled = otherJoint.LimitEnabled;
+                                TryUpdateJointParam(otherJoint, "limitenabled", otherJoint.LimitEnabled);
+                            }
                             otherJoint.LowerLimit = joint.LowerLimit;
                             TryUpdateJointParam(otherJoint, "lowerlimit", angle);
                         }
@@ -3236,7 +3245,7 @@ namespace Barotrauma
                         CanBeFocused = false
                     };
                     var group = new GUILayoutGroup(new RectTransform(Vector2.One, limbElement.RectTransform)) { AbsoluteSpacing = 2 };
-                    var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), $"Limb {id}");
+                    var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), name);
                     var idField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                     var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                     var limbTypeField = GUI.CreateEnumField(limbType, elementSize, "Limb Type", group.RectTransform, font: GUI.Font);
@@ -3252,17 +3261,20 @@ namespace Barotrauma
                             id = numInput.IntValue;
                             string text = nameField.GetChild<GUITextBox>().Text;
                             string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
-                            label.Text = $"Limb {t}";
+                            label.Text = t;
                         }
                     };
                     new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopLeft), "Name");
                     new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), name)
-                        .OnTextChanged += (tB, text) =>
+                    {
+                        CaretColor = Color.White,
+                        OnTextChanged = (tb, text) =>
                         {
                             string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
-                            label.Text = $"Limb {t}";
+                            label.Text = t;
                             return true;
-                        };
+                        }
+                    };
                     LimbGUIElements.Add(limbElement);
                 }
 

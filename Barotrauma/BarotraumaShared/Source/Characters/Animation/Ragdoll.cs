@@ -1406,6 +1406,17 @@ namespace Barotrauma
                 //use simple interpolation for other players' characters and characters that can't move
                 if (character.MemState.Count > 0)
                 {
+                    CharacterStateInfo serverPos = character.MemState.Last();
+                    if (!character.isSynced)
+                    {
+                        SetPosition(serverPos.Position, false);
+                        Collider.LinearVelocity = Vector2.Zero;
+                        character.MemLocalState.Clear();
+                        character.LastNetworkUpdateID = serverPos.ID;
+                        character.isSynced = true;
+                        return;
+                    }
+
                     if (character.MemState[0].Interact == null || character.MemState[0].Interact.Removed)
                     {
                         character.DeselectCharacter();

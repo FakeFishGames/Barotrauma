@@ -99,6 +99,11 @@ namespace Barotrauma
             }
         }
 
+        public object ParentObject
+        {
+            get { return obj; }
+        }
+
         public SerializableProperty(PropertyDescriptor property, object obj)
         {
             this.propertyDescriptor = property;

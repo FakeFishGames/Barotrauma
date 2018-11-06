@@ -124,7 +124,7 @@ namespace Barotrauma.Lights
 
         public void AddLight(LightSource light)
         {
-            lights.Add(light);
+            if (!lights.Contains(light)) lights.Add(light);
         }
 
         public void RemoveLight(LightSource light)
@@ -220,7 +220,7 @@ namespace Barotrauma.Lights
             foreach (LightSource light in activeLights)
             {
                 if (!light.IsBackground) continue;
-                light.DrawSprite(spriteBatch);
+                light.DrawSprite(spriteBatch, cam);
                 light.DrawLightVolume(spriteBatch, lightEffect, transform);
                 backgroundSpritesDrawn = true;
             }
@@ -288,10 +288,10 @@ namespace Barotrauma.Lights
             foreach (LightSource light in activeLights)
             {
                 if (light.IsBackground) continue;
-                light.DrawSprite(spriteBatch);
+                light.DrawSprite(spriteBatch, cam);
             }
             spriteBatch.End();
-                        
+
             //draw characters to obstruct the highlighted items/characters and light sprites
             //---------------------------------------------------------------------------------------------------
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: spriteBatchTransform);

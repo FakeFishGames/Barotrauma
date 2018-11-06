@@ -58,12 +58,12 @@ namespace Barotrauma
             convexHulls = new List<ConvexHull>();
 
             var mergedSections = new List<WallSection>();
-            foreach (var section in sections)
+            foreach (var section in Sections)
             {
                 if (mergedSections.Count > 5)
                 {
-                    int width = isHorizontal ? section.rect.Width : (int)BodyWidth;
-                    int height = isHorizontal ? (int)BodyHeight : section.rect.Height;
+                    int width = IsHorizontal ? section.rect.Width : (int)BodyWidth;
+                    int height = IsHorizontal ? (int)BodyHeight : section.rect.Height;
                     mergedSections.Add(new WallSection(new Rectangle(
                         section.rect.Center.X - width / 2,
                         section.rect.Y - section.rect.Height / 2 + height / 2,
@@ -80,8 +80,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    int width = isHorizontal ? section.rect.Width : (int)BodyWidth;
-                    int height = isHorizontal ? (int)BodyHeight : section.rect.Height;
+                    int width = IsHorizontal ? section.rect.Width : (int)BodyWidth;
+                    int height = IsHorizontal ? (int)BodyHeight : section.rect.Height;
                     mergedSections.Add(new WallSection(new Rectangle(
                         section.rect.Center.X - width / 2,
                         section.rect.Y - section.rect.Height / 2 + height / 2,
@@ -204,7 +204,8 @@ namespace Barotrauma
                         new Vector2(rect.Width, rect.Height),
                         color: color,
                         textureScale: TextureScale,
-                        startOffset: backGroundOffset);
+                        startOffset: backGroundOffset,
+                        scaleMultiplier: Scale);
 
                     prefab.BackgroundSprite.effects = oldEffects;
                 }
@@ -215,12 +216,12 @@ namespace Barotrauma
                 SpriteEffects oldEffects = prefab.sprite.effects;
                 prefab.sprite.effects ^= SpriteEffects;
 
-                for (int i = 0; i < sections.Length; i++)
+                for (int i = 0; i < Sections.Length; i++)
                 {
                     if (damageEffect != null)
                     {
-                        float newCutoff = sections[i].damage > 0 ? 
-                            MathHelper.Lerp(0.2f, 0.65f, sections[i].damage / prefab.Health) : 0.0f;
+                        float newCutoff = Sections[i].damage > 0 ? 
+                            MathHelper.Lerp(0.2f, 0.65f, Sections[i].damage / prefab.Health) : 0.0f;
 
                         if (Math.Abs(newCutoff - Submarine.DamageEffectCutoff) > 0.01f || color != Submarine.DamageEffectColor)
                         {
@@ -236,41 +237,42 @@ namespace Barotrauma
                     }
 
                     Point sectionOffset = new Point(
-                        Math.Abs(rect.Location.X - sections[i].rect.Location.X),
-                        Math.Abs(rect.Location.Y - sections[i].rect.Location.Y));
+                        Math.Abs(rect.Location.X - Sections[i].rect.Location.X),
+                        Math.Abs(rect.Location.Y - Sections[i].rect.Location.Y));
                     
-                    if (FlippedX && isHorizontal) sectionOffset.X = sections[i].rect.Right - rect.Right;
-                    if (FlippedY && !isHorizontal) sectionOffset.Y = (rect.Y - rect.Height) - (sections[i].rect.Y - sections[i].rect.Height);
+                    if (FlippedX && IsHorizontal) sectionOffset.X = Sections[i].rect.Right - rect.Right;
+                    if (FlippedY && !IsHorizontal) sectionOffset.Y = (rect.Y - rect.Height) - (Sections[i].rect.Y - Sections[i].rect.Height);
                     
                     sectionOffset.X += MathUtils.PositiveModulo((int)-textureOffset.X, prefab.sprite.SourceRect.Width);
                     sectionOffset.Y += MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.sprite.SourceRect.Height);
 
                     prefab.sprite.DrawTiled(
                         spriteBatch,
-                        new Vector2(sections[i].rect.X + drawOffset.X, -(sections[i].rect.Y + drawOffset.Y)),
-                        new Vector2(sections[i].rect.Width, sections[i].rect.Height),
+                        new Vector2(Sections[i].rect.X + drawOffset.X, -(Sections[i].rect.Y + drawOffset.Y)),
+                        new Vector2(Sections[i].rect.Width, Sections[i].rect.Height),
                         color: color,
-                        startOffset: sectionOffset, 
+                        startOffset: sectionOffset,
                         depth: depth,
-                        textureScale: TextureScale);
+                        textureScale: TextureScale,
+                        scaleMultiplier: Scale);
                 }
                 prefab.sprite.effects = oldEffects;
             }
 
             if (GameMain.DebugDraw)
             {
-                if (bodies != null && prefab.BodyRotation != 0.0f)
+                if (Bodies != null && prefab.BodyRotation != 0.0f)
                 {
-                    foreach (FarseerPhysics.Dynamics.Body body in bodies)
+                    for (int i = 0; i < Bodies.Count; i++)
                     {
-                        Vector2 pos = FarseerPhysics.ConvertUnits.ToDisplayUnits(body.Position);
+                        Vector2 pos = FarseerPhysics.ConvertUnits.ToDisplayUnits(Bodies[i].Position);
                         if (Submarine != null) pos += Submarine.Position;
                         pos.Y = -pos.Y;
                         GUI.DrawRectangle(spriteBatch,
                             pos,
-                            prefab.BodyWidth > 0.0f ? prefab.BodyWidth : rect.Width,
-                            prefab.BodyHeight > 0.0f ? prefab.BodyHeight : rect.Height,
-                            -body.Rotation, Color.White);
+                            FarseerPhysics.ConvertUnits.ToDisplayUnits(bodyDebugDimensions[i].X),
+                            FarseerPhysics.ConvertUnits.ToDisplayUnits(bodyDebugDimensions[i].Y),
+                            -Bodies[i].Rotation, Color.White);
                     }
                 }
             }

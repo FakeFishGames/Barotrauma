@@ -85,7 +85,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize("1.0,1.0,1.0,1.0", true)]
+        [InGameEditable, Serialize("1.0,1.0,1.0,1.0", true)]
         public Color LightColor
         {
             get { return lightColor; }

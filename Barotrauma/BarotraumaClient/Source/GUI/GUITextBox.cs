@@ -198,7 +198,9 @@ namespace Barotrauma
                     }                    
                 }
 
-                CaretIndex = Text.Length;
+                previousCaretIndex = _caretIndex;
+                _caretIndex = Text.Length;
+                caretPosDirty = true;
             }
         }
         
