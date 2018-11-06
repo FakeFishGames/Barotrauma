@@ -5,7 +5,7 @@
   <!-- head -->
   <limb id = "0" radius="65" type="Head" steerforce="3.0">
     <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="0,0,129,128" depth="0.04"/>
-    <attack type="Hit" range="120" damagerange="70" duration="0.2" damage="50" stun="2" force="10" targetforce="80" structuresoundtype="StructureBlunt">
+    <attack type="Hit" range="120" damagerange="70" duration="0.2" stun="2" force="10" targetforce="80" structuresoundtype="StructureBlunt">
       <Affliction identifier="internaldamage" strength="50"/>
       <Affliction identifier="stun" strength="2"/>
     </attack>

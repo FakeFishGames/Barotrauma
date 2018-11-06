@@ -132,7 +132,7 @@
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
         <sound file="Content/Items/Weapons/stungrenade.ogg" />
-        <Explosion range="500" damage="5" stun="25" force="0.1" smoke="false">
+        <Explosion range="500" stun="25" force="0.1" smoke="false">
           <Affliction identifier="internaldamage" strength="5" />
         </Explosion>
       </StatusEffect>
@@ -153,7 +153,9 @@
         <sound file="Content/Items/Weapons/stungrenade.ogg" />
         <Explosion range="500" stun="25" force="0.1" smoke="false">
           <Affliction identifier="internaldamage" strength="5" />
+          <Affliction identifier="burn" strength="100"/>
         </Explosion>
+        <Fire size="300.0" />
       </StatusEffect>
     </ItemComponent>
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
@@ -161,6 +163,7 @@
         <sound file="Content/Items/Weapons/stungrenade.ogg" />
         <Explosion range="500" stun="1" force="0.1">
           <Affliction identifier="internaldamage" strength="5" />
+          <Affliction identifier="burn" strength="100"/>
         </Explosion>
         <Fire size="300.0" />
       </StatusEffect>

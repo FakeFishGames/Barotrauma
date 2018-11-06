@@ -27,7 +27,7 @@
         <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="5000"/>
         <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" range="5000"/>
         <Explosion range="250.0" structuredamage="10" force="3.0">
-          <Affliction identifier="internaldamage" strength="20"/>
+          <Affliction identifier="burn" strength="5"/>
           <Affliction identifier="stun" strength="5"/>
         </Explosion>
       </StatusEffect>
@@ -58,7 +58,9 @@
         <Conditional Condition="gt 20"/>
         <sound file="Content/Items/Weapons/ExplosionSmall2.ogg" range="5000"/>
         <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" range="5000"/>
-        <Explosion range="280.0" structuredamage="20" damage="30" stun="8" force="3.0"/>
+        <Explosion range="280.0" structuredamage="20" stun="8" force="3.0">
+          <Affliction identifier="burn" strength="10"/>
+        </Explosion>
       </StatusEffect>
     </Holdable>
   </Item> 

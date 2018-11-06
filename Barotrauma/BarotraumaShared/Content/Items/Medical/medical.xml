@@ -37,7 +37,9 @@
     </ItemContainer>
 
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
-      <Attack bleedingdamage="1" structuredamage="1" stun="0.1" targetforce="5"/>
+      <Attack structuredamage="1" stun="0.1" targetforce="5">
+        <Affliction identifier="bleeding" strength="1"/>
+      </Attack>
       <StatusEffect type="OnImpact" target="Contained, Limb" Condition="-100.0" disabledeltatime="true" >
         <sound file="Content/Items/Medical/syringe.ogg" range="500"/>
         <RequiredItem identifiers="chem" type="Contained"/>
@@ -867,24 +869,15 @@
     <Throwable characterusable="false" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true"/>
       <StatusEffect type="OnFire" target="this" condition="-50"/> 
-      <StatusEffect type="OnBroken" target="This" Condition="-100.0">
-        <sound file="Content/Items/Weapons/ExplosionSmall2.ogg" selectionmode="All" range="5000"/>
-        <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" selectionmode="All" range="5000"/>
-        <Explosion range="500" force="0.1">
-          <Affliction identifier="burn" amount="5"/>
-          <Affliction identifier="stun" amount="3"/>
-        </Explosion>
-      </StatusEffect>
-      <StatusEffect type="OnUse" target="This" Condition="-100.0">
-        <sound file="Content/Items/Weapons/ExplosionSmall2.ogg" selectionmode="All" range="5000"/>
-        <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" selectionmode="All" range="5000"/>
-        <Explosion range="500" force="0.1">
-          <Affliction identifier="burn" amount="5"/>
-          <Affliction identifier="stun" amount="3"/>
-        </Explosion>
-      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" Condition="-100.0"/>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Weapons/ExplosionSmall2.ogg" selectionmode="All" range="5000"/>
+        <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" selectionmode="All" range="5000"/>
+        <Explosion range="500" force="0.1">
+          <Affliction identifier="burn" amount="5"/>
+          <Affliction identifier="stun" amount="3"/>
+        </Explosion>
         <Remove/>
       </StatusEffect>
     </Throwable>
