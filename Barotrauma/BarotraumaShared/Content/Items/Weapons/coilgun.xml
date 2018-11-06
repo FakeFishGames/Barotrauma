@@ -33,7 +33,7 @@
       <RequiredSkill identifier="mechanical" level="40"/>
       <RequiredItem identifier="wrench" type="Equipped"/>
     </Repairable>
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="6" itempos="90,-100" iteminterval="0,0" itemrotation="0" canbeselected="true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="6" itempos="40,-90" iteminterval="0,0" itemrotation="0" canbeselected="true">
       <Containable identifiers="coilgunammobox" />
       <!-- when the coilgun is fired, it triggers this statuseffect, causing contained ammunition boxes to spawn new ammo -->
       <StatusEffect type="OnUse" target="Contained">
