@@ -78,6 +78,22 @@ namespace Barotrauma.Items.Components
             {
                 CreateHUD();
             }
+
+            float distort = 1.0f - item.Condition / 100.0f;
+            foreach (HullData hullData in hullDatas.Values)
+            {
+                hullData.DistortionTimer -= deltaTime;
+                if (hullData.DistortionTimer <= 0.0f)
+                {
+                    hullData.Distort = Rand.Range(0.0f, 1.0f) < distort * distort;
+                    if (hullData.Distort)
+                    {
+                        hullData.Oxygen = Rand.Range(0.0f, 100.0f);
+                        hullData.Water = Rand.Range(0.0f, 1.0f);
+                    }
+                    hullData.DistortionTimer = Rand.Range(1.0f, 10.0f);
+                }
+            }
         }
 
         private void DrawHUDBack(SpriteBatch spriteBatch, GUICustomComponent container)
@@ -103,6 +119,18 @@ namespace Barotrauma.Items.Components
                 if (hullFrame == null) continue;
 
                 hullDatas.TryGetValue(hull, out HullData hullData);
+                if (hullData == null)
+                {
+                    hullData = new HullData();
+                    hullDatas.Add(hull, hullData);
+                }
+
+                if (hullData.Distort)
+                {
+                    hullFrame.Children.First().Color = Color.Lerp(Color.Black, Color.DarkGray * 0.5f, Rand.Range(0.0f, 1.0f));
+                    hullFrame.Color = Color.DarkGray * 0.5f;
+                    continue;
+                }
                 
                 subs.Add(hull.Submarine);
                 scale = Math.Min(
