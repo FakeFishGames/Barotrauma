@@ -167,10 +167,11 @@ namespace Barotrauma
                 {
                     Widget.EnableMultiSelect = false;
                 }
-                if (PlayerInput.KeyHit(Keys.C))
-                {
-                    copyJointsToggle.Selected = !copyJointsToggle.Selected;
-                }
+                // Conflicts with ctrl + c
+                //if (PlayerInput.KeyHit(Keys.C))
+                //{
+                //    copyJointsToggle.Selected = !copyJointsToggle.Selected;
+                //}
                 if (PlayerInput.KeyHit(Keys.T) || PlayerInput.KeyHit(Keys.X))
                 {
                     animTestPoseToggle.Selected = !animTestPoseToggle.Selected;
