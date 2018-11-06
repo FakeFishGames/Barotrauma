@@ -1,5 +1,5 @@
 ﻿<CrawlerSwimSlow
-  movementspeed="2"
+  movementspeed="6"
   steertorque="20"
   waveamplitude="0.04"
   wavelength="30"
