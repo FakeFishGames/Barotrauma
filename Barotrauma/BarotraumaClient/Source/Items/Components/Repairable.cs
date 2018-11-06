@@ -8,12 +8,14 @@ namespace Barotrauma.Items.Components
 {
     partial class Repairable : ItemComponent
     {
-        private GUIButton optimizeButton;
+        private GUIButton repairButton;
         private GUIProgressBar progressBar;
 
         private List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
         //the corresponding particle emitter is active when the condition is within this range
         private List<Vector2> particleEmitterConditionRanges = new List<Vector2>();
+
+        private string repairButtonText, repairingText;
 
         [Serialize("", false)]
         public string Description
@@ -24,12 +26,13 @@ namespace Barotrauma.Items.Components
         
         public override bool ShouldDrawHUD(Character character)
         {
-            return item.Condition < ShowRepairUIThreshold && HasRequiredItems(character, false);
+            if (!HasRequiredItems(character, false)) return false;
+            return (item.Condition < ShowRepairUIThreshold || (currentFixer == character && item.Condition < item.Prefab.Health));
         }
 
         partial void InitProjSpecific(XElement element)
         {
-            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), GuiFrame.RectTransform, Anchor.Center))
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), GuiFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
             {
                 Stretch = true,
                 RelativeSpacing = 0.05f
@@ -55,8 +58,10 @@ namespace Barotrauma.Items.Components
             progressBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform), 
                 color: Color.Green, barSize: 0.0f);
 
-            optimizeButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.TopCenter),
-                TextManager.Get("RepairButton"))
+            repairButtonText = TextManager.Get("RepairButton");
+            repairingText = TextManager.Get("Repairing");
+            repairButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.TopCenter),
+                repairButtonText)
             {
                 OnClicked = (btn, obj) =>
                 {
@@ -96,13 +101,16 @@ namespace Barotrauma.Items.Components
         {
             IsActive = true;
 
-            progressBar.BarSize = repairProgress;
-            progressBar.Color = repairProgress < 0.5f ?
-                Color.Lerp(Color.Red, Color.Orange, repairProgress * 2.0f) :
-                Color.Lerp(Color.Orange, Color.Green, (repairProgress - 0.5f) * 2.0f);
+            progressBar.BarSize = item.Condition / item.Prefab.Health;
+            progressBar.Color = ToolBox.GradientLerp(item.Condition / item.Prefab.Health, Color.Red, Color.Orange, Color.Green);
 
-            optimizeButton.Enabled = true;
-            foreach (GUIComponent c in GuiFrame.Children)
+            repairButton.Enabled = currentFixer == null;
+            repairButton.Text = currentFixer == null ? 
+                repairButtonText : 
+                repairingText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
+
+            System.Diagnostics.Debug.Assert(GuiFrame.GetChild(0) is GUILayoutGroup, "Repair UI hierarchy has changed, could not find skill texts");
+            foreach (GUIComponent c in GuiFrame.GetChild(0).Children)
             {
                 Skill skill = c.UserData as Skill;
                 if (skill == null) continue;
@@ -111,7 +119,6 @@ namespace Barotrauma.Items.Components
                 if (character.GetSkillLevel(skill.Identifier) < skill.Level)
                 {
                     textBlock.TextColor = Color.Red;
-                    optimizeButton.Enabled = false;
                 }
                 else
                 {
