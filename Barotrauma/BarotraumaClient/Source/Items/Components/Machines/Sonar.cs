@@ -180,9 +180,10 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
+            float distort = 1.0f - item.Condition / 100.0f;
             for (int i = sonarBlips.Count - 1; i >= 0; i--)
             {
-                sonarBlips[i].FadeTimer -= deltaTime * 0.5f;
+                sonarBlips[i].FadeTimer -= deltaTime * MathHelper.Lerp(0.5f, 2.0f, distort);
                 sonarBlips[i].Position += sonarBlips[i].Velocity * deltaTime;
 
                 if (sonarBlips[i].FadeTimer <= 0.0f) sonarBlips.RemoveAt(i);
@@ -756,9 +757,14 @@ namespace Barotrauma.Items.Components
         private void DrawBlip(SpriteBatch spriteBatch, SonarBlip blip, Vector2 transducerPos, Vector2 center, float strength)
         {
             strength = MathHelper.Clamp(strength, 0.0f, 1.0f);
+
+            float distort = 1.0f - item.Condition / 100.0f;
             
             Vector2 pos = (blip.Position - transducerPos) * displayScale * zoom;
             pos.Y = -pos.Y;
+
+            if (Rand.Range(0.5f, 2.0f) < distort) pos.X = -pos.X;
+            if (Rand.Range(0.5f, 2.0f) < distort) pos.Y = -pos.Y;
 
             float posDistSqr = pos.LengthSquared();
             if (posDistSqr > displayRadius * displayRadius)
