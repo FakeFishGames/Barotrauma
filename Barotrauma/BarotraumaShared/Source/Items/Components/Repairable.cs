@@ -14,12 +14,7 @@ namespace Barotrauma.Items.Components
         private string header;
         
         private float lastSentProgress;
-
-        public bool Fixed
-        {
-            get { return repairProgress >= 1.0f; }
-        }
-
+        
         private float fixDurationLowSkill, fixDurationHighSkill;
 
         private float deteriorationTimer;
@@ -59,7 +54,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        private float repairProgress;
+        /*private float repairProgress;
         public float RepairProgress
         {
             get { return repairProgress; }
@@ -68,7 +63,7 @@ namespace Barotrauma.Items.Components
                 repairProgress = MathHelper.Clamp(value, 0.0f, 1.0f);
                 if (repairProgress >= 1.0f && currentFixer != null) currentFixer.AnimController.Anim = AnimController.Animation.None;
             }
-        }
+        }*/
         
         private Character currentFixer;
         public Character CurrentFixer
@@ -134,11 +129,6 @@ namespace Barotrauma.Items.Components
                     {
                         item.Condition -= DeteriorationSpeed * deltaTime;
                     }
-
-                    float targetProgress = item.Condition / 100.0f;
-                    repairProgress = targetProgress < repairProgress ? 
-                        Math.Max(targetProgress, repairProgress - deltaTime * 0.1f) :
-                        Math.Min(targetProgress, repairProgress + deltaTime * 0.1f);
                 }
                 return;
             }
@@ -164,28 +154,18 @@ namespace Barotrauma.Items.Components
                      CurrentFixer.WorldPosition + Vector2.UnitY * 100.0f);
             }
 
+            bool wasBroken = item.Condition < item.Prefab.Health;
             float fixDuration = MathHelper.Lerp(fixDurationLowSkill, fixDurationHighSkill, successFactor);
             if (fixDuration <= 0.0f)
             {
-                repairProgress = 1.0f;
+                item.Condition = item.Prefab.Health;
             }
             else
             {
-                RepairProgress += deltaTime / fixDuration;
+                item.Condition += deltaTime / (fixDuration / item.Prefab.Health);
             }
-
-            if (item.Repairables.All(r => r.Fixed))
-            {
-                item.Condition = 100.0f;
-            }
-
-            if (GameMain.Server != null && Math.Abs(RepairProgress - lastSentProgress) > 0.01f)
-            {
-                lastSentProgress = RepairProgress;
-                item.CreateServerEvent(this);
-            }
-
-            if (Fixed)
+            
+            if (wasBroken && item.Condition >= item.Prefab.Health)
             {
                 SteamAchievementManager.OnItemRepaired(item, currentFixer);
             }
@@ -195,19 +175,17 @@ namespace Barotrauma.Items.Components
 
         private void UpdateFixAnimation(Character character)
         {
-            character.AnimController.UpdateUseItem(false, item.SimPosition + Vector2.UnitY * (repairProgress % 0.1f));
+            character.AnimController.UpdateUseItem(false, item.SimPosition + Vector2.UnitY * ((item.Condition / 100.0f) % 0.1f));
         }
 
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
             msg.Write(deteriorationTimer);
-            msg.Write(repairProgress);
         }
 
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
             deteriorationTimer = msg.ReadSingle();
-            repairProgress = msg.ReadSingle();
         }
 
         public void ClientWrite(NetBuffer msg, object[] extraData = null)

@@ -212,10 +212,6 @@ namespace Barotrauma
                     }
 #endif
                     ApplyStatusEffects(ActionType.OnBroken, 1.0f, null);
-                    foreach (Repairable repairable in GetComponents<Repairable>())
-                    {
-                        repairable.RepairProgress = 0.0f;
-                    }
                 }
 
                 SetActiveSprite();

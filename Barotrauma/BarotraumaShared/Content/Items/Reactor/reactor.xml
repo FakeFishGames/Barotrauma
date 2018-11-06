@@ -14,12 +14,6 @@
       <RequiredItem identifier="wrench" type="Equipped"/>
     </Repairable>
 
-    <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="3" fixDurationLowSkill="10" msg="ItemMsgRepairScrewdriver" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.1,0.27" style="ItemUI"/>
-      <RequiredSkill identifier="electrical" level="40"/>
-      <RequiredItem identifier="screwdriver" type="Equipped"/>
-    </Repairable>
-
     <Sprite texture = "reactor.png" sourcerect="0,0,321,192" depth="0.8"/>
 
     <Reactor canbeselected="true" firedelay="10" meltdowndelay="30" maxpoweroutput="10000" fuelconsumptionrate="0.2" vulnerabletoemp="false">
