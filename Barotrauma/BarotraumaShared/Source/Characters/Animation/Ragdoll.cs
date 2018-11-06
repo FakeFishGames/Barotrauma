@@ -323,6 +323,10 @@ namespace Barotrauma
         protected void CreateJoints()
         {
             DebugConsole.Log($"Creating joints from {RagdollParams.Name}.");
+            if (LimbJoints != null)
+            {
+                LimbJoints.ForEach(j => GameMain.World.RemoveJoint(j));
+            }
             LimbJoints = new LimbJoint[RagdollParams.Joints.Count];
             RagdollParams.Joints.ForEach(j => AddJoint(j));
             // Check the joints
