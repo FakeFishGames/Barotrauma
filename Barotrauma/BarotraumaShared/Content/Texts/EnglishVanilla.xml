@@ -744,6 +744,7 @@
   <ConnectionLocked>(Locked)</ConnectionLocked>
   <RequiredRepairSkills>Required skills:</RequiredRepairSkills>
   <RepairButton>Repair</RepairButton>
+  <Repairing>Repairing</Repairing>
 
   <!-- Health interface -->
   <Vitality>Vitality</Vitality>
