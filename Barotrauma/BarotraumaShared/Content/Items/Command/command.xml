@@ -18,10 +18,10 @@
       <sparksound file="Content/Items/Electricity/zap2.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap3.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap4.ogg" range="500" loop="false"/>
-      <LightComponent range="10.0" lightcolor="1.0,1.0,1.0,0.2" powerconsumption="5" IsOn="true" castshadows="false">
+      <LightComponent range="10.0" lightcolor="1.0,1.0,1.0,0.2" powerconsumption="5" IsOn="true" castshadows="false" allowingameediting="false">
         <sprite texture="Content/Items/Command/navigatorLights.png" depth="0.025" origin="0.5,0.5" alpha="1.0"/>
       </LightComponent>
-      <LightComponent range="10.0" lightcolor="1.0,1.0,1.0,0.5" powerconsumption="5" IsOn="true" castshadows="false" blinkfrequency="1">
+      <LightComponent range="10.0" lightcolor="1.0,1.0,1.0,0.5" powerconsumption="5" IsOn="true" castshadows="false" blinkfrequency="1" allowingameediting="false">
         <sprite texture="Content/Items/Command/navigatorLightsBlinking.png" depth="0.025" origin="0.5,0.5" alpha="1.0"/>
       </LightComponent>
     </Steering>
