@@ -11,6 +11,9 @@ namespace Barotrauma.Items.Components
         {
             public float? Oxygen;
             public float? Water;
+
+            public bool Distort;
+            public float DistortionTimer;
         }
         
         private DateTime resetDataTime;
@@ -56,7 +59,14 @@ namespace Barotrauma.Items.Components
             //(so that outdated hull info won't be shown if detectors stop sending signals)
             if (DateTime.Now > resetDataTime)
             {
-                hullDatas.Clear();
+                foreach (HullData hullData in hullDatas.Values)
+                {
+                    if (!hullData.Distort)
+                    {
+                        hullData.Oxygen = null;
+                        hullData.Water = null;
+                    }
+                }
                 resetDataTime = DateTime.Now + new TimeSpan(0, 0, 1);
             }
 
@@ -89,6 +99,8 @@ namespace Barotrauma.Items.Components
                 hullData = new HullData();
                 hullDatas.Add(sourceHull, hullData);
             }
+
+            if (hullData.Distort) return;
 
             switch (connection.Name)
             {
