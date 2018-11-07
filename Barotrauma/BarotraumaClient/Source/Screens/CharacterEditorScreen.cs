@@ -604,6 +604,11 @@ namespace Barotrauma
         {
             // TODO: copy all params and sub params -> use a generic method?
             var rect = limb.ActiveSprite.SourceRect;
+            var spriteParams = limb.limbParams.normalSpriteParams;
+            if (spriteParams == null)
+            {
+                spriteParams = limb.limbParams.deformSpriteParams;
+            }
             var newLimbElement = new XElement("limb",
                 new XAttribute("id", RagdollParams.Limbs.Last().ID + 1),
                 new XAttribute("radius", limb.limbParams.Radius),
@@ -611,7 +616,7 @@ namespace Barotrauma
                 new XAttribute("height", limb.limbParams.Height),
                 new XAttribute("mass", limb.limbParams.Mass),
                 new XElement("sprite",
-                    new XAttribute("texture", limb.limbParams.normalSpriteParams.Texture),
+                    new XAttribute("texture", spriteParams.Texture),
                     new XAttribute("sourcerect", $"{rect.X}, {rect.Y}, {rect.Size.X}, {rect.Size.Y}"))
                 );
             var lastLimbElement = RagdollParams.MainElement.Elements("limb").Last();
