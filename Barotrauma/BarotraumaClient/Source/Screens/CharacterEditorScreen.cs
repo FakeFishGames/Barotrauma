@@ -536,16 +536,23 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Creates a new joint between the last limb of the selected joint and the limb closest to the cursor.
+        /// Creates a new joint between the last limb of the given joint and the target limb.
         /// </summary>
         private void ExtrudeJoint(LimbJoint joint, int targetLimb, Vector2? anchor1 = null, Vector2? anchor2 = null)
         {
-            int limb1 = joint.jointParams.Limb2;
+            CreateJoint(joint.jointParams.Limb2, targetLimb, anchor1, anchor2);
+        }
+
+        /// <summary>
+        /// Creates a new joint using the limb IDs.
+        /// </summary>
+        private void CreateJoint(int fromLimb, int toLimb, Vector2? anchor1 = null, Vector2? anchor2 = null)
+        {
             Vector2 a1 = anchor1 ?? Vector2.Zero;
             Vector2 a2 = anchor2 ?? Vector2.Zero;
             var newJointElement = new XElement("joint",
-                new XAttribute("limb1", limb1),
-                new XAttribute("limb2", targetLimb),
+                new XAttribute("limb1", fromLimb),
+                new XAttribute("limb2", toLimb),
                 new XAttribute("limb1anchor", $"{a1.X.Format(2)}, {a1.Y.Format(2)}"),
                 new XAttribute("limb2anchor", $"{a2.X.Format(2)}, {a2.Y.Format(2)}")
                 );
