@@ -1573,8 +1573,8 @@ namespace Barotrauma
             if (canFocus)
             {
                 focusedCharacter = FindCharacterAtPosition(mouseSimPos);
-                //TODO: allow players to change the amount of aim assist?
-                focusedItem = CanInteract ? FindItemAtPosition(mouseSimPos, AnimController.InWater ? 0.6f : 0.3f) : null;
+                focusedItem = CanInteract ? 
+                    FindItemAtPosition(mouseSimPos, GameMain.Config.AimAssistAmount * (AnimController.InWater ? 1.5f : 1.0f)) : null;
                 
                 findFocusedTimer = 0.05f;
             }

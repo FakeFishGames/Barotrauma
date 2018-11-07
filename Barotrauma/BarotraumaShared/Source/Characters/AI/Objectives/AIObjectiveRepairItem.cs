@@ -21,7 +21,7 @@ namespace Barotrauma
             float priority = 100.0f - item.Condition;
             foreach (Repairable repairable in item.Repairables)
             {
-                if (repairable.Fixed) continue;
+                if (item.Condition > repairable.ShowRepairUIThreshold) continue;
                 //preference over items this character is good at fixing
                 priority *= Math.Max(repairable.DegreeOfSuccess(character), 0.1f);
             }
@@ -36,9 +36,9 @@ namespace Barotrauma
         {
             foreach (Repairable repairable in item.GetComponents<Repairable>())
             {
-                if (!repairable.Fixed) return false;
+                if (item.Condition < repairable.ShowRepairUIThreshold) return false;
             }
-
+            
             character?.Speak(TextManager.Get("DialogItemRepaired").Replace("[itemname]", item.Name), null, 0.0f, "itemrepaired", 10.0f);
             return true;
         }
@@ -50,12 +50,12 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            foreach (Repairable fixRequirement in item.Repairables)
+            foreach (Repairable repairable in item.Repairables)
             {
-                if (fixRequirement.Fixed) continue;
+                if (item.Condition > repairable.ShowRepairUIThreshold) continue;
                 
                 //make sure we have all the items required to fix the target item
-                foreach (var kvp in fixRequirement.requiredItems)
+                foreach (var kvp in repairable.requiredItems)
                 {
                     foreach (RelatedItem requiredItem in kvp.Value)
                     {
@@ -70,11 +70,11 @@ namespace Barotrauma
 
             if (character.CanInteractWith(item))
             {
-                foreach (Repairable fixRequirement in item.Repairables)
+                foreach (Repairable repairable in item.Repairables)
                 {
-                    if (fixRequirement.Fixed) continue;
+                    if (item.Condition > repairable.ShowRepairUIThreshold) continue;
                     if (character.SelectedConstruction != item) item.TryInteract(character, true, true);
-                    fixRequirement.CurrentFixer = character;
+                    repairable.CurrentFixer = character;
                     break;
                 }
             }

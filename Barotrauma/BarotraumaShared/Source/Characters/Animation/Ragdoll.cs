@@ -279,7 +279,7 @@ namespace Barotrauma
         /// <summary>
         /// Call this to create the ragdoll from the RagdollParams.
         /// </summary>
-        public void Recreate(RagdollParams ragdollParams)
+        public virtual void Recreate(RagdollParams ragdollParams)
         {
             if (IsFlipped)
             {
@@ -323,6 +323,10 @@ namespace Barotrauma
         protected void CreateJoints()
         {
             DebugConsole.Log($"Creating joints from {RagdollParams.Name}.");
+            if (LimbJoints != null)
+            {
+                LimbJoints.ForEach(j => GameMain.World.RemoveJoint(j));
+            }
             LimbJoints = new LimbJoint[RagdollParams.Joints.Count];
             RagdollParams.Joints.ForEach(j => AddJoint(j));
             // Check the joints
@@ -379,10 +383,11 @@ namespace Barotrauma
 
         /// <summary>
         /// Resets the serializable data to the currently selected ragdoll params.
+        /// Force reloading always loads the xml stored in the disk.
         /// </summary>
-        public void ResetRagdoll()
+        public void ResetRagdoll(bool forceReload = false)
         {
-            RagdollParams.Reset();
+            RagdollParams.Reset(forceReload);
             ResetJoints();
             ResetLimbs();
         }

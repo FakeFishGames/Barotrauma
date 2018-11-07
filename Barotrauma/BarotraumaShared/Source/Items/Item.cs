@@ -83,9 +83,11 @@ namespace Barotrauma
         {
             get
             {
-                if (hasInGameEditableProperties==null)
+                if (hasInGameEditableProperties == null)
                 {
-                    hasInGameEditableProperties = GetProperties<InGameEditable>().Any();
+                    var inGameEditableProperties = GetProperties<InGameEditable>();
+                    hasInGameEditableProperties = inGameEditableProperties.Any(p =>
+                        !(p.ParentObject is ItemComponent) || ((ItemComponent)p.ParentObject).AllowInGameEditing);
                 }
                 return (bool)hasInGameEditableProperties;
             }
@@ -212,10 +214,6 @@ namespace Barotrauma
                     }
 #endif
                     ApplyStatusEffects(ActionType.OnBroken, 1.0f, null);
-                    foreach (Repairable repairable in GetComponents<Repairable>())
-                    {
-                        repairable.RepairProgress = 0.0f;
-                    }
                 }
                 
                 SetActiveSprite();

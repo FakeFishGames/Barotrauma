@@ -162,9 +162,17 @@ namespace Barotrauma
         public Attack(XElement element, string parentDebugName)
         {
             SerializableProperty.DeserializeProperties(this, element);
-                                                            
+
+            if (element.Attribute("damage") != null ||
+                element.Attribute("bluntdamage") != null ||
+                element.Attribute("burndamage") != null ||
+                element.Attribute("bleedingdamage") != null)
+            {
+                DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - Define damage as afflictions instead of using the damage attribute (e.g. <Affliction identifier=\"internaldamage\" strength=\"10\" />).");
+            }
+
             DamageRange = element.GetAttributeFloat("damagerange", Range);
-            
+
             InitProjSpecific(element);
 
             string limbIndicesStr = element.GetAttributeString("applyforceonlimbs", "");
@@ -173,8 +181,7 @@ namespace Barotrauma
                 ApplyForceOnLimbs = new List<int>();
                 foreach (string limbIndexStr in limbIndicesStr.Split(','))
                 {
-                    int limbIndex;
-                    if (int.TryParse(limbIndexStr, out limbIndex))
+                    if (int.TryParse(limbIndexStr, out int limbIndex))
                     {
                         ApplyForceOnLimbs.Add(limbIndex);
                     }
