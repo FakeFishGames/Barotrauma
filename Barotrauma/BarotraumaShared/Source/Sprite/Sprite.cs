@@ -154,9 +154,9 @@ namespace Barotrauma
             Init(newFile, newOrigin: newOrigin, preMultiplyAlpha: preMultiplyAlpha);
         }
         
-        public Sprite(string newFile, Rectangle? sourceRectangle, Vector2? newOffset = null, float newRotation = 0, bool preMultiplyAlpha = true)
+        public Sprite(string newFile, Rectangle? sourceRectangle, Vector2? origin = null, float rotation = 0, bool preMultiplyAlpha = true)
         {
-            Init(newFile, sourceRectangle: sourceRectangle, newOffset: newOffset, newRotation: newRotation, preMultiplyAlpha: preMultiplyAlpha);
+            Init(newFile, sourceRectangle: sourceRectangle, newOrigin: origin, newRotation: rotation, preMultiplyAlpha: preMultiplyAlpha);
         }
         
         private void Init(string newFile, Rectangle? sourceRectangle = null, Vector2? newOrigin = null, Vector2? newOffset = null, float newRotation = 0, 
