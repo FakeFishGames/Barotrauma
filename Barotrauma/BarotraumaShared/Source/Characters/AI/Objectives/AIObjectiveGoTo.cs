@@ -20,8 +20,13 @@ namespace Barotrauma
 
         public float CloseEnough = 0.5f;
 
+        public bool IgnoreIfTargetDead;
+
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
+            if (target != null && target.Removed) return 0.0f;
+            if (IgnoreIfTargetDead && target is Character character && character.IsDead) return 0.0f;
+                        
             if (objectiveManager.CurrentOrder == this)
             {
                 return AIObjectiveManager.OrderPriority;
@@ -34,6 +39,8 @@ namespace Barotrauma
         {
             get
             {
+                if (target != null && target.Removed) return false;
+
                 if (repeat || waitUntilPathUnreachable > 0.0f) return true;
                 var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
 
@@ -137,9 +144,8 @@ namespace Barotrauma
             bool completed = false;
 
             float allowedDistance = 0.5f;
-            var item = target as Item;
 
-            if (item != null)
+            if (target is Item item)
             {
                 allowedDistance = Math.Max(ConvertUnits.ToSimUnits(item.InteractDistance), allowedDistance);
                 if (item.IsInsideTrigger(character.WorldPosition)) completed = true;
