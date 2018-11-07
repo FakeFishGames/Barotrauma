@@ -276,6 +276,7 @@
   <Warning>Warning</Warning>
   <Unknown>Unknown</Unknown>
   <None>None</None>
+  <Any>Any</Any>
   <Close>Close</Close>
   <Cancel>Cancel</Cancel>
   <Done>Done</Done>

@@ -42,12 +42,16 @@ namespace Barotrauma
 
             if (slotSpriteSmall == null)
             {
+                //TODO: define these in xml
                 slotSpriteSmall = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(532, 395, 75, 71), null, 0);
                 slotSpriteVertical = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(672, 218, 75, 144), null, 0);
                 slotSpriteHorizontal = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(476, 186, 160, 75), null, 0);
                 slotSpriteRound = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(681, 373, 58, 64), null, 0);
-                EquipIndicator = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(673, 182, 73, 27), null, 0);
-                EquipIndicatorOn = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(679, 108, 67, 21), null, 0);
+
+                EquipIndicator = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(673, 182, 73, 27), new Vector2(0.5f, 0.5f), 0);
+                EquipIndicatorHighlight = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(679, 108, 67, 21), new Vector2(0.5f, 0.5f), 0);
+                DropIndicator = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(870, 55, 73, 66), new Vector2(0.5f, 0.75f), 0);
+                DropIndicatorHighlight = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(946, 54, 73, 66), new Vector2(0.5f, 0.75f), 0);
             }
 #endif
         }
@@ -175,23 +179,27 @@ namespace Barotrauma
         {
             if (item?.ParentInventory == null || Items[index] == null) return false;
 
+            //swap to InvSlotType.Any if possible
             Inventory otherInventory = item.ParentInventory;
-            int otherIndex = Array.IndexOf(otherInventory.Items, item);
+            int otherIndex = -1;
+            for (int i = 0; i < otherInventory.Items.Length; i++)
+            {
+                if (otherInventory.Items[i] != item) continue;
+                if (otherInventory is CharacterInventory characterInventory)
+                {
+                    if (characterInventory.SlotTypes[i] == InvSlotType.Any)
+                    {
+                        otherIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            if (otherIndex == -1) otherIndex = Array.IndexOf(otherInventory.Items, item);
             Item existingItem = Items[index];
-            
+
             for (int j = 0; j < otherInventory.capacity; j++)
             {
-                /*if (character.HasEquippedItem(existingItem) && existingItem.AllowedSlots.Contains(InvSlotType.Any))
-                {
-                    for (int i = 0; i < capacity; i++)
-                    {
-                        if (Items[i] == existingItem && SlotTypes[i] != InvSlotType.Any)
-                        {
-                            Items[i] = null;
-                        }
-                    }
-                }*/
-
                 if (otherInventory.Items[j] == item) otherInventory.Items[j] = null;
             }
             for (int j = 0; j < capacity; j++)

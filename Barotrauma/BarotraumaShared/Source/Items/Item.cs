@@ -245,8 +245,13 @@ namespace Barotrauma
                 prefab.Tags.ForEach(t => tags.Add(t));
                 if (!string.IsNullOrWhiteSpace(value))
                 {
-                    // Process and add new tags
-                    value.Split(',').ForEach(t => tags.Add(t.ToLowerInvariant().Trim()));
+                    string[] splitTags = value.Split(',');
+                    foreach (string tag in splitTags)
+                    {
+                        string[] splitTag = tag.Split(':');
+                        splitTag[0] = splitTag[0].ToLowerInvariant();
+                        tags.Add(string.Join(":", splitTag));
+                    }
                 }
             }
         }

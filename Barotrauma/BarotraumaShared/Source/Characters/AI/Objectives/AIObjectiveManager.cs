@@ -13,6 +13,11 @@ namespace Barotrauma
         private Character character;
 
         private AIObjective currentOrder;
+
+        /// <summary>
+        /// When set above zero, the character will stand still doing nothing until the timer runs out (assuming they don't a high priority order active)
+        /// </summary>
+        public float WaitTimer;
         
         public AIObjective CurrentOrder
         {
@@ -81,6 +86,14 @@ namespace Barotrauma
         public void DoCurrentObjective(float deltaTime)
         {
             CurrentObjective = GetCurrentObjective();
+
+            if (CurrentObjective == null || (CurrentObjective.GetPriority(this) < OrderPriority && WaitTimer > 0.0f))
+            {
+                WaitTimer -= deltaTime;
+                character.AIController.SteeringManager.Reset();
+                return;
+            }
+
             CurrentObjective?.TryComplete(deltaTime);
         }
 
@@ -94,7 +107,8 @@ namespace Barotrauma
                 case "follow":
                     currentOrder = new AIObjectiveGoTo(orderGiver, character, true)
                     {
-                        CloseEnough = 1.5f
+                        CloseEnough = 1.5f,
+                        IgnoreIfTargetDead = true
                     };
                     break;
                 case "wait":
