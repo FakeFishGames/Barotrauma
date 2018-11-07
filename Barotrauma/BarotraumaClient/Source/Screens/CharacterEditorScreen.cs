@@ -53,6 +53,11 @@ namespace Barotrauma
         private bool displayBackgroundColor;
         private bool ragdollResetRequiresForceLoading;
 
+        private bool isExtrudingJoint;
+        private bool isDrawingJoint;
+        private Limb targetLimb;
+        private Vector2? anchor1Pos;
+
         private float spriteSheetZoom = 1;
         private int spriteSheetOffsetY = 100;
         private int spriteSheetOffsetX = (int)(GameMain.GraphicsWidth * 0.6f);
@@ -64,6 +69,13 @@ namespace Barotrauma
         private float spriteSheetOrientation;
 
         private bool isEndlessRunner;
+
+        private Rectangle GetSpritesheetRectangle => 
+            new Rectangle(
+                spriteSheetOffsetX, 
+                spriteSheetOffsetY, 
+                (int)(Textures.OrderByDescending(t => t.Width).First().Width * spriteSheetZoom), 
+                (int)(Textures.Sum(t => t.Height) * spriteSheetZoom));
 
         public override void Select()
         {
@@ -263,18 +275,7 @@ namespace Barotrauma
                         }
                     }
                 }
-                if (editJoints && PlayerInput.KeyDown(Keys.LeftControl) && PlayerInput.KeyDown(Keys.LeftAlt))
-                {
-                    // todo draw selection in the draw method
-                    var selectedJoint = selectedJoints.FirstOrDefault();
-                    if (selectedJoint != null)
-                    {
-                        if (PlayerInput.LeftButtonClicked())
-                        {
-                            ExtrudeJoint(selectedJoint);
-                        }
-                    }
-                }
+                UpdateJointCreation();
             }
             if (!isFreezed)
             {
@@ -397,6 +398,51 @@ namespace Barotrauma
             {
                 DrawSpritesheetEditor(spriteBatch, (float)deltaTime);
             }
+            if (isExtrudingJoint)
+            {
+                var selectedJoint = selectedJoints.FirstOrDefault();
+                if (selectedJoint != null)
+                {
+                    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 120, GameMain.GraphicsHeight / 5), "Creating a new joint", Color.White, font: GUI.LargeFont);
+                    if (GetSpritesheetRectangle.Contains(PlayerInput.MousePosition))
+                    {
+                        var startPos = GetLimbSpritesheetRect(selectedJoint.LimbB).Center.ToVector2();
+                        var offset = ConvertUnits.ToDisplayUnits(selectedJoint.LocalAnchorB) * spriteSheetZoom;
+                        offset.Y = -offset.Y;
+                        DrawJointCreationOnSpritesheet(spriteBatch, startPos + offset);
+                    }
+                    else
+                    {
+                        DrawJointCreationOnRagdoll(spriteBatch, SimToScreen(selectedJoint.WorldAnchorB));
+                    }
+                }
+            }
+            else if (isDrawingJoint)
+            {
+                var selectedLimb = selectedLimbs.FirstOrDefault();
+                if (selectedLimb != null)
+                {
+                    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 120, GameMain.GraphicsHeight / 5), "Creating a new joint", Color.White, font: GUI.LargeFont);
+                    if (GetSpritesheetRectangle.Contains(PlayerInput.MousePosition))
+                    {
+                        var startPos = GetLimbSpritesheetRect(selectedLimb).Center.ToVector2();
+                        if (anchor1Pos.HasValue)
+                        {
+                            var offset = anchor1Pos.Value;
+                            offset = -offset;
+                            startPos += offset;
+                        }
+                        DrawJointCreationOnSpritesheet(spriteBatch, startPos);
+                    }
+                    else
+                    {
+                        var startPos = anchor1Pos.HasValue
+                            ? SimToScreen(selectedLimb.SimPosition + Vector2.Transform(ConvertUnits.ToSimUnits(anchor1Pos.Value), Matrix.CreateRotationZ(selectedLimb.Rotation)))
+                            : SimToScreen(selectedLimb.SimPosition);
+                        DrawJointCreationOnRagdoll(spriteBatch, startPos);
+                    }
+                }
+            }
             if (isEndlessRunner)
             {
                 Structure wall = CurrentWall.walls.FirstOrDefault();
@@ -468,10 +514,101 @@ namespace Barotrauma
         #endregion
 
         #region Ragdoll Manipulation
+        private void UpdateJointCreation()
+        {
+            bool ctrlAlt = PlayerInput.KeyDown(Keys.LeftControl) && PlayerInput.KeyDown(Keys.LeftAlt);
+            isExtrudingJoint = !editLimbs && editJoints && ctrlAlt;
+            isDrawingJoint = !editJoints && editLimbs && ctrlAlt;
+            if (isExtrudingJoint)
+            {
+                var selectedJoint = selectedJoints.FirstOrDefault();
+                if (selectedJoint != null)
+                {
+                    if (GetSpritesheetRectangle.Contains(PlayerInput.MousePosition))
+                    {
+                        targetLimb = GetClosestLimbOnSpritesheet(PlayerInput.MousePosition, l => l != null && l != selectedJoint.LimbB && l.ActiveSprite != null);
+                        if (targetLimb != null && PlayerInput.LeftButtonClicked())
+                        {
+                            Vector2 anchor1 = ConvertUnits.ToDisplayUnits(selectedJoint.LocalAnchorB);
+                            Vector2 anchor2 = (GetLimbSpritesheetRect(targetLimb).Center.ToVector2() - PlayerInput.MousePosition) / spriteSheetZoom;
+                            anchor2.X = -anchor2.X;
+                            ExtrudeJoint(selectedJoint, targetLimb.limbParams.ID, anchor1, anchor2);
+                        }
+                    }
+                    else
+                    {
+                        targetLimb = GetClosestLimbOnRagdoll(PlayerInput.MousePosition, l => l != null && l != selectedJoint.LimbB && l.ActiveSprite != null);
+                        if (targetLimb != null && PlayerInput.LeftButtonClicked())
+                        {
+                            Vector2 anchor1 = ConvertUnits.ToDisplayUnits(selectedJoint.LocalAnchorB);
+                            Vector2 anchor2 = ConvertUnits.ToDisplayUnits(targetLimb.body.FarseerBody.GetLocalPoint(ScreenToSim(PlayerInput.MousePosition)));
+                            ExtrudeJoint(selectedJoint, targetLimb.limbParams.ID, anchor1, anchor2);
+                        }
+                    }
+                }
+                else
+                {
+                    targetLimb = null;
+                }
+            }
+            else if (isDrawingJoint)
+            {
+                var selectedLimb = selectedLimbs.FirstOrDefault();
+                if (selectedLimb != null)
+                {
+                    if (GetSpritesheetRectangle.Contains(PlayerInput.MousePosition))
+                    {
+                        if (anchor1Pos == null)
+                        {
+                            anchor1Pos = GetLimbSpritesheetRect(selectedLimb).Center.ToVector2() - PlayerInput.MousePosition;
+                        }
+                        targetLimb = GetClosestLimbOnSpritesheet(PlayerInput.MousePosition, l => l != null && l != selectedLimb && l.ActiveSprite != null);
+                        if (targetLimb != null && PlayerInput.LeftButtonClicked())
+                        {
+                            Vector2 anchor1 = anchor1Pos.HasValue ? anchor1Pos.Value / spriteSheetZoom : Vector2.Zero;
+                            anchor1.X = -anchor1.X;
+                            Vector2 anchor2 = (GetLimbSpritesheetRect(targetLimb).Center.ToVector2() - PlayerInput.MousePosition) / spriteSheetZoom;
+                            anchor2.X = -anchor2.X;
+                            CreateJoint(selectedLimb.limbParams.ID, targetLimb.limbParams.ID, anchor1, anchor2);
+                        }
+                    }
+                    else
+                    {
+                        if (anchor1Pos == null)
+                        {
+                            anchor1Pos = ConvertUnits.ToDisplayUnits(selectedLimb.body.FarseerBody.GetLocalPoint(ScreenToSim(PlayerInput.MousePosition)));
+                        }
+                        targetLimb = GetClosestLimbOnRagdoll(PlayerInput.MousePosition, l => l != null && l != selectedLimb && l.ActiveSprite != null);
+                        if (targetLimb != null && PlayerInput.LeftButtonClicked())
+                        {
+                            Vector2 anchor1 = anchor1Pos ?? Vector2.Zero;
+                            Vector2 anchor2 = ConvertUnits.ToDisplayUnits(targetLimb.body.FarseerBody.GetLocalPoint(ScreenToSim(PlayerInput.MousePosition)));
+                            CreateJoint(selectedLimb.limbParams.ID, targetLimb.limbParams.ID, anchor1, anchor2);
+                        }
+                    }
+                }
+                else
+                {
+                    targetLimb = null;
+                    anchor1Pos = null;
+                }
+            }
+            else
+            {
+                targetLimb = null;
+                anchor1Pos = null;
+            }
+        }
+
         private void CopyLimb(Limb limb)
         {
             // TODO: copy all params and sub params -> use a generic method?
             var rect = limb.ActiveSprite.SourceRect;
+            var spriteParams = limb.limbParams.normalSpriteParams;
+            if (spriteParams == null)
+            {
+                spriteParams = limb.limbParams.deformSpriteParams;
+            }
             var newLimbElement = new XElement("limb",
                 new XAttribute("id", RagdollParams.Limbs.Last().ID + 1),
                 new XAttribute("radius", limb.limbParams.Radius),
@@ -479,7 +616,7 @@ namespace Barotrauma
                 new XAttribute("height", limb.limbParams.Height),
                 new XAttribute("mass", limb.limbParams.Mass),
                 new XElement("sprite",
-                    new XAttribute("texture", limb.limbParams.normalSpriteParams.Texture),
+                    new XAttribute("texture", spriteParams.Texture),
                     new XAttribute("sourcerect", $"{rect.X}, {rect.Y}, {rect.Size.X}, {rect.Size.Y}"))
                 );
             var lastLimbElement = RagdollParams.MainElement.Elements("limb").Last();
@@ -495,24 +632,25 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Creates a new joint between the last limb of the selected joint and the limb closest to the cursor.
+        /// Creates a new joint between the last limb of the given joint and the target limb.
         /// </summary>
-        private void ExtrudeJoint(LimbJoint joint)
+        private void ExtrudeJoint(LimbJoint joint, int targetLimb, Vector2? anchor1 = null, Vector2? anchor2 = null)
         {
-            // first limb is the limb 2 of the selected joint
-            int limb1 = joint.jointParams.Limb2;
-            Vector2 anchor1 = Vector2.Zero;
-            Vector2 anchor2 = Vector2.Zero;
-            // second limb is the limb that's closest to the mouse cursor
-            int limb2 = character.AnimController.Limbs
-                .Where(l => l != joint.LimbB)
-                .OrderBy(l => Vector2.Distance(SimToScreen(l.SimPosition), PlayerInput.MousePosition))
-                .First().limbParams.ID;
+            CreateJoint(joint.jointParams.Limb2, targetLimb, anchor1, anchor2);
+        }
+
+        /// <summary>
+        /// Creates a new joint using the limb IDs.
+        /// </summary>
+        private void CreateJoint(int fromLimb, int toLimb, Vector2? anchor1 = null, Vector2? anchor2 = null)
+        {
+            Vector2 a1 = anchor1 ?? Vector2.Zero;
+            Vector2 a2 = anchor2 ?? Vector2.Zero;
             var newJointElement = new XElement("joint",
-                new XAttribute("limb1", limb1),
-                new XAttribute("limb2", limb2),
-                new XAttribute("limb1anchor", $"{anchor1.X.Format(2)}, {anchor1.Y.Format(2)}"),
-                new XAttribute("limb2anchor", $"{anchor2.X.Format(2)}, {anchor2.Y.Format(2)}")
+                new XAttribute("limb1", fromLimb),
+                new XAttribute("limb2", toLimb),
+                new XAttribute("limb1anchor", $"{a1.X.Format(2)}, {a1.Y.Format(2)}"),
+                new XAttribute("limb2anchor", $"{a2.X.Format(2)}, {a2.Y.Format(2)}")
                 );
             var lastJointElement = RagdollParams.MainElement.Elements("joint").Last();
             lastJointElement.AddAfterSelf(newJointElement);
@@ -522,6 +660,7 @@ namespace Barotrauma
             TeleportTo(spawnPosition);
             ClearWidgets();
             selectedJoints.Add(character.AnimController.LimbJoints.Single(j => j.jointParams == newJointParams));
+            jointsToggle.Selected = true;
             ResetParamsEditor();
             ragdollResetRequiresForceLoading = true;
         }
@@ -599,6 +738,7 @@ namespace Barotrauma
             }
             jointsToRemove.ForEach(j => RagdollParams.Joints.Remove(j));
             RecreateRagdoll();
+            ClearWidgets();
             ragdollResetRequiresForceLoading = true;
         }
         #endregion
@@ -910,6 +1050,7 @@ namespace Barotrauma
         private GUIScrollBar limbScaleBar;
         private GUIScrollBar spriteSheetZoomBar;
         private GUITickBox copyJointsToggle;
+        private GUITickBox jointsToggle;
 
         private void CreateGUI()
         {
@@ -1246,8 +1387,8 @@ namespace Barotrauma
             var spritesheetToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Spritesheet") { Selected = showSpritesheet };
             var ragdollToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Ragdoll") { Selected = showRagdoll };
             var editAnimsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Animations") { Selected = editAnimations };       
-            var editLimbsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Limbs") { Selected = this.editLimbs };
-            var jointsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joints") { Selected = editJoints };
+            var editLimbsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Limbs") { Selected = editLimbs };
+            jointsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joints") { Selected = editJoints };
             var ikToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit IK Targets") { Selected = editIK };
             freezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Freeze") { Selected = isFreezed };
             var autoFreezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Auto Freeze") { Selected = autoFreeze };
@@ -1712,6 +1853,8 @@ namespace Barotrauma
                 {
                     RecreateRagdoll();
                     character.AnimController.ResetLimbs();
+                    ClearWidgets();
+                    ResetParamsEditor();
                     return true;
                 }
             };
@@ -1730,7 +1873,7 @@ namespace Barotrauma
         private List<AnimationParams> AnimParams => character.AnimController.AllAnimParams;
         private AnimationParams CurrentAnimation => character.AnimController.CurrentAnimationParams;
         private RagdollParams RagdollParams => character.AnimController.RagdollParams;
-
+        
         private void ResetParamsEditor()
         {
             ParamsEditor.Instance.Clear();
@@ -1774,7 +1917,7 @@ namespace Barotrauma
         {
             if (editableParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
             {
-                editableParams.SerializableEntityEditor.UpdateValue(p, value);
+                editableParams.SerializableEntityEditor?.UpdateValue(p, value);
             }
         }
 
@@ -1785,7 +1928,7 @@ namespace Barotrauma
         {
             if (ragdollSubParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
             {
-                ragdollSubParams.SerializableEntityEditor.UpdateValue(p, value);
+                ragdollSubParams.SerializableEntityEditor?.UpdateValue(p, value);
             }
             else
             {
@@ -1794,7 +1937,7 @@ namespace Barotrauma
                 {
                     if (subParams.SerializableProperties.TryGetValue(name, out p))
                     {
-                        subParams.SerializableEntityEditor.UpdateValue(p, value);
+                        subParams.SerializableEntityEditor?.UpdateValue(p, value);
                     }
                 }
                 else
@@ -1827,6 +1970,79 @@ namespace Barotrauma
                 //limbJoint.UpperLimit = MathUtils.WrapAnglePi(limbJoint.UpperLimit);
                 limbJoint.LowerLimit = MathUtils.WrapAngleTwoPi(limbJoint.LowerLimit);
                 limbJoint.UpperLimit = MathUtils.WrapAngleTwoPi(limbJoint.UpperLimit);
+            }
+        }
+
+        private Limb GetClosestLimbOnRagdoll(Vector2 targetPos, Func<Limb, bool> filter = null)
+        {
+            // TODO: optimize?
+            return character.AnimController.Limbs
+                .Where(l => filter == null ? true : filter(l))
+                .OrderBy(l => Vector2.Distance(SimToScreen(l.SimPosition), targetPos))
+                .FirstOrDefault();
+        }
+
+        private Limb GetClosestLimbOnSpritesheet(Vector2 targetPos, Func<Limb, bool> filter = null)
+        {
+            // TODO: optimize?
+            return character.AnimController.Limbs
+                .Where(l => filter == null ? true : filter(l))
+                .OrderBy(l => Vector2.Distance(GetLimbSpritesheetRect(l).Center.ToVector2(), targetPos))
+                .FirstOrDefault();
+        }
+
+        private Rectangle GetLimbSpritesheetRect(Limb limb)
+        {
+            int offsetX = spriteSheetOffsetX;
+            int offsetY = spriteSheetOffsetY;
+            Rectangle rect = Rectangle.Empty;
+            for (int i = 0; i < Textures.Count; i++)
+            {
+                if (limb.ActiveSprite.FilePath != texturePaths[i])
+                {
+                    offsetY += (int)(Textures[i].Height * spriteSheetZoom);
+                }
+                else
+                {
+                    rect = limb.ActiveSprite.SourceRect;
+                    rect.Size = rect.MultiplySize(spriteSheetZoom);
+                    rect.Location = rect.Location.Multiply(spriteSheetZoom);
+                    rect.X += offsetX;
+                    rect.Y += offsetY;
+                    Vector2 origin = limb.ActiveSprite.Origin;
+                    break;
+                }
+            }
+            return rect;
+        }
+
+        private void DrawJointCreationOnSpritesheet(SpriteBatch spriteBatch, Vector2 startPos)
+        {
+            // Spritesheet
+            GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 200, GameMain.GraphicsHeight - 150), "Left click to select the target limb for the other end of the joint.", Color.White, Color.Black * 0.5f, 10, GUI.Font);
+            GUI.DrawLine(spriteBatch, startPos, PlayerInput.MousePosition, Color.LightGreen, width: 3);
+            if (targetLimb != null)
+            {
+                GUI.DrawRectangle(spriteBatch, GetLimbSpritesheetRect(targetLimb), Color.LightGreen, thickness: 3);
+            }
+        }
+
+        private void DrawJointCreationOnRagdoll(SpriteBatch spriteBatch, Vector2 startPos)
+        {
+            // Ragdoll
+            GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 200, GameMain.GraphicsHeight - 150), "Left click to select the target limb for the other end of the joint.", Color.White, Color.Black * 0.5f, 10, GUI.Font);
+            GUI.DrawLine(spriteBatch, startPos, PlayerInput.MousePosition, Color.LightGreen, width: 3);
+            if (targetLimb != null)
+            {
+                var sourceRect = targetLimb.ActiveSprite.SourceRect;
+                Vector2 size = sourceRect.Size.ToVector2() * Cam.Zoom * targetLimb.Scale;
+                Vector2 up = VectorExtensions.Backward(targetLimb.Rotation);
+                Vector2 left = up.Right();
+                Vector2 limbScreenPos = SimToScreen(targetLimb.SimPosition);
+                var offset = targetLimb.ActiveSprite.RelativeOrigin.X * left + targetLimb.ActiveSprite.RelativeOrigin.Y * up;
+                Vector2 center = limbScreenPos + offset;
+                corners = MathUtils.GetImaginaryRect(corners, up, center, size);
+                GUI.DrawRectangle(spriteBatch, corners, Color.LightGreen, thickness: 3);
             }
         }
         #endregion
@@ -1871,7 +2087,7 @@ namespace Barotrauma
             bool altDown = PlayerInput.KeyDown(Keys.LeftAlt);
             if (!altDown)
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 120, GameMain.GraphicsHeight - 200), "HOLD \"Left Alt\" TO ADJUST THE CYCLE SPEED", Color.White, Color.Black * 0.5f, 10, GUI.Font);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 120, GameMain.GraphicsHeight - 150), "HOLD \"Left Alt\" TO ADJUST THE CYCLE SPEED", Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
             // Widgets for all anims -->
             Vector2 referencePoint = SimToScreen(head != null ? head.SimPosition: collider.SimPosition);
@@ -2155,22 +2371,24 @@ namespace Barotrauma
             {
                 if (limb == null || limb.ActiveSprite == null) { continue; }
                 var origin = limb.ActiveSprite.Origin;
+                var relativeOrigin = limb.ActiveSprite.RelativeOrigin;
                 var sourceRect = limb.ActiveSprite.SourceRect;
                 Vector2 size = sourceRect.Size.ToVector2() * Cam.Zoom * limb.Scale;
                 Vector2 up = VectorExtensions.Backward(limb.Rotation);
                 Vector2 left = up.Right();
                 Vector2 limbScreenPos = SimToScreen(limb.SimPosition);
-                var relativeOrigin = new Vector2(origin.X / sourceRect.Width, origin.Y / sourceRect.Height);
-                var relativeOffset = relativeOrigin - limb.ActiveSprite.RelativeOrigin;
-                Vector2 offset = new Vector2(relativeOffset.X * sourceRect.Width, relativeOffset.Y * sourceRect.Height);
-                offset = offset.X * left + offset.Y * up;
-                // There's a calculation error in here somewhere, but the magic number 1.8 seems to do the trick.
-                Vector2 center = limbScreenPos + offset * 1.8f;
+                Vector2 offset = relativeOrigin.X * left + relativeOrigin.Y * up;
+                Vector2 center = limbScreenPos + offset;
                 corners = MathUtils.GetImaginaryRect(corners, up, center, size);
-                //GUI.DrawRectangle(spriteBatch, center - Vector2.One * 2, Vector2.One * 4, Color.Black, isFilled: true);
-                GUI.DrawRectangle(spriteBatch, corners, selectedLimbs.Contains(limb) ? Color.Yellow : Color.Red);
-                //GUI.DrawLine(spriteBatch, limbScreenPos, limbScreenPos + up * 20, Color.White, width: 3);
-                //GUI.DrawLine(spriteBatch, limbScreenPos, limbScreenPos + up * 20, Color.Red);
+                if (selectedLimbs.Contains(limb))
+                {
+                    GUI.DrawRectangle(spriteBatch, corners, Color.Yellow, thickness: 3);
+                }
+                else
+                {
+
+                    GUI.DrawRectangle(spriteBatch, corners, Color.Red);
+                }
                 // Draw origins
                 if (selectedLimbs.Contains(limb))
                 {
@@ -2216,7 +2434,7 @@ namespace Barotrauma
                         {
                             origin.X = Math.Abs(origin.X - sourceRect.Width);
                         }
-                        TryUpdateLimbParam(limb, "origin", relativeOrigin);
+                        TryUpdateLimbParam(limb, "origin", limb.ActiveSprite.RelativeOrigin);
                         if (limbPairEditing)
                         {
                             UpdateOtherLimbs(limb, otherLimb =>
@@ -2226,10 +2444,10 @@ namespace Barotrauma
                                 {
                                     otherLimb.DamagedSprite.Origin = sprite.Origin;
                                 }
-                                TryUpdateLimbParam(otherLimb, "origin", relativeOrigin);
+                                TryUpdateLimbParam(otherLimb, "origin", otherLimb.ActiveSprite.RelativeOrigin);
                             });
                         }
-                        GUI.DrawString(spriteBatch, limbScreenPos + new Vector2(10, -10), relativeOrigin.FormatDoubleDecimal(), Color.Yellow, Color.Black * 0.5f);
+                        GUI.DrawString(spriteBatch, limbScreenPos + new Vector2(10, -10), limb.ActiveSprite.RelativeOrigin.FormatDoubleDecimal(), Color.Yellow, Color.Black * 0.5f);
                     }
                     else
                     {
@@ -2242,9 +2460,9 @@ namespace Barotrauma
         private void DrawRagdoll(SpriteBatch spriteBatch, float deltaTime)
         {
             bool altDown = PlayerInput.KeyDown(Keys.LeftAlt);
-            if (!altDown && editJoints)
+            if (!altDown && editJoints && selectedJoints.Any())
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 200, GameMain.GraphicsHeight - 200), "HOLD \"Left Alt\" TO MANIPULATE THE OTHER END OF THE JOINT", Color.White, Color.Black * 0.5f, 10, GUI.Font);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 200, GameMain.GraphicsHeight - 150), "HOLD \"Left Alt\" TO MANIPULATE THE OTHER END OF THE JOINT", Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
             foreach (Limb limb in character.AnimController.Limbs)
             {
@@ -2327,68 +2545,65 @@ namespace Barotrauma
                             GUI.DrawLine(spriteBatch, limbScreenPos, tformedJointPos, Color.Yellow, width: 3);
                             //GUI.DrawRectangle(spriteBatch, inputRect, Color.Red);
                             GUI.DrawString(spriteBatch, tformedJointPos + new Vector2(dotSize.X, -dotSize.Y) * 2, $"{joint.jointParams.Name} {jointPos.FormatZeroDecimal()}", Color.White, Color.Black * 0.5f);
-                            if (selectedJoints.Contains(joint))
+                            if (PlayerInput.LeftButtonHeld())
                             {
-                                if (PlayerInput.LeftButtonHeld())
+                                if (!selectionWidget.IsControlled) { continue; }
+                                if (autoFreeze)
                                 {
-                                    if (!selectionWidget.IsControlled) { continue; }
-                                    if (autoFreeze)
+                                    isFreezed = true;
+                                }
+                                Vector2 input = ConvertUnits.ToSimUnits(scaledMouseSpeed) / Cam.Zoom;
+                                input.Y = -input.Y;
+                                input = input.TransformVector(VectorExtensions.Forward(limb.Rotation));
+                                if (joint.BodyA == limb.body.FarseerBody)
+                                {
+                                    joint.LocalAnchorA += input;
+                                    TryUpdateJointParam(joint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
+                                    // Snap all selected joints to the first selected
+                                    if (copyJointSettings)
                                     {
-                                        isFreezed = true;
-                                    }
-                                    Vector2 input = ConvertUnits.ToSimUnits(scaledMouseSpeed) / Cam.Zoom;
-                                    input.Y = -input.Y;
-                                    input = input.TransformVector(VectorExtensions.Forward(limb.Rotation));
-                                    if (joint.BodyA == limb.body.FarseerBody)
-                                    {
-                                        joint.LocalAnchorA += input;
-                                        TryUpdateJointParam(joint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
-                                        // Snap all selected joints to the first selected
-                                        if (copyJointSettings)
+                                        foreach (var j in selectedJoints)
                                         {
-                                            foreach (var j in selectedJoints)
-                                            {
-                                                j.LocalAnchorA = joint.LocalAnchorA;
-                                                TryUpdateJointParam(j, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
-                                            }
+                                            j.LocalAnchorA = joint.LocalAnchorA;
+                                            TryUpdateJointParam(j, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
                                         }
                                     }
-                                    else if (joint.BodyB == limb.body.FarseerBody)
+                                }
+                                else if (joint.BodyB == limb.body.FarseerBody)
+                                {
+                                    joint.LocalAnchorB += input;
+                                    TryUpdateJointParam(joint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
+                                    // Snap all selected joints to the first selected
+                                    if (copyJointSettings)
                                     {
-                                        joint.LocalAnchorB += input;
-                                        TryUpdateJointParam(joint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
-                                        // Snap all selected joints to the first selected
-                                        if (copyJointSettings)
+                                        foreach (var j in selectedJoints)
                                         {
-                                            foreach (var j in selectedJoints)
-                                            {
-                                                j.LocalAnchorA = joint.LocalAnchorA;
-                                                TryUpdateJointParam(j, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
-                                            }
+                                            j.LocalAnchorA = joint.LocalAnchorA;
+                                            TryUpdateJointParam(j, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
                                         }
                                     }
-                                    // Edit the other joints
-                                    if (limbPairEditing)
-                                    {
-                                        UpdateOtherJoints(limb, (otherLimb, otherJoint) =>
-                                        {
-                                            if (joint.BodyA == limb.body.FarseerBody && otherJoint.BodyA == otherLimb.body.FarseerBody)
-                                            {
-                                                otherJoint.LocalAnchorA = joint.LocalAnchorA;
-                                                TryUpdateJointParam(otherJoint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
-                                            }
-                                            else if (joint.BodyB == limb.body.FarseerBody && otherJoint.BodyB == otherLimb.body.FarseerBody)
-                                            {
-                                                otherJoint.LocalAnchorB = joint.LocalAnchorB;
-                                                TryUpdateJointParam(otherJoint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
-                                            }
-                                        });
-                                    }
                                 }
-                                else
+                                // Edit the other joints
+                                if (limbPairEditing)
                                 {
-                                    isFreezed = freezeToggle.Selected;
+                                    UpdateOtherJoints(limb, (otherLimb, otherJoint) =>
+                                    {
+                                        if (joint.BodyA == limb.body.FarseerBody && otherJoint.BodyA == otherLimb.body.FarseerBody)
+                                        {
+                                            otherJoint.LocalAnchorA = joint.LocalAnchorA;
+                                            TryUpdateJointParam(otherJoint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
+                                        }
+                                        else if (joint.BodyB == limb.body.FarseerBody && otherJoint.BodyB == otherLimb.body.FarseerBody)
+                                        {
+                                            otherJoint.LocalAnchorB = joint.LocalAnchorB;
+                                            TryUpdateJointParam(otherJoint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
+                                        }
+                                    });
                                 }
+                            }
+                            else
+                            {
+                                isFreezed = freezeToggle.Selected;
                             }
                         }
                     }
@@ -2535,7 +2750,6 @@ namespace Barotrauma
                     rect.Location = rect.Location.Multiply(spriteSheetZoom);
                     rect.X += offsetX;
                     rect.Y += offsetY;
-
                     GUI.DrawRectangle(spriteBatch, rect, selectedLimbs.Contains(limb) ? Color.Yellow : Color.Red);
                     Vector2 origin = limb.ActiveSprite.Origin;
                     Vector2 limbScreenPos = new Vector2(rect.X + origin.X * spriteSheetZoom, rect.Y + origin.Y * spriteSheetZoom);
@@ -2999,6 +3213,7 @@ namespace Barotrauma
             Widget CreateJointSelectionWidget(string ID, LimbJoint j)
             {
                 var widget = new Widget(ID, 10, Widget.Shape.Circle);
+                widget.inputAreaMargin = new Point(5, 5);
                 widget.refresh = () =>
                 {
                     widget.showTooltip = !selectedJoints.Contains(joint);
@@ -3024,12 +3239,9 @@ namespace Barotrauma
                         w.refresh();
                         w.linkedWidget?.refresh();
                     }
-                };
-                widget.tooltip = joint.jointParams.Name;
-                widget.MouseUp += () =>
-                {
                     ResetParamsEditor();
                 };
+                widget.tooltip = joint.jointParams.Name;
                 jointSelectionWidgets.Add(ID, widget);
                 return widget;
             }
