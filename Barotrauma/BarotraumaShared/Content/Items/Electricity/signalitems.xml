@@ -70,6 +70,20 @@
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
     <Wire />
   </Item>
+  <Item name="Black Wire" identifier="blackwire" category="Electrical" Tags="smallitem,wire" spritecolor="50,50,50,255" InventoryIconColor="50,50,50,255" canbepicked="true" cargocontaineridentifier="metalcrate" price="10">
+    <Price locationtype="City" buyprice="5" />
+    <Price locationtype="Outpost" buyprice="5" />
+    <Price locationtype="Research" buyprice="5" />
+    <Price locationtype="Military" buyprice="5" />
+    <Deconstruct time="5">
+      <Item identifier="copperbar" />
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" />
+    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="77,106,48,20" />
+    <Body radius="7" width="30" density="30" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
+    <Wire />
+  </Item>
   <Item name="Brown Wire" identifier="brownwire" category="Electrical" Tags="smallitem,wire" spritecolor="123,77,62,255" InventoryIconColor="123,77,62,255" canbepicked="true" cargocontaineridentifier="metalcrate" price="10">
     <Price locationtype="City" buyprice="5" />
     <Price locationtype="Outpost" buyprice="5" />

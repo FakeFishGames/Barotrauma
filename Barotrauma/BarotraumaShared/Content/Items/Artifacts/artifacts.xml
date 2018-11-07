@@ -178,7 +178,7 @@
 
     <Holdable slots="Any,RightHand+LeftHand" aimpos="100,0" handle1="0,11" handle2="2,11"/>
 
-    <RepairTool structurefixamount="-3.0" limbfixamount="-1.0" range="600" barrelpos="30,15">
+    <RepairTool structurefixamount="-3.0" limbfixamount="-0.7" range="600" barrelpos="30,15">
       <RequiredItems identifier="sulphuriteshard,oxygeniteshard" type="Contained"/>
       <Fixable identifier="structure"/>
 
@@ -204,8 +204,10 @@
       <RequiredItems identifier="sulphuriteshard,oxygeniteshard" type="Contained"/>
     </Propulsion>
 
-    <Projectile characterusable="false" launchimpulse="80.0">      
-      <Attack damage="1000" bleedingdamage="10" structuredamage="500" damagetype="Blunt"/>
+    <Projectile characterusable="false" launchimpulse="80.0">
+      <Attack structuredamage="500" damagetype="Blunt">
+        <Affliction identifier="burn" strength="1000"/>
+      </Attack>
 
       <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
         <sound file="Content/Items/Artifacts/alienweapon.ogg"/>
