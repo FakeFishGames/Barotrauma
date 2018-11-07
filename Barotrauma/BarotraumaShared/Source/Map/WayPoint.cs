@@ -74,15 +74,15 @@ namespace Barotrauma
             private set
             {
                 idCardTags = value;
-                for (int i = 0; i<idCardTags.Length; i++)
+                for (int i = 0; i < idCardTags.Length; i++)
                 {
-                    idCardTags[i] = idCardTags[i].Trim();
+                    idCardTags[i] = idCardTags[i].Trim().ToLowerInvariant();
                 }
             }
         }
 
         public WayPoint(Vector2 position, SpawnType spawnType, Submarine submarine, Gap gap = null)
-            : this(new Rectangle((int)position.X-3, (int)position.Y+3, 6, 6), submarine)
+            : this(new Rectangle((int)position.X - 3, (int)position.Y + 3, 6, 6), submarine)
         {
             this.spawnType = spawnType;
             ConnectedGap = gap;
@@ -109,7 +109,7 @@ namespace Barotrauma
             idCardTags = new string[0];
 
 #if CLIENT
-            if (iconTexture==null)
+            if (iconTexture == null)
             {
                 iconTexture = Sprite.LoadTexture("Content/Map/waypointIcons.png");
             }
@@ -123,11 +123,13 @@ namespace Barotrauma
 
         public override MapEntity Clone()
         {
-            var clone = new WayPoint(rect, Submarine);
-            clone.idCardDesc = idCardDesc;
-            clone.idCardTags = idCardTags;
-            clone.spawnType = spawnType;
-            clone.assignedJob = assignedJob;
+            var clone = new WayPoint(rect, Submarine)
+            {
+                idCardDesc = idCardDesc,
+                idCardTags = idCardTags,
+                spawnType = spawnType,
+                assignedJob = assignedJob
+            };
 
             return clone;
         }
@@ -178,7 +180,7 @@ namespace Barotrauma
 
                 WayPoint prevWaypoint = null;
 
-                if (hull.Rect.Width<minDist*3.0f)
+                if (hull.Rect.Width < minDist * 3.0f)
                 {
                     new WayPoint(
                         new Vector2(hull.Rect.X + hull.Rect.Width / 2.0f, hull.Rect.Y - hull.Rect.Height + heightFromFloor), SpawnType.Path, submarine);

@@ -14,6 +14,11 @@ namespace Barotrauma
     {
         const float ChatMessageFadeTime = 10.0f;
 
+        /// <summary>
+        /// How long the previously selected character waits doing nothing when switching to another character
+        /// </summary>
+        const float CharacterWaitOnSwitch = 20.0f;
+
         const float ConversationIntervalMin = 100.0f;
         const float ConversationIntervalMax = 180.0f;
 
@@ -487,7 +492,7 @@ namespace Barotrauma
         {
             Character character = selection as Character;
             if (character == null || character.IsDead || character.IsUnconscious) return false;
-            Character.Controlled = character;
+            SelectCharacter(character);
             return true;
         }
 
@@ -904,14 +909,25 @@ namespace Barotrauma
         {
             if (GameMain.IsMultiplayer) { return; }
             if (characters.None()) { return; }
-            Character.Controlled = characters[TryAdjustIndex(1)];
+            SelectCharacter(characters[TryAdjustIndex(1)]);
         }
 
         public void SelectPreviousCharacter()
         {
             if (GameMain.IsMultiplayer) { return; }
             if (characters.None()) { return; }
-            Character.Controlled = characters[TryAdjustIndex(-1)];
+            SelectCharacter(characters[TryAdjustIndex(-1)]);
+        }
+
+        private void SelectCharacter(Character character)
+        {
+            //make the previously selected character wait in place for some time
+            //(so they don't immediately start idling and walking away from their station)
+            if (Character.Controlled?.AIController != null)
+            {
+                Character.Controlled.AIController.ObjectiveManager.WaitTimer = CharacterWaitOnSwitch;
+            }
+            Character.Controlled = character;
         }
 
         private int TryAdjustIndex(int amount)

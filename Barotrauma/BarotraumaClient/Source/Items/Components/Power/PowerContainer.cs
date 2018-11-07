@@ -78,12 +78,16 @@ namespace Barotrauma.Items.Components
             };
         }
 
+        public override bool Select(Character character)
+        {
+            rechargeSpeedSlider.BarScroll = rechargeSpeed / MaxRechargeSpeed;
+            return base.Select(character);
+        }
+
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             float chargeRatio = charge / capacity;
-            chargeIndicator.Color = chargeRatio < 0.5f ?
-                Color.Lerp(Color.Red, Color.Yellow, chargeRatio * 2) :
-                Color.Lerp(Color.Yellow, Color.Green, (chargeRatio - 0.5f) * 2);
+            chargeIndicator.Color = ToolBox.GradientLerp(chargeRatio, Color.Red, Color.Orange, Color.Green);
         }
 
         public void Draw(SpriteBatch spriteBatch, bool editing = false)
