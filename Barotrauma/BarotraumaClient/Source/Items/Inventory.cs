@@ -54,7 +54,7 @@ namespace Barotrauma
 
                 Vector2 equipIndicatorPos = new Vector2(
                     Rect.Center.X - Inventory.EquipIndicator.size.X / 2 * Inventory.UIScale,
-                    Rect.Center.Y + (Rect.Height / 2 + 20 * Inventory.UIScale) * buttonDir - Inventory.EquipIndicator.size.Y / 2 * Inventory.UIScale);
+                    Rect.Center.Y + (Rect.Height / 2 + 25 * Inventory.UIScale) * buttonDir - Inventory.EquipIndicator.size.Y / 2 * Inventory.UIScale);
                 equipIndicatorPos += DrawOffset;
 
                 return new Rectangle(
@@ -128,7 +128,8 @@ namespace Barotrauma
         protected float prevUIScale = UIScale;
 
         protected static Sprite slotSpriteSmall, slotSpriteHorizontal, slotSpriteVertical, slotSpriteRound;
-        public static Sprite EquipIndicator, EquipIndicatorOn;
+        public static Sprite EquipIndicator, EquipIndicatorHighlight;
+        public static Sprite DropIndicator, DropIndicatorHighlight;
 
         public Rectangle BackgroundFrame { get; protected set; }
 
@@ -808,8 +809,12 @@ namespace Barotrauma
                     }
                 }
             }
-            
-            if (GameMain.DebugDraw) GUI.DrawRectangle(spriteBatch, rect, Color.White, false, 0, 1);
+
+            if (GameMain.DebugDraw)
+            {
+                GUI.DrawRectangle(spriteBatch, rect, Color.White, false, 0, 1);
+                GUI.DrawRectangle(spriteBatch, slot.EquipButtonRect, Color.White, false, 0, 1);
+            }
 
             if (slot.HighlightColor != Color.Transparent)
             {
