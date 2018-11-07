@@ -94,7 +94,8 @@ namespace Barotrauma
                 case "follow":
                     currentOrder = new AIObjectiveGoTo(orderGiver, character, true)
                     {
-                        CloseEnough = 1.5f
+                        CloseEnough = 1.5f,
+                        IgnoreIfTargetDead = true
                     };
                     break;
                 case "wait":
