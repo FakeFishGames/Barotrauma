@@ -100,6 +100,9 @@
     <Compile Include="Source\Characters\AI\HumanAIController.cs" />
     <Compile Include="Source\Characters\Animation\Ragdoll.cs" />
     <Compile Include="Source\Characters\Attack.cs" />
+    <Compile Include="Source\Characters\Health\AfflictionHusk.cs" />
+    <Compile Include="Source\Characters\Health\CharacterHealth.cs" />
+    <Compile Include="Source\Characters\Health\DamageModifier.cs" />
     <Compile Include="Source\Events\EventManager.cs" />
     <Compile Include="Source\GUI\ChatBox.cs" />
     <Compile Include="Source\GUI\GUIRadioButtonGroup.cs" />
