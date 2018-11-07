@@ -60,6 +60,11 @@ namespace Barotrauma
             get { return Properties; }
         }
 
+        public Key[] Keys
+        {
+            get { return keys; }
+        }
+
         protected Key[] keys;
         private Item[] selectedItems;
 
@@ -189,6 +194,8 @@ namespace Barotrauma
 
         private Color speechBubbleColor;
         private float speechBubbleTimer;
+
+        public bool ResetInteract;
 
         private float lockHandsTimer;
         public bool LockHands
@@ -1556,6 +1563,12 @@ namespace Barotrauma
                 return;
             }
 
+            if (ResetInteract)
+            {
+                ResetInteract = false;
+                return;
+            }
+
             if (!CanInteract)
             {
                 SelectedConstruction = null;
@@ -1621,10 +1634,20 @@ namespace Barotrauma
             }
             else if (focusedCharacter != null && IsKeyHit(InputType.Health))
             {
-                SelectCharacter(focusedCharacter);
+                if (focusedCharacter == SelectedCharacter)
+                {
+                    DeselectCharacter();
 #if CLIENT
-                if (Controlled == this) CharacterHealth.OpenHealthWindow = focusedCharacter.CharacterHealth;
+                    if (Controlled == this) CharacterHealth.OpenHealthWindow = null;
 #endif
+                }
+                else
+                {
+                    SelectCharacter(focusedCharacter);
+#if CLIENT
+                    if (Controlled == this) CharacterHealth.OpenHealthWindow = focusedCharacter.CharacterHealth;
+#endif
+                }
             }
             else if (focusedItem != null)
             {
