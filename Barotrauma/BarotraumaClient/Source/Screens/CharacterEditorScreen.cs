@@ -56,6 +56,7 @@ namespace Barotrauma
         private bool isExtrudingJoint;
         private bool isDrawingJoint;
         private Limb targetLimb;
+        private Vector2? anchor1Pos;
 
         private float spriteSheetZoom = 1;
         private int spriteSheetOffsetY = 100;
@@ -278,8 +279,9 @@ namespace Barotrauma
                         targetLimb = GetClosestLimb(PlayerInput.MousePosition, l => l != null && l != selectedJoint.LimbB && l.ActiveSprite != null);
                         if (targetLimb != null && PlayerInput.LeftButtonClicked())
                         {
-                            // TODO: anchors from the mouse positions
-                            ExtrudeJoint(selectedJoint, targetLimb.limbParams.ID);
+                            Vector2 anchor1 = ConvertUnits.ToDisplayUnits(selectedJoint.LocalAnchorB);
+                            Vector2 anchor2 = ConvertUnits.ToDisplayUnits(targetLimb.body.FarseerBody.GetLocalPoint(ScreenToSim(PlayerInput.MousePosition)));
+                            ExtrudeJoint(selectedJoint, targetLimb.limbParams.ID, anchor1, anchor2);
                         }
                     }
                     else
@@ -292,21 +294,28 @@ namespace Barotrauma
                     var selectedLimb = selectedLimbs.FirstOrDefault();
                     if (selectedLimb != null)
                     {
+                        if (anchor1Pos == null)
+                        {
+                            anchor1Pos = ConvertUnits.ToDisplayUnits(selectedLimb.body.FarseerBody.GetLocalPoint(ScreenToSim(PlayerInput.MousePosition)));
+                        }
                         targetLimb = GetClosestLimb(PlayerInput.MousePosition, l => l != null && l != selectedLimb && l.ActiveSprite != null);
                         if (targetLimb != null && PlayerInput.LeftButtonClicked())
                         {
-                            // TODO: anchors from the mouse positions
-                            CreateJoint(selectedLimb.limbParams.ID, targetLimb.limbParams.ID);
+                            Vector2 anchor1 = anchor1Pos ?? Vector2.Zero;
+                            Vector2 anchor2 = ConvertUnits.ToDisplayUnits(targetLimb.body.FarseerBody.GetLocalPoint(ScreenToSim(PlayerInput.MousePosition)));
+                            CreateJoint(selectedLimb.limbParams.ID, targetLimb.limbParams.ID, anchor1, anchor2);
                         }
                     }
                     else
                     {
                         targetLimb = null;
+                        anchor1Pos = null;
                     }
                 }
                 else
                 {
                     targetLimb = null;
+                    anchor1Pos = null;
                 }
             }
             if (!isFreezed)
@@ -443,7 +452,10 @@ namespace Barotrauma
                 var selectedLimb = selectedLimbs.FirstOrDefault();
                 if (selectedLimb != null)
                 {
-                    DrawJointCreation(spriteBatch, SimToScreen(selectedLimb.SimPosition));
+                    var startPos = anchor1Pos.HasValue
+                        ? SimToScreen(selectedLimb.SimPosition + Vector2.Transform(ConvertUnits.ToSimUnits(anchor1Pos.Value), Matrix.CreateRotationZ(selectedLimb.Rotation)))
+                        : SimToScreen(selectedLimb.SimPosition);
+                    DrawJointCreation(spriteBatch, startPos);
                 }
             }
             if (isEndlessRunner)
@@ -1763,6 +1775,8 @@ namespace Barotrauma
                 {
                     RecreateRagdoll();
                     character.AnimController.ResetLimbs();
+                    ClearWidgets();
+                    ResetParamsEditor();
                     return true;
                 }
             };
