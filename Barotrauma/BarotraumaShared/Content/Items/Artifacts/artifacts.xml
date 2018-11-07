@@ -66,7 +66,14 @@
 
     <Body radius="25" density="50" friction="0.95"/>
 
-    <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10">
+      <!-- EMP explosion every 10 seconds -->
+      <StatusEffect type="Always" target="This" Condition="-10.0"/>
+      <StatusEffect type="OnBroken" target="This" Condition="100">
+        <Explosion range="200.0" empstrength="5" camerashake="0" stun="0" force="2.0" flames="false" smoke="false" shockwave="false" sparks="true" underwaterbubble="false"/>
+        <ParticleEmitter particle="artifactspark" anglemin="0" anglemax="360" particleamount="20" velocitymin="100" velocitymax="500" />
+      </StatusEffect>
+    </Holdable>
   </Item>
 
   <Item
