@@ -16,9 +16,7 @@ namespace Barotrauma
         const float MaxDoubleClickDistance = 10.0f;
 
         static bool doubleClicked;
-
-        public static Keys selectKey = Keys.E;
-
+        
         public static Vector2 MousePosition
         {
             get { return new Vector2(mouseState.Position.X, mouseState.Position.Y); }
