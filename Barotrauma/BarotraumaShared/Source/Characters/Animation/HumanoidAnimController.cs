@@ -1387,7 +1387,7 @@ namespace Barotrauma
             if (Anim == Animation.Climbing)
             {
                 //cannot drag up ladders if the character is conscious
-                if (!target.AllowInput && GameMain.Client == null)
+                if (target.AllowInput && GameMain.Client == null)
                 {
                     character.DeselectCharacter();
                     return;
