@@ -65,6 +65,12 @@ namespace Barotrauma
             get { return useSteamMatchmaking && UseSteam; }
             set { useSteamMatchmaking = value; }
         }
+
+        public string QuickStartSubmarineName
+        {
+            get;
+            set;
+        }
 #else
         //steam functionality determined at compile time
         public bool UseSteam
@@ -117,6 +123,13 @@ namespace Barotrauma
                 characterGender = value;
                 Save();
             }
+        }
+
+        private float aimAssistAmount;
+        public float AimAssistAmount
+        {
+            get { return aimAssistAmount; }
+            set { aimAssistAmount = MathHelper.Clamp(value, 0.0f, 5.0f); }
         }
 
         private bool unsavedSettings;
@@ -261,6 +274,7 @@ namespace Barotrauma
 
 #if DEBUG
             UseSteam = doc.Root.GetAttributeBool("usesteam", true);
+            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
 #endif
 
             if (doc == null)
@@ -325,6 +339,9 @@ namespace Barotrauma
 #else
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", true);
 #endif
+
+            AimAssistAmount = doc.Root.GetAttributeFloat("aimassistamount", 0.5f);
+
 
             keyMapping = new KeyOrMouse[Enum.GetNames(typeof(InputType)).Length];
             keyMapping[(int)InputType.Up] = new KeyOrMouse(Keys.W);
@@ -444,7 +461,8 @@ namespace Barotrauma
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
                 new XAttribute("enablesplashscreen", EnableSplashScreen),
                 new XAttribute("usesteammatchmaking", useSteamMatchmaking),
-                new XAttribute("requiresteamauthentication", requireSteamAuthentication));
+                new XAttribute("requiresteamauthentication", requireSteamAuthentication),
+                new XAttribute("aimassistamount", aimAssistAmount));
 
             if (!ShowUserStatisticsPrompt)
             {

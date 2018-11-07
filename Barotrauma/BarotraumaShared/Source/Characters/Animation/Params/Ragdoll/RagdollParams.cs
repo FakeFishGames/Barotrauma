@@ -72,7 +72,7 @@ namespace Barotrauma
                 new XAttribute("width", 1),
                 new XAttribute("height", 1),
                 new XElement("sprite",
-                    new XAttribute("sourcerect", $"{0}, {0}, {1}, {1}")))
+                    new XAttribute("sourcerect", $"0, 0, 1, 1")))
         };
 
         protected static string GetFolder(string speciesName)
@@ -234,6 +234,15 @@ namespace Barotrauma
             return false;
         }
 
+        public bool Reset(bool forceReload = false)
+        {
+            if (forceReload)
+            {
+                return Load(FullPath, SpeciesName);
+            }
+            return base.Reset();
+        }
+
         protected void CreateColliders()
         {
             ColliderParams.Clear();
@@ -252,6 +261,7 @@ namespace Barotrauma
             {
                 Limbs.Add(new LimbParams(element, this));
             }
+            Limbs = Limbs.OrderBy(l => l.ID).ToList();
         }
 
         protected void CreateJoints()
@@ -301,14 +311,27 @@ namespace Barotrauma
 
     class JointParams : RagdollSubParams
     {
-        public JointParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
+        public JointParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
+
+        private string name;
+        [Serialize("", true), Editable]
+        public override string Name
         {
-            Name = element.GetAttributeString("name", null);
-            if (Name == null)
+            get
             {
-                Name = $"Joint {element.Attribute("limb1").Value} - {element.Attribute("limb2").Value}";
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    name = GenerateName();
+                }
+                return name;
+            }
+            set
+            {
+                name = value;
             }
         }
+
+        public override string GenerateName() => $"Joint {Limb1} - {Limb2}";
 
         [Serialize(-1, true), Editable]
         public int Limb1 { get; set; }
@@ -351,11 +374,6 @@ namespace Barotrauma
     {
         public LimbParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
         {
-            Name = element.GetAttributeString("name", null);
-            if (Name == null)
-            {
-                Name = $"Limb {element.Attribute("id").Value}";
-            }
             var spriteElement = element.Element("sprite");
             if (spriteElement != null)
             {
@@ -380,8 +398,28 @@ namespace Barotrauma
         public readonly SpriteParams damagedSpriteParams;
         public readonly SpriteParams deformSpriteParams;
 
+        private string name;
+        [Serialize("", true), Editable]
+        public override string Name
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    name = GenerateName();
+                }
+                return name;
+            }
+            set
+            {
+                name = value;
+            }
+        }
+
+        public override string GenerateName() => $"Limb {ID}";
+
         /// <summary>
-        /// Note that editing this in-game doesn't currently have any effect. It should be visible, but readonly.
+        /// Note that editing this in-game doesn't currently have any effect (unless the ragdoll is recreated). It should be visible, but readonly in the editor.
         /// </summary>
         [Serialize(-1, true), Editable]
         public int ID { get; set; }
@@ -441,10 +479,7 @@ namespace Barotrauma
 
     class SpriteParams : RagdollSubParams
     {
-        public SpriteParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
-        {
-            Name = element.Name.ToString();
-        }
+        public SpriteParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
 
         [Serialize("0, 0, 0, 0", true), Editable]
         public Rectangle SourceRect { get; set; }
@@ -455,15 +490,33 @@ namespace Barotrauma
         [Serialize(0f, true), Editable(DecimalCount = 3)]
         public float Depth { get; set; }
 
-        //[Serialize("", true)]
-        //public string Texture { get; set; }
+        [Serialize("", true)]
+        public string Texture { get; set; }
     }
 
     class ColliderParams : RagdollSubParams
     {
         public ColliderParams(XElement element, RagdollParams ragdoll, string name = null) : base(element, ragdoll)
         {
-            Name = name ?? element.Name.ToString();
+            Name = name;
+        }
+
+        private string name;
+        [Serialize("", true), Editable]
+        public override string Name
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    name = GenerateName();
+                }
+                return name;
+            }
+            set
+            {
+                name = value;
+            }
         }
 
         [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
@@ -478,11 +531,13 @@ namespace Barotrauma
 
     abstract class RagdollSubParams : ISerializableEntity
     {
-        public string Name { get; protected set; }
+        public virtual string Name { get; set; }
         public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
         public XElement Element { get; private set; }
         public List<RagdollSubParams> SubParams { get; set; } = new List<RagdollSubParams>();
         public RagdollParams Ragdoll { get; private set; }
+
+        public virtual string GenerateName() => Element.Name.ToString();
 
         public RagdollSubParams(XElement element, RagdollParams ragdoll)
         {

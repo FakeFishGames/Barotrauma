@@ -1,5 +1,5 @@
 ﻿<MantisSwimSlow
-  movementspeed="3"
+  movementspeed="3.5"
   waveamplitude="0.3"
   wavelength="25"
   steertorque="25"

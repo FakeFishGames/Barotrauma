@@ -686,7 +686,9 @@ namespace Barotrauma
 
                     }
 
-                    if (position.X < borders.X || position.X > borders.Right || position.Y > borders.Y || position.Y < borders.Y - borders.Height)
+                    const float padding = 128.0f;
+                    if (position.X < borders.X - padding || position.X > borders.Right + padding || 
+                        position.Y > borders.Y + padding || position.Y < borders.Y - borders.Height - padding)
                     {
                         continue;
                     }

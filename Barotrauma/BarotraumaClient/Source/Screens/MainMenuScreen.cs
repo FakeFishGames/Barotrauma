@@ -53,9 +53,19 @@ namespace Barotrauma
                 IgnoreLayoutGroups = true,
                 OnClicked = (tb, userdata) =>
                 {
-                    var subs = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.Shuttle) && !s.HasTag(SubmarineTag.HideInMenus));
+                    Submarine selectedSub = null;
+                    if (!string.IsNullOrEmpty(GameMain.Config.QuickStartSubmarineName))
+                    {
+                        selectedSub = Submarine.SavedSubmarines.First(s => 
+                            s.Name.ToLower() == GameMain.Config.QuickStartSubmarineName.ToLower());
+                    }
+                    if (selectedSub == null)
+                    {
+                        var subs = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.Shuttle) && !s.HasTag(SubmarineTag.HideInMenus));
+                        selectedSub = subs.ElementAt(Rand.Int(subs.Count()));
+                    }
                     var gamesession = new GameSession(
-                        subs.ElementAt(Rand.Int(subs.Count())),
+                        selectedSub,
                         "Data/Saves/test.xml",
                         GameModePreset.list.Find(gm => gm.Name == "SPSandbox"),
                         missionPrefab: null);

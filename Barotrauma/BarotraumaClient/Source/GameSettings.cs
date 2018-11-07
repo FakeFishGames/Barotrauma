@@ -19,6 +19,7 @@ namespace Barotrauma
         private GUIButton applyButton;
 
         private GUIFrame[] tabs;
+        private GUIButton[] tabButtons;
 
         public Action OnHUDScaleChanged;
 
@@ -95,13 +96,14 @@ namespace Barotrauma
                 { RelativeOffset = new Vector2(0.0f, 0.1f) }, isHorizontal: true);
 
             tabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length];
+            tabButtons = new GUIButton[tabs.Length];
             foreach (Tab tab in Enum.GetValues(typeof(Tab)))
             {
                 tabs[(int)tab] = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.91f), paddedFrame.RectTransform), style: "InnerFrame")
                 {
                     UserData = tab
                 };
-                new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), tabButtonHolder.RectTransform), tab.ToString())
+                tabButtons[(int)tab] = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), tabButtonHolder.RectTransform), tab.ToString())
                 {
                     UserData = tab,
                     OnClicked = (bt, userdata) => { SelectTab((Tab)userdata); return true; }
@@ -349,8 +351,8 @@ namespace Barotrauma
             for (int i = 0; i < inputNames.Length; i++)
             {
                 var inputContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.06f), inputFrame.RectTransform), style: null);
-                new GUITextBlock(new RectTransform(new Vector2(0.4f, 1.0f), inputContainer.RectTransform), TextManager.Get("InputType." + ((InputType)i)) + ": ", font: GUI.SmallFont);
-                var keyBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 1.0f), inputContainer.RectTransform, Anchor.TopRight),
+                new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), inputContainer.RectTransform), TextManager.Get("InputType." + ((InputType)i)) + ": ", font: GUI.SmallFont);
+                var keyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 1.0f), inputContainer.RectTransform, Anchor.TopRight),
                     text: keyMapping[i].ToString(), font: GUI.SmallFont)
                 {
                     UserData = i
@@ -358,6 +360,20 @@ namespace Barotrauma
                 keyBox.OnSelected += KeyBoxSelected;
                 keyBox.SelectedColor = Color.Gold * 0.3f;
             }
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("AimAssist"));
+            new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
+                barSize: 0.1f)
+            {
+                BarScroll = MathUtils.InverseLerp(0.0f, 5.0f, AimAssistAmount),
+                OnMoved = (scrollBar, scroll) =>
+                {
+                    AimAssistAmount = MathHelper.Lerp(0.0f, 5.0f, scroll);
+                    UnsavedSettings = true;
+                    return true;
+                },
+                Step = 0.1f
+            };
 
             new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
                 TextManager.Get("Cancel"))
@@ -380,7 +396,7 @@ namespace Barotrauma
             };
             applyButton.OnClicked = ApplyClicked;
 
-            SelectTab(Tab.Graphics);
+            SelectTab(Tab.General);
         }
 
         private void SelectTab(Tab tab)
@@ -388,6 +404,7 @@ namespace Barotrauma
             for (int i = 0; i < tabs.Length; i++)
             {
                 tabs[i].Visible = (Tab)tabs[i].UserData == tab;
+                tabButtons[i].Selected = tabs[i].Visible;
             }
         }
 

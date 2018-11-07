@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Spear" identifier="spear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate">
+  <Item name="Spear" identifier="spear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem">
     <Price locationtype="Military" buyprice="55" />
     <Price locationtype="City" buyprice="60" />
     <Price locationtype="Outpost" buyprice="60" />
@@ -17,7 +17,7 @@
       </Attack>
     </Projectile>
   </Item>
-  <Item name="Harpoon Gun" identifier="harpoongun" category="Equipment" cargocontaineridentifier="metalcrate" tags="weapon">
+  <Item name="Harpoon Gun" identifier="harpoongun" category="Equipment" cargocontaineridentifier="metalcrate" tags="mediumitem,weapon">
     <Price locationtype="Military" buyprice="170" />
     <Price locationtype="City" buyprice="200" />
     <Deconstruct time="10">
@@ -32,7 +32,7 @@
       <Sound file="Content/Items/Weapons/harpoon1.ogg" type="OnUse" />
       <Sound file="Content/Items/Weapons/harpoon2.ogg" type="OnUse" />
       <StatusEffect type="OnUse">
-        <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" flash="false" sparks="false" camerashake="6.0" />
+        <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" flash="false" sparks="false" underwaterbubble="false" camerashake="6.0" />
       </StatusEffect>
       <RequiredItems identifier="spear" type="Contained" msg="ItemMsgSpearRequired" />
       <RequiredSkill identifier="weapons" level="30" />
@@ -42,7 +42,7 @@
       <Containable identifier="spear" />
     </ItemContainer>
   </Item>
-  <Item name="Syringe Gun" identifier="syringegun" category="Equipment" cargocontaineridentifier="metalcrate" tags="weapon">
+  <Item name="Syringe Gun" identifier="syringegun" category="Equipment" cargocontaineridentifier="metalcrate" tags="weapon,mediumitem">
     <Price locationtype="Research" buyprice="300" />
     <Price locationtype="Military" buyprice="350" />
     <Price locationtype="City" buyprice="500" />
@@ -74,7 +74,7 @@
     <Body width="8" height="3" density="40" />
     <Pickable slots="Any" />
     <Projectile characterusable="false" hitscan="true" removeonhit="true">
-      <Attack structuredamage="100" stun="0.5" targetforce="50">
+      <Attack structuredamage="100" stun="0.5" targetforce="10">
         <Affliction identifier="gunshotwound" strength="40" />
         <Affliction identifier="internaldamage" strength="30" />
       </Attack>
@@ -98,7 +98,7 @@
       <Sound file="Content/Items/Weapons/revolver3.ogg" type="OnUse" range="3000" />
       <Sound file="Content/Items/Weapons/revolver4.ogg" type="OnUse" range="3000" />
       <StatusEffect type="OnUse">
-        <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" sparks="false" camerashake="6.0" />
+        <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" sparks="false" underwaterbubble="false" camerashake="6.0" />
       </StatusEffect>
       <RequiredItems identifier="revolverround" type="Contained" msg="ItemMsgAmmoRequired" />
       <RequiredSkill identifier="weapons" level="40" />
@@ -132,7 +132,7 @@
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
         <sound file="Content/Items/Weapons/stungrenade.ogg" />
-        <Explosion range="500" damage="5" stun="25" force="0.1" smoke="false">
+        <Explosion range="500" stun="25" force="0.1" smoke="false">
           <Affliction identifier="internaldamage" strength="5" />
         </Explosion>
       </StatusEffect>
@@ -153,7 +153,9 @@
         <sound file="Content/Items/Weapons/stungrenade.ogg" />
         <Explosion range="500" stun="25" force="0.1" smoke="false">
           <Affliction identifier="internaldamage" strength="5" />
+          <Affliction identifier="burn" strength="100"/>
         </Explosion>
+        <Fire size="300.0" />
       </StatusEffect>
     </ItemComponent>
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
@@ -161,6 +163,7 @@
         <sound file="Content/Items/Weapons/stungrenade.ogg" />
         <Explosion range="500" stun="1" force="0.1">
           <Affliction identifier="internaldamage" strength="5" />
+          <Affliction identifier="burn" strength="100"/>
         </Explosion>
         <Fire size="300.0" />
       </StatusEffect>
@@ -188,7 +191,7 @@
         <sound file="Content/Items/Weapons/stunbaton3.ogg" range="500" />
         <sound file="Content/Items/Weapons/stunbaton4.ogg" range="500" />
         <RequiredItem identifier="batterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
-        <Explosion range="100.0" force="0.1" shockwave="false" flames="false" smoke="false" camerashake="6.0" />
+        <Explosion range="100.0" force="0.1" shockwave="false" flames="false" smoke="false" underwaterbubble="false" camerashake="6.0" />
       </StatusEffect>
       <StatusEffect type="OnUse" target="Contained,Character" Condition="-15.0" stun="30.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/stunbaton1.ogg" selectionmode="random" range="500" />
@@ -196,7 +199,7 @@
         <sound file="Content/Items/Weapons/stunbaton3.ogg" range="500" />
         <sound file="Content/Items/Weapons/stunbaton4.ogg" range="500" />
         <RequiredItem identifier="fulguriumbatterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
-        <Explosion range="100.0" force="0.5" shockwave="false" flames="false" smoke="true" camerashake="6.0" />
+        <Explosion range="100.0" force="0.5" shockwave="false" flames="false" smoke="true" underwaterbubble="false" camerashake="6.0" />
       </StatusEffect>
     </MeleeWeapon>
     <ItemContainer capacity="1" hideitems="true">

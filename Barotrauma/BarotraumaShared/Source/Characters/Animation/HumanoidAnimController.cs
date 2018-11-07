@@ -198,7 +198,16 @@ namespace Barotrauma
         {
             // TODO: load from the character info file?
             movementLerp = RagdollParams.MainElement.GetAttributeFloat("movementlerp", 0.4f);
+        }
 
+        public override void Recreate(RagdollParams ragdollParams)
+        {
+            base.Recreate(ragdollParams);
+            CalculateArmLengths();
+        }
+
+        private void CalculateArmLengths()
+        {
             //calculate arm and forearm length (atm this assumes that both arms are the same size)
             Limb rightForearm = GetLimb(LimbType.RightForearm);
             Limb rightHand = GetLimb(LimbType.RightHand);
@@ -210,14 +219,14 @@ namespace Barotrauma
             {
                 localAnchorShoulder = shoulder.LimbA.type == LimbType.RightArm ? shoulder.LocalAnchorA : shoulder.LocalAnchorB;
             }
-            LimbJoint rightElbow = rightForearm == null ? 
+            LimbJoint rightElbow = rightForearm == null ?
                 GetJointBetweenLimbs(LimbType.RightArm, LimbType.RightHand) :
                 GetJointBetweenLimbs(LimbType.RightArm, LimbType.RightForearm);
             if (rightElbow != null)
             {
                 localAnchorElbow = rightElbow.LimbA.type == LimbType.RightArm ? rightElbow.LocalAnchorA : rightElbow.LocalAnchorB;
             }
-            upperArmLength = Vector2.Distance(localAnchorShoulder, localAnchorElbow);           
+            upperArmLength = Vector2.Distance(localAnchorShoulder, localAnchorElbow);
             if (rightElbow != null)
             {
                 if (rightForearm == null)

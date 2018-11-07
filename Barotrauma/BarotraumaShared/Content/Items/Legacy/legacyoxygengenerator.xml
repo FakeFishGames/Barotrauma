@@ -26,7 +26,7 @@
       <StatusEffect type="OnBroken" target="This" disabledeltatime="true">
         <sound file="Content/Items/Weapons/ExplosionMedium3.ogg" range="8000" selectionmode="All"/>
         <sound file="Content/Items/Weapons/ExplosionDebris3.ogg" range="8000" />
-        <Explosion range="50" damage="0" stun="0" force="3.0" flames="false" shockwave="false" sparks="true"/>
+        <Explosion range="50" stun="0" force="3.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false"/>
       </StatusEffect>
     </OxygenGenerator>
   

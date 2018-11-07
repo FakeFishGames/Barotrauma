@@ -133,6 +133,7 @@
   <SoundVolume>Sound volume</SoundVolume>
   <MusicVolume>Music volume</MusicVolume>
   <Controls>Controls</Controls>
+  <AimAssist>Aim assist</AimAssist>
   <Language>Language</Language>  
   <ContentPackage>Content package</ContentPackage>
   <ContentPackages>Content packages</ContentPackages>
@@ -745,6 +746,7 @@
   <ConnectionLocked>(Locked)</ConnectionLocked>
   <RequiredRepairSkills>Required skills:</RequiredRepairSkills>
   <RepairButton>Repair</RepairButton>
+  <Repairing>Repairing</Repairing>
 
   <!-- Health interface -->
   <Vitality>Vitality</Vitality>
