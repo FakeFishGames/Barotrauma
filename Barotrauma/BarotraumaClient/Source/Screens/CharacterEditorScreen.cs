@@ -1895,6 +1895,7 @@ namespace Barotrauma
 
         private void DrawJointCreation(SpriteBatch spriteBatch, Vector2 startPos)
         {
+            GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 200, GameMain.GraphicsHeight - 150), "Left click to select the target limb for the other end of the joint.", Color.White, Color.Black * 0.5f, 10, GUI.Font);
             GUI.DrawLine(spriteBatch, startPos, PlayerInput.MousePosition, Color.LightGreen, width: 3);
             if (targetLimb != null)
             {
@@ -1951,7 +1952,7 @@ namespace Barotrauma
             bool altDown = PlayerInput.KeyDown(Keys.LeftAlt);
             if (!altDown)
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 120, GameMain.GraphicsHeight - 200), "HOLD \"Left Alt\" TO ADJUST THE CYCLE SPEED", Color.White, Color.Black * 0.5f, 10, GUI.Font);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 120, GameMain.GraphicsHeight - 150), "HOLD \"Left Alt\" TO ADJUST THE CYCLE SPEED", Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
             // Widgets for all anims -->
             Vector2 referencePoint = SimToScreen(head != null ? head.SimPosition: collider.SimPosition);
@@ -2326,7 +2327,7 @@ namespace Barotrauma
             bool altDown = PlayerInput.KeyDown(Keys.LeftAlt);
             if (!altDown && editJoints && selectedJoints.Any())
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 200, GameMain.GraphicsHeight - 200), "HOLD \"Left Alt\" TO MANIPULATE THE OTHER END OF THE JOINT", Color.White, Color.Black * 0.5f, 10, GUI.Font);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 200, GameMain.GraphicsHeight - 150), "HOLD \"Left Alt\" TO MANIPULATE THE OTHER END OF THE JOINT", Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
             foreach (Limb limb in character.AnimController.Limbs)
             {
