@@ -153,6 +153,7 @@ namespace Barotrauma
 
             rectT.SizeChanged += UpdateRect;
             rectT.ScaleChanged += UpdateRect;
+            Bar.RectTransform.SizeChanged += () => { BarScroll = barScroll; };
         }
 
         private void UpdateRect()
@@ -161,6 +162,7 @@ namespace Barotrauma
             var newSize = new Point((int)(Rect.Size.X - padding.X - padding.Z), (int)(Rect.Size.Y - padding.Y - padding.W));
             newSize = IsHorizontal ? newSize.Multiply(new Vector2(BarSize, 1)) : newSize.Multiply(new Vector2(1, BarSize));
             Bar.RectTransform.Resize(newSize);
+            BarScroll = barScroll;
         }
         
         protected override void Update(float deltaTime)
