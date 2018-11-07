@@ -480,8 +480,14 @@ namespace Barotrauma
 
                         if (limb.RefJointIndex > -1)
                         {
-                            RevoluteJoint refJoint = LimbJoints[limb.RefJointIndex];
-                            footPos.X = refJoint.WorldAnchorA.X;
+                            if (LimbJoints.Length <= limb.RefJointIndex)
+                            {
+                                DebugConsole.ThrowError($"Reference joint index {limb.RefJointIndex} is out of array. This is probably due to a missing joint. If you just deleted a joint, don't do that without first removing the reference joint indices from the limbs. If this is not the case, please ensure that you have defined the index to the right joint.");
+                            }
+                            else
+                            {
+                                footPos.X = LimbJoints[limb.RefJointIndex].WorldAnchorA.X;
+                            }
                         }
                         footPos.X += limb.StepOffset.X * Dir;
                         footPos.Y += limb.StepOffset.Y;

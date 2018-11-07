@@ -634,6 +634,7 @@ namespace Barotrauma
             }
             jointsToRemove.ForEach(j => RagdollParams.Joints.Remove(j));
             RecreateRagdoll();
+            ClearWidgets();
             ragdollResetRequiresForceLoading = true;
         }
         #endregion
@@ -1281,7 +1282,7 @@ namespace Barotrauma
             var spritesheetToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Spritesheet") { Selected = showSpritesheet };
             var ragdollToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Ragdoll") { Selected = showRagdoll };
             var editAnimsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Animations") { Selected = editAnimations };       
-            var editLimbsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Limbs") { Selected = this.editLimbs };
+            var editLimbsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Limbs") { Selected = editLimbs };
             var jointsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joints") { Selected = editJoints };
             var ikToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit IK Targets") { Selected = editIK };
             freezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Freeze") { Selected = isFreezed };
@@ -1765,7 +1766,7 @@ namespace Barotrauma
         private List<AnimationParams> AnimParams => character.AnimController.AllAnimParams;
         private AnimationParams CurrentAnimation => character.AnimController.CurrentAnimationParams;
         private RagdollParams RagdollParams => character.AnimController.RagdollParams;
-
+        
         private void ResetParamsEditor()
         {
             ParamsEditor.Instance.Clear();
@@ -1809,7 +1810,7 @@ namespace Barotrauma
         {
             if (editableParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
             {
-                editableParams.SerializableEntityEditor.UpdateValue(p, value);
+                editableParams.SerializableEntityEditor?.UpdateValue(p, value);
             }
         }
 
@@ -1820,7 +1821,7 @@ namespace Barotrauma
         {
             if (ragdollSubParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
             {
-                ragdollSubParams.SerializableEntityEditor.UpdateValue(p, value);
+                ragdollSubParams.SerializableEntityEditor?.UpdateValue(p, value);
             }
             else
             {
@@ -1829,7 +1830,7 @@ namespace Barotrauma
                 {
                     if (subParams.SerializableProperties.TryGetValue(name, out p))
                     {
-                        subParams.SerializableEntityEditor.UpdateValue(p, value);
+                        subParams.SerializableEntityEditor?.UpdateValue(p, value);
                     }
                 }
                 else
@@ -2271,7 +2272,7 @@ namespace Barotrauma
         private void DrawRagdoll(SpriteBatch spriteBatch, float deltaTime)
         {
             bool altDown = PlayerInput.KeyDown(Keys.LeftAlt);
-            if (!altDown && editJoints)
+            if (!altDown && editJoints && selectedJoints.Any())
             {
                 GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 200, GameMain.GraphicsHeight - 200), "HOLD \"Left Alt\" TO MANIPULATE THE OTHER END OF THE JOINT", Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
@@ -2356,68 +2357,65 @@ namespace Barotrauma
                             GUI.DrawLine(spriteBatch, limbScreenPos, tformedJointPos, Color.Yellow, width: 3);
                             //GUI.DrawRectangle(spriteBatch, inputRect, Color.Red);
                             GUI.DrawString(spriteBatch, tformedJointPos + new Vector2(dotSize.X, -dotSize.Y) * 2, $"{joint.jointParams.Name} {jointPos.FormatZeroDecimal()}", Color.White, Color.Black * 0.5f);
-                            if (selectedJoints.Contains(joint))
+                            if (PlayerInput.LeftButtonHeld())
                             {
-                                if (PlayerInput.LeftButtonHeld())
+                                if (!selectionWidget.IsControlled) { continue; }
+                                if (autoFreeze)
                                 {
-                                    if (!selectionWidget.IsControlled) { continue; }
-                                    if (autoFreeze)
+                                    isFreezed = true;
+                                }
+                                Vector2 input = ConvertUnits.ToSimUnits(scaledMouseSpeed) / Cam.Zoom;
+                                input.Y = -input.Y;
+                                input = input.TransformVector(VectorExtensions.Forward(limb.Rotation));
+                                if (joint.BodyA == limb.body.FarseerBody)
+                                {
+                                    joint.LocalAnchorA += input;
+                                    TryUpdateJointParam(joint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
+                                    // Snap all selected joints to the first selected
+                                    if (copyJointSettings)
                                     {
-                                        isFreezed = true;
-                                    }
-                                    Vector2 input = ConvertUnits.ToSimUnits(scaledMouseSpeed) / Cam.Zoom;
-                                    input.Y = -input.Y;
-                                    input = input.TransformVector(VectorExtensions.Forward(limb.Rotation));
-                                    if (joint.BodyA == limb.body.FarseerBody)
-                                    {
-                                        joint.LocalAnchorA += input;
-                                        TryUpdateJointParam(joint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
-                                        // Snap all selected joints to the first selected
-                                        if (copyJointSettings)
+                                        foreach (var j in selectedJoints)
                                         {
-                                            foreach (var j in selectedJoints)
-                                            {
-                                                j.LocalAnchorA = joint.LocalAnchorA;
-                                                TryUpdateJointParam(j, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
-                                            }
+                                            j.LocalAnchorA = joint.LocalAnchorA;
+                                            TryUpdateJointParam(j, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
                                         }
                                     }
-                                    else if (joint.BodyB == limb.body.FarseerBody)
+                                }
+                                else if (joint.BodyB == limb.body.FarseerBody)
+                                {
+                                    joint.LocalAnchorB += input;
+                                    TryUpdateJointParam(joint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
+                                    // Snap all selected joints to the first selected
+                                    if (copyJointSettings)
                                     {
-                                        joint.LocalAnchorB += input;
-                                        TryUpdateJointParam(joint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
-                                        // Snap all selected joints to the first selected
-                                        if (copyJointSettings)
+                                        foreach (var j in selectedJoints)
                                         {
-                                            foreach (var j in selectedJoints)
-                                            {
-                                                j.LocalAnchorA = joint.LocalAnchorA;
-                                                TryUpdateJointParam(j, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
-                                            }
+                                            j.LocalAnchorA = joint.LocalAnchorA;
+                                            TryUpdateJointParam(j, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
                                         }
                                     }
-                                    // Edit the other joints
-                                    if (limbPairEditing)
-                                    {
-                                        UpdateOtherJoints(limb, (otherLimb, otherJoint) =>
-                                        {
-                                            if (joint.BodyA == limb.body.FarseerBody && otherJoint.BodyA == otherLimb.body.FarseerBody)
-                                            {
-                                                otherJoint.LocalAnchorA = joint.LocalAnchorA;
-                                                TryUpdateJointParam(otherJoint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
-                                            }
-                                            else if (joint.BodyB == limb.body.FarseerBody && otherJoint.BodyB == otherLimb.body.FarseerBody)
-                                            {
-                                                otherJoint.LocalAnchorB = joint.LocalAnchorB;
-                                                TryUpdateJointParam(otherJoint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
-                                            }
-                                        });
-                                    }
                                 }
-                                else
+                                // Edit the other joints
+                                if (limbPairEditing)
                                 {
-                                    isFreezed = freezeToggle.Selected;
+                                    UpdateOtherJoints(limb, (otherLimb, otherJoint) =>
+                                    {
+                                        if (joint.BodyA == limb.body.FarseerBody && otherJoint.BodyA == otherLimb.body.FarseerBody)
+                                        {
+                                            otherJoint.LocalAnchorA = joint.LocalAnchorA;
+                                            TryUpdateJointParam(otherJoint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
+                                        }
+                                        else if (joint.BodyB == limb.body.FarseerBody && otherJoint.BodyB == otherLimb.body.FarseerBody)
+                                        {
+                                            otherJoint.LocalAnchorB = joint.LocalAnchorB;
+                                            TryUpdateJointParam(otherJoint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
+                                        }
+                                    });
                                 }
+                            }
+                            else
+                            {
+                                isFreezed = freezeToggle.Selected;
                             }
                         }
                     }
@@ -3053,12 +3051,9 @@ namespace Barotrauma
                         w.refresh();
                         w.linkedWidget?.refresh();
                     }
-                };
-                widget.tooltip = joint.jointParams.Name;
-                widget.MouseUp += () =>
-                {
                     ResetParamsEditor();
                 };
+                widget.tooltip = joint.jointParams.Name;
                 jointSelectionWidgets.Add(ID, widget);
                 return widget;
             }
