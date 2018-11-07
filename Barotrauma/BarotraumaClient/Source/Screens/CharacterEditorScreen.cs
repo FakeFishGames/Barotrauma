@@ -403,6 +403,7 @@ namespace Barotrauma
                 var selectedJoint = selectedJoints.FirstOrDefault();
                 if (selectedJoint != null)
                 {
+                    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 120, GameMain.GraphicsHeight / 5), "Drawing a new joint", Color.White, font: GUI.LargeFont);
                     if (GetSpritesheetRectangle.Contains(PlayerInput.MousePosition))
                     {
                         var startPos = GetLimbSpritesheetRect(selectedJoint.LimbB).Center.ToVector2();
@@ -421,6 +422,7 @@ namespace Barotrauma
                 var selectedLimb = selectedLimbs.FirstOrDefault();
                 if (selectedLimb != null)
                 {
+                    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 120, GameMain.GraphicsHeight / 5), "Drawing a new joint", Color.White, font: GUI.LargeFont);
                     if (GetSpritesheetRectangle.Contains(PlayerInput.MousePosition))
                     {
                         var startPos = GetLimbSpritesheetRect(selectedLimb).Center.ToVector2();
