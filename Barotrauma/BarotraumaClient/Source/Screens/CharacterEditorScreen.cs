@@ -54,6 +54,7 @@ namespace Barotrauma
         private bool ragdollResetRequiresForceLoading;
 
         private bool isExtrudingJoint;
+        private bool isDrawingJoint;
         private Limb targetLimb;
 
         private float spriteSheetZoom = 1;
@@ -266,8 +267,9 @@ namespace Barotrauma
                         }
                     }
                 }
-                // TODO: if no joint selected, select nearest limb on mouse down? -> create joints between two limbs
-                isExtrudingJoint = editJoints && PlayerInput.KeyDown(Keys.LeftControl) && PlayerInput.KeyDown(Keys.LeftAlt);
+                bool ctrlAlt = PlayerInput.KeyDown(Keys.LeftControl) && PlayerInput.KeyDown(Keys.LeftAlt);
+                isExtrudingJoint = !editLimbs && editJoints && ctrlAlt;
+                isDrawingJoint = !editJoints && editLimbs && ctrlAlt;
                 if (isExtrudingJoint)
                 {
                     var selectedJoint = selectedJoints.FirstOrDefault();
@@ -283,6 +285,28 @@ namespace Barotrauma
                         {
                             // TODO: anchors from the mouse positions
                             ExtrudeJoint(selectedJoint, targetLimb.limbParams.ID);
+                        }
+                    }
+                    else
+                    {
+                        targetLimb = null;
+                    }
+                }
+                else if (isDrawingJoint)
+                {
+                    var selectedLimb = selectedLimbs.FirstOrDefault();
+                    if (selectedLimb != null)
+                    {
+                        // TODO: optimize
+                        targetLimb = character.AnimController.Limbs
+                            .Where(l => l != selectedLimb)
+                            .OrderBy(l => Vector2.Distance(SimToScreen(l.SimPosition), PlayerInput.MousePosition))
+                            .FirstOrDefault();
+
+                        if (targetLimb != null && PlayerInput.LeftButtonClicked())
+                        {
+                            // TODO: anchors from the mouse positions
+                            CreateJoint(selectedLimb.limbParams.ID, targetLimb.limbParams.ID);
                         }
                     }
                     else
@@ -423,7 +447,7 @@ namespace Barotrauma
                 {
                     var startPos = SimToScreen(selectedJoint.WorldAnchorB);
                     var mousePos = PlayerInput.MousePosition;
-                    GUI.DrawLine(spriteBatch, startPos, mousePos, Color.Red, width: 3);
+                    GUI.DrawLine(spriteBatch, startPos, mousePos, Color.Blue, width: 3);
                     if (targetLimb != null)
                     {
                         var sourceRect = targetLimb.ActiveSprite.SourceRect;
@@ -434,7 +458,29 @@ namespace Barotrauma
                         var offset = targetLimb.ActiveSprite.RelativeOrigin.X * left + targetLimb.ActiveSprite.RelativeOrigin.Y * up;
                         Vector2 center = limbScreenPos + offset;
                         corners = MathUtils.GetImaginaryRect(corners, up, center, size);
-                        GUI.DrawRectangle(spriteBatch, corners, Color.Red, thickness: 3);
+                        GUI.DrawRectangle(spriteBatch, corners, Color.Blue, thickness: 3);
+                    }
+                }
+            }
+            else if (isDrawingJoint)
+            {
+                var selectedLimb = selectedLimbs.FirstOrDefault();
+                if (selectedLimb != null)
+                {
+                    var startPos = SimToScreen(selectedLimb.SimPosition);
+                    var mousePos = PlayerInput.MousePosition;
+                    GUI.DrawLine(spriteBatch, startPos, mousePos, Color.Blue, width: 3);
+                    if (targetLimb != null)
+                    {
+                        var sourceRect = targetLimb.ActiveSprite.SourceRect;
+                        Vector2 size = sourceRect.Size.ToVector2() * Cam.Zoom * targetLimb.Scale;
+                        Vector2 up = VectorExtensions.Backward(targetLimb.Rotation);
+                        Vector2 left = up.Right();
+                        Vector2 limbScreenPos = SimToScreen(targetLimb.SimPosition);
+                        var offset = targetLimb.ActiveSprite.RelativeOrigin.X * left + targetLimb.ActiveSprite.RelativeOrigin.Y * up;
+                        Vector2 center = limbScreenPos + offset;
+                        corners = MathUtils.GetImaginaryRect(corners, up, center, size);
+                        GUI.DrawRectangle(spriteBatch, corners, Color.Blue, thickness: 3);
                     }
                 }
             }
