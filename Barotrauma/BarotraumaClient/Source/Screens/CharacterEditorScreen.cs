@@ -275,12 +275,7 @@ namespace Barotrauma
                     var selectedJoint = selectedJoints.FirstOrDefault();
                     if (selectedJoint != null)
                     {
-                        // TODO: optimize
-                        targetLimb = character.AnimController.Limbs
-                            .Where(l => l != selectedJoint.LimbB)
-                            .OrderBy(l => Vector2.Distance(SimToScreen(l.SimPosition), PlayerInput.MousePosition))
-                            .FirstOrDefault();
-
+                        targetLimb = GetClosestLimb(PlayerInput.MousePosition, l => l != null && l != selectedJoint.LimbB && l.ActiveSprite != null);
                         if (targetLimb != null && PlayerInput.LeftButtonClicked())
                         {
                             // TODO: anchors from the mouse positions
@@ -297,12 +292,7 @@ namespace Barotrauma
                     var selectedLimb = selectedLimbs.FirstOrDefault();
                     if (selectedLimb != null)
                     {
-                        // TODO: optimize
-                        targetLimb = character.AnimController.Limbs
-                            .Where(l => l != selectedLimb)
-                            .OrderBy(l => Vector2.Distance(SimToScreen(l.SimPosition), PlayerInput.MousePosition))
-                            .FirstOrDefault();
-
+                        targetLimb = GetClosestLimb(PlayerInput.MousePosition, l => l != null && l != selectedLimb && l.ActiveSprite != null);
                         if (targetLimb != null && PlayerInput.LeftButtonClicked())
                         {
                             // TODO: anchors from the mouse positions
@@ -445,21 +435,7 @@ namespace Barotrauma
                 var selectedJoint = selectedJoints.FirstOrDefault();
                 if (selectedJoint != null)
                 {
-                    var startPos = SimToScreen(selectedJoint.WorldAnchorB);
-                    var mousePos = PlayerInput.MousePosition;
-                    GUI.DrawLine(spriteBatch, startPos, mousePos, Color.Blue, width: 3);
-                    if (targetLimb != null)
-                    {
-                        var sourceRect = targetLimb.ActiveSprite.SourceRect;
-                        Vector2 size = sourceRect.Size.ToVector2() * Cam.Zoom * targetLimb.Scale;
-                        Vector2 up = VectorExtensions.Backward(targetLimb.Rotation);
-                        Vector2 left = up.Right();
-                        Vector2 limbScreenPos = SimToScreen(targetLimb.SimPosition);
-                        var offset = targetLimb.ActiveSprite.RelativeOrigin.X * left + targetLimb.ActiveSprite.RelativeOrigin.Y * up;
-                        Vector2 center = limbScreenPos + offset;
-                        corners = MathUtils.GetImaginaryRect(corners, up, center, size);
-                        GUI.DrawRectangle(spriteBatch, corners, Color.Blue, thickness: 3);
-                    }
+                    DrawJointCreation(spriteBatch, SimToScreen(selectedJoint.WorldAnchorB));
                 }
             }
             else if (isDrawingJoint)
@@ -467,21 +443,7 @@ namespace Barotrauma
                 var selectedLimb = selectedLimbs.FirstOrDefault();
                 if (selectedLimb != null)
                 {
-                    var startPos = SimToScreen(selectedLimb.SimPosition);
-                    var mousePos = PlayerInput.MousePosition;
-                    GUI.DrawLine(spriteBatch, startPos, mousePos, Color.Blue, width: 3);
-                    if (targetLimb != null)
-                    {
-                        var sourceRect = targetLimb.ActiveSprite.SourceRect;
-                        Vector2 size = sourceRect.Size.ToVector2() * Cam.Zoom * targetLimb.Scale;
-                        Vector2 up = VectorExtensions.Backward(targetLimb.Rotation);
-                        Vector2 left = up.Right();
-                        Vector2 limbScreenPos = SimToScreen(targetLimb.SimPosition);
-                        var offset = targetLimb.ActiveSprite.RelativeOrigin.X * left + targetLimb.ActiveSprite.RelativeOrigin.Y * up;
-                        Vector2 center = limbScreenPos + offset;
-                        corners = MathUtils.GetImaginaryRect(corners, up, center, size);
-                        GUI.DrawRectangle(spriteBatch, corners, Color.Blue, thickness: 3);
-                    }
+                    DrawJointCreation(spriteBatch, SimToScreen(selectedLimb.SimPosition));
                 }
             }
             if (isEndlessRunner)
@@ -1918,6 +1880,35 @@ namespace Barotrauma
                 limbJoint.UpperLimit = MathUtils.WrapAngleTwoPi(limbJoint.UpperLimit);
             }
         }
+
+        /// <summary>
+        /// Target pos is in screen space.
+        /// </summary>
+        private Limb GetClosestLimb(Vector2 targetPos, Func<Limb, bool> filter = null)
+        {
+            // TODO: optimize?
+            return character.AnimController.Limbs
+                .Where(l => filter == null ? true : filter(l))
+                .OrderBy(l => Vector2.Distance(SimToScreen(l.SimPosition), targetPos))
+                .FirstOrDefault();
+        }
+
+        private void DrawJointCreation(SpriteBatch spriteBatch, Vector2 startPos)
+        {
+            GUI.DrawLine(spriteBatch, startPos, PlayerInput.MousePosition, Color.LightGreen, width: 3);
+            if (targetLimb != null)
+            {
+                var sourceRect = targetLimb.ActiveSprite.SourceRect;
+                Vector2 size = sourceRect.Size.ToVector2() * Cam.Zoom * targetLimb.Scale;
+                Vector2 up = VectorExtensions.Backward(targetLimb.Rotation);
+                Vector2 left = up.Right();
+                Vector2 limbScreenPos = SimToScreen(targetLimb.SimPosition);
+                var offset = targetLimb.ActiveSprite.RelativeOrigin.X * left + targetLimb.ActiveSprite.RelativeOrigin.Y * up;
+                Vector2 center = limbScreenPos + offset;
+                corners = MathUtils.GetImaginaryRect(corners, up, center, size);
+                GUI.DrawRectangle(spriteBatch, corners, Color.LightGreen, thickness: 3);
+            }
+        }
         #endregion
 
         #region Animation Controls
@@ -2253,7 +2244,15 @@ namespace Barotrauma
                 Vector2 offset = relativeOrigin.X * left + relativeOrigin.Y * up;
                 Vector2 center = limbScreenPos + offset;
                 corners = MathUtils.GetImaginaryRect(corners, up, center, size);
-                GUI.DrawRectangle(spriteBatch, corners, selectedLimbs.Contains(limb) ? Color.Yellow : Color.Red);
+                if (selectedLimbs.Contains(limb))
+                {
+                    GUI.DrawRectangle(spriteBatch, corners, Color.Yellow, thickness: 3);
+                }
+                else
+                {
+
+                    GUI.DrawRectangle(spriteBatch, corners, Color.Red);
+                }
                 // Draw origins
                 if (selectedLimbs.Contains(limb))
                 {
@@ -2615,7 +2614,6 @@ namespace Barotrauma
                     rect.Location = rect.Location.Multiply(spriteSheetZoom);
                     rect.X += offsetX;
                     rect.Y += offsetY;
-
                     GUI.DrawRectangle(spriteBatch, rect, selectedLimbs.Contains(limb) ? Color.Yellow : Color.Red);
                     Vector2 origin = limb.ActiveSprite.Origin;
                     Vector2 limbScreenPos = new Vector2(rect.X + origin.X * spriteSheetZoom, rect.Y + origin.Y * spriteSheetZoom);
