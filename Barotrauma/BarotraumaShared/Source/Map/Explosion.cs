@@ -195,7 +195,7 @@ namespace Barotrauma
                     List<Affliction> modifiedAfflictions = new List<Affliction>();
                     foreach (Affliction affliction in attack.Afflictions)
                     {
-                        modifiedAfflictions.Add(affliction.CreateMultiplied(distFactor));
+                        modifiedAfflictions.Add(affliction.CreateMultiplied(distFactor / c.AnimController.Limbs.Length));
                     }
                     c.LastDamageSource = damageSource;
                     Character attacker = null;
