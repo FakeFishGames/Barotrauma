@@ -32,11 +32,6 @@ namespace Barotrauma
             UseTreatment
         }
 
-        private static Sprite toggleArrow;
-
-        //which slot is the toggle arrow drawn above
-        private int toggleArrowSlotIndex;
-
         private Point screenResolution;
 
         public Vector2[] SlotPositions;
@@ -52,25 +47,11 @@ namespace Barotrauma
                 SetSlotPositions(layout);
             }
         }
+        public bool Hidden { get; set; }
 
-        private bool hidden;
-        public bool Hidden
-        {
-            get { return hidden; }
-            set { hidden = value; }
-        }
-        
         partial void InitProjSpecific(XElement element)
         {
-            if (toggleArrow == null)
-            {
-                toggleArrow = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(585, 973, 67, 23), null);
-                toggleArrow.Origin = toggleArrow.size / 2;
-            }
-
-            toggleArrowSlotIndex = MathHelper.Clamp(element.GetAttributeInt("arrowslot", 0), 0, capacity - 1);
-
-            hidden = true;
+            Hidden = true;
 
             SlotPositions = new Vector2[SlotTypes.Length];
             CurrentLayout = Layout.Default;
@@ -702,22 +683,27 @@ namespace Barotrauma
                     highlightedQuickUseSlot = slots[i];
                 }
 
-                EquipIndicator.Draw(spriteBatch, slots[i].EquipButtonRect.Center.ToVector2(), color, EquipIndicator.size / 2, 0, UIScale);
+                var quickUseIndicator = Items[i].AllowedSlots.Any(a => a == InvSlotType.Any) ?
+                    EquipIndicator : DropIndicator;
+                var quickUseHighlight = Items[i].AllowedSlots.Any(a => a == InvSlotType.Any) ?
+                    EquipIndicatorHighlight : DropIndicatorHighlight;
+
+                quickUseIndicator.Draw(spriteBatch, slots[i].EquipButtonRect.Center.ToVector2(), color, quickUseIndicator.Origin, 0, UIScale);
                 slots[i].QuickUseTimer = Math.Min(slots[i].QuickUseTimer, 1.0f);
                 if (slots[i].QuickUseTimer > 0.0f)
                 {
                     float indicatorFillAmount = character.HasEquippedItem(Items[i]) ? 1.0f - slots[i].QuickUseTimer : slots[i].QuickUseTimer;
-                    EquipIndicatorOn.DrawTiled(spriteBatch,
-                        slots[i].EquipButtonRect.Center.ToVector2() - EquipIndicatorOn.size / 2 * UIScale * 0.85f,
-                        new Vector2((int)(slots[i].EquipButtonRect.Width * indicatorFillAmount * 0.85f), (int)(slots[i].EquipButtonRect.Height * 0.85f)),
+                    quickUseHighlight.DrawTiled(spriteBatch,
+                        slots[i].EquipButtonRect.Center.ToVector2() - quickUseHighlight.Origin * UIScale * 0.85f,
+                        new Vector2(quickUseIndicator.SourceRect.Width * indicatorFillAmount, quickUseIndicator.SourceRect.Height) * UIScale * 0.85f,
                         null,
                         color * 0.9f,
                         null,
-                        new Vector2(slots[i].EquipButtonRect.Width / EquipIndicatorOn.size.X, slots[i].EquipButtonRect.Height / EquipIndicatorOn.size.Y) * 0.85f);
+                        Vector2.One * UIScale * 0.85f);
                 }
                 else if (character.HasEquippedItem(Items[i]))
                 {
-                    EquipIndicatorOn.Draw(spriteBatch, slots[i].EquipButtonRect.Center.ToVector2(), color * 0.9f, EquipIndicatorOn.size / 2, 0, UIScale * 0.85f);
+                    quickUseHighlight.Draw(spriteBatch, slots[i].EquipButtonRect.Center.ToVector2(), color * 0.9f, quickUseHighlight.Origin, 0, UIScale * 0.85f);
                 }
             }
 
