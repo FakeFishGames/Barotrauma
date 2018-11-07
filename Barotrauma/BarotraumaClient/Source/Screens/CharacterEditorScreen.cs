@@ -3213,6 +3213,7 @@ namespace Barotrauma
             Widget CreateJointSelectionWidget(string ID, LimbJoint j)
             {
                 var widget = new Widget(ID, 10, Widget.Shape.Circle);
+                widget.inputAreaMargin = new Point(5, 5);
                 widget.refresh = () =>
                 {
                     widget.showTooltip = !selectedJoints.Contains(joint);
