@@ -1379,10 +1379,19 @@ namespace Barotrauma
             if (targetRightHand == null) targetRightHand = target.AnimController.GetLimb(LimbType.Torso);
             if (targetRightHand == null) targetRightHand = target.AnimController.MainLimb;
 
-            target.AnimController.ResetPullJoints();
+            if (!target.AllowInput)
+            {
+                target.AnimController.ResetPullJoints();
+            }
 
             if (Anim == Animation.Climbing)
             {
+                //cannot drag up ladders if the character is conscious
+                if (!target.AllowInput && GameMain.Client == null)
+                {
+                    character.DeselectCharacter();
+                    return;
+                }
                 Limb targetTorso = target.AnimController.GetLimb(LimbType.Torso);
                 if (targetTorso == null) targetTorso = target.AnimController.MainLimb;
 
@@ -1470,84 +1479,98 @@ namespace Barotrauma
                         {
                             sourceSimPos -= character.SelectedCharacter.Submarine.SimPosition;
                         }
+                        var body = Submarine.CheckVisibility(sourceSimPos, targetSimPos, ignoreSubs: true);
+                        if (body != null)
+                        {
+                            character.DeselectCharacter();
+                            return;
+                        }
                     }
 
                     //only pull with one hand when swimming
-                    if (i < 1 || !inWater)
+                    if (i > 0 && inWater) continue;
+                    
+                    Vector2 diff = ConvertUnits.ToSimUnits(targetLimb.WorldPosition - pullLimb.WorldPosition);
+
+                    Vector2 targetAnchor = targetLeftHand.PullJointWorldAnchorB;
+                    float targetForce = 0.0f;
+                    pullLimb.PullJointEnabled = true;
+                    if (targetLimb.type == LimbType.Torso || targetLimb == target.AnimController.MainLimb)
                     {
-                        Vector2 diff = ConvertUnits.ToSimUnits(targetLimb.WorldPosition - pullLimb.WorldPosition);
+                        pullLimb.PullJointWorldAnchorB = targetLimb.SimPosition;
+                        pullLimb.PullJointMaxForce = 5000.0f;
+                        targetMovement *= MathHelper.Clamp(Mass / target.Mass, 0.5f, 1.0f);
+                            
+                        Vector2 shoulderPos = shoulder.WorldAnchorA;
+                        Vector2 dragDir = inWater ? Vector2.Normalize(targetLimb.SimPosition - shoulderPos) : Vector2.UnitY;
 
-                        pullLimb.PullJointEnabled = true;
-                        targetLimb.PullJointEnabled = true;
-                        if (targetLimb.type == LimbType.Torso || targetLimb == target.AnimController.MainLimb)
+                        targetAnchor = shoulderPos - dragDir * ConvertUnits.ToSimUnits(upperArmLength + forearmLength);
+                        targetForce = 200.0f;
+
+                        if (target.Submarine != character.Submarine)
                         {
-                            pullLimb.PullJointWorldAnchorB = targetLimb.SimPosition;
-                            pullLimb.PullJointMaxForce = 5000.0f;
-                            targetMovement *= MathHelper.Clamp(Mass / target.Mass, 0.5f, 1.0f);
-
-                            //hand length
-                            float a = 37.0f;
-                            //arm length
-                            float b = 28.0f;
-
-                            Vector2 shoulderPos = shoulder.WorldAnchorA;
-                            Vector2 dragDir = inWater ? Vector2.Normalize(targetLimb.SimPosition - shoulderPos) : Vector2.UnitY;
-
-                            targetLimb.PullJointWorldAnchorB = shoulderPos - dragDir * ConvertUnits.ToSimUnits(a + b);
-                            targetLimb.PullJointMaxForce = 200.0f;
-
-                            if (target.Submarine != character.Submarine)
+                            if (character.Submarine == null)
                             {
-                                if (character.Submarine == null)
-                                {
-                                    pullLimb.PullJointWorldAnchorB += target.Submarine.SimPosition;
-                                    targetLimb.PullJointWorldAnchorB -= target.Submarine.SimPosition;
-                                }
-                                else if (target.Submarine == null)
-                                {
-                                    pullLimb.PullJointWorldAnchorB -= character.Submarine.SimPosition;
-                                    targetLimb.PullJointWorldAnchorB += character.Submarine.SimPosition;
-                                }
-                                else
-                                {
-                                    pullLimb.PullJointWorldAnchorB -= target.Submarine.SimPosition;
-                                    pullLimb.PullJointWorldAnchorB += character.Submarine.SimPosition;
-                                    targetLimb.PullJointWorldAnchorB -= character.Submarine.SimPosition;
-                                    targetLimb.PullJointWorldAnchorB += target.Submarine.SimPosition;
-                                }
+                                pullLimb.PullJointWorldAnchorB += target.Submarine.SimPosition;
+                                targetAnchor -= target.Submarine.SimPosition;
+                            }
+                            else if (target.Submarine == null)
+                            {
+                                pullLimb.PullJointWorldAnchorB -= character.Submarine.SimPosition;
+                                targetAnchor += character.Submarine.SimPosition;
+                            }
+                            else
+                            {
+                                pullLimb.PullJointWorldAnchorB -= target.Submarine.SimPosition;
+                                pullLimb.PullJointWorldAnchorB += character.Submarine.SimPosition;
+                                targetAnchor -= character.Submarine.SimPosition;
+                                targetAnchor += target.Submarine.SimPosition;
                             }
                         }
-                        else
-                        {
-                            pullLimb.PullJointWorldAnchorB = pullLimb.SimPosition + diff;
-                            pullLimb.PullJointMaxForce = 5000.0f;
-
-                            targetLimb.PullJointWorldAnchorB = targetLimb.SimPosition - diff;
-                            targetLimb.PullJointMaxForce = 5000.0f;
-                        }
-                        target.AnimController.movement = -diff;
                     }
+                    else
+                    {
+                        pullLimb.PullJointWorldAnchorB = pullLimb.SimPosition + diff;
+                        pullLimb.PullJointMaxForce = 5000.0f;
+
+                        targetAnchor = targetLimb.SimPosition - diff;
+                        targetForce = 5000.0f;
+                    }
+
+                    if (!target.AllowInput)
+                    {
+                        targetLimb.PullJointEnabled = true;
+                        targetLimb.PullJointMaxForce = targetForce;
+                        targetLimb.PullJointWorldAnchorB = targetAnchor;
+                    }
+
+                    target.AnimController.movement = -diff;                    
                 }
 
                 float dist = Vector2.Distance(target.SimPosition, Collider.SimPosition);
+                //let the target break free if it's moving away and gets far enough
+                if (GameMain.Client == null && dist > 1.4f && 
+                    Vector2.Dot(target.SimPosition - Collider.SimPosition, target.AnimController.TargetMovement) > 0)
+                {
+                    character.DeselectCharacter();
+                    return;
+                }
 
                 //limit movement if moving away from the target
                 if (Vector2.Dot(target.SimPosition - Collider.SimPosition, targetMovement) < 0)
                 {
-                    targetMovement *= MathHelper.Clamp(2.0f - dist, 0.0f, 1.0f);
+                    targetMovement *= MathHelper.Clamp(1.5f - dist, 0.0f, 1.0f);
                 }
-
-                target.AnimController.IgnorePlatforms = IgnorePlatforms;
-
+                
                 if (!target.AllowInput)
                 {
+                    target.AnimController.IgnorePlatforms = IgnorePlatforms;
                     target.AnimController.TargetMovement = TargetMovement;
                 }
-                else if (target is AICharacter)
+                else if (target is AICharacter && target != Character.Controlled)
                 {
-                    target.AnimController.TargetMovement = Vector2.Lerp(
-                        target.AnimController.TargetMovement,
-                        (character.SimPosition + Vector2.UnitX * Dir) - target.SimPosition, 0.5f);
+                    target.AnimController.TargetDir = WorldPosition.X > target.WorldPosition.X ? Direction.Right : Direction.Left;
+                    target.AnimController.TargetMovement = (character.SimPosition + Vector2.UnitX * Dir) - target.SimPosition;
                 }
             }
         }
