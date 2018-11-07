@@ -278,6 +278,14 @@ namespace Barotrauma.Items.Components
                     if (!item.HasTag("reactorfuel")) continue;
                     item.Condition -= fissionRate / 100.0f * fuelConsumptionRate * deltaTime;
                 }
+
+                if (item.CurrentHull != null)
+                {
+                    //the sound can be heard from 20 000 display units away when running at full power
+                    item.CurrentHull.SoundRange = Math.Max(
+                        (-currPowerConsumption / MaxPowerOutput) * 20000.0f, 
+                        item.CurrentHull.AiTarget.SoundRange);
+                }
             }
 
             item.SendSignal(0, ((int)(temperature * 100.0f)).ToString(), "temperature_out", null);
