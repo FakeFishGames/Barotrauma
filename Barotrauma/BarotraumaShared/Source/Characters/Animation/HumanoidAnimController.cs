@@ -1716,6 +1716,7 @@ namespace Barotrauma
 
         private void HandIK(Limb hand, Vector2 pos, float force = 1.0f)
         {
+            if (shoulder == null) { return; }
             Vector2 shoulderPos = shoulder.WorldAnchorA;
 
             Limb arm, forearm;
@@ -1741,9 +1742,9 @@ namespace Barotrauma
             float armAngle = MathUtils.SolveTriangleSSS(forearmLength, upperArmLength, c);
             float handAngle = MathUtils.SolveTriangleSSS(upperArmLength, forearmLength, c);
 
-            arm.body.SmoothRotate((ang2 - armAngle * Dir), 20.0f * force * arm.Mass);
+            arm?.body.SmoothRotate((ang2 - armAngle * Dir), 20.0f * force * arm.Mass);
             forearm?.body.SmoothRotate((ang2 + handAngle * Dir), 20.0f * force * forearm.Mass);
-            hand.body.SmoothRotate((ang2 + handAngle * Dir), 100.0f * force * hand.Mass);
+            hand?.body.SmoothRotate((ang2 + handAngle * Dir), 100.0f * force * hand.Mass);
         }
 
         public override void UpdateUseItem(bool allowMovement, Vector2 handPos)
