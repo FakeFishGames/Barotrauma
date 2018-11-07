@@ -470,6 +470,8 @@ namespace Barotrauma
 
         private bool CheckCharacterCollision(Contact contact, Character character)
         {
+            //characters that can't enter the sub always collide regardless of gaps
+            if (!character.AnimController.CanEnterSubmarine) return true;
             if (character.Submarine != null) return false;
 
             contact.GetWorldManifold(out Vector2 contactNormal, out FixedArray2<Vector2> points);

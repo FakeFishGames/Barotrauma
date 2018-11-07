@@ -112,30 +112,12 @@ namespace Barotrauma
         private bool EnterIDCardTags(GUITextBox textBox, string text)
         {
             IdCardTags = text.Split(',');
-            textBox.Text = text;
-            textBox.Color = Color.Green;
-
+            textBox.Text = string.Join(",", IdCardTags);
+            textBox.Flash(Color.Green);
             textBox.Deselect();
-
             return true;
         }
-
-        private bool EnterAssignedJob(GUITextBox textBox, string text)
-        {
-            string trimmedName = text.ToLowerInvariant().Trim();
-            assignedJob = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == trimmedName);
-
-            if (assignedJob != null && trimmedName != TextManager.Get("None").ToLowerInvariant())
-            {
-                textBox.Color = Color.Green;
-                textBox.Text = (assignedJob == null) ? TextManager.Get("None") : assignedJob.Name;
-            }
-
-            textBox.Deselect();
-
-            return true;
-        }
-
+        
         private bool TextBoxChanged(GUITextBox textBox, string text)
         {
             textBox.Color = Color.Red;
@@ -215,14 +197,25 @@ namespace Barotrauma
 
 
                 var jobsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform),
-                    TextManager.Get("SpawnpointJobs"), font: GUI.SmallFont);
-                propertyBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), jobsText.RectTransform, Anchor.CenterRight), (assignedJob == null) ? "None" : assignedJob.Name)
+                    TextManager.Get("SpawnpointJobs"), font: GUI.SmallFont)
                 {
-                    MaxTextLength = 60,
-                    OnEnterPressed = EnterAssignedJob,
-                    OnTextChanged = TextBoxChanged,
                     ToolTip = TextManager.Get("SpawnpointJobsTooltip")
                 };
+                var jobDropDown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1.0f), jobsText.RectTransform, Anchor.CenterRight))
+                {
+                    ToolTip = TextManager.Get("SpawnpointJobsTooltip"),
+                    OnSelected = (selected, userdata) =>
+                    {
+                        assignedJob = userdata as JobPrefab;
+                        return true;
+                    }
+                };
+                jobDropDown.AddItem(TextManager.Get("Any"), null);
+                foreach (JobPrefab jobPrefab in JobPrefab.List)
+                {
+                    jobDropDown.AddItem(jobPrefab.Name, jobPrefab);
+                }
+                jobDropDown.SelectItem(assignedJob);
             }
             
             PositionEditingHUD();

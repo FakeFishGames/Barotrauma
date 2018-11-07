@@ -179,23 +179,27 @@ namespace Barotrauma
         {
             if (item?.ParentInventory == null || Items[index] == null) return false;
 
+            //swap to InvSlotType.Any if possible
             Inventory otherInventory = item.ParentInventory;
-            int otherIndex = Array.IndexOf(otherInventory.Items, item);
+            int otherIndex = -1;
+            for (int i = 0; i < otherInventory.Items.Length; i++)
+            {
+                if (otherInventory.Items[i] != item) continue;
+                if (otherInventory is CharacterInventory characterInventory)
+                {
+                    if (characterInventory.SlotTypes[i] == InvSlotType.Any)
+                    {
+                        otherIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            if (otherIndex == -1) otherIndex = Array.IndexOf(otherInventory.Items, item);
             Item existingItem = Items[index];
-            
+
             for (int j = 0; j < otherInventory.capacity; j++)
             {
-                /*if (character.HasEquippedItem(existingItem) && existingItem.AllowedSlots.Contains(InvSlotType.Any))
-                {
-                    for (int i = 0; i < capacity; i++)
-                    {
-                        if (Items[i] == existingItem && SlotTypes[i] != InvSlotType.Any)
-                        {
-                            Items[i] = null;
-                        }
-                    }
-                }*/
-
                 if (otherInventory.Items[j] == item) otherInventory.Items[j] = null;
             }
             for (int j = 0; j < capacity; j++)
