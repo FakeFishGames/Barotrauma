@@ -42,12 +42,16 @@ namespace Barotrauma
 
             if (slotSpriteSmall == null)
             {
+                //TODO: define these in xml
                 slotSpriteSmall = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(532, 395, 75, 71), null, 0);
                 slotSpriteVertical = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(672, 218, 75, 144), null, 0);
                 slotSpriteHorizontal = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(476, 186, 160, 75), null, 0);
                 slotSpriteRound = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(681, 373, 58, 64), null, 0);
-                EquipIndicator = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(673, 182, 73, 27), null, 0);
-                EquipIndicatorOn = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(679, 108, 67, 21), null, 0);
+
+                EquipIndicator = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(673, 182, 73, 27), new Vector2(0.5f, 0.5f), 0);
+                EquipIndicatorHighlight = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(679, 108, 67, 21), new Vector2(0.5f, 0.5f), 0);
+                DropIndicator = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(870, 55, 73, 66), new Vector2(0.5f, 0.75f), 0);
+                DropIndicatorHighlight = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(946, 54, 73, 66), new Vector2(0.5f, 0.75f), 0);
             }
 #endif
         }
