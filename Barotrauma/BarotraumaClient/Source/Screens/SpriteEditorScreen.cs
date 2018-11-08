@@ -297,6 +297,23 @@ namespace Barotrauma
                 }
             }
 
+            // TODO: add ragdolls and animations into the content package
+            foreach (string filePath in Directory.GetFiles("Content/Characters/", "*.xml", SearchOption.AllDirectories))
+            {
+                XDocument doc = XMLExtensions.TryLoadXml(filePath);
+                if (doc != null && doc.Root != null)
+                {
+                    if (doc.Element("Ragdoll") == null)
+                    {
+                        if (doc.Element("ragdoll") == null)
+                        {
+                            continue;
+                        }
+                    }
+                    LoadSprites(doc.Root);
+                }
+            }
+
             void LoadSprites(XElement element)
             {
                 element.Elements("sprite").ForEach(s => CreateSprite(s));
