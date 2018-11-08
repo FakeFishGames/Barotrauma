@@ -273,7 +273,7 @@ namespace Barotrauma
 
             if (levelObjectPrefab.DeformableSprite != null)
             {
-                var deformEditor = levelObjectPrefab.DeformableSprite.CreateEditor(editor, levelObjectPrefab.SpriteDeformations);
+                var deformEditor = levelObjectPrefab.DeformableSprite.CreateEditor(editor, levelObjectPrefab.SpriteDeformations, levelObjectPrefab.Name);
                 deformEditor.GetChild<GUIDropDown>().OnSelected += (selected, userdata) =>
                 {
                     CreateLevelObjectEditor(selectedLevelObject);

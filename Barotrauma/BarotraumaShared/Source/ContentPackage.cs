@@ -216,6 +216,14 @@ namespace Barotrauma
             md5Hash = new Md5Hash(bytes);
         }
 
+        /// <summary>
+        /// Returns all xml files.
+        /// </summary>
+        public static IEnumerable<string> GetAllContentFiles(IEnumerable<ContentPackage> contentPackages)
+        {
+            return contentPackages.SelectMany(f => f.Files).Select(f => f.Path).Where(p => p.EndsWith(".xml"));
+        }
+
         public static IEnumerable<string> GetFilesOfType(IEnumerable<ContentPackage> contentPackages, ContentType type)
         {
             return contentPackages.SelectMany(f => f.Files).Where(f => f.Type == type).Select(f => f.Path);
