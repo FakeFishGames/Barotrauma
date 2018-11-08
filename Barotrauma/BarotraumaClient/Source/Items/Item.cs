@@ -74,9 +74,14 @@ namespace Barotrauma
             {
                 SpriteEffects oldEffects = selectedSprite.effects;
                 selectedSprite.effects ^= SpriteEffects;
+                SpriteEffects oldBrokenSpriteEffects = SpriteEffects.None;
+                if (fadeInBrokenSprite != null)
+                {
+                    oldBrokenSpriteEffects = fadeInBrokenSprite.Sprite.effects;
+                    fadeInBrokenSprite.Sprite.effects ^= SpriteEffects;
+                }
 
                 float depth = GetDrawDepth();
-
                 if (body == null)
                 {
                     if (prefab.ResizeHorizontal || prefab.ResizeVertical || SpriteEffects.HasFlag(SpriteEffects.FlipHorizontally) || SpriteEffects.HasFlag(SpriteEffects.FlipVertically))
@@ -91,7 +96,6 @@ namespace Barotrauma
                         selectedSprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, 0.0f, 1.0f, SpriteEffects.None, depth);
                         fadeInBrokenSprite?.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color * fadeInBrokenSpriteAlpha, 0.0f, 1.0f, SpriteEffects.None, depth - 0.000001f);
                     }
-
                 }
                 else if (body.Enabled)
                 {
@@ -122,8 +126,11 @@ namespace Barotrauma
                 }
 
                 selectedSprite.effects = oldEffects;
+                if (fadeInBrokenSprite != null)
+                {
+                    fadeInBrokenSprite.Sprite.effects = oldEffects;
+                }
             }
-
 
             List<IDrawableComponent> staticDrawableComponents = new List<IDrawableComponent>(drawableComponents); //static list to compensate for drawable toggling
             for (int i = 0; i < staticDrawableComponents.Count; i++)
