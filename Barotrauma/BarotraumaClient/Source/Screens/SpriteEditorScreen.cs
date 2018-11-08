@@ -287,7 +287,6 @@ namespace Barotrauma
         private HashSet<Sprite> loadedSprites = new HashSet<Sprite>();
         private void LoadSprites()
         {
-            // TODO: limb sprites are in ragdolls -> we need to load and parse all ragdoll files separately.
             foreach (string filePath in ContentPackage.GetAllContentFiles(GameMain.SelectedPackages))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(filePath);
