@@ -109,9 +109,14 @@ namespace Barotrauma
             {
                 SpriteEffects oldEffects = activeSprite.effects;
                 activeSprite.effects ^= SpriteEffects;
+                SpriteEffects oldBrokenSpriteEffects = SpriteEffects.None;
+                if (fadeInBrokenSprite != null)
+                {
+                    oldBrokenSpriteEffects = fadeInBrokenSprite.Sprite.effects;
+                    fadeInBrokenSprite.Sprite.effects ^= SpriteEffects;
+                }
 
                 float depth = GetDrawDepth();
-
                 if (body == null)
                 {
                     bool flipHorizontal = (SpriteEffects & SpriteEffects.FlipHorizontally) != 0;
@@ -131,7 +136,6 @@ namespace Barotrauma
                         activeSprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, SpriteRotation, Scale, activeSprite.effects, depth);
                         fadeInBrokenSprite?.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color * fadeInBrokenSpriteAlpha, SpriteRotation, Scale, activeSprite.effects, depth - 0.000001f);
                     }
-
                 }
                 else if (body.Enabled)
                 {
@@ -162,6 +166,10 @@ namespace Barotrauma
                 }
 
                 activeSprite.effects = oldEffects;
+                if (fadeInBrokenSprite != null)
+                {
+                    fadeInBrokenSprite.Sprite.effects = oldEffects;
+                }
             }
 
             //use a backwards for loop because the drawable components may disable drawing, 
