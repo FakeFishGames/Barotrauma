@@ -279,14 +279,17 @@ namespace Barotrauma
         /// <summary>
         /// Call this to create the ragdoll from the RagdollParams.
         /// </summary>
-        public virtual void Recreate(RagdollParams ragdollParams)
+        public virtual void Recreate(RagdollParams ragdollParams = null)
         {
             if (IsFlipped)
             {
                 Flip();
             }
             dir = Direction.Right;
-            RagdollParams = ragdollParams;
+            if (ragdollParams != null)
+            {
+                RagdollParams = ragdollParams;
+            }
             CreateColliders();
             CreateLimbs();
             CreateJoints();
