@@ -19,7 +19,7 @@ namespace Barotrauma.Items.Components
         private GUITickBox directionalTickBox;
         private GUIScrollBar directionalSlider;
 
-        private GUIFrame activeControlsDisabler;
+        private GUIComponent activeControlsContainer;
 
         private GUICustomComponent sonarView;
 
@@ -66,7 +66,7 @@ namespace Barotrauma.Items.Components
 
             controlContainer.RectTransform.SetAsFirstChild();
 
-            var paddedControlContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), controlContainer.RectTransform, Anchor.Center))
+            var paddedControlContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), controlContainer.RectTransform, Anchor.Center))
             {
                 RelativeSpacing = 0.03f,
                 Stretch = true
@@ -97,17 +97,13 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
-
-            var activeControls = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.8f), paddedControlContainer.RectTransform) { RelativeOffset = new Vector2(0.1f, 0.0f) }, "InnerFrame");
-            var paddedActiveControls = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), activeControls.RectTransform, Anchor.Center))
+            
+            var zoomContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), paddedControlContainer.RectTransform), isHorizontal: true);
+            new GUITextBlock(new RectTransform(new Vector2(0.35f, 1.0f), zoomContainer.RectTransform), TextManager.Get("SonarZoom"), font: GUI.SmallFont)
             {
-                RelativeSpacing = 0.03f,
-                Stretch = true
+                Padding = Vector4.Zero
             };
-
-            var zoomContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), paddedActiveControls.RectTransform), isHorizontal: true);
-            new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), zoomContainer.RectTransform), TextManager.Get("SonarZoom"), font: GUI.SmallFont);
-            zoomSlider = new GUIScrollBar(new RectTransform(new Vector2(0.7f, 1.0f), zoomContainer.RectTransform), barSize: 0.1f, isHorizontal: true)
+            zoomSlider = new GUIScrollBar(new RectTransform(new Vector2(0.65f, 1.0f), zoomContainer.RectTransform), barSize: 0.1f, isHorizontal: true)
             {
                 OnMoved = (scrollbar, scroll) =>
                 {
@@ -125,12 +121,18 @@ namespace Barotrauma.Items.Components
                 }
             };
 
-            directionalTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), paddedActiveControls.RectTransform), TextManager.Get("SonarDirectionalPing"))
+            var activeControls = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.6f), paddedControlContainer.RectTransform) { RelativeOffset = new Vector2(0.1f, 0.0f) }, "InnerFrame");
+            activeControlsContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), activeControls.RectTransform, Anchor.Center))
+            {
+                RelativeSpacing = 0.03f,
+                Stretch = true
+            };
+            
+            directionalTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), activeControlsContainer.RectTransform), TextManager.Get("SonarDirectionalPing"))
             {
                 OnSelected = (tickBox) =>
                 {
                     useDirectionalPing = tickBox.Selected;
-                    directionalSlider.Enabled = useDirectionalPing;
                     if (GameMain.Server != null)
                     {
                         item.CreateServerEvent(this);
@@ -143,9 +145,8 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
-            directionalSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.3f), paddedActiveControls.RectTransform), barSize: 0.1f, isHorizontal: true)
+            directionalSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.3f), activeControlsContainer.RectTransform), barSize: 0.1f, isHorizontal: true)
             {
-                Enabled = false,
                 OnMoved = (scrollbar, scroll) =>
                 {
                     float pingAngle = MathHelper.Lerp(0.0f, MathHelper.TwoPi, scroll);
@@ -162,10 +163,8 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
-
-            activeControlsDisabler = new GUIFrame(new RectTransform(Vector2.One, activeControls.RectTransform), "InnerFrame");
-
-            signalWarningText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedControlContainer.RectTransform), "", Color.Orange, textAlignment: Alignment.Center);
+            
+            signalWarningText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedControlContainer.RectTransform), "", Color.Orange, textAlignment: Alignment.Center);
             
             GUITickBox.CreateRadioButtonGroup(new List<GUITickBox>() { activeTickBox, passiveTickBox });
 
@@ -190,7 +189,13 @@ namespace Barotrauma.Items.Components
                 if (sonarBlips[i].FadeTimer <= 0.0f) sonarBlips.RemoveAt(i);
             }
 
-            activeControlsDisabler.Visible = !IsActive;
+            foreach (GUIComponent component in activeControlsContainer.Parent.GetAllChildren())
+            {
+                if (component is GUITextBlock textBlock)
+                {
+                    textBlock.TextColor = IsActive ? textBlock.Style.textColor : textBlock.Style.textColor * 0.5f;
+                }
+            }
 
             //sonar view can only get focus when the cursor is inside the circle
             sonarView.CanBeFocused = 
