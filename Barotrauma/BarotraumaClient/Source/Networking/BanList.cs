@@ -7,7 +7,7 @@ namespace Barotrauma.Networking
 {
     partial class BannedPlayer
     {
-        public BannedPlayer(string name, Int32 uniqueIdentifier, bool isRangeBan, string ip, ulong steamID)
+        public BannedPlayer(string name, UInt16 uniqueIdentifier, bool isRangeBan, string ip, ulong steamID)
         {
             this.Name = name;
             this.SteamID = steamID;
@@ -26,8 +26,8 @@ namespace Barotrauma.Networking
             get { return banFrame; }
         }
 
-        public List<Int32> localRemovedBans = new List<Int32>();
-        public List<Int32> localRangeBans = new List<Int32>();
+        public List<UInt16> localRemovedBans = new List<UInt16>();
+        public List<UInt16> localRangeBans = new List<UInt16>();
 
         private void RecreateBanFrame()
         {
@@ -115,7 +115,7 @@ namespace Barotrauma.Networking
             for (int i = 0; i < bannedPlayerCount; i++)
             {
                 string name = incMsg.ReadString();
-                Int32 uniqueIdentifier = incMsg.ReadInt32();
+                UInt16 uniqueIdentifier = incMsg.ReadUInt16();
                 bool isRangeBan = incMsg.ReadBoolean(); incMsg.ReadPadBits();
                 
                 string ip = "";
@@ -175,13 +175,13 @@ namespace Barotrauma.Networking
         public void ClientAdminWrite(NetBuffer outMsg)
         {
             outMsg.Write((UInt16)localRemovedBans.Count);
-            foreach (Int32 uniqueId in localRemovedBans)
+            foreach (UInt16 uniqueId in localRemovedBans)
             {
                 outMsg.Write(uniqueId);
             }
 
             outMsg.Write((UInt16)localRangeBans.Count);
-            foreach (Int32 uniqueId in localRangeBans)
+            foreach (UInt16 uniqueId in localRangeBans)
             {
                 outMsg.Write(uniqueId);
             }

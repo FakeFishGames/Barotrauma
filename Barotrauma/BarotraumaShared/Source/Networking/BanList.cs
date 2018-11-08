@@ -13,7 +13,7 @@ namespace Barotrauma.Networking
         public UInt64 SteamID;
         public string Reason;
         public DateTime? ExpirationTime;
-        public Int32 UniqueIdentifier;
+        public UInt16 UniqueIdentifier;
     }
 
     partial class BanList
