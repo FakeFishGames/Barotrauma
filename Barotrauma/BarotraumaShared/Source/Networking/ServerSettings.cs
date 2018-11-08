@@ -240,15 +240,7 @@ namespace Barotrauma.Networking
                     {
                         NetPropertyData netPropertyData = new NetPropertyData(property, typeName);
 
-                        //calculate key based on MD5 hash instead of string.GetHashCode
-                        //to ensure consistent results across platforms
-                        byte[] inputBytes = Encoding.ASCII.GetBytes(property.Name);
-                        byte[] hash = md5.ComputeHash(inputBytes);
-
-                        UInt32 key = (UInt32)((property.Name.Length & 0xff) << 24); //could use more of the hash here instead?
-                        key |= (UInt32)(hash[hash.Length - 3] << 16);
-                        key |= (UInt32)(hash[hash.Length - 2] << 8);
-                        key |= (UInt32)(hash[hash.Length - 1]);
+                        UInt32 key = ToolBox.StringToUInt32Hash(property.Name, md5);
 
                         if (netProperties.ContainsKey(key)) throw new Exception("Hashing collision in ServerSettings.netProperties: " + netProperties[key] + " has same key as " + property.Name + " (" + key.ToString() + ")");
 
