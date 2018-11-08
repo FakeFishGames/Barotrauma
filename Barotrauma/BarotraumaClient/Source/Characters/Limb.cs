@@ -171,7 +171,7 @@ namespace Barotrauma
                             }
                             if (deformation == null)
                             {
-                                deformation = SpriteDeformation.Load(animationElement);
+                                deformation = SpriteDeformation.Load(animationElement, character.SpeciesName);
                                 if (deformation != null)
                                 {
                                     ragdoll.SpriteDeformations.Add(deformation);
