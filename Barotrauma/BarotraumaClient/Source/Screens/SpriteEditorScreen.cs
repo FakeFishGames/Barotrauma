@@ -230,10 +230,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        string[] splitted = element.BaseUri.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
-                        IEnumerable<string> filtered = splitted.SkipWhile(part => part != "Content");
-                        string parsed = string.Join("/", filtered);
-                        xmlPath = parsed;
+                        xmlPath = ParsePathFromUri(element.BaseUri);
                         xmlPathText.Text = xmlPath;
                         xmlPathText.TextColor = Color.LightGray;
                     }
@@ -284,16 +281,18 @@ namespace Barotrauma
             RefreshLists();
         }
 
-        private void ResetWidgets()
-        {
-            widgets.Clear();
-            Widget.selectedWidgets.Clear();
-        }
-
         public override void Select()
         {
             base.Select();
+            LoadSprites();
             RefreshLists();
+        }
+
+        public override void Deselect()
+        {
+            base.Deselect();
+            loadedSprites.ForEach(s => s.Remove());
+            loadedSprites.Clear();
         }
 
         public void SelectSprite(Sprite sprite)
@@ -382,14 +381,8 @@ namespace Barotrauma
                     bool isSelected = selectedSprites.Contains(sprite);
                     GUI.DrawRectangle(spriteBatch, sourceRect, isSelected ? Color.Yellow : Color.Red * 0.5f, thickness: isSelected ? 2 : 1);
 
-                    string identifier = null;
-                    var sourceElement = sprite.SourceElement;
-                    if (sourceElement != null)
-                    {
-                        var parentElement = sourceElement.Parent;
-                        identifier = parentElement != null ? sourceElement.ToString() + parentElement.ToString() : sourceElement.ToString();
-                    }
-                    if (!string.IsNullOrEmpty(identifier))
+                    string id = sprite.ID;
+                    if (!string.IsNullOrEmpty(id))
                     {
                         int widgetSize = 10;
                         Vector2 halfSize = new Vector2(widgetSize) / 2;
@@ -397,7 +390,7 @@ namespace Barotrauma
                         Vector2 GetTopLeft() => sprite.SourceRect.Location.ToVector2();
                         Vector2 GetTopRight() => new Vector2(GetTopLeft().X + sprite.SourceRect.Width, GetTopLeft().Y);
                         Vector2 GetBottomRight() => new Vector2(GetTopRight().X, GetTopRight().Y + sprite.SourceRect.Height);
-                        var originWidget = GetWidget($"{identifier}_origin", widgetSize, Widget.Shape.Cross, initMethod: w =>
+                        var originWidget = GetWidget($"{id}_origin", widgetSize, Widget.Shape.Cross, initMethod: w =>
                         {
                             w.color = Color.Yellow;
                             w.secondaryColor = Color.Gray;
@@ -419,7 +412,7 @@ namespace Barotrauma
                             w.MouseUp += w.refresh;
                             w.PreUpdate += dTime => w.Enabled = selectedSprites.Contains(sprite);
                         });
-                        var positionWidget = GetWidget($"{identifier}_position", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
+                        var positionWidget = GetWidget($"{id}_position", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                         {
                             w.color = Color.Yellow;
                             w.secondaryColor = Color.Gray;
@@ -432,11 +425,11 @@ namespace Barotrauma
                             {
                                 w.DrawPos = PlayerInput.MousePosition;
                                 sprite.SourceRect = new Rectangle(((w.DrawPos + halfSize - textureRect.Location.ToVector2()) / zoom).ToPoint(), sprite.SourceRect.Size);
-                                if (widgets.TryGetValue($"{identifier}_size", out Widget sizeW))
+                                if (widgets.TryGetValue($"{id}_size", out Widget sizeW))
                                 {
                                     sizeW.refresh();
                                 }
-                                if (widgets.TryGetValue($"{identifier}_origin", out Widget originW))
+                                if (widgets.TryGetValue($"{id}_origin", out Widget originW))
                                 {
                                     originW.refresh();
                                 }
@@ -451,7 +444,7 @@ namespace Barotrauma
                             w.MouseUp += w.refresh;
                             w.PreUpdate += dTime => w.Enabled = selectedSprites.Contains(sprite);
                         });
-                        var sizeWidget = GetWidget($"{identifier}_size", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
+                        var sizeWidget = GetWidget($"{id}_size", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                         {
                             w.color = Color.Yellow;
                             w.secondaryColor = Color.Gray;
@@ -465,7 +458,7 @@ namespace Barotrauma
                                 w.DrawPos = PlayerInput.MousePosition;
                                 sprite.SourceRect = new Rectangle(sprite.SourceRect.Location, ((w.DrawPos - new Vector2(widgetSize) - positionWidget.DrawPos) / zoom).ToPoint());
                                 sprite.RelativeOrigin = sprite.RelativeOrigin;
-                                if (widgets.TryGetValue($"{identifier}_origin", out Widget originW))
+                                if (widgets.TryGetValue($"{id}_origin", out Widget originW))
                                 {
                                     originW.refresh();
                                 }
@@ -499,6 +492,47 @@ namespace Barotrauma
             spriteBatch.End();
         }
 
+        private HashSet<Sprite> loadedSprites = new HashSet<Sprite>();
+        private void LoadSprites()
+        {
+            // TODO: limb sprites are in ragdolls -> we need to load and parse all ragdoll files separately.
+            foreach (string filePath in ContentPackage.GetAllContentFiles(GameMain.SelectedPackages))
+            {
+                XDocument doc = XMLExtensions.TryLoadXml(filePath);
+                if (doc != null && doc.Root != null)
+                {
+                    LoadSprites(doc.Root);
+                }
+            }
+
+            void LoadSprites(XElement element)
+            {
+                element.Elements("sprite").ForEach(s => CreateSprite(s));
+                element.Elements().ForEach(e => LoadSprites(e));
+            }
+
+            void CreateSprite(XElement element)
+            {
+                string spriteFolder = "";
+                if (!element.GetAttributeString("texture", "").Contains("/"))
+                {
+                    spriteFolder = Path.GetDirectoryName(ParsePathFromUri(element.BaseUri));
+                }
+                string identifier = Sprite.GetID(element);
+                if (Sprite.LoadedSprites.None(s => s.ID == identifier))
+                {
+                    loadedSprites.Add(new Sprite(element, spriteFolder));
+                }
+            }
+        }
+
+        private string ParsePathFromUri(string uri)
+        {
+            string[] splitted = uri.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+            IEnumerable<string> filtered = splitted.SkipWhile(part => part != "Content");
+            return string.Join("/", filtered);
+        }
+
         private void ResetScale()
         {
             float width = viewArea.Width / (float)selectedTexture.Width;
@@ -511,22 +545,17 @@ namespace Barotrauma
 
         private float GetBarScrollValue() => MathHelper.Lerp(0, 1, MathUtils.InverseLerp(minZoom, maxZoom, zoom));
 
-        private string GetIdentifier(Sprite sprite)
-        {
-            var element = sprite.SourceElement;
-            if (element == null) { return string.Empty; }
-            string identifier = element.Parent.GetAttributeString("identifier", string.Empty);
-            if (string.IsNullOrEmpty(identifier))
-            {
-                return element.Parent.GetAttributeString("name", string.Empty);
-            }
-            return identifier;
-        }
-
         private string GetSpriteName(Sprite sprite)
         {
-            string identifier = GetIdentifier(sprite);
-            return string.IsNullOrEmpty(identifier) ? Path.GetFileNameWithoutExtension(sprite.FilePath) : identifier;
+            var sourceElement = sprite.SourceElement;
+            if (sourceElement == null) { return string.Empty; }
+            string id = string.Empty;
+            string identifier = sourceElement.Parent.GetAttributeString("identifier", string.Empty);
+            if (string.IsNullOrEmpty(id))
+            {
+                id = sourceElement.Parent.GetAttributeString("name", string.Empty);
+            }
+            return string.IsNullOrEmpty(id) ? Path.GetFileNameWithoutExtension(sprite.FilePath) : id;
         }
 
         public void RefreshLists()
@@ -574,6 +603,12 @@ namespace Barotrauma
                 widgets.Add(id, widget);
             }
             return widget;
+        }
+
+        private void ResetWidgets()
+        {
+            widgets.Clear();
+            Widget.selectedWidgets.Clear();
         }
         #endregion
     }
