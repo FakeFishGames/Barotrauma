@@ -125,7 +125,7 @@ namespace Barotrauma
                 if (subElement.Name.ToString().ToLowerInvariant() != "deformablesprite") continue;                
                 foreach (XElement animationElement in subElement.Elements())
                 {
-                    var newDeformation = SpriteDeformation.Load(animationElement);
+                    var newDeformation = SpriteDeformation.Load(animationElement, Prefab.Name);
                     if (newDeformation != null)
                     {
                         newDeformation.DeformationParams = Prefab.SpriteDeformations[j].DeformationParams;

@@ -623,7 +623,7 @@ namespace Barotrauma
             lastLimbElement.AddAfterSelf(newLimbElement);
             var newLimbParams = new LimbParams(newLimbElement, RagdollParams);
             RagdollParams.Limbs.Add(newLimbParams);
-            character.AnimController.Recreate(RagdollParams);
+            character.AnimController.Recreate();
             TeleportTo(spawnPosition);
             ClearWidgets();
             selectedLimbs.Add(character.AnimController.Limbs.Single(l => l.limbParams == newLimbParams));
@@ -656,7 +656,7 @@ namespace Barotrauma
             lastJointElement.AddAfterSelf(newJointElement);
             var newJointParams = new JointParams(newJointElement, RagdollParams);
             RagdollParams.Joints.Add(newJointParams);
-            character.AnimController.Recreate(RagdollParams);
+            character.AnimController.Recreate();
             TeleportTo(spawnPosition);
             ClearWidgets();
             selectedJoints.Add(character.AnimController.LimbJoints.Single(j => j.jointParams == newJointParams));
@@ -738,7 +738,6 @@ namespace Barotrauma
             }
             jointsToRemove.ForEach(j => RagdollParams.Joints.Remove(j));
             RecreateRagdoll();
-            ClearWidgets();
             ragdollResetRequiresForceLoading = true;
         }
         #endregion
@@ -964,11 +963,12 @@ namespace Barotrauma
             selectedJoints.Clear();
         }
 
-        private void RecreateRagdoll()
+        private void RecreateRagdoll(RagdollParams ragdoll = null)
         {
-            character.AnimController.Recreate(RagdollParams);
+            character.AnimController.Recreate(ragdoll);
             TeleportTo(spawnPosition);
             ResetParamsEditor();
+            ClearWidgets();
         }
 
         private void TeleportTo(Vector2 position)
@@ -1543,9 +1543,9 @@ namespace Barotrauma
                 {
                     character.AnimController.ResetRagdoll(forceReload: false);
                     ResetParamsEditor();
+                    ClearWidgets();
                 }
                 CreateCenterPanel();
-                ClearWidgets();
                 GUI.AddMessage($"Ragdoll reset", Color.WhiteSmoke, font: GUI.Font);
                 return true;
             };
@@ -1650,8 +1650,10 @@ namespace Barotrauma
                     string fileName = Path.GetFileNameWithoutExtension(selectedFile);
                     var ragdoll = character.IsHumanoid ? HumanRagdollParams.GetRagdollParams(character.SpeciesName, fileName) as RagdollParams : RagdollParams.GetRagdollParams<FishRagdollParams>(character.SpeciesName, fileName);
                     GUI.AddMessage($"Ragdoll loaded from {selectedFile}", Color.WhiteSmoke, font: GUI.Font);
-                    RecreateRagdoll();
+                    RecreateRagdoll(ragdoll);
+                    spriteSheetZoom = 1;
                     CreateCenterPanel();
+                    CreateTextures();
                     loadBox.Close();
                     return true;
                 };
@@ -1853,8 +1855,6 @@ namespace Barotrauma
                 {
                     RecreateRagdoll();
                     character.AnimController.ResetLimbs();
-                    ClearWidgets();
-                    ResetParamsEditor();
                     return true;
                 }
             };

@@ -159,7 +159,6 @@ namespace Barotrauma.Items.Components
             fissionRateScrollBar = new GUIScrollBar(new RectTransform(new Point(columnMid.Rect.Width, 30), columnMid.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(0, 60) },
                 style: "GUISlider", barSize: 0.1f)
             {
-                BarScroll = 0.0f,
                 OnMoved = (GUIScrollBar bar, float scrollAmount) =>
                 {
                     LastUser = Character.Controlled;
@@ -179,7 +178,6 @@ namespace Barotrauma.Items.Components
             turbineOutputScrollBar = new GUIScrollBar(new RectTransform(new Point(columnMid.Rect.Width, 30), columnMid.RectTransform, Anchor.BottomCenter),
                 style: "GUISlider", barSize: 0.1f, isHorizontal: true)
             {
-                BarScroll = 0.0f,
                 OnMoved = (GUIScrollBar bar, float scrollAmount) =>
                 {
                     LastUser = Character.Controlled;
@@ -263,6 +261,8 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
+            turbineOutputScrollBar.BarScroll = targetTurbineOutput / 100.0f;
+            fissionRateScrollBar.BarScroll = targetFissionRate / 100.0f;
             var itemContainer = item.GetComponent<ItemContainer>();
             if (itemContainer != null)
             {
