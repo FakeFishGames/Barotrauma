@@ -308,10 +308,6 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
-            for (int i = 0; i < widgets.Count; i++)
-            {
-                widgets.ElementAt(i).Value.Update((float)deltaTime);
-            }
             Widget.EnableMultiSelect = PlayerInput.KeyDown(Keys.LeftControl);
             // Select rects with the mouse
             if (Widget.selectedWidgets.None() || Widget.EnableMultiSelect)
@@ -338,6 +334,7 @@ namespace Barotrauma
                 zoomBar.BarScroll = GetBarScrollValue();
                 ResetWidgets();
             }
+            widgets.Values.ForEach(w => w.Update((float)deltaTime));
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -420,7 +417,7 @@ namespace Barotrauma
                             };
                             w.Deselected += w.refresh;
                             w.MouseUp += w.refresh;
-                            w.PreUpdate += dTime => w.Enabled = isSelected;
+                            w.PreUpdate += dTime => w.Enabled = selectedSprites.Contains(sprite);
                         });
                         var positionWidget = GetWidget($"{identifier}_position", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                         {
@@ -452,7 +449,7 @@ namespace Barotrauma
                             w.refresh = () => w.DrawPos = textureRect.Location.ToVector2() + sprite.SourceRect.Location.ToVector2() * zoom - halfSize;
                             w.Deselected += w.refresh;
                             w.MouseUp += w.refresh;
-                            w.PreUpdate += dTime => w.Enabled = isSelected;
+                            w.PreUpdate += dTime => w.Enabled = selectedSprites.Contains(sprite);
                         });
                         var sizeWidget = GetWidget($"{identifier}_size", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                         {
@@ -481,7 +478,7 @@ namespace Barotrauma
                             w.refresh = () => w.DrawPos = textureRect.Location.ToVector2() + new Vector2(sprite.SourceRect.Right, sprite.SourceRect.Bottom) * zoom + halfSize;
                             w.MouseUp += w.refresh;
                             w.Deselected += w.refresh;
-                            w.PreUpdate += dTime => w.Enabled = isSelected;
+                            w.PreUpdate += dTime => w.Enabled = selectedSprites.Contains(sprite);
                         });
                         if (isSelected)
                         {
