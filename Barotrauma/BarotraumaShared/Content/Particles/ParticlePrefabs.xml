@@ -330,6 +330,39 @@
     <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="392,83,106,16"/>
   </spark>
 
+  <artifactspark
+    lifetime="0.5"
+    startdelaymin="0"
+    startdelaymax="0"
+    angularvelocitymin="0"
+    angularvelocitymax="0"
+    startrotationmin="0"
+    startrotationmax="0"
+    rotatetodirection="True"
+    drag="0"
+    waterdrag="0"
+    velocitychange="0,0"
+    velocitychangewater="0,0"
+    collisionradius="1"
+    usecollision="False"
+    deleteoncollision="False"
+    friction="0.5"
+    restitution="0.5"
+    startsizemin="0.1,0.1"
+    startsizemax="2,0.6"
+    sizechangemin="-1,-0.5"
+    sizechangemax="-3,-0.5"
+    growtime="0"
+    startcolor="1,0.9137255,1,1"
+    startalpha="1"
+    colorchange="-3,0,0,-3"
+    drawtarget="Both"
+    blendstate="Additive"
+    animduration="1"
+    loopanim="True">
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="395,41,108,11" origin="0.1,0.5"/>
+  </artifactspark>
+
   <shockwave
     startsize="0.1,0.1"
     sizechange="15.0,15.0"

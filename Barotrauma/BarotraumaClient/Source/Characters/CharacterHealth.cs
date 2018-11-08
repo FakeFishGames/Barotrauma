@@ -13,6 +13,8 @@ namespace Barotrauma
     {
         public static bool HideNormalInventory = false;
 
+        private static bool toggledThisFrame;
+
         private static Sprite damageOverlay;
 
         private GUIButton cprButton;
@@ -65,8 +67,6 @@ namespace Barotrauma
 
         private float distortTimer;
 
-        private bool openedThisFrame;
-
         private float healthShadowSize;
         private float healthShadowDelay;
 
@@ -101,9 +101,10 @@ namespace Barotrauma
                 }
 
                 openHealthWindow = value;
+                toggledThisFrame = true;
+                Character.Controlled.ResetInteract = true;
                 if (openHealthWindow != null)
                 {
-                    OpenHealthWindow.openedThisFrame = true;
                     OpenHealthWindow.healthWindow.GetChild(0).GetChild<GUITextBlock>().Text = value.character.Name;
                     Character.Controlled.SelectedConstruction = null;
                 }
@@ -468,7 +469,8 @@ namespace Barotrauma
                 distortTimer = 0.0f;
             }
 
-            if (PlayerInput.KeyHit(InputType.Health) && GUI.KeyboardDispatcher.Subscriber == null && character.AllowInput && !openedThisFrame)
+            if (PlayerInput.KeyHit(InputType.Health) && GUI.KeyboardDispatcher.Subscriber == null && 
+                character.AllowInput && character.FocusedCharacter == null && !toggledThisFrame)
             {
                 if (openHealthWindow != null)
                     OpenHealthWindow = null;
@@ -481,10 +483,13 @@ namespace Barotrauma
                     HUD.CloseHUD(HUDLayoutSettings.HealthWindowAreaRight) :
                     HUD.CloseHUD(HUDLayoutSettings.HealthWindowAreaLeft))
                 {
+                    //emulate a Health input to get the character to deselect the item server-side
+                    character.Keys[(int)InputType.Health].Hit = true;
                     OpenHealthWindow = null;
                 }
             }
-            openedThisFrame = false;
+            toggledThisFrame = false;
+            
             
             if (character.IsDead)
             {

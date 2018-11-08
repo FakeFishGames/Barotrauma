@@ -161,7 +161,9 @@ namespace Barotrauma
 
                         //reset focus when attempting to use/select something
                         if (memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Use) ||
-                            memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Select))
+                            memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Select) ||
+                            memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Health) ||
+                            memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Grab))
                         {
                             focusedItem = null;
                             focusedCharacter = null;
