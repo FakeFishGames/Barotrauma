@@ -46,7 +46,12 @@ namespace Barotrauma
         public SpriteEditorScreen()
         {
             cam = new Camera();
+            CreateGUIElements();
+        }
 
+        #region Initialization
+        private void CreateGUIElements()
+        {
             topPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), Frame.RectTransform) { MinSize = new Point(0, 60) }, "GUIFrameTop");
             topPanelContents = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.8f), topPanel.RectTransform, Anchor.Center), style: null);
 
@@ -191,15 +196,15 @@ namespace Barotrauma
             };
 
             texturePathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.BottomCenter)
-                { RelativeOffset = new Vector2(0.4f, 0) }, "", Color.LightGray);
+            { RelativeOffset = new Vector2(0.4f, 0) }, "", Color.LightGray);
             xmlPathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.TopCenter)
-                { RelativeOffset = new Vector2(0.4f, 0) }, "", Color.LightGray);
+            { RelativeOffset = new Vector2(0.4f, 0) }, "", Color.LightGray);
 
             leftPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f - topPanel.RectTransform.RelativeSize.Y), Frame.RectTransform, Anchor.BottomLeft)
-                { MinSize = new Point(150, 0) }, style: "GUIFrameLeft");
+            { MinSize = new Point(150, 0) }, style: "GUIFrameLeft");
             var paddedLeftPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), leftPanel.RectTransform, Anchor.CenterLeft)
-                { RelativeOffset = new Vector2(0.02f, 0.0f) })
-                    { Stretch = true };
+            { RelativeOffset = new Vector2(0.02f, 0.0f) })
+            { Stretch = true };
             textureList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), paddedLeftPanel.RectTransform))
             {
                 OnSelected = (listBox, userData) =>
@@ -238,9 +243,9 @@ namespace Barotrauma
                     return true;
                 }
             };
-            
+
             rightPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f - topPanel.RectTransform.RelativeSize.Y), Frame.RectTransform, Anchor.BottomRight)
-                { MinSize = new Point(150, 0) },
+            { MinSize = new Point(150, 0) },
                 style: "GUIFrameRight");
             var paddedRightPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), rightPanel.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.02f, 0.0f) })
             {
@@ -277,33 +282,44 @@ namespace Barotrauma
                     return true;
                 }
             };
-       
-            RefreshLists();
         }
 
-        public override void Select()
+        private HashSet<Sprite> loadedSprites = new HashSet<Sprite>();
+        private void LoadSprites()
         {
-            base.Select();
-            LoadSprites();
-            RefreshLists();
-        }
+            // TODO: limb sprites are in ragdolls -> we need to load and parse all ragdoll files separately.
+            foreach (string filePath in ContentPackage.GetAllContentFiles(GameMain.SelectedPackages))
+            {
+                XDocument doc = XMLExtensions.TryLoadXml(filePath);
+                if (doc != null && doc.Root != null)
+                {
+                    LoadSprites(doc.Root);
+                }
+            }
 
-        public override void Deselect()
-        {
-            base.Deselect();
-            loadedSprites.ForEach(s => s.Remove());
-            loadedSprites.Clear();
-        }
+            void LoadSprites(XElement element)
+            {
+                element.Elements("sprite").ForEach(s => CreateSprite(s));
+                element.Elements().ForEach(e => LoadSprites(e));
+            }
 
-        public void SelectSprite(Sprite sprite)
-        {
-            ResetWidgets();
-            textureList.Select(sprite.Texture);
-            ResetScale();
-            selectedSprites.Clear();
-            selectedSprites.Add(sprite);
+            void CreateSprite(XElement element)
+            {
+                string spriteFolder = "";
+                if (!element.GetAttributeString("texture", "").Contains("/"))
+                {
+                    spriteFolder = Path.GetDirectoryName(ParsePathFromUri(element.BaseUri));
+                }
+                string identifier = Sprite.GetID(element);
+                if (Sprite.LoadedSprites.None(s => s.ID == identifier))
+                {
+                    loadedSprites.Add(new Sprite(element, spriteFolder));
+                }
+            }
         }
+        #endregion
 
+        #region Public methods
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
@@ -353,13 +369,13 @@ namespace Barotrauma
                     (int)(selectedTexture.Bounds.Height * zoom));
 
                 spriteBatch.Draw(selectedTexture,
-                    viewArea.Center.ToVector2(), 
-                    sourceRectangle: null, 
-                    color: Color.White, 
+                    viewArea.Center.ToVector2(),
+                    sourceRectangle: null,
+                    color: Color.White,
                     rotation: 0.0f,
-                    origin: new Vector2(selectedTexture.Bounds.Width / 2.0f, selectedTexture.Bounds.Height / 2.0f), 
-                    scale: zoom, 
-                    effects: SpriteEffects.None, 
+                    origin: new Vector2(selectedTexture.Bounds.Width / 2.0f, selectedTexture.Bounds.Height / 2.0f),
+                    scale: zoom,
+                    effects: SpriteEffects.None,
                     layerDepth: 0);
 
                 //GUI.DrawRectangle(spriteBatch, viewArea, Color.Green, isFilled: false);
@@ -492,70 +508,27 @@ namespace Barotrauma
             spriteBatch.End();
         }
 
-        private HashSet<Sprite> loadedSprites = new HashSet<Sprite>();
-        private void LoadSprites()
+        public override void Select()
         {
-            // TODO: limb sprites are in ragdolls -> we need to load and parse all ragdoll files separately.
-            foreach (string filePath in ContentPackage.GetAllContentFiles(GameMain.SelectedPackages))
-            {
-                XDocument doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc != null && doc.Root != null)
-                {
-                    LoadSprites(doc.Root);
-                }
-            }
-
-            void LoadSprites(XElement element)
-            {
-                element.Elements("sprite").ForEach(s => CreateSprite(s));
-                element.Elements().ForEach(e => LoadSprites(e));
-            }
-
-            void CreateSprite(XElement element)
-            {
-                string spriteFolder = "";
-                if (!element.GetAttributeString("texture", "").Contains("/"))
-                {
-                    spriteFolder = Path.GetDirectoryName(ParsePathFromUri(element.BaseUri));
-                }
-                string identifier = Sprite.GetID(element);
-                if (Sprite.LoadedSprites.None(s => s.ID == identifier))
-                {
-                    loadedSprites.Add(new Sprite(element, spriteFolder));
-                }
-            }
+            base.Select();
+            LoadSprites();
+            RefreshLists();
         }
 
-        private string ParsePathFromUri(string uri)
+        public override void Deselect()
         {
-            string[] splitted = uri.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
-            IEnumerable<string> filtered = splitted.SkipWhile(part => part != "Content");
-            return string.Join("/", filtered);
+            base.Deselect();
+            loadedSprites.ForEach(s => s.Remove());
+            loadedSprites.Clear();
         }
 
-        private void ResetScale()
+        public void SelectSprite(Sprite sprite)
         {
-            float width = viewArea.Width / (float)selectedTexture.Width;
-            float height = viewArea.Height / (float)selectedTexture.Height;
-            maxZoom = Math.Min(width, height);
-            zoom = Math.Min(1, maxZoom);
-            zoomBar.BarScroll = GetBarScrollValue();
             ResetWidgets();
-        }
-
-        private float GetBarScrollValue() => MathHelper.Lerp(0, 1, MathUtils.InverseLerp(minZoom, maxZoom, zoom));
-
-        private string GetSpriteName(Sprite sprite)
-        {
-            var sourceElement = sprite.SourceElement;
-            if (sourceElement == null) { return string.Empty; }
-            string id = string.Empty;
-            string identifier = sourceElement.Parent.GetAttributeString("identifier", string.Empty);
-            if (string.IsNullOrEmpty(id))
-            {
-                id = sourceElement.Parent.GetAttributeString("name", string.Empty);
-            }
-            return string.IsNullOrEmpty(id) ? Path.GetFileNameWithoutExtension(sprite.FilePath) : id;
+            textureList.Select(sprite.Texture);
+            ResetScale();
+            selectedSprites.Clear();
+            selectedSprites.Add(sprite);
         }
 
         public void RefreshLists()
@@ -587,9 +560,43 @@ namespace Barotrauma
                     textures.Add(normalizedFilePath);
                 }
             }
-
             topPanelContents.Visible = false;
         }
+
+        public void ResetScale()
+        {
+            float width = viewArea.Width / (float)selectedTexture.Width;
+            float height = viewArea.Height / (float)selectedTexture.Height;
+            maxZoom = Math.Min(width, height);
+            zoom = Math.Min(1, maxZoom);
+            zoomBar.BarScroll = GetBarScrollValue();
+            ResetWidgets();
+        }
+        #endregion
+
+        #region Helpers
+        private string ParsePathFromUri(string uri)
+        {
+            string[] splitted = uri.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+            IEnumerable<string> filtered = splitted.SkipWhile(part => part != "Content");
+            return string.Join("/", filtered);
+        }
+
+        private float GetBarScrollValue() => MathHelper.Lerp(0, 1, MathUtils.InverseLerp(minZoom, maxZoom, zoom));
+
+        private string GetSpriteName(Sprite sprite)
+        {
+            var sourceElement = sprite.SourceElement;
+            if (sourceElement == null) { return string.Empty; }
+            string id = string.Empty;
+            string identifier = sourceElement.Parent.GetAttributeString("identifier", string.Empty);
+            if (string.IsNullOrEmpty(id))
+            {
+                id = sourceElement.Parent.GetAttributeString("name", string.Empty);
+            }
+            return string.IsNullOrEmpty(id) ? Path.GetFileNameWithoutExtension(sprite.FilePath) : id;
+        }
+        #endregion
 
         #region Widgets
         private Dictionary<string, Widget> widgets = new Dictionary<string, Widget>();
