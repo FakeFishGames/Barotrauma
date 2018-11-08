@@ -11,13 +11,15 @@ namespace Barotrauma.Networking
 {
     partial class BannedPlayer
     {
+        private static UInt16 LastIdentifier = 0;
+
         public BannedPlayer(string name, string ip, string reason, DateTime? expirationTime)
         {
             this.Name = name;
             this.IP = ip;
             this.Reason = reason;
             this.ExpirationTime = expirationTime;
-            this.UniqueIdentifier = CryptoRandom.Instance.Next();
+            this.UniqueIdentifier = LastIdentifier; LastIdentifier++;
 
             this.IsRangeBan = IP.IndexOf(".x")>-1;
         }
@@ -28,7 +30,7 @@ namespace Barotrauma.Networking
             this.SteamID = steamID;
             this.Reason = reason;
             this.ExpirationTime = expirationTime;
-            this.UniqueIdentifier = CryptoRandom.Instance.Next();
+            this.UniqueIdentifier = LastIdentifier; LastIdentifier++;
 
             this.IsRangeBan = false;
         }
@@ -251,7 +253,7 @@ namespace Barotrauma.Networking
                 UInt16 removeCount = incMsg.ReadUInt16();
                 for (int i = 0; i < removeCount; i++)
                 {
-                    Int32 id = incMsg.ReadInt32();
+                    UInt16 id = incMsg.ReadUInt16();
                     BannedPlayer bannedPlayer = bannedPlayers.Find(p => p.UniqueIdentifier == id);
                     if (bannedPlayer != null)
                     {
@@ -262,7 +264,7 @@ namespace Barotrauma.Networking
                 Int16 rangeBanCount = incMsg.ReadInt16();
                 for (int i = 0; i < rangeBanCount; i++)
                 {
-                    Int32 id = incMsg.ReadInt32();
+                    UInt16 id = incMsg.ReadUInt16();
                     BannedPlayer bannedPlayer = bannedPlayers.Find(p => p.UniqueIdentifier == id);
                     if (bannedPlayer != null)
                     {
