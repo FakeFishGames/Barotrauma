@@ -59,8 +59,11 @@ namespace Barotrauma
 
                 if (character.IsRemotePlayer)
                 {
-                    MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
-                    MainLimb.PullJointEnabled = true;
+                    if (!SimplePhysicsEnabled)
+                    {
+                        MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
+                        MainLimb.PullJointEnabled = true;
+                    }
                 }
                 else
                 {
@@ -127,6 +130,9 @@ namespace Barotrauma
 
                 UpdateWalkAnim(deltaTime);
             }
+
+            //don't flip or drag when simply physics is enabled
+            if (SimplePhysicsEnabled) { return; }
             
             if (!character.IsRemotePlayer)
             {
@@ -254,12 +260,18 @@ namespace Barotrauma
 
         void UpdateSineAnim(float deltaTime)
         {
-            movement = TargetMovement*swimSpeed;
-            
+            movement = TargetMovement * swimSpeed;
+
+            Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement, 0.5f);
+
+            //limbs are disabled when simple physics is enabled, no need to move them
+            if (SimplePhysicsEnabled) { return; }
+
             MainLimb.PullJointEnabled = true;
             MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
 
             if (movement.LengthSquared() < 0.00001f) return;
+
 
             float movementAngle = MathUtils.VectorToAngle(movement) - MathHelper.PiOver2;
             
@@ -292,16 +304,21 @@ namespace Barotrauma
                 Vector2 pullPos = Limbs[i].PullJointWorldAnchorA;
                 Limbs[i].body.ApplyForce(movement * Limbs[i].SteerForce * Limbs[i].Mass, pullPos);
             }
-            
-            Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement, 0.5f);
-                
+                            
             floorY = Limbs[0].SimPosition.Y;            
         }
             
         void UpdateWalkAnim(float deltaTime)
         {
             movement = MathUtils.SmoothStep(movement, TargetMovement * walkSpeed, 0.2f);
-            
+
+            Collider.LinearVelocity = new Vector2(
+                movement.X,
+                Collider.LinearVelocity.Y > 0.0f ? Collider.LinearVelocity.Y * 0.5f : Collider.LinearVelocity.Y);
+
+            //limbs are disabled when simple physics is enabled, no need to move them
+            if (SimplePhysicsEnabled) { return; }
+
             float mainLimbHeight, mainLimbAngle;
             if (MainLimb.type == LimbType.Torso)
             {
@@ -314,11 +331,7 @@ namespace Barotrauma
                 mainLimbAngle = headAngle;
             }
 
-            MainLimb.body.SmoothRotate(mainLimbAngle * Dir, 50.0f);
-            
-            Collider.LinearVelocity = new Vector2(
-                movement.X,
-                Collider.LinearVelocity.Y > 0.0f ? Collider.LinearVelocity.Y * 0.5f : Collider.LinearVelocity.Y);
+            MainLimb.body.SmoothRotate(mainLimbAngle * Dir, 50.0f);            
 
             MainLimb.MoveToPos(GetColliderBottom() + Vector2.UnitY * mainLimbHeight, 10.0f);
             

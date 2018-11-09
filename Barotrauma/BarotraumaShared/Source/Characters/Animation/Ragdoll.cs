@@ -715,7 +715,7 @@ namespace Barotrauma
             float totalMass = 0.0f;
             foreach (Limb limb in Limbs)
             {
-                if (limb.IsSevered) continue;
+                if (limb.IsSevered || !limb.body.Enabled) continue;
                 centerOfMass += limb.Mass * limb.SimPosition;
                 totalMass += limb.Mass;
             }
