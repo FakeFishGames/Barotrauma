@@ -28,7 +28,11 @@ namespace Barotrauma
         public event TextBoxEvent OnKeyHit;
 
         public delegate bool OnTextChangedHandler(GUITextBox textBox, string text);
-        public OnTextChangedHandler OnTextChanged;
+        /// <summary>
+        /// Don't set the Text property on delegates that register to this event, because modifying the Text will launch this event -> stack overflow. 
+        /// If the event launches, the text should already be up to date!
+        /// </summary>
+        public event OnTextChangedHandler OnTextChanged;
 
         public bool CaretEnabled { get; set; }
         public Color? CaretColor { get; set; }
@@ -41,7 +45,6 @@ namespace Barotrauma
             get { return _caretIndex; }
             set
             {
-                if (_caretIndex == value) { return; }
                 previousCaretIndex = _caretIndex;
                 _caretIndex = value;
                 caretPosDirty = true;
@@ -178,29 +181,9 @@ namespace Barotrauma
             }
             set
             {
-                if (textBlock.Text == value) return;
-
-                textBlock.Text = value;
-                if (textBlock.Text == null) textBlock.Text = "";
-
-                if (textBlock.Text != "" && !Wrap)
-                {
-                    if (maxTextLength != null)
-                    {
-                        if (Text.Length > maxTextLength)
-                        {
-                            Text = textBlock.Text.Substring(0, (int)maxTextLength);
-                        }
-                    }
-                    else if (ClampText && Font.MeasureString(textBlock.Text).X > (int)(textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z))
-                    {
-                        Text = textBlock.Text.Substring(0, textBlock.Text.Length - 1);
-                    }                    
-                }
-
-                previousCaretIndex = _caretIndex;
-                _caretIndex = Text.Length;
-                caretPosDirty = true;
+                SetText(value);
+                CaretIndex = Text.Length;
+                OnTextChanged?.Invoke(this, Text);
             }
         }
         
@@ -221,6 +204,27 @@ namespace Barotrauma
             
             rectT.SizeChanged += () => { caretPosDirty = true; };
             rectT.ScaleChanged += () => { caretPosDirty = true; };
+        }
+
+        private void SetText(string text)
+        {
+            if (textBlock.Text == text) return;
+            textBlock.Text = text;
+            if (textBlock.Text == null) textBlock.Text = "";
+            if (textBlock.Text != "" && !Wrap)
+            {
+                if (maxTextLength != null)
+                {
+                    if (textBlock.Text.Length > maxTextLength)
+                    {
+                        textBlock.Text = textBlock.Text.Substring(0, (int)maxTextLength);
+                    }
+                }
+                else if (ClampText && Font.MeasureString(textBlock.Text).X > (int)(textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z))
+                {
+                    textBlock.Text = textBlock.Text.Substring(0, textBlock.Text.Length - 1);
+                }
+            }
         }
 
         private void CalculateCaretPos()
@@ -379,9 +383,7 @@ namespace Barotrauma
                 Character.DisableControls = true;
                 if (OnEnterPressed != null &&  PlayerInput.KeyHit(Keys.Enter))
                 {
-                    string input = Text;
-                    Text = "";
-                    OnEnterPressed(this, input);
+                    OnEnterPressed(this, Text);
                 }
             }
             else if (Selected)
@@ -497,21 +499,19 @@ namespace Barotrauma
             {
                 RemoveSelectedText();
             }
-            int prevCaretIndex = CaretIndex;
-            Text = Text.Insert(CaretIndex, inputChar.ToString());
-            CaretIndex = Math.Min(Text.Length, ++prevCaretIndex);
+            SetText(Text.Insert(CaretIndex, inputChar.ToString()));
+            CaretIndex = Math.Min(Text.Length, CaretIndex + 1);
             OnTextChanged?.Invoke(this, Text);
         }
 
-        public void ReceiveTextInput(string text)
+        public void ReceiveTextInput(string input)
         {
             if (selectedCharacters > 0)
             {
                 RemoveSelectedText();
             }
-            int prevCaretIndex = CaretIndex;
-            Text = Text.Insert(CaretIndex, text);
-            CaretIndex = Math.Min(Text.Length, prevCaretIndex + text.Length);
+            SetText(Text.Insert(CaretIndex, input));
+            CaretIndex = Math.Min(Text.Length, CaretIndex + input.Length);
             OnTextChanged?.Invoke(this, Text);
         }
 
@@ -529,9 +529,8 @@ namespace Barotrauma
                     else if (Text.Length > 0 && CaretIndex > 0)
                     {
                         CaretIndex--;
-                        int prevCaretIndex = CaretIndex;
-                        Text = Text.Remove(CaretIndex, 1);
-                        CaretIndex = prevCaretIndex;
+                        SetText(Text.Remove(CaretIndex, 1));
+                        CalculateCaretPos();
                         ClearSelection();
                     }
                     OnTextChanged?.Invoke(this, Text);
@@ -541,10 +540,9 @@ namespace Barotrauma
                     break;
                 case (char)0x16: // ctrl-v
                     string text = GetCopiedText();
-                    int previousCaretIndex = CaretIndex;
                     RemoveSelectedText();
-                    Text = Text.Insert(CaretIndex, text);
-                    CaretIndex = Math.Min(Text.Length, previousCaretIndex + text.Length);
+                    SetText(Text.Insert(CaretIndex, text));
+                    CaretIndex = Math.Min(Text.Length, CaretIndex + text.Length);
                     OnTextChanged?.Invoke(this, Text);
                     break;
                 case (char)0x18: // ctrl-x
@@ -608,9 +606,8 @@ namespace Barotrauma
                     }
                     else if (Text.Length > 0 && CaretIndex < Text.Length)
                     {
-                        int prevCaretIndex = CaretIndex;
-                        Text = Text.Remove(CaretIndex, 1);
-                        CaretIndex = prevCaretIndex;
+                        SetText(Text.Remove(CaretIndex, 1));
+                        CaretIndex--;
                         OnTextChanged?.Invoke(this, Text);
                     }
                     break;
@@ -673,13 +670,14 @@ namespace Barotrauma
             if (selectedText.Length == 0) { return; }
             if (IsLeftToRight)
             {
-                Text = Text.Remove(selectionStartIndex, selectedText.Length);
+                SetText(Text.Remove(selectionStartIndex, selectedText.Length));
+                CaretIndex = Math.Min(Text.Length, selectionStartIndex);
             }
             else
             {
-                Text = Text.Remove(selectionEndIndex, selectedText.Length);
+                SetText(Text.Remove(selectionEndIndex, selectedText.Length));
+                CaretIndex = Math.Min(Text.Length, selectionEndIndex);
             }
-            CaretIndex = Math.Min(Text.Length, previousCaretIndex);
             ClearSelection();
             OnTextChanged?.Invoke(this, Text);
         }

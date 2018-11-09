@@ -80,13 +80,11 @@ namespace Barotrauma.Networking
                 RelativeSpacing = 0.05f
             };
             new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), nameArea.RectTransform), TextManager.Get("WhiteListName"));
-            nameBox = new GUITextBox(new RectTransform(new Vector2(0.7f, 1.0f), nameArea.RectTransform), "")
+            nameBox = new GUITextBox(new RectTransform(new Vector2(0.7f, 1.0f), nameArea.RectTransform), "");
+            nameBox.OnTextChanged += (textBox, text) =>
             {
-                OnTextChanged = (textBox, text) =>
-                {
-                    addNewButton.Enabled = !string.IsNullOrEmpty(ipBox.Text) && !string.IsNullOrEmpty(nameBox.Text);
-                    return true;
-                }
+                addNewButton.Enabled = !string.IsNullOrEmpty(ipBox.Text) && !string.IsNullOrEmpty(nameBox.Text);
+                return true;
             };
 
             var ipArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), whitelistFrame.RectTransform), isHorizontal: true)
@@ -95,13 +93,11 @@ namespace Barotrauma.Networking
                 RelativeSpacing = 0.05f
             };
             new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), ipArea.RectTransform), TextManager.Get("WhiteListIP"));
-            ipBox = new GUITextBox(new RectTransform(new Vector2(0.7f, 1.0f), ipArea.RectTransform), "")
+            ipBox = new GUITextBox(new RectTransform(new Vector2(0.7f, 1.0f), ipArea.RectTransform), "");
+            ipBox.OnTextChanged += (textBox, text) =>
             {
-                OnTextChanged = (textBox, text) => 
-                {
-                    addNewButton.Enabled = !string.IsNullOrEmpty(ipBox.Text) && !string.IsNullOrEmpty(nameBox.Text);
-                    return true;
-                }
+                addNewButton.Enabled = !string.IsNullOrEmpty(ipBox.Text) && !string.IsNullOrEmpty(nameBox.Text);
+                return true;
             };
 
             addNewButton = new GUIButton(new RectTransform(new Vector2(0.4f, 0.1f), whitelistFrame.RectTransform), TextManager.Get("WhiteListAdd"))

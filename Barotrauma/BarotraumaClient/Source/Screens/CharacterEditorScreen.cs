@@ -3374,12 +3374,12 @@ namespace Barotrauma
                                 new GUITextBlock(leftElement, "Config File Output");
                                 xmlPathElement = new GUITextBox(rightElement, string.Empty)
                                 {
-                                    CaretColor = Color.White,
-                                    OnTextChanged = (tb, text) =>
-                                    {
-                                        XMLPath = text;
-                                        return true;
-                                    }
+                                    CaretColor = Color.White
+                                };
+                                xmlPathElement.OnTextChanged += (tb, text) =>
+                                {
+                                    XMLPath = text;
+                                    return true;
                                 };
                                 break;
                             case 3:
@@ -3387,11 +3387,11 @@ namespace Barotrauma
                                 texturePathElement = new GUITextBox(rightElement, string.Empty)
                                 {
                                     CaretColor = Color.White,
-                                    OnTextChanged = (tb, text) =>
-                                    {
-                                        TexturePath = text;
-                                        return true;
-                                    }
+                                };
+                                texturePathElement.OnTextChanged += (tb, text) =>
+                                {
+                                    TexturePath = text;
+                                    return true;
                                 };
                                 break;
                         }
@@ -3649,15 +3649,15 @@ namespace Barotrauma
                         }
                     };
                     new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopLeft), "Name");
-                    new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), name)
+                    var nameInput = new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), name)
                     {
                         CaretColor = Color.White,
-                        OnTextChanged = (tb, text) =>
-                        {
-                            string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
-                            label.Text = t;
-                            return true;
-                        }
+                    };
+                    nameInput.OnTextChanged += (tb, text) =>
+                    {
+                        string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
+                        label.Text = t;
+                        return true;
                     };
                     LimbGUIElements.Add(limbElement);
                 }
@@ -3672,15 +3672,15 @@ namespace Barotrauma
                     var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), jointName);
                     var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                     new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopLeft), "Name");
-                    new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), jointName)
+                    var nameInput = new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), jointName)
                     {
                         CaretColor = Color.White,
-                        OnTextChanged = (textB, text) =>
-                        {
-                            jointName = text;
-                            label.Text = jointName;
-                            return true;
-                        }
+                    };
+                    nameInput.OnTextChanged += (textB, text) =>
+                    {
+                        jointName = text;
+                        label.Text = jointName;
+                        return true;
                     };
                     var limb1Field = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                     new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), limb1Field.RectTransform, Anchor.TopLeft), "Limb 1");
