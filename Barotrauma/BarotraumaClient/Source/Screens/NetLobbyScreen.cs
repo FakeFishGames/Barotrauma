@@ -341,15 +341,15 @@ namespace Barotrauma
             {
                 TextGetter = GetServerName,
                 Enabled = GameMain.Server != null,
-                OnTextChanged = ChangeServerName
             };
+            serverName.OnTextChanged += ChangeServerName;
             clientDisabledElements.Add(serverName);
 
             serverMessage = new GUITextBox(new RectTransform(new Vector2(infoColumnContainer.RectTransform.RelativeSize.X, 0.15f), defaultModeContainer.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.07f) })
             {
-                Wrap = true,
-                OnTextChanged = UpdateServerMessage
+                Wrap = true
             };
+            serverMessage.OnTextChanged += UpdateServerMessage;
             clientDisabledElements.Add(serverMessage);
             
             settingsButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), topButtonContainer.RectTransform, Anchor.TopRight),
@@ -461,10 +461,8 @@ namespace Barotrauma
             //seed ------------------------------------------------------------------
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), TextManager.Get("LevelSeed"));
-            seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform))
-            {
-                OnTextChanged = SelectSeed
-            };
+            seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform));
+            seedBox.OnTextChanged += SelectSeed;
             clientDisabledElements.Add(seedBox);
             LevelSeed = ToolBox.RandomSeed(8);
 
@@ -575,7 +573,7 @@ namespace Barotrauma
 
             textBox.Select();
             textBox.OnEnterPressed = GameMain.NetworkMember.EnterChatMessage;
-            textBox.OnTextChanged = GameMain.NetworkMember.TypingChatMessage;
+            textBox.OnTextChanged += GameMain.NetworkMember.TypingChatMessage;
 
             myCharacterFrame.RectTransform.AbsoluteOffset = new Point(0, 0);
             myCharacterFrame.GetChild<GUIButton>().Visible = false;

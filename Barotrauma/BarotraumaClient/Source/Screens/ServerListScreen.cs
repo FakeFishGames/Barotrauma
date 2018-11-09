@@ -70,16 +70,14 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("YourName"));
             clientNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.045f), leftColumn.RectTransform), "")
             {
-                Text = GameMain.Config.DefaultPlayerName,
-                OnTextChanged = SelectServer
+                Text = GameMain.Config.DefaultPlayerName
             };
+            clientNameBox.OnTextChanged += SelectServer;
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("ServerIP"));
             // TODO: Show IP on server info window
-            ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.045f), leftColumn.RectTransform), "")
-            {
-                OnTextChanged = ManualConnectServer
-            };
+            ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.045f), leftColumn.RectTransform), "");
+            ipBox.OnTextChanged += ManualConnectServer;
             ipBox.OnSelected += (sender, key) => 
             {
                 if (sender.UserData is ServerInfo)

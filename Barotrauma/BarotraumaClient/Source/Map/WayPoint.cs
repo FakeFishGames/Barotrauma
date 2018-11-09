@@ -180,9 +180,9 @@ namespace Barotrauma
                 {
                     MaxTextLength = 150,
                     OnEnterPressed = EnterIDCardDesc,
-                    OnTextChanged = TextBoxChanged,
                     ToolTip = TextManager.Get("IDCardDescriptionTooltip")
                 };
+                propertyBox.OnTextChanged += TextBoxChanged;
 
 
                 var tagsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform),
@@ -191,9 +191,9 @@ namespace Barotrauma
                 {
                     MaxTextLength = 60,
                     OnEnterPressed = EnterIDCardTags,
-                    OnTextChanged = TextBoxChanged,
                     ToolTip = TextManager.Get("IDCardTagsTooltip")
                 };
+                propertyBox.OnTextChanged += TextBoxChanged;
 
 
                 var jobsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform),
