@@ -335,6 +335,12 @@ namespace Barotrauma.Items.Components
 
         private void CreateDoorBody()
         {
+            if (doorBody != null)
+            {
+                GameMain.World.RemoveBody(doorBody);
+                doorBody = null;
+            }
+
             Vector2 position = ConvertUnits.ToSimUnits(item.Position + (dockingTarget.door.Item.WorldPosition - item.WorldPosition));
             if (!MathUtils.IsValid(position))
             {
@@ -350,6 +356,8 @@ namespace Barotrauma.Items.Components
                     errorMsg);
                 position = Vector2.Zero;
             }
+
+            System.Diagnostics.Debug.Assert(doorBody == null);
 
             doorBody = BodyFactory.CreateRectangle(GameMain.World,
                 dockingTarget.door.Body.width,
