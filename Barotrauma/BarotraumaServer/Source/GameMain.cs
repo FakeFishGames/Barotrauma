@@ -254,58 +254,6 @@ namespace Barotrauma
             CloseServer();
         }
         
-        public void ProcessInput()
-        {
-            try
-            {
-                string input = "";
-                while (true)
-                {
-                    //using this instead of Console.ReadLine to prevent blocking
-                    if (Console.KeyAvailable)
-                    {
-                        ConsoleKeyInfo key = Console.ReadKey(true);
-                        switch (key.Key)
-                        {
-                            case ConsoleKey.Enter:
-                                lock (DebugConsole.QueuedCommands)
-                                {
-                                    DebugConsole.QueuedCommands.Add(input);
-                                }
-                                input = "";
-                                break;
-                            case ConsoleKey.Backspace:
-                                if (input.Length > 0) input = input.Substring(0, input.Length - 1);
-                                break;
-                            default:
-                                if (key.KeyChar != 0)
-                                {
-                                    input += key.KeyChar;
-                                }
-                                break;
-                        }
-
-                        //rewrite the input so it's not mangled about by new console messages
-                        int cursorTop = Console.CursorTop;
-                        Console.CursorLeft = 0;
-                        string ln = input;
-                        while (ln.Length==0 || ln.Length%Console.WindowWidth>0)
-                        {
-                            ln += " ";
-                        }
-                        Console.WriteLine(ln);
-                        Console.CursorTop = cursorTop;
-                        Console.CursorLeft = input.Length;
-                    }
-                    Thread.Yield();
-                }
-            }
-            catch (ThreadAbortException e)
-            {
-                //don't have anything to do here yet
-            }
-        }
-
         public CoroutineHandle ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)
         {
             return CoroutineManager.StartCoroutine(loader);

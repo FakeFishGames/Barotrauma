@@ -49,9 +49,7 @@ namespace Barotrauma
 
         private static bool isOpen;
         public static bool IsOpen => isOpen;
-
-        private static Queue<ColoredText> queuedMessages = new Queue<ColoredText>();
-
+        
         private static GUITextBlock activeQuestionText;
         
         private static GUIFrame frame;

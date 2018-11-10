@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using FarseerPhysics;
 using Barotrauma.Items.Components;
+using System.Threading;
 
 namespace Barotrauma
 {
@@ -59,6 +60,92 @@ namespace Barotrauma
                     QueuedCommands.RemoveAt(0);
                 }
             }
+        }
+
+
+        public static void UpdateCommandLine()
+        {
+            try
+            {
+                Console.Clear();
+                string input = "";
+                while (true)
+                {
+                    //dequeue messages
+                    lock (queuedMessages)
+                    {
+                        if (queuedMessages.Count>0)
+                        {
+                            while (queuedMessages.Count > 0)
+                            {
+                                ColoredText msg = queuedMessages.Dequeue();
+
+                                Console.CursorLeft = 0;
+                                string msgTxt = msg.Text;
+                                int paddingLen = Console.WindowWidth - (msg.Text.Length % Console.WindowWidth)-1;
+                                msgTxt += new string(' ', paddingLen>0 ? paddingLen : 0);
+
+                                Console.ForegroundColor = XnaToConsoleColor.Convert(msg.Color);
+                                Console.WriteLine(msgTxt);
+                                RewriteInputToCommandLine(input);
+                            }
+                        }
+                    }
+
+                    //read player input
+                    if (Console.KeyAvailable)
+                    {
+                        ConsoleKeyInfo key = Console.ReadKey(true);
+                        switch (key.Key)
+                        {
+                            case ConsoleKey.Enter:
+                                lock (DebugConsole.QueuedCommands)
+                                {
+                                    DebugConsole.QueuedCommands.Add(input);
+                                }
+                                input = "";
+                                break;
+                            case ConsoleKey.Backspace:
+                                if (input.Length > 0) input = input.Substring(0, input.Length - 1);
+                                break;
+                            default:
+                                if (key.KeyChar != 0)
+                                {
+                                    input += key.KeyChar;
+                                }
+                                break;
+                        }
+                        
+                        RewriteInputToCommandLine(input);
+                    }
+                    lock (queuedMessages)
+                    {
+
+                    }
+                    Thread.Yield();
+                }
+            }
+            catch (ThreadAbortException e)
+            {
+                //don't have anything to do here yet
+            }
+        }
+
+        private static void RewriteInputToCommandLine(string input)
+        {
+            int cursorTop = Console.CursorTop;
+            string ln = !string.IsNullOrWhiteSpace(input) ? DebugConsole.AutoComplete(input) : ""; DebugConsole.ResetAutoComplete();
+            ln += new string(' ', Console.WindowWidth - (ln.Length % Console.WindowWidth));
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.CursorLeft = 0;
+            Console.CursorTop = cursorTop;
+            Console.WriteLine(ln);
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.CursorLeft = 0;
+            Console.CursorTop = cursorTop;
+            Console.WriteLine(input);
+            Console.CursorTop = cursorTop;
+            Console.CursorLeft = input.Length;
         }
 
         private static void AssignOnClientRequestExecute(string names, Action<Client, Vector2, string[]> onClientRequestExecute)

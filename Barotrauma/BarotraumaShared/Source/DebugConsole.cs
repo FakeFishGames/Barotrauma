@@ -77,7 +77,9 @@ namespace Barotrauma
                 OnExecute(args);
             }
         }
-        
+
+        private static Queue<ColoredText> queuedMessages = new Queue<ColoredText>();
+
         static partial void AddHelpMessage(Command command);
         
         const int MaxMessages = 300;
@@ -1320,35 +1322,11 @@ namespace Barotrauma
         {
             if (string.IsNullOrEmpty((msg))) return;
 
-#if SERVER
             var newMsg = new ColoredText(msg, color, isCommand);
-            Messages.Add(newMsg);
-
-            //TODO: REMOVE
-            Console.ForegroundColor = XnaToConsoleColor.Convert(color);
-            Console.WriteLine(msg);
-            Console.ForegroundColor = ConsoleColor.White;
-
-            if (GameSettings.SaveDebugConsoleLogs)
-            {
-                unsavedMessages.Add(newMsg);
-                if (unsavedMessages.Count >= messagesPerFile)
-                {
-                    SaveLogs();
-                    unsavedMessages.Clear();
-                }
-            }
-
-            if (Messages.Count > MaxMessages)
-            {
-                Messages.RemoveRange(0, Messages.Count - MaxMessages);
-            }
-#elif CLIENT
             lock (queuedMessages)
             {
                 queuedMessages.Enqueue(new ColoredText(msg, color, isCommand));
             }
-#endif
         }
 
         public static void ShowQuestionPrompt(string question, QuestionCallback onAnswered)
@@ -1439,8 +1417,7 @@ namespace Barotrauma
             isOpen = true;
 #endif
         }
-
-
+        
         public static void SaveLogs()
         {
             if (unsavedMessages.Count == 0) return;
