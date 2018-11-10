@@ -118,10 +118,7 @@ namespace Barotrauma
                         
                         RewriteInputToCommandLine(input);
                     }
-                    lock (queuedMessages)
-                    {
-
-                    }
+                    
                     Thread.Yield();
                 }
             }
