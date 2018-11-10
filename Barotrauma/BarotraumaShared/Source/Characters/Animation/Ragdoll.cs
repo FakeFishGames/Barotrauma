@@ -1497,6 +1497,7 @@ namespace Barotrauma
                         }
                     }
 
+                    //TODO: this does not work, the positions are in sim units but FindHull uses display units
                     Hull serverHull = Hull.FindHull(serverPos.Position, character.CurrentHull, false);
                     Hull clientHull = Hull.FindHull(localPos.Position, serverHull, false);
                     
