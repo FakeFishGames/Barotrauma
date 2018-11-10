@@ -39,6 +39,7 @@ namespace Barotrauma
             set
             {
                 minValueFloat = value;
+                ClampFloatValue();
                 PlusButton.Visible = inputType == NumberType.Int ||
                     (inputType == NumberType.Float && MinValueFloat > float.MinValue && MaxValueFloat < float.MaxValue);
                 MinusButton.Visible = PlusButton.Visible;
@@ -50,6 +51,7 @@ namespace Barotrauma
             set
             {
                 maxValueFloat = value;
+                ClampFloatValue();
                 PlusButton.Visible = inputType == NumberType.Int ||
                     (inputType == NumberType.Float && MinValueFloat > float.MinValue && MaxValueFloat < float.MaxValue);
                 MinusButton.Visible = PlusButton.Visible;
@@ -63,18 +65,8 @@ namespace Barotrauma
             set
             {
                 if (value == floatValue) return;
-
                 floatValue = value;
-                if (MinValueFloat != null)
-                {
-                    floatValue = Math.Max(floatValue, MinValueFloat.Value);
-                    MinusButton.Enabled = floatValue > MinValueFloat;
-                }
-                if (MaxValueFloat != null)
-                {
-                    floatValue = Math.Min(floatValue, MaxValueFloat.Value);
-                    PlusButton.Enabled = floatValue < MaxValueFloat;
-                }
+                ClampFloatValue();
                 UpdateText();
                 OnValueChanged?.Invoke(this);
             }
@@ -100,18 +92,8 @@ namespace Barotrauma
             set
             {
                 if (value == intValue) return;
-
                 intValue = value;
-                if (MinValueInt != null)
-                {
-                    intValue = Math.Max(intValue, MinValueInt.Value);
-                    MinusButton.Enabled = intValue > MinValueInt;
-                }
-                if (MaxValueInt != null)
-                {
-                    intValue = Math.Min(intValue, MaxValueInt.Value);
-                    PlusButton.Enabled = intValue < MaxValueInt;
-                }
+                ClampIntValue();
                 UpdateText();
                 OnValueChanged?.Invoke(this);
             }
@@ -129,12 +111,12 @@ namespace Barotrauma
             TextBox = new GUITextBox(new RectTransform(new Point(Rect.Width, Rect.Height), rectT), textAlignment: textAlignment, style: style)
             {
                 ClampText = false,
-                OnTextChanged = TextChanged,
                 // For some reason the caret in the number inputs is dimmer than it should.
                 // It should not be rendered behind anything, as I first suspected.
                 // Therefore this hack.
                 CaretColor = Color.White
             };
+            TextBox.OnTextChanged += TextChanged;
             var buttonArea = new GUIFrame(new RectTransform(new Point(buttonSize.X, buttonSize.Y * 2), rectT, Anchor.CenterRight), style: null);
             PlusButton = new GUIButton(new RectTransform(buttonSize, buttonArea.RectTransform), "+");
             PlusButton.OnButtonDown += () =>
@@ -254,37 +236,59 @@ namespace Barotrauma
                     int newIntValue = IntValue;
                     if (text == "" || text == "-") 
                     {
-                        IntValue = 0;
-                        textBox.Text = text;
+                        intValue = 0;
                     }
                     else if (int.TryParse(text, out newIntValue))
                     {
-                        IntValue = newIntValue;
+                        intValue = newIntValue;
                     }
-                    else
-                    {
-                        textBox.Text = IntValue.ToString();
-                    }
+                    ClampIntValue();
                     break;
                 case NumberType.Float:
                     float newFloatValue = FloatValue;
-
                     text = new string(text.Where(c => char.IsDigit(c) || c == '.' || c == '-').ToArray());
-
                     if (text == "" || text == "-")
                     {
-                        FloatValue = 0;
-                        textBox.Text = text;
+                        floatValue = 0;
                     }
                     else if (float.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out newFloatValue))
                     {
-                        FloatValue = newFloatValue;
-                        textBox.Text = text;
+                        floatValue = newFloatValue;
                     }
+                    ClampFloatValue();
                     break;
             }
+            OnValueChanged?.Invoke(this);
 
             return true;
+        }
+
+        private void ClampFloatValue()
+        {
+            if (MinValueFloat != null)
+            {
+                floatValue = Math.Max(floatValue, MinValueFloat.Value);
+                MinusButton.Enabled = floatValue > MinValueFloat;
+            }
+            if (MaxValueFloat != null)
+            {
+                floatValue = Math.Min(floatValue, MaxValueFloat.Value);
+                PlusButton.Enabled = floatValue < MaxValueFloat;
+            }
+        }
+
+        private void ClampIntValue()
+        {
+            if (MinValueInt != null)
+            {
+                intValue = Math.Max(intValue, MinValueInt.Value);
+                MinusButton.Enabled = intValue > MinValueInt;
+            }
+            if (MaxValueInt != null)
+            {
+                intValue = Math.Min(intValue, MaxValueInt.Value);
+                PlusButton.Enabled = intValue < MaxValueInt;
+            }
         }
 
         private void UpdateText()

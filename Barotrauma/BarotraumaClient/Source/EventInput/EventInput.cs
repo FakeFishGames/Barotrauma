@@ -37,9 +37,9 @@ namespace EventInput
     public class CharacterEventArgs : EventArgs
     {
         private readonly char character;
-        private readonly int lParam;
+        private readonly long lParam;
 
-        public CharacterEventArgs(char character, int lParam)
+        public CharacterEventArgs(char character, long lParam)
         {
             this.character = character;
             this.lParam = lParam;
@@ -50,12 +50,12 @@ namespace EventInput
             get { return character; }
         }
 
-        public int Param
+        public long Param
         {
             get { return lParam; }
         }
 
-        public int RepeatCount
+        public long RepeatCount
         {
             get { return lParam & 0xffff; }
         }
@@ -207,7 +207,7 @@ namespace EventInput
 
                 case WM_CHAR:
                     if (CharEntered != null)
-                        CharEntered(null, new CharacterEventArgs((char)wParam, lParam.ToInt32()));
+                        CharEntered(null, new CharacterEventArgs((char)wParam, lParam.ToInt64()));
                     break;
 
                 case WM_IME_SETCONTEXT:

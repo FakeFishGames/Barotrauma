@@ -103,7 +103,11 @@ namespace Barotrauma
                     case "deformablesprite":
                         foreach (XElement deformElement in subElement.Elements())
                         {
-                            SpriteDeformations.Add(SpriteDeformation.Load(deformElement));                            
+                            var deformation = SpriteDeformation.Load(deformElement, Name);
+                            if (deformation != null)
+                            {
+                                SpriteDeformations.Add(deformation); 
+                            }                           
                         }
                         break;
                 }

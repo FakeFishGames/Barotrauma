@@ -292,10 +292,8 @@ namespace Barotrauma
                 UserData = "filterarea"
             };
             new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), filterArea.RectTransform), TextManager.Get("FilterMapEntities"), font: GUI.SmallFont);
-            entityFilterBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUI.SmallFont)
-            {
-                OnTextChanged = (textBox, text) => { FilterEntities(text); return true; }
-            };
+            entityFilterBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUI.SmallFont);
+            entityFilterBox.OnTextChanged += (textBox, text) => { FilterEntities(text); return true; };
             var clearButton = new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), filterArea.RectTransform), "x")
             {
                 OnClicked = (btn, userdata) => { ClearFilter(); entityFilterBox.Flash(Color.White); return true; }
@@ -644,9 +642,9 @@ namespace Barotrauma
             descriptionBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.25f), paddedSaveFrame.RectTransform))
             {
                 Wrap = true,
-                Text = Submarine.MainSub == null ? "" : Submarine.MainSub.Description,
-                OnTextChanged = ChangeSubDescription
+                Text = Submarine.MainSub == null ? "" : Submarine.MainSub.Description
             };
+            descriptionBox.OnTextChanged += ChangeSubDescription;
 
             var horizontalArea = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.25f), paddedSaveFrame.RectTransform), style: null);
             

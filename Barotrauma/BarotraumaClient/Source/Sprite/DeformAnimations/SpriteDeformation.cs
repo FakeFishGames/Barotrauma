@@ -112,16 +112,16 @@ namespace Barotrauma.SpriteDeformations
 
         public int Sync => deformationParams.Sync;
 
-        public static SpriteDeformation Load(string deformationType)
+        public static SpriteDeformation Load(string deformationType, string parentDebugName)
         {
-            return Load(null, deformationType);
+            return Load(null, deformationType, parentDebugName);
         }
-        public static SpriteDeformation Load(XElement element)
+        public static SpriteDeformation Load(XElement element, string parentDebugName)
         {
-            return Load(element, null);
+            return Load(element, null, parentDebugName);
         }
 
-        private static SpriteDeformation Load(XElement element, string deformationType)
+        private static SpriteDeformation Load(XElement element, string deformationType, string parentDebugName)
         {
             string typeName = deformationType;
 
@@ -158,7 +158,7 @@ namespace Barotrauma.SpriteDeformations
                     }
                     else
                     {
-                        DebugConsole.ThrowError("Could not load sprite deformation animation - \"" + typeName + "\" is not a valid deformation type.");
+                        DebugConsole.ThrowError("Could not load sprite deformation animation in " + parentDebugName + " - \"" + typeName + "\" is not a valid deformation type.");
                     }
                     break;
             }

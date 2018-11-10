@@ -257,7 +257,7 @@ namespace Barotrauma
         
         #region Editing
 
-        public GUIComponent CreateEditor(GUIComponent parent, List<SpriteDeformation> deformations)
+        public GUIComponent CreateEditor(GUIComponent parent, List<SpriteDeformation> deformations, string parentDebugName)
         {
             var container = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.0f), parent.RectTransform))
             {
@@ -310,7 +310,7 @@ namespace Barotrauma
             var deformationDD = new GUIDropDown(new RectTransform(new Point(container.Rect.Width, 30), container.RectTransform), "Add new sprite deformation");
             deformationDD.OnSelected = (selected, userdata) =>
             {
-                deformations.Add(SpriteDeformation.Load((string)userdata));
+                deformations.Add(SpriteDeformation.Load((string)userdata, parentDebugName));
                 deformationDD.Text = "Add new sprite deformation";
                 return false;
             };

@@ -1,0 +1,81 @@
+﻿<Ragdoll type="human" colliderheightfromfloor="155" impacttolerance="7.5" draggable="True" limbscale="0.3" jointscale="0.3" canentersubmarine="True">
+  <collider height="150" radius="30" name="Main Collider" width="0" />
+  <collider height="80" radius="30" name="Secondary Collider" width="0" />
+  <!-- head -->
+  <limb id="0" radius="34" mass="6" type="Head" attackpriority="2" healthindex="0" name="Limb 0" flip="True" steerforce="0" stepoffset="0,0" height="0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Human/NewArt/head_2.png" sourcerect="14,8,71,76" depth="0.1" origin="0.5,0.5" />
+    <damagedsprite texture="Content/Characters/Human/damagedhead.png" sourcerect="1,1,37,38" origin="0.5,0.5" depth="0" />
+  </limb>
+  <!-- body -->
+  <limb id="1" radius="40" height="60" mass="20" type="Torso" attackpriority="3" healthindex="1" name="Limb 1" flip="True" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Items/Jobgear/NewArt/NewHuman_Medic_torso.png" sourcerect="21,31,95,185" depth="0.06" origin="0.49,0.6" />
+    <damagedsprite texture="Content/Characters/Human/damagedtorso.png" sourcerect="0,0,29,58" origin="0.5,0.6" depth="0" />
+  </limb>
+  <limb id="12" radius="40" mass="20" type="Waist" healthindex="1" name="Limb 12" flip="True" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Items/Jobgear/NewArt/NewHuman_Medic_legs.png" sourcerect="31,0,87,120" depth="0.11" origin="0.5,0.5" />
+    <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="0,0,32,29" origin="0.5,0.5" depth="0" />
+  </limb>
+  <!-- left arm -->
+  <limb id="2" radius="32" height="80" mass="3" type="LeftArm" healthindex="2" name="Limb 2" flip="True" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Items/Jobgear/NewArt/NewHuman_Medic_torso.png" sourcerect="123,34,58,134" depth="0.15" origin="0.47,0.47" />
+    <damagedsprite texture="Content/Characters/Human/damagedtorso.png" sourcerect="30,2,17,39" origin="0.5,0.5" depth="0" />
+  </limb>
+  <limb id="3" radius="24" height="60" mass="3" type="LeftHand" pullpos="0,-18" healthindex="2" name="Limb 3" flip="True" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Items/Jobgear/NewArt/NewHuman_Medic_torso.png" sourcerect="198,33,39,149" depth="0.16" origin="0.5,0.5" />
+    <damagedsprite texture="Content/Characters/Human/damagedtorso.png" sourcerect="49,2,13,47" origin="0.5,0.5" depth="0" />
+  </limb>
+  <!-- right arm -->
+  <limb id="4" radius="32" height="80" mass="3" type="RightArm" healthindex="3" name="Limb 4" flip="True" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Items/Jobgear/NewArt/NewHuman_Medic_torso.png" sourcerect="123,34,58,134" depth="0.01" origin="0.47,0.47" />
+    <damagedsprite texture="Content/Characters/Human/damagedtorso.png" sourcerect="30,2,17,39" origin="0.5,0.5" depth="0" />
+  </limb>
+  <limb id="5" radius="24" height="60" mass="3" type="RightHand" pullpos="0,-18" healthindex="3" name="Limb 5" flip="True" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Items/Jobgear/NewArt/NewHuman_Medic_torso.png" sourcerect="198,33,39,149" origin="0.5,0.5" depth="0" />
+    <damagedsprite texture="Content/Characters/Human/damagedtorso.png" sourcerect="49,2,13,47" origin="0.5,0.5" depth="0" />
+  </limb>
+  <!-- left leg -->
+  <limb id="6" radius="28" height="60" mass="8" type="LeftThigh" healthindex="4" name="Limb 6" flip="True" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Items/Jobgear/NewArt/NewHuman_Medic_legs.png" sourcerect="39,123,72,130" depth="0.15" origin="0.5,0.5" />
+    <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="0,32,26,48" origin="0.5,0.5" depth="0" />
+  </limb>
+  <limb id="7" radius="24" height="78" mass="5" type="LeftLeg" healthindex="4" name="Limb 7" flip="True" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Items/Jobgear/NewArt/NewHuman_Medic_legs.png" sourcerect="143,123,64,121" depth="0.16" origin="0.5,0.5" />
+    <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="32,0,22,50" origin="0.5,0.5" depth="0" />
+  </limb>
+  <limb id="8" radius="20" height="40" mass="2" type="LeftFoot" flip="True" pullpos="-5,0" healthindex="4" name="Limb 8" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Items/Jobgear/NewArt/NewHuman_Medic_legs.png" sourcerect="155,17,60,90" depth="0.14" origin="0.5,0.5" />
+    <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="35,53,16,25" origin="0.5,0.5" depth="0" />
+    <sound tag="footstep_metal" />
+  </limb>
+  <!-- right leg -->
+  <limb id="9" radius="28" height="60" mass="8" type="RightThigh" healthindex="5" name="Limb 9" flip="True" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Items/Jobgear/NewArt/NewHuman_Medic_legs.png" sourcerect="39,123,72,130" depth="0.11" origin="0.5,0.5" />
+    <damagedsprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="0,32,26,48" origin="0.5,0.5" depth="0" />
+  </limb>
+  <limb id="10" radius="24" height="78" mass="5" type="RightLeg" healthindex="5" name="Limb 10" flip="True" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Items/Jobgear/NewArt/NewHuman_Medic_legs.png" sourcerect="143,123,64,121" depth="0.12" origin="0.5,0.5" />
+    <damagedsprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="32,0,22,50" origin="0.5,0.5" depth="0" />
+  </limb>
+  <limb id="11" radius="20" height="40" mass="2" type="RightFoot" flip="True" pullpos="-5,0" healthindex="5" name="Limb 11" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Items/Jobgear/NewArt/NewHuman_Medic_legs.png" sourcerect="155,17,60,90" origin="0.5,0.5" depth="0" />
+    <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="35,53,16,25" origin="0.5,0.5" depth="0" />
+    <sound tag="footstep_metal" />
+  </limb>
+  <!-- head to body -->
+  <joint limb1="0" limb1anchor="-14.26959,-27.55471" limb2="1" limb2anchor="-6.867711,88.47444" lowerlimit="-90" upperlimit="45" canbesevered="True" name="Joint 0 - 1" limitenabled="True" />
+  <joint limb1="1" limb1anchor="2.91471,-56.18708" limb2="12" limb2anchor="4.880337,36.82063" lowerlimit="-10" upperlimit="10" canbesevered="False" name="Joint 1 - 12" limitenabled="True" />
+  <!-- body to left arm -->
+  <joint limb1="1" limb1anchor="-2.898444,44.13085" limb2="2" limb2anchor="2.837451,35.80114" limitenabled="False" name="Joint 1 - 2" canbesevered="True" upperlimit="0" lowerlimit="0" />
+  <joint limb1="2" limb1anchor="3.007349,-58.40009" limb2="3" limb2anchor="-1.038308,58.12393" lowerlimit="5" upperlimit="170" canbesevered="True" name="Joint 2 - 3" limitenabled="True" />
+  <!-- body to right arm -->
+  <joint limb1="1" limb1anchor="-2.898444,44.13085" limb2="4" limb2anchor="2.837451,35.80114" limitenabled="False" name="Joint 1 - 4" canbesevered="True" upperlimit="0" lowerlimit="0" />
+  <joint limb1="4" limb1anchor="3.007349,-58.40009" limb2="5" limb2anchor="-1.038308,58.12393" lowerlimit="5" upperlimit="170" canbesevered="True" name="Joint 4 - 5" limitenabled="True" />
+  <!-- body to left leg -->
+  <joint limb1="12" limb1anchor="2.066917,-39.63243" limb2="6" limb2anchor="-3.856903,34.10136" lowerlimit="-30" upperlimit="120" canbesevered="True" name="Joint 12 - 6" limitenabled="True" />
+  <joint limb1="6" limb1anchor="-5.380095,-55.38822" limb2="7" limb2anchor="5.088643,49.05762" lowerlimit="-139.2462" upperlimit="-2.926941" canbesevered="True" name="Joint 6 - 7" limitenabled="True" />
+  <joint limb1="7" limb1anchor="0.7583023,-50.88317" limb2="8" limb2anchor="19.05977,16.80432" lowerlimit="20" upperlimit="90" canbesevered="True" name="Joint 7 - 8" limitenabled="True" />
+  <!-- body to right leg -->
+  <joint limb1="12" limb1anchor="2.066917,-39.63243" limb2="9" limb2anchor="-3.856903,34.10136" lowerlimit="-30" upperlimit="120" canbesevered="True" name="Joint 12 - 9" limitenabled="True" />
+  <joint limb1="9" limb1anchor="-5.380095,-55.38822" limb2="10" limb2anchor="5.088643,49.05762" lowerlimit="-139.2462" upperlimit="-2.926941" canbesevered="True" name="Joint 9 - 10" limitenabled="True" />
+  <joint limb1="10" limb1anchor="0.7583023,-50.88317" limb2="11" limb2anchor="19.05977,16.80432" lowerlimit="20" upperlimit="90" canbesevered="True" name="Joint 10 - 11" limitenabled="True" />
+</Ragdoll>

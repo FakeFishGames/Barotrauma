@@ -93,7 +93,7 @@ namespace Barotrauma.Networking
 
             chatBox = new ChatBox(inGameHUD, false);
             chatBox.OnEnterMessage += EnterChatMessage;
-            chatBox.OnTextChanged += TypingChatMessage;
+            chatBox.InputBox.OnTextChanged += TypingChatMessage;
 
             var buttonContainer = new GUILayoutGroup(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ButtonAreaTop, inGameHUD.RectTransform),
                 isHorizontal: true, childAnchor: Anchor.CenterRight)
@@ -1832,6 +1832,13 @@ namespace Barotrauma.Networking
 
         public bool TypingChatMessage(GUITextBox textBox, string text)
         {
+            // Do we need this kind of check here? 
+            // Had to remove this from the chatbox.TextBox.OnTextChanged delegate property, because the delegate was refactored as event and it cannot be accessed like that anymore.
+            //if (chatBox.IsSinglePlayer)
+            //{
+            //    DebugConsole.ThrowError("Cannot access chat input box in single player!\n" + Environment.StackTrace);
+            //    return false;
+            //}
             string command = ChatMessage.GetChatMessageCommand(text, out _);
             switch (command)
             {
@@ -1874,7 +1881,11 @@ namespace Barotrauma.Networking
 
             SendChatMessage(message);
 
-            if (textBox == chatBox.InputBox) textBox.Deselect();
+            if(textBox == chatBox.InputBox)
+            {
+                textBox.Deselect();
+                textBox.Text = "";
+            }
 
             return true;
         }
@@ -1941,7 +1952,6 @@ namespace Barotrauma.Networking
                     if (Screen.Selected == GameMain.GameScreen && PlayerInput.KeyHit(InputType.RadioChat))
                     {
                         msgBox.Text = "r; ";
-                        msgBox.OnTextChanged?.Invoke(msgBox, msgBox.Text);
                     }
                 }
             }

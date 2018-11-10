@@ -90,13 +90,15 @@ namespace Barotrauma
             return FilePath + ": " + sourceRect;
         }
 
+        public string ID { get; private set; }
+
         partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn, bool premultiplyAlpha = true);
         partial void CalculateSourceRect();
 
         // TODO: use the Init method below?
         public Sprite(XElement element, string path = "", string file = "")
         {
-            this.SourceElement = element;
+            SourceElement = element;
             if (file == "")
             {
                 file = element.GetAttributeString("texture", "");
@@ -133,6 +135,7 @@ namespace Barotrauma
 
             Depth = element.GetAttributeFloat("depth", 0.001f);
 
+            ID = GetID(SourceElement);
             list.Add(this);
         }
 
@@ -187,7 +190,18 @@ namespace Barotrauma
                 list.Add(this);
             }
         }
-        
+
+        /// <summary>
+        /// Creates a supposedly unique id from the parent element. If the parent element is not found, uses the sprite element.
+        /// TODO: If there are multiple elements with exactly the same data, the ids will fail. -> Is there a better way to identify the sprites?
+        /// </summary>
+        public static string GetID(XElement sourceElement)
+        {
+            if (sourceElement == null) { return string.Empty; }
+            var parentElement = sourceElement.Parent;
+            return parentElement != null ? sourceElement.ToString() + parentElement.ToString() : sourceElement.ToString();
+        }
+
         public void Remove()
         {
             list.Remove(this);
