@@ -336,16 +336,16 @@ namespace Barotrauma
             var serverName = new GUITextBox(new RectTransform(new Vector2(0.3f, 0.05f), defaultModeContainer.RectTransform))
             {
                 TextGetter = GetServerName,
-                Enabled = false,//GameMain.Server != null,
-                OnTextChanged = ChangeServerName
+                Enabled = false//GameMain.Client.HasPermission(ClientPermissions.ManageSettings)
             };
+            serverName.OnTextChanged += ChangeServerName;
             clientDisabledElements.Add(serverName);
 
             serverMessage = new GUITextBox(new RectTransform(new Vector2(infoColumnContainer.RectTransform.RelativeSize.X, 0.15f), defaultModeContainer.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.07f) })
             {
-                Wrap = true,
-                OnTextChanged = UpdateServerMessage
+                Wrap = true
             };
+            serverMessage.OnTextChanged += UpdateServerMessage;
             clientDisabledElements.Add(serverMessage);
             
             SettingsButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), topButtonContainer.RectTransform, Anchor.TopRight),
@@ -457,10 +457,8 @@ namespace Barotrauma
             //seed ------------------------------------------------------------------
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), TextManager.Get("LevelSeed"));
-            seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform))
-            {
-                OnTextChanged = SelectSeed
-            };
+            seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform));
+            seedBox.OnTextChanged += SelectSeed;
             clientDisabledElements.Add(seedBox);
             LevelSeed = ToolBox.RandomSeed(8);
 
@@ -573,8 +571,9 @@ namespace Barotrauma
             CampaignCharacterDiscarded = false;
 
             textBox.Select();
+
             textBox.OnEnterPressed = GameMain.Client.EnterChatMessage;
-            textBox.OnTextChanged = GameMain.Client.TypingChatMessage;
+            textBox.OnTextChanged += GameMain.Client.TypingChatMessage;
 
             myCharacterFrame.RectTransform.AbsoluteOffset = new Point(0, 0);
             myCharacterFrame.GetChild<GUIButton>().Visible = false;

@@ -26,7 +26,7 @@ namespace Barotrauma.Networking
 
             new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.05f), paddedFrame.RectTransform, Anchor.TopRight), "Filter", font: GUI.SmallFont);            
             GUITextBox searchBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 0.05f), paddedFrame.RectTransform, Anchor.TopRight), font: GUI.SmallFont);
-            searchBox.OnTextChanged = (textBox, text) =>
+            searchBox.OnTextChanged += (textBox, text) =>
             {
                 msgFilter = text;
                 FilterMessages();

@@ -61,7 +61,7 @@ namespace Barotrauma
                 excludedIdentifiers = value.Split(',');
                 for (int i = 0; i < excludedIdentifiers.Length; i++)
                 {
-                    excludedIdentifiers[i] = excludedIdentifiers[i].Trim();
+                    excludedIdentifiers[i] = excludedIdentifiers[i].Trim().ToLowerInvariant();
                 }
             }
         }
@@ -77,13 +77,13 @@ namespace Barotrauma
         {
             for (int i = 0; i < identifiers.Length; i++)
             {
-                identifiers[i] = identifiers[i].Trim();
+                identifiers[i] = identifiers[i].Trim().ToLowerInvariant();
             }
             this.identifiers = identifiers;
 
             for (int i = 0; i < excludedIdentifiers.Length; i++)
             {
-                excludedIdentifiers[i] = excludedIdentifiers[i].Trim();
+                excludedIdentifiers[i] = excludedIdentifiers[i].Trim().ToLowerInvariant();
             }
             this.excludedIdentifiers = excludedIdentifiers;
 

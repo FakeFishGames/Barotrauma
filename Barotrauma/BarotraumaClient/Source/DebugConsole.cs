@@ -1020,7 +1020,7 @@ namespace Barotrauma
                 RagdollParams ragdollParams = character.AnimController.RagdollParams;
                 ragdollParams.LimbScale = value;
                 var pos = character.WorldPosition;
-                character.AnimController.Recreate(ragdollParams);
+                character.AnimController.Recreate();
                 character.TeleportTo(pos);
             }, isCheat: true));
 
@@ -1045,7 +1045,7 @@ namespace Barotrauma
                 RagdollParams ragdollParams = character.AnimController.RagdollParams;
                 ragdollParams.JointScale = value;
                 var pos = character.WorldPosition;
-                character.AnimController.Recreate(ragdollParams);
+                character.AnimController.Recreate();
                 character.TeleportTo(pos);
             }, isCheat: true));
 
@@ -1071,7 +1071,7 @@ namespace Barotrauma
                 ragdollParams.LimbScale = value;
                 ragdollParams.JointScale = value;
                 var pos = character.WorldPosition;
-                character.AnimController.Recreate(ragdollParams);
+                character.AnimController.Recreate();
                 character.TeleportTo(pos);
             }, isCheat: true));
 
@@ -1084,7 +1084,7 @@ namespace Barotrauma
                     return;
                 }
                 var pos = character.WorldPosition;
-                character.AnimController.Recreate(character.AnimController.RagdollParams);
+                character.AnimController.Recreate();
                 character.TeleportTo(pos);
             }, isCheat: true));
 

@@ -73,12 +73,14 @@ namespace Barotrauma.Items.Components
             };
         }
 
-        public override bool Select(Character character)
+        public override void OnItemLoaded()
         {
-            rechargeSpeedSlider.BarScroll = rechargeSpeed / MaxRechargeSpeed;
-            return base.Select(character);
+            if (rechargeSpeedSlider != null)
+            {
+                rechargeSpeedSlider.BarScroll = rechargeSpeed / MaxRechargeSpeed;
+            }
         }
-
+        
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             float chargeRatio = charge / capacity;

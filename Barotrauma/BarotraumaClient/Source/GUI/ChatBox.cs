@@ -24,6 +24,7 @@ namespace Barotrauma
         private Point screenResolution;
 
         private bool isSinglePlayer;
+        public bool IsSinglePlayer => isSinglePlayer;
                
         private bool toggleOpen = true;
         private float openState;
@@ -54,28 +55,6 @@ namespace Barotrauma
                     return;
                 }
                 inputBox.OnEnterPressed = value;
-            }
-        }
-
-        public GUITextBox.OnTextChangedHandler OnTextChanged
-        {
-            get
-            {
-                if (isSinglePlayer)
-                {
-                    DebugConsole.ThrowError("Cannot access chat input box in single player!\n" + Environment.StackTrace);
-                    return null;
-                }
-                return inputBox.OnTextChanged;
-            }
-            set
-            {
-                if (isSinglePlayer)
-                {
-                    DebugConsole.ThrowError("Cannot access chat input box in single player!\n" + Environment.StackTrace);
-                    return;
-                }
-                inputBox.OnTextChanged = value;
             }
         }
         
@@ -155,7 +134,6 @@ namespace Barotrauma
                         if (radioItem != null && Character.Controlled.HasEquippedItem(radioItem) && radioItem.GetComponent<WifiComponent>().CanTransmit())
                         {
                             inputBox.Text = "r; ";
-                            inputBox.OnTextChanged?.Invoke(inputBox, inputBox.Text);
                         }
                     }
                     return true;

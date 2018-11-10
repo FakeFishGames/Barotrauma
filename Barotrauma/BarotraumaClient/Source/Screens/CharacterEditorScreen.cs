@@ -59,6 +59,8 @@ namespace Barotrauma
         private Vector2? anchor1Pos;
 
         private float spriteSheetZoom = 1;
+        private float spriteSheetMinZoom = 0.25f;
+        private float spriteSheetMaxZoom = 1;
         private int spriteSheetOffsetY = 100;
         private int spriteSheetOffsetX = (int)(GameMain.GraphicsWidth * 0.6f);
         private Color backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1.0f);
@@ -623,7 +625,7 @@ namespace Barotrauma
             lastLimbElement.AddAfterSelf(newLimbElement);
             var newLimbParams = new LimbParams(newLimbElement, RagdollParams);
             RagdollParams.Limbs.Add(newLimbParams);
-            character.AnimController.Recreate(RagdollParams);
+            character.AnimController.Recreate();
             TeleportTo(spawnPosition);
             ClearWidgets();
             selectedLimbs.Add(character.AnimController.Limbs.Single(l => l.limbParams == newLimbParams));
@@ -656,7 +658,7 @@ namespace Barotrauma
             lastJointElement.AddAfterSelf(newJointElement);
             var newJointParams = new JointParams(newJointElement, RagdollParams);
             RagdollParams.Joints.Add(newJointParams);
-            character.AnimController.Recreate(RagdollParams);
+            character.AnimController.Recreate();
             TeleportTo(spawnPosition);
             ClearWidgets();
             selectedJoints.Add(character.AnimController.LimbJoints.Single(j => j.jointParams == newJointParams));
@@ -738,7 +740,6 @@ namespace Barotrauma
             }
             jointsToRemove.ForEach(j => RagdollParams.Joints.Remove(j));
             RecreateRagdoll();
-            ClearWidgets();
             ragdollResetRequiresForceLoading = true;
         }
         #endregion
@@ -964,11 +965,12 @@ namespace Barotrauma
             selectedJoints.Clear();
         }
 
-        private void RecreateRagdoll()
+        private void RecreateRagdoll(RagdollParams ragdoll = null)
         {
-            character.AnimController.Recreate(RagdollParams);
+            character.AnimController.Recreate(ragdoll);
             TeleportTo(spawnPosition);
             ResetParamsEditor();
+            ClearWidgets();
         }
 
         private void TeleportTo(Vector2 position)
@@ -1128,16 +1130,14 @@ namespace Barotrauma
             var layoutGroupSpriteSheet = new GUILayoutGroup(new RectTransform(Vector2.One, spriteSheetControls.RectTransform)) { AbsoluteSpacing = 5, CanBeFocused = false };
             new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), "Spritesheet zoom:", Color.White);
             var spriteSheetControlElement = new GUIFrame(new RectTransform(new Point(elementSize.X * 2, textAreaHeight), layoutGroupSpriteSheet.RectTransform), style: null);
-            float spriteMinScale = 0.25f;
-            float spriteMaxScale = textures == null || textures.None() ? 1 : (rightPanel.Rect.Left - spriteSheetOffsetX) / (float)(textures.OrderByDescending(t => t.Width).First().Width);
-            spriteSheetZoom = MathHelper.Clamp(spriteSheetZoom, spriteMinScale, spriteMaxScale);
+            CalculateSpritesheetZoom();
             spriteSheetZoomBar = new GUIScrollBar(new RectTransform(new Vector2(0.75f, 1), spriteSheetControlElement.RectTransform), barSize: 0.2f)
             {
-                BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteMinScale, spriteMaxScale, spriteSheetZoom)),
+                BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteSheetMinZoom, spriteSheetMaxZoom, spriteSheetZoom)),
                 Step = 0.01f,
                 OnMoved = (scrollBar, value) =>
                 {
-                    spriteSheetZoom = MathHelper.Lerp(spriteMinScale, spriteMaxScale, value);
+                    spriteSheetZoom = MathHelper.Lerp(spriteSheetMinZoom, spriteSheetMaxZoom, value);
                     return true;
                 }
             };
@@ -1145,8 +1145,8 @@ namespace Barotrauma
             {
                 OnClicked = (box, data) =>
                 {
-                    spriteSheetZoom = Math.Min(1, spriteMaxScale);
-                    spriteSheetZoomBar.BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteMinScale, spriteMaxScale, spriteSheetZoom));
+                    spriteSheetZoom = Math.Min(1, spriteSheetMaxZoom);
+                    spriteSheetZoomBar.BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteSheetMinZoom, spriteSheetMaxZoom, spriteSheetZoom));
                     return true;
                 }
             };
@@ -1543,9 +1543,9 @@ namespace Barotrauma
                 {
                     character.AnimController.ResetRagdoll(forceReload: false);
                     ResetParamsEditor();
+                    ClearWidgets();
                 }
                 CreateCenterPanel();
-                ClearWidgets();
                 GUI.AddMessage($"Ragdoll reset", Color.WhiteSmoke, font: GUI.Font);
                 return true;
             };
@@ -1650,7 +1650,8 @@ namespace Barotrauma
                     string fileName = Path.GetFileNameWithoutExtension(selectedFile);
                     var ragdoll = character.IsHumanoid ? HumanRagdollParams.GetRagdollParams(character.SpeciesName, fileName) as RagdollParams : RagdollParams.GetRagdollParams<FishRagdollParams>(character.SpeciesName, fileName);
                     GUI.AddMessage($"Ragdoll loaded from {selectedFile}", Color.WhiteSmoke, font: GUI.Font);
-                    RecreateRagdoll();
+                    RecreateRagdoll(ragdoll);
+                    CreateTextures();
                     CreateCenterPanel();
                     loadBox.Close();
                     return true;
@@ -1853,8 +1854,6 @@ namespace Barotrauma
                 {
                     RecreateRagdoll();
                     character.AnimController.ResetLimbs();
-                    ClearWidgets();
-                    ResetParamsEditor();
                     return true;
                 }
             };
@@ -2044,6 +2043,25 @@ namespace Barotrauma
                 corners = MathUtils.GetImaginaryRect(corners, up, center, size);
                 GUI.DrawRectangle(spriteBatch, corners, Color.LightGreen, thickness: 3);
             }
+        }
+
+        private void CalculateSpritesheetZoom()
+        {
+            float width = textures.OrderByDescending(t => t.Width).First().Width;
+            float height = textures.Sum(t => t.Height);
+            if (textures == null || textures.None())
+            {
+                spriteSheetMaxZoom = 1;
+            }
+            else if (height > width)
+            {
+                spriteSheetMaxZoom = (rightPanel.Rect.Bottom - spriteSheetOffsetY) / height;
+            }
+            else
+            {
+                spriteSheetMaxZoom = (rightPanel.Rect.Left - spriteSheetOffsetX) / width;
+            }
+            spriteSheetZoom = MathHelper.Clamp(1, spriteSheetMinZoom, spriteSheetMaxZoom);
         }
         #endregion
 
@@ -3374,12 +3392,12 @@ namespace Barotrauma
                                 new GUITextBlock(leftElement, "Config File Output");
                                 xmlPathElement = new GUITextBox(rightElement, string.Empty)
                                 {
-                                    CaretColor = Color.White,
-                                    OnTextChanged = (tb, text) =>
-                                    {
-                                        XMLPath = text;
-                                        return true;
-                                    }
+                                    CaretColor = Color.White
+                                };
+                                xmlPathElement.OnTextChanged += (tb, text) =>
+                                {
+                                    XMLPath = text;
+                                    return true;
                                 };
                                 break;
                             case 3:
@@ -3387,11 +3405,11 @@ namespace Barotrauma
                                 texturePathElement = new GUITextBox(rightElement, string.Empty)
                                 {
                                     CaretColor = Color.White,
-                                    OnTextChanged = (tb, text) =>
-                                    {
-                                        TexturePath = text;
-                                        return true;
-                                    }
+                                };
+                                texturePathElement.OnTextChanged += (tb, text) =>
+                                {
+                                    TexturePath = text;
+                                    return true;
                                 };
                                 break;
                         }
@@ -3649,15 +3667,15 @@ namespace Barotrauma
                         }
                     };
                     new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopLeft), "Name");
-                    new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), name)
+                    var nameInput = new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), name)
                     {
                         CaretColor = Color.White,
-                        OnTextChanged = (tb, text) =>
-                        {
-                            string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
-                            label.Text = t;
-                            return true;
-                        }
+                    };
+                    nameInput.OnTextChanged += (tb, text) =>
+                    {
+                        string t = string.IsNullOrWhiteSpace(text) ? id.ToString() : text;
+                        label.Text = t;
+                        return true;
                     };
                     LimbGUIElements.Add(limbElement);
                 }
@@ -3672,15 +3690,15 @@ namespace Barotrauma
                     var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), jointName);
                     var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                     new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopLeft), "Name");
-                    new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), jointName)
+                    var nameInput = new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), jointName)
                     {
                         CaretColor = Color.White,
-                        OnTextChanged = (textB, text) =>
-                        {
-                            jointName = text;
-                            label.Text = jointName;
-                            return true;
-                        }
+                    };
+                    nameInput.OnTextChanged += (textB, text) =>
+                    {
+                        jointName = text;
+                        label.Text = jointName;
+                        return true;
                     };
                     var limb1Field = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                     new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), limb1Field.RectTransform, Anchor.TopLeft), "Limb 1");

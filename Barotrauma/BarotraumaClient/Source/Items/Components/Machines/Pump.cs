@@ -109,6 +109,11 @@ namespace Barotrauma.Items.Components
                 TextManager.Get("PumpIn"), textAlignment: Alignment.Center);            
         }
 
+        public override void OnItemLoaded()
+        {
+            pumpSpeedSlider.BarScroll = (flowPercentage + 100.0f) / 200.0f;
+        }
+        
         partial void UpdateProjSpecific(float deltaTime)
         {
             if (FlowPercentage < 0.0f)
