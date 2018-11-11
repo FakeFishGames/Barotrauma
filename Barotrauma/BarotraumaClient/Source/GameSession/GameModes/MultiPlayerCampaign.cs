@@ -163,10 +163,9 @@ namespace Barotrauma
                 campaign = ((MultiPlayerCampaign)GameMain.GameSession.GameMode);
                 campaign.CampaignID = campaignID;
                 campaign.GenerateMap(mapSeed);
+                GameMain.NetLobbyScreen.ToggleCampaignMode(true);
             }
 
-            GameMain.NetLobbyScreen.ToggleCampaignMode(true);
-            if (NetIdUtils.IdMoreRecent(campaign.lastUpdateID, updateID)) return;
 
             //server has a newer save file
             if (NetIdUtils.IdMoreRecent(saveID, campaign.PendingSaveID))
@@ -183,8 +182,8 @@ namespace Barotrauma
                 GameMain.Client.RequestFile(FileTransferType.CampaignSave, null, null);*/
                 campaign.PendingSaveID = saveID;
             }
-            //we've got the latest save file
-            else if (!NetIdUtils.IdMoreRecent(saveID, campaign.lastSaveID))
+            
+            if (NetIdUtils.IdMoreRecent(updateID, campaign.lastUpdateID))
             {
                 campaign.Map.SetLocation(currentLocIndex == UInt16.MaxValue ? -1 : currentLocIndex);
                 campaign.Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
