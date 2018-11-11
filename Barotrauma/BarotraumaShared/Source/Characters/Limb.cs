@@ -446,28 +446,34 @@ namespace Barotrauma
             body.ApplyTorque(Mass * character.AnimController.Dir * attack.Torque);
 
             bool wasHit = false;
-
             if (damageTarget != null)
             {
                 switch (attack.HitDetectionType)
                 {
                     case HitDetection.Distance:
-                        wasHit = dist < attack.DamageRange;
+                        if (dist < attack.DamageRange)
+                        {
+                            List<Body> ignoredBodies = character.AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
+                            ignoredBodies.Add(character.AnimController.Collider.FarseerBody);
+
+                            var body = Submarine.PickBody(
+                                SimPosition, attackPosition,
+                                ignoredBodies, Physics.CollisionWall);
+
+                            wasHit = body == null;
+                        }
                         break;
                     case HitDetection.Contact:
                         List<Body> targetBodies = new List<Body>();
-                        if (damageTarget is Character)
+                        if (damageTarget is Character targetCharacter)
                         {
-                            Character targetCharacter = (Character)damageTarget;
                             foreach (Limb limb in targetCharacter.AnimController.Limbs)
                             {
                                 if (!limb.IsSevered && limb.body?.FarseerBody != null) targetBodies.Add(limb.body.FarseerBody);
                             }
                         }
-                        else if (damageTarget is Structure)
+                        else if (damageTarget is Structure targetStructure)
                         {
-                            Structure targetStructure = (Structure)damageTarget;
-                            
                             if (character.Submarine == null && targetStructure.Submarine != null)
                             {
                                 targetBodies.Add(targetStructure.Submarine.PhysicsBody.FarseerBody);
@@ -482,7 +488,7 @@ namespace Barotrauma
                             Item targetItem = damageTarget as Item;
                             if (targetItem.body?.FarseerBody != null) targetBodies.Add(targetItem.body.FarseerBody);
                         }
-                        
+
                         if (targetBodies != null)
                         {
                             ContactEdge contactEdge = body.FarseerBody.ContactList;
