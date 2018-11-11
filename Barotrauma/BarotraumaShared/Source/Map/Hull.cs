@@ -541,31 +541,31 @@ namespace Barotrauma
         }
 
         //returns the water block which contains the point (or null if it isn't inside any)
-        public static Hull FindHull(Vector2 position, Hull guess = null, bool useWorldCoordinates = true)
+        public static Hull FindHull(Vector2 position, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = true)
         {
             if (entityGrids == null) return null;
 
             if (guess != null)
             {
-                if (Submarine.RectContains(useWorldCoordinates ? guess.WorldRect : guess.rect, position)) return guess;
+                if (Submarine.RectContains(useWorldCoordinates ? guess.WorldRect : guess.rect, position, inclusive)) return guess;
             }
 
             var entities = EntityGrid.GetEntities(entityGrids, position, useWorldCoordinates);
             foreach (Hull hull in entities)
             {
-                if (Submarine.RectContains(useWorldCoordinates ? hull.WorldRect : hull.rect, position)) return hull;
+                if (Submarine.RectContains(useWorldCoordinates ? hull.WorldRect : hull.rect, position, inclusive)) return hull;
             }
 
             return null;
         }
 
         //returns the water block which contains the point (or null if it isn't inside any)
-        public static Hull FindHullOld(Vector2 position, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = false)
+        public static Hull FindHullOld(Vector2 position, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = true)
         {
             return FindHullOld(position, hullList, guess, useWorldCoordinates, inclusive);
         }
 
-        public static Hull FindHullOld(Vector2 position, List<Hull> hulls, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = false)
+        public static Hull FindHullOld(Vector2 position, List<Hull> hulls, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = true)
         {
             if (guess != null && hulls.Contains(guess))
             {
