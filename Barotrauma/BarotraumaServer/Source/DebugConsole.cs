@@ -76,19 +76,21 @@ namespace Barotrauma
                     {
                         if (queuedMessages.Count>0)
                         {
+                            Console.CursorLeft = 0;
+                            Console.Write(new string(' ', Console.WindowWidth));
+                            Console.CursorTop--; Console.CursorLeft = 0;
                             while (queuedMessages.Count > 0)
                             {
                                 ColoredText msg = queuedMessages.Dequeue();
-
-                                Console.CursorLeft = 0;
+                                
                                 string msgTxt = msg.Text;
                                 int paddingLen = Console.WindowWidth - (msg.Text.Length % Console.WindowWidth)-1;
                                 msgTxt += new string(' ', paddingLen>0 ? paddingLen : 0);
 
                                 Console.ForegroundColor = XnaToConsoleColor.Convert(msg.Color);
                                 Console.WriteLine(msgTxt);
-                                RewriteInputToCommandLine(input);
                             }
+                            RewriteInputToCommandLine(input);
                         }
                     }
 
@@ -130,18 +132,15 @@ namespace Barotrauma
 
         private static void RewriteInputToCommandLine(string input)
         {
-            int cursorTop = Console.CursorTop;
             string ln = !string.IsNullOrWhiteSpace(input) ? DebugConsole.AutoComplete(input) : ""; DebugConsole.ResetAutoComplete();
             ln += new string(' ', Console.WindowWidth - (ln.Length % Console.WindowWidth));
             Console.ForegroundColor = ConsoleColor.DarkGray;
             Console.CursorLeft = 0;
-            Console.CursorTop = cursorTop;
-            Console.WriteLine(ln);
+            Console.Write(ln);
             Console.ForegroundColor = ConsoleColor.White;
             Console.CursorLeft = 0;
-            Console.CursorTop = cursorTop;
-            Console.WriteLine(input);
-            Console.CursorTop = cursorTop;
+            Console.CursorTop--;
+            Console.Write(input);
             Console.CursorLeft = input.Length;
         }
 

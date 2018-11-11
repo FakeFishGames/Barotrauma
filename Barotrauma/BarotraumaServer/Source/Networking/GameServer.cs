@@ -921,16 +921,13 @@ namespace Barotrauma.Networking
                 }
 
                 ClientWriteLobby(c);
-
-                if (c.Connection != OwnerConnection)
+                
+                MultiPlayerCampaign campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
+                if (campaign != null && NetIdUtils.IdMoreRecent(campaign.LastSaveID, c.LastRecvCampaignSave))
                 {
-                    MultiPlayerCampaign campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
-                    if (campaign != null && NetIdUtils.IdMoreRecent(campaign.LastSaveID, c.LastRecvCampaignSave))
+                    if (!fileSender.ActiveTransfers.Any(t => t.Connection == c.Connection && t.FileType == FileTransferType.CampaignSave))
                     {
-                        if (!fileSender.ActiveTransfers.Any(t => t.Connection == c.Connection && t.FileType == FileTransferType.CampaignSave))
-                        {
-                            fileSender.StartTransfer(c.Connection, FileTransferType.CampaignSave, GameMain.GameSession.SavePath);
-                        }
+                        fileSender.StartTransfer(c.Connection, FileTransferType.CampaignSave, GameMain.GameSession.SavePath);
                     }
                 }
             }
@@ -1143,19 +1140,11 @@ namespace Barotrauma.Networking
             }
 
             var campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
-            if (campaign != null)
+            if (campaign != null && NetIdUtils.IdMoreRecent(campaign.LastUpdateID, c.LastRecvCampaignUpdate))
             {
-                if (NetIdUtils.IdMoreRecent(campaign.LastUpdateID, c.LastRecvCampaignUpdate))
-                {
-                    outmsg.Write(true);
-                    outmsg.WritePadBits();
-                    campaign.ServerWrite(outmsg, c);
-                }
-                else
-                {
-                    outmsg.Write(false);
-                    outmsg.WritePadBits();
-                }
+                outmsg.Write(true);
+                outmsg.WritePadBits();
+                campaign.ServerWrite(outmsg, c);
             }
             else
             {
