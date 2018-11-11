@@ -8,7 +8,9 @@
     allowedlinks="deconstructor"
     description="A machine capable of manufacturing a wide range of items out of basic raw materials.">
 
-    <Sprite texture="Content/Items/Fabricators/FF_Fabricator.png" sourcerect="0,0,192,208" depth="0.8"/>
+    <Sprite texture="Content/Items/Fabricators/FF_Fabricator_broken.png" sourcerect="0,0,182,198" depth="0.8"/>
+    <BrokenSprite texture="Content/Items/Fabricators/FF_Fabricator_broken.png" sourcerect="182,0,182,198" depth="0.8" maxcondition="50" fadein="true" />
+    <BrokenSprite texture="Content/Items/Fabricators/FF_Fabricator_broken.png" sourcerect="364,0,182,198" depth="0.8" maxcondition="0" />
 
     <Fabricator canbeselected = "true" powerconsumption="500.0">
       <GuiFrame relativesize="0.4,0.4" minsize="600,400" maxsize="900,600" anchor="Center" style="ItemUI"/>
@@ -264,7 +266,9 @@
     allowedlinks="deconstructor"
     description="A machine that can be used to manufacture various medicines.">
 
-    <Sprite texture="Content/Items/Fabricators/FF_medicalFabricator.png" depth="0.8" sourcerect="0,0,139,200"/>
+    <Sprite texture="Content/Items/Fabricators/FF_medicalFabricator_broken.png" depth="0.8" sourcerect="0,0,139,199"/>
+    <BrokenSprite texture="Content/Items/Fabricators/FF_medicalFabricator_broken.png" sourcerect="139,0,139,199" depth="0.8" maxcondition="50" fadein="true" />
+    <BrokenSprite texture="Content/Items/Fabricators/FF_medicalFabricator_broken.png" sourcerect="278,0,139,199" depth="0.8" maxcondition="0" />
 
     <Fabricator canbeselected = "true" powerconsumption="100.0">
       <GuiFrame relativesize="0.4,0.4" minsize="600,400" maxsize="900,600" anchor="Center" style="ItemUI"/>
@@ -392,7 +396,9 @@
     allowedlinks="fabricator,medicalfabricator"
     description="Disassembles and breaks down items to reusable components and material bars.">
 
-    <Sprite texture="Content/Items/Fabricators/FF_deconstructor.png" depth="0.8" sourcerect="0,0,176,144"/>
+    <Sprite texture="Content/Items/Fabricators/FF_deconstructor_broken.png" depth="0.8" sourcerect="0,0,175,132"/>
+    <BrokenSprite texture="Content/Items/Fabricators/FF_deconstructor_broken.png" sourcerect="175,0,175,132" depth="0.8" maxcondition="50" fadein="true" />
+    <BrokenSprite texture="Content/Items/Fabricators/FF_deconstructor_broken.png" sourcerect="350,0,175,132" depth="0.8" maxcondition="0" />
 
     <Deconstructor canbeselected = "true" powerconsumption="500.0">
       <GuiFrame relativesize="0.15,0.35" minsize="300,400" maxsize="360,480" anchor="Center" style="ItemUI"/>
