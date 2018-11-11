@@ -262,7 +262,7 @@ namespace Barotrauma.Items.Components
             
             if (!item.linkedTo.Any(e => e is Hull) && !dockingTarget.item.linkedTo.Any(e => e is Hull))
             {
-                CreateHull();
+                CreateHulls();
             }
         }
 
@@ -338,6 +338,12 @@ namespace Barotrauma.Items.Components
 
         private void CreateDoorBody()
         {
+            if (doorBody != null)
+            {
+                GameMain.World.RemoveBody(doorBody);
+                doorBody = null;
+            }
+
             Vector2 position = ConvertUnits.ToSimUnits(item.Position + (dockingTarget.door.Item.WorldPosition - item.WorldPosition));
             if (!MathUtils.IsValid(position))
             {
@@ -354,6 +360,8 @@ namespace Barotrauma.Items.Components
                 position = Vector2.Zero;
             }
 
+            System.Diagnostics.Debug.Assert(doorBody == null);
+
             doorBody = BodyFactory.CreateRectangle(GameMain.World,
                 dockingTarget.door.Body.width,
                 dockingTarget.door.Body.height,
@@ -365,7 +373,7 @@ namespace Barotrauma.Items.Components
             doorBody.BodyType = BodyType.Static;
         }
 
-        private void CreateHull()
+        private void CreateHulls()
         {
             var hullRects = new Rectangle[] { item.WorldRect, dockingTarget.item.WorldRect };
             var subs = new Submarine[] { item.Submarine, dockingTarget.item.Submarine };
@@ -393,6 +401,60 @@ namespace Barotrauma.Items.Components
                 hullRects[0] = new Rectangle(hullRects[0].Center.X, hullRects[0].Y, ((int)DockedDistance / 2), hullRects[0].Height);
                 hullRects[1] = new Rectangle(hullRects[1].Center.X - ((int)DockedDistance / 2), hullRects[1].Y, ((int)DockedDistance / 2), hullRects[1].Height);
 
+
+                //expand hulls if needed, so there's no empty space between the sub's hulls and docking port hulls
+                int leftSubRightSide = int.MinValue, rightSubLeftSide = int.MaxValue;
+                foreach (Hull hull in Hull.hullList)
+                {
+                    for (int i = 0; i < 2; i++)
+                    {
+                        if (hull.Submarine != subs[i]) continue;
+                        if (hull.WorldRect.Y < hullRects[i].Y - hullRects[i].Height) continue;
+                        if (hull.WorldRect.Y - hull.WorldRect.Height > hullRects[i].Y) continue;
+
+                        if (i == 0) //left hull
+                        {
+                            leftSubRightSide = Math.Max(hull.WorldRect.Right, leftSubRightSide);
+                        }
+                        else //upper hull
+                        {
+                            rightSubLeftSide = Math.Min(hull.WorldRect.X, rightSubLeftSide);
+                        }
+                    }
+                }
+
+
+                //expand left hull to the rightmost hull of the sub at the left side
+                //(unless the difference is more than 100 units - if the distance is very large 
+                //there's something wrong with the positioning of the docking ports or submarine hulls)
+                int leftHullDiff = hullRects[0].X - leftSubRightSide;
+                if (leftHullDiff > 0)
+                {
+                    if (leftHullDiff > 100)
+                    {
+                        DebugConsole.ThrowError("Creating hulls between docking ports failed. The leftmost docking port seems to be very far from any hulls in the left-side submarine.");
+                    }
+                    else
+                    {
+                        hullRects[0].X -= leftHullDiff;
+                        hullRects[0].Width += leftHullDiff;
+                    }
+                }
+
+                int rightHullDiff = rightSubLeftSide - hullRects[1].Right;
+                if (rightHullDiff > 0)
+                {
+                    if (rightHullDiff > 100)
+                    {
+                        DebugConsole.ThrowError("Creating hulls between docking ports failed. The rightmost docking port seems to be very far from any hulls in the right-side submarine.");
+                    }
+                    else
+                    {
+                        hullRects[1].Width += rightHullDiff;
+                    }
+                }
+
+
                 for (int i = 0; i < 2; i++)
                 {
                     hullRects[i].Location -= MathUtils.ToPoint((subs[i].WorldPosition - subs[i].HiddenSubPosition));
@@ -417,9 +479,60 @@ namespace Barotrauma.Items.Components
                     hullRects = new Rectangle[] { dockingTarget.item.WorldRect, item.WorldRect };
                     subs = new Submarine[] { dockingTarget.item.Submarine, item.Submarine };
                 }
+                
+                hullRects[0] = new Rectangle(hullRects[0].X, hullRects[0].Y + (int)(-hullRects[0].Height + DockedDistance) / 2, hullRects[0].Width, ((int)DockedDistance / 2));
+                hullRects[1] = new Rectangle(hullRects[1].X, hullRects[1].Y - hullRects[1].Height / 2, hullRects[1].Width, ((int)DockedDistance / 2));
 
-                hullRects[0] = new Rectangle(hullRects[0].X, hullRects[0].Y + (int)(-hullRects[0].Height+DockedDistance)/2, hullRects[0].Width, ((int)DockedDistance / 2));
-                hullRects[1] = new Rectangle(hullRects[1].X, hullRects[1].Y - hullRects[1].Height/2, hullRects[1].Width, ((int)DockedDistance / 2));
+                //expand hulls if needed, so there's no empty space between the sub's hulls and docking port hulls
+                int upperSubBottom = int.MaxValue, lowerSubTop = int.MinValue;
+                foreach (Hull hull in Hull.hullList)
+                {
+                    for (int i = 0; i < 2; i++)
+                    {
+                        if (hull.Submarine != subs[i]) continue;
+                        if (hull.WorldRect.Right < hullRects[i].X) continue;
+                        if (hull.WorldRect.X > hullRects[i].Right) continue;
+
+                        if (i == 0) //lower hull
+                        {
+                            lowerSubTop = Math.Max(hull.WorldRect.Y, lowerSubTop);
+                        }
+                        else //upper hull
+                        {
+                            upperSubBottom = Math.Min(hull.WorldRect.Y - hull.WorldRect.Height, upperSubBottom);
+                        }
+                    }
+                }
+
+                //expand lower hull to the topmost hull of the lower sub 
+                //(unless the difference is more than 100 units - if the distance is very large 
+                //there's something wrong with the positioning of the docking ports or submarine hulls)
+                int lowerHullDiff = (hullRects[0].Y - hullRects[0].Height) - lowerSubTop;
+                if (lowerHullDiff > 0)
+                {
+                    if (lowerHullDiff > 100)
+                    {
+                        DebugConsole.ThrowError("Creating hulls between docking ports failed. The lower docking port seems to be very far from any hulls in the lower submarine.");
+                    }
+                    else
+                    {
+                        hullRects[0].Height += lowerHullDiff;
+                    }
+                }
+
+                int upperHullDiff = upperSubBottom - hullRects[1].Y;
+                if (upperHullDiff > 0)
+                {
+                    if (upperHullDiff > 100)
+                    {
+                        DebugConsole.ThrowError("Creating hulls between docking ports failed. The upper docking port seems to be very far from any hulls in the upper submarine.");
+                    }
+                    else
+                    {
+                        hullRects[1].Y += upperHullDiff;
+                        hullRects[1].Height += upperHullDiff;
+                    }
+                }
 
                 for (int i = 0; i < 2; i++)
                 {
