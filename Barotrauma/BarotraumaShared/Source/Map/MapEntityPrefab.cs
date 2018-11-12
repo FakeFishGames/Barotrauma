@@ -90,7 +90,12 @@ namespace Barotrauma
             get;
             protected set;
         }
-        
+
+
+        // TODO: use for scaling the whole entity (physics, source rect etc). Turn saveable, when done.
+        [Serialize(1f, false), Editable(0.1f, 10f)]
+        public float Scale { get; set; } = 1;
+
         //If a matching prefab is not found when loading a sub, the game will attempt to find a prefab with a matching alias.
         //(allows changing names while keeping backwards compatibility with older sub files)
         public string[] Aliases
