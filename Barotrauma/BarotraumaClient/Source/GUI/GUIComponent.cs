@@ -47,7 +47,7 @@ namespace Barotrauma
 
         /// <summary>
         /// Returns all child elements in the hierarchy.
-        /// If the component has RectTransform, it's more efficient to use RectTransform.GetChildren and access the Element property directly.
+        /// If the component has RectTransform, it's more efficient to use RectTransform.GetChildren and access the GUIComponent property directly.
         /// </summary>
         public IEnumerable<GUIComponent> GetAllChildren()
         {
