@@ -22,6 +22,8 @@ namespace Barotrauma
         private GUIFrame frame;
         private GUITextBlock textBlock;
 
+        public Func<string, string> textFilterFunction;
+
         public delegate bool OnEnterHandler(GUITextBox textBox, string text);
         public OnEnterHandler OnEnterPressed;
         
@@ -206,9 +208,13 @@ namespace Barotrauma
             rectT.ScaleChanged += () => { caretPosDirty = true; };
         }
 
-        private void SetText(string text)
+        private bool SetText(string text)
         {
-            if (textBlock.Text == text) return;
+            if (textFilterFunction != null)
+            {
+                text = textFilterFunction(text);
+            }
+            if (textBlock.Text == text) { return false; }
             textBlock.Text = text;
             if (textBlock.Text == null) textBlock.Text = "";
             if (textBlock.Text != "" && !Wrap)
@@ -225,6 +231,7 @@ namespace Barotrauma
                     textBlock.Text = textBlock.Text.Substring(0, textBlock.Text.Length - 1);
                 }
             }
+            return true;
         }
 
         private void CalculateCaretPos()
@@ -499,9 +506,11 @@ namespace Barotrauma
             {
                 RemoveSelectedText();
             }
-            SetText(Text.Insert(CaretIndex, inputChar.ToString()));
-            CaretIndex = Math.Min(Text.Length, CaretIndex + 1);
-            OnTextChanged?.Invoke(this, Text);
+            if (SetText(Text.Insert(CaretIndex, inputChar.ToString())))
+            {
+                CaretIndex = Math.Min(Text.Length, CaretIndex + 1);
+                OnTextChanged?.Invoke(this, Text);
+            }
         }
 
         public void ReceiveTextInput(string input)
@@ -510,9 +519,11 @@ namespace Barotrauma
             {
                 RemoveSelectedText();
             }
-            SetText(Text.Insert(CaretIndex, input));
-            CaretIndex = Math.Min(Text.Length, CaretIndex + input.Length);
-            OnTextChanged?.Invoke(this, Text);
+            if (SetText(Text.Insert(CaretIndex, input)))
+            {
+                CaretIndex = Math.Min(Text.Length, CaretIndex + input.Length);
+                OnTextChanged?.Invoke(this, Text);
+            }
         }
 
         public void ReceiveCommandInput(char command)
@@ -541,9 +552,11 @@ namespace Barotrauma
                 case (char)0x16: // ctrl-v
                     string text = GetCopiedText();
                     RemoveSelectedText();
-                    SetText(Text.Insert(CaretIndex, text));
-                    CaretIndex = Math.Min(Text.Length, CaretIndex + text.Length);
-                    OnTextChanged?.Invoke(this, Text);
+                    if (SetText(Text.Insert(CaretIndex, text)))
+                    {
+                        CaretIndex = Math.Min(Text.Length, CaretIndex + text.Length);
+                        OnTextChanged?.Invoke(this, Text);
+                    }
                     break;
                 case (char)0x18: // ctrl-x
                     CopySelectedText();
