@@ -37,7 +37,7 @@
   
   </Item>
   
-  <Item name="Battery" identifier="battery" tags="battery" category="Electrical" description="Generally used for storing backup power in case of a reactor failure.">
+  <Item name="Battery" identifier="battery" tags="battery" category="Electrical" Scale="0.5" description="Generally used for storing backup power in case of a reactor failure.">
     
     <Sprite texture="battery_broken.png" sourcerect="0,0,118,159" depth="0.8" />
     <BrokenSprite texture="battery_broken.png" sourcerect="118,0,118,159" depth="0.8" maxcondition="50" fadein="true" />
@@ -68,7 +68,7 @@
   
   </Item>
   
-  <Item name="Supercapacitor" identifier="supercapacitor" category="Electrical" description="Can deliver charge much faster than batteries.">
+  <Item name="Supercapacitor" identifier="supercapacitor" category="Electrical" Scale="0.5" description="Can deliver charge much faster than batteries.">
     
     <Sprite texture="supercapacitor_broken.png" depth="0.8" sourcerect="0,0,154,176" />
     <BrokenSprite texture="supercapacitor_broken.png" sourcerect="154,0,154,176" depth="0.8" maxcondition="50" fadein="true" />
