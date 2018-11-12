@@ -33,6 +33,7 @@ namespace Barotrauma
                         campaign.LastSaveID++;
 
                         DebugConsole.NewMessage("Campaign started!", Color.Cyan);
+                        DebugConsole.NewMessage(GameMain.GameSession.Map.CurrentLocation.Name + " -> " + GameMain.GameSession.Map.SelectedLocation.Name, Color.Cyan);
                     });
                 }
                 else
@@ -54,6 +55,7 @@ namespace Barotrauma
                         GameMain.GameSession.Map.SelectRandomLocation(true);
 
                         DebugConsole.NewMessage("Campaign loaded!", Color.Cyan);
+                        DebugConsole.NewMessage(GameMain.GameSession.Map.CurrentLocation.Name + " -> " + GameMain.GameSession.Map.SelectedLocation.Name, Color.Cyan);
                     });
                 }
             });

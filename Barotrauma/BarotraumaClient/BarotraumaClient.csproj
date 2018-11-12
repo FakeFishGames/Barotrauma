@@ -149,7 +149,6 @@
     <Compile Include="Source\GameSession\GameModes\Tutorials\TutorialMode.cs" />
     <Compile Include="Source\GameSession\GameModes\Tutorials\Tutorial.cs" />
     <Compile Include="Source\GameSession\GameSession.cs" />
-    <Compile Include="Source\GameSession\HireManager.cs" />
     <Compile Include="Source\GameSession\RoundSummary.cs" />
     <Compile Include="Source\GameSettings.cs" />
     <Compile Include="Source\GUI\ComponentStyle.cs" />
@@ -215,7 +214,6 @@
     <Compile Include="Source\Map\Lights\LightManager.cs" />
     <Compile Include="Source\Map\Lights\LightSource.cs" />
     <Compile Include="Source\Map\LinkedSubmarine.cs" />
-    <Compile Include="Source\Map\Map\Location.cs" />
     <Compile Include="Source\Map\Map\Map.cs" />
     <Compile Include="Source\Map\MapEntity.cs" />
     <Compile Include="Source\Map\MapEntityPrefab.cs" />
