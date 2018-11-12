@@ -705,7 +705,7 @@
 
     <Body width="8" height="16" density="20"/>
 
-    <ItemComponent characterusable="true">
+    <ItemComponent>
       <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true"/>
       <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="10">
         <ReduceAffliction identifier="damage" amount="1"/>
@@ -757,7 +757,7 @@
 
     <Body width="8" height="16" density="20"/>
 
-    <ItemComponent characterusable="true">
+    <ItemComponent>
       <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true"/>
       <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="15">
         <Affliction identifier="internaldamage" amount="1"/>
@@ -800,7 +800,7 @@
 
     <Body width="8" height="16" density="20"/>
 
-    <ItemComponent characterusable="true">
+    <ItemComponent>
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true"/>
       <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="10">
         <ReduceAffliction identifier="bloodloss" amount="1"/>
