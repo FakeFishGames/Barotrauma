@@ -659,7 +659,7 @@ namespace Barotrauma
                     sprite.Draw(spriteBatch, itemPos + Vector2.One * 2, Color.Black, scale: scale);
                     sprite.Draw(spriteBatch, 
                         itemPos, 
-                        sprite == draggingItem.Sprite ? draggingItem.GetSpriteColor() : draggingItem.Prefab.InventoryIconColor, 
+                        sprite == draggingItem.Sprite ? draggingItem.GetSpriteColor() : draggingItem.GetInventoryIconColor(), 
                         scale: scale);
                 }
             }
@@ -843,7 +843,7 @@ namespace Barotrauma
                     rotation = (float)Math.Sin(slot.HighlightTimer * MathHelper.TwoPi) * slot.HighlightTimer * 0.3f;
                 }
 
-                Color spriteColor = sprite == item.Sprite ? item.GetSpriteColor() : item.Prefab.InventoryIconColor;
+                Color spriteColor = sprite == item.Sprite ? item.GetSpriteColor() : item.GetInventoryIconColor();
                 if (CharacterHealth.OpenHealthWindow != null && !item.UseInHealthInterface)
                 {
                     spriteColor = Color.Lerp(spriteColor, Color.TransparentBlack, 0.5f);

@@ -9,6 +9,7 @@
     useinhealthinterface="true"
     cargocontaineridentifier="chemicalcrate"
     usecontainedspritecolor="true"
+    usecontainedinventoryiconcolor="true"
     description="In most cases injection is often a much more effective method of administering drugs than taking them orally."
     canuseonself="true">
     

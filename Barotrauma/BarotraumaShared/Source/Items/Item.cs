@@ -187,6 +187,13 @@ namespace Barotrauma
             set { spriteColor = value; }
         }
 
+        [Serialize("1.0,1.0,1.0,1.0", false), Editable]
+        public Color InventoryIconColor
+        {
+            get;
+            protected set;
+        }
+
         public Color Color
         {
             get { return spriteColor; }
