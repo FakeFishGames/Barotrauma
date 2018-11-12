@@ -58,6 +58,23 @@ namespace Barotrauma
             return color;
         }
 
+        public Color GetInventoryIconColor()
+        {
+            Color color = InventoryIconColor;
+            if (Prefab.UseContainedInventoryIconColor && ownInventory != null)
+            {
+                for (int i = 0; i < ownInventory.Items.Length; i++)
+                {
+                    if (ownInventory.Items[i] != null)
+                    {
+                        color = ownInventory.Items[i].InventoryIconColor;
+                        break;
+                    }
+                }
+            }
+            return color;
+        }
+
         partial void SetActiveSprite()
         {
             activeSprite = prefab.sprite;

@@ -26,7 +26,8 @@ namespace Barotrauma
 
         public Sprite InventoryIcon;
 
-        [Serialize("1.0,1.0,1.0,1.0", false), Editable]
+        //only used to display correct color in the sub editor, item instances have their own property that can be edited on a per-item basis
+        [Serialize("1.0,1.0,1.0,1.0", false)]
         public Color InventoryIconColor
         {
             get;
