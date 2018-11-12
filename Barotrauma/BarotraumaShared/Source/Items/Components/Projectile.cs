@@ -368,8 +368,8 @@ namespace Barotrauma.Items.Components
             }
 
             if (character != null) character.LastDamageSource = item;
-            ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
-            ApplyStatusEffects(ActionType.OnImpact, 1.0f, character);
+            ApplyStatusEffects(ActionType.OnUse, 1.0f, character, target.Body.UserData as Limb);
+            ApplyStatusEffects(ActionType.OnImpact, 1.0f, character, target.Body.UserData as Limb);
             
             item.body.FarseerBody.OnCollision -= OnProjectileCollision;
 

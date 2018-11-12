@@ -25,7 +25,7 @@
 
     <MeleeWeapon slots="Any,RightHand,LeftHand"
               aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
-      <StatusEffect type="OnUse" target="Contained, Limb" Condition="-33.4" disabledeltatime="true" >
+      <StatusEffect type="OnUse" target="Contained, Limb, Character" Condition="-33.4" disabledeltatime="true" >
         <sound file="Content/Items/Medical/syringe.ogg" range="500"/>
         <RequiredItem identifier="chem" type="Contained"/>
         <Use/>
@@ -41,7 +41,7 @@
       <Attack structuredamage="1" stun="0.1" targetforce="5">
         <Affliction identifier="bleeding" strength="1"/>
       </Attack>
-      <StatusEffect type="OnImpact" target="Contained, Limb" Condition="-100.0" disabledeltatime="true" >
+      <StatusEffect type="OnImpact" target="Contained, Limb, Character" Condition="-100.0" disabledeltatime="true" >
         <sound file="Content/Items/Medical/syringe.ogg" range="500"/>
         <RequiredItem identifiers="chem" type="Contained"/>
         <Use/>
