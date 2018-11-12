@@ -213,6 +213,7 @@
     identifier="ethanol"
     category="Material"
     spritecolor="0.0,0.9,0.1,1.0"
+    containercolor="0.0,0.9,0.1,1.0"    
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
     useinhealthinterface="true"
