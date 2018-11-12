@@ -162,11 +162,11 @@ namespace Barotrauma
             {
                 soundVolume = MathHelper.Clamp(value, 0.0f, 1.0f);
 #if CLIENT
-                if (GameMain.SoundManager!=null)
+                if (GameMain.SoundManager != null)
                 {
-                    GameMain.SoundManager.SetCategoryGainMultiplier("default",soundVolume);
-                    GameMain.SoundManager.SetCategoryGainMultiplier("ui",soundVolume);
-                    GameMain.SoundManager.SetCategoryGainMultiplier("waterambience",soundVolume);
+                    GameMain.SoundManager.SetCategoryGainMultiplier("default", soundVolume);
+                    GameMain.SoundManager.SetCategoryGainMultiplier("ui", soundVolume);
+                    GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", soundVolume);
                 }
 #endif
             }
@@ -179,7 +179,7 @@ namespace Barotrauma
             {
                 musicVolume = MathHelper.Clamp(value, 0.0f, 1.0f);
 #if CLIENT
-                SoundPlayer.MusicVolume = musicVolume;
+                GameMain.SoundManager?.SetCategoryGainMultiplier("music", musicVolume);
 #endif
             }
         }

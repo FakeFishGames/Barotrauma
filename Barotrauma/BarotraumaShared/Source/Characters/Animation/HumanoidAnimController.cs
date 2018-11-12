@@ -759,16 +759,21 @@ namespace Barotrauma
 
         void UpdateStandingSimple()
         {
-            movement = MathUtils.SmoothStep(movement, TargetMovement, movementLerp);
-
-            if (inWater && movement.LengthSquared() > 0.00001f)
-            {
-                movement = Vector2.Normalize(movement);
-            }
-
-            if (Math.Abs(movement.X)<0.005f)
+            if (Math.Abs(movement.X) < 0.005f)
             {
                 movement.X = 0.0f;
+            }
+            movement = MathUtils.SmoothStep(movement, TargetMovement, movementLerp);
+
+            if (InWater)
+            {
+                Collider.LinearVelocity = movement;
+            }
+            else if (onGround && (!character.IsRemotePlayer || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)))
+            {
+                Collider.LinearVelocity = new Vector2(
+                        movement.X,
+                        Collider.LinearVelocity.Y > 0.0f ? Collider.LinearVelocity.Y * 0.5f : Collider.LinearVelocity.Y);                
             }
         }
 

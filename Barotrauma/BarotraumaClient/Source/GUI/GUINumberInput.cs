@@ -210,8 +210,16 @@ namespace Barotrauma
                     return true;
                 };
             }
-
             InputType = inputType;
+            switch (InputType)
+            {
+                case NumberType.Int:
+                    TextBox.textFilterFunction = text => new string(text.Where(c => char.IsNumber(c)).ToArray());
+                    break;
+                case NumberType.Float:
+                    TextBox.textFilterFunction = text => new string(text.Where(c => char.IsDigit(c) || c == '.' || c == '-').ToArray());
+                    break;
+            }
         }
 
         /// <summary>
@@ -234,7 +242,7 @@ namespace Barotrauma
             {
                 case NumberType.Int:
                     int newIntValue = IntValue;
-                    if (text == "" || text == "-") 
+                    if (string.IsNullOrWhiteSpace(text) || text == "-")
                     {
                         intValue = 0;
                     }
@@ -246,8 +254,7 @@ namespace Barotrauma
                     break;
                 case NumberType.Float:
                     float newFloatValue = FloatValue;
-                    text = new string(text.Where(c => char.IsDigit(c) || c == '.' || c == '-').ToArray());
-                    if (text == "" || text == "-")
+                    if (string.IsNullOrWhiteSpace(text) || text == "-")
                     {
                         floatValue = 0;
                     }
@@ -259,7 +266,6 @@ namespace Barotrauma
                     break;
             }
             OnValueChanged?.Invoke(this);
-
             return true;
         }
 

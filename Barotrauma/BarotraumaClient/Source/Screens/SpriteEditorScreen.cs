@@ -182,7 +182,6 @@ namespace Barotrauma
                 OnMoved = (scrollBar, value) =>
                 {
                     zoom = MathHelper.Lerp(minZoom, maxZoom, value);
-                    ResetWidgets();
                     return true;
                 }
             };
@@ -363,7 +362,6 @@ namespace Barotrauma
             {
                 zoom = MathHelper.Clamp(zoom + PlayerInput.ScrollWheelSpeed * (float)deltaTime * 0.05f * zoom, minZoom, maxZoom);
                 zoomBar.BarScroll = GetBarScrollValue();
-                ResetWidgets();
             }
             widgets.Values.ForEach(w => w.Update((float)deltaTime));
         }
@@ -432,7 +430,6 @@ namespace Barotrauma
                             w.refresh = () =>
                                 w.DrawPos = (textureRect.Location.ToVector2() + (sprite.Origin + sprite.SourceRect.Location.ToVector2()) * zoom)
                                     .Clamp(textureRect.Location.ToVector2() + GetTopLeft() * zoom, textureRect.Location.ToVector2() + GetBottomRight() * zoom);
-                            w.refresh();
                             w.MouseDown += () => spriteList.Select(sprite);
                             w.MouseHeld += dTime =>
                             {
@@ -440,9 +437,15 @@ namespace Barotrauma
                                 sprite.Origin = (w.DrawPos + halfSize - textureRect.Location.ToVector2() - sprite.SourceRect.Location.ToVector2() * zoom) / zoom;
                                 w.tooltip = $"Origin: {sprite.RelativeOrigin.FormatDoubleDecimal()}";
                             };
-                            w.Deselected += w.refresh;
-                            w.MouseUp += w.refresh;
                             w.PreUpdate += dTime => w.Enabled = selectedSprites.Contains(sprite);
+                            w.PostUpdate += dTime => w.size = w.IsSelected ? (int)Math.Round(widgetSize * 1.5f) : widgetSize;
+                            w.PreDraw += (sp, dTime) =>
+                            {
+                                if (!w.IsSelected)
+                                {
+                                    w.refresh();
+                                }
+                            };
                         });
                         var positionWidget = GetWidget($"{id}_position", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                         {
@@ -472,9 +475,15 @@ namespace Barotrauma
                                 w.tooltip = $"Position: {sprite.SourceRect.Location}";
                             };
                             w.refresh = () => w.DrawPos = textureRect.Location.ToVector2() + sprite.SourceRect.Location.ToVector2() * zoom - halfSize;
-                            w.Deselected += w.refresh;
-                            w.MouseUp += w.refresh;
                             w.PreUpdate += dTime => w.Enabled = selectedSprites.Contains(sprite);
+                            w.PostUpdate += dTime => w.size = w.IsSelected ? (int)Math.Round(widgetSize * 1.5f) : widgetSize;
+                            w.PreDraw += (sp, dTime) =>
+                            {
+                                if (!w.IsSelected)
+                                {
+                                    w.refresh();
+                                }
+                            };
                         });
                         var sizeWidget = GetWidget($"{id}_size", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                         {
@@ -501,9 +510,15 @@ namespace Barotrauma
                                 w.tooltip = $"Size: {sprite.SourceRect.Size}";
                             };
                             w.refresh = () => w.DrawPos = textureRect.Location.ToVector2() + new Vector2(sprite.SourceRect.Right, sprite.SourceRect.Bottom) * zoom + halfSize;
-                            w.MouseUp += w.refresh;
-                            w.Deselected += w.refresh;
                             w.PreUpdate += dTime => w.Enabled = selectedSprites.Contains(sprite);
+                            w.PostUpdate += dTime => w.size = w.IsSelected ? (int)Math.Round(widgetSize * 1.5f) : widgetSize;
+                            w.PreDraw += (sp, dTime) =>
+                            {
+                                if (!w.IsSelected)
+                                {
+                                    w.refresh();
+                                }
+                            };
                         });
                         if (isSelected)
                         {
@@ -586,7 +601,6 @@ namespace Barotrauma
             maxZoom = Math.Min(width, height);
             zoom = Math.Min(1, maxZoom);
             zoomBar.BarScroll = GetBarScrollValue();
-            ResetWidgets();
         }
         #endregion
 

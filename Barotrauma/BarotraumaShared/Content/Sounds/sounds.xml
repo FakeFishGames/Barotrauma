@@ -135,6 +135,11 @@
   <music file="Content/Sounds/Music/Layer 4 - Arriving at Destination.ogg" type="endround"/>
   <music file="Content/Sounds/Music/Road to Hell.ogg" type="crewdead"/>
 
+
+  <music file="Content/Sounds/Music/Desperation.ogg" type="default" intensityrange="0,30"/>
+  <music file="Content/Sounds/Music/Engine room whales.ogg" type="default" intensityrange="0,30"/>
+  <music file="Content/Sounds/Music/Somethings outside.ogg" type="default" intensityrange="0,30"/>
+
   <music file="Content/Sounds/Music/Layer 0 - Basic.ogg" type="intensity" intensityrange="0,100"/>
   <music file="Content/Sounds/Music/Intensity Layer 1.ogg" type="intensity" intensityrange="10,30"/>
   <music file="Content/Sounds/Music/Intensity Layer 2.ogg" type="intensity" intensityrange="30,50"/>
