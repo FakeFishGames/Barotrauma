@@ -691,5 +691,14 @@ namespace Barotrauma
 
             GameMain.Client.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ComponentState, index });
         }
+
+        partial void RemoveProjSpecific()
+        {
+            if (Inventory.draggingItem == this)
+            {
+                Inventory.draggingItem = null;
+                Inventory.draggingSlot = null;
+            }
+        }
     }
 }

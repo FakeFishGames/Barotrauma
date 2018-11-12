@@ -2218,6 +2218,10 @@ namespace Barotrauma
                     it.linkedTo.Remove(this);
                 }
             }
+
+            RemoveProjSpecific();
         }
+
+        partial void RemoveProjSpecific();
     }
 }
