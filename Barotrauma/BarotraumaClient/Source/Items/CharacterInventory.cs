@@ -348,7 +348,7 @@ namespace Barotrauma
 
             for (int i = 0; i < capacity; i++)
             {
-                if (Items[i] != null && Character.Controlled?.Inventory == this &&
+                if (Items[i] != null && Items[i] != draggingItem && Character.Controlled?.Inventory == this &&
                     GUI.KeyboardDispatcher.Subscriber == null &&
                     slots[i].QuickUseKey != Keys.None && PlayerInput.KeyHit(slots[i].QuickUseKey))
                 {

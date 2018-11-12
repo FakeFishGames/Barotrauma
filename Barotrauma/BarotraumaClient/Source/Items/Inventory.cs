@@ -871,7 +871,7 @@ namespace Barotrauma
             {
                 GUI.DrawString(spriteBatch, rect.Location.ToVector2(), 
                     slot.QuickUseKey.ToString().Substring(1, 1), 
-                    item == null ? Color.Gray : Color.White, 
+                    item == null || !drawItem ? Color.Gray : Color.White, 
                     Color.Black * 0.8f);
             }
         }
