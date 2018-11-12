@@ -233,6 +233,9 @@ namespace Barotrauma
                 slotRect.X = (int)(topLeft.X + (rectSize.X + spacing.X) * (i % slotsPerRow));
                 slotRect.Y = (int)(topLeft.Y + (rectSize.Y + spacing.Y) * ((int)Math.Floor((double)i / slotsPerRow)));
                 slots[i] = new InventorySlot(slotRect);
+                slots[i].InteractRect = new Rectangle(
+                    (int)(slots[i].Rect.X - spacing.X / 2 - 1), (int)(slots[i].Rect.Y - spacing.Y / 2 - 1), 
+                    (int)(slots[i].Rect.Width + spacing.X + 2), (int)(slots[i].Rect.Height + spacing.Y + 2));
             }
 
             if (selectedSlot != null && selectedSlot.ParentInventory == this)
@@ -386,22 +389,22 @@ namespace Barotrauma
                 subRect.Width = slots[slotIndex].SlotSprite == null ? (int)(60 * UIScale) : (int)(slots[slotIndex].SlotSprite.size.X * UIScale);
                 subRect.Height = (int)(60 * UIScale);
 
-                int spacing = (int)(10 * UIScale);
+                Vector2 spacing = new Vector2(10 * UIScale, (10 + EquipIndicator.size.Y) * UIScale);
 
                 int columns = (int)Math.Max(Math.Floor(Math.Sqrt(itemCapacity)), 1);
-                while (itemCapacity / columns * (subRect.Height + spacing) > GameMain.GraphicsHeight * 0.5f)
+                while (itemCapacity / columns * (subRect.Height + spacing.Y) > GameMain.GraphicsHeight * 0.5f)
                 {
                     columns++;
                 }
 
-                int startX = slot.Rect.Center.X - (int)(subRect.Width * (columns / 2.0f) + spacing * ((columns - 1) / 2.0f));
+                int startX = slot.Rect.Center.X - (int)(subRect.Width * (columns / 2.0f) + spacing.X * ((columns - 1) / 2.0f));
                 subRect.X = startX;
                 int startY = dir < 0 ?
-                    slot.EquipButtonRect.Y - subRect.Height - (int)(20 * UIScale) :
+                    slot.EquipButtonRect.Y - subRect.Height - (int)(35 * UIScale) :
                     slot.EquipButtonRect.Bottom + (int)(10 * UIScale);
                 subRect.Y = startY;
 
-                float totalHeight = itemCapacity / columns * (subRect.Height + spacing);
+                float totalHeight = itemCapacity / columns * (subRect.Height + spacing.Y);
                 subInventory.openState = subInventory.HideTimer >= 0.5f ?
                     Math.Min(subInventory.openState + deltaTime * 5.0f, 1.0f) :
                     Math.Max(subInventory.openState - deltaTime * 3.0f, 0.0f);
@@ -412,19 +415,20 @@ namespace Barotrauma
                     subInventory.slots[i].Rect.Location += new Point(0, (int)totalHeight * -dir);
 
                     subInventory.slots[i].DrawOffset = Vector2.SmoothStep( new Vector2(0, -50 * dir), new Vector2(0, totalHeight * dir), subInventory.openState);
-
-                    subInventory.slots[i].InteractRect = subInventory.slots[i].Rect;
-                    subInventory.slots[i].InteractRect.Inflate((int)(5 * UIScale), (int)(5 * UIScale));
+                    
+                    subInventory.slots[i].InteractRect = new Rectangle(
+                        (int)(subInventory.slots[i].Rect.X - spacing.X / 2 - 1), (int)(subInventory.slots[i].Rect.Y - spacing.Y / 2 - 1),
+                        (int)(subInventory.slots[i].Rect.Width + spacing.X + 2), (int)(subInventory.slots[i].Rect.Height + spacing.Y + 2));
 
                     if ((i + 1) % columns == 0)
                     {
                         subRect.X = startX;
                         subRect.Y += subRect.Height * dir;
-                        subRect.Y += spacing * dir;
+                        subRect.Y += (int)(spacing.Y * dir);
                     }
                     else
                     {
-                        subRect.X = subInventory.slots[i].Rect.Right + spacing;
+                        subRect.X = (int)(subInventory.slots[i].Rect.Right + spacing.X);
                     }
                 }        
                 slots[slotIndex].State = GUIComponent.ComponentState.Hover;
