@@ -171,7 +171,7 @@ namespace Barotrauma.Items.Components
             float flippedRotation = BaseRotation;
             if (item.FlippedX) flippedRotation = -flippedRotation;
             if (item.FlippedY) flippedRotation = 180.0f - flippedRotation;
-            transformedBarrelPos = MathUtils.RotatePointAroundTarget(barrelPos, new Vector2(item.Rect.Width / 2, item.Rect.Height / 2), flippedRotation);
+            transformedBarrelPos = MathUtils.RotatePointAroundTarget(barrelPos * item.Scale, new Vector2(item.Rect.Width / 2, item.Rect.Height / 2), flippedRotation);
 #if CLIENT
             item.SpriteRotation = MathHelper.ToRadians(flippedRotation);
 #endif
@@ -336,7 +336,7 @@ namespace Barotrauma.Items.Components
 
             projectile.body.ResetDynamics();
             projectile.body.Enabled = true;
-            projectile.SetTransform(ConvertUnits.ToSimUnits(new Vector2(item.WorldRect.X + barrelPos.X, item.WorldRect.Y - barrelPos.Y)), -rotation);
+            projectile.SetTransform(ConvertUnits.ToSimUnits(new Vector2(item.WorldRect.X + transformedBarrelPos.X, item.WorldRect.Y - transformedBarrelPos.Y)), -rotation);
             projectile.FindHull();
             projectile.Submarine = projectile.body.Submarine;
 
@@ -551,7 +551,7 @@ namespace Barotrauma.Items.Components
             minRotation = maxRotation;
             maxRotation = temp;
 
-            barrelPos.X = item.Sprite.SourceRect.Width - barrelPos.X;
+            barrelPos.X = item.Rect.Width - barrelPos.X * item.Scale;
 
             while (minRotation < 0)
             {
@@ -572,7 +572,7 @@ namespace Barotrauma.Items.Components
             minRotation = maxRotation;
             maxRotation = temp;
 
-            barrelPos.Y = item.Sprite.SourceRect.Height - barrelPos.Y;
+            barrelPos.Y = item.Rect.Height - barrelPos.Y * item.Scale;
 
             while (minRotation < 0)
             {

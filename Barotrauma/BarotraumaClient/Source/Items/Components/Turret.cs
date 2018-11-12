@@ -206,13 +206,13 @@ namespace Barotrauma.Items.Components
             railSprite?.Draw(spriteBatch,
                 drawPos,
                 Color.White,
-                rotation + MathHelper.PiOver2, 1.0f,
+                rotation + MathHelper.PiOver2, item.Scale,
                 SpriteEffects.None, item.SpriteDepth + 0.01f);
 
             barrelSprite?.Draw(spriteBatch,
-                drawPos - new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation)) * recoilOffset, 
+                drawPos - new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation)) * recoilOffset * item.Scale, 
                 Color.White,
-                rotation + MathHelper.PiOver2, 1.0f,
+                rotation + MathHelper.PiOver2, item.Scale,
                 SpriteEffects.None, item.SpriteDepth + 0.015f);
             
     
