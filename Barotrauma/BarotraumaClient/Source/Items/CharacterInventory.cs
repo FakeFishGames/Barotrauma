@@ -675,6 +675,7 @@ namespace Barotrauma
             {
                 if (HideSlot(i)) continue;
                 if (Items[i] == null || !Items[i].AllowedSlots.Any(a => a != InvSlotType.Any)) continue;
+                if (draggingItem == Items[i] && !slots[i].IsHighlighted) continue;
 
                 Color color = slots[i].EquipButtonState == GUIComponent.ComponentState.Pressed ? Color.Gray : Color.White * 0.8f;
                 if (slots[i].EquipButtonState == GUIComponent.ComponentState.Hover)
