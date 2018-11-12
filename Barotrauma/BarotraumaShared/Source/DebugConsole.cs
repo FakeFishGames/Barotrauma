@@ -923,7 +923,7 @@ namespace Barotrauma
             return commands.ToArray();
         }
 
-        public static string AutoComplete(string command)
+        public static string AutoComplete(string command, int increment=1)
         {
             string[] splitCommand = SplitCommand(command);
             string[] args = splitCommand.Skip(1).ToArray();
@@ -939,21 +939,36 @@ namespace Barotrauma
                 //get all valid arguments for the given command
                 string[][] allArgs = matchingCommand.GetValidArgs();
                 if (allArgs == null || allArgs.GetLength(0) < autoCompletedArgIndex + 1) return command;
-
-                if (string.IsNullOrEmpty(currentAutoCompletedCommand))
-                {
-                    currentAutoCompletedCommand = autoCompletedArgIndex > args.Length - 1 ? " " : args.Last();
-                }
-
+                
                 //find all valid autocompletions for the given argument
-                string[] validArgs = allArgs[autoCompletedArgIndex].Where(arg => 
-                    currentAutoCompletedCommand.Trim().Length <= arg.Length && 
-                    arg.Substring(0, currentAutoCompletedCommand.Trim().Length).ToLower() == currentAutoCompletedCommand.Trim().ToLower()).ToArray();
+                string[] validArgs = allArgs[autoCompletedArgIndex];
+                if (args.Length > 0)
+                {
+                    string lastArg = args.Last();
+                    validArgs = allArgs[autoCompletedArgIndex].Where(arg =>
+                        lastArg.Trim().Length <= arg.Length &&
+                        arg.Substring(0, lastArg.Length).ToLower() == lastArg.ToLower()).ToArray();
+                }
 
                 if (validArgs.Length == 0) return command;
 
-                currentAutoCompletedIndex = currentAutoCompletedIndex % validArgs.Length;
-                string autoCompletedArg = validArgs[currentAutoCompletedIndex++];
+                currentAutoCompletedIndex = -1;
+                for (int i = 0; i < validArgs.Length; i++)
+                {
+                    if (validArgs[i] == currentAutoCompletedCommand)
+                    {
+                        currentAutoCompletedCommand = validArgs[i];
+                        currentAutoCompletedIndex = i;
+                        break;
+                    }
+                }
+
+                int index = currentAutoCompletedIndex + increment;
+                while (index >= validArgs.Length) index -= validArgs.Length;
+                while (index < 0) index += validArgs.Length;
+                string autoCompletedArg = validArgs[index];
+                currentAutoCompletedCommand = autoCompletedArg;
+                currentAutoCompletedIndex = index;
 
                 //add quotation marks to args that contain spaces
                 if (autoCompletedArg.Contains(' ')) autoCompletedArg = '"' + autoCompletedArg + '"';
@@ -966,18 +981,13 @@ namespace Barotrauma
             }
             else
             {
-                if (string.IsNullOrWhiteSpace(currentAutoCompletedCommand))
-                {
-                    currentAutoCompletedCommand = command;
-                }
-
                 List<string> matchingCommands = new List<string>();
                 foreach (Command c in commands)
                 {
                     foreach (string name in c.names)
                     {
-                        if (currentAutoCompletedCommand.Length > name.Length) continue;
-                        if (currentAutoCompletedCommand == name.Substring(0, currentAutoCompletedCommand.Length))
+                        if (command.Length > name.Length) continue;
+                        if (command == name.Substring(0, command.Length))
                         {
                             matchingCommands.Add(name);
                         }
@@ -986,8 +996,24 @@ namespace Barotrauma
 
                 if (matchingCommands.Count == 0) return command;
 
-                currentAutoCompletedIndex = currentAutoCompletedIndex % matchingCommands.Count;
-                return matchingCommands[currentAutoCompletedIndex++];
+                currentAutoCompletedIndex = -1;
+                for (int i = 0; i < matchingCommands.Count; i++)
+                {
+                    if (matchingCommands[i] == currentAutoCompletedCommand)
+                    {
+                        currentAutoCompletedCommand = matchingCommands[i];
+                        currentAutoCompletedIndex = i;
+                        break;
+                    }
+                }
+
+                int index = currentAutoCompletedIndex + increment;
+                while (index >= matchingCommands.Count) index -= matchingCommands.Count;
+                while (index < 0) index += matchingCommands.Count;
+                string matchingCommand = matchingCommands[index];
+                currentAutoCompletedIndex = index;
+                currentAutoCompletedCommand = matchingCommand;
+                return matchingCommand;
             }
         }
 
@@ -1003,7 +1029,7 @@ namespace Barotrauma
 
         public static void ResetAutoComplete()
         {
-            currentAutoCompletedCommand = "";
+            //currentAutoCompletedCommand = "";
             currentAutoCompletedIndex = 0;
         }
 
