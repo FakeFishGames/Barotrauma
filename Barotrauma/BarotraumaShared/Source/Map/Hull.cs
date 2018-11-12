@@ -659,14 +659,14 @@ namespace Barotrauma
             return float.MaxValue;
         }
 
-        //returns the hull which contains the point (or null if it isn't inside any)
-        public static Hull FindHull(Vector2 position, Hull guess = null, bool useWorldCoordinates = true)
+        //returns the water block which contains the point (or null if it isn't inside any)
+        public static Hull FindHull(Vector2 position, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = true)
         {
             if (entityGrids == null) return null;
 
             if (guess != null)
             {
-                if (Submarine.RectContains(useWorldCoordinates ? guess.WorldRect : guess.rect, position)) return guess;
+                if (Submarine.RectContains(useWorldCoordinates ? guess.WorldRect : guess.rect, position, inclusive)) return guess;
             }
 
             foreach (EntityGrid entityGrid in entityGrids)
@@ -683,7 +683,6 @@ namespace Barotrauma
                     else
                     {
                         borders.Location += new Point((int)entityGrid.Submarine.HiddenSubPosition.X, (int)entityGrid.Submarine.HiddenSubPosition.Y);
-
                     }
 
                     const float padding = 128.0f;
@@ -701,7 +700,7 @@ namespace Barotrauma
                 if (entities == null) continue;
                 foreach (Hull hull in entities)
                 {
-                    if (Submarine.RectContains(hull.rect, transformedPosition)) return hull;
+                    if (Submarine.RectContains(hull.rect, transformedPosition, inclusive)) return hull;
                 }
             }
 
@@ -709,12 +708,12 @@ namespace Barotrauma
         }
 
         //returns the water block which contains the point (or null if it isn't inside any)
-        public static Hull FindHullOld(Vector2 position, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = false)
+        public static Hull FindHullOld(Vector2 position, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = true)
         {
             return FindHullOld(position, hullList, guess, useWorldCoordinates, inclusive);
         }
 
-        public static Hull FindHullOld(Vector2 position, List<Hull> hulls, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = false)
+        public static Hull FindHullOld(Vector2 position, List<Hull> hulls, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = true)
         {
             if (guess != null && hulls.Contains(guess))
             {

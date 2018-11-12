@@ -181,6 +181,13 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(false, false)]
+        public bool UseContainedInventoryIconColor
+        {
+            get;
+            private set;
+        }
+
         public bool CanSpriteFlipX
         {
             get { return canSpriteFlipX; }

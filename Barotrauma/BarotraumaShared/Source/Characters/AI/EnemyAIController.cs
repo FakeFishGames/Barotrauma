@@ -404,7 +404,7 @@ namespace Barotrauma
 
             Vector2 escapeDir = Vector2.Normalize(SimPosition - selectedAiTarget.SimPosition);
             if (!MathUtils.IsValid(escapeDir)) escapeDir = Vector2.UnitY;
-            SteeringManager.SteeringManual(deltaTime, escapeDir * 2);
+            SteeringManager.SteeringManual(deltaTime, escapeDir * Character.AnimController.GetCurrentSpeed(useMaxSpeed: true));
             SteeringManager.SteeringWander(1.0f);
             if (Character.CurrentHull == null)
             {
@@ -555,7 +555,7 @@ namespace Barotrauma
 
             if (attackLimb != null)
             {
-                steeringManager.SteeringSeek(attackSimPosition - (attackLimb.SimPosition - SimPosition), 3);
+                steeringManager.SteeringSeek(attackSimPosition - (attackLimb.SimPosition - SimPosition), Character.AnimController.GetCurrentSpeed(useMaxSpeed: true));
                 if (Character.CurrentHull == null)
                 {
                     SteeringManager.SteeringAvoid(deltaTime, colliderSize * 1.5f, 1.0f);
@@ -766,7 +766,7 @@ namespace Barotrauma
             }
             else
             {
-                steeringManager.SteeringSeek(attackSimPosition - (mouthPos - SimPosition), 3);
+                steeringManager.SteeringSeek(attackSimPosition - (mouthPos - SimPosition), Character.AnimController.GetCurrentSpeed(useMaxSpeed: true));
             }
         }
         

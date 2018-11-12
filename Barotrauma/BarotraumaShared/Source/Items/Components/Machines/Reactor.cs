@@ -450,16 +450,18 @@ namespace Barotrauma.Items.Components
                 //we need more fuel
                 if (-currPowerConsumption < load * 0.5f && prevAvailableFuel <= 0.0f)
                 {
-                    var containFuelObjective = new AIObjectiveContainItem(character, new string[] { "fuelrod", "reactorfuel" }, item.GetComponent<ItemContainer>());
-                    containFuelObjective.MinContainedAmount = containedItems.Count(i => i != null && i.Prefab.Identifier == "fuelrod" || i.HasTag("reactorfuel")) + 1;
-                    containFuelObjective.GetItemPriority = (Item fuelItem) =>
+                    var containFuelObjective = new AIObjectiveContainItem(character, new string[] { "fuelrod", "reactorfuel" }, item.GetComponent<ItemContainer>())
                     {
-                        if (fuelItem.ParentInventory?.Owner is Item)
+                        MinContainedAmount = containedItems.Count(i => i != null && i.Prefab.Identifier == "fuelrod" || i.HasTag("reactorfuel")) + 1,
+                        GetItemPriority = (Item fuelItem) =>
                         {
-                            //don't take fuel from other reactors
-                            if (((Item)fuelItem.ParentInventory.Owner).GetComponent<Reactor>() != null) return 0.0f;
+                            if (fuelItem.ParentInventory?.Owner is Item)
+                            {
+                                //don't take fuel from other reactors
+                                if (((Item)fuelItem.ParentInventory.Owner).GetComponent<Reactor>() != null) return 0.0f;
+                            }
+                            return 1.0f;
                         }
-                        return 1.0f;
                     };
                     objective.AddSubObjective(containFuelObjective);
 
@@ -485,9 +487,6 @@ namespace Barotrauma.Items.Components
             switch (objective.Option.ToLowerInvariant())
             {
                 case "powerup":
-#if CLIENT
-                    onOffSwitch.BarScroll = 0.0f;
-#endif
                     shutDown = false;
                     //characters with insufficient skill levels simply set the autotemp on instead of trying to adjust the temperature manually
                     if (degreeOfSuccess < 0.5f)
@@ -500,7 +499,13 @@ namespace Barotrauma.Items.Components
                         AutoTemp = false;
                         unsentChanges = true;
                         UpdateAutoTemp(2.0f + degreeOfSuccess * 5.0f, 1.0f);
-                    }                    
+
+                    }
+#if CLIENT
+                    onOffSwitch.BarScroll = 0.0f;
+                    fissionRateScrollBar.BarScroll = FissionRate / 100.0f;
+                    turbineOutputScrollBar.BarScroll = TurbineOutput / 100.0f;
+#endif
                     break;
                 case "shutdown":
 #if CLIENT

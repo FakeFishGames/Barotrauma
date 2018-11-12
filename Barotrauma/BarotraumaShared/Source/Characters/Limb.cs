@@ -248,9 +248,14 @@ namespace Barotrauma
                     return;
                 }
 
+
                 if (Vector2.DistanceSquared(pullJoint.WorldAnchorA, value) > 50.0f * 50.0f)
                 {
-                    string errorMsg = "Attempted to move the anchor of a limb's pull joint extremely far from the limb (" + value + ")\n" + Environment.StackTrace;
+                    Vector2 diff = value - pullJoint.WorldAnchorA;
+                    string errorMsg = "Attempted to move the anchor of a limb's pull joint extremely far from the limb (diff: " + diff +
+                        ", limb enabled: " + body.Enabled +
+                        ", simple physics enabled: " + character.AnimController.SimplePhysicsEnabled + ")\n"
+                        + Environment.StackTrace;
                     DebugConsole.ThrowError(errorMsg);
                     GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorB:ExcessiveValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                     return;
@@ -459,7 +464,17 @@ namespace Barotrauma
                 switch (attack.HitDetectionType)
                 {
                     case HitDetection.Distance:
-                        wasHit = dist < attack.DamageRange;
+                        if (dist < attack.DamageRange)
+                        {
+                            List<Body> ignoredBodies = character.AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
+                            ignoredBodies.Add(character.AnimController.Collider.FarseerBody);
+
+                            var body = Submarine.PickBody(
+                                SimPosition, attackPosition,
+                                ignoredBodies, Physics.CollisionWall);
+
+                            wasHit = body == null;
+                        }
                         break;
                     case HitDetection.Contact:
                         List<Body> targetBodies = new List<Body>();

@@ -395,6 +395,16 @@ namespace Barotrauma
             }
         }
 
+        public void SelectNext(bool force = false, bool autoScroll = true)
+        {
+            Select(Math.Min(Content.CountChildren - 1, SelectedIndex + 1), force, autoScroll);
+        }
+
+        public void SelectPrevious(bool force = false, bool autoScroll = true)
+        {
+            Select(Math.Max(0, SelectedIndex - 1), force, autoScroll);
+        }
+
         public void Select(int childIndex, bool force = false, bool autoScroll = true)
         {
             if (childIndex >= Content.CountChildren || childIndex < 0) return;
@@ -616,10 +626,10 @@ namespace Barotrauma
             switch (key)
             {
                 case Keys.Down:
-                    Select(Math.Min(Content.CountChildren - 1, SelectedIndex + 1));
+                    SelectNext();
                     break;
                 case Keys.Up:
-                    Select(Math.Max(0, SelectedIndex - 1));
+                    SelectPrevious();
                     break;
                 default:
                     GUI.KeyboardDispatcher.Subscriber = null;

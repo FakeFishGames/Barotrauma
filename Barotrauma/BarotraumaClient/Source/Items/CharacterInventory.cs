@@ -348,7 +348,7 @@ namespace Barotrauma
 
             for (int i = 0; i < capacity; i++)
             {
-                if (Items[i] != null && Character.Controlled?.Inventory == this &&
+                if (Items[i] != null && Items[i] != draggingItem && Character.Controlled?.Inventory == this &&
                     GUI.KeyboardDispatcher.Subscriber == null &&
                     slots[i].QuickUseKey != Keys.None && PlayerInput.KeyHit(slots[i].QuickUseKey))
                 {
@@ -675,6 +675,7 @@ namespace Barotrauma
             {
                 if (HideSlot(i)) continue;
                 if (Items[i] == null || !Items[i].AllowedSlots.Any(a => a != InvSlotType.Any)) continue;
+                if (draggingItem == Items[i] && !slots[i].IsHighlighted) continue;
 
                 Color color = slots[i].EquipButtonState == GUIComponent.ComponentState.Pressed ? Color.Gray : Color.White * 0.8f;
                 if (slots[i].EquipButtonState == GUIComponent.ComponentState.Hover)

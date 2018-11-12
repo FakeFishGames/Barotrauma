@@ -1326,7 +1326,7 @@ namespace Barotrauma
             {
                 var droppedItemSprite = droppedItem.Prefab.InventoryIcon ?? droppedItem.Sprite;
                 droppedItemSprite.Draw(spriteBatch, dropItemArea.Rect.Center.ToVector2(),
-                    droppedItemSprite == droppedItem.Sprite ? droppedItem.GetSpriteColor() : droppedItem.Prefab.InventoryIconColor,
+                    droppedItemSprite == droppedItem.Sprite ? droppedItem.GetSpriteColor() : droppedItem.GetInventoryIconColor(),
                     origin: droppedItemSprite.size / 2,
                     scale: MathHelper.SmoothStep(0.0f, 100.0f / droppedItemSprite.size.Length(), dropItemAnimTimer / dropItemAnimDuration));
             }

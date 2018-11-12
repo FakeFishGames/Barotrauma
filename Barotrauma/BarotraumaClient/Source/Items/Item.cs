@@ -50,7 +50,24 @@ namespace Barotrauma
                 {
                     if (ownInventory.Items[i] != null)
                     {
-                        color = ownInventory.Items[i].spriteColor;
+                        color = ownInventory.Items[i].ContainerColor;
+                        break;
+                    }
+                }
+            }
+            return color;
+        }
+
+        public Color GetInventoryIconColor()
+        {
+            Color color = InventoryIconColor;
+            if (Prefab.UseContainedInventoryIconColor && ownInventory != null)
+            {
+                for (int i = 0; i < ownInventory.Items.Length; i++)
+                {
+                    if (ownInventory.Items[i] != null)
+                    {
+                        color = ownInventory.Items[i].ContainerColor;
                         break;
                     }
                 }
@@ -691,7 +708,7 @@ namespace Barotrauma
 
             GameMain.Client.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ComponentState, index });
         }
-
+        
         public static Item ReadSpawnData(NetBuffer msg, bool spawn = true)
         {
             string itemName = msg.ReadString();
@@ -790,6 +807,15 @@ namespace Barotrauma
             }
 
             return item;
+        }
+
+        partial void RemoveProjSpecific()
+        {
+            if (Inventory.draggingItem == this)
+            {
+                Inventory.draggingItem = null;
+                Inventory.draggingSlot = null;
+            }
         }
     }
 }

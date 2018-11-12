@@ -22,6 +22,8 @@ namespace Barotrauma
         private GUIFrame frame;
         private GUITextBlock textBlock;
 
+        public Func<string, string> textFilterFunction;
+
         public delegate bool OnEnterHandler(GUITextBox textBox, string text);
         public OnEnterHandler OnEnterPressed;
         
@@ -206,9 +208,13 @@ namespace Barotrauma
             rectT.ScaleChanged += () => { caretPosDirty = true; };
         }
 
-        private void SetText(string text)
+        private bool SetText(string text)
         {
-            if (textBlock.Text == text) return;
+            if (textFilterFunction != null)
+            {
+                text = textFilterFunction(text);
+            }
+            if (textBlock.Text == text) { return false; }
             textBlock.Text = text;
             if (textBlock.Text == null) textBlock.Text = "";
             if (textBlock.Text != "" && !Wrap)
@@ -225,6 +231,7 @@ namespace Barotrauma
                     textBlock.Text = textBlock.Text.Substring(0, textBlock.Text.Length - 1);
                 }
             }
+            return true;
         }
 
         private void CalculateCaretPos()
@@ -499,9 +506,11 @@ namespace Barotrauma
             {
                 RemoveSelectedText();
             }
-            SetText(Text.Insert(CaretIndex, inputChar.ToString()));
-            CaretIndex = Math.Min(Text.Length, CaretIndex + 1);
-            OnTextChanged?.Invoke(this, Text);
+            if (SetText(Text.Insert(CaretIndex, inputChar.ToString())))
+            {
+                CaretIndex = Math.Min(Text.Length, CaretIndex + 1);
+                OnTextChanged?.Invoke(this, Text);
+            }
         }
 
         public void ReceiveTextInput(string input)
@@ -510,9 +519,11 @@ namespace Barotrauma
             {
                 RemoveSelectedText();
             }
-            SetText(Text.Insert(CaretIndex, input));
-            CaretIndex = Math.Min(Text.Length, CaretIndex + input.Length);
-            OnTextChanged?.Invoke(this, Text);
+            if (SetText(Text.Insert(CaretIndex, input)))
+            {
+                CaretIndex = Math.Min(Text.Length, CaretIndex + input.Length);
+                OnTextChanged?.Invoke(this, Text);
+            }
         }
 
         public void ReceiveCommandInput(char command)
@@ -541,9 +552,11 @@ namespace Barotrauma
                 case (char)0x16: // ctrl-v
                     string text = GetCopiedText();
                     RemoveSelectedText();
-                    SetText(Text.Insert(CaretIndex, text));
-                    CaretIndex = Math.Min(Text.Length, CaretIndex + text.Length);
-                    OnTextChanged?.Invoke(this, Text);
+                    if (SetText(Text.Insert(CaretIndex, text)))
+                    {
+                        CaretIndex = Math.Min(Text.Length, CaretIndex + text.Length);
+                        OnTextChanged?.Invoke(this, Text);
+                    }
                     break;
                 case (char)0x18: // ctrl-x
                     CopySelectedText();
@@ -609,6 +622,51 @@ namespace Barotrauma
                         SetText(Text.Remove(CaretIndex, 1));
                         CaretIndex--;
                         OnTextChanged?.Invoke(this, Text);
+                    }
+                    break;
+                case Keys.Tab:
+                    // Select the next text box.
+                    var editor = RectTransform.GetParents().Select(p => p.GUIComponent as SerializableEntityEditor).FirstOrDefault(e => e != null);
+                    if (editor == null) { break; }
+                    var allTextBoxes = GetAndSortTextBoxes(editor).ToList();
+                    if (allTextBoxes.Any())
+                    {
+                        int currentIndex = allTextBoxes.IndexOf(this);
+                        int nextIndex = Math.Min(allTextBoxes.Count - 1, currentIndex + 1);
+                        var next = allTextBoxes[nextIndex];
+                        if (next != this)
+                        {
+                            next.Select();
+                            next.Flash(Color.White * 0.5f, 0.5f);
+                        }
+                        else
+                        {
+                            // Select the first text box in the next editor that has text boxes.
+                            var listBox = RectTransform.GetParents().Select(p => p.GUIComponent as GUIListBox).FirstOrDefault(lb => lb != null);
+                            if (listBox == null) { break; }
+                            // TODO: The get's out of focus if the selection is out of view.
+                            // Not sure how's that possible, but it seems to work when the auto scroll is disabled and you handle the scrolling manually.
+                            listBox.SelectNext();
+                            while (SelectNextTextBox(listBox) == null)
+                            {
+                                var previous = listBox.SelectedComponent;
+                                listBox.SelectNext();
+                                if (listBox.SelectedComponent == previous) { break; }
+                            }
+                        }
+                    }
+                    IEnumerable<GUITextBox> GetAndSortTextBoxes(GUIComponent parent) => parent.GetAllChildren().Select(c => c as GUITextBox).Where(t => t != null).OrderBy(t => t.Rect.Y).ThenBy(t => t.Rect.X);
+                    GUITextBox SelectNextTextBox(GUIListBox listBox)
+                    {
+                        var textBoxes = GetAndSortTextBoxes(listBox.SelectedComponent);
+                        if (textBoxes.Any())
+                        {
+                            var next = textBoxes.First();
+                            next.Select();
+                            next.Flash(Color.White * 0.5f, 0.5f);
+                            return next;
+                        }
+                        return null;
                     }
                     break;
             }

@@ -755,7 +755,7 @@ namespace Barotrauma
             float totalMass = 0.0f;
             foreach (Limb limb in Limbs)
             {
-                if (limb.IsSevered) continue;
+                if (limb.IsSevered || !limb.body.Enabled) continue;
                 centerOfMass += limb.Mass * limb.SimPosition;
                 totalMass += limb.Mass;
             }
@@ -838,16 +838,19 @@ namespace Barotrauma
                 if (newHull == null && currentHull.Submarine != null)
                 {
                     if (Gap.FindAdjacent(currentHull.ConnectedGaps, findPos, 150.0f) != null) return;
+                    character.MemLocalState?.Clear();
                     Teleport(ConvertUnits.ToSimUnits(currentHull.Submarine.Position), currentHull.Submarine.Velocity);
                 }
                 //out -> in
                 else if (currentHull == null && newHull.Submarine != null)
                 {
+                    character.MemLocalState?.Clear();
                     Teleport(-ConvertUnits.ToSimUnits(newHull.Submarine.Position), -newHull.Submarine.Velocity);
                 }
                 //from one sub to another
                 else if (newHull != null && currentHull != null && newHull.Submarine != currentHull.Submarine)
                 {
+                    character.MemLocalState?.Clear();
                     Teleport(ConvertUnits.ToSimUnits(currentHull.Submarine.Position - newHull.Submarine.Position),
                         Vector2.Zero);
                 }
@@ -1389,7 +1392,7 @@ namespace Barotrauma
         {
             if (GameMain.NetworkMember == null) return;
 
-            float lowestSubPos = ConvertUnits.ToSimUnits(Submarine.Loaded.Min(s => s.HiddenSubPosition.Y - s.Borders.Height));
+            float lowestSubPos = ConvertUnits.ToSimUnits(Submarine.Loaded.Min(s => s.HiddenSubPosition.Y - s.Borders.Height - 128.0f));
 
             for (int i = 0; i < character.MemState.Count; i++ )
             {
@@ -1397,12 +1400,12 @@ namespace Barotrauma
                 {
                     //transform in-sub coordinates to outside coordinates
                     if (character.MemState[i].Position.Y > lowestSubPos)
-                        character.MemState[i].TransformInToOutside();                    
+                        character.MemState[i].TransformInToOutside();
                 }
                 else if (currentHull != null)
                 {
                     //transform outside coordinates to in-sub coordinates
-                    if (character.MemState[i].Position.Y <lowestSubPos)                    
+                    if (character.MemState[i].Position.Y < lowestSubPos)
                         character.MemState[i].TransformOutToInside(currentHull.Submarine);
                 }
             }
