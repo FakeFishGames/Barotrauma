@@ -50,7 +50,7 @@ namespace Barotrauma
                 {
                     if (ownInventory.Items[i] != null)
                     {
-                        color = ownInventory.Items[i].spriteColor;
+                        color = ownInventory.Items[i].ContainerColor;
                         break;
                     }
                 }
@@ -67,7 +67,7 @@ namespace Barotrauma
                 {
                     if (ownInventory.Items[i] != null)
                     {
-                        color = ownInventory.Items[i].InventoryIconColor;
+                        color = ownInventory.Items[i].ContainerColor;
                         break;
                     }
                 }

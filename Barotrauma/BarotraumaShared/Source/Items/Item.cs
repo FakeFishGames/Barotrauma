@@ -194,6 +194,14 @@ namespace Barotrauma
             protected set;
         }
 
+
+        [Serialize("1.0,1.0,1.0,1.0", false), Editable(ToolTip = "Changes the color of the item this item is contained inside. Only has an effect if either of the UseContainedSpriteColor or UseContainedInventoryIconColor property of the container is set to true.")]
+        public Color ContainerColor
+        {
+            get;
+            protected set;
+        }
+
         public Color Color
         {
             get { return spriteColor; }
