@@ -70,7 +70,7 @@ namespace Barotrauma
             set
             {
                 enabled = value;
-                if (selectedWidgets.Contains(this))
+                if (!enabled && selectedWidgets.Contains(this))
                 {
                     selectedWidgets.Remove(this);
                 }
