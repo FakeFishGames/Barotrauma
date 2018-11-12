@@ -611,6 +611,51 @@ namespace Barotrauma
                         OnTextChanged?.Invoke(this, Text);
                     }
                     break;
+                case Keys.Tab:
+                    // Select the next text box.
+                    var editor = RectTransform.GetParents().Select(p => p.GUIComponent as SerializableEntityEditor).FirstOrDefault(e => e != null);
+                    if (editor == null) { break; }
+                    var allTextBoxes = GetAndSortTextBoxes(editor).ToList();
+                    if (allTextBoxes.Any())
+                    {
+                        int currentIndex = allTextBoxes.IndexOf(this);
+                        int nextIndex = Math.Min(allTextBoxes.Count - 1, currentIndex + 1);
+                        var next = allTextBoxes[nextIndex];
+                        if (next != this)
+                        {
+                            next.Select();
+                            next.Flash(Color.White * 0.5f, 0.5f);
+                        }
+                        else
+                        {
+                            // Select the first text box in the next editor that has text boxes.
+                            var listBox = RectTransform.GetParents().Select(p => p.GUIComponent as GUIListBox).FirstOrDefault(lb => lb != null);
+                            if (listBox == null) { break; }
+                            // TODO: The get's out of focus if the selection is out of view.
+                            // Not sure how's that possible, but it seems to work when the auto scroll is disabled and you handle the scrolling manually.
+                            listBox.SelectNext();
+                            while (SelectNextTextBox(listBox) == null)
+                            {
+                                var previous = listBox.SelectedComponent;
+                                listBox.SelectNext();
+                                if (listBox.SelectedComponent == previous) { break; }
+                            }
+                        }
+                    }
+                    IEnumerable<GUITextBox> GetAndSortTextBoxes(GUIComponent parent) => parent.GetAllChildren().Select(c => c as GUITextBox).Where(t => t != null).OrderBy(t => t.Rect.Y).ThenBy(t => t.Rect.X);
+                    GUITextBox SelectNextTextBox(GUIListBox listBox)
+                    {
+                        var textBoxes = GetAndSortTextBoxes(listBox.SelectedComponent);
+                        if (textBoxes.Any())
+                        {
+                            var next = textBoxes.First();
+                            next.Select();
+                            next.Flash(Color.White * 0.5f, 0.5f);
+                            return next;
+                        }
+                        return null;
+                    }
+                    break;
             }
             OnKeyHit?.Invoke(this, key);
             void HandleSelection()
