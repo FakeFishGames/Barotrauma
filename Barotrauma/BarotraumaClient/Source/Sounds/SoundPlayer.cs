@@ -49,9 +49,8 @@ namespace Barotrauma
     static class SoundPlayer
     {
         private static ILookup<string, Sound> miscSounds;
-        
+
         //music
-        public static float MusicVolume = 1.0f;
         private const float MusicLerpSpeed = 1.0f;
         private const float UpdateMusicInterval = 5.0f;
 
@@ -565,7 +564,7 @@ namespace Barotrauma
                         musicChannel[i] = currentMusic[i].Play(0.0f, "music");
                         musicChannel[i].Looping = true;
                     }
-                    musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, MusicVolume, MusicLerpSpeed * deltaTime);
+                    musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, 1.0f, MusicLerpSpeed * deltaTime);
                 }
             } 
         }
