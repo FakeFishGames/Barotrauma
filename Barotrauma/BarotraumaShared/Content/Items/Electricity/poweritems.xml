@@ -39,9 +39,9 @@
   
   <Item name="Battery" identifier="battery" tags="battery" category="Electrical" Scale="0.5" description="Generally used for storing backup power in case of a reactor failure.">
     
-    <Sprite texture="battery_broken.png" sourcerect="0,0,118,159" depth="0.8" />
-    <BrokenSprite texture="battery_broken.png" sourcerect="118,0,118,159" depth="0.8" maxcondition="50" fadein="true" />
-    <BrokenSprite texture="battery_broken.png" sourcerect="236,0,118,159" depth="0.8" maxcondition="0" />
+    <Sprite texture="battery.png" sourcerect="0,0,118,159" depth="0.8" />
+    <BrokenSprite texture="battery.png" sourcerect="118,0,118,159" depth="0.8" maxcondition="50" fadein="true" />
+    <BrokenSprite texture="battery.png" sourcerect="236,0,118,159" depth="0.8" maxcondition="0" />
     
     <PowerContainer capacity="2000.0" maxrechargespeed="500.0" maxoutput="1000.0" canbeselected="true">
       <GuiFrame relativesize="0.18,0.23" minsize="350,250" maxsize="420,300" anchor="Center" relativeoffset="0,-0.1" style="ItemUI" />
@@ -70,9 +70,9 @@
   
   <Item name="Supercapacitor" identifier="supercapacitor" category="Electrical" Scale="0.5" description="Can deliver charge much faster than batteries.">
     
-    <Sprite texture="supercapacitor_broken.png" depth="0.8" sourcerect="0,0,154,176" />
-    <BrokenSprite texture="supercapacitor_broken.png" sourcerect="154,0,154,176" depth="0.8" maxcondition="50" fadein="true" />
-    <BrokenSprite texture="supercapacitor_broken.png" sourcerect="308,0,154,176" depth="0.8" maxcondition="0" />
+    <Sprite texture="supercapacitor.png" depth="0.8" sourcerect="0,0,154,176" />
+    <BrokenSprite texture="supercapacitor.png" sourcerect="154,0,154,176" depth="0.8" maxcondition="50" fadein="true" />
+    <BrokenSprite texture="supercapacitor.png" sourcerect="308,0,154,176" depth="0.8" maxcondition="0" />
     
     <PowerContainer capacity="20.0" maxrechargespeed="20.0" maxoutput="2000000.0" canbeselected="true">
       <GuiFrame relativesize="0.18,0.23" minsize="350,250" maxsize="420,300" anchor="Center" relativeoffset="0,-0.1" style="ItemUI" />

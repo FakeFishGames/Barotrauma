@@ -6,9 +6,9 @@
     allowedlinks="hull"
     category="Machine">
 
-    <Sprite texture ="FF_pump_broken.png" depth="0.8" sourcerect="0,0,200,178"/>
-    <BrokenSprite texture="FF_pump_broken.png" sourcerect="200,0,200,178" depth="0.8" maxcondition="50" fadein="true" />
-    <BrokenSprite texture="FF_pump_broken.png" sourcerect="400,0,200,178" depth="0.8" maxcondition="0" />
+    <Sprite texture ="FF_pump.png" depth="0.8" sourcerect="0,0,200,178"/>
+    <BrokenSprite texture="FF_pump.png" sourcerect="200,0,200,178" depth="0.8" maxcondition="50" fadein="true" />
+    <BrokenSprite texture="FF_pump.png" sourcerect="400,0,200,178" depth="0.8" maxcondition="0" />
 
     <Pump canbeselected="true" maxflow="600" PowerConsumption="300.0" MinVoltage="0.3">
       <GuiFrame relativesize="0.17,0.14" minsize="330,145" maxsize="400,175" anchor="Center" style="ItemUI"/>

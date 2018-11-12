@@ -6,9 +6,9 @@
     linkable="true"
     allowedlinks="vent">
     
-    <Sprite texture ="FF_oxygengenerator_broken.png" depth="0.8" sourcerect="0,0,214,192"/>
-    <BrokenSprite texture="FF_oxygengenerator_broken.png" sourcerect="214,0,214,192" depth="0.8" maxcondition="50" fadein="true" />
-    <BrokenSprite texture="FF_oxygengenerator_broken.png" sourcerect="428,0,214,192" depth="0.8" maxcondition="0" />
+    <Sprite texture ="FF_oxygengenerator.png" depth="0.8" sourcerect="0,0,214,192"/>
+    <BrokenSprite texture="FF_oxygengenerator.png" sourcerect="214,0,214,192" depth="0.8" maxcondition="50" fadein="true" />
+    <BrokenSprite texture="FF_oxygengenerator.png" sourcerect="428,0,214,192" depth="0.8" maxcondition="0" />
   
     <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected = "true">
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1500" loop="false"/>

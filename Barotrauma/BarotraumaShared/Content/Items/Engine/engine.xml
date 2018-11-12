@@ -5,9 +5,9 @@
     identifier="engine"
     category="Machine">
 
-    <Sprite texture ="BTart_EngineDiesel_broken.png" depth="0.8" sourcerect="0,0,590,218" canflipx="true"/>
-    <BrokenSprite texture="BTart_EngineDiesel_broken.png" sourcerect="0,436,590,218" depth="0.8" maxcondition="50" fadein="true" />
-    <BrokenSprite texture="BTart_EngineDiesel_broken.png" sourcerect="0,654,590,218" depth="0.8" maxcondition="0" />
+    <Sprite texture ="BTart_EngineDiesel.png" depth="0.8" sourcerect="0,0,590,218" canflipx="true"/>
+    <BrokenSprite texture="BTart_EngineDiesel.png" sourcerect="0,436,590,218" depth="0.8" maxcondition="50" fadein="true" />
+    <BrokenSprite texture="BTart_EngineDiesel.png" sourcerect="0,654,590,218" depth="0.8" maxcondition="0" />
 
     <trigger x="20" y ="0" width="590" height="232"/>
 
