@@ -42,10 +42,12 @@ namespace Barotrauma
             {
                 IsFixedSize = false
             });
-            textBox.OnTextChanged += (textBox, text) =>
+            textBox.OnKeyHit += (sender, key) =>
             {
-                ResetAutoComplete();
-                return true;
+                if (key != Keys.Tab)
+                {
+                    ResetAutoComplete();
+                }
             };
 
             NewMessage("Press F3 to open/close the debug console", Color.Cyan);
