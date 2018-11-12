@@ -53,11 +53,11 @@ namespace Barotrauma
 #if CLIENT
             new GameModePreset("Single Player", typeof(SinglePlayerCampaign), true);
             new GameModePreset("Tutorial", typeof(TutorialMode), true);
-#endif
             new GameModePreset("SPSandbox", typeof(GameMode), true)
             {
                 Description = "Single player sandbox mode for debugging."
             };
+#endif
 
             new GameModePreset("Sandbox", typeof(GameMode), false)
             {

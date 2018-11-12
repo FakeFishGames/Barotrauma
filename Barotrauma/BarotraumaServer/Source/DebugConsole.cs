@@ -69,6 +69,8 @@ namespace Barotrauma
             {
                 Console.Clear();
                 string input = "";
+                int memoryIndex = -1;
+                List<string> commandMemory = new List<string>();
                 while (true)
                 {
                     //dequeue messages
@@ -84,6 +86,9 @@ namespace Barotrauma
                                 ColoredText msg = queuedMessages.Dequeue();
                                 
                                 string msgTxt = msg.Text;
+
+                                if (msg.IsCommand) commandMemory.Add(msgTxt);
+
                                 int paddingLen = Console.WindowWidth - (msg.Text.Length % Console.WindowWidth)-1;
                                 msgTxt += new string(' ', paddingLen>0 ? paddingLen : 0);
 
@@ -106,14 +111,48 @@ namespace Barotrauma
                                     DebugConsole.QueuedCommands.Add(input);
                                 }
                                 input = "";
+                                memoryIndex = -1;
                                 break;
                             case ConsoleKey.Backspace:
                                 if (input.Length > 0) input = input.Substring(0, input.Length - 1);
+                                memoryIndex = -1;
+                                break;
+                            case ConsoleKey.LeftArrow:
+                                AutoComplete(input, -1);
+                                break;
+                            case ConsoleKey.RightArrow:
+                                AutoComplete(input, 1);
+                                break;
+                            case ConsoleKey.UpArrow:
+                                memoryIndex--;
+                                if (memoryIndex < 0) memoryIndex = commandMemory.Count - 1;
+                                if (memoryIndex >= commandMemory.Count) memoryIndex = commandMemory.Count - 1;
+                                if (memoryIndex >= 0)
+                                {
+                                    input = commandMemory[memoryIndex];
+                                }
+                                break;
+                            case ConsoleKey.DownArrow:
+                                memoryIndex++;
+                                if (memoryIndex < 0) memoryIndex = 0;
+                                if (memoryIndex >= commandMemory.Count) memoryIndex = 0;
+                                if (commandMemory.Count>0)
+                                {
+                                    input = commandMemory[memoryIndex];
+                                }
+                                break;
+                            case ConsoleKey.Tab:
+                                if (input.Length > 0)
+                                {
+                                    input = AutoComplete(input, 0);
+                                    memoryIndex = -1;
+                                }
                                 break;
                             default:
                                 if (key.KeyChar != 0)
                                 {
                                     input += key.KeyChar;
+                                    memoryIndex = -1;
                                 }
                                 break;
                         }
@@ -132,7 +171,7 @@ namespace Barotrauma
 
         private static void RewriteInputToCommandLine(string input)
         {
-            string ln = !string.IsNullOrWhiteSpace(input) ? DebugConsole.AutoComplete(input) : ""; DebugConsole.ResetAutoComplete();
+            string ln = input.Length>0 ? AutoComplete(input,0) : "";
             ln += new string(' ', Console.WindowWidth - (ln.Length % Console.WindowWidth));
             Console.ForegroundColor = ConsoleColor.DarkGray;
             Console.CursorLeft = 0;
