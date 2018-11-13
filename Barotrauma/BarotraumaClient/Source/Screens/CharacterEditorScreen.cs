@@ -313,21 +313,10 @@ namespace Barotrauma
             }
             Cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
             Cam.Position = character.WorldPosition;
+            MapEntity.mapEntityList.ForEach(e => e.IsHighlighted = false);
             // Update widgets
-            foreach (var widget in jointSelectionWidgets.Values)
-            {
-                widget.Enabled = editJoints;
-                widget.Update((float)deltaTime);
-            }
-            foreach (var widget in animationWidgets.Values)
-            {
-                widget.Enabled = editAnimations;
-                widget.Update((float)deltaTime);
-            }
-            foreach (MapEntity e in MapEntity.mapEntityList)
-            {
-                e.IsHighlighted = false;
-            }
+            jointSelectionWidgets.Values.ForEach(w => w.Update((float)deltaTime));
+            animationWidgets.Values.ForEach(w => w.Update((float)deltaTime));
         }
 
         /// <summary>
@@ -3225,22 +3214,25 @@ namespace Barotrauma
         {
             if (!animationWidgets.TryGetValue(id, out Widget widget))
             {
-                widget = new Widget(id, size, shape);
-                int normalSize = widget.size;
+                int selectedSize = size * 2;
+                widget = new Widget(id, size, shape)
+                {
+                    tooltipOffset = new Vector2(selectedSize / 2 + 5, -10)
+                };
                 widget.color = color;
-                animationWidgets.Add(id, widget);
+                widget.PreUpdate += dTime => widget.Enabled = editAnimations;
                 widget.PostUpdate += dTime =>
                 {
                     if (widget.IsSelected)
                     {
-                        widget.size = normalSize * 2;
+                        widget.size = selectedSize;
                         widget.inputAreaMargin = 20;
                         widget.isFilled = true;
                     }
                     else
                     {
-                        widget.size = normalSize;
-                        widget.inputAreaMargin = 0;
+                        widget.size = size;
+                        widget.inputAreaMargin = 5;
                         widget.isFilled = false;
                     }
                 };
@@ -3251,6 +3243,7 @@ namespace Barotrauma
                         widget.refresh();
                     }
                 };
+                animationWidgets.Add(id, widget);
                 initMethod?.Invoke(widget);
             }
             return widget;
@@ -3279,14 +3272,32 @@ namespace Barotrauma
             // Widget creation method
             Widget CreateJointSelectionWidget(string ID, LimbJoint j)
             {
-                var widget = new Widget(ID, 10, Widget.Shape.Circle);
-                //widget.inputAreaMargin = 5;
+                int normalSize = 10;
+                int selectedSize = 20;
+                var widget = new Widget(ID, normalSize, Widget.Shape.Circle)
+                {
+                    tooltipOffset = new Vector2(selectedSize / 2 + 5, -10)
+                };
                 widget.refresh = () =>
                 {
                     widget.showTooltip = !selectedJoints.Contains(joint);
                     widget.color = selectedJoints.Contains(joint) ? Color.Yellow : Color.Red;
                 };
                 widget.refresh();
+                widget.PreUpdate += dTime => widget.Enabled = editJoints;
+                widget.PostUpdate += dTime =>
+                {
+                    if (widget.IsSelected)
+                    {
+                        widget.size = selectedSize;
+                        widget.inputAreaMargin = 10;
+                    }
+                    else
+                    {
+                        widget.size = normalSize;
+                        widget.inputAreaMargin = 0;
+                    }
+                };
                 widget.MouseDown += () =>
                 {
                     if (!selectedJoints.Contains(joint))
