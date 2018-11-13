@@ -2090,6 +2090,8 @@ namespace Barotrauma
             Vector2 screenSpaceLeft = screenSpaceForward.Right();
             // The forward vector is left or right in screen space when the unit is not swimming. Cannot rely on the collider here, because the rotation may vary on ground.
             Vector2 forward = animParams.IsSwimAnimation ? screenSpaceForward : Vector2.UnitX * dir;
+            Vector2 GetSimSpaceForward() => animParams.IsSwimAnimation ? Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation)) : Vector2.UnitX * dir;
+            Vector2 GetScreenSpaceForward() => animParams.IsSwimAnimation ? VectorExtensions.Backward(collider.Rotation, 1) : Vector2.UnitX * dir;
 
             bool altDown = PlayerInput.KeyDown(Keys.LeftAlt);
             if (!altDown)
@@ -2101,35 +2103,100 @@ namespace Barotrauma
             Vector2 drawPos = referencePoint;
             if (altDown)
             {
-                if (selectedWidget == "Movement Speed") { selectedWidget = null; }
-                // Cycle speed
-                float multiplier = 0.25f;
-                drawPos += forward * ConvertUnits.ToDisplayUnits(animParams.CycleSpeed * multiplier) * Cam.Zoom;
-                DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 20, Color.MediumPurple, "Cycle Speed", () =>
+                GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_CycleSpeed", Color.MediumPurple, size: 20, sizeMultiplier: 1.5f, shape: Widget.Shape.Circle, initMethod: w =>
                 {
-                    float speed = animParams.CycleSpeed + ConvertUnits.ToSimUnits(Vector2.Multiply(scaledMouseSpeed / multiplier, forward).Combine()) / Cam.Zoom;
-                    TryUpdateAnimParam("cyclespeed", speed);
-                    GUI.DrawLine(spriteBatch, drawPos, referencePoint, Color.MediumPurple);
-                });
-                GUI.DrawLine(spriteBatch, drawPos + forward * 10, drawPos + forward * 15, Color.MediumPurple);
+                    float multiplier = 0.25f;
+                    w.tooltip = "Cycle Speed";
+                    w.refresh = () =>
+                    {
+                        referencePoint = SimToScreen(head != null ? head.SimPosition : collider.SimPosition);
+                        w.DrawPos = referencePoint + GetScreenSpaceForward() * ConvertUnits.ToDisplayUnits(animParams.CycleSpeed * multiplier) * Cam.Zoom;
+                        // Update tooltip, because the cycle speed might be automatically adjusted by the movement speed widget.
+                        w.tooltip = $"Cycle Speed: {animParams.CycleSpeed.FormatSingleDecimal()}";
+                    };
+                    w.MouseHeld += dTime =>
+                    {
+                        // TODO: clamp so that cannot manipulate the local y axis -> remove the additional refresh callback in below
+                        //Vector2 newPos = PlayerInput.MousePosition;
+                        //w.DrawPos = newPos;
+                        float speed = animParams.CycleSpeed + ConvertUnits.ToSimUnits(Vector2.Multiply(PlayerInput.MouseSpeed / multiplier, GetScreenSpaceForward()).Combine()) / Cam.Zoom;
+                        TryUpdateAnimParam("cyclespeed", speed);
+                        w.tooltip = $"Cycle Speed: {animParams.CycleSpeed.FormatSingleDecimal()}";
+                    };
+                    // Overrides the normal condition (because evaluated last)
+                    w.PreUpdate += dTime =>
+                    {
+                        if (!PlayerInput.KeyDown(Keys.LeftAlt))
+                        {
+                            w.Enabled = false;
+                        }
+                    };
+                    // Additional (remove if the position is update when the mouse is held)
+                    w.PreDraw += (sp, dTime) =>
+                    {
+                        if (w.IsControlled)
+                        {
+                            w.refresh();
+                        }
+                    };
+                    w.PostDraw += (sp, dTime) =>
+                    {
+                        if (w.IsSelected)
+                        {
+                            GUI.DrawLine(spriteBatch, w.DrawPos, referencePoint, Color.MediumPurple);
+                        }
+                    };
+                }).Draw(spriteBatch, deltaTime);
             }
             else
             {
-                if (selectedWidget == "Cycle Speed") { selectedWidget = null; }
-                // Movement speed
-                float multiplier = 0.5f;
-                drawPos += forward * ConvertUnits.ToDisplayUnits(animParams.MovementSpeed * multiplier) * Cam.Zoom;
-                DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 20, Color.Turquoise, "Movement Speed", () =>
+                GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_MovementSpeed", Color.Turquoise, size: 20, sizeMultiplier: 1.5f, shape: Widget.Shape.Circle, initMethod: w =>
                 {
-                    float speed = animParams.MovementSpeed + ConvertUnits.ToSimUnits(Vector2.Multiply(scaledMouseSpeed / multiplier, forward).Combine()) / Cam.Zoom;
-                    TryUpdateAnimParam("movementspeed", MathHelper.Clamp(speed, 0.1f, Ragdoll.MAX_SPEED));
-                    GUI.DrawLine(spriteBatch, drawPos, referencePoint, Color.Turquoise);
-                    if (humanSwimParams != null)
+                    float multiplier = 0.5f;
+                    w.tooltip = "Movement Speed";
+                    w.refresh = () =>
                     {
-                        TryUpdateAnimParam("cyclespeed", animParams.MovementSpeed);
-                    }
-                });
-                GUI.DrawLine(spriteBatch, drawPos + forward * 10, drawPos + forward * 15, Color.Turquoise);
+                        referencePoint = SimToScreen(head != null ? head.SimPosition : collider.SimPosition);
+                        w.DrawPos = referencePoint + GetScreenSpaceForward() * ConvertUnits.ToDisplayUnits(animParams.MovementSpeed * multiplier) * Cam.Zoom;
+                    };
+                    w.MouseHeld += dTime =>
+                    {
+                        // TODO: clamp so that cannot manipulate the local y axis -> remove the additional refresh callback in below
+                        //Vector2 newPos = PlayerInput.MousePosition;
+                        //w.DrawPos = newPos;
+                        float speed = animParams.MovementSpeed + ConvertUnits.ToSimUnits(Vector2.Multiply(PlayerInput.MouseSpeed / multiplier, GetScreenSpaceForward()).Combine()) / Cam.Zoom;
+                        TryUpdateAnimParam("movementspeed", MathHelper.Clamp(speed, 0.1f, Ragdoll.MAX_SPEED));
+                        // Sync
+                        if (humanSwimParams != null)
+                        {
+                            TryUpdateAnimParam("cyclespeed", animParams.MovementSpeed);
+                        }
+                        w.tooltip = $"Movement Speed: {animParams.MovementSpeed.FormatSingleDecimal()}";
+                    };
+                    // Overrides the normal condition (because evaluated last)
+                    w.PreUpdate += dTime =>
+                    {
+                        if (PlayerInput.KeyDown(Keys.LeftAlt))
+                        {
+                            w.Enabled = false;
+                        }
+                    };
+                    // Additional (remove if the position is update when the mouse is held)
+                    w.PreDraw += (sp, dTime) =>
+                    {
+                        if (w.IsControlled)
+                        {
+                            w.refresh();
+                        }
+                    };
+                    w.PostDraw += (sp, dTime) =>
+                    {
+                        if (w.IsSelected)
+                        {
+                            GUI.DrawLine(spriteBatch, w.DrawPos, referencePoint, Color.Turquoise);
+                        }
+                    };
+                }).Draw(spriteBatch, deltaTime);
             }
 
             if (head != null)
@@ -2260,7 +2327,7 @@ namespace Barotrauma
             {
                 if (hand != null || arm != null)
                 {
-                    var widget = GetAnimationWidget($"{character.SpeciesName}_HandMoveAmount", Color.LightGreen, initMethod: w =>
+                    var widget = GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_HandMoveAmount", Color.LightGreen, initMethod: w =>
                     {
                         w.tooltip = "Hand Move Amount";
                         w.refresh = () =>
@@ -3210,11 +3277,11 @@ namespace Barotrauma
         #region Widgets as classes
         private Dictionary<string, Widget> animationWidgets = new Dictionary<string, Widget>();
 
-        private Widget GetAnimationWidget(string id, Color color, int size = 10, Widget.Shape shape = Widget.Shape.Rectangle, Action<Widget> initMethod = null)
+        private Widget GetAnimationWidget(string id, Color color, int size = 10, float sizeMultiplier = 2, Widget.Shape shape = Widget.Shape.Rectangle, Action<Widget> initMethod = null)
         {
             if (!animationWidgets.TryGetValue(id, out Widget widget))
             {
-                int selectedSize = size * 2;
+                int selectedSize = (int)Math.Round(size * sizeMultiplier);
                 widget = new Widget(id, size, shape)
                 {
                     tooltipOffset = new Vector2(selectedSize / 2 + 5, -10)
@@ -3227,18 +3294,17 @@ namespace Barotrauma
                     {
                         widget.size = selectedSize;
                         widget.inputAreaMargin = 20;
-                        widget.isFilled = true;
                     }
                     else
                     {
                         widget.size = size;
                         widget.inputAreaMargin = 5;
-                        widget.isFilled = false;
                     }
+                    widget.isFilled = widget.IsControlled;
                 };
                 widget.PreDraw += (sp, dTime) =>
                 {
-                    if (!widget.IsSelected)
+                    if (!widget.IsControlled)
                     {
                         widget.refresh();
                     }
