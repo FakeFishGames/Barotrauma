@@ -60,6 +60,8 @@ namespace Barotrauma
 
         public Action refresh;
 
+        public object data;
+
         public bool IsSelected => enabled && selectedWidgets.Contains(this);
         public bool IsControlled => IsSelected && PlayerInput.LeftButtonHeld();
         public bool IsMouseOver => GUI.MouseOn == null && InputRect.Contains(PlayerInput.MousePosition);
