@@ -111,21 +111,7 @@ namespace Barotrauma
         public DeformableSprite DeformSprite { get; protected set; }
         public Sprite ActiveSprite => DeformSprite != null ? DeformSprite.Sprite : Sprite;
 
-        // TODO: damaged sprite?
-        public float TextureScale
-        {
-            get
-            {
-                if (DeformSprite != null)
-                {
-                    return limbParams.deformSpriteParams != null ? limbParams.deformSpriteParams.Scale : 1;
-                }
-                else
-                {
-                    return limbParams.normalSpriteParams != null ? limbParams.normalSpriteParams.Scale : 1;
-                }
-            }
-        }
+        public float TextureScale => limbParams.Ragdoll.TextureScale;
 
         public Sprite DamagedSprite { get; set; }
 

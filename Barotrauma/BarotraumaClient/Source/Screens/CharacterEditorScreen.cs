@@ -1155,38 +1155,14 @@ namespace Barotrauma
                     return true;
                 }
             };
-            var spriteParams = RagdollParams.Limbs.Select(l => l.normalSpriteParams).FirstOrDefault();
-            if (spriteParams == null)
-            {
-                spriteParams = RagdollParams.Limbs.Select(l => l.deformSpriteParams).FirstOrDefault();
-            }
-            textureScale = spriteParams != null ? spriteParams.Scale : 1;
-            new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), "Texture scale:", Color.White)
-            {
-                ToolTip = "Note that the texture scale can be set per sprite. This slider gets the value of the first limb. When moved, it sets a uniform value to all the limbs."
-            };
+            new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), "Texture scale:", Color.White);
             textureScaleBar = new GUIScrollBar(new RectTransform(new Point((int)(elementSize.X * 1.75f), textAreaHeight), layoutGroupSpriteSheet.RectTransform), barSize: 0.2f)
             {
-                BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(textureMinScale, textureMaxScale, textureScale)),
+                BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(textureMinScale, textureMaxScale, RagdollParams.TextureScale)),
                 Step = 0.01f,
                 OnMoved = (scrollBar, value) =>
                 {
-                    textureScale = MathHelper.Lerp(textureMinScale, textureMaxScale, value);
-                    foreach (var limb in RagdollParams.Limbs)
-                    {
-                        if (limb.normalSpriteParams != null)
-                        {
-                            limb.normalSpriteParams.Scale = textureScale;
-                        }
-                        if (limb.deformSpriteParams != null)
-                        {
-                            limb.deformSpriteParams.Scale = textureScale;
-                        }
-                        //if (limb.damagedSpriteParams != null)
-                        //{
-                        //    limb.damagedSpriteParams.Scale = textureScale;
-                        //}
-                    }
+                    RagdollParams.TextureScale = MathHelper.Lerp(textureMinScale, textureMaxScale, value);
                     return true;
                 }
             };
