@@ -2139,41 +2139,42 @@ namespace Barotrauma
             Vector2 forward = animParams.IsSwimAnimation ? screenSpaceForward : Vector2.UnitX * dir;
             Vector2 GetSimSpaceForward() => animParams.IsSwimAnimation ? Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation)) : Vector2.UnitX * dir;
             Vector2 GetScreenSpaceForward() => animParams.IsSwimAnimation ? VectorExtensions.Backward(collider.Rotation, 1) : Vector2.UnitX * dir;
+            bool ShowCycleWidget() => PlayerInput.KeyDown(Keys.LeftAlt) && (CurrentAnimation is IHumanAnimation || CurrentAnimation is GroundedMovementParams);
 
             bool altDown = PlayerInput.KeyDown(Keys.LeftAlt);
-            if (!altDown)
+            if (!altDown && (animParams is IHumanAnimation || animParams is GroundedMovementParams))
             {
                 GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 120, GameMain.GraphicsHeight - 150), "HOLD \"Left Alt\" TO ADJUST THE CYCLE SPEED", Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
             // Widgets for all anims -->
             Vector2 referencePoint = SimToScreen(head != null ? head.SimPosition: collider.SimPosition);
             Vector2 drawPos = referencePoint;
-            if (altDown)
+            if (ShowCycleWidget())
             {
-                GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_CycleSpeed", Color.MediumPurple, size: 20, sizeMultiplier: 1.5f, shape: Widget.Shape.Circle, initMethod: w =>
+                GetAnimationWidget($"{character.SpeciesName}_{CurrentAnimation.AnimationType.ToString()}_CycleSpeed", Color.MediumPurple, size: 20, sizeMultiplier: 1.5f, shape: Widget.Shape.Circle, initMethod: w =>
                 {
                     float multiplier = 0.25f;
                     w.tooltip = "Cycle Speed";
                     w.refresh = () =>
                     {
                         referencePoint = SimToScreen(head != null ? head.SimPosition : collider.SimPosition);
-                        w.DrawPos = referencePoint + GetScreenSpaceForward() * ConvertUnits.ToDisplayUnits(animParams.CycleSpeed * multiplier) * Cam.Zoom;
+                        w.DrawPos = referencePoint + GetScreenSpaceForward() * ConvertUnits.ToDisplayUnits(CurrentAnimation.CycleSpeed * multiplier) * Cam.Zoom;
                         // Update tooltip, because the cycle speed might be automatically adjusted by the movement speed widget.
-                        w.tooltip = $"Cycle Speed: {animParams.CycleSpeed.FormatSingleDecimal()}";
+                        w.tooltip = $"Cycle Speed: {CurrentAnimation.CycleSpeed.FormatSingleDecimal()}";
                     };
                     w.MouseHeld += dTime =>
                     {
                         // TODO: clamp so that cannot manipulate the local y axis -> remove the additional refresh callback in below
                         //Vector2 newPos = PlayerInput.MousePosition;
                         //w.DrawPos = newPos;
-                        float speed = animParams.CycleSpeed + ConvertUnits.ToSimUnits(Vector2.Multiply(PlayerInput.MouseSpeed / multiplier, GetScreenSpaceForward()).Combine()) / Cam.Zoom;
+                        float speed = CurrentAnimation.CycleSpeed + ConvertUnits.ToSimUnits(Vector2.Multiply(PlayerInput.MouseSpeed / multiplier, GetScreenSpaceForward()).Combine()) / Cam.Zoom;
                         TryUpdateAnimParam("cyclespeed", speed);
-                        w.tooltip = $"Cycle Speed: {animParams.CycleSpeed.FormatSingleDecimal()}";
+                        w.tooltip = $"Cycle Speed: {CurrentAnimation.CycleSpeed.FormatSingleDecimal()}";
                     };
                     // Additional check, which overrides the previous value (because evaluated last)
                     w.PreUpdate += dTime =>
                     {
-                        if (!PlayerInput.KeyDown(Keys.LeftAlt))
+                        if (!ShowCycleWidget())
                         {
                             w.Enabled = false;
                         }
@@ -2197,33 +2198,33 @@ namespace Barotrauma
             }
             else
             {
-                GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_MovementSpeed", Color.Turquoise, size: 20, sizeMultiplier: 1.5f, shape: Widget.Shape.Circle, initMethod: w =>
+                GetAnimationWidget($"{character.SpeciesName}_{CurrentAnimation.AnimationType.ToString()}_MovementSpeed", Color.Turquoise, size: 20, sizeMultiplier: 1.5f, shape: Widget.Shape.Circle, initMethod: w =>
                 {
                     float multiplier = 0.5f;
                     w.tooltip = "Movement Speed";
                     w.refresh = () =>
                     {
                         referencePoint = SimToScreen(head != null ? head.SimPosition : collider.SimPosition);
-                        w.DrawPos = referencePoint + GetScreenSpaceForward() * ConvertUnits.ToDisplayUnits(animParams.MovementSpeed * multiplier) * Cam.Zoom;
+                        w.DrawPos = referencePoint + GetScreenSpaceForward() * ConvertUnits.ToDisplayUnits(CurrentAnimation.MovementSpeed * multiplier) * Cam.Zoom;
                     };
                     w.MouseHeld += dTime =>
                     {
                         // TODO: clamp so that cannot manipulate the local y axis -> remove the additional refresh callback in below
                         //Vector2 newPos = PlayerInput.MousePosition;
                         //w.DrawPos = newPos;
-                        float speed = animParams.MovementSpeed + ConvertUnits.ToSimUnits(Vector2.Multiply(PlayerInput.MouseSpeed / multiplier, GetScreenSpaceForward()).Combine()) / Cam.Zoom;
+                        float speed = CurrentAnimation.MovementSpeed + ConvertUnits.ToSimUnits(Vector2.Multiply(PlayerInput.MouseSpeed / multiplier, GetScreenSpaceForward()).Combine()) / Cam.Zoom;
                         TryUpdateAnimParam("movementspeed", MathHelper.Clamp(speed, 0.1f, Ragdoll.MAX_SPEED));
                         // Sync
                         if (humanSwimParams != null)
                         {
-                            TryUpdateAnimParam("cyclespeed", animParams.MovementSpeed);
+                            TryUpdateAnimParam("cyclespeed", character.AnimController.CurrentAnimationParams.MovementSpeed);
                         }
-                        w.tooltip = $"Movement Speed: {animParams.MovementSpeed.FormatSingleDecimal()}";
+                        w.tooltip = $"Movement Speed: {CurrentAnimation.MovementSpeed.FormatSingleDecimal()}";
                     };
                     // Additional check, which overrides the previous value (because evaluated last)
                     w.PreUpdate += dTime =>
                     {
-                        if (PlayerInput.KeyDown(Keys.LeftAlt))
+                        if (ShowCycleWidget())
                         {
                             w.Enabled = false;
                         }
