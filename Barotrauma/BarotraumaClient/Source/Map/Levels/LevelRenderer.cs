@@ -259,6 +259,11 @@ namespace Barotrauma
                             Color.Lerp(Color.Yellow, Color.Red, i / (float)nodeList.Count), 0, 10);
                     }
                 }
+
+                foreach (var ruin in level.Ruins)
+                {
+                    ruin.DebugDraw(spriteBatch);
+                }
             }
 
             Vector2 pos = new Vector2(0.0f, -level.Size.Y);
