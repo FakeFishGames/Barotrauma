@@ -87,8 +87,9 @@ namespace Barotrauma
                         if (sprite.Texture != selectedTexture) { continue; }
                         var element = sprite.SourceElement;
                         if (element == null) { continue; }
+                        // Not all sprites have a sourcerect defined, in which case we'll want to use the current source rect instead of an empty rect.
                         sprite.SourceRect = element.GetAttributeRect("sourcerect", sprite.SourceRect);
-                        sprite.Origin = element.GetAttributeVector2("origin", sprite.RelativeOrigin);
+                        sprite.RelativeOrigin = element.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
                     }
                     ResetWidgets();
                     xmlPathText.Text = "Changes successfully reset";
