@@ -228,7 +228,7 @@ namespace Barotrauma.RuinGeneration
 
             for (int i = 0; i < iterations; i++)
             {
-                rooms.ForEach(l => l.Split(0.3f, verticalProbability, 300));
+                rooms.ForEach(l => l.Split(0.3f, verticalProbability, generationParams.MinSplitWidth));
                 rooms = baseRoom.GetLeaves();
             }
 
