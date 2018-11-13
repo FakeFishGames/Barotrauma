@@ -384,10 +384,7 @@ namespace Barotrauma.RuinGeneration
 
             List<RuinShape> doorlessRooms = new List<RuinShape>(shapes);
 
-            //generate doors & sensors that close them -------------------------------------------------------------
-
-            /*var sensorPrefab = MapEntityPrefab.Find(null, "alienmotionsensor") as ItemPrefab;
-            var wirePrefab = MapEntityPrefab.Find(null, "wire") as ItemPrefab;*/
+            //generate doors & hatches -------------------------------------------------------------
 
             foreach (Corridor corridor in corridors)
             {
@@ -488,10 +485,18 @@ namespace Barotrauma.RuinGeneration
                 position = new Vector2(room.Rect.X + 64, Rand.Range(room.Rect.Y + size.X, room.Rect.Bottom - size.Y, Rand.RandSync.Server));
             }
 
-            MapEntity entity;
+            MapEntity entity = null;
             if (entityConfig.Prefab is ItemPrefab)
             {
                 entity = new Item((ItemPrefab)entityConfig.Prefab, position, null);
+            }
+            else if (entityConfig.Prefab is ItemAssemblyPrefab itemAssemblyPrefab)
+            {
+                var entities = itemAssemblyPrefab.CreateInstance(position);
+                foreach (MapEntity e in entities)
+                {
+                    if (e is Structure) e.ShouldBeSaved = false;
+                }
             }
             else
             {
@@ -571,8 +576,7 @@ namespace Barotrauma.RuinGeneration
                         return;
                     }
 
-                    //TODO: alien wire prefab w/ custom sprite?
-                    var wirePrefab = MapEntityPrefab.Find(null, "blackwire") as ItemPrefab;
+                    var wirePrefab = MapEntityPrefab.Find(null, "alienwire") as ItemPrefab;
                     foreach (Pair<string, string> wireToParent in childEntity.WireToParent)
                     {
                         var conn1 = item.Connections.Find(c => c.Name == wireToParent.First);
