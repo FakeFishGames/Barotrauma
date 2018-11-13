@@ -27,10 +27,10 @@ namespace Barotrauma
 
         public string SpeciesName { get; private set; }
 
-        [Serialize(1.0f, true), Editable(MIN_SCALE, MAX_SCALE)]
+        [Serialize(1.0f, true), Editable(MIN_SCALE, MAX_SCALE, DecimalCount = 3)]
         public float LimbScale { get; set; }
 
-        [Serialize(1.0f, true), Editable(MIN_SCALE, MAX_SCALE)]
+        [Serialize(1.0f, true), Editable(MIN_SCALE, MAX_SCALE, DecimalCount = 3)]
         public float JointScale { get; set; }
 
         [Serialize(45f, true), Editable(0f, 1000f)]
