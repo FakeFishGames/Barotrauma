@@ -80,11 +80,11 @@ namespace Barotrauma.RuinGeneration
         {
             Walls = new List<Line>();
 
-            Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.Right, Rect.Y), RuinStructureType.Wall));
-            Walls.Add(new Line(new Vector2(Rect.X, Rect.Bottom), new Vector2(Rect.Right, Rect.Bottom), RuinStructureType.Wall));
+            Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.Right, Rect.Y), RuinEntityType.Wall));
+            Walls.Add(new Line(new Vector2(Rect.X, Rect.Bottom), new Vector2(Rect.Right, Rect.Bottom), RuinEntityType.Wall));
 
-            Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.X, Rect.Bottom), RuinStructureType.Wall));
-            Walls.Add(new Line(new Vector2(Rect.Right, Rect.Y), new Vector2(Rect.Right, Rect.Bottom), RuinStructureType.Wall));
+            Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.X, Rect.Bottom), RuinEntityType.Wall));
+            Walls.Add(new Line(new Vector2(Rect.Right, Rect.Y), new Vector2(Rect.Right, Rect.Bottom), RuinEntityType.Wall));
         }
 
         public void Scale(Vector2 scale)
@@ -133,23 +133,20 @@ namespace Barotrauma.RuinGeneration
 
         private void CalculateDistanceFromEntrance(int currentDist, List<BTRoom> rooms, List<Corridor> corridors)
         {
-            if (DistanceFromEntrance == 0)
-            {
-                DistanceFromEntrance = currentDist;
-            }
-            else
-            {
-                DistanceFromEntrance = Math.Min(currentDist, DistanceFromEntrance);
-            }
-            
+            DistanceFromEntrance = DistanceFromEntrance == 0 ? currentDist : Math.Min(currentDist, DistanceFromEntrance);
+
             var roomRect = Rect;
-            roomRect.Inflate(5, 5);            
+            roomRect.Inflate(5, 5);
             foreach (var corridor in corridors)
             {
                 var corridorRect = corridor.Rect;
                 corridorRect.Inflate(5, 5);
                 if (!corridorRect.Intersects(roomRect)) continue;
 
+                corridor.DistanceFromEntrance = corridor.DistanceFromEntrance == 0 ?
+                    DistanceFromEntrance :
+                    Math.Min(corridor.DistanceFromEntrance, DistanceFromEntrance);
+                
                 List<BTRoom> connectedRooms = new List<BTRoom>();
                 foreach (var otherRoom in rooms)
                 {

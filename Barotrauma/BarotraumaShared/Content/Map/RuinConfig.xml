@@ -26,13 +26,22 @@
 
   <item prefab="RuinClaw" alignment="Bottom" type="Prop" commonness="5"/>
 
-  <item prefab="Oxygenite Shard" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
-  <item prefab="Sulphurite Shard" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
+  <item prefab="oxygeniteshard" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
+  <item prefab="sulphuriteshard" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
   
-  <item prefab="Ancient Weapon" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="1"/>
+  <item prefab="ancientweapon" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="1"/>
 
-  <item prefab="Alien Door" alignment="Center" type="Door"/>
-  <item prefab="Alien Hatch" alignment="Center" type="Hatch"/>
+  <item prefab="aliendoor" alignment="Center" type="Door">
+    <item prefab="alienmotionsensor" alignment="Center" type="Prop" roomplacement="nextroom">
+      <Wire from="state_out" to="set_state"/>
+    </item>
+  </item>
+  
+  <item prefab="alienhatch" alignment="Center" type="Hatch">
+    <item prefab="alienmotionsensor" alignment="Center" type="Prop" roomplacement="nextroom">
+      <Wire from="state_out" to="set_state"/>
+    </item>
+  </item>
 
-  <item prefab="Artifact Holder" alignment="Center" type="Prop" commonness="5"/>
+  <item prefab="artifactholder" alignment="Center" type="Prop" commonness="5"/>
 </Structures>

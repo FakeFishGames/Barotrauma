@@ -8,7 +8,7 @@ using System.Xml.Linq;
 namespace Barotrauma.RuinGeneration
 {
     [Flags]
-    enum RuinStructureType
+    enum RuinEntityType
     {
         Wall = 1, CorridorWall = 2, Prop = 4, Back = 8, Door = 16, Hatch = 32, HeavyWall = 64
     }
@@ -31,7 +31,7 @@ namespace Barotrauma.RuinGeneration
 
         private string filePath;
 
-        private List<RuinStructure> structureList;
+        private List<RuinEntityConfig> entityList;
         
         public string Name => "RuinGenerationParams";
 
@@ -91,13 +91,13 @@ namespace Barotrauma.RuinGeneration
 
         private RuinGenerationParams(XElement element)
         {
-            structureList = new List<RuinStructure>();
+            entityList = new List<RuinEntityConfig>();
 
             if (element != null)
             {
                 foreach (XElement subElement in element.Elements())
                 {
-                    structureList.Add(new RuinStructure(subElement));
+                    entityList.Add(new RuinEntityConfig(subElement));
                 }
             }
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
@@ -116,18 +116,18 @@ namespace Barotrauma.RuinGeneration
             return paramsList[Rand.Int(paramsList.Count, Rand.RandSync.Server)];
         }
 
-        public RuinStructure GetRandomStructure(RuinStructureType type, Alignment alignment, RuinStructure.RoomType roomType = RuinStructure.RoomType.Any)
+        public RuinEntityConfig GetRandomEntity(RuinEntityType type, Alignment alignment, RuinEntityConfig.RoomType roomType = RuinEntityConfig.RoomType.Any)
         {
-            var matchingStructures = structureList.FindAll(rs => 
+            var matchingEntities = entityList.FindAll(rs => 
                 rs.Type.HasFlag(type) && 
                 rs.Alignment.HasFlag(alignment) && 
-                (roomType == RuinStructure.RoomType.Any || rs.RoomPlacement == RuinStructure.RoomType.Any || rs.RoomPlacement.HasFlag(roomType)));
+                (roomType == RuinEntityConfig.RoomType.Any || rs.RoomPlacement == RuinEntityConfig.RoomType.Any || rs.RoomPlacement.HasFlag(roomType)));
 
-            if (!matchingStructures.Any()) return null;
+            if (!matchingEntities.Any()) return null;
 
             return ToolBox.SelectWeightedRandom(
-                matchingStructures,
-                matchingStructures.Select(s => s.Commonness).ToList(),
+                matchingEntities,
+                matchingEntities.Select(s => s.Commonness).ToList(),
                 Rand.RandSync.Server);
         }
 
@@ -175,21 +175,45 @@ namespace Barotrauma.RuinGeneration
         }
     }
 
-    class RuinStructure
+    class RuinEntityConfig : ISerializableEntity
     {
         public readonly MapEntityPrefab Prefab;
-        public readonly Alignment Alignment;
-        public readonly RuinStructureType Type;
-        public readonly float Commonness;
-        public readonly RoomType RoomPlacement;
 
-        private readonly List<RuinStructure> childStructures = new List<RuinStructure>();
+        [Serialize(Alignment.Bottom, false), Editable]
+        public Alignment Alignment { get; private set; }
 
-        public IEnumerable<RuinStructure> ChildStructures
+        [Serialize(RuinEntityType.Prop, false), Editable]
+        public RuinEntityType Type { get; private set; }
+
+        [Serialize(1.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
+        public float Commonness { get; private set; }
+
+        [Serialize(RoomType.Any, false), Editable]
+        public RoomType RoomPlacement { get; private set; }
+
+        [Serialize(false, false), Editable]
+        public bool LinkToParent { get; private set; }
+
+        /// <summary>
+        /// Pair.First = the name of the connection in this item, Pair.Second = the name of the connection in the parent item
+        /// </summary>
+        public List<Pair<string, string>> WireToParent { get; private set; } = new List<Pair<string, string>>();
+
+        private readonly List<RuinEntityConfig> childEntities = new List<RuinEntityConfig>();
+
+        public IEnumerable<RuinEntityConfig> ChildEntities
         {
-            get { return childStructures; }
+            get { return childEntities; }
         }
 
+        public string Name => Prefab == null ? "null" : Prefab.Name;
+
+        public Dictionary<string, SerializableProperty> SerializableProperties
+        {
+            get;
+            private set;
+        } = new Dictionary<string, SerializableProperty>();
+        
         public enum RoomType
         {
             Any = 0,
@@ -200,43 +224,32 @@ namespace Barotrauma.RuinGeneration
             LastRoom = 16
         }
 
-        public RuinStructure(XElement element)
+        public RuinEntityConfig(XElement element)
         {
             string name = element.GetAttributeString("prefab", "");
-            Prefab = MapEntityPrefab.Find(name);
+            Prefab = MapEntityPrefab.Find(name: null, identifier: name);
 
             if (Prefab == null)
             {
-                DebugConsole.ThrowError("Loading ruin structure failed - structure prefab \"" + name + " not found.");
+                DebugConsole.ThrowError("Loading ruin entity config failed - map entity prefab \"" + name + " not found.");
                 return;
             }
 
-            string alignmentStr = element.GetAttributeString("alignment", "Bottom");
-            if (!Enum.TryParse(alignmentStr, true, out Alignment))
-            {
-                DebugConsole.ThrowError("Error in ruin structure \"" + name + "\" - " + alignmentStr + " is not a valid alignment.");
-            }
-            
-            string typeStr = element.GetAttributeString("type", "");
-            if (!Enum.TryParse(typeStr, true, out Type))
-            {
-                DebugConsole.ThrowError("Error in ruin structure \"" + name + "\" - " + typeStr + " is not a valid type.");
-                return;
-            }
-
-            string placementStr = element.GetAttributeString("placement", "Any");
-            if (!Enum.TryParse(placementStr, true, out RoomPlacement))
-            {
-                DebugConsole.ThrowError("Error in ruin structure \"" + name + "\" - " + placementStr + " is not a valid room placement type.");
-                return;
-            }
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
 
             foreach (XElement subElement in element.Elements())
             {
-                childStructures.Add(new RuinStructure(subElement));
+                if (subElement.Name.ToString().ToLowerInvariant() == "wire")
+                {
+                    WireToParent.Add(new Pair<string, string>(
+                        subElement.GetAttributeString("from", ""),
+                        subElement.GetAttributeString("to", "")));
+                }
+                else
+                {
+                    childEntities.Add(new RuinEntityConfig(subElement));
+                }
             }
-
-            Commonness = element.GetAttributeFloat("commonness", 1);
         }        
     }
 }
