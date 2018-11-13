@@ -24,7 +24,7 @@ namespace Barotrauma.Items.Components
         
         public override void Move(Vector2 amount)
         {
-            if (item.Submarine.Loading || Screen.Selected != GameMain.SubEditorScreen) return;
+            if (item.Submarine == null || item.Submarine.Loading || Screen.Selected != GameMain.SubEditorScreen) return;
 
             Vector2 wireNodeOffset = item.Submarine == null ? Vector2.Zero : item.Submarine.HiddenSubPosition + amount;
             //move the end of the connected wires when moving the item in sub editor
