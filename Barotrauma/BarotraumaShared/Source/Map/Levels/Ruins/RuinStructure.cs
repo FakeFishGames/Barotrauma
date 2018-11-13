@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml;
 using System.Xml.Linq;
 
 namespace Barotrauma.RuinGeneration
@@ -14,7 +15,21 @@ namespace Barotrauma.RuinGeneration
 
     class RuinGenerationParams : ISerializableEntity
     {
+        public static List<RuinGenerationParams> List
+        {
+            get
+            {
+                if (paramsList == null)
+                {
+                    LoadAll();
+                }
+                return paramsList;
+            }
+        }
+
         private static List<RuinGenerationParams> paramsList;
+
+        private string filePath;
 
         private List<RuinStructure> structureList;
         
@@ -36,6 +51,13 @@ namespace Barotrauma.RuinGeneration
 
         [Serialize(0.5f, false), Editable(MinValueFloat = 0.1f, MaxValueFloat = 0.9f, ToolTip = "The probability for the split algorithm to split the area vertically. High values tend to create tall, vertical rooms, and low values wide, horizontal rooms.")]
         public float VerticalSplitProbability
+        {
+            get;
+            set;
+        }
+
+        [Serialize(400, false), Editable(ToolTip = "The splitting algorithm attempts to keep the dimensions the split areas larger than this. For example, if the width of the split areas would be smaller than this after a vertical split, the algorithm will do a horizontal split.")]
+        public int MinSplitWidth
         {
             get;
             set;
@@ -83,7 +105,7 @@ namespace Barotrauma.RuinGeneration
 
         public static RuinGenerationParams GetRandom()
         {
-            if (paramsList == null) { Load(); }
+            if (paramsList == null) { LoadAll(); }
 
             if (paramsList.Count == 0)
             {
@@ -94,17 +116,6 @@ namespace Barotrauma.RuinGeneration
             return paramsList[Rand.Int(paramsList.Count, Rand.RandSync.Server)];
         }
 
-        private static void Load()
-        {
-            paramsList = new List<RuinGenerationParams>();
-            foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.RuinConfig))
-            {
-                XDocument doc = XMLExtensions.TryLoadXml(configFile);
-                if (doc?.Root == null) continue;
-                paramsList.Add(new RuinGenerationParams(doc.Root));
-            }
-        }
-        
         public RuinStructure GetRandomStructure(RuinStructureType type, Alignment alignment)
         {
             var matchingStructures = structureList.FindAll(rs => rs.Type.HasFlag(type) && rs.Alignment.HasFlag(alignment));
@@ -114,6 +125,49 @@ namespace Barotrauma.RuinGeneration
                 matchingStructures,
                 matchingStructures.Select(s => s.Commonness).ToList(),
                 Rand.RandSync.Server);
+        }
+
+        private static void LoadAll()
+        {
+            paramsList = new List<RuinGenerationParams>();
+            foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.RuinConfig))
+            {
+                XDocument doc = XMLExtensions.TryLoadXml(configFile);
+                if (doc?.Root == null) continue;
+                var newParams = new RuinGenerationParams(doc.Root)
+                {
+                    filePath = configFile
+                };
+                paramsList.Add(newParams);
+            }
+        }
+
+        public static void SaveAll()
+        {
+            XmlWriterSettings settings = new XmlWriterSettings
+            {
+                Indent = true,
+                NewLineOnAttributes = true
+            };
+
+            foreach (RuinGenerationParams generationParams in List)
+            {
+                foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.RuinConfig))
+                {
+                    if (configFile != generationParams.filePath) continue;
+
+                    XDocument doc = XMLExtensions.TryLoadXml(configFile);
+                    if (doc?.Root == null) continue;
+
+                    SerializableProperty.SerializeProperties(generationParams, doc.Root);
+
+                    using (var writer = XmlWriter.Create(configFile, settings))
+                    {
+                        doc.WriteTo(writer);
+                        writer.Flush();
+                    }
+                }
+            }
         }
     }
 

@@ -1085,7 +1085,7 @@ namespace Barotrauma
             ruins.Add(ruin);
             
             ruin.RuinShapes.Sort((shape1, shape2) => shape2.DistanceFromEntrance.CompareTo(shape1.DistanceFromEntrance));
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 4 && i < ruin.RuinShapes.Count; i++)
             {
                 positionsOfInterest.Add(new InterestingPosition(ruin.RuinShapes[i].Rect.Center.ToVector2(), PositionType.Ruin));
             }

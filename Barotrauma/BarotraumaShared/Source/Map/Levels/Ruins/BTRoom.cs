@@ -44,7 +44,7 @@ namespace Barotrauma.RuinGeneration
         {
             subRooms = new BTRoom[2];
 
-            if (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < verticalProbability && 
+            if (Rand.Range(0.0f, rect.Height / (float)rect.Width, Rand.RandSync.Server) < verticalProbability && 
                 rect.Width * minDivRatio >= minWidth)
             {
                 SplitVertical(minDivRatio);

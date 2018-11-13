@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Lights;
+using Barotrauma.RuinGeneration;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -22,7 +23,7 @@ namespace Barotrauma
         private LevelGenerationParams selectedParams;
         private LevelObjectPrefab selectedLevelObject;
 
-        private GUIListBox paramsList, levelObjectList;
+        private GUIListBox paramsList, ruinParamsList, levelObjectList;
         private GUIListBox editorContainer;
 
         private GUIButton spriteEditDoneButton;
@@ -51,13 +52,22 @@ namespace Barotrauma
                 RelativeSpacing = 0.01f
             };
 
-            paramsList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), paddedLeftPanel.RectTransform));
+            paramsList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.3f), paddedLeftPanel.RectTransform));
             paramsList.OnSelected += (GUIComponent component, object obj) =>
             {
                 selectedParams = obj as LevelGenerationParams;
                 editorContainer.ClearChildren();
                 SortLevelObjectsList(selectedParams);
                 new SerializableEntityEditor(editorContainer.Content.RectTransform, selectedParams, false, true, elementHeight: 20);
+                return true;
+            };
+
+            ruinParamsList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), paddedLeftPanel.RectTransform));
+            ruinParamsList.OnSelected += (GUIComponent component, object obj) =>
+            {
+                var ruinGenerationParams = obj as RuinGenerationParams;
+                editorContainer.ClearChildren();
+                new SerializableEntityEditor(editorContainer.Content.RectTransform, ruinGenerationParams, false, true, elementHeight: 20);
                 return true;
             };
 
@@ -116,6 +126,7 @@ namespace Barotrauma
             {
                 OnClicked = (btn, obj) =>
                 {
+                    Submarine.Unload();
                     GameMain.LightManager.ClearLights();
                     Level.CreateRandom(seedBox.Text, generationParams: selectedParams).Generate(mirror: false);
                     GameMain.LightManager.AddLight(pointerLightSource);
@@ -167,6 +178,7 @@ namespace Barotrauma
 
             editingSprite = null;
             UpdateParamsList();
+            UpdateRuinParamsList();
             UpdateLevelObjectsList();
         }
 
@@ -185,6 +197,22 @@ namespace Barotrauma
             foreach (LevelGenerationParams genParams in LevelGenerationParams.LevelParams)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paramsList.Content.RectTransform) { MinSize = new Point(0, 20) },
+                    genParams.Name)
+                {
+                    Padding = Vector4.Zero,
+                    UserData = genParams
+                };
+            }
+        }
+
+        private void UpdateRuinParamsList()
+        {
+            editorContainer.ClearChildren();
+            ruinParamsList.Content.ClearChildren();
+
+            foreach (RuinGenerationParams genParams in RuinGenerationParams.List)
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), ruinParamsList.Content.RectTransform) { MinSize = new Point(0, 20) },
                     genParams.Name)
                 {
                     Padding = Vector4.Zero,
@@ -504,6 +532,8 @@ namespace Barotrauma
                     writer.Flush();
                 }
             }
+
+            RuinGenerationParams.SaveAll();
         }
 
         private void Serialize(LevelGenerationParams genParams)
