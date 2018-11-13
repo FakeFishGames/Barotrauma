@@ -363,10 +363,6 @@ namespace Barotrauma
             {
                 zoom = MathHelper.Clamp(zoom + PlayerInput.ScrollWheelSpeed * (float)deltaTime * 0.05f * zoom, minZoom, maxZoom);
                 zoomBar.BarScroll = GetBarScrollValue();
-                if (Widget.selectedWidgets.Any())
-                {
-                    ResetWidgets();
-                }
             }
             widgets.Values.ForEach(w => w.Update((float)deltaTime));
         }
@@ -429,7 +425,7 @@ namespace Barotrauma
                             w.MouseHeld += dTime =>
                             {
                                 w.DrawPos = PlayerInput.MousePosition.Clamp(textureRect.Location.ToVector2() + GetTopLeft() * zoom, textureRect.Location.ToVector2() + GetBottomRight() * zoom);
-                                sprite.Origin = (w.DrawPos + new Vector2(w.size / 2) - textureRect.Location.ToVector2() - sprite.SourceRect.Location.ToVector2() * zoom) / zoom;
+                                sprite.Origin = (w.DrawPos - textureRect.Location.ToVector2() - sprite.SourceRect.Location.ToVector2() * zoom) / zoom;
                                 w.tooltip = $"Origin: {sprite.RelativeOrigin.FormatDoubleDecimal()}";
                             };
                             w.refresh = () =>
@@ -593,7 +589,7 @@ namespace Barotrauma
                 widget.MouseDown += () => spriteList.Select(sprite);
                 widget.PreDraw += (sp, dTime) =>
                 {
-                    if (!widget.IsSelected)
+                    if (!widget.IsControlled)
                     {
                         widget.refresh();
                     }
