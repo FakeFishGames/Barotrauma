@@ -33,6 +33,9 @@ namespace Barotrauma
         [Serialize(1.0f, true), Editable(MIN_SCALE, MAX_SCALE, DecimalCount = 3)]
         public float JointScale { get; set; }
 
+        [Serialize(1f, true), Editable(DecimalCount = 3)]
+        public float TextureScale { get; set; }
+
         [Serialize(45f, true), Editable(0f, 1000f)]
         public float ColliderHeightFromFloor { get; set; }
 
@@ -489,9 +492,6 @@ namespace Barotrauma
 
         [Serialize(0f, true), Editable(DecimalCount = 3)]
         public float Depth { get; set; }
-
-        [Serialize(1f, true), Editable(DecimalCount = 3)]
-        public float Scale { get; set; }
 
         [Serialize("", true)]
         public string Texture { get; set; }
