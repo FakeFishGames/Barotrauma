@@ -1535,7 +1535,7 @@ namespace Barotrauma
             quickSaveRagdollButton.OnClicked += (button, userData) =>
             {
                 character.AnimController.SaveRagdoll();
-                GUI.AddMessage($"Ragdoll saved", Color.Green, font: GUI.Font);
+                GUI.AddMessage($"Ragdoll saved to {RagdollParams.FullPath}", Color.Green, font: GUI.Font);
                 return true;
             };
             var resetAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Reset Animations");
