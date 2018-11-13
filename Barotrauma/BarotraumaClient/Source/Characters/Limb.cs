@@ -111,6 +111,22 @@ namespace Barotrauma
         public DeformableSprite DeformSprite { get; protected set; }
         public Sprite ActiveSprite => DeformSprite != null ? DeformSprite.Sprite : Sprite;
 
+        // TODO: damaged sprite?
+        public float TextureScale
+        {
+            get
+            {
+                if (DeformSprite != null)
+                {
+                    return limbParams.deformSpriteParams != null ? limbParams.deformSpriteParams.Scale : 1;
+                }
+                else
+                {
+                    return limbParams.normalSpriteParams != null ? limbParams.normalSpriteParams.Scale : 1;
+                }
+            }
+        }
+
         public Sprite DamagedSprite { get; set; }
 
         public Color InitialLightSourceColor
@@ -344,11 +360,11 @@ namespace Barotrauma
                     {
                         DeformSprite.Reset();
                     }
-                    body.Draw(DeformSprite, cam, Vector2.One * Scale, color);
+                    body.Draw(DeformSprite, cam, Vector2.One * Scale * TextureScale, color);
                 }
                 else
                 {
-                    body.Draw(spriteBatch, Sprite, color, null, Scale);
+                    body.Draw(spriteBatch, Sprite, color, null, Scale * TextureScale);
                 }
             }
 
@@ -395,7 +411,7 @@ namespace Barotrauma
                     new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
                     new Color((color.R * wearableColor.R) / (255.0f * 255.0f), (color.G * wearableColor.G) / (255.0f * 255.0f), (color.B * wearableColor.B) / (255.0f * 255.0f)) * ((color.A * wearableColor.A) / (255.0f * 255.0f)),
                     origin, -body.DrawRotation,
-                    Scale, spriteEffect, depth);
+                    Scale * TextureScale, spriteEffect, depth);
             }
 
             if (damageOverlayStrength > 0.0f && DamagedSprite != null && !hideLimb)
