@@ -185,6 +185,8 @@ namespace Barotrauma.RuinGeneration
 
         private List<RuinShape> allShapes;
 
+        private RuinGenerationParams generationParams;
+
         public List<RuinShape> RuinShapes
         {
             get { return allShapes; }
@@ -203,15 +205,13 @@ namespace Barotrauma.RuinGeneration
 
         public Ruin(VoronoiCell closestPathCell, List<VoronoiCell> caveCells, Rectangle area, bool mirror = false)
         {
-            Area = area;
+            generationParams = RuinGenerationParams.GetRandom();
 
+            Area = area;
             corridors = new List<Corridor>();
             rooms = new List<BTRoom>();
-
             walls = new List<Line>();
-
             allShapes = new List<RuinShape>();
-
             Generate(closestPathCell, caveCells, area, mirror);
         }
              
@@ -219,21 +219,16 @@ namespace Barotrauma.RuinGeneration
         {
             corridors.Clear();
             rooms.Clear();
-
-            //area = new Rectangle(area.X, area.Y - area.Height, area.Width, area.Height);
-
-            int iterations = Rand.Range(3, 4, Rand.RandSync.Server);
-
-            float verticalProbability = Rand.Range(0.4f, 0.6f, Rand.RandSync.Server);
             
-            BTRoom baseRoom = new BTRoom(area);
+            int iterations = Rand.Range(generationParams.RoomDivisionIterationsMin, generationParams.RoomDivisionIterationsMax, Rand.RandSync.Server);
+            float verticalProbability = generationParams.VerticalSplitProbability;
 
+            BTRoom baseRoom = new BTRoom(area);
             rooms = new List<BTRoom> { baseRoom };
 
             for (int i = 0; i < iterations; i++)
             {
                 rooms.ForEach(l => l.Split(0.3f, verticalProbability, 300));
-
                 rooms = baseRoom.GetLeaves();
             }
 
@@ -241,19 +236,16 @@ namespace Barotrauma.RuinGeneration
             {
                 leaf.Scale
                     (
-                        new Vector2(Rand.Range(0.5f, 0.9f, Rand.RandSync.Server), Rand.Range(0.5f, 0.9f, Rand.RandSync.Server))
+                        new Vector2(
+                            Rand.Range(generationParams.RoomWidthRange.X, generationParams.RoomWidthRange.Y, Rand.RandSync.Server), 
+                            Rand.Range(generationParams.RoomHeightRange.X, generationParams.RoomHeightRange.Y, Rand.RandSync.Server))
                     );
             }
-            
-            baseRoom.GenerateCorridors(200, 256, corridors);
+
+            baseRoom.GenerateCorridors(generationParams.CorridorWidthRange.X, generationParams.CorridorWidthRange.Y, corridors);
 
             walls = new List<Line>();
-
-            rooms.ForEach(leaf => 
-            { 
-                leaf.CreateWalls();
-                //walls.AddRange(leaf.Walls); 
-            });
+            rooms.ForEach(leaf => { leaf.CreateWalls(); });
 
             //---------------------------
 
@@ -303,13 +295,9 @@ namespace Barotrauma.RuinGeneration
                     if (corridor == corridor2) continue;
                     corridor.SplitWalls(corridor2.Rect);
                 }
-
-
                 walls.AddRange(corridor.Walls);
             }
-
-            //leaves.Remove(entranceRoom);
-
+            
             BTRoom.CalculateDistancesFromEntrance(entranceRoom, corridors);
 
             allShapes = GenerateStructures(caveCells, area, mirror);
@@ -345,7 +333,7 @@ namespace Barotrauma.RuinGeneration
                 //generate walls  --------------------------------------------------------------
                 foreach (Line wall in leaf.Walls)
                 {
-                    var structurePrefab = RuinStructure.GetRandom(wallType, leaf.GetLineAlignment(wall));
+                    var structurePrefab = generationParams.GetRandomStructure(wallType, leaf.GetLineAlignment(wall));
                     if (structurePrefab == null) continue;
 
                     float radius = (wall.A.X == wall.B.X) ?
@@ -373,7 +361,7 @@ namespace Barotrauma.RuinGeneration
                 }
 
                 //generate backgrounds --------------------------------------------------------------
-                var background = RuinStructure.GetRandom(RuinStructureType.Back, Alignment.Center);
+                var background = generationParams.GetRandomStructure(RuinStructureType.Back, Alignment.Center);
                 if (background == null) continue;
 
                 Rectangle backgroundRect = new Rectangle(leaf.Rect.X, leaf.Rect.Y + leaf.Rect.Height, leaf.Rect.Width, leaf.Rect.Height);
@@ -402,7 +390,7 @@ namespace Barotrauma.RuinGeneration
 
             foreach (Corridor corridor in corridors)
             {
-                var doorPrefab = RuinStructure.GetRandom(corridor.IsHorizontal ? RuinStructureType.Door : RuinStructureType.Hatch, Alignment.Center);
+                var doorPrefab = generationParams.GetRandomStructure(corridor.IsHorizontal ? RuinStructureType.Door : RuinStructureType.Hatch, Alignment.Center);
                 if (doorPrefab == null) continue;
 
                 //find all walls that are parallel to the corridor
@@ -462,7 +450,7 @@ namespace Barotrauma.RuinGeneration
             {
                 Alignment[] alignments = new Alignment[] { Alignment.Top, Alignment.Bottom, Alignment.Right, Alignment.Left, Alignment.Center };
 
-                var prop = RuinStructure.GetRandom(RuinStructureType.Prop, alignments[Rand.Int(alignments.Length, Rand.RandSync.Server)]);
+                var prop = generationParams.GetRandomStructure(RuinStructureType.Prop, alignments[Rand.Int(alignments.Length, Rand.RandSync.Server)]);
                 if (prop == null) continue;
 
                 Vector2 size = (prop.Prefab is StructurePrefab) ? ((StructurePrefab)prop.Prefab).Size : Vector2.Zero;

@@ -1,5 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Structures>
+<Structures
+  RoomDivisionIterationsMin="3"
+  RoomDivisionIterationsMax="4"
+  VerticalSplitProbability="0.5"
+  RoomWidthRange="0.5,0.9"
+  RoomHeightRange="0.5,0.9"
+  CorridorWidthRange="200,256">
+  
   <structure prefab="RuinWallHorizontal" alignment="Top, Bottom" type="Wall"/>
   <structure prefab="RuinWallHorizontalSmall" alignment="Top, Bottom" type="CorridorWall"/>
 
@@ -7,8 +14,7 @@
   <structure prefab="RuinWallVerticalSmall" alignment="Left,Right" type="CorridorWall"/>
 
   <structure prefab="RuinWallHeavyHorizontal" alignment="Top, Bottom" type="HeavyWall"/>
-  <structure prefab="RuinWallHeavyVertical" alignment="Left,Right" type="HeavyWall"/>
-  
+  <structure prefab="RuinWallHeavyVertical" alignment="Left,Right" type="HeavyWall"/>  
 
   <structure prefab="RuinBack" alignment="Center" type="Back" commonness="3"/>
   <structure prefab="RuinBackFractal" alignment="Center" type="Back" commonness="2"/>  
