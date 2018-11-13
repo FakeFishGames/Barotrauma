@@ -363,6 +363,10 @@ namespace Barotrauma
             {
                 zoom = MathHelper.Clamp(zoom + PlayerInput.ScrollWheelSpeed * (float)deltaTime * 0.05f * zoom, minZoom, maxZoom);
                 zoomBar.BarScroll = GetBarScrollValue();
+                if (Widget.selectedWidgets.Any())
+                {
+                    ResetWidgets();
+                }
             }
             widgets.Values.ForEach(w => w.Update((float)deltaTime));
         }
