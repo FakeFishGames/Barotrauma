@@ -426,7 +426,7 @@ namespace Barotrauma
                             w.secondaryColor = Color.Gray;
                             w.tooltipOffset = tooltipOffset;
                             w.tooltip = $"Origin: {sprite.RelativeOrigin.FormatDoubleDecimal()}";
-                            w.inputAreaMargin = new Point(widgetSize / 2);
+                            w.inputAreaMargin = widgetSize / 2;
                             w.refresh = () =>
                                 w.DrawPos = (textureRect.Location.ToVector2() + (sprite.Origin + sprite.SourceRect.Location.ToVector2()) * zoom)
                                     .Clamp(textureRect.Location.ToVector2() + GetTopLeft() * zoom, textureRect.Location.ToVector2() + GetBottomRight() * zoom);
@@ -454,7 +454,7 @@ namespace Barotrauma
                             w.tooltipOffset = tooltipOffset;
                             w.tooltip = $"Position: {sprite.SourceRect.Location}";
                             w.DrawPos = textureRect.Location.ToVector2() + GetTopLeft() * zoom - halfSize;
-                            w.inputAreaMargin = new Point(widgetSize / 2);
+                            w.inputAreaMargin = widgetSize / 2;
                             w.MouseDown += () => spriteList.Select(sprite);
                             w.MouseHeld += dTime =>
                             {
@@ -492,7 +492,7 @@ namespace Barotrauma
                             w.tooltipOffset = tooltipOffset;
                             w.tooltip = $"Size: {sprite.SourceRect.Size}";
                             w.DrawPos = textureRect.Location.ToVector2() + GetBottomRight() * zoom + halfSize;
-                            w.inputAreaMargin = new Point(widgetSize / 2);
+                            w.inputAreaMargin = widgetSize / 2;
                             w.MouseDown += () => spriteList.Select(sprite);
                             w.MouseHeld += dTime =>
                             {

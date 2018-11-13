@@ -2273,7 +2273,6 @@ namespace Barotrauma
                 {
                     var widget = GetAnimationWidget($"{character.SpeciesName}_HandMoveAmount", Color.LightGreen, initMethod: w =>
                     {
-                        int normalSize = w.size;
                         w.tooltip = "Hand Move Amount";
                         w.refresh = () =>
                         {
@@ -2287,18 +2286,6 @@ namespace Barotrauma
                             var transformedInput = ConvertUnits.ToSimUnits(new Vector2(PlayerInput.MouseSpeed.X * dir, PlayerInput.MouseSpeed.Y) / Cam.Zoom);
                             TryUpdateAnimParam("handmoveamount", humanGroundedParams.HandMoveAmount + transformedInput);
                             w.tooltip = $"Hand Move Amount: {humanGroundedParams.HandMoveAmount.FormatDoubleDecimal()}";
-                        };
-                        w.PostUpdate += dTime =>
-                        {
-                            w.size = w.IsSelected ? (int)Math.Round(normalSize * 1.5f) : normalSize;
-                            w.isFilled = w.IsSelected;
-                        };
-                        w.PreDraw += (sp, dTime) =>
-                        {
-                            if (!w.IsSelected)
-                            {
-                                w.refresh();
-                            }
                         };
                         w.PostDraw += (sp, dTime) =>
                         {
@@ -3239,10 +3226,32 @@ namespace Barotrauma
             if (!animationWidgets.TryGetValue(id, out Widget widget))
             {
                 widget = new Widget(id, size, shape);
-                widget.inputAreaMargin = new Point(5, 5);
+                int normalSize = widget.size;
                 widget.color = color;
-                initMethod?.Invoke(widget);
                 animationWidgets.Add(id, widget);
+                widget.PostUpdate += dTime =>
+                {
+                    if (widget.IsSelected)
+                    {
+                        widget.size = normalSize * 2;
+                        widget.inputAreaMargin = 20;
+                        widget.isFilled = true;
+                    }
+                    else
+                    {
+                        widget.size = normalSize;
+                        widget.inputAreaMargin = 0;
+                        widget.isFilled = false;
+                    }
+                };
+                widget.PreDraw += (sp, dTime) =>
+                {
+                    if (!widget.IsSelected)
+                    {
+                        widget.refresh();
+                    }
+                };
+                initMethod?.Invoke(widget);
             }
             return widget;
         }
@@ -3271,7 +3280,7 @@ namespace Barotrauma
             Widget CreateJointSelectionWidget(string ID, LimbJoint j)
             {
                 var widget = new Widget(ID, 10, Widget.Shape.Circle);
-                widget.inputAreaMargin = new Point(5, 5);
+                //widget.inputAreaMargin = 5;
                 widget.refresh = () =>
                 {
                     widget.showTooltip = !selectedJoints.Contains(joint);
