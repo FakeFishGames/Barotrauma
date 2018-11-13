@@ -604,12 +604,12 @@ namespace Barotrauma
                     if (widget.IsSelected)
                     {
                         widget.size = selectedSize;
-                        widget.inputAreaMargin = size * 2;
+                        widget.inputAreaMargin = 10;
                     }
                     else
                     {
                         widget.size = size;
-                        widget.inputAreaMargin = size;
+                        widget.inputAreaMargin = 5;
                     }
                 };
                 widgets.Add(id, widget);
