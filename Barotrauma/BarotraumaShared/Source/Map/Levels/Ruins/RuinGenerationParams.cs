@@ -116,9 +116,13 @@ namespace Barotrauma.RuinGeneration
             return paramsList[Rand.Int(paramsList.Count, Rand.RandSync.Server)];
         }
 
-        public RuinStructure GetRandomStructure(RuinStructureType type, Alignment alignment)
+        public RuinStructure GetRandomStructure(RuinStructureType type, Alignment alignment, RuinStructure.RoomType roomType = RuinStructure.RoomType.Any)
         {
-            var matchingStructures = structureList.FindAll(rs => rs.Type.HasFlag(type) && rs.Alignment.HasFlag(alignment));
+            var matchingStructures = structureList.FindAll(rs => 
+                rs.Type.HasFlag(type) && 
+                rs.Alignment.HasFlag(alignment) && 
+                (roomType == RuinStructure.RoomType.Any || rs.RoomPlacement == RuinStructure.RoomType.Any || rs.RoomPlacement.HasFlag(roomType)));
+
             if (!matchingStructures.Any()) return null;
 
             return ToolBox.SelectWeightedRandom(
@@ -177,6 +181,24 @@ namespace Barotrauma.RuinGeneration
         public readonly Alignment Alignment;
         public readonly RuinStructureType Type;
         public readonly float Commonness;
+        public readonly RoomType RoomPlacement;
+
+        private readonly List<RuinStructure> childStructures = new List<RuinStructure>();
+
+        public IEnumerable<RuinStructure> ChildStructures
+        {
+            get { return childStructures; }
+        }
+
+        public enum RoomType
+        {
+            Any = 0,
+            SameRoom = 1,
+            PreviousRoom = 2,
+            NextRoom = 4,
+            FirstRoom = 8,
+            LastRoom = 16
+        }
 
         public RuinStructure(XElement element)
         {
@@ -185,21 +207,33 @@ namespace Barotrauma.RuinGeneration
 
             if (Prefab == null)
             {
-                DebugConsole.ThrowError("Loading ruin structure failed - structure prefab \"" + name + " not found");
+                DebugConsole.ThrowError("Loading ruin structure failed - structure prefab \"" + name + " not found.");
                 return;
             }
 
             string alignmentStr = element.GetAttributeString("alignment", "Bottom");
             if (!Enum.TryParse(alignmentStr, true, out Alignment))
             {
-                DebugConsole.ThrowError("Error in ruin structure \"" + name + "\" - " + alignmentStr + " is not a valid alignment");
+                DebugConsole.ThrowError("Error in ruin structure \"" + name + "\" - " + alignmentStr + " is not a valid alignment.");
             }
             
             string typeStr = element.GetAttributeString("type", "");
             if (!Enum.TryParse(typeStr, true, out Type))
             {
-                DebugConsole.ThrowError("Error in ruin structure \"" + name + "\" - " + typeStr + " is not a valid type");
+                DebugConsole.ThrowError("Error in ruin structure \"" + name + "\" - " + typeStr + " is not a valid type.");
                 return;
+            }
+
+            string placementStr = element.GetAttributeString("placement", "Any");
+            if (!Enum.TryParse(placementStr, true, out RoomPlacement))
+            {
+                DebugConsole.ThrowError("Error in ruin structure \"" + name + "\" - " + placementStr + " is not a valid room placement type.");
+                return;
+            }
+
+            foreach (XElement subElement in element.Elements())
+            {
+                childStructures.Add(new RuinStructure(subElement));
             }
 
             Commonness = element.GetAttributeFloat("commonness", 1);

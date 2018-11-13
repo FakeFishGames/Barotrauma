@@ -280,7 +280,6 @@ namespace Barotrauma.RuinGeneration
                 walls.AddRange(leaf.Walls);
             }
 
-
             foreach (Corridor corridor in corridors)
             {
                 corridor.CreateWalls();
@@ -298,7 +297,7 @@ namespace Barotrauma.RuinGeneration
                 walls.AddRange(corridor.Walls);
             }
             
-            BTRoom.CalculateDistancesFromEntrance(entranceRoom, corridors);
+            BTRoom.CalculateDistancesFromEntrance(entranceRoom, rooms, corridors);
 
             allShapes = GenerateStructures(caveCells, area, mirror);
         }
@@ -315,10 +314,13 @@ namespace Barotrauma.RuinGeneration
                     shape.MirrorX(ruinArea.Center.ToVector2());
                 }
             }
+
+            int maxDistanceFromEntrance = shapes.Max(s => s.DistanceFromEntrance);
             
             foreach (RuinShape leaf in shapes)
             {
                 RuinStructureType wallType = RuinStructureType.Wall;
+                RuinStructure.RoomType roomType = GetRoomType(leaf, maxDistanceFromEntrance);
 
                 if (!(leaf is BTRoom))
                 {
@@ -333,7 +335,7 @@ namespace Barotrauma.RuinGeneration
                 //generate walls  --------------------------------------------------------------
                 foreach (Line wall in leaf.Walls)
                 {
-                    var structurePrefab = generationParams.GetRandomStructure(wallType, leaf.GetLineAlignment(wall));
+                    var structurePrefab = generationParams.GetRandomStructure(wallType, leaf.GetLineAlignment(wall), roomType);
                     if (structurePrefab == null) continue;
 
                     float radius = (wall.A.X == wall.B.X) ?
@@ -361,7 +363,7 @@ namespace Barotrauma.RuinGeneration
                 }
 
                 //generate backgrounds --------------------------------------------------------------
-                var background = generationParams.GetRandomStructure(RuinStructureType.Back, Alignment.Center);
+                var background = generationParams.GetRandomStructure(RuinStructureType.Back, Alignment.Center, roomType);
                 if (background == null) continue;
 
                 Rectangle backgroundRect = new Rectangle(leaf.Rect.X, leaf.Rect.Y + leaf.Rect.Height, leaf.Rect.Width, leaf.Rect.Height);
@@ -390,7 +392,10 @@ namespace Barotrauma.RuinGeneration
 
             foreach (Corridor corridor in corridors)
             {
-                var doorPrefab = generationParams.GetRandomStructure(corridor.IsHorizontal ? RuinStructureType.Door : RuinStructureType.Hatch, Alignment.Center);
+                RuinStructure.RoomType corridorType = GetRoomType(corridor, maxDistanceFromEntrance);
+
+                var doorPrefab = generationParams.GetRandomStructure(
+                    corridor.IsHorizontal ? RuinStructureType.Door : RuinStructureType.Hatch, Alignment.Center, corridorType);
                 if (doorPrefab == null) continue;
 
                 //find all walls that are parallel to the corridor
@@ -444,57 +449,113 @@ namespace Barotrauma.RuinGeneration
                 wire.Connect(conn2, false);
             }
 
-
             //generate props --------------------------------------------------------------
             for (int i = 0; i < shapes.Count * 2; i++)
             {
+                RuinShape room = shapes[Rand.Int(shapes.Count, Rand.RandSync.Server)];
+
                 Alignment[] alignments = new Alignment[] { Alignment.Top, Alignment.Bottom, Alignment.Right, Alignment.Left, Alignment.Center };
 
-                var prop = generationParams.GetRandomStructure(RuinStructureType.Prop, alignments[Rand.Int(alignments.Length, Rand.RandSync.Server)]);
-                if (prop == null) continue;
+                var prop = generationParams.GetRandomStructure(
+                    RuinStructureType.Prop, 
+                    alignments[Rand.Int(alignments.Length, Rand.RandSync.Server)], 
+                    GetRoomType(room, maxDistanceFromEntrance));
 
-                Vector2 size = (prop.Prefab is StructurePrefab) ? ((StructurePrefab)prop.Prefab).Size : Vector2.Zero;
+                if (prop == null) { continue; }
 
-                //if the prop is placed at the center of the room, we have to use a room without a door (because they're also placed at the center)
-                var shape = prop.Alignment.HasFlag(Alignment.Center) ?
-                    doorlessRooms[Rand.Int(doorlessRooms.Count, Rand.RandSync.Server)] :
-                    shapes[Rand.Int(shapes.Count, Rand.RandSync.Server)];
+                //if the prop is placed at the center of the room, we have to use a room without a door (because they're also placed at the center)                
+                if (!doorlessRooms.Contains(room) && prop.Alignment.HasFlag(Alignment.Center)) continue;
 
-                Vector2 position = shape.Rect.Center.ToVector2();
-                if (prop.Alignment.HasFlag(Alignment.Top))
-                {
-                    position = new Vector2(Rand.Range(shape.Rect.X + size.X, shape.Rect.Right - size.X, Rand.RandSync.Server), shape.Rect.Bottom - 64);
-                }
-                else if (prop.Alignment.HasFlag(Alignment.Bottom))
-                {
-                    position = new Vector2(Rand.Range(shape.Rect.X + size.X, shape.Rect.Right - size.X, Rand.RandSync.Server), shape.Rect.Top + 64);
-                }
-                else if (prop.Alignment.HasFlag(Alignment.Right))
-                {
-                    position = new Vector2(shape.Rect.Right - 64, Rand.Range(shape.Rect.Y + size.X, shape.Rect.Bottom - size.Y, Rand.RandSync.Server));
-                }
-                else if (prop.Alignment.HasFlag(Alignment.Left))
-                {
-                    position = new Vector2(shape.Rect.X + 64, Rand.Range(shape.Rect.Y + size.X, shape.Rect.Bottom - size.Y, Rand.RandSync.Server));
-                }
-
-                if (prop.Prefab is ItemPrefab)
-                {
-                    new Item((ItemPrefab)prop.Prefab, position, null);
-                }
-                else
-                {
-                    new Structure(new Rectangle(
-                        (int)(position.X - size.X / 2.0f), (int)(position.Y + size.Y / 2.0f),
-                        (int)size.X, (int)size.Y),
-                        prop.Prefab as StructurePrefab, null)
-                    {
-                        ShouldBeSaved = false
-                    };
-                }
+                CreateStructure(prop, room);
             }
 
             return shapes;
+        }
+
+        private RuinStructure.RoomType GetRoomType(RuinShape room, int maxDistanceFromEntrance)
+        {
+            RuinStructure.RoomType roomType = RuinStructure.RoomType.Any;
+            if (room.DistanceFromEntrance <= 1)
+            {
+                roomType = RuinStructure.RoomType.FirstRoom;
+            }
+            else if (room.DistanceFromEntrance == maxDistanceFromEntrance)
+            {
+                roomType = RuinStructure.RoomType.LastRoom;
+            }
+            return roomType;
+        }
+
+        private void CreateStructure(RuinStructure structure, RuinShape room)
+        {
+            Alignment[] alignments = new Alignment[] { Alignment.Top, Alignment.Bottom, Alignment.Right, Alignment.Left, Alignment.Center };
+            
+            Vector2 size = (structure.Prefab is StructurePrefab) ? ((StructurePrefab)structure.Prefab).Size : Vector2.Zero;
+            
+            Vector2 position = room.Rect.Center.ToVector2();
+            if (structure.Alignment.HasFlag(Alignment.Top))
+            {
+                position = new Vector2(Rand.Range(room.Rect.X + size.X, room.Rect.Right - size.X, Rand.RandSync.Server), room.Rect.Bottom - 64);
+            }
+            else if (structure.Alignment.HasFlag(Alignment.Bottom))
+            {
+                position = new Vector2(Rand.Range(room.Rect.X + size.X, room.Rect.Right - size.X, Rand.RandSync.Server), room.Rect.Top + 64);
+            }
+            else if (structure.Alignment.HasFlag(Alignment.Right))
+            {
+                position = new Vector2(room.Rect.Right - 64, Rand.Range(room.Rect.Y + size.X, room.Rect.Bottom - size.Y, Rand.RandSync.Server));
+            }
+            else if (structure.Alignment.HasFlag(Alignment.Left))
+            {
+                position = new Vector2(room.Rect.X + 64, Rand.Range(room.Rect.Y + size.X, room.Rect.Bottom - size.Y, Rand.RandSync.Server));
+            }
+
+            if (structure.Prefab is ItemPrefab)
+            {
+                new Item((ItemPrefab)structure.Prefab, position, null);
+            }
+            else
+            {
+                new Structure(new Rectangle(
+                    (int)(position.X - size.X / 2.0f), (int)(position.Y + size.Y / 2.0f),
+                    (int)size.X, (int)size.Y),
+                    structure.Prefab as StructurePrefab, null)
+                {
+                    ShouldBeSaved = false
+                };
+            }
+
+            CreateChildStructures(structure, room);
+        }
+
+        private void CreateChildStructures(RuinStructure structure, RuinShape room)
+        {
+            foreach (RuinStructure childStructure in structure.ChildStructures)
+            {
+                switch (childStructure.RoomPlacement)
+                {
+                    case RuinStructure.RoomType.SameRoom:
+                        CreateStructure(childStructure, room);
+                        break;
+                    case RuinStructure.RoomType.NextRoom:
+                        var nextRoom = rooms.Find(r => r.DistanceFromEntrance == room.DistanceFromEntrance + 1);
+                        if (nextRoom != null) { CreateStructure(childStructure, nextRoom); };
+                        break;
+                    case RuinStructure.RoomType.PreviousRoom:
+                        var prevRoom = rooms.Find(r => r.DistanceFromEntrance == room.DistanceFromEntrance - 1);
+                        if (prevRoom != null) { CreateStructure(childStructure, prevRoom); };
+                        break;
+                    case RuinStructure.RoomType.FirstRoom:
+                        var firstRoom = rooms.Find(r => r.DistanceFromEntrance <= 1);
+                        if (firstRoom != null) { CreateStructure(childStructure, firstRoom); };
+                        break;
+                    case RuinStructure.RoomType.LastRoom:
+                        int maxDistFromEntrance = rooms.Max(r => r.DistanceFromEntrance);
+                        var lastRoom = rooms.Find(r => r.DistanceFromEntrance == maxDistFromEntrance);
+                        if (lastRoom != null) { CreateStructure(childStructure, lastRoom); };
+                        break;
+                }
+            }
         }
     }
 }
