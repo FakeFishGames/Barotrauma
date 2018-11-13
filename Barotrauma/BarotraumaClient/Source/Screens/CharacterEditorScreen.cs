@@ -2123,7 +2123,7 @@ namespace Barotrauma
                         TryUpdateAnimParam("cyclespeed", speed);
                         w.tooltip = $"Cycle Speed: {animParams.CycleSpeed.FormatSingleDecimal()}";
                     };
-                    // Overrides the normal condition (because evaluated last)
+                    // Additional check, which overrides the previous value (because evaluated last)
                     w.PreUpdate += dTime =>
                     {
                         if (!PlayerInput.KeyDown(Keys.LeftAlt))
@@ -2173,7 +2173,7 @@ namespace Barotrauma
                         }
                         w.tooltip = $"Movement Speed: {animParams.MovementSpeed.FormatSingleDecimal()}";
                     };
-                    // Overrides the normal condition (because evaluated last)
+                    // Additional check, which overrides the previous value (because evaluated last)
                     w.PreUpdate += dTime =>
                     {
                         if (PlayerInput.KeyDown(Keys.LeftAlt))
