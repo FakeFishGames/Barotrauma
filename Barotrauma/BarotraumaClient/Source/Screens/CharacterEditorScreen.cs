@@ -59,6 +59,9 @@ namespace Barotrauma
         private Vector2? anchor1Pos;
 
         private float spriteSheetZoom = 1;
+        private float textureScale = 1;
+        private float textureMinScale = 0.1f;
+        private float textureMaxScale = 2;
         private float spriteSheetMinZoom = 0.25f;
         private float spriteSheetMaxZoom = 1;
         private int spriteSheetOffsetY = 100;
@@ -1045,6 +1048,7 @@ namespace Barotrauma
         private GUITickBox animTestPoseToggle;
         private GUIScrollBar jointScaleBar;
         private GUIScrollBar limbScaleBar;
+        private GUIScrollBar textureScaleBar;
         private GUIScrollBar spriteSheetZoomBar;
         private GUITickBox copyJointsToggle;
         private GUITickBox jointsToggle;
@@ -1121,7 +1125,13 @@ namespace Barotrauma
                 }
             }
             // Spritesheet controls
-            spriteSheetControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerPanel.RectTransform, Anchor.TopRight), style: null) { CanBeFocused = false };
+            spriteSheetControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerPanel.RectTransform, Anchor.TopRight)
+            {
+                AbsoluteOffset = new Point(100, 0)
+            }, style: null)
+            {
+                CanBeFocused = false
+            };
             var layoutGroupSpriteSheet = new GUILayoutGroup(new RectTransform(Vector2.One, spriteSheetControls.RectTransform)) { AbsoluteSpacing = 5, CanBeFocused = false };
             new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), "Spritesheet zoom:", Color.White);
             var spriteSheetControlElement = new GUIFrame(new RectTransform(new Point(elementSize.X * 2, textAreaHeight), layoutGroupSpriteSheet.RectTransform), style: null);
@@ -1142,6 +1152,41 @@ namespace Barotrauma
                 {
                     spriteSheetZoom = Math.Min(1, spriteSheetMaxZoom);
                     spriteSheetZoomBar.BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteSheetMinZoom, spriteSheetMaxZoom, spriteSheetZoom));
+                    return true;
+                }
+            };
+            var spriteParams = RagdollParams.Limbs.Select(l => l.normalSpriteParams).FirstOrDefault();
+            if (spriteParams == null)
+            {
+                spriteParams = RagdollParams.Limbs.Select(l => l.deformSpriteParams).FirstOrDefault();
+            }
+            textureScale = spriteParams != null ? spriteParams.Scale : 1;
+            new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), "Texture scale:", Color.White)
+            {
+                ToolTip = "Note that the texture scale can be set per sprite. This slider gets the value of the first limb. When moved, it sets a uniform value to all the limbs."
+            };
+            textureScaleBar = new GUIScrollBar(new RectTransform(new Point((int)(elementSize.X * 1.75f), textAreaHeight), layoutGroupSpriteSheet.RectTransform), barSize: 0.2f)
+            {
+                BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(textureMinScale, textureMaxScale, textureScale)),
+                Step = 0.01f,
+                OnMoved = (scrollBar, value) =>
+                {
+                    textureScale = MathHelper.Lerp(textureMinScale, textureMaxScale, value);
+                    foreach (var limb in RagdollParams.Limbs)
+                    {
+                        if (limb.normalSpriteParams != null)
+                        {
+                            limb.normalSpriteParams.Scale = textureScale;
+                        }
+                        if (limb.deformSpriteParams != null)
+                        {
+                            limb.deformSpriteParams.Scale = textureScale;
+                        }
+                        //if (limb.damagedSpriteParams != null)
+                        //{
+                        //    limb.damagedSpriteParams.Scale = textureScale;
+                        //}
+                    }
                     return true;
                 }
             };
@@ -1540,6 +1585,8 @@ namespace Barotrauma
                     ResetParamsEditor();
                     ClearWidgets();
                 }
+                ResetParamsEditor();
+                ClearWidgets();
                 CreateCenterPanel();
                 GUI.AddMessage($"Ragdoll reset", Color.WhiteSmoke, font: GUI.Font);
                 return true;
@@ -2029,7 +2076,7 @@ namespace Barotrauma
             if (targetLimb != null)
             {
                 var sourceRect = targetLimb.ActiveSprite.SourceRect;
-                Vector2 size = sourceRect.Size.ToVector2() * Cam.Zoom * targetLimb.Scale;
+                Vector2 size = sourceRect.Size.ToVector2() * Cam.Zoom * targetLimb.Scale * targetLimb.TextureScale;
                 Vector2 up = VectorExtensions.Backward(targetLimb.Rotation);
                 Vector2 left = up.Right();
                 Vector2 limbScreenPos = SimToScreen(targetLimb.SimPosition);
@@ -2443,7 +2490,7 @@ namespace Barotrauma
                 var origin = limb.ActiveSprite.Origin;
                 var relativeOrigin = limb.ActiveSprite.RelativeOrigin;
                 var sourceRect = limb.ActiveSprite.SourceRect;
-                Vector2 size = sourceRect.Size.ToVector2() * Cam.Zoom * limb.Scale;
+                Vector2 size = sourceRect.Size.ToVector2() * Cam.Zoom * limb.Scale * limb.TextureScale;
                 Vector2 up = VectorExtensions.Backward(limb.Rotation);
                 Vector2 left = up.Right();
                 Vector2 limbScreenPos = SimToScreen(limb.SimPosition);
@@ -2491,7 +2538,7 @@ namespace Barotrauma
                     if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && selectedLimbs.Contains(limb))
                     {
                         Vector2 forward = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(limb.Rotation));
-                        var input = -scaledMouseSpeed * inputMultiplier / Cam.Zoom / limb.Scale;
+                        var input = -scaledMouseSpeed * inputMultiplier / Cam.Zoom / limb.Scale / limb.TextureScale;
                         var sprite = limb.ActiveSprite;
                         origin += input.TransformVector(forward);
                         var max = new Vector2(sourceRect.Width, sourceRect.Height);
@@ -3011,7 +3058,7 @@ namespace Barotrauma
                 {
                     continue;
                 }
-                Vector2 tformedJointPos = jointPos = jointPos / RagdollParams.JointScale * spriteSheetZoom;
+                Vector2 tformedJointPos = jointPos = jointPos / RagdollParams.JointScale / limb.TextureScale * spriteSheetZoom;
                 tformedJointPos.Y = -tformedJointPos.Y;
                 tformedJointPos.X *= character.AnimController.Dir;
                 tformedJointPos += limbScreenPos;
@@ -3039,7 +3086,7 @@ namespace Barotrauma
                         Vector2 input = ConvertUnits.ToSimUnits(scaledMouseSpeed);
                         input.Y = -input.Y;
                         input.X *= character.AnimController.Dir;
-                        input *= RagdollParams.JointScale / spriteSheetZoom;
+                        input *= RagdollParams.JointScale * limb.TextureScale / spriteSheetZoom;
                         if (joint.BodyA == limb.body.FarseerBody)
                         {
                             joint.LocalAnchorA += input;
