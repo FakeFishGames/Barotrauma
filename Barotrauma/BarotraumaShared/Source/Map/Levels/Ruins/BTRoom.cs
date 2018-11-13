@@ -126,12 +126,12 @@ namespace Barotrauma.RuinGeneration
             }
         }
 
-        public static void CalculateDistancesFromEntrance(BTRoom entrance, List<Corridor> corridors)
+        public static void CalculateDistancesFromEntrance(BTRoom entrance, List<BTRoom> rooms, List<Corridor> corridors)
         {
-            entrance.CalculateDistanceFromEntrance(1, new List<Corridor>(corridors));
+            entrance.CalculateDistanceFromEntrance(0, rooms, new List<Corridor>(corridors));
         }
 
-        private void CalculateDistanceFromEntrance(int currentDist, List<Corridor> corridors)
+        private void CalculateDistanceFromEntrance(int currentDist, List<BTRoom> rooms, List<Corridor> corridors)
         {
             if (DistanceFromEntrance == 0)
             {
@@ -141,18 +141,37 @@ namespace Barotrauma.RuinGeneration
             {
                 DistanceFromEntrance = Math.Min(currentDist, DistanceFromEntrance);
             }
-
-            currentDist++;
-
-            for (int i = corridors.Count - 1; i >= 0; i = Math.Min(i - 1, corridors.Count - 1))
+            
+            var roomRect = Rect;
+            roomRect.Inflate(5, 5);            
+            foreach (var corridor in corridors)
             {
-                var corridor = corridors[i];
+                var corridorRect = corridor.Rect;
+                corridorRect.Inflate(5, 5);
+                if (!corridorRect.Intersects(roomRect)) continue;
 
-                if (!corridor.ConnectedRooms.Contains(this)) continue;
+                List<BTRoom> connectedRooms = new List<BTRoom>();
+                foreach (var otherRoom in rooms)
+                {
+                    if (otherRoom == this) continue;
+                    if (otherRoom.DistanceFromEntrance > 0 && otherRoom.DistanceFromEntrance < currentDist) continue;
 
-                corridors.RemoveAt(i);
+                    var otherRoomRect = otherRoom.Rect;
+                    otherRoomRect.Inflate(5, 5);
+                    if (corridorRect.Intersects(otherRoomRect)) { connectedRooms.Add(otherRoom); }
+                }
 
-                corridor.ConnectedRooms[corridor.ConnectedRooms[0] == this ? 1 : 0].CalculateDistanceFromEntrance(currentDist, corridors);
+                connectedRooms.Sort((r1, r2) =>
+                {
+                    return
+                        (Math.Abs(r1.Rect.Center.X - Rect.Center.X) + Math.Abs(r1.Rect.Center.Y - Rect.Center.Y)) -
+                        (Math.Abs(r2.Rect.Center.X - Rect.Center.X) + Math.Abs(r2.Rect.Center.Y - Rect.Center.Y));
+                });
+
+                for (int i = 0; i < connectedRooms.Count; i++)
+                {
+                    connectedRooms[i].CalculateDistanceFromEntrance(currentDist + 1 + i, rooms, corridors);
+                }
             }
         }
     }
