@@ -1467,9 +1467,6 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\UI\uiButton.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\UI\uiIcons.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\UI\UI_Atlas.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -2399,6 +2396,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Character.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\Affliction.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\AfflictionBleeding.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\AfflictionPsychosis.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\AfflictionHusk.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\AfflictionPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\CharacterHealth.cs" />

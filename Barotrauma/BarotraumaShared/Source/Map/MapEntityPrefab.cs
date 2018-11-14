@@ -213,7 +213,7 @@ namespace Barotrauma
                 return false;
             }
         }
-        
+
         /// <summary>
         /// Find a matching map entity prefab
         /// </summary>
@@ -241,6 +241,7 @@ namespace Barotrauma
                 }
             }
 
+            DebugConsole.ThrowError("Failed to find a matching MapEntityPrefab (name: \"" + name + "\", identifier: \"" + identifier + "\").\n" + Environment.StackTrace);
             return null;
         }
 

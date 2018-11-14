@@ -69,6 +69,7 @@ namespace Barotrauma
                     gamesession.StartRound(ToolBox.RandomSeed(8));
                     GameMain.GameScreen.Select();
 
+                    string[] jobIdentifiers = new string[] { "captain", "engineer", "mechanic" };
                     for (int i = 0; i < 3; i++)
                     {
                         var spawnPoint = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
@@ -78,7 +79,15 @@ namespace Barotrauma
                             GameMain.MainMenuScreen.Select();
                             return true;
                         }
-                        var newCharacter = Character.Create(Character.HumanConfigFile, spawnPoint.WorldPosition, ToolBox.RandomSeed(8));
+                        var characterInfo = new CharacterInfo(
+                            Character.HumanConfigFile, 
+                            jobPrefab: JobPrefab.List.Find(j => j.Identifier == jobIdentifiers[i]));
+                        if (characterInfo.Job == null)
+                        {
+                            DebugConsole.ThrowError("Failed to find the job \"" + jobIdentifiers[i] + "\"!");
+                        }
+
+                        var newCharacter = Character.Create(Character.HumanConfigFile, spawnPoint.WorldPosition, ToolBox.RandomSeed(8), characterInfo);
                         newCharacter.GiveJobItems(spawnPoint);
                         gamesession.CrewManager.AddCharacter(newCharacter);
                         Character.Controlled = newCharacter;

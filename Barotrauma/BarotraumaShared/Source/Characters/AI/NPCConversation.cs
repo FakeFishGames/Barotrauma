@@ -134,6 +134,14 @@ namespace Barotrauma
                 if (speaker.AnimController.InWater) currentFlags.Add("Underwater");
                 currentFlags.Add(speaker.CurrentHull == null ? "Outside" : "Inside");
 
+                if (Character.Controlled != null)
+                {
+                    if (Character.Controlled.CharacterHealth.GetAffliction("psychosis") != null)
+                    {
+                        currentFlags.Add(speaker != Character.Controlled ? "Psychosis" : "PsychosisSelf");
+                    }
+                }
+
                 var afflictions = speaker.CharacterHealth.GetAllAfflictions();
                 foreach (Affliction affliction in afflictions)
                 {
