@@ -7,7 +7,7 @@
     category="Machine">
 
     <Sprite texture ="FF_pump.png" depth="0.8" sourcerect="0,0,200,178"/>
-    <BrokenSprite texture="FF_pump.png" sourcerect="200,0,200,178" depth="0.8" maxcondition="50" fadein="true" />
+    <BrokenSprite texture="FF_pump.png" sourcerect="200,0,200,178" depth="0.8" maxcondition="55" fadein="true" />
     <BrokenSprite texture="FF_pump.png" sourcerect="400,0,200,178" depth="0.8" maxcondition="0" />
 
     <Pump canbeselected="true" maxflow="600" PowerConsumption="300.0" MinVoltage="0.3">
