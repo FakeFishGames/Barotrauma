@@ -568,9 +568,9 @@ namespace Barotrauma
             return children[index];
         }
 
-        public bool IsParentOf(RectTransform rectT)
+        public bool IsParentOf(RectTransform rectT, bool recursive = true)
         {
-            return children.Contains(rectT) || children.Any(c => c.IsParentOf(rectT));
+            return children.Contains(rectT) || (recursive && children.Any(c => c.IsParentOf(rectT)));
         }
 
         public void ClearChildren()

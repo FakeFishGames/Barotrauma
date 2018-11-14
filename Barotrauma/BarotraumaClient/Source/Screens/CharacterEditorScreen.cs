@@ -3713,7 +3713,13 @@ namespace Barotrauma
                     {
                         ParseLimbsFromGUIElements();
                         ParseJointsFromGUIElements();
-                        var torso = LimbXElements.Values.Select(x => x.Attribute("type")).FirstOrDefault(a => a.Value.ToLowerInvariant() == "torso").Parent;
+                        var torsoAttributes = LimbXElements.Values.Select(x => x.Attribute("type")).Where(a => a.Value.ToLowerInvariant() == "torso");
+                        if (torsoAttributes.Count() != 1)
+                        {
+                            GUI.AddMessage("You need to define one and only one limb as \"Torso\"!", Color.Red);
+                            return false;
+                        }
+                        XElement torso = torsoAttributes.Single().Parent;
                         int radius = torso.GetAttributeInt("radius", -1);
                         int height = torso.GetAttributeInt("height", -1);
                         int width = torso.GetAttributeInt("width", -1);
@@ -4077,9 +4083,11 @@ namespace Barotrauma
                         {
                             if (hierarchy != "0")
                             {
-                                // If the bone is at the root hierarchy, parent the bone to the last sibling (1 is parented to 0, 2 to 1 etc)
+                                // OLD LOGIC: If the bone is at the root hierarchy, parent the bone to the last sibling (1 is parented to 0, 2 to 1 etc)
+                                // NEW LOGIC: if hierarchy length == 1, parent to 0
                                 // Else parent to the last bone in the current hierarchy (11 is parented to 1, 212 is parented to 21 etc)
-                                string parent = hierarchy.Length > 1 ? hierarchy.Remove(hierarchy.Length - 1, 1) : (int.Parse(hierarchy) - 1).ToString();
+                                //string parent = hierarchy.Length > 1 ? hierarchy.Remove(hierarchy.Length - 1, 1) : (int.Parse(hierarchy) - 1).ToString();
+                                string parent = hierarchy.Length > 1 ? hierarchy.Remove(hierarchy.Length - 1, 1) : "0";
                                 if (hierarchyToID.TryGetValue(parent, out int parentID))
                                 {
                                     Vector2 anchor1 = Vector2.Zero;
