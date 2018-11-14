@@ -3713,7 +3713,13 @@ namespace Barotrauma
                     {
                         ParseLimbsFromGUIElements();
                         ParseJointsFromGUIElements();
-                        var torso = LimbXElements.Values.Select(x => x.Attribute("type")).FirstOrDefault(a => a.Value.ToLowerInvariant() == "torso").Parent;
+                        var torsoAttributes = LimbXElements.Values.Select(x => x.Attribute("type")).Where(a => a.Value.ToLowerInvariant() == "torso");
+                        if (torsoAttributes.Count() != 1)
+                        {
+                            GUI.AddMessage("You need to define one and only one limb as \"Torso\"!", Color.Red);
+                            return false;
+                        }
+                        XElement torso = torsoAttributes.Single().Parent;
                         int radius = torso.GetAttributeInt("radius", -1);
                         int height = torso.GetAttributeInt("height", -1);
                         int width = torso.GetAttributeInt("width", -1);
