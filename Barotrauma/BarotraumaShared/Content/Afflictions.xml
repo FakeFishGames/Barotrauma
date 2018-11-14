@@ -230,7 +230,7 @@
     <Effect minstrength="0" maxstrength="100"
       maxvitalitydecrease="0"
       strengthchange="-0.1"/>
-    <icon texture="Content/UI/IconAtlas.png" sourcerect="0,640,128,128" color="60,107,195,255" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="256,640,128,128" color="150,26,26,255" origin="0,0"/>
   </AfflictionPsychosis>
   
   <Affliction
