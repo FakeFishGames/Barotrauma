@@ -42,7 +42,6 @@ namespace Barotrauma
                 RelativeSpacing = 0.02f
             };
             
-#if DEBUG
             //debug button for quickly starting a new round
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform, Anchor.TopCenter, Pivot.BottomCenter) { AbsoluteOffset = new Point(0, -40) },
                 "Quickstart (dev)", style: "GUIButtonLarge", color: Color.Red)
@@ -73,6 +72,12 @@ namespace Barotrauma
                     for (int i = 0; i < 3; i++)
                     {
                         var spawnPoint = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
+                        if (spawnPoint == null)
+                        {
+                            DebugConsole.ThrowError("No spawnpoints found in the selected submarine. Quickstart failed.");
+                            GameMain.MainMenuScreen.Select();
+                            return true;
+                        }
                         var newCharacter = Character.Create(Character.HumanConfigFile, spawnPoint.WorldPosition, ToolBox.RandomSeed(8));
                         newCharacter.GiveJobItems(spawnPoint);
                         gamesession.CrewManager.AddCharacter(newCharacter);
@@ -81,8 +86,6 @@ namespace Barotrauma
                     return true;
                 }
             };
-#endif
-
 
             var minButtonSize = new Point(120, 20);
             var maxButtonSize = new Point(240, 40);
