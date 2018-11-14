@@ -54,10 +54,10 @@ namespace Barotrauma
             return RectTransform.GetAllChildren().Select(c => c.GUIComponent);
         }
 
-        public bool IsParentOf(GUIComponent component)
+        public bool IsParentOf(GUIComponent component, bool recursive = true)
         {
             if (component == null) { return false; }
-            return RectTransform.IsParentOf(component.RectTransform);
+            return RectTransform.IsParentOf(component.RectTransform, recursive);
         }
 
         public virtual void RemoveChild(GUIComponent child)
