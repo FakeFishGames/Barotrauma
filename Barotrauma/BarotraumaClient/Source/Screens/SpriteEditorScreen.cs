@@ -441,6 +441,7 @@ namespace Barotrauma
                                 sprite.SourceRect = new Rectangle(((w.DrawPos + new Vector2(w.size / 2) - textureRect.Location.ToVector2()) / zoom).ToPoint(), sprite.SourceRect.Size);
                                 if (spriteList.SelectedComponent is GUITextBlock textBox)
                                 {
+                                    // TODO: cache the sprite name?
                                     textBox.Text = GetSpriteName(sprite) + " " + sprite.SourceRect;
                                 }
                                 w.tooltip = $"Position: {sprite.SourceRect.Location}";
@@ -457,6 +458,7 @@ namespace Barotrauma
                                 sprite.RelativeOrigin = sprite.RelativeOrigin;
                                 if (spriteList.SelectedComponent is GUITextBlock textBox)
                                 {
+                                    // TODO: cache the sprite name?
                                     textBox.Text = GetSpriteName(sprite) + " " + sprite.SourceRect;
                                 }
                                 w.tooltip = $"Size: {sprite.SourceRect.Size}";
@@ -561,13 +563,16 @@ namespace Barotrauma
         {
             var sourceElement = sprite.SourceElement;
             if (sourceElement == null) { return string.Empty; }
-            string id = string.Empty;
-            string identifier = sourceElement.Parent.GetAttributeString("identifier", string.Empty);
-            if (string.IsNullOrEmpty(id))
+            string name = sourceElement.GetAttributeString("name", null);
+            if (string.IsNullOrWhiteSpace(name))
             {
-                id = sourceElement.Parent.GetAttributeString("name", string.Empty);
+                name = sourceElement.Parent.GetAttributeString("identifier", string.Empty);
             }
-            return string.IsNullOrEmpty(id) ? Path.GetFileNameWithoutExtension(sprite.FilePath) : id;
+            if (string.IsNullOrEmpty(name))
+            {
+                name = sourceElement.Parent.GetAttributeString("name", string.Empty);
+            }
+            return string.IsNullOrEmpty(name) ? Path.GetFileNameWithoutExtension(sprite.FilePath) : name;
         }
         #endregion
 
