@@ -116,6 +116,7 @@ namespace Barotrauma
                 }
                 currentFloodDuration = Rand.Range(20.0f, 100.0f);
             }
+            createFloodTimer = 0.0f;
         }
 
         private void UpdateFires(Character character, float deltaTime)
