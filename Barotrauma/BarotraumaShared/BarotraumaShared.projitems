@@ -257,31 +257,31 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\InventoryIconAtlas.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\NewArt\NewHuman_Captain_legs.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\NewHuman_Captain_legs.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\NewArt\NewHuman_Captain_torso.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\NewHuman_Captain_torso.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\NewArt\NewHuman_Mechanic_legs.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\NewHuman_Mechanic_legs.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\NewArt\NewHuman_Mechanic_torso.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\NewHuman_Mechanic_torso.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\NewArt\NewHuman_Medic_legs.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\NewHuman_Medic_legs.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\NewArt\NewHuman_Medic_torso.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\NewHuman_Medic_torso.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\NewArt\NewHuman_SecOfficer_legs.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\NewHuman_SecOfficer_legs.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\NewArt\NewHuman_SecOfficer_NO_SKIN_torso.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\NewHuman_SecOfficer_NO_SKIN_torso.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\NewArt\NewHuman_SecOfficer_torso.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\NewHuman_SecOfficer_torso.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Labels\labels.png">
