@@ -157,11 +157,11 @@ namespace Barotrauma
             // create 1x1 texture for line drawing
             t = new Texture2D(GraphicsDevice, 1, 1);
             t.SetData(new Color[] { Color.White });// fill the texture with white
-            submarineIcon = new Sprite("Content/UI/uiIcons.png", new Rectangle(0, 192, 64, 64));
+            submarineIcon = new Sprite("Content/UI/IconAtlas.png", new Rectangle(452, 385, 182, 81));
             submarineIcon.Origin = submarineIcon.size / 2;
-            arrow = new Sprite("Content/UI/uiIcons.png", new Rectangle(80, 240, 16, 16));
+            arrow = new Sprite("Content/UI/IconAtlas.png", new Rectangle(392, 393, 49, 45));
             arrow.Origin = arrow.size / 2;
-            SpeechBubbleIcon = new Sprite("Content/UI/uiIcons.png", new Rectangle(0, 129, 65, 61));
+            SpeechBubbleIcon = new Sprite("Content/UI/IconAtlas.png", new Rectangle(385, 449, 66, 60));
             SpeechBubbleIcon.Origin = SpeechBubbleIcon.size / 2;
 
             lockIcon = new Sprite("Content/UI/UI_Atlas.png", new Rectangle(996, 677, 21, 25));
@@ -668,7 +668,7 @@ namespace Barotrauma
                 {
                     Vector2 normalizedDiff = Vector2.Normalize(targetScreenPos - iconPos);
                     Vector2 arrowOffset = normalizedDiff * sprite.size.X * symbolScale * 0.7f;
-                    Arrow.Draw(spriteBatch, iconPos + arrowOffset, color * alpha, MathUtils.VectorToAngle(arrowOffset) + MathHelper.PiOver2);
+                    Arrow.Draw(spriteBatch, iconPos + arrowOffset, color * alpha, MathUtils.VectorToAngle(arrowOffset) + MathHelper.PiOver2, scale: 0.5f);
                 }
             }
         }
