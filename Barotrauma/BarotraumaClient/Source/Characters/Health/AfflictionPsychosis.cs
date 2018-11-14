@@ -24,14 +24,28 @@ namespace Barotrauma
         private float createFireSourceTimer;
         private List<FakeFireSource> fakeFireSources = new List<FakeFireSource>();
 
+        enum FloodType
+        {
+            Minor,
+            Major,
+            HideFlooding
+        }
+
         private float minSoundInterval = 10.0f, maxSoundInterval = 60.0f;
+        private FloodType currentFloodType;
         private float soundTimer;
+
+        private float minFloodInterval = 30.0f, maxFloodInterval = 180.0f;
+        private float createFloodTimer;
+        private float currentFloodState;
+        private float currentFloodDuration;
 
         partial void UpdateProjSpecific(CharacterHealth characterHealth, Limb targetLimb, float deltaTime)
         {
             if (Character.Controlled != characterHealth.Character) return;
+            UpdateFloods(deltaTime);
             UpdateSounds(characterHealth.Character, deltaTime);
-            UpdateFires(characterHealth.Character, deltaTime);
+            UpdateFires(characterHealth.Character, deltaTime);            
         }
 
         private void UpdateSounds(Character character, float deltaTime)
@@ -49,6 +63,61 @@ namespace Barotrauma
             soundTimer = 0.0f;
         }
 
+        private void UpdateFloods(float deltaTime)
+        {
+            if (currentFloodDuration > 0.0f)
+            {
+                currentFloodDuration -= deltaTime;
+                switch (currentFloodType)
+                {
+                    case FloodType.Minor:
+                        currentFloodState += deltaTime;
+                        //lerp the water surface in all hulls 50 units above the floor within 10 seconds
+                        foreach (Hull hull in Hull.hullList)
+                        {
+                            hull.DrawSurface = hull.Rect.Y - hull.Rect.Height + MathHelper.Lerp(0.0f, 50.0f, currentFloodState / 10.0f);
+                        }
+                        break;
+                    case FloodType.Major:
+                        currentFloodState += deltaTime;
+                        //create a full flood in 10 seconds
+                        foreach (Hull hull in Hull.hullList)
+                        {
+                            hull.DrawSurface = hull.Rect.Y - MathHelper.Lerp(hull.Rect.Height, 0.0f, currentFloodState / 10.0f);
+                        }
+                        break;
+                    case FloodType.HideFlooding:
+                        //hide water inside hulls (the player can't see which hulls are flooded)
+                        foreach (Hull hull in Hull.hullList)
+                        {
+                            hull.DrawSurface = hull.Rect.Y - hull.Rect.Height;
+                        }
+                        break;
+                }
+                return;
+            }
+
+            if (createFloodTimer < MathHelper.Lerp(maxFloodInterval, minFloodInterval, Strength / 100.0f))
+            {
+                createFloodTimer += deltaTime;
+                return;
+            }
+
+            //probability of a fake flood goes from 0%-100%
+            if (Rand.Range(0.0f, 100.0f) < Strength)
+            {
+                if (Rand.Range(0.0f, 1.0f) < 0.5f)
+                {
+                    currentFloodType = FloodType.HideFlooding;
+                }
+                else
+                {
+                    currentFloodType = Strength < 50.0f ? FloodType.Minor : FloodType.Major;
+                }
+                currentFloodDuration = Rand.Range(20.0f, 100.0f);
+            }
+        }
+
         private void UpdateFires(Character character, float deltaTime)
         {
             createFireSourceTimer += deltaTime;
@@ -62,7 +131,7 @@ namespace Barotrauma
                 {
                     Size = Vector2.One * 20.0f,
                     Hull = fireHull,
-                    Position = new Vector2(Rand.Range(0.0f, fireHull.Rect.Width), fireHull.Rect.Height + 30.0f),
+                    Position = new Vector2(Rand.Range(0.0f, fireHull.Rect.Width), 30.0f),
                     LifeTime = MathHelper.Lerp(10.0f, 100.0f, Strength / 100.0f)
                 });
                 createFireSourceTimer = 0.0f;
@@ -80,7 +149,7 @@ namespace Barotrauma
 
                 FireSource.EmitParticles(
                     fakeFireSource.Size,
-                    fakeFireSource.Hull.WorldRect.Location.ToVector2() + fakeFireSource.Position,
+                    fakeFireSource.Hull.WorldRect.Location.ToVector2() + fakeFireSource.Position - Vector2.UnitY * fakeFireSource.Hull.Rect.Height,
                     fakeFireSource.Hull,
                     0.5f);
             }
