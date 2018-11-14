@@ -576,7 +576,8 @@ namespace Barotrauma.RuinGeneration
                         return;
                     }
 
-                    var wirePrefab = MapEntityPrefab.Find(null, "alienwire") as ItemPrefab;
+                    //TODO: alien wire prefab w/ custom sprite?
+                    var wirePrefab = MapEntityPrefab.Find(null, "blackwire") as ItemPrefab;
                     foreach (Pair<string, string> wireToParent in childEntity.WireToParent)
                     {
                         var conn1 = item.Connections.Find(c => c.Name == wireToParent.First);
