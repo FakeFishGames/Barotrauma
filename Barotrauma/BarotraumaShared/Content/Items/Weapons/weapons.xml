@@ -140,34 +140,32 @@
   </Item>
   
   <Item
-    name="EMP Grenade"
-    category="Equipment"
-    price="200"
-    cargocontainername="Explosive Crate"
-    tags="smallitem,weapon,explosive">
+    name="EMP Grenade" identifier="empgrenade" category="Equipment" price="200" cargocontainername="Explosive Crate" tags="smallitem,weapon,explosive">
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="Flash Powder" mincondition="0.9"/>
-      <Item name="Chloral Hydrate" mincondition="0.9"/>
+      <Item identifier="steelbar" />
+      <Item identifier="flashpowder" mincondition="0.9" />
+      <Item identifier="chloralhydrate" mincondition="0.9" />
     </Deconstruct>
 
     <Sprite texture="weapons.png" sourcerect="98,0,11,24" depth="0.55"/>
-
     <Body width="11" height="24" density="30"/>
-
     <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
     <ItemComponent characterusable="false">
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
         <sound file="Content/Items/Weapons/stungrenade.ogg"/>
-        <Explosion range="500" damage="5" stun="25" force="0.1" smoke="false" empstrength="10"/>
+        <Explosion range="500" stun="25" force="0.1" smoke="false" empstrength="10"/>
+          <Affliction identifier="internaldamage" strength="5" />
+        <Explosion/>
       </StatusEffect>
     </ItemComponent>
 
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
         <sound file="Content/Items/Weapons/stungrenade.ogg"/>
-        <Explosion range="500" damage="5" stun="25" force="0.1" smoke="false"/>
+        <Explosion range="500" stun="25" force="0.1" smoke="false" empstrength="10"/>
+          <Affliction identifier="internaldamage" strength="5" />
+        <Explosion/>
       </StatusEffect>
     </Throwable>
   </Item>
