@@ -263,6 +263,12 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\NewHuman_Captain_torso.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\NewHuman_Engineer_legs.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>    	
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\NewHuman_Engineer_torso.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>    	
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\NewHuman_Mechanic_legs.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
