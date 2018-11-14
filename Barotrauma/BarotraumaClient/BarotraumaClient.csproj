@@ -100,6 +100,7 @@
     <Compile Include="Source\Characters\AI\HumanAIController.cs" />
     <Compile Include="Source\Characters\Animation\Ragdoll.cs" />
     <Compile Include="Source\Characters\Attack.cs" />
+    <Compile Include="Source\Characters\Health\AfflictionPsychosis.cs" />
     <Compile Include="Source\Events\EventManager.cs" />
     <Compile Include="Source\GUI\ChatBox.cs" />
     <Compile Include="Source\GUI\ParamsEditor.cs" />

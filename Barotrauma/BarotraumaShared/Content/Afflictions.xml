@@ -216,6 +216,23 @@
   
   <!-- Special afflictions -->
 
+  <AfflictionPsychosis
+    name="Psychosis"
+    identifier="psychosis"
+    description="Is this the real life? Is this just fantasy?"
+    type="psychosis"
+    limbspecific="false"
+    indicatorlimb="Head"
+    activationthreshold="0"
+    showiconthreshold="40"
+    maxstrength="100"
+    achievementonremoved="healpsychosis">
+    <Effect minstrength="0" maxstrength="100"
+      maxvitalitydecrease="0"
+      strengthchange="-0.1"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="0,640,128,128" color="60,107,195,255" origin="0,0"/>
+  </AfflictionPsychosis>
+  
   <Affliction
     name="Drunk"
     identifier="drunk"
