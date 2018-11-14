@@ -42,20 +42,23 @@
     <Body width="52" height="17" density="30"/>
 
     <Wearable slots="Any,InnerClothes">
-      <sprite texture="doctorgear.png" limb="Torso" sourcerect="0,0,31,58" origin="0.5,0.48" depth="0.01"/>
+      <sprite texture="NewHuman_Medic_torso.png" limb="Torso" sourcerect="0,0,31,58" origin="0.5,0.48" depth="0.01"/>
 
-      <sprite texture="doctorgear.png" limb="RightHand" sourcerect="51,0,15,47" origin="0.45,0.55" depth="0.005" hidelimb="true"/>
-      <sprite texture="doctorgear.png" limb="LeftHand" sourcerect="51,0,15,47" origin="0.45,0.55" depth="0.13" hidelimb="true"/>
+      <sprite name="Medic Right Lower Arm" texture="NewHuman_Medic_torso.png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Medic Left Lower Arm" texture="NewHuman_Medic_torso.png" limb="LeftHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
 
-      <sprite texture="doctorgear.png" limb="RightArm" sourcerect="33,0,17,40" origin="0.5,0.5" hidelimb="true"/>
-      <sprite texture="doctorgear.png" limb="LeftArm" sourcerect="33,0,17,40" origin="0.5,0.5" depth="0.14" hidelimb="true"/>
+      <sprite name="Medic Right Upper Arm" texture="NewHuman_Medic_torso.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Medic Left Upper Arm" texture="NewHuman_Medic_torso.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
 
-      <sprite texture="doctorgear.png" limb="Waist" sourcerect="0,0,1,1" origin="0.5,0.5" hidelimb="true"/>
-      <sprite texture="doctorgear.png" limb="RightThigh" sourcerect="0,61,24,46" origin="0.5,0.5" depth="0.10" hidelimb="true"/>
-      <sprite texture="doctorgear.png" limb="LeftThigh" sourcerect="0,61,24,46" origin="0.5,0.5" depth="0.14" hidelimb="true"/>
+      <sprite name="Medic Waist" texture="NewHuman_Medic_legs.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Medic Right Thigh" texture="NewHuman_Medic_legs.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Medic Left Thigh" texture="NewHuman_Medic_legs.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
 
-      <sprite texture="doctorgear.png" limb="RightLeg" sourcerect="26,61,17,48" origin="0.5,0.5" depth="0.11" hidelimb="true"/>
-      <sprite texture="doctorgear.png" limb="LeftLeg" sourcerect="26,61,17,48" origin="0.5,0.5" depth="0.15" hidelimb="true"/>
+      <sprite name="Medic Right Leg" texture="NewHuman_Medic_legs.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Medic Left Leg" texture="NewHuman_Medic_legs.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+
+      <sprite name="Medic Right Shoe" texture="NewHuman_Medic_legs.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Medic Left Shoe" texture="NewHuman_Medic_legs.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
     </Wearable>
 
     <ItemContainer capacity="3">
