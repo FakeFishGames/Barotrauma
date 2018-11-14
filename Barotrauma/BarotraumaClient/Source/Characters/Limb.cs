@@ -367,8 +367,13 @@ namespace Barotrauma
 
                 SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
-                Vector2 origin = wearable.Sprite.Origin;
+                Vector2 origin = wearable.InheritOrigin ? ActiveSprite.Origin : wearable.Sprite.Origin;
                 if (body.Dir == -1.0f) origin.X = wearable.Sprite.SourceRect.Width - origin.X;
+
+                if (wearable.InheritSourceRect)
+                {
+                    wearable.Sprite.SourceRect = ActiveSprite.SourceRect;
+                }
                 
                 float depth = wearable.Sprite.Depth;
 
@@ -392,12 +397,13 @@ namespace Barotrauma
                 //if there are multiple sprites on this limb, make the successive ones be drawn in front
                 depthStep += 0.000001f;
 
+                float textureScale = wearable.InheritTextureScale ? TextureScale : 1;
                 Color wearableColor = wearable.WearableComponent.Item.GetSpriteColor();
                 wearable.Sprite.Draw(spriteBatch,
                     new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
                     new Color((color.R * wearableColor.R) / (255.0f * 255.0f), (color.G * wearableColor.G) / (255.0f * 255.0f), (color.B * wearableColor.B) / (255.0f * 255.0f)) * ((color.A * wearableColor.A) / (255.0f * 255.0f)),
                     origin, -body.DrawRotation,
-                    Scale * TextureScale, spriteEffect, depth);
+                    Scale * textureScale, spriteEffect, depth);
             }
 
             if (damageOverlayStrength > 0.0f && DamagedSprite != null && !hideLimb)
