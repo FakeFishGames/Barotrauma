@@ -52,6 +52,12 @@ namespace Barotrauma
         private bool useSteamMatchmaking;
         private bool requireSteamAuthentication;
 
+        public string QuickStartSubmarineName
+        {
+            get;
+            set;
+        }
+
 #if DEBUG
         //steam functionality can be enabled/disabled in debug builds
         public bool UseSteam;
@@ -66,11 +72,6 @@ namespace Barotrauma
             set { useSteamMatchmaking = value; }
         }
 
-        public string QuickStartSubmarineName
-        {
-            get;
-            set;
-        }
 #else
         //steam functionality determined at compile time
         public bool UseSteam
@@ -274,8 +275,8 @@ namespace Barotrauma
 
 #if DEBUG
             UseSteam = doc.Root.GetAttributeBool("usesteam", true);
-            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
 #endif
+            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
 
             if (doc == null)
             {
