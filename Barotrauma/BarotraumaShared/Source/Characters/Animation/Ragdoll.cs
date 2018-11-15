@@ -350,12 +350,18 @@ namespace Barotrauma
 
             UpdateCollisionCategories();
 
+            SetInitialLimbPositions();
+        }
+
+        private void SetInitialLimbPositions()
+        {
             foreach (var joint in LimbJoints)
             {
                 if (joint == null) { continue; }
+                float angle = (joint.LowerLimit + joint.UpperLimit) / 2.0f;
                 joint.LimbB?.body?.SetTransform(
-                    joint.BodyA.Position + (joint.LocalAnchorA - joint.LocalAnchorB) * 0.1f,
-                    (joint.LowerLimit + joint.UpperLimit) / 2.0f);
+                    (joint.WorldAnchorA - MathUtils.RotatePointAroundTarget(joint.LocalAnchorB, Vector2.Zero, MathHelper.ToDegrees(joint.BodyA.Rotation + angle), true)),
+                    joint.BodyA.Rotation + angle);
             }
         }
 
