@@ -195,7 +195,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
-    <Body width="8" height="17" density="10"/>
+    <Body width="8" height="17" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="poison,chlorine" type="OnUse" target="Character" duration="20.0">
@@ -235,7 +235,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,256,64,64"/>
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
-    <Body width="8" height="7" density="10"/>
+    <Body width="8" height="7" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" delay="5">
@@ -266,7 +266,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Limb" disabledeltatime="true">
@@ -298,7 +298,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Limb" disabledeltatime="true">
@@ -338,7 +338,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Limb" disabledeltatime="true">
@@ -510,7 +510,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,256,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">      
       <StatusEffect type="OnUse" target="Character">
@@ -554,7 +554,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character">
@@ -868,7 +868,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="false" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true"/>
@@ -905,7 +905,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
-    <Body width="8" height="17" density="10"/>
+    <Body width="8" height="17" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" disabledeltatime="true">
@@ -936,7 +936,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
-    <Body width="8" height="17" density="10"/>
+    <Body width="8" height="17" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="poison,acid" type="OnUse" target="Character" duration="30.0">
@@ -996,7 +996,7 @@
     
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" HuskInfectionState="0.01">
@@ -1028,7 +1028,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character">
@@ -1057,7 +1057,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,256,64,64"/>
     <Sprite texture ="Content/Items/Medical/med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="25" height="5" density="10"/>
+    <Body width="25" height="5" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true"/>
@@ -1096,7 +1096,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,256,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character">
