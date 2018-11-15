@@ -1862,6 +1862,7 @@ namespace Barotrauma
                 foreach (var limb in character.AnimController.Limbs)
                 {
                     limb.ActiveSprite.ReloadTexture();
+                    limb.WearingItems.ForEach(i => i.Sprite.ReloadTexture());
                 }
                 return true;
             };
