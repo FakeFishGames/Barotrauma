@@ -3723,25 +3723,26 @@ namespace Barotrauma
                         int radius = torso.GetAttributeInt("radius", -1);
                         int height = torso.GetAttributeInt("height", -1);
                         int width = torso.GetAttributeInt("width", -1);
-                        int colliderHeight = - 1;
+                        int colliderHeight = -1;
                         if (radius == -1)
                         {
                             // the collider is a box -> calculate the capsule
                             if (width == height)
                             {
                                 radius = width / 2;
+                                colliderHeight = width - radius * 2;
                             }
                             else
                             {
                                 if (height > width)
                                 {
                                     radius = width / 2;
-                                    colliderHeight = height;
+                                    colliderHeight = height - radius * 2;
                                 }
                                 else
                                 {
                                     radius = height / 2;
-                                    colliderHeight = width;
+                                    colliderHeight = width - radius * 2;
                                 }
                             }
                         }
@@ -3753,7 +3754,14 @@ namespace Barotrauma
                         var colliderAttributes = new List<XAttribute>() { new XAttribute("radius", radius) };
                         if (colliderHeight > -1)
                         {
-                            colliderAttributes.Add(new XAttribute("height", colliderHeight));
+                            if (height > width)
+                            {
+                                colliderAttributes.Add(new XAttribute("height", colliderHeight));
+                            }
+                            else
+                            {
+                                colliderAttributes.Add(new XAttribute("width", colliderHeight));
+                            }
                         }
                         var colliderElements = new List<XElement>() { new XElement("collider", colliderAttributes) };
                         if (IsHumanoid)
@@ -3762,7 +3770,14 @@ namespace Barotrauma
                             var secondaryCollider = new XElement("collider", new XAttribute("radius", radius));
                             if (colliderHeight > -1)
                             {
-                                secondaryCollider.Add(new XAttribute("height", colliderHeight * 0.75f));
+                                if (height > width)
+                                {
+                                    secondaryCollider.Add(new XAttribute("height", colliderHeight * 0.75f));
+                                }
+                                else
+                                {
+                                    colliderAttributes.Add(new XAttribute("width", colliderHeight * 0.75f));
+                                }
                             }
                             colliderElements.Add(secondaryCollider);
                         }
@@ -3959,12 +3974,12 @@ namespace Barotrauma
                             if (height > width)
                             {
                                 colliderAttributes.Add(new XAttribute("radius", width / 2));
-                                colliderAttributes.Add(new XAttribute("height", (int)Math.Round(height * 0.75f)));
+                                colliderAttributes.Add(new XAttribute("height", height - width));
                             }
                             else
                             {
                                 colliderAttributes.Add(new XAttribute("radius", height / 2));
-                                colliderAttributes.Add(new XAttribute("width", (int)Math.Round(width * 0.75f)));
+                                colliderAttributes.Add(new XAttribute("width", width - height));
                             }
                         }
                         string notes = string.Empty;
