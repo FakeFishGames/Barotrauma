@@ -4,7 +4,7 @@ namespace Barotrauma.Items.Components
 {
     class WaterDetector : ItemComponent
     {
-        string output, falseOutput;
+        private string output, falseOutput;
 
         [InGameEditable, Serialize("1", true)]
         public string Output
@@ -13,7 +13,7 @@ namespace Barotrauma.Items.Components
             set { output = value; }
         }
 
-        [InGameEditable, Serialize("", true)]
+        [InGameEditable, Serialize("0", true)]
         public string FalseOutput
         {
             get { return falseOutput; }
