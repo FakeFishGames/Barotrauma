@@ -290,6 +290,26 @@ namespace Barotrauma
             {
                 RagdollParams = ragdollParams;
             }
+            foreach (var limbParams in RagdollParams.Limbs)
+            {
+                if (!PhysicsBody.IsValid(limbParams.Radius, limbParams.Height, limbParams.Width))
+                {
+                    {
+                        DebugConsole.ThrowError("Cannot create the ragdoll: invalid collider dimensions on limb: " + limbParams.Name);
+                        return;
+                    }
+                }
+            }
+            foreach (var colliderParams in RagdollParams.ColliderParams)
+            {
+                if (!PhysicsBody.IsValid(colliderParams.Radius, colliderParams.Height, colliderParams.Width))
+                {
+                    {
+                        DebugConsole.ThrowError("Cannot create the ragdoll: invalid collider dimensions on collider: " + colliderParams.Name);
+                        return;
+                    }
+                }
+            }
             CreateColliders();
             CreateLimbs();
             CreateJoints();
@@ -316,6 +336,11 @@ namespace Barotrauma
             collider = new List<PhysicsBody>();
             foreach (ColliderParams cParams in RagdollParams.ColliderParams)
             {
+                if (!PhysicsBody.IsValid(cParams.Radius, cParams.Height, cParams.Width))
+                {
+                    DebugConsole.ThrowError("Invalid collider dimensions: " + cParams.Name);
+                    break; ;
+                }
                 var body = new PhysicsBody(cParams);
                 collider.Add(body);
                 body.UserData = character;
