@@ -179,14 +179,19 @@ namespace Barotrauma
             int conversationIndex = Rand.Int(conversations.Count);
             NPCConversation selectedConversation = conversations[conversationIndex];
             if (string.IsNullOrEmpty(selectedConversation.Line)) return;
-
+            
             Character speaker = null;
             //speaker already assigned for this line
             if (assignedSpeakers.ContainsKey(selectedConversation.speakerIndex))
             {
-                speaker = assignedSpeakers[selectedConversation.speakerIndex];
+                //check if the character has all required flags to say the line
+                var characterFlags = GetCurrentFlags(assignedSpeakers[selectedConversation.speakerIndex]);
+                if (selectedConversation.Flags.All(flag => characterFlags.Contains(flag)))
+                {
+                    speaker = assignedSpeakers[selectedConversation.speakerIndex];
+                }
             }
-            else
+            if (speaker == null)
             {
                 var allowedSpeakers = new List<Character>();
 
