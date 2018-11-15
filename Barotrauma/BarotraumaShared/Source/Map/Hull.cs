@@ -50,7 +50,7 @@ namespace Barotrauma
 
         private float lethalPressure;
 
-        private float surface;
+        private float surface, drawSurface;
         private float waterVolume;
         private float pressure;
 
@@ -102,7 +102,7 @@ namespace Barotrauma
                     Gap.UpdateHulls();
                 }
 
-                surface = rect.Y - rect.Height + WaterVolume / rect.Width;
+                surface = drawSurface = rect.Y - rect.Height + WaterVolume / rect.Width;
                 Pressure = surface;
             }
         }
@@ -132,6 +132,17 @@ namespace Barotrauma
         public float Surface
         {
             get { return surface; }
+        }
+
+        public float DrawSurface
+        {
+            get { return drawSurface; }
+            set
+            {
+                if (Math.Abs(drawSurface - value) < 0.00001f) return;
+                drawSurface = MathHelper.Clamp(value, rect.Y - rect.Height, rect.Y);
+                update = true;
+            }
         }
 
         public float WorldSurface
@@ -339,7 +350,7 @@ namespace Barotrauma
                 Gap.UpdateHulls();
             }
 
-            surface = rect.Y - rect.Height + WaterVolume / rect.Width;
+            surface = drawSurface = rect.Y - rect.Height + WaterVolume / rect.Width;
             Pressure = surface;
         }
 
@@ -439,9 +450,13 @@ namespace Barotrauma
                 return;
             }
             
-            //interpolate the position of the rendered surface towards the "target surface"
             surface = Math.Max(MathHelper.Lerp(
                 surface, 
+                rect.Y - rect.Height + WaterVolume / rect.Width, 
+                deltaTime * 10.0f), rect.Y - rect.Height);
+            //interpolate the position of the rendered surface towards the "target surface"
+            drawSurface = Math.Max(MathHelper.Lerp(
+                drawSurface, 
                 rect.Y - rect.Height + WaterVolume / rect.Width, 
                 deltaTime * 10.0f), rect.Y - rect.Height);
 
@@ -550,7 +565,7 @@ namespace Barotrauma
                 if (WaterVolume <= 0.0f)
                 {
                     //wait for the surface to be lerped back to bottom and the waves to settle until disabling update
-                    if (surface > rect.Y - rect.Height + 1) return;
+                    if (drawSurface > rect.Y - rect.Height + 1) return;
                     for (int i = 1; i < waveY.Length - 1; i++)
                     {
                         if (waveY[i] > 0.1f) return;

@@ -458,6 +458,7 @@ namespace Barotrauma
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
                 new XAttribute("enablesplashscreen", EnableSplashScreen),
                 new XAttribute("usesteammatchmaking", useSteamMatchmaking),
+                new XAttribute("quickstartsub", QuickStartSubmarineName),
                 new XAttribute("requiresteamauthentication", requireSteamAuthentication),
                 new XAttribute("aimassistamount", aimAssistAmount));
 
