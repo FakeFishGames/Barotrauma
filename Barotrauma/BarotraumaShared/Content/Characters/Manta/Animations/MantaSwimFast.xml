@@ -1,0 +1,17 @@
+﻿<MantaSwimFast
+  animationtype="SwimFast"
+  flip="True"
+  mirror="True"
+  waveamplitude="0.3"
+  wavelength="20"
+  rotatetowardsmovement="True"
+  torsotorque="150"
+  headtorque="280"
+  foottorque="0"
+  tailtorque="50"
+  footangles="17: 4.074009,26: 3.827566"
+  steertorque="25"
+  movementspeed="3.36"
+  cyclespeed="1"
+  headangle="112.2"
+  torsoangle="57.59999" />

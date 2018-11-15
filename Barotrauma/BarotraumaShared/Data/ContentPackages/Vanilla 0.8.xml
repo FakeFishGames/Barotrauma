@@ -52,8 +52,8 @@
   <Character file="Content/Characters/Human/human.xml" />
   <Character file="Content/Characters/Humanhusk/humanhusk.xml" />
   <Character file="Content/Characters/Husk/husk.xml" />
+  <Character file="Content/Characters/Manta/manta.xml" />
   <Character file="Content/Characters/Mantis/mantis.xml" />
-  <Character file="Content/Characters/Mantis2/mantis2.xml" />
   <Character file="Content/Characters/Seamantis/seamantis.xml" />
   <Character file="Content/Characters/Moloch/moloch.xml" />
   <Character file="Content/Characters/Molochboss/molochboss.xml" />
