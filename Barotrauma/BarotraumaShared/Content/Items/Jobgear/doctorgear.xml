@@ -19,7 +19,7 @@
 
     <Wearable limbtype="Head" slots="Any,Head">
       <sprite texture ="doctorgear.png" sourcerect="0,120,20,8" limb="Head" origin="0.45,0.9"/>
-    </Wearable>U
+    </Wearable>
 
     <StatusHUD drawhudwhenequipped="true"/>
   </Item>
@@ -42,7 +42,7 @@
     <Body width="52" height="17" density="30"/>
 
     <Wearable slots="Any,InnerClothes">
-      <sprite texture="NewHuman_Medic_torso.png" limb="Torso" sourcerect="0,0,31,58" origin="0.5,0.48" depth="0.01"/>
+      <sprite name="Medic Torso" texture="NewHuman_Medic_torso.png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
 
       <sprite name="Medic Right Lower Arm" texture="NewHuman_Medic_torso.png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
       <sprite name="Medic Left Lower Arm" texture="NewHuman_Medic_torso.png" limb="LeftHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
