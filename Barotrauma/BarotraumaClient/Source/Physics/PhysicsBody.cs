@@ -37,15 +37,18 @@ namespace Barotrauma
             sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, -drawRotation, scale, spriteEffect, depth);
         }
 
-        public void DebugDraw(SpriteBatch spriteBatch, Color color)
+        public void DebugDraw(SpriteBatch spriteBatch, Color color, bool forceColor = false)
         {
-            if (!body.Enabled)
+            if (!forceColor)
             {
-                color = Color.Gray;
-            }
-            else if (!body.Awake)
-            {
-                color = Color.Blue;
+                if (!body.Enabled)
+                {
+                    color = Color.Gray;
+                }
+                else if (!body.Awake)
+                {
+                    color = Color.Blue;
+                }
             }
 
             if (targetPosition != null)
