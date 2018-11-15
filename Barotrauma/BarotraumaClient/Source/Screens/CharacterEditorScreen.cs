@@ -99,8 +99,8 @@ namespace Barotrauma
             Submarine.MainSub.GodMode = true;
             if (Character.Controlled == null)
             {
-                //SpawnCharacter(Character.HumanConfigFile);
-                SpawnCharacter(AllFiles.First());
+                SpawnCharacter(Character.HumanConfigFile);
+                //SpawnCharacter(AllFiles.First());
             }
             else
             {
