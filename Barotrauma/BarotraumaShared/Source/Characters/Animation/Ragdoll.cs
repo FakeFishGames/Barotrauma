@@ -308,8 +308,12 @@ namespace Barotrauma
 
         protected void CreateColliders()
         {
-            collider = new List<PhysicsBody>();
+            if (collider != null)
+            {
+                collider.ForEach(c => c.Remove());
+            }
             DebugConsole.Log($"Creating colliders from {RagdollParams.Name}.");
+            collider = new List<PhysicsBody>();
             foreach (ColliderParams cParams in RagdollParams.ColliderParams)
             {
                 var body = new PhysicsBody(cParams);
@@ -325,11 +329,11 @@ namespace Barotrauma
 
         protected void CreateJoints()
         {
-            DebugConsole.Log($"Creating joints from {RagdollParams.Name}.");
             if (LimbJoints != null)
             {
                 LimbJoints.ForEach(j => GameMain.World.RemoveJoint(j));
             }
+            DebugConsole.Log($"Creating joints from {RagdollParams.Name}.");
             LimbJoints = new LimbJoint[RagdollParams.Joints.Count];
             RagdollParams.Joints.ForEach(j => AddJoint(j));
             // Check the joints
@@ -361,6 +365,10 @@ namespace Barotrauma
 
         protected void CreateLimbs()
         {
+            if (limbs != null)
+            {
+                limbs.ForEach(l => l.Remove());
+            }
             DebugConsole.Log($"Creating limbs from {RagdollParams.Name}.");
             limbDictionary = new Dictionary<LimbType, Limb>();
             limbs = new Limb[RagdollParams.Limbs.Count];
