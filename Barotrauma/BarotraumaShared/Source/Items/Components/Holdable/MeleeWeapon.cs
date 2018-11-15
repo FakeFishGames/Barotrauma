@@ -41,6 +41,13 @@ namespace Barotrauma.Items.Components
             set { reload = Math.Max(0.0f, value); }
         }
 
+        [Serialize(false, false)]
+        public bool AllowHitMultiple
+        {
+            get;
+            set;
+        }
+
         public MeleeWeapon(Item item, XElement element)
             : base(item, element)
         {
@@ -218,29 +225,49 @@ namespace Barotrauma.Items.Components
                 targetLimb = (Limb)f2.Body.UserData;
                 if (targetLimb.IsSevered || targetLimb.character == null) return false;
                 targetCharacter = targetLimb.character;
-
-                if (hitTargets.Contains(targetCharacter)) return false;
+                if (targetCharacter == picker) return false;
+                if (AllowHitMultiple)
+                {
+                    if (hitTargets.Contains(targetCharacter)) return false;
+                }
+                else
+                {
+                    if (hitTargets.Any(t => t is Character)) return false;
+                }
                 hitTargets.Add(targetCharacter);
             }
             else if (f2.Body.UserData is Character)
             {
                 targetCharacter = (Character)f2.Body.UserData;
+                if (targetCharacter == picker) return false;
                 targetLimb = targetCharacter.AnimController.GetLimb(LimbType.Torso); //Otherwise armor can be bypassed in strange ways
-                if (hitTargets.Contains(targetCharacter)) return false;
+                if (AllowHitMultiple)
+                {
+                    if (hitTargets.Contains(targetCharacter)) return false;
+                }
+                else
+                {
+                    if (hitTargets.Any(t => t is Character)) return false;
+                }
                 hitTargets.Add(targetCharacter);
             }
             else if (f2.Body.UserData is Structure)
             {
                 targetStructure = (Structure)f2.Body.UserData;
-                if (hitTargets.Contains(targetStructure)) return false;
+                if (AllowHitMultiple)
+                {
+                    if (hitTargets.Contains(targetStructure)) return true;
+                }
+                else
+                {
+                    if (hitTargets.Any(t => t is Structure)) return true;
+                }
                 hitTargets.Add(targetStructure);
             }
             else
             {
                 return false;
             }
-
-            if (targetCharacter == picker) return false;
 
             if (attack != null)
             {
@@ -278,7 +305,7 @@ namespace Barotrauma.Items.Components
             }
             
             if (targetCharacter != null) //TODO: Allow OnUse to happen on structures too maybe??
-                ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter != null ? targetCharacter : null);
+                ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter);
 
             if (DeleteOnUse)
             {
