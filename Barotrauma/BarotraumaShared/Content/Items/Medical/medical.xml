@@ -132,7 +132,7 @@
 
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
-    <Body width="8" height="17" density="10"/>
+    <Body width="8" height="17" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="poison,chlorine" type="OnUse" target="Character" Health="-0.1" duration="20.0">
@@ -161,7 +161,7 @@
 
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
-    <Body width="8" height="7" density="10"/>
+    <Body width="8" height="7" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="drunk" type="OnUse" target="Character" SpeedMultiplier="0.8" setvalue="true" duration="20.0">
@@ -184,7 +184,7 @@
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" Health="-5.0" disabledeltatime="true">
@@ -207,7 +207,7 @@
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" Health="-5.0" disabledeltatime="true">
@@ -234,7 +234,7 @@
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" Health="-5.0" disabledeltatime="true">
@@ -420,7 +420,7 @@
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" HuskInfectionState="-0.4">
@@ -456,7 +456,7 @@
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character">
@@ -512,7 +512,7 @@
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="false" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true"/>
@@ -542,7 +542,7 @@
 
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
-    <Body width="8" height="17" density="10"/>
+    <Body width="8" height="17" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" Health="-5.0" Stun="10" disabledeltatime="true">
@@ -565,7 +565,7 @@
 
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
-    <Body width="8" height="17" density="10"/>
+    <Body width="8" height="17" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="poison,acid" type="OnUse" target="Character" Health="-1.0" duration="30.0">
@@ -612,7 +612,7 @@
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" HuskInfectionState="0.01">
@@ -638,7 +638,7 @@
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="poison,morbusine" type="OnUse" target="Character" Health="-5.0" duration="60.0">
@@ -662,7 +662,7 @@
 
     <Sprite texture ="Content/Items/Medical/med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="25" height="5" density="10"/>
+    <Body width="25" height="5" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true"/>
@@ -691,7 +691,7 @@
         Two injections to choke slightly faster than welding fuel. -->
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" Health="-5.0">

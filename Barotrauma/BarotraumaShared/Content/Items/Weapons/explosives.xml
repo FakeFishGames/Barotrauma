@@ -8,7 +8,7 @@
     price="100">
 
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
-    <Body width="24" height="8"/>
+    <Body width="24" height="8" density="20"/>
 
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
@@ -27,7 +27,7 @@
     spritecolor="1.0,0.5,1.0,1.0">
 
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
-    <Body width="24" height="8"/>
+    <Body width="24" height="8" density="20"/>
 
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnFire" target="This" Condition="-50.0"/>
@@ -47,7 +47,7 @@
     cargocontainername="Explosive Crate">
 
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
-    <Body width="24" height="8"/>
+    <Body width="24" height="8" density="20"/>
 
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="Always" target="This" Condition="-0.35"/>
@@ -74,7 +74,7 @@
     spritecolor="1.0,0.0,0.0,1.0">
 
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
-    <Body width="24" height="8"/>
+    <Body width="24" height="8" density="20"/>
 
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnFire" target="This" Condition="-50.0"/>
@@ -97,7 +97,7 @@
 
     <Sprite texture="weapons.png"  depth="0.8" sourcerect="0,107,14,12"/>
 
-    <Body width="14" height="12"/>
+    <Body width="14" height="12" density="20"/>
 
     <Holdable selectkey="Action" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem name="Wrench" type="Equipped"/>

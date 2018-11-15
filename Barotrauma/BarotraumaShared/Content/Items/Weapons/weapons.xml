@@ -295,7 +295,7 @@
 
     <Sprite texture="Content/Items/Jobgear/clownshirt.png" sourcerect="32,50,32,14" depth="0.55"/>
 
-    <Body width="30" height="10" density="10"/>
+    <Body width="30" height="10" density="15"/>
 
     <Holdable slots="Any,RightHand,LeftHand" aimpos="100,0" handle1="-5,0"/>
 
