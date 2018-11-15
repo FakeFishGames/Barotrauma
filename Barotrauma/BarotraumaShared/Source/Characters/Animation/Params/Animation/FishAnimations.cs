@@ -121,7 +121,7 @@ namespace Barotrauma
         [Serialize(1f, true), Editable]
         public float WaveAmplitude { get; set; }
 
-        [Serialize(1f, true), Editable]
+        [Serialize(10.0f, true), Editable]
         public float WaveLength { get; set; }
 
         [Serialize(true, true), Editable(ToolTip = "Should the character face towards the direction it's heading.")]

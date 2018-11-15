@@ -146,8 +146,8 @@
     category="Machine"
     spritecolor="0,0,0,1">
 
-    <!-- TODO: sonar transducer sprite -->
-    <Sprite texture="Content/Items/Command/statusMonitor.png" sourcerect="0,0,266,224" depth="0.8"/>
+    <!-- TODO: sonar transducer light implementation -->
+    <Sprite texture="Content/Items/Command/sonarTransducer.png" sourcerect="0,0,97,97" depth="0.8"/>
 
     <SonarTransducer MinVoltage="0.5" PowerConsumption="100" canbeselected="true"/>
 

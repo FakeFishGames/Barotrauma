@@ -50,13 +50,21 @@ namespace Barotrauma
                 OnClicked = (tb, userdata) =>
                 {
                     Submarine selectedSub = null;
-                    if (!string.IsNullOrEmpty(GameMain.Config.QuickStartSubmarineName))
+                    string subName = GameMain.Config.QuickStartSubmarineName;
+                    if (!string.IsNullOrEmpty(subName))
                     {
-                        selectedSub = Submarine.SavedSubmarines.First(s => 
-                            s.Name.ToLower() == GameMain.Config.QuickStartSubmarineName.ToLower());
+                        DebugConsole.NewMessage($"Loading the predefined quick start sub \"{subName}\"", Color.White);
+                        selectedSub = Submarine.SavedSubmarines.FirstOrDefault(s => 
+                            s.Name.ToLower() == subName.ToLower());
+
+                        if (selectedSub == null)
+                        {
+                            DebugConsole.NewMessage($"Cannot find a sub that matches the name \"{subName}\".", Color.Red);
+                        }
                     }
                     if (selectedSub == null)
                     {
+                        DebugConsole.NewMessage("Loading a random sub.", Color.White);
                         var subs = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.Shuttle) && !s.HasTag(SubmarineTag.HideInMenus));
                         selectedSub = subs.ElementAt(Rand.Int(subs.Count()));
                     }
@@ -102,7 +110,8 @@ namespace Barotrauma
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("TutorialButton"), style: "GUIButtonLarge")
             {
                 UserData = Tab.Tutorials,
-                OnClicked = SelectTab
+                OnClicked = SelectTab,
+                Enabled = false
             };
 
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), buttonsParent.RectTransform), style: null); //spacing

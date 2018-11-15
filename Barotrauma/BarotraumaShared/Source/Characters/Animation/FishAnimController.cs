@@ -379,6 +379,13 @@ namespace Barotrauma
                 }
             }
 
+            var waveLength = Math.Abs(CurrentSwimParams.WaveLength);
+            var waveAmplitude = Math.Abs(CurrentSwimParams.WaveAmplitude);
+            if (waveLength > 0 && waveAmplitude > 0)
+            {
+                WalkPos -= movement.Length() / Math.Abs(waveLength);
+                WalkPos = MathUtils.WrapAngleTwoPi(WalkPos);
+            }
 
             foreach (var limb in Limbs)
             {
@@ -391,20 +398,13 @@ namespace Barotrauma
                             limb.body.SmoothRotate(CurrentSwimParams.FootAnglesInRadians[limb.limbParams.ID] * Dir, CurrentSwimParams.FootTorque);
                         }
                         break;
-                }
-            }            
-
-            Limb tail = GetLimb(LimbType.Tail);
-            if (tail != null)
-            {
-                var waveLength = Math.Abs(CurrentSwimParams.WaveLength);
-                var waveAmplitude = Math.Abs(CurrentSwimParams.WaveAmplitude);
-                WalkPos -= movement.Length() / Math.Abs(waveLength);
-                WalkPos = MathUtils.WrapAngleTwoPi(WalkPos);
-                if (waveLength > 0 && waveAmplitude > 0)
-                {
-                    float waveRotation = (float)Math.Sin(WalkPos);
-                    tail.body.ApplyTorque(waveRotation * tail.Mass * CurrentSwimParams.TailTorque * waveAmplitude);
+                    case LimbType.Tail:
+                        if (waveLength > 0 && waveAmplitude > 0)
+                        {
+                            float waveRotation = (float)Math.Sin(WalkPos);
+                            limb.body.ApplyTorque(waveRotation * limb.Mass * CurrentSwimParams.TailTorque * waveAmplitude);
+                        }
+                        break;
                 }
             }
 

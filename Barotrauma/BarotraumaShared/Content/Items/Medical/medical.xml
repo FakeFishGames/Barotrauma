@@ -430,48 +430,34 @@
     </Throwable>
   </Item>
 
-  <Item
-    name="Xenogland Extract"
-    identifier="auxiliorizine"
-    category="Material"
-    spritecolor="1.0,1.0,0.0,1.0"
-    containercolor="1.0,1.0,0.0,1.0"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    description="A highly potent stimulant effective in the treatment of internal damage, oxygen deprivation and to a lesser extent, blood loss. Produces mild burns as a side effect."
-    useinhealthinterface="true">
-
-    <Price locationtype="Research" buyprice="150"/>
-    <Price locationtype="Military" buyprice="200"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,192,64,64"/>
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
-
-    <Body width="8" height="16" density="20"/>
-
+  <Item name="Xenogland Extract" identifier="auxiliorizine" category="Material" spritecolor="1.0,1.0,0.0,1.0" containercolor="1.0,1.0,0.0,1.0" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A highly potent stimulant effective in the treatment of internal damage, oxygen deprivation and to a lesser extent, blood loss. Produces mild burns as a side effect." useinhealthinterface="true">
+    <Price locationtype="Research" buyprice="150" />
+    <Price locationtype="Military" buyprice="200" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,192,64,64" />
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6" />
+    <Body width="8" height="16" density="20" />
     <ItemComponent>
-      <StatusEffect tags="medical" type="OnUse" target="Character" duration="15.0">
+      <StatusEffect tags="medical" type="OnUse" target="This, Limb" duration="15.0">
         <ReduceAffliction identifier="damage" amount="0.25" />
         <ReduceAffliction identifier="oxygenlow" amount="0.5" />
-        <Affliction identifier="burn" amount="1" />
+        <Affliction identifier="burn" amount="0.5" />
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
       </StatusEffect>
     </ItemComponent>
-    
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect tags="medical" type="OnUse" target="Character" duration="60.0">
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-        <ReduceAffliction identifier="damage" amount="0.5"/>
-        <ReduceAffliction identifier="oxygenlow" amount="0.5"/>
-        <ReduceAffliction identifier="bloodloss" amount="0.25"/>
-        <Affliction identifier="burn" amount="0.25"/>
+      <StatusEffect tags="medical" type="OnUse" target="This, Limb" duration="60.0">
+        <RequiredItem identifier="medicalsyringe" type="Container" />
+        <ReduceAffliction identifier="damage" amount="0.5" />
+        <ReduceAffliction identifier="oxygenlow" amount="0.5" />
+        <ReduceAffliction identifier="bloodloss" amount="0.25" />
+        <Affliction identifier="burn" amount="0.125" />
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
-        <Remove/>
+        <Remove />
       </StatusEffect>
     </Throwable>
   </Item>
