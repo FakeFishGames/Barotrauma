@@ -146,7 +146,7 @@ namespace Barotrauma
             RelativeOrigin = spriteParams.Origin;
             if (isFlipped)
             {
-                origin.X = sourceRect.Width - origin.X;
+                Origin = new Vector2(sourceRect.Width - origin.X, origin.Y);
             }
             depth = spriteParams.Depth;
             // TODO: size?
