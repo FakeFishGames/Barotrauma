@@ -849,6 +849,8 @@ namespace Barotrauma
         #region Character spawning
         private int characterIndex = -1;
         private string currentCharacterConfig;
+        private string selectedJob = null;
+
         private List<string> allFiles;
         private List<string> AllFiles
         {
@@ -918,7 +920,18 @@ namespace Barotrauma
                 character.Remove();
                 character = null;
             }
-            character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), hasAi: false, ragdoll: ragdoll);
+            if (configFile == Character.HumanConfigFile && selectedJob != null)
+            {
+                var characterInfo = new CharacterInfo(configFile, jobPrefab: JobPrefab.List.First(job => job.Identifier == selectedJob));
+                character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), characterInfo, hasAi: false, ragdoll: ragdoll);
+                character.GiveJobItems();
+                selectedJob = characterInfo.Job.Prefab.Identifier;
+            }
+            else
+            {
+                character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), hasAi: false, ragdoll: ragdoll);
+                selectedJob = null;
+            }
             character.dontFollowCursor = dontFollowCursor;
             OnPostSpawn();
             return character;
@@ -1386,6 +1399,24 @@ namespace Barotrauma
                 SpawnCharacter((string)data);
                 return true;
             };
+            if (currentCharacterConfig == Character.HumanConfigFile)
+            {
+                var jobDropDown = new GUIDropDown(new RectTransform(new Vector2(1, 0.04f), layoutGroup.RectTransform), elementCount: 6, style: null);
+                jobDropDown.ListBox.Color = new Color(jobDropDown.ListBox.Color.R, jobDropDown.ListBox.Color.G, jobDropDown.ListBox.Color.B, byte.MaxValue);
+                jobDropDown.AddItem("None");
+                JobPrefab.List.ForEach(j => jobDropDown.AddItem(j.Name, j.Identifier));
+                jobDropDown.SelectItem(selectedJob);
+                jobDropDown.OnSelected = (component, data) =>
+                {
+                    string newJob = data is string jobIdentifier ? jobIdentifier : null;
+                    if (newJob != selectedJob)
+                    {
+                        selectedJob = newJob;
+                        SpawnCharacter(currentCharacterConfig);
+                    }
+                    return true;
+                };
+            }
             var charButtons = new GUIFrame(new RectTransform(buttonSize, parent: layoutGroup.RectTransform), style: null);
             var prevCharacterButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1), charButtons.RectTransform, Anchor.TopLeft), "Previous \nCharacter");
             prevCharacterButton.OnClicked += (b, obj) =>
