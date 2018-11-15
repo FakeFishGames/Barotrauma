@@ -387,7 +387,8 @@ namespace Barotrauma
             if (damagedElement != null)
             {
                 damagedSpriteParams = new SpriteParams(damagedElement, ragdoll);
-                SubParams.Add(damagedSpriteParams);
+                // Hide the damaged sprite params in the editor for now.
+                //SubParams.Add(damagedSpriteParams);
             }
             var deformElement = element.Element("deformablesprite");
             if (deformElement != null)
