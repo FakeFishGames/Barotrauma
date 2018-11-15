@@ -366,8 +366,8 @@ namespace Barotrauma
             }
             else if (displayColliders)
             {
-                character.AnimController.Collider.DebugDraw(spriteBatch, Color.White);
-                character.AnimController.Limbs.ForEach(l => l.body.DebugDraw(spriteBatch, Color.LightGreen));
+                character.AnimController.Collider.DebugDraw(spriteBatch, Color.White, forceColor: true);
+                character.AnimController.Limbs.ForEach(l => l.body.DebugDraw(spriteBatch, Color.LightGreen, forceColor: true));
             }
             spriteBatch.End();
 
