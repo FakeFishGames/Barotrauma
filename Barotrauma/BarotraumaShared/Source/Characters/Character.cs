@@ -2125,7 +2125,7 @@ namespace Barotrauma
 
             AttackResult attackResult = hitLimb.AddDamage(worldPosition, afflictions, playSound);
             CharacterHealth.ApplyDamage(hitLimb, attackResult);
-            OnAttacked?.Invoke(attacker, attackResult);
+            if (attacker != this) { OnAttacked?.Invoke(attacker, attackResult); };
             AdjustKarma(attacker, attackResult);
 
             if (attacker != null && attackResult.Damage > 0.0f)

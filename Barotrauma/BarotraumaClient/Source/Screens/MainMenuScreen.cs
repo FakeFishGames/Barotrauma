@@ -110,7 +110,8 @@ namespace Barotrauma
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("TutorialButton"), style: "GUIButtonLarge")
             {
                 UserData = Tab.Tutorials,
-                OnClicked = SelectTab
+                OnClicked = SelectTab,
+                Enabled = false
             };
 
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), buttonsParent.RectTransform), style: null); //spacing
