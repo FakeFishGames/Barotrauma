@@ -234,27 +234,10 @@ namespace Barotrauma
             {
                 if (flipTimer > 1.0f || character.IsRemotePlayer)
                 {
-                    Limb head = GetLimb(LimbType.Head);
-                    Limb tail = GetLimb(LimbType.Tail);
-                    bool wrongway = false;
-                    if (head != null && tail != null)
+                    Flip();
+                    if (!inWater || CurrentSwimParams.Mirror)
                     {
-                        wrongway = 
-                            (Dir > 0.0f && head.SimPosition.X < MainLimb.SimPosition.X && tail.SimPosition.X > MainLimb.SimPosition.X) ||
-                            (Dir < 0.0f && head.SimPosition.X > MainLimb.SimPosition.X && tail.SimPosition.X < MainLimb.SimPosition.X);
-                    }
-
-                    if (wrongway)
-                    {
-                        base.Flip();
-                    }
-                    else
-                    {
-                        Flip();
-                        if (!inWater || CurrentSwimParams.Mirror)
-                        {
-                            Mirror();
-                        }
+                        Mirror();
                     }
                     flipTimer = 0.0f;
                 }
