@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name ="human" humanoid="true" needsair="true" genders="true" maleheadid="1,8" femaleheadid="1,8" canspeak="true" blooddecal="blood">
+<Character name ="human" humanoid="true" needsair="true" genders="false" maleheadid="1,4" femaleheadid="1,8" canspeak="true" blooddecal="blood">
 
   <name firstname="Content/Characters/Human/[GENDER]firstnames.txt" lastname="Content/Characters/Human/lastnames.txt" />
   
