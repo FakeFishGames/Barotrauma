@@ -20,7 +20,7 @@
     <Sprite texture="captainLegs.png" sourcerect="0,49,52,17" depth="0.6" />
     <Body width="52" height="17" density="30" />
     <Wearable slots="Any,InnerClothes">
-      <sprite name="Captain's Uniform Torso" texture="NewHuman_Captain_torso.png" limb="Torso" sourcerect="18,36,97,169" origin="0.5,0.48" depthlimb="Head" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform Torso" texture="NewHuman_Captain_torso.png" limb="Torso" sourcerect="18,36,97,169" origin="0.5,0.48" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
       <sprite name="Captain's Uniform Right Lower Arm" texture="NewHuman_Captain_torso.png" limb="RightHand" sourcerect="195,36,47,113" origin="0.3909234,0.4615422" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
       <sprite name="Captain's Uniform Left Lower Arm" texture="NewHuman_Captain_torso.png" limb="LeftHand" sourcerect="196,36,46,114" origin="0.5083462,0.4487063" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
       <sprite name="Captain's Uniform Right Upper Arm" texture="NewHuman_Captain_torso.png" limb="RightArm" sourcerect="128,32,51,142" origin="0.4848484,0.3380281" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
