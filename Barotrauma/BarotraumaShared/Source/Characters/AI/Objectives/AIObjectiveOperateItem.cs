@@ -17,6 +17,8 @@ namespace Barotrauma
 
         private bool requireEquip;
 
+        private bool useController;
+
         private AIObjectiveGoTo gotoObjective;
 
         public override bool CanBeCompleted
@@ -24,6 +26,8 @@ namespace Barotrauma
             get
             {
                 if (gotoObjective != null && !gotoObjective.CanBeCompleted) return false;
+
+                if (useController && controller == null) return false;
 
                 return canBeCompleted;
             }
@@ -47,23 +51,29 @@ namespace Barotrauma
         public AIObjectiveOperateItem(ItemComponent item, Character character, string option, bool requireEquip, Entity operateTarget = null, bool useController = false)
             : base (character, option)
         {
-            this.component = item;
+            this.component = item ?? throw new System.ArgumentNullException("item", "Attempted to create an AIObjectiveOperateItem with a null target.");
             this.requireEquip = requireEquip;
             this.operateTarget = operateTarget;
+            this.useController = useController;
 
             if (useController)
             {
-                var controllers = item.Item.GetConnectedComponents<Controller>();
+                var controllers = component.Item.GetConnectedComponents<Controller>();
                 if (controllers.Any()) controller = controllers[0];
             }
-
 
             canBeCompleted = true;
         }
 
         protected override void Act(float deltaTime)
         {
-            ItemComponent target = controller == null ? component : controller;
+            ItemComponent target = useController ? controller : component;
+
+            if (useController && controller == null)
+            {
+                character.Speak(TextManager.Get("DialogCantFindController").Replace("[item]", component.Item.Name), null, 2.0f, "cantfindcontroller", 30.0f);
+                return;
+            }
 
             if (target.CanBeSelected)
             { 
