@@ -138,6 +138,37 @@
       </StatusEffect>
     </Throwable>
   </Item>
+  
+  <Item
+    name="EMP Grenade" identifier="empgrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive">
+    <Deconstruct time="10">
+      <Item identifier="steelbar" />
+      <Item identifier="flashpowder" mincondition="0.9" />
+      <Item identifier="chloralhydrate" mincondition="0.9" />
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,0,64,64" />
+    <Sprite texture="weapons.png" sourcerect="114,1,14,27" depth="0.55" />
+    <Body width="11" height="24" density="30"/>
+    <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
+    <ItemComponent characterusable="false">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0">
+        <sound file="Content/Items/Weapons/stungrenade.ogg"/>
+        <Explosion range="500" stun="0.5" force="0.1" smoke="false" sparks="true" empstrength="10">
+          <Affliction identifier="internaldamage" strength="5" />
+        </Explosion>
+      </StatusEffect>
+    </ItemComponent>
+
+    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
+      <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
+        <sound file="Content/Items/Weapons/stungrenade.ogg"/>
+        <Explosion range="500" stun="0.5" force="0.1" smoke="false" sparks="true" empstrength="10">
+          <Affliction identifier="internaldamage" strength="5" />
+        </Explosion>
+      </StatusEffect>
+    </Throwable>
+  </Item>
+  
   <Item name="Incendium Grenade" identifier="incendiumgrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive">
     <Deconstruct time="10">
       <Item identifier="steelbar" />
@@ -209,7 +240,7 @@
   </Item>
   <Item name="Bike Horn" identifier="bikehorn" category="Equipment" tags="weapon,smallitem" cargocontaineridentifier="metalcrate" description="HONK">
     <Sprite texture="Content/Items/Jobgear/clownshirt.png" sourcerect="32,50,32,14" depth="0.55" />
-    <Body width="30" height="10" density="10" />
+    <Body width="30" height="10" density="15" />
     <Holdable slots="Any,RightHand,LeftHand" aimpos="100,0" handle1="-5,0" />
     <RangedWeapon reload="2">
       <Sound file="Content/Items/Weapons/honk.ogg" type="OnUse" />

@@ -814,6 +814,8 @@
   <DialogReactorTaken>Hey, I'm operating the reactor!</DialogReactorTaken>
   <DialogReactorTaken>Hands off please, I've got this!</DialogReactorTaken>
   <DialogReactorTaken>Hey, we don't need two people at the reactor!</DialogReactorTaken>
+  <DialogCantFindController>I can't find a way to operate the [item]!</DialogCantFindController>
+  <DialogCantFindController>I don't know how to control the [item]!</DialogCantFindController>
   <DialogLoadTurret>Loading ammunition to the [itemname]!</DialogLoadTurret>
   <DialogFireTurret>Firing!</DialogFireTurret>
   <DialogFireTurret>Fire in the hole!</DialogFireTurret>

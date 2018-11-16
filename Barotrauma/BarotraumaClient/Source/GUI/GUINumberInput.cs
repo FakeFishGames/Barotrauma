@@ -67,7 +67,10 @@ namespace Barotrauma
                 if (value == floatValue) return;
                 floatValue = value;
                 ClampFloatValue();
+                float newValue = floatValue;
                 UpdateText();
+                //UpdateText may remove decimals from the value, force to full accuracy
+                floatValue = newValue; 
                 OnValueChanged?.Invoke(this);
             }
         }
@@ -93,7 +96,6 @@ namespace Barotrauma
             {
                 if (value == intValue) return;
                 intValue = value;
-                ClampIntValue();
                 UpdateText();
                 OnValueChanged?.Invoke(this);
             }

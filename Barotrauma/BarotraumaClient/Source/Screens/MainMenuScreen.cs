@@ -45,7 +45,6 @@ namespace Barotrauma
                 RelativeSpacing = 0.02f
             };
             
-#if DEBUG
             //debug button for quickly starting a new round
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform, Anchor.TopCenter, Pivot.BottomCenter) { AbsoluteOffset = new Point(0, -40) },
                 "Quickstart (dev)", style: "GUIButtonLarge", color: Color.Red)
@@ -54,13 +53,21 @@ namespace Barotrauma
                 OnClicked = (tb, userdata) =>
                 {
                     Submarine selectedSub = null;
-                    if (!string.IsNullOrEmpty(GameMain.Config.QuickStartSubmarineName))
+                    string subName = GameMain.Config.QuickStartSubmarineName;
+                    if (!string.IsNullOrEmpty(subName))
                     {
-                        selectedSub = Submarine.SavedSubmarines.First(s => 
-                            s.Name.ToLower() == GameMain.Config.QuickStartSubmarineName.ToLower());
+                        DebugConsole.NewMessage($"Loading the predefined quick start sub \"{subName}\"", Color.White);
+                        selectedSub = Submarine.SavedSubmarines.FirstOrDefault(s => 
+                            s.Name.ToLower() == subName.ToLower());
+
+                        if (selectedSub == null)
+                        {
+                            DebugConsole.NewMessage($"Cannot find a sub that matches the name \"{subName}\".", Color.Red);
+                        }
                     }
                     if (selectedSub == null)
                     {
+                        DebugConsole.NewMessage("Loading a random sub.", Color.White);
                         var subs = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.Shuttle) && !s.HasTag(SubmarineTag.HideInMenus));
                         selectedSub = subs.ElementAt(Rand.Int(subs.Count()));
                     }
@@ -73,10 +80,25 @@ namespace Barotrauma
                     gamesession.StartRound(ToolBox.RandomSeed(8));
                     GameMain.GameScreen.Select();
 
+                    string[] jobIdentifiers = new string[] { "captain", "engineer", "mechanic" };
                     for (int i = 0; i < 3; i++)
                     {
                         var spawnPoint = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
-                        var newCharacter = Character.Create(Character.HumanConfigFile, spawnPoint.WorldPosition, ToolBox.RandomSeed(8));
+                        if (spawnPoint == null)
+                        {
+                            DebugConsole.ThrowError("No spawnpoints found in the selected submarine. Quickstart failed.");
+                            GameMain.MainMenuScreen.Select();
+                            return true;
+                        }
+                        var characterInfo = new CharacterInfo(
+                            Character.HumanConfigFile, 
+                            jobPrefab: JobPrefab.List.Find(j => j.Identifier == jobIdentifiers[i]));
+                        if (characterInfo.Job == null)
+                        {
+                            DebugConsole.ThrowError("Failed to find the job \"" + jobIdentifiers[i] + "\"!");
+                        }
+
+                        var newCharacter = Character.Create(Character.HumanConfigFile, spawnPoint.WorldPosition, ToolBox.RandomSeed(8), characterInfo);
                         newCharacter.GiveJobItems(spawnPoint);
                         gamesession.CrewManager.AddCharacter(newCharacter);
                         Character.Controlled = newCharacter;
@@ -84,8 +106,6 @@ namespace Barotrauma
                     return true;
                 }
             };
-#endif
-
 
             var minButtonSize = new Point(120, 20);
             var maxButtonSize = new Point(240, 40);
@@ -93,7 +113,8 @@ namespace Barotrauma
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("TutorialButton"), style: "GUIButtonLarge")
             {
                 UserData = Tab.Tutorials,
-                OnClicked = SelectTab
+                OnClicked = SelectTab,
+                Enabled = false
             };
 
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), buttonsParent.RectTransform), style: null); //spacing

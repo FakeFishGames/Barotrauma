@@ -7,7 +7,7 @@
     <Price locationtype="Research" buyprice="200" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,64,64,64" />
     <Sprite texture="weapons.png" depth="0.8" sourcerect="103,58,23,16" />
-    <Body width="23" height="16" />
+    <Body width="23" height="16" density="20"/>
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" type="OnUse" range="10000" selectionmode="All"/>
       <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" type="OnUse" range="10000" />
@@ -23,7 +23,7 @@
   <Item name="Compound N" identifier="compoundn" category="Equipment" Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate">
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,64,64,64" />
     <Sprite texture="weapons.png" depth="0.8" sourcerect="103,75,24,16" />
-    <Body width="24" height="16" />
+    <Body width="24" height="16" density="20"/>
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <sound file="Content/Items/Weapons/ExplosionMedium2.ogg" type="OnUse" range="10000" selectionmode="All"/>
       <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" type="OnUse" range="10000" />
@@ -41,7 +41,7 @@
   <Item name="Volatile Compound N" identifier="volatilecompoundn" category="Equipment" Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate">
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,64,64,64" />
     <Sprite texture="weapons.png" depth="0.8" sourcerect="103,108,23,17" />
-    <Body width="24" height="8" />
+    <Body width="24" height="8" density="20"/>
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <sound file="Content/Items/Weapons/ExplosionMedium3.ogg" type="OnUse" range="10000" selectionmode="All"/>
       <sound file="Content/Items/Weapons/ExplosionDebris3.ogg" type="OnUse" range="10000" />
@@ -62,7 +62,7 @@
   <Item name="IC-4 Block" identifier="ic4block" description="A compound made of C-4 and incendium." category="Equipment" Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate">
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,64,64,64" />
     <Sprite texture="weapons.png" depth="0.8" sourcerect="103,91,23,16" />
-    <Body width="24" height="16" />
+    <Body width="24" height="16" density="20"/>
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <sound file="Content/Items/Weapons/ExplosionMedium3.ogg" type="OnUse" range="10000" selectionmode="All"/>
       <sound file="Content/Items/Weapons/ExplosionDebris4.ogg" type="OnUse" range="10000" />
@@ -86,7 +86,7 @@
     <Price locationtype="Research" buyprice="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,64,64,64" />
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,105,24,22" />
-    <Body width="14" height="12" />
+    <Body width="14" height="12" density="20"/>
     <Holdable selectkey="Action" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>

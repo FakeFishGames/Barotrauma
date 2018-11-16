@@ -6,9 +6,9 @@
     linkable="true"
     allowedlinks="vent">
     
-    <Sprite texture ="FF_oxygengenerator_broken.png" depth="0.8" sourcerect="0,0,214,192"/>
-    <BrokenSprite texture="FF_oxygengenerator_broken.png" sourcerect="214,0,214,192" depth="0.8" maxcondition="50" fadein="true" />
-    <BrokenSprite texture="FF_oxygengenerator_broken.png" sourcerect="428,0,214,192" depth="0.8" maxcondition="0" />
+    <Sprite texture ="FF_oxygengenerator.png" depth="0.8" sourcerect="0,0,214,192"/>
+    <BrokenSprite texture="FF_oxygengenerator.png" sourcerect="214,0,214,192" depth="0.8" maxcondition="55" fadein="true" />
+    <BrokenSprite texture="FF_oxygengenerator.png" sourcerect="428,0,214,192" depth="0.8" maxcondition="0" />
   
     <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected = "true">
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1500" loop="false"/>
@@ -43,7 +43,7 @@
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
       <RequiredSkill identifier="mechanical" level="30"/>
       <RequiredItem identifier="wrench" type="equipped"/>
-      <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="50.0"/>
+      <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="25.0"/>
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="3" mincondition="0.0" maxcondition="0.0"/>
     </Repairable>
   </Item>

@@ -15,6 +15,7 @@ namespace Barotrauma
         private GUIListBox listBox;
 
         private RectTransform currentListBoxParent;
+        private List<RectTransform> parentHierarchy = new List<RectTransform>();
 
         private bool selectMultiple;
 
@@ -49,7 +50,7 @@ namespace Barotrauma
         {
             get
             {
-                return (listBox.SelectedComponent == null) ? null : listBox.SelectedComponent.UserData;
+                return listBox.SelectedComponent?.UserData;
             }
         }
 
@@ -131,17 +132,20 @@ namespace Barotrauma
         /// </summary>
         private RectTransform FindListBoxParent()
         {
-            List<RectTransform> parents = new List<RectTransform>() { RectTransform.Parent };
-            while (parents.Last().Parent != null)
+            parentHierarchy.Clear();
+            parentHierarchy = new List<RectTransform>() { RectTransform.Parent };
+            while (parentHierarchy.Last().Parent != null)
             {
-                parents.Add(parents.Last().Parent);
+                parentHierarchy.Add(parentHierarchy.Last().Parent);
             }
             //find the parent GUIListBox highest in the hierarchy
-            for (int i = parents.Count - 1; i >= 0; i--)
+            for (int i = parentHierarchy.Count - 1; i >= 0; i--)
             {
-                if (parents[i].GUIComponent is GUIListBox) return parents[i];
+                if (parentHierarchy[i].GUIComponent is GUIListBox) return parentHierarchy[i];
             }
             //or just go with the direct parent if there are no listboxes in the hierarchy
+            parentHierarchy.Clear();
+            parentHierarchy.Add(RectTransform.Parent);
             return RectTransform.Parent;
         }
                 
@@ -274,15 +278,19 @@ namespace Barotrauma
         }
 
         private void AddListBoxToGUIUpdateList(GUIComponent parent)
-        {            
+        {
             //the parent is not our parent anymore :(
             //can happen when subscribed to a parent higher in the hierarchy (instead of the direct parent),
             //and somewhere between this component and the higher parent a component was removed
-            if (!parent.IsParentOf(this))
+            for (int i = 1; i < parentHierarchy.Count; i++)
             {
-                parent.OnAddedToGUIUpdateList -= AddListBoxToGUIUpdateList;
-                return;
+                if (!parentHierarchy[i].IsParentOf(parentHierarchy[i - 1], recursive: false))
+                {
+                    parent.OnAddedToGUIUpdateList -= AddListBoxToGUIUpdateList;
+                    return;
+                }
             }
+
             if (Dropped)
             {
                 listBox.AddToGUIUpdateList(false, UpdateOrder);

@@ -27,11 +27,14 @@ namespace Barotrauma
 
         public string SpeciesName { get; private set; }
 
-        [Serialize(1.0f, true), Editable(MIN_SCALE, MAX_SCALE)]
+        [Serialize(1.0f, true), Editable(MIN_SCALE, MAX_SCALE, DecimalCount = 2)]
         public float LimbScale { get; set; }
 
-        [Serialize(1.0f, true), Editable(MIN_SCALE, MAX_SCALE)]
+        [Serialize(1.0f, true), Editable(MIN_SCALE, MAX_SCALE, DecimalCount = 2)]
         public float JointScale { get; set; }
+
+        [Serialize(1f, true), Editable(DecimalCount = 2)]
+        public float TextureScale { get; set; }
 
         [Serialize(45f, true), Editable(0f, 1000f)]
         public float ColliderHeightFromFloor { get; set; }
@@ -384,7 +387,8 @@ namespace Barotrauma
             if (damagedElement != null)
             {
                 damagedSpriteParams = new SpriteParams(damagedElement, ragdoll);
-                SubParams.Add(damagedSpriteParams);
+                // Hide the damaged sprite params in the editor for now.
+                //SubParams.Add(damagedSpriteParams);
             }
             var deformElement = element.Element("deformablesprite");
             if (deformElement != null)

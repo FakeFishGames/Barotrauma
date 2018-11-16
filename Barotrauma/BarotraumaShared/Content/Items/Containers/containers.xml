@@ -1,4 +1,18 @@
 ﻿<Items>
+
+  <Item
+    name="Supplies Cabinet"
+    identifier="suppliescabinet"
+    linkable="true"
+    pickdistance="150">
+
+    <Sprite texture="suppliesCabinet.png" depth="0.84" sourcerect="0,0,52,78"/>
+
+    <ItemContainer capacity="6" canbeselected="true" hideitems="true">
+      <Containable identifiers="smallitem,mediumitem"/>
+    </ItemContainer>
+  </Item>
+  
   <Item
     name="Small Windowed Steel Cabinet"
     identifier="smallwindowedsteelcabinet"

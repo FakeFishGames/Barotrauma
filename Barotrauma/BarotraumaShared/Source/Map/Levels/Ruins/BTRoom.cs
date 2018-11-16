@@ -44,7 +44,7 @@ namespace Barotrauma.RuinGeneration
         {
             subRooms = new BTRoom[2];
 
-            if (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < verticalProbability && 
+            if (Rand.Range(0.0f, rect.Height / (float)rect.Width, Rand.RandSync.Server) < verticalProbability && 
                 rect.Width * minDivRatio >= minWidth)
             {
                 SplitVertical(minDivRatio);
@@ -80,11 +80,11 @@ namespace Barotrauma.RuinGeneration
         {
             Walls = new List<Line>();
 
-            Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.Right, Rect.Y), RuinStructureType.Wall));
-            Walls.Add(new Line(new Vector2(Rect.X, Rect.Bottom), new Vector2(Rect.Right, Rect.Bottom), RuinStructureType.Wall));
+            Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.Right, Rect.Y), RuinEntityType.Wall));
+            Walls.Add(new Line(new Vector2(Rect.X, Rect.Bottom), new Vector2(Rect.Right, Rect.Bottom), RuinEntityType.Wall));
 
-            Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.X, Rect.Bottom), RuinStructureType.Wall));
-            Walls.Add(new Line(new Vector2(Rect.Right, Rect.Y), new Vector2(Rect.Right, Rect.Bottom), RuinStructureType.Wall));
+            Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.X, Rect.Bottom), RuinEntityType.Wall));
+            Walls.Add(new Line(new Vector2(Rect.Right, Rect.Y), new Vector2(Rect.Right, Rect.Bottom), RuinEntityType.Wall));
         }
 
         public void Scale(Vector2 scale)
@@ -126,33 +126,49 @@ namespace Barotrauma.RuinGeneration
             }
         }
 
-        public static void CalculateDistancesFromEntrance(BTRoom entrance, List<Corridor> corridors)
+        public static void CalculateDistancesFromEntrance(BTRoom entrance, List<BTRoom> rooms, List<Corridor> corridors)
         {
-            entrance.CalculateDistanceFromEntrance(1, new List<Corridor>(corridors));
+            entrance.CalculateDistanceFromEntrance(0, rooms, new List<Corridor>(corridors));
         }
 
-        private void CalculateDistanceFromEntrance(int currentDist, List<Corridor> corridors)
+        private void CalculateDistanceFromEntrance(int currentDist, List<BTRoom> rooms, List<Corridor> corridors)
         {
-            if (DistanceFromEntrance == 0)
+            DistanceFromEntrance = DistanceFromEntrance == 0 ? currentDist : Math.Min(currentDist, DistanceFromEntrance);
+
+            var roomRect = Rect;
+            roomRect.Inflate(5, 5);
+            foreach (var corridor in corridors)
             {
-                DistanceFromEntrance = currentDist;
-            }
-            else
-            {
-                DistanceFromEntrance = Math.Min(currentDist, DistanceFromEntrance);
-            }
+                var corridorRect = corridor.Rect;
+                corridorRect.Inflate(5, 5);
+                if (!corridorRect.Intersects(roomRect)) continue;
 
-            currentDist++;
+                corridor.DistanceFromEntrance = corridor.DistanceFromEntrance == 0 ?
+                    DistanceFromEntrance :
+                    Math.Min(corridor.DistanceFromEntrance, DistanceFromEntrance);
+                
+                List<BTRoom> connectedRooms = new List<BTRoom>();
+                foreach (var otherRoom in rooms)
+                {
+                    if (otherRoom == this) continue;
+                    if (otherRoom.DistanceFromEntrance > 0 && otherRoom.DistanceFromEntrance < currentDist) continue;
 
-            for (int i = corridors.Count - 1; i >= 0; i = Math.Min(i - 1, corridors.Count - 1))
-            {
-                var corridor = corridors[i];
+                    var otherRoomRect = otherRoom.Rect;
+                    otherRoomRect.Inflate(5, 5);
+                    if (corridorRect.Intersects(otherRoomRect)) { connectedRooms.Add(otherRoom); }
+                }
 
-                if (!corridor.ConnectedRooms.Contains(this)) continue;
+                connectedRooms.Sort((r1, r2) =>
+                {
+                    return
+                        (Math.Abs(r1.Rect.Center.X - Rect.Center.X) + Math.Abs(r1.Rect.Center.Y - Rect.Center.Y)) -
+                        (Math.Abs(r2.Rect.Center.X - Rect.Center.X) + Math.Abs(r2.Rect.Center.Y - Rect.Center.Y));
+                });
 
-                corridors.RemoveAt(i);
-
-                corridor.ConnectedRooms[corridor.ConnectedRooms[0] == this ? 1 : 0].CalculateDistanceFromEntrance(currentDist, corridors);
+                for (int i = 0; i < connectedRooms.Count; i++)
+                {
+                    connectedRooms[i].CalculateDistanceFromEntrance(currentDist + 1 + i, rooms, corridors);
+                }
             }
         }
     }

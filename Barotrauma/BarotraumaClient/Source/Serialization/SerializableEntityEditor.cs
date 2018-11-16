@@ -415,8 +415,8 @@ namespace Barotrauma
             var editableAttribute = property.GetAttribute<Editable>();
             numberInput.MinValueFloat = editableAttribute.MinValueFloat;
             numberInput.MaxValueFloat = editableAttribute.MaxValueFloat;
-            numberInput.FloatValue = value;
             numberInput.DecimalsToDisplay = editableAttribute.DecimalCount;
+            numberInput.FloatValue = value;
             numberInput.OnValueChanged += (numInput) =>
             {
                 if (property.TrySetValue(numInput.FloatValue))
@@ -590,12 +590,12 @@ namespace Barotrauma
                     Font = GUI.SmallFont
                 };
 
+                numberInput.DecimalsToDisplay = editableAttribute.DecimalCount;
+
                 if (i == 0)
                     numberInput.FloatValue = value.X;
                 else
                     numberInput.FloatValue = value.Y;
-
-                numberInput.DecimalsToDisplay = editableAttribute.DecimalCount;
 
                 int comp = i;
                 numberInput.OnValueChanged += (numInput) =>
@@ -641,14 +641,14 @@ namespace Barotrauma
                     Font = GUI.SmallFont
                 };
 
+                numberInput.DecimalsToDisplay = editableAttribute.DecimalCount;
+
                 if (i == 0)
                     numberInput.FloatValue = value.X;
                 else if (i == 1)
                     numberInput.FloatValue = value.Y;
                 else if (i == 2)
                     numberInput.FloatValue = value.Z;
-
-                numberInput.DecimalsToDisplay = editableAttribute.DecimalCount;
 
                 int comp = i;
                 numberInput.OnValueChanged += (numInput) =>

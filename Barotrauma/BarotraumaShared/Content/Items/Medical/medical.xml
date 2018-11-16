@@ -25,7 +25,7 @@
 
     <MeleeWeapon slots="Any,RightHand,LeftHand"
               aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
-      <StatusEffect type="OnUse" target="Contained, Limb" Condition="-33.4" disabledeltatime="true" >
+      <StatusEffect type="OnUse" target="Contained, Limb, Character" Condition="-33.4" disabledeltatime="true" >
         <sound file="Content/Items/Medical/syringe.ogg" range="500"/>
         <RequiredItem identifier="chem" type="Contained"/>
         <Use/>
@@ -41,7 +41,7 @@
       <Attack structuredamage="1" stun="0.1" targetforce="5">
         <Affliction identifier="bleeding" strength="1"/>
       </Attack>
-      <StatusEffect type="OnImpact" target="Contained, Limb" Condition="-100.0" disabledeltatime="true" >
+      <StatusEffect type="OnImpact" target="Contained, Limb, Character" Condition="-100.0" disabledeltatime="true" >
         <sound file="Content/Items/Medical/syringe.ogg" range="500"/>
         <RequiredItem identifiers="chem" type="Contained"/>
         <Use/>
@@ -195,7 +195,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
-    <Body width="8" height="17" density="10"/>
+    <Body width="8" height="17" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="poison,chlorine" type="OnUse" target="Character" duration="20.0">
@@ -235,7 +235,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,256,64,64"/>
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
-    <Body width="8" height="7" density="10"/>
+    <Body width="8" height="7" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" delay="5">
@@ -266,7 +266,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Limb" disabledeltatime="true">
@@ -298,7 +298,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Limb" disabledeltatime="true">
@@ -338,7 +338,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Limb" disabledeltatime="true">
@@ -430,48 +430,34 @@
     </Throwable>
   </Item>
 
-  <Item
-    name="Xenogland Extract"
-    identifier="auxiliorizine"
-    category="Material"
-    spritecolor="1.0,1.0,0.0,1.0"
-    containercolor="1.0,1.0,0.0,1.0"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    description="A highly potent stimulant effective in the treatment of internal damage, oxygen deprivation and to a lesser extent, blood loss. Produces mild burns as a side effect."
-    useinhealthinterface="true">
-
-    <Price locationtype="Research" buyprice="150"/>
-    <Price locationtype="Military" buyprice="200"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,192,64,64"/>
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
-
-    <Body width="8" height="16" density="20"/>
-
+  <Item name="Xenogland Extract" identifier="auxiliorizine" category="Material" spritecolor="1.0,1.0,0.0,1.0" containercolor="1.0,1.0,0.0,1.0" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A highly potent stimulant effective in the treatment of internal damage, oxygen deprivation and to a lesser extent, blood loss. Produces mild burns as a side effect." useinhealthinterface="true">
+    <Price locationtype="Research" buyprice="150" />
+    <Price locationtype="Military" buyprice="200" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,192,64,64" />
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6" />
+    <Body width="8" height="16" density="20" />
     <ItemComponent>
-      <StatusEffect tags="medical" type="OnUse" target="Character" duration="15.0">
+      <StatusEffect tags="medical" type="OnUse" target="This, Limb" duration="15.0">
         <ReduceAffliction identifier="damage" amount="0.25" />
         <ReduceAffliction identifier="oxygenlow" amount="0.5" />
-        <Affliction identifier="burn" amount="1" />
+        <Affliction identifier="burn" amount="0.5" />
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
       </StatusEffect>
     </ItemComponent>
-    
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect tags="medical" type="OnUse" target="Character" duration="60.0">
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-        <ReduceAffliction identifier="damage" amount="0.5"/>
-        <ReduceAffliction identifier="oxygenlow" amount="0.5"/>
-        <ReduceAffliction identifier="bloodloss" amount="0.25"/>
-        <Affliction identifier="burn" amount="0.25"/>
+      <StatusEffect tags="medical" type="OnUse" target="This, Limb" duration="60.0">
+        <RequiredItem identifier="medicalsyringe" type="Container" />
+        <ReduceAffliction identifier="damage" amount="0.5" />
+        <ReduceAffliction identifier="oxygenlow" amount="0.5" />
+        <ReduceAffliction identifier="bloodloss" amount="0.25" />
+        <Affliction identifier="burn" amount="0.125" />
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
-        <Remove/>
+        <Remove />
       </StatusEffect>
     </Throwable>
   </Item>
@@ -524,7 +510,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,256,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">      
       <StatusEffect type="OnUse" target="Character">
@@ -568,7 +554,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character">
@@ -882,7 +868,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="false" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true"/>
@@ -919,7 +905,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
-    <Body width="8" height="17" density="10"/>
+    <Body width="8" height="17" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" disabledeltatime="true">
@@ -950,7 +936,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
-    <Body width="8" height="17" density="10"/>
+    <Body width="8" height="17" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="poison,acid" type="OnUse" target="Character" duration="30.0">
@@ -1010,7 +996,7 @@
     
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" HuskInfectionState="0.01">
@@ -1042,7 +1028,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character">
@@ -1071,7 +1057,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,256,64,64"/>
     <Sprite texture ="Content/Items/Medical/med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="25" height="5" density="10"/>
+    <Body width="25" height="5" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true"/>
@@ -1110,7 +1096,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,256,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="8" height="16" density="10"/>
+    <Body width="8" height="16" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character">

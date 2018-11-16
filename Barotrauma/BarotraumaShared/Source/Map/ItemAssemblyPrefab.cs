@@ -21,8 +21,9 @@ namespace Barotrauma
             configPath = filePath;
             XDocument doc = XMLExtensions.TryLoadXml(filePath);
             if (doc == null || doc.Root == null) return;
-
+            
             name = doc.Root.GetAttributeString("name", "");
+            identifier = doc.Root.GetAttributeString("identifier", null) ?? name.ToLowerInvariant().Replace(" ", "");
             configElement = doc.Root;
 
             Category = MapEntityCategory.ItemAssembly;
@@ -42,23 +43,32 @@ namespace Barotrauma
         
         protected override void CreateInstance(Rectangle rect)
         {
+            CreateInstance(rect.Location.ToVector2());
+        }
+
+        public List<MapEntity> CreateInstance(Vector2 position)
+        {
             List<MapEntity> entities = MapEntity.LoadAll(Submarine.MainSub, configElement, configPath);
-            if (entities.Count == 0) return;
-            
+            if (entities.Count == 0) return entities;
+
+            Vector2 offset = Submarine.MainSub == null ? Vector2.Zero : Submarine.MainSub.HiddenSubPosition;
+
             foreach (MapEntity me in entities)
             {
-                me.Move(rect.Location.ToVector2());
+                me.Move(position);
                 Item item = me as Item;
                 if (item == null) continue;
                 Wire wire = item.GetComponent<Wire>();
-                if (wire != null) wire.MoveNodes(rect.Location.ToVector2() - Submarine.MainSub.HiddenSubPosition);
+                if (wire != null) wire.MoveNodes(position - offset);
             }
 
             MapEntity.MapLoaded(entities, true);
 #if CLIENT
             MapEntity.SelectedList.Clear();
             MapEntity.SelectedList.AddRange(entities);
-#endif         
+#endif   
+            return entities;
+
         }
 
 #if CLIENT

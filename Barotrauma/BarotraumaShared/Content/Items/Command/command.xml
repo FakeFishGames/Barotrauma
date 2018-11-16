@@ -8,9 +8,9 @@
     allowedlinks="statusmonitor"
     category="Machine">
 
-    <Sprite texture="Content/Items/Command/navigator_broken.png" depth="0.8" sourcerect="0,0,188,194"/>
-    <BrokenSprite texture="Content/Items/Command/navigator_broken.png" sourcerect="188,0,188,194" depth="0.8" maxcondition="50" fadein="true" />
-    <BrokenSprite texture="Content/Items/Command/navigator_broken.png" sourcerect="376,0,188,194" depth="0.8" maxcondition="0" />
+    <Sprite texture="Content/Items/Command/navigator.png" depth="0.8" sourcerect="0,0,188,194"/>
+    <BrokenSprite texture="Content/Items/Command/navigator.png" sourcerect="188,0,188,194" depth="0.8" maxcondition="55" fadein="true" />
+    <BrokenSprite texture="Content/Items/Command/navigator.png" sourcerect="376,0,188,194" depth="0.8" maxcondition="0" />
 
     <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10" linkuitocomponent="3">
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" style="OuterGlow" color="0,0,0,0.8" absoluteoffset="30,0"/>
@@ -53,7 +53,7 @@
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
       <RequiredSkill identifier="electrical" level="40"/>
       <RequiredItem identifier="screwdriver" type="equipped"/>
-      <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="50.0"/>
+      <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="25.0"/>
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="3" mincondition="0.0" maxcondition="0.0"/>
     </Repairable>
   </Item>
@@ -66,9 +66,9 @@
     allowedlinks="statusmonitor"
     category="Machine">
 
-    <Sprite texture="Content/Items/Command/navigator_broken.png" depth="0.8" sourcerect="0,0,188,194"/>
-    <BrokenSprite texture="Content/Items/Command/navigator_broken.png" sourcerect="188,0,188,194" depth="0.8" maxcondition="50" fadein="true" />
-    <BrokenSprite texture="Content/Items/Command/navigator_broken.png" sourcerect="376,0,188,194" depth="0.8" maxcondition="0" />
+    <Sprite texture="Content/Items/Command/navigator.png" depth="0.8" sourcerect="0,0,188,194"/>
+    <BrokenSprite texture="Content/Items/Command/navigator.png" sourcerect="188,0,188,194" depth="0.8" maxcondition="50" fadein="true" />
+    <BrokenSprite texture="Content/Items/Command/navigator.png" sourcerect="376,0,188,194" depth="0.8" maxcondition="0" />
     
     <Sonar canbeselected = "true" powerconsumption="100" displaybordersize="-0.1">
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" absoluteoffset="30,0"/>
@@ -108,9 +108,9 @@
     linkable="true"
     allowedlinks="navterminal">
 
-    <Sprite texture="Content/Items/Command/statusMonitor_broken.png" sourcerect="0,0,113,193" depth="0.8"/>
-    <BrokenSprite texture="Content/Items/Command/statusMonitor_broken.png" sourcerect="113,0,113,193" depth="0.8" maxcondition="50" fadein="true" />
-    <BrokenSprite texture="Content/Items/Command/statusMonitor_broken.png" sourcerect="226,0,113,193" depth="0.8" maxcondition="0" />
+    <Sprite texture="Content/Items/Command/statusMonitor.png" sourcerect="0,0,113,193" depth="0.8"/>
+    <BrokenSprite texture="Content/Items/Command/statusMonitor.png" sourcerect="113,0,113,193" depth="0.8" maxcondition="50" fadein="true" />
+    <BrokenSprite texture="Content/Items/Command/statusMonitor.png" sourcerect="226,0,113,193" depth="0.8" maxcondition="0" />
 
     <MiniMap MinVoltage="0.5" PowerConsumption="100" canbeselected = "true">
       <GuiFrame relativesize="0.5,0.5" anchor="Center" style="ItemUI"/>
@@ -146,8 +146,8 @@
     category="Machine"
     spritecolor="0,0,0,1">
 
-    <!-- TODO: sonar transducer sprite -->
-    <Sprite texture="Content/Items/Command/statusMonitor.png" sourcerect="0,0,266,224" depth="0.8"/>
+    <!-- TODO: sonar transducer light implementation -->
+    <Sprite texture="Content/Items/Command/sonarTransducer.png" sourcerect="0,0,97,97" depth="0.8"/>
 
     <SonarTransducer MinVoltage="0.5" PowerConsumption="100" canbeselected="true"/>
 

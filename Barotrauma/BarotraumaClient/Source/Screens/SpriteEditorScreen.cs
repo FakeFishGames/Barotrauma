@@ -87,8 +87,9 @@ namespace Barotrauma
                         if (sprite.Texture != selectedTexture) { continue; }
                         var element = sprite.SourceElement;
                         if (element == null) { continue; }
+                        // Not all sprites have a sourcerect defined, in which case we'll want to use the current source rect instead of an empty rect.
                         sprite.SourceRect = element.GetAttributeRect("sourcerect", sprite.SourceRect);
-                        sprite.Origin = element.GetAttributeVector2("origin", sprite.RelativeOrigin);
+                        sprite.RelativeOrigin = element.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
                     }
                     ResetWidgets();
                     xmlPathText.Text = "Changes successfully reset";
@@ -415,110 +416,54 @@ namespace Barotrauma
                     if (!string.IsNullOrEmpty(id))
                     {
                         int widgetSize = 10;
-                        Vector2 halfSize = new Vector2(widgetSize) / 2;
-                        Vector2 tooltipOffset = new Vector2(15, -10);
                         Vector2 GetTopLeft() => sprite.SourceRect.Location.ToVector2();
                         Vector2 GetTopRight() => new Vector2(GetTopLeft().X + sprite.SourceRect.Width, GetTopLeft().Y);
                         Vector2 GetBottomRight() => new Vector2(GetTopRight().X, GetTopRight().Y + sprite.SourceRect.Height);
-                        var originWidget = GetWidget($"{id}_origin", widgetSize, Widget.Shape.Cross, initMethod: w =>
+                        var originWidget = GetWidget($"{id}_origin", sprite, widgetSize, Widget.Shape.Cross, initMethod: w =>
                         {
-                            w.color = Color.Yellow;
-                            w.secondaryColor = Color.Gray;
-                            w.tooltipOffset = tooltipOffset;
                             w.tooltip = $"Origin: {sprite.RelativeOrigin.FormatDoubleDecimal()}";
-                            w.inputAreaMargin = new Point(widgetSize / 2);
-                            w.refresh = () =>
-                                w.DrawPos = (textureRect.Location.ToVector2() + (sprite.Origin + sprite.SourceRect.Location.ToVector2()) * zoom)
-                                    .Clamp(textureRect.Location.ToVector2() + GetTopLeft() * zoom, textureRect.Location.ToVector2() + GetBottomRight() * zoom);
-                            w.MouseDown += () => spriteList.Select(sprite);
                             w.MouseHeld += dTime =>
                             {
                                 w.DrawPos = PlayerInput.MousePosition.Clamp(textureRect.Location.ToVector2() + GetTopLeft() * zoom, textureRect.Location.ToVector2() + GetBottomRight() * zoom);
-                                sprite.Origin = (w.DrawPos + halfSize - textureRect.Location.ToVector2() - sprite.SourceRect.Location.ToVector2() * zoom) / zoom;
+                                sprite.Origin = (w.DrawPos - textureRect.Location.ToVector2() - sprite.SourceRect.Location.ToVector2() * zoom) / zoom;
                                 w.tooltip = $"Origin: {sprite.RelativeOrigin.FormatDoubleDecimal()}";
                             };
-                            w.PreUpdate += dTime => w.Enabled = selectedSprites.Contains(sprite);
-                            w.PostUpdate += dTime => w.size = w.IsSelected ? (int)Math.Round(widgetSize * 1.5f) : widgetSize;
-                            w.PreDraw += (sp, dTime) =>
-                            {
-                                if (!w.IsSelected)
-                                {
-                                    w.refresh();
-                                }
-                            };
+                            w.refresh = () =>
+                                w.DrawPos = (textureRect.Location.ToVector2() + (sprite.Origin + sprite.SourceRect.Location.ToVector2()) * zoom)
+                                    .Clamp(textureRect.Location.ToVector2() + GetTopLeft() * zoom, textureRect.Location.ToVector2() + GetBottomRight() * zoom);
                         });
-                        var positionWidget = GetWidget($"{id}_position", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
+                        var positionWidget = GetWidget($"{id}_position", sprite, widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                         {
-                            w.color = Color.Yellow;
-                            w.secondaryColor = Color.Gray;
-                            w.tooltipOffset = tooltipOffset;
                             w.tooltip = $"Position: {sprite.SourceRect.Location}";
-                            w.DrawPos = textureRect.Location.ToVector2() + GetTopLeft() * zoom - halfSize;
-                            w.inputAreaMargin = new Point(widgetSize / 2);
-                            w.MouseDown += () => spriteList.Select(sprite);
                             w.MouseHeld += dTime =>
                             {
                                 w.DrawPos = PlayerInput.MousePosition;
-                                sprite.SourceRect = new Rectangle(((w.DrawPos + halfSize - textureRect.Location.ToVector2()) / zoom).ToPoint(), sprite.SourceRect.Size);
-                                if (widgets.TryGetValue($"{id}_size", out Widget sizeW))
-                                {
-                                    sizeW.refresh();
-                                }
-                                if (widgets.TryGetValue($"{id}_origin", out Widget originW))
-                                {
-                                    originW.refresh();
-                                }
+                                sprite.SourceRect = new Rectangle(((w.DrawPos + new Vector2(w.size / 2) - textureRect.Location.ToVector2()) / zoom).ToPoint(), sprite.SourceRect.Size);
                                 if (spriteList.SelectedComponent is GUITextBlock textBox)
                                 {
+                                    // TODO: cache the sprite name?
                                     textBox.Text = GetSpriteName(sprite) + " " + sprite.SourceRect;
                                 }
                                 w.tooltip = $"Position: {sprite.SourceRect.Location}";
                             };
-                            w.refresh = () => w.DrawPos = textureRect.Location.ToVector2() + sprite.SourceRect.Location.ToVector2() * zoom - halfSize;
-                            w.PreUpdate += dTime => w.Enabled = selectedSprites.Contains(sprite);
-                            w.PostUpdate += dTime => w.size = w.IsSelected ? (int)Math.Round(widgetSize * 1.5f) : widgetSize;
-                            w.PreDraw += (sp, dTime) =>
-                            {
-                                if (!w.IsSelected)
-                                {
-                                    w.refresh();
-                                }
-                            };
+                            w.refresh = () => w.DrawPos = textureRect.Location.ToVector2() + sprite.SourceRect.Location.ToVector2() * zoom - new Vector2(w.size / 2);
                         });
-                        var sizeWidget = GetWidget($"{id}_size", widgetSize, Widget.Shape.Rectangle, initMethod: w =>
+                        var sizeWidget = GetWidget($"{id}_size", sprite, widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                         {
-                            w.color = Color.Yellow;
-                            w.secondaryColor = Color.Gray;
-                            w.tooltipOffset = tooltipOffset;
                             w.tooltip = $"Size: {sprite.SourceRect.Size}";
-                            w.DrawPos = textureRect.Location.ToVector2() + GetBottomRight() * zoom + halfSize;
-                            w.inputAreaMargin = new Point(widgetSize / 2);
-                            w.MouseDown += () => spriteList.Select(sprite);
                             w.MouseHeld += dTime =>
                             {
                                 w.DrawPos = PlayerInput.MousePosition;
-                                sprite.SourceRect = new Rectangle(sprite.SourceRect.Location, ((w.DrawPos - new Vector2(widgetSize) - positionWidget.DrawPos) / zoom).ToPoint());
+                                sprite.SourceRect = new Rectangle(sprite.SourceRect.Location, ((w.DrawPos - new Vector2(w.size) - positionWidget.DrawPos) / zoom).ToPoint());
                                 sprite.RelativeOrigin = sprite.RelativeOrigin;
-                                if (widgets.TryGetValue($"{id}_origin", out Widget originW))
-                                {
-                                    originW.refresh();
-                                }
                                 if (spriteList.SelectedComponent is GUITextBlock textBox)
                                 {
+                                    // TODO: cache the sprite name?
                                     textBox.Text = GetSpriteName(sprite) + " " + sprite.SourceRect;
                                 }
                                 w.tooltip = $"Size: {sprite.SourceRect.Size}";
                             };
-                            w.refresh = () => w.DrawPos = textureRect.Location.ToVector2() + new Vector2(sprite.SourceRect.Right, sprite.SourceRect.Bottom) * zoom + halfSize;
-                            w.PreUpdate += dTime => w.Enabled = selectedSprites.Contains(sprite);
-                            w.PostUpdate += dTime => w.size = w.IsSelected ? (int)Math.Round(widgetSize * 1.5f) : widgetSize;
-                            w.PreDraw += (sp, dTime) =>
-                            {
-                                if (!w.IsSelected)
-                                {
-                                    w.refresh();
-                                }
-                            };
+                            w.refresh = () => w.DrawPos = textureRect.Location.ToVector2() + new Vector2(sprite.SourceRect.Right, sprite.SourceRect.Bottom) * zoom + new Vector2(w.size / 2);
                         });
                         if (isSelected)
                         {
@@ -618,26 +563,58 @@ namespace Barotrauma
         {
             var sourceElement = sprite.SourceElement;
             if (sourceElement == null) { return string.Empty; }
-            string id = string.Empty;
-            string identifier = sourceElement.Parent.GetAttributeString("identifier", string.Empty);
-            if (string.IsNullOrEmpty(id))
+            string name = sourceElement.GetAttributeString("name", null);
+            if (string.IsNullOrWhiteSpace(name))
             {
-                id = sourceElement.Parent.GetAttributeString("name", string.Empty);
+                name = sourceElement.Parent.GetAttributeString("identifier", string.Empty);
             }
-            return string.IsNullOrEmpty(id) ? Path.GetFileNameWithoutExtension(sprite.FilePath) : id;
+            if (string.IsNullOrEmpty(name))
+            {
+                name = sourceElement.Parent.GetAttributeString("name", string.Empty);
+            }
+            return string.IsNullOrEmpty(name) ? Path.GetFileNameWithoutExtension(sprite.FilePath) : name;
         }
         #endregion
 
         #region Widgets
         private Dictionary<string, Widget> widgets = new Dictionary<string, Widget>();
 
-        private Widget GetWidget(string id, int size = 5, Widget.Shape shape = Widget.Shape.Rectangle, Action<Widget> initMethod = null)
+        private Widget GetWidget(string id, Sprite sprite, int size = 5, Widget.Shape shape = Widget.Shape.Rectangle, Action<Widget> initMethod = null)
         {
             if (!widgets.TryGetValue(id, out Widget widget))
             {
-                widget = new Widget(id, size, shape);
-                initMethod?.Invoke(widget);
+                int selectedSize = (int)Math.Round(size * 1.5f);
+                widget = new Widget(id, size, shape)
+                {
+                    data = sprite,
+                    color = Color.Yellow,
+                    secondaryColor = Color.Gray,
+                    tooltipOffset = new Vector2(selectedSize / 2 + 5, -10)
+                };
+                widget.MouseDown += () => spriteList.Select(sprite);
+                widget.PreDraw += (sp, dTime) =>
+                {
+                    if (!widget.IsControlled)
+                    {
+                        widget.refresh();
+                    }
+                };
+                widget.PreUpdate += dTime => widget.Enabled = selectedSprites.Contains(sprite);
+                widget.PostUpdate += dTime =>
+                {
+                    if (widget.IsSelected)
+                    {
+                        widget.size = selectedSize;
+                        widget.inputAreaMargin = 10;
+                    }
+                    else
+                    {
+                        widget.size = size;
+                        widget.inputAreaMargin = 5;
+                    }
+                };
                 widgets.Add(id, widget);
+                initMethod?.Invoke(widget);
             }
             return widget;
         }

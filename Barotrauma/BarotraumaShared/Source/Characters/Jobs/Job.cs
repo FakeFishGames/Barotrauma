@@ -98,17 +98,17 @@ namespace Barotrauma
             }
         }
 
-        public void GiveJobItems(Character character, WayPoint spawnPoint)
+        public void GiveJobItems(Character character, WayPoint spawnPoint = null)
         {
             if (SpawnItems == null) return;
 
             foreach (XElement itemElement in SpawnItems.Elements())
             {
-                InitializeJobItem(character, spawnPoint, itemElement);
+                InitializeJobItem(character, itemElement, spawnPoint);
             }            
         }
 
-        private void InitializeJobItem(Character character, WayPoint spawnPoint, XElement itemElement, Item parentItem = null)
+        private void InitializeJobItem(Character character, XElement itemElement, WayPoint spawnPoint = null, Item parentItem = null)
         {
             ItemPrefab itemPrefab;
             if (itemElement.Attribute("name") != null)
@@ -175,7 +175,7 @@ namespace Barotrauma
 
             foreach (XElement childItemElement in itemElement.Elements())
             {
-                InitializeJobItem(character, spawnPoint, childItemElement, item);
+                InitializeJobItem(character, childItemElement, spawnPoint, item);
             } 
         }
 

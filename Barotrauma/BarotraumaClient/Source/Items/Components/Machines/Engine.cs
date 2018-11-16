@@ -108,6 +108,14 @@ namespace Barotrauma.Items.Components
 
                 propellerSprite.Draw(spriteBatch, (int)Math.Floor(spriteIndex), drawPos, Color.White, propellerSprite.Origin, 0.0f, Vector2.One);
             }
+
+            if (editing)
+            {
+                Vector2 drawPos = item.DrawPosition;
+                drawPos += PropellerPos;
+                drawPos.Y = -drawPos.Y;
+                GUI.DrawRectangle(spriteBatch, drawPos - Vector2.One * 10, Vector2.One * 20, Color.Red);
+            }
         }
 
         public void ClientWrite(NetBuffer msg, object[] extraData = null)

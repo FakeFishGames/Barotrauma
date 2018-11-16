@@ -918,7 +918,7 @@ namespace Barotrauma
         {
             //make the previously selected character wait in place for some time
             //(so they don't immediately start idling and walking away from their station)
-            if (Character.Controlled?.AIController != null)
+            if (Character.Controlled?.AIController?.ObjectiveManager != null)
             {
                 Character.Controlled.AIController.ObjectiveManager.WaitTimer = CharacterWaitOnSwitch;
             }
