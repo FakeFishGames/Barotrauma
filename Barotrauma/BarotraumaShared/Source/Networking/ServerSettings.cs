@@ -628,20 +628,25 @@ namespace Barotrauma.Networking
             msg.WritePadBits();
         }
 
-        public void ReadExtraCargo(NetBuffer msg)
+        public bool ReadExtraCargo(NetBuffer msg)
         {
+            bool changed = false;
             UInt32 count = msg.ReadUInt32();
-            ExtraCargo = new Dictionary<ItemPrefab, int>();
+            if (ExtraCargo == null || count != ExtraCargo.Count) changed = true;
+            Dictionary<ItemPrefab, int> extraCargo = new Dictionary<ItemPrefab, int>();
             for (int i=0;i<count;i++)
             {
                 string prefabName = msg.ReadString();
                 byte amount = msg.ReadByte();
                 ItemPrefab ip = MapEntityPrefab.List.Find(p => p is ItemPrefab && p.Name.Equals(prefabName,StringComparison.InvariantCulture)) as ItemPrefab;
-                if (ip != null && amount>0)
+                if (ip != null && amount > 0)
                 {
-                    ExtraCargo.Add(ip, amount);
+                    if (changed || !ExtraCargo.ContainsKey(ip) || ExtraCargo[ip] != amount) changed = true;
+                    extraCargo.Add(ip, amount);
                 }
             }
+            if (changed) ExtraCargo = extraCargo;
+            return changed;
         }
 
         public void WriteExtraCargo(NetBuffer msg)
@@ -657,28 +662,6 @@ namespace Barotrauma.Networking
             {
                 msg.Write(kvp.Key.Name); msg.Write((byte)kvp.Value);
             }
-        }
-
-        private void SharedWrite(NetBuffer outMsg)
-        {
-            outMsg.Write(ServerName);
-            outMsg.Write((UInt16)Port);
-            outMsg.Write((UInt16)maxPlayers);
-            outMsg.Write(ServerName);
-            outMsg.Write(ServerMessageText);
-
-            WriteExtraCargo(outMsg);
-        }
-
-        private void SharedRead(NetBuffer incMsg)
-        {
-            ServerName = incMsg.ReadString();
-            Port = incMsg.ReadUInt16();
-            maxPlayers = incMsg.ReadUInt16();
-            ServerName = incMsg.ReadString();
-            ServerMessageText = incMsg.ReadString();
-
-            ReadExtraCargo(incMsg);
         }
     }
 }

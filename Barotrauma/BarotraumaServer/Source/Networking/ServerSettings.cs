@@ -48,7 +48,10 @@ namespace Barotrauma.Networking
 
         public void ServerWrite(NetBuffer outMsg,Client c)
         {
-            SharedWrite(outMsg);
+            outMsg.Write(ServerName);
+            outMsg.Write(ServerMessageText);
+
+            WriteExtraCargo(outMsg);
 
             Voting.ServerWrite(outMsg);
 
@@ -70,10 +73,18 @@ namespace Barotrauma.Networking
         {
             if (!c.HasPermission(Networking.ClientPermissions.ManageSettings)) return;
 
-            SharedRead(incMsg);
+            bool changed = false;
+
+            string serverName = incMsg.ReadString();
+            if (ServerName != serverName) changed = true;
+            ServerName = serverName;
+            string serverMessageText = incMsg.ReadString();
+            if (ServerMessageText != serverMessageText) changed = true;
+            ServerMessageText = serverMessageText;
+
+            changed |= ReadExtraCargo(incMsg);
 
             UInt32 count = incMsg.ReadUInt32();
-            bool changed = false;
 
             for (int i=0;i<count;i++)
             {

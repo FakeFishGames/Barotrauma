@@ -130,7 +130,10 @@ namespace Barotrauma.Networking
 
         public void ClientRead(NetBuffer incMsg)
         {
-            SharedRead(incMsg);
+            ServerName = incMsg.ReadString();
+            ServerMessageText = incMsg.ReadString();
+
+            ReadExtraCargo(incMsg);
 
             Voting.ClientRead(incMsg);
 
@@ -144,15 +147,29 @@ namespace Barotrauma.Networking
 
         public void ClientAdminWrite()
         {
+            if (!GameMain.Client.HasPermission(Networking.ClientPermissions.ManageSettings)) return;
+
+            if (GameMain.NetLobbyScreen.ServerName.Text != ServerName)
+            {
+                ServerName = GameMain.NetLobbyScreen.ServerName.Text;
+            }
+            if (GameMain.NetLobbyScreen.ServerMessage.Text != ServerMessageText)
+            {
+                ServerMessageText = GameMain.NetLobbyScreen.ServerMessage.Text;
+            }
+
             NetOutgoingMessage outMsg = GameMain.NetworkMember.NetPeer.CreateMessage();
 
             outMsg.Write((byte)ClientPacketHeader.SERVER_SETTINGS);
 
-            SharedWrite(outMsg);
+            outMsg.Write(ServerName);
+            outMsg.Write(ServerMessageText);
+
+            WriteExtraCargo(outMsg);
 
             IEnumerable<KeyValuePair<UInt32, NetPropertyData>> changedProperties = netProperties.Where(kvp => kvp.Value.ChangedLocally);
             UInt32 count = (UInt32)changedProperties.Count();
-            bool changedMonsterSettings = tempMonsterEnabled.Any(p => p.Value != MonsterEnabled[p.Key]);
+            bool changedMonsterSettings = tempMonsterEnabled!=null && tempMonsterEnabled.Any(p => p.Value != MonsterEnabled[p.Key]);
             
             outMsg.Write(count);
             DebugConsole.NewMessage("COUNT: " + count.ToString(), Color.Yellow);
