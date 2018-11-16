@@ -368,7 +368,8 @@ namespace Barotrauma
                 SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
                 Vector2 origin = wearable.InheritOrigin ? ActiveSprite.Origin : wearable.Sprite.Origin;
-                if (body.Dir == -1.0f) origin.X = wearable.Sprite.SourceRect.Width - origin.X;
+                // If the wearable inherits the origin, flipping is already handled.
+                if (!wearable.InheritOrigin && body.Dir == -1.0f) origin.X = wearable.Sprite.SourceRect.Width - origin.X;
 
                 if (wearable.InheritSourceRect)
                 {
