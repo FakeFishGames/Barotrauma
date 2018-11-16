@@ -87,12 +87,6 @@ namespace Barotrauma
             }
             else
             {
-                // TODO: remove
-                if (file.Contains("[GENDER]"))
-                {
-                    // fail silently for now
-                    return null;
-                }
                 DebugConsole.ThrowError("Sprite \"" + file + "\" not found!");
             }
 

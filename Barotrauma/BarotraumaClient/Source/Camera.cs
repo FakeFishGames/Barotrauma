@@ -353,6 +353,14 @@ namespace Barotrauma
             Freeze = false;
         }
         
+        public void StopMovement()
+        {
+            targetZoom = zoom;
+            velocity = Vector2.Zero;
+            angularVelocity = 0.0f;
+            rotation = 0.0f;
+        }
+
         public Vector2 Position
         {
             get { return position; }
@@ -365,7 +373,7 @@ namespace Barotrauma
                 position = value; 
             }
         }
-        
+                
         public Vector2 ScreenToWorld(Vector2 coords)
         {
             Vector2 worldCoords = Vector2.Transform(coords, Matrix.Invert(transform));
