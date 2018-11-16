@@ -2130,7 +2130,7 @@ namespace Barotrauma
             {
                 GetAnimationWidget($"{character.SpeciesName}_{CurrentAnimation.AnimationType.ToString()}_CycleSpeed", Color.MediumPurple, size: 20, sizeMultiplier: 1.5f, shape: Widget.Shape.Circle, initMethod: w =>
                 {
-                    float multiplier = 0.25f;
+                    float multiplier = 0.5f;
                     w.tooltip = "Cycle Speed";
                     w.refresh = () =>
                     {
