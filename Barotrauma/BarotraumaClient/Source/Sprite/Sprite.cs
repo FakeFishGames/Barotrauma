@@ -10,6 +10,8 @@ namespace Barotrauma
     {
         protected Texture2D texture;
 
+        private bool preMultipliedAlpha;
+
         public Texture2D Texture
         {
             get { return texture; }
@@ -36,6 +38,7 @@ namespace Barotrauma
 
         partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn, bool preMultiplyAlpha)
         {
+            preMultipliedAlpha = preMultiplyAlpha;
             texture = LoadTexture(this.file, preMultiplyAlpha);
 
             if (texture == null)
@@ -54,7 +57,7 @@ namespace Barotrauma
             texture.Dispose();
             texture = null;
 
-            texture = TextureLoader.FromFile(file);
+            texture = TextureLoader.FromFile(file, preMultipliedAlpha);
             foreach (Sprite sprite in sprites)
             {
                 sprite.texture = texture;
