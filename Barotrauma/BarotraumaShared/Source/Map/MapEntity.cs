@@ -518,7 +518,7 @@ namespace Barotrauma
         }
 
         // TODO: use for scaling the whole entity (physics, source rect etc). Turn saveable, when done.
-        [Serialize(1f, false), Editable(0.1f, 10f)]
+        [Serialize(1f, false), Editable(0.1f, 10f, DecimalCount = 3)]
         public float Scale { get; set; } = 1;
         #endregion
     }
