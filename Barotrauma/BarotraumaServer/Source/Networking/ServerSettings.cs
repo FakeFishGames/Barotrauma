@@ -220,10 +220,8 @@ namespace Barotrauma.Networking
             ServerName = doc.Root.GetAttributeString("name", "");
             ServerMessageText = doc.Root.GetAttributeString("ServerMessage", "");
             
-#if SERVER
             GameMain.NetLobbyScreen.SelectedModeName = GameMode;
             GameMain.NetLobbyScreen.MissionTypeName = MissionType;
-#endif
 
             GameMain.NetLobbyScreen.SetBotSpawnMode(BotSpawnMode);
             GameMain.NetLobbyScreen.SetBotCount(BotCount);
@@ -362,10 +360,8 @@ namespace Barotrauma.Networking
             {
                 File.Delete("Data/clientpermissions.txt");
             }
-
-#if SERVER
+            
             GameServer.Log("Saving client permissions", ServerLog.MessageType.ServerMessage);
-#endif
 
             XDocument doc = new XDocument(new XElement("ClientPermissions"));
 

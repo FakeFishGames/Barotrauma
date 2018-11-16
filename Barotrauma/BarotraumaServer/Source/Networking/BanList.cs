@@ -159,9 +159,7 @@ namespace Barotrauma.Networking
         private void RemoveBan(BannedPlayer banned)
         {
             DebugConsole.Log("Removing ban from " + banned.Name);
-#if SERVER
             GameServer.Log("Removing ban from " + banned.Name, ServerLog.MessageType.ServerMessage);
-#endif
 
             bannedPlayers.Remove(banned);
 
