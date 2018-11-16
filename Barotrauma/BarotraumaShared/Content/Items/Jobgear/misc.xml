@@ -15,7 +15,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,0,64,64"/>
     <Sprite texture="headset.png" depth="0.6" sourcerect="0,0,16,16"/>
 
-    <Body width="12" height="8" density="10"/>
+    <Body width="12" height="8" density="13"/>
 
     <WifiComponent range="35000.0" LinkToChat="true" MinChatMessageInterval="0.0">
       <RequiredItems identifier="batterycell,fulguriumbatterycell" type="Contained"/>      
@@ -42,7 +42,7 @@
 
     <Sprite texture="clownmask.png" depth="0.6" sourcerect="0,0,37,38"/>
 
-    <Body width="10" radius="10"  density="10"/>
+    <Body width="10" radius="10" density="15"/>
 
     <Deconstruct time="10">
       <Item identifier="bikehorn"/>

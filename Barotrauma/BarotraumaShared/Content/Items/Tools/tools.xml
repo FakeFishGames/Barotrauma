@@ -219,7 +219,7 @@
     </Deconstruct>
     <!-- TODO: sonar beacon sprite -->
     <Sprite texture="tools.png" sourcerect="42,6,22,11" depth="0.55" />
-    <Body width="31" height="6" density="10" />
+    <Body width="31" height="6" density="12" />
     <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0" />
     <LightComponent LightColor="0.0,1.0,0.0,1.0" range="50" powerconsumption="10" blinkfrequency="2" IsOn="true">
       <AiTarget soundrange="20000" sonarlabel="Sonar Beacon" />
