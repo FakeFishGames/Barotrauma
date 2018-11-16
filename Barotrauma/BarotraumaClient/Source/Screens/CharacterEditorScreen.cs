@@ -1556,8 +1556,9 @@ namespace Barotrauma
                     ResetParamsEditor();
                     ClearWidgets();
                 }
-                ResetParamsEditor();
-                ClearWidgets();
+                // These should be unnecessary here
+                //ResetParamsEditor();
+                //ClearWidgets();
                 CreateCenterPanel();
                 GUI.AddMessage($"Ragdoll reset", Color.WhiteSmoke, font: GUI.Font);
                 return true;
