@@ -7,15 +7,9 @@
 
     <Sprite texture ="engine.png" depth="0.8" sourcerect="0,0,373,113" canflipx="true"/>
 
-    <trigger x="20" y ="0" width="590" height="464"/>
+    <trigger x="70" y="0" width="300" height="113"/>
 
-    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
-      <RequiredSkill identifier="mechanical" level="30"/>
-      <RequiredItem identifier="wrench" type="equipped"/>
-    </Repairable>
-
-    <Engine minvoltage="0.5" powerconsumption="2000.0" maxforce="2000" canbeselected = "true">
+    <Engine minvoltage="0.5" powerconsumption="2000.0" maxforce="2000" canbeselected="true" propellerpos="-130,0">
       <GuiFrame relativesize="0.2,0.15" minsize="400,160" maxsize="480,190" anchor="Center" style="ItemUI"/>
       <StatusEffect type="InWater" target="This" condition="-2.0"/>
       <sound file="Content/Items/Engine/engine.ogg" type="OnActive" range="3000.0" volumeproperty="CurrentVolume" loop="true"/>
@@ -26,6 +20,39 @@
       <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="power_in"/>
       <input name="set_force"/>
-    </ConnectionPanel> 
+    </ConnectionPanel>
+
+    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="30"/>
+      <RequiredItem identifier="wrench" type="equipped"/>
+    </Repairable>
+  </Item>
+
+  <Item
+    name="Shuttle Engine"
+    category="Legacy">
+
+    <Sprite texture="Content/Items/Legacy/engine.png" depth="0.8" sourcerect="0,115,224,73" canflipx="true"/>
+
+    <trigger x="15" y ="0" width="194" height="73"/>
+
+    <Engine minvoltage="0.5" powerconsumption="500.0" maxforce="300" canbeselected = "true" propellerpos="-80,0">
+      <GuiFrame relativesize="0.2,0.15" minsize="400,160" maxsize="480,190" anchor="Center" style="ItemUI"/>
+      <sound file="Content/Items/Engine/engine.ogg" type="OnActive" range="3000.0" volumeproperty="CurrentVolume" loop="true"/>
+    </Engine>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
+      <input name="power_in"/>
+      <input name="set_force"/>
+    </ConnectionPanel>
+    
+    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="10" msg="ItemMsgRepairWrench" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="30"/>
+      <RequiredItem identifier="wrench" type="equipped"/>
+    </Repairable>
   </Item>
 </Items>
