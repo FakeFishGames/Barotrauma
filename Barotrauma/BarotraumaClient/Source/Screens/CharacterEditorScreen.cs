@@ -961,6 +961,7 @@ namespace Barotrauma
         {
             character.AnimController.Recreate(ragdoll);
             TeleportTo(spawnPosition);
+            CreateTextures();
             ResetParamsEditor();
             ClearWidgets();
         }
@@ -1663,7 +1664,6 @@ namespace Barotrauma
                     var ragdoll = character.IsHumanoid ? HumanRagdollParams.GetRagdollParams(character.SpeciesName, fileName) as RagdollParams : RagdollParams.GetRagdollParams<FishRagdollParams>(character.SpeciesName, fileName);
                     GUI.AddMessage($"Ragdoll loaded from {selectedFile}", Color.WhiteSmoke, font: GUI.Font);
                     RecreateRagdoll(ragdoll);
-                    CreateTextures();
                     CreateCenterPanel();
                     loadBox.Close();
                     return true;
