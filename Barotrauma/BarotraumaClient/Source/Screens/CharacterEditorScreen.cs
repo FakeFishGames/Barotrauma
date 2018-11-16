@@ -129,6 +129,7 @@ namespace Barotrauma
             }
             GameMain.Instance.OnResolutionChanged -= OnResolutionChanged;
             GameMain.LightManager.LightingEnabled = true;
+            ClearWidgets();
         }
 
         private void OnResolutionChanged()

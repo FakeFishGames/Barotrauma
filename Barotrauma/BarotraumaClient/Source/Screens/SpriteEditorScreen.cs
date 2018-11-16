@@ -496,6 +496,7 @@ namespace Barotrauma
             base.Deselect();
             loadedSprites.ForEach(s => s.Remove());
             loadedSprites.Clear();
+            ResetWidgets();
         }
 
         public void SelectSprite(Sprite sprite)
