@@ -2114,8 +2114,8 @@ namespace Barotrauma
             Vector2 screenSpaceLeft = screenSpaceForward.Right();
             // The forward vector is left or right in screen space when the unit is not swimming. Cannot rely on the collider here, because the rotation may vary on ground.
             Vector2 forward = animParams.IsSwimAnimation ? screenSpaceForward : Vector2.UnitX * dir;
-            Vector2 GetSimSpaceForward() => animParams.IsSwimAnimation ? Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation)) : Vector2.UnitX * dir;
-            Vector2 GetScreenSpaceForward() => animParams.IsSwimAnimation ? VectorExtensions.Backward(collider.Rotation, 1) : Vector2.UnitX * dir;
+            Vector2 GetSimSpaceForward() => animParams.IsSwimAnimation ? Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation)) : Vector2.UnitX * character.AnimController.Dir;
+            Vector2 GetScreenSpaceForward() => animParams.IsSwimAnimation ? VectorExtensions.Backward(collider.Rotation, 1) : Vector2.UnitX * character.AnimController.Dir;
             bool ShowCycleWidget() => PlayerInput.KeyDown(Keys.LeftAlt) && (CurrentAnimation is IHumanAnimation || CurrentAnimation is GroundedMovementParams);
 
             bool altDown = PlayerInput.KeyDown(Keys.LeftAlt);
