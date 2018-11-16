@@ -255,10 +255,9 @@ namespace Barotrauma
                     //mouse released -> move the entities to the new position of the mouse
 
                     Vector2 moveAmount = position - startMovingPos;
-                    moveAmount = Submarine.VectorToWorldGrid(moveAmount);
-
-                    if (moveAmount != Vector2.Zero)
+                    if (Math.Abs(moveAmount.X) >= Submarine.GridSize.X || Math.Abs(moveAmount.Y) >= Submarine.GridSize.Y)
                     {
+                        moveAmount = Submarine.VectorToWorldGrid(moveAmount);
                         //clone
                         if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
                         {
@@ -271,7 +270,6 @@ namespace Barotrauma
                             foreach (MapEntity e in selectedList) e.Move(moveAmount);
                         }
                     }
-
                     startMovingPos = Vector2.Zero;
                 }
 
@@ -345,8 +343,10 @@ namespace Barotrauma
                     {
                         if (e.IsMouseOn(position)) startMovingPos = position;
                     }
-
                     selectionPos = position;
+
+                    //stop camera movement to prevent accidental dragging or rect selection
+                    Screen.Selected.Cam.StopMovement();
                 }
             }
         }
