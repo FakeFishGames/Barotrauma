@@ -342,7 +342,7 @@ namespace Barotrauma
                 UpdaterUtil.SaveFileList("filelist.xml");
             }));
 
-            commands.Add(new Command("spawn|spawncharacter", "spawn [creaturename] [near/inside/outside/cursor]: Spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine).", (string[] args) =>
+            commands.Add(new Command("spawn|spawncharacter", "spawn [creaturename/jobname] [near/inside/outside/cursor]: Spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine). You can also enter the name of a job (e.g. \"Mechanic\") to spawn a character with a specific job and the appropriate equipment.", (string[] args) =>
             {
                 SpawnCharacter(args, GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), out string errorMsg);
                 if (!string.IsNullOrWhiteSpace(errorMsg))
@@ -365,6 +365,11 @@ namespace Barotrauma
                 for (int i = 0; i < characterFiles.Count; i++)
                 {
                     characterFiles[i] = Path.GetFileNameWithoutExtension(characterFiles[i]).ToLowerInvariant();
+                }
+
+                foreach (JobPrefab jobPrefab in JobPrefab.List)
+                {
+                    characterFiles.Add(jobPrefab.Name);
                 }
 
                 return new string[][]
@@ -2517,6 +2522,10 @@ namespace Barotrauma
             Vector2 spawnPosition = Vector2.Zero;
             WayPoint spawnPoint = null;
 
+            string characterLowerCase = args[0].ToLowerInvariant();
+            JobPrefab job = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == characterLowerCase || jp.Identifier.ToLowerInvariant() == characterLowerCase);
+            bool human = job != null || characterLowerCase == "human";
+
             if (args.Length > 1)
             {
                 switch (args[1].ToLowerInvariant())
@@ -2550,22 +2559,29 @@ namespace Barotrauma
                         spawnPosition = cursorWorldPos;
                         break;
                     default:
-                        spawnPoint = WayPoint.GetRandom(args[0].ToLowerInvariant() == "human" ? SpawnType.Human : SpawnType.Enemy);
+                        spawnPoint = WayPoint.GetRandom(human ? SpawnType.Human : SpawnType.Enemy);
                         break;
                 }
             }
             else
             {
-                spawnPoint = WayPoint.GetRandom(args[0].ToLowerInvariant() == "human" ? SpawnType.Human : SpawnType.Enemy);
+                spawnPoint = WayPoint.GetRandom(human ? SpawnType.Human : SpawnType.Enemy);
             }
 
             if (string.IsNullOrWhiteSpace(args[0])) return;
 
             if (spawnPoint != null) spawnPosition = spawnPoint.WorldPosition;
 
-            if (args[0].ToLowerInvariant() == "human")
+            if (human)
             {
-                spawnedCharacter = Character.Create(Character.HumanConfigFile, spawnPosition, ToolBox.RandomSeed(8));
+                CharacterInfo characterInfo = new CharacterInfo(Character.HumanConfigFile, jobPrefab: job);
+                spawnedCharacter = Character.Create(characterInfo, spawnPosition, ToolBox.RandomSeed(8));
+
+                if (job != null)
+                {
+                    spawnedCharacter.GiveJobItems(spawnPoint);
+                }
+
                 if (GameMain.GameSession != null)
                 {
                     if (GameMain.GameSession.GameMode != null && !GameMain.GameSession.GameMode.IsSinglePlayer)
