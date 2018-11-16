@@ -104,7 +104,6 @@ namespace Barotrauma
             {
                 OnPreSpawn();
                 character = Character.Controlled;
-                TeleportTo(spawnPosition);
                 OnPostSpawn();
             }
             GameMain.Instance.OnResolutionChanged += OnResolutionChanged;
