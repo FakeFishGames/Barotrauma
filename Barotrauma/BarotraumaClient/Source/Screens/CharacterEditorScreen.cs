@@ -59,6 +59,9 @@ namespace Barotrauma
         private Vector2? anchor1Pos;
 
         private float spriteSheetZoom = 1;
+        private float textureScale = 1;
+        private float textureMinScale = 0.1f;
+        private float textureMaxScale = 2;
         private float spriteSheetMinZoom = 0.25f;
         private float spriteSheetMaxZoom = 1;
         private int spriteSheetOffsetY = 100;
@@ -96,7 +99,6 @@ namespace Barotrauma
             Submarine.MainSub.GodMode = true;
             if (Character.Controlled == null)
             {
-                //SpawnCharacter(Character.HumanConfigFile);
                 SpawnCharacter(AllFiles.First());
             }
             else
@@ -313,21 +315,10 @@ namespace Barotrauma
             }
             Cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
             Cam.Position = character.WorldPosition;
+            MapEntity.mapEntityList.ForEach(e => e.IsHighlighted = false);
             // Update widgets
-            foreach (var widget in jointSelectionWidgets.Values)
-            {
-                widget.Enabled = editJoints;
-                widget.Update((float)deltaTime);
-            }
-            foreach (var widget in animationWidgets.Values)
-            {
-                widget.Enabled = editAnimations;
-                widget.Update((float)deltaTime);
-            }
-            foreach (MapEntity e in MapEntity.mapEntityList)
-            {
-                e.IsHighlighted = false;
-            }
+            jointSelectionWidgets.Values.ForEach(w => w.Update((float)deltaTime));
+            animationWidgets.Values.ForEach(w => w.Update((float)deltaTime));
         }
 
         /// <summary>
@@ -374,8 +365,8 @@ namespace Barotrauma
             }
             else if (displayColliders)
             {
-                character.AnimController.Collider.DebugDraw(spriteBatch, Color.White);
-                character.AnimController.Limbs.ForEach(l => l.body.DebugDraw(spriteBatch, Color.LightGreen));
+                character.AnimController.Collider.DebugDraw(spriteBatch, Color.White, forceColor: true);
+                character.AnimController.Limbs.ForEach(l => l.body.DebugDraw(spriteBatch, Color.LightGreen, forceColor: true));
             }
             spriteBatch.End();
 
@@ -889,7 +880,7 @@ namespace Barotrauma
 
         private void GetCurrentCharacterIndex()
         {
-            characterIndex = AllFiles.IndexOf(GetConfigFile(character.SpeciesName));
+            characterIndex = AllFiles.IndexOf(Character.GetConfigFile(character.SpeciesName));
         }
 
         private void IncreaseIndex()
@@ -908,11 +899,6 @@ namespace Barotrauma
             {
                 characterIndex = AllFiles.Count - 1;
             }
-        }
-
-        private string GetConfigFile(string speciesName)
-        {
-            return AllFiles.Find(c => c.EndsWith(speciesName + ".xml"));
         }
 
         private Character SpawnCharacter(string configFile, RagdollParams ragdoll = null)
@@ -1056,6 +1042,7 @@ namespace Barotrauma
         private GUITickBox animTestPoseToggle;
         private GUIScrollBar jointScaleBar;
         private GUIScrollBar limbScaleBar;
+        private GUIScrollBar textureScaleBar;
         private GUIScrollBar spriteSheetZoomBar;
         private GUITickBox copyJointsToggle;
         private GUITickBox jointsToggle;
@@ -1132,7 +1119,13 @@ namespace Barotrauma
                 }
             }
             // Spritesheet controls
-            spriteSheetControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerPanel.RectTransform, Anchor.TopRight), style: null) { CanBeFocused = false };
+            spriteSheetControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerPanel.RectTransform, Anchor.TopRight)
+            {
+                AbsoluteOffset = new Point(100, 0)
+            }, style: null)
+            {
+                CanBeFocused = false
+            };
             var layoutGroupSpriteSheet = new GUILayoutGroup(new RectTransform(Vector2.One, spriteSheetControls.RectTransform)) { AbsoluteSpacing = 5, CanBeFocused = false };
             new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), "Spritesheet zoom:", Color.White);
             var spriteSheetControlElement = new GUIFrame(new RectTransform(new Point(elementSize.X * 2, textAreaHeight), layoutGroupSpriteSheet.RectTransform), style: null);
@@ -1153,6 +1146,17 @@ namespace Barotrauma
                 {
                     spriteSheetZoom = Math.Min(1, spriteSheetMaxZoom);
                     spriteSheetZoomBar.BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteSheetMinZoom, spriteSheetMaxZoom, spriteSheetZoom));
+                    return true;
+                }
+            };
+            new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), "Texture scale:", Color.White);
+            textureScaleBar = new GUIScrollBar(new RectTransform(new Point((int)(elementSize.X * 1.75f), textAreaHeight), layoutGroupSpriteSheet.RectTransform), barSize: 0.2f)
+            {
+                BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(textureMinScale, textureMaxScale, RagdollParams.TextureScale)),
+                Step = 0.01f,
+                OnMoved = (scrollBar, value) =>
+                {
+                    RagdollParams.TextureScale = MathHelper.Lerp(textureMinScale, textureMaxScale, value);
                     return true;
                 }
             };
@@ -1525,7 +1529,7 @@ namespace Barotrauma
             quickSaveRagdollButton.OnClicked += (button, userData) =>
             {
                 character.AnimController.SaveRagdoll();
-                GUI.AddMessage($"Ragdoll saved", Color.Green, font: GUI.Font);
+                GUI.AddMessage($"Ragdoll saved to {RagdollParams.FullPath}", Color.Green, font: GUI.Font);
                 return true;
             };
             var resetAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Reset Animations");
@@ -1551,6 +1555,8 @@ namespace Barotrauma
                     ResetParamsEditor();
                     ClearWidgets();
                 }
+                ResetParamsEditor();
+                ClearWidgets();
                 CreateCenterPanel();
                 GUI.AddMessage($"Ragdoll reset", Color.WhiteSmoke, font: GUI.Font);
                 return true;
@@ -1850,6 +1856,7 @@ namespace Barotrauma
                 foreach (var limb in character.AnimController.Limbs)
                 {
                     limb.ActiveSprite.ReloadTexture();
+                    limb.WearingItems.ForEach(i => i.Sprite.ReloadTexture());
                 }
                 return true;
             };
@@ -2040,7 +2047,7 @@ namespace Barotrauma
             if (targetLimb != null)
             {
                 var sourceRect = targetLimb.ActiveSprite.SourceRect;
-                Vector2 size = sourceRect.Size.ToVector2() * Cam.Zoom * targetLimb.Scale;
+                Vector2 size = sourceRect.Size.ToVector2() * Cam.Zoom * targetLimb.Scale * targetLimb.TextureScale;
                 Vector2 up = VectorExtensions.Backward(targetLimb.Rotation);
                 Vector2 left = up.Right();
                 Vector2 limbScreenPos = SimToScreen(targetLimb.SimPosition);
@@ -2101,46 +2108,114 @@ namespace Barotrauma
             Vector2 screenSpaceLeft = screenSpaceForward.Right();
             // The forward vector is left or right in screen space when the unit is not swimming. Cannot rely on the collider here, because the rotation may vary on ground.
             Vector2 forward = animParams.IsSwimAnimation ? screenSpaceForward : Vector2.UnitX * dir;
+            Vector2 GetSimSpaceForward() => animParams.IsSwimAnimation ? Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation)) : Vector2.UnitX * character.AnimController.Dir;
+            Vector2 GetScreenSpaceForward() => animParams.IsSwimAnimation ? VectorExtensions.Backward(collider.Rotation, 1) : Vector2.UnitX * character.AnimController.Dir;
+            bool ShowCycleWidget() => PlayerInput.KeyDown(Keys.LeftAlt) && (CurrentAnimation is IHumanAnimation || CurrentAnimation is GroundedMovementParams);
 
             bool altDown = PlayerInput.KeyDown(Keys.LeftAlt);
-            if (!altDown)
+            if (!altDown && (animParams is IHumanAnimation || animParams is GroundedMovementParams))
             {
                 GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 120, GameMain.GraphicsHeight - 150), "HOLD \"Left Alt\" TO ADJUST THE CYCLE SPEED", Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
             // Widgets for all anims -->
             Vector2 referencePoint = SimToScreen(head != null ? head.SimPosition: collider.SimPosition);
             Vector2 drawPos = referencePoint;
-            if (altDown)
+            if (ShowCycleWidget())
             {
-                if (selectedWidget == "Movement Speed") { selectedWidget = null; }
-                // Cycle speed
-                float multiplier = 0.25f;
-                drawPos += forward * ConvertUnits.ToDisplayUnits(animParams.CycleSpeed * multiplier) * Cam.Zoom;
-                DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 20, Color.MediumPurple, "Cycle Speed", () =>
+                GetAnimationWidget($"{character.SpeciesName}_{CurrentAnimation.AnimationType.ToString()}_CycleSpeed", Color.MediumPurple, size: 20, sizeMultiplier: 1.5f, shape: Widget.Shape.Circle, initMethod: w =>
                 {
-                    float speed = animParams.CycleSpeed + ConvertUnits.ToSimUnits(Vector2.Multiply(scaledMouseSpeed / multiplier, forward).Combine()) / Cam.Zoom;
-                    TryUpdateAnimParam("cyclespeed", speed);
-                    GUI.DrawLine(spriteBatch, drawPos, referencePoint, Color.MediumPurple);
-                });
-                GUI.DrawLine(spriteBatch, drawPos + forward * 10, drawPos + forward * 15, Color.MediumPurple);
+                    float multiplier = 0.5f;
+                    w.tooltip = "Cycle Speed";
+                    w.refresh = () =>
+                    {
+                        referencePoint = SimToScreen(head != null ? head.SimPosition : collider.SimPosition);
+                        w.DrawPos = referencePoint + GetScreenSpaceForward() * ConvertUnits.ToDisplayUnits(CurrentAnimation.CycleSpeed * multiplier) * Cam.Zoom;
+                        // Update tooltip, because the cycle speed might be automatically adjusted by the movement speed widget.
+                        w.tooltip = $"Cycle Speed: {CurrentAnimation.CycleSpeed.FormatSingleDecimal()}";
+                    };
+                    w.MouseHeld += dTime =>
+                    {
+                        // TODO: clamp so that cannot manipulate the local y axis -> remove the additional refresh callback in below
+                        //Vector2 newPos = PlayerInput.MousePosition;
+                        //w.DrawPos = newPos;
+                        float speed = CurrentAnimation.CycleSpeed + ConvertUnits.ToSimUnits(Vector2.Multiply(PlayerInput.MouseSpeed / multiplier, GetScreenSpaceForward()).Combine()) / Cam.Zoom;
+                        TryUpdateAnimParam("cyclespeed", speed);
+                        w.tooltip = $"Cycle Speed: {CurrentAnimation.CycleSpeed.FormatSingleDecimal()}";
+                    };
+                    // Additional check, which overrides the previous value (because evaluated last)
+                    w.PreUpdate += dTime =>
+                    {
+                        if (!ShowCycleWidget())
+                        {
+                            w.Enabled = false;
+                        }
+                    };
+                    // Additional (remove if the position is update when the mouse is held)
+                    w.PreDraw += (sp, dTime) =>
+                    {
+                        if (w.IsControlled)
+                        {
+                            w.refresh();
+                        }
+                    };
+                    w.PostDraw += (sp, dTime) =>
+                    {
+                        if (w.IsSelected)
+                        {
+                            GUI.DrawLine(spriteBatch, w.DrawPos, referencePoint, Color.MediumPurple);
+                        }
+                    };
+                }).Draw(spriteBatch, deltaTime);
             }
             else
             {
-                if (selectedWidget == "Cycle Speed") { selectedWidget = null; }
-                // Movement speed
-                float multiplier = 0.5f;
-                drawPos += forward * ConvertUnits.ToDisplayUnits(animParams.MovementSpeed * multiplier) * Cam.Zoom;
-                DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 20, Color.Turquoise, "Movement Speed", () =>
+                GetAnimationWidget($"{character.SpeciesName}_{CurrentAnimation.AnimationType.ToString()}_MovementSpeed", Color.Turquoise, size: 20, sizeMultiplier: 1.5f, shape: Widget.Shape.Circle, initMethod: w =>
                 {
-                    float speed = animParams.MovementSpeed + ConvertUnits.ToSimUnits(Vector2.Multiply(scaledMouseSpeed / multiplier, forward).Combine()) / Cam.Zoom;
-                    TryUpdateAnimParam("movementspeed", MathHelper.Clamp(speed, 0.1f, Ragdoll.MAX_SPEED));
-                    GUI.DrawLine(spriteBatch, drawPos, referencePoint, Color.Turquoise);
-                    if (humanSwimParams != null)
+                    float multiplier = 0.5f;
+                    w.tooltip = "Movement Speed";
+                    w.refresh = () =>
                     {
-                        TryUpdateAnimParam("cyclespeed", animParams.MovementSpeed);
-                    }
-                });
-                GUI.DrawLine(spriteBatch, drawPos + forward * 10, drawPos + forward * 15, Color.Turquoise);
+                        referencePoint = SimToScreen(head != null ? head.SimPosition : collider.SimPosition);
+                        w.DrawPos = referencePoint + GetScreenSpaceForward() * ConvertUnits.ToDisplayUnits(CurrentAnimation.MovementSpeed * multiplier) * Cam.Zoom;
+                    };
+                    w.MouseHeld += dTime =>
+                    {
+                        // TODO: clamp so that cannot manipulate the local y axis -> remove the additional refresh callback in below
+                        //Vector2 newPos = PlayerInput.MousePosition;
+                        //w.DrawPos = newPos;
+                        float speed = CurrentAnimation.MovementSpeed + ConvertUnits.ToSimUnits(Vector2.Multiply(PlayerInput.MouseSpeed / multiplier, GetScreenSpaceForward()).Combine()) / Cam.Zoom;
+                        TryUpdateAnimParam("movementspeed", MathHelper.Clamp(speed, 0.1f, Ragdoll.MAX_SPEED));
+                        // Sync
+                        if (humanSwimParams != null)
+                        {
+                            TryUpdateAnimParam("cyclespeed", character.AnimController.CurrentAnimationParams.MovementSpeed);
+                        }
+                        w.tooltip = $"Movement Speed: {CurrentAnimation.MovementSpeed.FormatSingleDecimal()}";
+                    };
+                    // Additional check, which overrides the previous value (because evaluated last)
+                    w.PreUpdate += dTime =>
+                    {
+                        if (ShowCycleWidget())
+                        {
+                            w.Enabled = false;
+                        }
+                    };
+                    // Additional (remove if the position is update when the mouse is held)
+                    w.PreDraw += (sp, dTime) =>
+                    {
+                        if (w.IsControlled)
+                        {
+                            w.refresh();
+                        }
+                    };
+                    w.PostDraw += (sp, dTime) =>
+                    {
+                        if (w.IsSelected)
+                        {
+                            GUI.DrawLine(spriteBatch, w.DrawPos, referencePoint, Color.Turquoise);
+                        }
+                    };
+                }).Draw(spriteBatch, deltaTime);
             }
 
             if (head != null)
@@ -2249,21 +2324,31 @@ namespace Barotrauma
                 // Grounded only
                 if (groundedParams != null)
                 {
-                    referencePoint = SimToScreen(colliderBottom);
-                    var v = ConvertUnits.ToDisplayUnits(groundedParams.StepSize);
-                    drawPos = referencePoint + new Vector2(v.X * dir, -v.Y) * Cam.Zoom;
-                    var origin = drawPos - new Vector2(widgetDefaultSize / 2, 0) * -dir;
-                    DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.LightGreen, "Step Size", () =>
+                    GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_StepSize", Color.LimeGreen, initMethod: w =>
                     {
-                        var transformedInput = ConvertUnits.ToSimUnits(scaledMouseSpeed) * dir / Cam.Zoom;
-                        if (dir > 0)
+                        w.tooltip = "Step Size";
+                        w.refresh = () =>
                         {
-                            transformedInput.Y = -transformedInput.Y;
-                        }
-                        TryUpdateAnimParam("stepsize", groundedParams.StepSize + transformedInput);
-                        GUI.DrawLine(spriteBatch, origin, referencePoint, Color.LightGreen);
-                    });
-                    GUI.DrawLine(spriteBatch, origin, origin + Vector2.UnitX * 5 * dir, Color.LightGreen);
+                            referencePoint = SimToScreen(character.AnimController.GetColliderBottom());
+                            var stepSize = ConvertUnits.ToDisplayUnits(groundedParams.StepSize);
+                            w.DrawPos = referencePoint + new Vector2(stepSize.X * character.AnimController.Dir, -stepSize.Y) * Cam.Zoom;
+                        };
+                        w.MouseHeld += dTime =>
+                        {
+                            w.DrawPos = PlayerInput.MousePosition;
+                            var transformedInput = ConvertUnits.ToSimUnits(new Vector2(PlayerInput.MouseSpeed.X * character.AnimController.Dir, -PlayerInput.MouseSpeed.Y)) / Cam.Zoom;
+                            TryUpdateAnimParam("stepsize", groundedParams.StepSize + transformedInput);
+                            w.tooltip = $"Step Size: {groundedParams.StepSize.FormatDoubleDecimal()}";
+                        };
+                        w.PreDraw += (sp, dTime) => w.refresh();
+                        w.PostDraw += (sp, dTime) =>
+                        {
+                            if (w.IsSelected)
+                            {
+                                GUI.DrawLine(sp, w.DrawPos, SimToScreen(character.AnimController.GetColliderBottom()), Color.LimeGreen);
+                            }
+                        };
+                    }).Draw(spriteBatch, deltaTime);
                 }
             }
             // Human grounded only -->
@@ -2271,44 +2356,31 @@ namespace Barotrauma
             {
                 if (hand != null || arm != null)
                 {
-                    var widget = GetAnimationWidget($"{character.SpeciesName}_HandMoveAmount", Color.LightGreen, initMethod: w =>
+                    GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_HandMoveAmount", Color.LightGreen, initMethod: w =>
                     {
-                        int normalSize = w.size;
                         w.tooltip = "Hand Move Amount";
+                        float offset = 0.2f;
                         w.refresh = () =>
                         {
-                            referencePoint = SimToScreen(collider.SimPosition + simSpaceForward * 0.2f);
+                            referencePoint = SimToScreen(collider.SimPosition + GetSimSpaceForward() * offset);
                             var handMovement = ConvertUnits.ToDisplayUnits(humanGroundedParams.HandMoveAmount);
-                            w.DrawPos = referencePoint + new Vector2(handMovement.X * dir, handMovement.Y) * Cam.Zoom;
+                            w.DrawPos = referencePoint + new Vector2(handMovement.X * character.AnimController.Dir, handMovement.Y) * Cam.Zoom;
                         };
                         w.MouseHeld += dTime =>
                         {
                             w.DrawPos = PlayerInput.MousePosition;
-                            var transformedInput = ConvertUnits.ToSimUnits(new Vector2(PlayerInput.MouseSpeed.X * dir, PlayerInput.MouseSpeed.Y) / Cam.Zoom);
+                            var transformedInput = ConvertUnits.ToSimUnits(new Vector2(PlayerInput.MouseSpeed.X * character.AnimController.Dir, PlayerInput.MouseSpeed.Y) / Cam.Zoom);
                             TryUpdateAnimParam("handmoveamount", humanGroundedParams.HandMoveAmount + transformedInput);
                             w.tooltip = $"Hand Move Amount: {humanGroundedParams.HandMoveAmount.FormatDoubleDecimal()}";
-                        };
-                        w.PostUpdate += dTime =>
-                        {
-                            w.size = w.IsSelected ? (int)Math.Round(normalSize * 1.5f) : normalSize;
-                            w.isFilled = w.IsSelected;
-                        };
-                        w.PreDraw += (sp, dTime) =>
-                        {
-                            if (!w.IsSelected)
-                            {
-                                w.refresh();
-                            }
                         };
                         w.PostDraw += (sp, dTime) =>
                         {
                             if (w.IsSelected)
                             {
-                                GUI.DrawLine(sp, w.DrawPos, referencePoint, Color.LightGreen);
+                                GUI.DrawLine(sp, w.DrawPos, SimToScreen(collider.SimPosition + GetSimSpaceForward() * offset), Color.LightGreen);
                             }
                         };
-                    });
-                    widget.Draw(spriteBatch, deltaTime);
+                    }).Draw(spriteBatch, deltaTime);
                 }
             }
             // Fish swim only -->
@@ -2400,7 +2472,7 @@ namespace Barotrauma
                 var origin = limb.ActiveSprite.Origin;
                 var relativeOrigin = limb.ActiveSprite.RelativeOrigin;
                 var sourceRect = limb.ActiveSprite.SourceRect;
-                Vector2 size = sourceRect.Size.ToVector2() * Cam.Zoom * limb.Scale;
+                Vector2 size = sourceRect.Size.ToVector2() * Cam.Zoom * limb.Scale * limb.TextureScale;
                 Vector2 up = VectorExtensions.Backward(limb.Rotation);
                 Vector2 left = up.Right();
                 Vector2 limbScreenPos = SimToScreen(limb.SimPosition);
@@ -2448,7 +2520,7 @@ namespace Barotrauma
                     if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && selectedLimbs.Contains(limb))
                     {
                         Vector2 forward = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(limb.Rotation));
-                        var input = -scaledMouseSpeed * inputMultiplier / Cam.Zoom / limb.Scale;
+                        var input = -scaledMouseSpeed * inputMultiplier / Cam.Zoom / limb.Scale / limb.TextureScale;
                         var sprite = limb.ActiveSprite;
                         origin += input.TransformVector(forward);
                         var max = new Vector2(sourceRect.Width, sourceRect.Height);
@@ -2803,7 +2875,7 @@ namespace Barotrauma
                         bool isMouseOnRect = rect.Contains(PlayerInput.MousePosition);
                         if (isMouseOnRect && GUI.MouseOn == null)
                         {
-                            if (PlayerInput.LeftButtonDown() && selectedWidget == null)
+                            if (PlayerInput.LeftButtonDown())
                             {
                                 if (!selectedLimbs.Contains(limb))
                                 {
@@ -2831,7 +2903,7 @@ namespace Barotrauma
                             GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.Yellow);
                             GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.Yellow);
 
-                            if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && isMouseOnRect && selectedWidget == null && GUI.MouseOn == null)
+                            if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && isMouseOnRect && GUI.MouseOn == null)
                             {
                                 var input = scaledMouseSpeed / spriteSheetZoom;
                                 input.X *= character.AnimController.Dir;
@@ -2968,7 +3040,7 @@ namespace Barotrauma
                 {
                     continue;
                 }
-                Vector2 tformedJointPos = jointPos = jointPos / RagdollParams.JointScale * spriteSheetZoom;
+                Vector2 tformedJointPos = jointPos = jointPos / RagdollParams.JointScale / limb.TextureScale * spriteSheetZoom;
                 tformedJointPos.Y = -tformedJointPos.Y;
                 tformedJointPos.X *= character.AnimController.Dir;
                 tformedJointPos += limbScreenPos;
@@ -2996,7 +3068,7 @@ namespace Barotrauma
                         Vector2 input = ConvertUnits.ToSimUnits(scaledMouseSpeed);
                         input.Y = -input.Y;
                         input.X *= character.AnimController.Dir;
-                        input *= RagdollParams.JointScale / spriteSheetZoom;
+                        input *= RagdollParams.JointScale * limb.TextureScale / spriteSheetZoom;
                         if (joint.BodyA == limb.body.FarseerBody)
                         {
                             joint.LocalAnchorA += input;
@@ -3180,19 +3252,13 @@ namespace Barotrauma
         }
 
         public enum WidgetType { Rectangle, Circle }
-        private string selectedWidget;
         private void DrawWidget(SpriteBatch spriteBatch, Vector2 drawPos, WidgetType widgetType, int size, Color color, string name, Action onPressed, bool ? autoFreeze = null, Action onHovered = null)
         {
             var drawRect = new Rectangle((int)drawPos.X - size / 2, (int)drawPos.Y - size / 2, size, size);
             var inputRect = drawRect;
             inputRect.Inflate(size * 0.75f, size * 0.75f);
             bool isMouseOn = inputRect.Contains(PlayerInput.MousePosition);
-            // Unselect
-            if (!isMouseOn && selectedWidget == name)
-            {
-                selectedWidget = null;
-            }
-            bool isSelected = isMouseOn && (selectedWidget == null || selectedWidget == name);
+            bool isSelected = isMouseOn && GUI.MouseOn == null && Widget.selectedWidgets.None();
             switch (widgetType)
             {
                 case WidgetType.Rectangle:
@@ -3205,7 +3271,6 @@ namespace Barotrauma
             }
             if (isSelected)
             {
-                selectedWidget = name;
                 // Label/tooltip
                 if (onHovered == null)
                 {
@@ -3234,15 +3299,40 @@ namespace Barotrauma
         #region Widgets as classes
         private Dictionary<string, Widget> animationWidgets = new Dictionary<string, Widget>();
 
-        private Widget GetAnimationWidget(string id, Color color, int size = 10, Widget.Shape shape = Widget.Shape.Rectangle, Action<Widget> initMethod = null)
+        private Widget GetAnimationWidget(string id, Color color, int size = 10, float sizeMultiplier = 2, Widget.Shape shape = Widget.Shape.Rectangle, Action<Widget> initMethod = null)
         {
             if (!animationWidgets.TryGetValue(id, out Widget widget))
             {
-                widget = new Widget(id, size, shape);
-                widget.inputAreaMargin = new Point(5, 5);
+                int selectedSize = (int)Math.Round(size * sizeMultiplier);
+                widget = new Widget(id, size, shape)
+                {
+                    tooltipOffset = new Vector2(selectedSize / 2 + 5, -10)
+                };
                 widget.color = color;
-                initMethod?.Invoke(widget);
+                widget.PreUpdate += dTime => widget.Enabled = editAnimations;
+                widget.PostUpdate += dTime =>
+                {
+                    if (widget.IsSelected)
+                    {
+                        widget.size = selectedSize;
+                        widget.inputAreaMargin = 20;
+                    }
+                    else
+                    {
+                        widget.size = size;
+                        widget.inputAreaMargin = 5;
+                    }
+                    widget.isFilled = widget.IsControlled;
+                };
+                widget.PreDraw += (sp, dTime) =>
+                {
+                    if (!widget.IsControlled)
+                    {
+                        widget.refresh();
+                    }
+                };
                 animationWidgets.Add(id, widget);
+                initMethod?.Invoke(widget);
             }
             return widget;
         }
@@ -3270,14 +3360,32 @@ namespace Barotrauma
             // Widget creation method
             Widget CreateJointSelectionWidget(string ID, LimbJoint j)
             {
-                var widget = new Widget(ID, 10, Widget.Shape.Circle);
-                widget.inputAreaMargin = new Point(5, 5);
+                int normalSize = 10;
+                int selectedSize = 20;
+                var widget = new Widget(ID, normalSize, Widget.Shape.Circle)
+                {
+                    tooltipOffset = new Vector2(selectedSize / 2 + 5, -10)
+                };
                 widget.refresh = () =>
                 {
                     widget.showTooltip = !selectedJoints.Contains(joint);
                     widget.color = selectedJoints.Contains(joint) ? Color.Yellow : Color.Red;
                 };
                 widget.refresh();
+                widget.PreUpdate += dTime => widget.Enabled = editJoints;
+                widget.PostUpdate += dTime =>
+                {
+                    if (widget.IsSelected)
+                    {
+                        widget.size = selectedSize;
+                        widget.inputAreaMargin = 10;
+                    }
+                    else
+                    {
+                        widget.size = normalSize;
+                        widget.inputAreaMargin = 0;
+                    }
+                };
                 widget.MouseDown += () =>
                 {
                     if (!selectedJoints.Contains(joint))
@@ -3603,29 +3711,36 @@ namespace Barotrauma
                     {
                         ParseLimbsFromGUIElements();
                         ParseJointsFromGUIElements();
-                        var torso = LimbXElements.Values.Select(x => x.Attribute("type")).FirstOrDefault(a => a.Value.ToLowerInvariant() == "torso").Parent;
+                        var torsoAttributes = LimbXElements.Values.Select(x => x.Attribute("type")).Where(a => a.Value.ToLowerInvariant() == "torso");
+                        if (torsoAttributes.Count() != 1)
+                        {
+                            GUI.AddMessage("You need to define one and only one limb as \"Torso\"!", Color.Red);
+                            return false;
+                        }
+                        XElement torso = torsoAttributes.Single().Parent;
                         int radius = torso.GetAttributeInt("radius", -1);
                         int height = torso.GetAttributeInt("height", -1);
                         int width = torso.GetAttributeInt("width", -1);
-                        int colliderHeight = - 1;
+                        int colliderHeight = -1;
                         if (radius == -1)
                         {
                             // the collider is a box -> calculate the capsule
                             if (width == height)
                             {
                                 radius = width / 2;
+                                colliderHeight = width - radius * 2;
                             }
                             else
                             {
                                 if (height > width)
                                 {
                                     radius = width / 2;
-                                    colliderHeight = height;
+                                    colliderHeight = height - radius * 2;
                                 }
                                 else
                                 {
                                     radius = height / 2;
-                                    colliderHeight = width;
+                                    colliderHeight = width - radius * 2;
                                 }
                             }
                         }
@@ -3637,7 +3752,14 @@ namespace Barotrauma
                         var colliderAttributes = new List<XAttribute>() { new XAttribute("radius", radius) };
                         if (colliderHeight > -1)
                         {
-                            colliderAttributes.Add(new XAttribute("height", colliderHeight));
+                            if (height > width)
+                            {
+                                colliderAttributes.Add(new XAttribute("height", colliderHeight));
+                            }
+                            else
+                            {
+                                colliderAttributes.Add(new XAttribute("width", colliderHeight));
+                            }
                         }
                         var colliderElements = new List<XElement>() { new XElement("collider", colliderAttributes) };
                         if (IsHumanoid)
@@ -3646,7 +3768,14 @@ namespace Barotrauma
                             var secondaryCollider = new XElement("collider", new XAttribute("radius", radius));
                             if (colliderHeight > -1)
                             {
-                                secondaryCollider.Add(new XAttribute("height", colliderHeight * 0.75f));
+                                if (height > width)
+                                {
+                                    secondaryCollider.Add(new XAttribute("height", colliderHeight * 0.75f));
+                                }
+                                else
+                                {
+                                    colliderAttributes.Add(new XAttribute("width", colliderHeight * 0.75f));
+                                }
                             }
                             colliderElements.Add(secondaryCollider);
                         }
@@ -3843,12 +3972,12 @@ namespace Barotrauma
                             if (height > width)
                             {
                                 colliderAttributes.Add(new XAttribute("radius", width / 2));
-                                colliderAttributes.Add(new XAttribute("height", (int)Math.Round(height * 0.75f)));
+                                colliderAttributes.Add(new XAttribute("height", height - width));
                             }
                             else
                             {
                                 colliderAttributes.Add(new XAttribute("radius", height / 2));
-                                colliderAttributes.Add(new XAttribute("width", (int)Math.Round(width * 0.75f)));
+                                colliderAttributes.Add(new XAttribute("width", width - height));
                             }
                         }
                         string notes = string.Empty;
@@ -3967,9 +4096,11 @@ namespace Barotrauma
                         {
                             if (hierarchy != "0")
                             {
-                                // If the bone is at the root hierarchy, parent the bone to the last sibling (1 is parented to 0, 2 to 1 etc)
+                                // OLD LOGIC: If the bone is at the root hierarchy, parent the bone to the last sibling (1 is parented to 0, 2 to 1 etc)
+                                // NEW LOGIC: if hierarchy length == 1, parent to 0
                                 // Else parent to the last bone in the current hierarchy (11 is parented to 1, 212 is parented to 21 etc)
-                                string parent = hierarchy.Length > 1 ? hierarchy.Remove(hierarchy.Length - 1, 1) : (int.Parse(hierarchy) - 1).ToString();
+                                //string parent = hierarchy.Length > 1 ? hierarchy.Remove(hierarchy.Length - 1, 1) : (int.Parse(hierarchy) - 1).ToString();
+                                string parent = hierarchy.Length > 1 ? hierarchy.Remove(hierarchy.Length - 1, 1) : "0";
                                 if (hierarchyToID.TryGetValue(parent, out int parentID))
                                 {
                                     Vector2 anchor1 = Vector2.Zero;

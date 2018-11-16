@@ -83,9 +83,12 @@ namespace Barotrauma
 
         static HUDLayoutSettings()
         {
-            GameMain.Instance.OnResolutionChanged += CreateAreas;
-            GameMain.Config.OnHUDScaleChanged += CreateAreas;
-            CreateAreas();
+            if (GameMain.Instance != null)
+            {
+                GameMain.Instance.OnResolutionChanged += CreateAreas;
+                GameMain.Config.OnHUDScaleChanged += CreateAreas;
+                CreateAreas();
+            }
         }
         
         public static RectTransform ToRectTransform(Rectangle rect, RectTransform parent)

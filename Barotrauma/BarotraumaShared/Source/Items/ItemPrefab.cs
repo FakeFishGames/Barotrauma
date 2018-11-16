@@ -222,15 +222,14 @@ namespace Barotrauma
             {
                 if (PlayerInput.LeftButtonClicked())
                 {
-                    var item = new Item(new Rectangle((int)position.X, (int)position.Y, (int)sprite.size.X, (int)sprite.size.Y), this, Submarine.MainSub);
-                    //constructor.Invoke(lobject);
-                    item.Submarine = Submarine.MainSub;
+                    var item = new Item(new Rectangle((int)position.X, (int)position.Y, (int)(sprite.size.X * Scale), (int)(sprite.size.Y * Scale)), this, Submarine.MainSub)
+                    {
+                        Submarine = Submarine.MainSub
+                    };
                     item.SetTransform(ConvertUnits.ToSimUnits(Submarine.MainSub == null ? item.Position : item.Position - Submarine.MainSub.Position), 0.0f);
                     item.FindHull();
 
                     placePosition = Vector2.Zero;
-
-                    // selected = null;
                     return;
                 }
             }

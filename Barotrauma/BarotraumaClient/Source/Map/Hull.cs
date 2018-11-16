@@ -265,7 +265,7 @@ namespace Barotrauma
             float top = rect.Y + submarinePos.Y;
             float bottom = top - rect.Height;
 
-            float drawSurface = surface + submarinePos.Y;
+            float renderSurface = drawSurface + submarinePos.Y;
 
             Matrix transform = cam.Transform * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
             
@@ -325,12 +325,12 @@ namespace Barotrauma
                 //top left
                 corners[0] = new Vector3(x, top, 0.0f);
                 //watersurface left
-                corners[3] = new Vector3(corners[0].X, drawSurface + waveY[i], 0.0f);
+                corners[3] = new Vector3(corners[0].X, renderSurface + waveY[i], 0.0f);
                 
                 //top right
                 corners[1] = new Vector3(x + width, top, 0.0f);
                 //watersurface right
-                corners[2] = new Vector3(corners[1].X, drawSurface + waveY[i + 1], 0.0f);
+                corners[2] = new Vector3(corners[1].X, renderSurface + waveY[i + 1], 0.0f);
 
                 //bottom left
                 corners[4] = new Vector3(x, bottom, 0.0f);

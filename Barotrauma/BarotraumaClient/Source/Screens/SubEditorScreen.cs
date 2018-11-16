@@ -31,7 +31,7 @@ namespace Barotrauma
 
         public GUIComponent TopPanel, LeftPanel;
 
-        private bool entityMenuOpen = true, entityMenuOpened;
+        private bool entityMenuOpen = true;
         private float entityMenuOpenState = 1.0f;
         public GUIComponent EntityMenu;
         private GUITextBox entityFilterBox;
@@ -1060,6 +1060,7 @@ namespace Barotrauma
 
         private bool OpenEntityMenu(MapEntityCategory selectedCategory)
         {
+            entityFilterBox.Text = "";
             if (characterMode) SetCharacterMode(false);
             if (wiringMode) SetWiringMode(false);
 
@@ -1067,7 +1068,6 @@ namespace Barotrauma
             loadFrame = null;
 
             ClearFilter();
-            entityMenuOpened = true;
             
             foreach (GUIComponent child in toggleEntityMenuButton.Children)
             {
@@ -1700,13 +1700,7 @@ namespace Barotrauma
             }
 
             if (tutorial != null) tutorial.Update((float)deltaTime);
-
-            if (entityMenuOpened)
-            {
-                entityFilterBox.Text = "";
-                entityMenuOpened = false;
-            }
-
+            
             hullVolumeFrame.Visible = MapEntity.SelectedList.Any(s => s is Hull);
             saveAssemblyFrame.Visible = MapEntity.SelectedList.Count > 0;
             

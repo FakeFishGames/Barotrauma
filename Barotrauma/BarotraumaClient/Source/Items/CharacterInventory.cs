@@ -32,6 +32,8 @@ namespace Barotrauma
             UseTreatment
         }
 
+        private static Dictionary<InvSlotType, Sprite> limbSlotIcons;
+
         private Point screenResolution;
 
         public Vector2[] SlotPositions;
@@ -52,6 +54,19 @@ namespace Barotrauma
         partial void InitProjSpecific(XElement element)
         {
             Hidden = true;
+
+            if (limbSlotIcons == null)
+            {
+                limbSlotIcons = new Dictionary<InvSlotType, Sprite>();
+
+                int margin = 2;
+                limbSlotIcons.Add(InvSlotType.Headset, new Sprite("Content/UI/IconAtlas.png", new Rectangle(384 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+                limbSlotIcons.Add(InvSlotType.InnerClothes, new Sprite("Content/UI/IconAtlas.png", new Rectangle(512 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+                limbSlotIcons.Add(InvSlotType.Card, new Sprite("Content/UI/IconAtlas.png", new Rectangle(640 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+                limbSlotIcons.Add(InvSlotType.Head, new Sprite("Content/UI/IconAtlas.png", new Rectangle(896 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+                limbSlotIcons.Add(InvSlotType.LeftHand, new Sprite("Content/UI/IconAtlas.png", new Rectangle(640 + margin, 383 + margin, 128 - margin * 2, 128 - margin * 2)));
+                limbSlotIcons.Add(InvSlotType.RightHand, new Sprite("Content/UI/IconAtlas.png", new Rectangle(768 + margin, 383 + margin, 128 - margin * 2, 128 - margin * 2)));
+            }
 
             SlotPositions = new Vector2[SlotTypes.Length];
             CurrentLayout = Layout.Default;
@@ -674,8 +689,30 @@ namespace Barotrauma
             for (int i = 0; i < capacity; i++)
             {
                 if (HideSlot(i)) continue;
-                if (Items[i] == null || !Items[i].AllowedSlots.Any(a => a != InvSlotType.Any)) continue;
+
+                if (Items[i] == null || !Items[i].AllowedSlots.Any(a => a != InvSlotType.Any))
+                {
+                    //draw limb icons on empty slots
+                    if (limbSlotIcons.ContainsKey(SlotTypes[i]))
+                    {
+                        var icon = limbSlotIcons[SlotTypes[i]];
+                        icon.Draw(spriteBatch, slots[i].Rect.Center.ToVector2(), Color.White * 0.3f, origin: icon.size / 2, scale: slots[i].Rect.Width / icon.size.X);
+                    }
+                    continue;
+                }
                 if (draggingItem == Items[i] && !slots[i].IsHighlighted) continue;
+                
+                //draw hand icons if the item is equipped in a hand slot
+                if (IsInLimbSlot(Items[i], InvSlotType.LeftHand))
+                {
+                    var icon = limbSlotIcons[InvSlotType.LeftHand];
+                    icon.Draw(spriteBatch, new Vector2(slots[i].Rect.X, slots[i].Rect.Bottom), Color.White * 0.6f, origin: new Vector2(icon.size.X * 0.35f, icon.size.Y * 0.75f), scale: slots[i].Rect.Width / icon.size.X * 0.7f);
+                }
+                if (IsInLimbSlot(Items[i], InvSlotType.RightHand))
+                {
+                    var icon = limbSlotIcons[InvSlotType.RightHand];
+                    icon.Draw(spriteBatch, new Vector2(slots[i].Rect.Right, slots[i].Rect.Bottom), Color.White * 0.6f, origin: new Vector2(icon.size.X * 0.65f, icon.size.Y * 0.75f), scale: slots[i].Rect.Width / icon.size.X * 0.7f);
+                }
 
                 Color color = slots[i].EquipButtonState == GUIComponent.ComponentState.Pressed ? Color.Gray : Color.White * 0.8f;
                 if (slots[i].EquipButtonState == GUIComponent.ComponentState.Hover)

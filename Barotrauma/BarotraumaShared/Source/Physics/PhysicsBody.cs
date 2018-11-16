@@ -736,6 +736,8 @@ namespace Barotrauma
             System.Diagnostics.Debug.Assert(list.Count == 0);
         }
 
+        public static bool IsValidShape(float radius, float height, float width) => radius > 0 || (height > 0 && width > 0);
+
         partial void DisposeProjSpecific();
     }
 }

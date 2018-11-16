@@ -25,7 +25,7 @@ namespace Barotrauma
             get
             {
                 var inputRect = DrawRect;
-                inputRect.Inflate(inputAreaMargin.X, inputAreaMargin.Y);
+                inputRect.Inflate(inputAreaMargin, inputAreaMargin);
                 return inputRect;
             }
         }
@@ -40,7 +40,7 @@ namespace Barotrauma
         /// Currently used only for rectangles.
         /// </summary>
         public bool isFilled;
-        public Point inputAreaMargin;
+        public int inputAreaMargin;
         public Color color = Color.Red;
         public Color? secondaryColor;
         public Color textColor = Color.White;
@@ -59,6 +59,8 @@ namespace Barotrauma
         public event Action<SpriteBatch, float> PostDraw;
 
         public Action refresh;
+
+        public object data;
 
         public bool IsSelected => enabled && selectedWidgets.Contains(this);
         public bool IsControlled => IsSelected && PlayerInput.LeftButtonHeld();

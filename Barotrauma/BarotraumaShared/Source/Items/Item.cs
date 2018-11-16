@@ -380,10 +380,10 @@ namespace Barotrauma
 
         public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine)
             : this(new Rectangle(
-                (int)(position.X - itemPrefab.sprite.size.X / 2), 
-                (int)(position.Y + itemPrefab.sprite.size.Y / 2), 
-                (int)itemPrefab.sprite.size.X, 
-                (int)itemPrefab.sprite.size.Y), 
+                (int)(position.X - itemPrefab.sprite.size.X / 2 * itemPrefab.Scale), 
+                (int)(position.Y + itemPrefab.sprite.size.Y / 2 * itemPrefab.Scale), 
+                (int)(itemPrefab.sprite.size.X * itemPrefab.Scale), 
+                (int)(itemPrefab.sprite.size.Y * itemPrefab.Scale)), 
             itemPrefab, submarine)
         {
 
@@ -1722,8 +1722,8 @@ namespace Barotrauma
             Rectangle rect = element.GetAttributeRect("rect", Rectangle.Empty);
             if (rect.Width == 0 && rect.Height == 0)
             {
-                rect.Width = (int)prefab.Size.X;
-                rect.Height = (int)prefab.Size.Y;
+                rect.Width = (int)(prefab.Size.X * prefab.Scale);
+                rect.Height = (int)(prefab.Size.Y * prefab.Scale);
             }
 
             Item item = new Item(rect, prefab, submarine)

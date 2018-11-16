@@ -889,7 +889,7 @@ namespace Barotrauma
             return (info != null && !string.IsNullOrWhiteSpace(info.Name)) ? info.Name : SpeciesName;
         }
 
-        public void GiveJobItems(WayPoint spawnPoint)
+        public void GiveJobItems(WayPoint spawnPoint = null)
         {
             if (info == null || info.Job == null) return;
 
@@ -2126,7 +2126,7 @@ namespace Barotrauma
 
             AttackResult attackResult = hitLimb.AddDamage(worldPosition, afflictions, playSound);
             CharacterHealth.ApplyDamage(hitLimb, attackResult);
-            OnAttacked?.Invoke(attacker, attackResult);
+            if (attacker != this) { OnAttacked?.Invoke(attacker, attackResult); };
             AdjustKarma(attacker, attackResult);
 
             if (attacker != null && attackResult.Damage > 0.0f)
