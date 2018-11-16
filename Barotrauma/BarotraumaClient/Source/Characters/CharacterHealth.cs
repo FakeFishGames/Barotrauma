@@ -962,9 +962,7 @@ namespace Barotrauma
             foreach (ItemComponent ic in item.components)
             {
                 if (!ic.HasRequiredContainedItems(character == Character.Controlled)) continue;
-#if CLIENT
                 ic.PlaySound(ActionType.OnUse, character.WorldPosition, character);
-#endif
                 ic.WasUsed = true;
                 ic.ApplyStatusEffects(ActionType.OnUse, 1.0f, character, targetLimb);
                 if (ic.DeleteOnUse) remove = true;                
