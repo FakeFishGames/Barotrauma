@@ -592,7 +592,6 @@ namespace Barotrauma
                     secondaryColor = Color.Gray,
                     tooltipOffset = new Vector2(selectedSize / 2 + 5, -10)
                 };
-                widget.MouseDown += () => spriteList.Select(sprite);
                 widget.PreDraw += (sp, dTime) =>
                 {
                     if (!widget.IsControlled)
