@@ -99,7 +99,6 @@ namespace Barotrauma
             Submarine.MainSub.GodMode = true;
             if (Character.Controlled == null)
             {
-                //SpawnCharacter(Character.HumanConfigFile);
                 SpawnCharacter(AllFiles.First());
             }
             else
@@ -881,7 +880,7 @@ namespace Barotrauma
 
         private void GetCurrentCharacterIndex()
         {
-            characterIndex = AllFiles.IndexOf(GetConfigFile(character.SpeciesName));
+            characterIndex = AllFiles.IndexOf(Character.GetConfigFile(character.SpeciesName));
         }
 
         private void IncreaseIndex()
@@ -900,11 +899,6 @@ namespace Barotrauma
             {
                 characterIndex = AllFiles.Count - 1;
             }
-        }
-
-        private string GetConfigFile(string speciesName)
-        {
-            return AllFiles.Find(c => c.EndsWith(speciesName + ".xml"));
         }
 
         private Character SpawnCharacter(string configFile, RagdollParams ragdoll = null)
@@ -2881,7 +2875,7 @@ namespace Barotrauma
                         bool isMouseOnRect = rect.Contains(PlayerInput.MousePosition);
                         if (isMouseOnRect && GUI.MouseOn == null)
                         {
-                            if (PlayerInput.LeftButtonDown() && selectedWidget == null)
+                            if (PlayerInput.LeftButtonDown())
                             {
                                 if (!selectedLimbs.Contains(limb))
                                 {
@@ -2909,7 +2903,7 @@ namespace Barotrauma
                             GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.Yellow);
                             GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.Yellow);
 
-                            if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && isMouseOnRect && selectedWidget == null && GUI.MouseOn == null)
+                            if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && isMouseOnRect && GUI.MouseOn == null)
                             {
                                 var input = scaledMouseSpeed / spriteSheetZoom;
                                 input.X *= character.AnimController.Dir;
@@ -3258,19 +3252,13 @@ namespace Barotrauma
         }
 
         public enum WidgetType { Rectangle, Circle }
-        private string selectedWidget;
         private void DrawWidget(SpriteBatch spriteBatch, Vector2 drawPos, WidgetType widgetType, int size, Color color, string name, Action onPressed, bool ? autoFreeze = null, Action onHovered = null)
         {
             var drawRect = new Rectangle((int)drawPos.X - size / 2, (int)drawPos.Y - size / 2, size, size);
             var inputRect = drawRect;
             inputRect.Inflate(size * 0.75f, size * 0.75f);
             bool isMouseOn = inputRect.Contains(PlayerInput.MousePosition);
-            // Unselect
-            if (!isMouseOn && selectedWidget == name)
-            {
-                selectedWidget = null;
-            }
-            bool isSelected = isMouseOn && (selectedWidget == null || selectedWidget == name);
+            bool isSelected = isMouseOn && GUI.MouseOn == null && Widget.selectedWidgets.None();
             switch (widgetType)
             {
                 case WidgetType.Rectangle:
@@ -3283,7 +3271,6 @@ namespace Barotrauma
             }
             if (isSelected)
             {
-                selectedWidget = name;
                 // Label/tooltip
                 if (onHovered == null)
                 {
