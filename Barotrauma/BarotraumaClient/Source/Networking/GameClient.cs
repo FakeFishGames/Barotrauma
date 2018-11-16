@@ -870,6 +870,8 @@ namespace Barotrauma.Networking
                 }
             }
 
+            GameMain.NetLobbyScreen.ServerName.Enabled = HasPermission(ClientPermissions.ManageSettings);
+            GameMain.NetLobbyScreen.ServerMessage.Enabled = HasPermission(ClientPermissions.ManageSettings);
             GameMain.NetLobbyScreen.SettingsButton.Visible = HasPermission(ClientPermissions.ManageSettings);
             GameMain.NetLobbyScreen.SettingsButton.OnClicked = ServerSettings.ToggleSettingsFrame;
             GameMain.NetLobbyScreen.ReadyToStartBox.Visible = !HasPermission(ClientPermissions.ManageRound);
@@ -1068,7 +1070,6 @@ namespace Barotrauma.Networking
                             UInt16 settingsLen = inc.ReadUInt16();
                             byte[] settingsData = inc.ReadBytes(settingsLen);
                             
-
                             if (inc.ReadBoolean())
                             {
                                 if (GameSettings.VerboseLogging)
@@ -1124,8 +1125,9 @@ namespace Barotrauma.Networking
                                 GameMain.NetLobbyScreen.LastUpdateID = updateID;
 
                                 serverSettings.ServerLog.ServerName = serverSettings.ServerName;
-                                
-                                GameMain.NetLobbyScreen.ServerMessage.Text = serverSettings.ServerMessageText;
+
+                                if (!GameMain.NetLobbyScreen.ServerName.Selected) GameMain.NetLobbyScreen.ServerName.Text = serverSettings.ServerName;
+                                if (!GameMain.NetLobbyScreen.ServerMessage.Selected) GameMain.NetLobbyScreen.ServerMessage.Text = serverSettings.ServerMessageText;
                                 GameMain.NetLobbyScreen.UsingShuttle = usingShuttle;
 
                                 if (!allowSubVoting) GameMain.NetLobbyScreen.TrySelectSub(selectSubName, selectSubHash, GameMain.NetLobbyScreen.SubList);

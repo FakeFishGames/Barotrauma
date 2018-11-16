@@ -74,10 +74,24 @@ namespace Barotrauma
             set { textBlock.TextGetter = value; }
         }
 
+        private bool selected;
         public bool Selected
         {
-            get;
-            set;
+            get
+            {
+                return selected;
+            }
+            set
+            {
+                if (!selected && value)
+                {
+                    Select();
+                }
+                else if (selected && !value)
+                {
+                    Deselect();
+                }
+            }
         }
 
         public bool Wrap
@@ -311,16 +325,16 @@ namespace Barotrauma
 
         public void Select()
         {
-            Selected = true;
             CaretIndex = GetCaretIndexFromScreenPos(PlayerInput.MousePosition);
             ClearSelection();
+            selected = true;
             GUI.KeyboardDispatcher.Subscriber = this;
             OnSelected?.Invoke(this, Keys.None);
         }
 
         public void Deselect()
         {
-            Selected = false;
+            selected = false;
             if (GUI.KeyboardDispatcher.Subscriber == this)
             {
                 GUI.KeyboardDispatcher.Subscriber = null;
@@ -366,6 +380,7 @@ namespace Barotrauma
             }
             else
             {
+                if (PlayerInput.LeftButtonClicked()) Deselect();
                 isSelecting = false;
                 state = ComponentState.None;
             }

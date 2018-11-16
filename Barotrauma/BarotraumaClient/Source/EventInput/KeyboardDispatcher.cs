@@ -74,6 +74,7 @@ namespace EventInput
             get { return _subscriber; }
             set
             {
+                if (_subscriber == value) return;
                 if (_subscriber != null)
                     _subscriber.Selected = false;
                 _subscriber = value;

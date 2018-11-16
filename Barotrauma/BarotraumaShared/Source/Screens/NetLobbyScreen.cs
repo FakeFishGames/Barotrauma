@@ -18,12 +18,6 @@ namespace Barotrauma
             }
             set { lastUpdateID = value; }
         }
-
-        //for guitextblock delegate
-        public string GetServerName()
-        {
-            return GameMain.NetworkMember.ServerSettings.ServerName;
-        }
         
         private string levelSeed = "";
 

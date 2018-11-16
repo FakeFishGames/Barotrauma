@@ -2,6 +2,7 @@
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -69,9 +70,7 @@ namespace Barotrauma
         private GUIComponent campaignSetupUI;
 
         private Sprite backgroundSprite;
-
-        private GUITextBox serverMessage;
-
+        
         private float autoRestartTimer;
 
         //persistent characterinfo provided by the server
@@ -96,18 +95,20 @@ namespace Barotrauma
                     (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.SelectSub));
             }
         }
+        
+        public GUITextBox ServerName
+        {
+            get;
+            private set;
+        }
+
 
         public GUITextBox ServerMessage
         {
-            get { return serverMessage; }
+            get;
+            private set;
         }
-
-        public string ServerMessageText
-        {
-            get { return serverMessage.Text; }
-            set { serverMessage.Text = value; }
-        }
-
+        
         public GUIButton ShowLogButton
         {
             get;
@@ -333,20 +334,22 @@ namespace Barotrauma
 
             //server info ------------------------------------------------------------------
 
-            var serverName = new GUITextBox(new RectTransform(new Vector2(0.3f, 0.05f), defaultModeContainer.RectTransform))
+            ServerName = new GUITextBox(new RectTransform(new Vector2(0.3f, 0.05f), defaultModeContainer.RectTransform));
+            ServerName.OnDeselected += (textBox, key) =>
             {
-                TextGetter = GetServerName,
-                Enabled = false//GameMain.Client.HasPermission(ClientPermissions.ManageSettings)
+                GameMain.Client.ServerSettings.ClientAdminWrite();
             };
-            serverName.OnTextChanged += ChangeServerName;
-            clientDisabledElements.Add(serverName);
+            clientDisabledElements.Add(ServerName);
 
-            serverMessage = new GUITextBox(new RectTransform(new Vector2(infoColumnContainer.RectTransform.RelativeSize.X, 0.15f), defaultModeContainer.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.07f) })
+            ServerMessage = new GUITextBox(new RectTransform(new Vector2(infoColumnContainer.RectTransform.RelativeSize.X, 0.15f), defaultModeContainer.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.07f) })
             {
                 Wrap = true
             };
-            serverMessage.OnTextChanged += UpdateServerMessage;
-            clientDisabledElements.Add(serverMessage);
+            ServerMessage.OnDeselected += (textBox, key) =>
+            {
+                GameMain.Client.ServerSettings.ClientAdminWrite();
+            };
+            clientDisabledElements.Add(ServerMessage);
             
             SettingsButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), topButtonContainer.RectTransform, Anchor.TopRight),
                 TextManager.Get("ServerSettingsButton"));
@@ -588,14 +591,16 @@ namespace Barotrauma
             //ServerName = (GameMain.Server == null) ? ServerName : GameMain.Server.Name;
 
             //disable/hide elements the clients are not supposed to use/see
-            //TODO: is this even applicable anymore?
-            clientDisabledElements.ForEach(c => c.Enabled = false);//GameMain.Server != null);
-            clientHiddenElements.ForEach(c => c.Visible = false);//GameMain.Server != null);
+            clientDisabledElements.ForEach(c => c.Enabled = false);
+            clientHiddenElements.ForEach(c => c.Visible = false);
 
             ShowLogButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
 
             SettingsButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound);
+
+            ServerName.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            ServerMessage.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
 
             if (GameMain.Client != null)
             {
@@ -1177,27 +1182,7 @@ namespace Barotrauma
 
             return true;
         }
-
-        public bool ChangeServerName(GUITextBox textBox, string text)
-        {
-            return false;
-            /*if (GameMain.Server == null) return false;
-            ServerName = text;
-            lastUpdateID++;
-
-            return true;*/
-        }
-
-        public bool UpdateServerMessage(GUITextBox textBox, string text)
-        {
-            return false;
-            /*if (GameMain.Server == null) return false;
-
-            lastUpdateID++;
-
-            return true;*/
-        }
-
+        
         public void AddPlayer(string name)
         {
             GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), playerList.Content.RectTransform),
