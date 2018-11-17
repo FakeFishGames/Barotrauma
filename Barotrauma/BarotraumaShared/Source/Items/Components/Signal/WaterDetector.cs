@@ -30,7 +30,7 @@ namespace Barotrauma.Items.Components
         {
             string signalOut = item.InWater ? output : falseOutput;
 
-            item.SendSignal(0, signalOut, "state_out", null);
+            item.SendSignal(0, signalOut, "signal_out", null);
         }
     }
 }
