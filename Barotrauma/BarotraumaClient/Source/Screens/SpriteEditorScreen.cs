@@ -64,7 +64,7 @@ namespace Barotrauma
                 {
                     if (!(textureList.SelectedData is Texture2D selectedTexture)) { return false; }
                     object selectedSprite = spriteList.SelectedData;
-                    Sprite matchingSprite = Sprite.LoadedSprites.First(s => s.Texture == selectedTexture);
+                    Sprite matchingSprite = loadedSprites.First(s => s.Texture == selectedTexture);
                     matchingSprite.ReloadTexture();
                     RefreshLists();
                     textureList.Select(matchingSprite.Texture);
@@ -82,7 +82,7 @@ namespace Barotrauma
                 OnClicked = (button, userData) =>
                 {
                     if (selectedTexture == null) { return false; }
-                    foreach (Sprite sprite in Sprite.LoadedSprites)
+                    foreach (Sprite sprite in loadedSprites)
                     {
                         if (sprite.Texture != selectedTexture) { continue; }
                         var element = sprite.SourceElement;
@@ -141,7 +141,7 @@ namespace Barotrauma
                 {
                     if (selectedTexture == null) { return false; }
                     XDocument doc = null;
-                    foreach (Sprite sprite in Sprite.LoadedSprites)
+                    foreach (Sprite sprite in loadedSprites)
                     {
                         if (sprite.Texture != selectedTexture) { continue; }
                         var element = sprite.SourceElement;
@@ -223,7 +223,7 @@ namespace Barotrauma
                     }
                     if (selectedSprites.None(s => s.Texture == selectedTexture))
                     {
-                        spriteList.Select(Sprite.LoadedSprites.First(s => s.Texture == selectedTexture));
+                        spriteList.Select(loadedSprites.First(s => s.Texture == selectedTexture));
                     }
                     var firstSprite = selectedSprites.First();
                     texturePathText.Text = firstSprite.FilePath;
@@ -287,28 +287,22 @@ namespace Barotrauma
         private HashSet<Sprite> loadedSprites = new HashSet<Sprite>();
         private void LoadSprites()
         {
-            foreach (string filePath in ContentPackage.GetAllContentFiles(GameMain.SelectedPackages))
-            {
-                XDocument doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc != null && doc.Root != null)
-                {
-                    LoadSprites(doc.Root);
-                }
-            }
+            loadedSprites.ForEach(s => s.Remove());
+            loadedSprites.Clear();
+            //foreach (string filePath in ContentPackage.GetAllContentFiles(GameMain.SelectedPackages))
+            //{
+            //    XDocument doc = XMLExtensions.TryLoadXml(filePath);
+            //    if (doc != null && doc.Root != null)
+            //    {
+            //        LoadSprites(doc.Root);
+            //    }
+            //}
 
-            // TODO: add ragdolls and animations into the content package
-            foreach (string filePath in Directory.GetFiles("Content/Characters/", "*.xml", SearchOption.AllDirectories))
+            foreach (string filePath in Directory.GetFiles("Content/", "*.xml", SearchOption.AllDirectories))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(filePath);
                 if (doc != null && doc.Root != null)
                 {
-                    if (doc.Element("Ragdoll") == null)
-                    {
-                        if (doc.Element("ragdoll") == null)
-                        {
-                            continue;
-                        }
-                    }
                     LoadSprites(doc.Root);
                 }
             }
@@ -316,21 +310,26 @@ namespace Barotrauma
             void LoadSprites(XElement element)
             {
                 element.Elements("sprite").ForEach(s => CreateSprite(s));
+                element.Elements("Sprite").ForEach(s => CreateSprite(s));
                 element.Elements().ForEach(e => LoadSprites(e));
             }
 
             void CreateSprite(XElement element)
             {
                 string spriteFolder = "";
-                if (!element.GetAttributeString("texture", "").Contains("/"))
+                string textureElement = element.GetAttributeString("texture", "");
+                if (textureElement.Contains("[GENDER]") || textureElement.Contains("[HEADID]")) { return; }
+                if (!textureElement.Contains("/"))
                 {
                     spriteFolder = Path.GetDirectoryName(ParsePathFromUri(element.BaseUri));
                 }
-                string identifier = Sprite.GetID(element);
-                if (Sprite.LoadedSprites.None(s => s.ID == identifier))
-                {
-                    loadedSprites.Add(new Sprite(element, spriteFolder));
-                }
+                // Uncomment if we do multiple passes -> there can be duplicates
+                //string identifier = Sprite.GetID(element);
+                //if (loadedSprites.None(s => s.ID == identifier))
+                //{
+                //    loadedSprites.Add(new Sprite(element, spriteFolder));
+                //}
+                loadedSprites.Add(new Sprite(element, spriteFolder));
             }
         }
         #endregion
@@ -345,7 +344,7 @@ namespace Barotrauma
             {
                 if (selectedTexture != null)
                 {
-                    foreach (Sprite sprite in Sprite.LoadedSprites)
+                    foreach (Sprite sprite in loadedSprites)
                     {
                         if (sprite.Texture != selectedTexture) continue;
                         if (PlayerInput.LeftButtonClicked())
@@ -496,6 +495,7 @@ namespace Barotrauma
             base.Deselect();
             loadedSprites.ForEach(s => s.Remove());
             loadedSprites.Clear();
+            ResetWidgets();
         }
 
         public void SelectSprite(Sprite sprite)
@@ -513,7 +513,7 @@ namespace Barotrauma
             spriteList.ClearChildren();
             ResetWidgets();
             HashSet<string> textures = new HashSet<string>();
-            foreach (Sprite sprite in Sprite.LoadedSprites.OrderBy(s => Path.GetFileNameWithoutExtension(s.FilePath)))
+            foreach (Sprite sprite in loadedSprites.OrderBy(s => Path.GetFileNameWithoutExtension(s.FilePath)))
             {
                 //ignore sprites that don't have a file path (e.g. submarine pics)
                 if (string.IsNullOrEmpty(sprite.FilePath)) continue;
@@ -591,7 +591,6 @@ namespace Barotrauma
                     secondaryColor = Color.Gray,
                     tooltipOffset = new Vector2(selectedSize / 2 + 5, -10)
                 };
-                widget.MouseDown += () => spriteList.Select(sprite);
                 widget.PreDraw += (sp, dTime) =>
                 {
                     if (!widget.IsControlled)

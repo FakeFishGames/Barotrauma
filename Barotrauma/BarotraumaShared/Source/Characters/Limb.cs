@@ -217,20 +217,24 @@ namespace Barotrauma
             {
                 if (!MathUtils.IsValid(value))
                 {
-                    string errorMsg = "Attempted to set the anchor of a limb's pull joint to an invalid value (" + value + ")\n" + Environment.StackTrace;
+                    string errorMsg = "Attempted to set the anchor A of a limb's pull joint to an invalid value (" + value + ")\n" + Environment.StackTrace;
                     DebugConsole.ThrowError(errorMsg);
                     GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorA:InvalidValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                     return;
                 }
 
-                if (Vector2.DistanceSquared(pullJoint.WorldAnchorB, value) > 50.0f * 50.0f)
+                if (Vector2.DistanceSquared(SimPosition, value) > 50.0f * 50.0f)
                 {
-                    string errorMsg = "Attempted to move the anchor of a limb's pull joint extremely far from the limb (" + value + ")\n" + Environment.StackTrace;
+                    Vector2 diff = value - SimPosition;
+                    string errorMsg = "Attempted to move the anchor A of a limb's pull joint extremely far from the limb (diff: " + diff +
+                        ", limb enabled: " + body.Enabled +
+                        ", simple physics enabled: " + character.AnimController.SimplePhysicsEnabled + ")\n"
+                        + Environment.StackTrace;
                     DebugConsole.ThrowError(errorMsg);
                     GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorA:ExcessiveValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                     return;
                 }
-
+                
                 pullJoint.WorldAnchorA = value;
             }
         }
@@ -242,17 +246,16 @@ namespace Barotrauma
             {
                 if (!MathUtils.IsValid(value))
                 {
-                    string errorMsg = "Attempted to set the anchor of a limb's pull joint to an invalid value (" + value + ")\n" + Environment.StackTrace;
+                    string errorMsg = "Attempted to set the anchor B of a limb's pull joint to an invalid value (" + value + ")\n" + Environment.StackTrace;
                     DebugConsole.ThrowError(errorMsg);
                     GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorB:InvalidValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                     return;
                 }
-
-
+                
                 if (Vector2.DistanceSquared(pullJoint.WorldAnchorA, value) > 50.0f * 50.0f)
                 {
                     Vector2 diff = value - pullJoint.WorldAnchorA;
-                    string errorMsg = "Attempted to move the anchor of a limb's pull joint extremely far from the limb (diff: " + diff +
+                    string errorMsg = "Attempted to move the anchor B of a limb's pull joint extremely far from the limb (diff: " + diff +
                         ", limb enabled: " + body.Enabled +
                         ", simple physics enabled: " + character.AnimController.SimplePhysicsEnabled + ")\n"
                         + Environment.StackTrace;
