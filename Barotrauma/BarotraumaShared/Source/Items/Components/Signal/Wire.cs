@@ -282,7 +282,7 @@ namespace Barotrauma.Items.Components
                         Vector2 pullBackDir = diff == Vector2.Zero ? Vector2.Zero : Vector2.Normalize(diff);
 
                         user.AnimController.Collider.ApplyForce(pullBackDir * user.Mass * 50.0f);
-                        user.AnimController.UpdateUseItem(true, user.SimPosition + pullBackDir * 2.0f);
+                        user.AnimController.UpdateUseItem(true, user.WorldPosition + pullBackDir * 200.0f);
                         if (currLength > MaxLength * 1.5f && GameMain.Client == null)
                         {
                             ClearConnections();
