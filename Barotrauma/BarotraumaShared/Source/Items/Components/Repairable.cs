@@ -175,7 +175,7 @@ namespace Barotrauma.Items.Components
 
         private void UpdateFixAnimation(Character character)
         {
-            character.AnimController.UpdateUseItem(false, item.SimPosition + Vector2.UnitY * ((item.Condition / 100.0f) % 0.1f));
+            character.AnimController.UpdateUseItem(false, item.WorldPosition + new Vector2(0.0f, 100.0f) * ((item.Condition / 100.0f) % 0.1f));
         }
 
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
