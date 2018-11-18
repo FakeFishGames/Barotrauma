@@ -635,8 +635,8 @@ namespace Barotrauma
                     else if (Text.Length > 0 && CaretIndex < Text.Length)
                     {
                         SetText(Text.Remove(CaretIndex, 1));
-                        CaretIndex--;
                         OnTextChanged?.Invoke(this, Text);
+                        caretPosDirty = true;
                     }
                     break;
                 case Keys.Tab:

@@ -59,7 +59,6 @@ namespace Barotrauma
         private Vector2? anchor1Pos;
 
         private float spriteSheetZoom = 1;
-        private float textureScale = 1;
         private float textureMinScale = 0.1f;
         private float textureMaxScale = 2;
         private float spriteSheetMinZoom = 0.25f;
@@ -105,7 +104,6 @@ namespace Barotrauma
             {
                 OnPreSpawn();
                 character = Character.Controlled;
-                TeleportTo(spawnPosition);
                 OnPostSpawn();
             }
             GameMain.Instance.OnResolutionChanged += OnResolutionChanged;
@@ -129,6 +127,7 @@ namespace Barotrauma
             }
             GameMain.Instance.OnResolutionChanged -= OnResolutionChanged;
             GameMain.LightManager.LightingEnabled = true;
+            ClearWidgets();
         }
 
         private void OnResolutionChanged()
@@ -961,6 +960,7 @@ namespace Barotrauma
         {
             character.AnimController.Recreate(ragdoll);
             TeleportTo(spawnPosition);
+            CreateTextures();
             ResetParamsEditor();
             ClearWidgets();
         }
@@ -1555,8 +1555,9 @@ namespace Barotrauma
                     ResetParamsEditor();
                     ClearWidgets();
                 }
-                ResetParamsEditor();
-                ClearWidgets();
+                // These should be unnecessary here
+                //ResetParamsEditor();
+                //ClearWidgets();
                 CreateCenterPanel();
                 GUI.AddMessage($"Ragdoll reset", Color.WhiteSmoke, font: GUI.Font);
                 return true;
@@ -1663,7 +1664,6 @@ namespace Barotrauma
                     var ragdoll = character.IsHumanoid ? HumanRagdollParams.GetRagdollParams(character.SpeciesName, fileName) as RagdollParams : RagdollParams.GetRagdollParams<FishRagdollParams>(character.SpeciesName, fileName);
                     GUI.AddMessage($"Ragdoll loaded from {selectedFile}", Color.WhiteSmoke, font: GUI.Font);
                     RecreateRagdoll(ragdoll);
-                    CreateTextures();
                     CreateCenterPanel();
                     loadBox.Close();
                     return true;
@@ -2128,8 +2128,8 @@ namespace Barotrauma
                     w.tooltip = "Cycle Speed";
                     w.refresh = () =>
                     {
-                        referencePoint = SimToScreen(head != null ? head.SimPosition : collider.SimPosition);
-                        w.DrawPos = referencePoint + GetScreenSpaceForward() * ConvertUnits.ToDisplayUnits(CurrentAnimation.CycleSpeed * multiplier) * Cam.Zoom;
+                        var refPoint = SimToScreen(head != null ? head.SimPosition : collider.SimPosition);
+                        w.DrawPos = refPoint + GetScreenSpaceForward() * ConvertUnits.ToDisplayUnits(CurrentAnimation.CycleSpeed * multiplier) * Cam.Zoom;
                         // Update tooltip, because the cycle speed might be automatically adjusted by the movement speed widget.
                         w.tooltip = $"Cycle Speed: {CurrentAnimation.CycleSpeed.FormatSingleDecimal()}";
                     };
@@ -2162,7 +2162,7 @@ namespace Barotrauma
                     {
                         if (w.IsSelected)
                         {
-                            GUI.DrawLine(spriteBatch, w.DrawPos, referencePoint, Color.MediumPurple);
+                            GUI.DrawLine(spriteBatch, w.DrawPos, SimToScreen(head != null ? head.SimPosition : collider.SimPosition), Color.MediumPurple);
                         }
                     };
                 }).Draw(spriteBatch, deltaTime);
@@ -2175,8 +2175,8 @@ namespace Barotrauma
                     w.tooltip = "Movement Speed";
                     w.refresh = () =>
                     {
-                        referencePoint = SimToScreen(head != null ? head.SimPosition : collider.SimPosition);
-                        w.DrawPos = referencePoint + GetScreenSpaceForward() * ConvertUnits.ToDisplayUnits(CurrentAnimation.MovementSpeed * multiplier) * Cam.Zoom;
+                        var refPoint = SimToScreen(head != null ? head.SimPosition : collider.SimPosition);
+                        w.DrawPos = refPoint + GetScreenSpaceForward() * ConvertUnits.ToDisplayUnits(CurrentAnimation.MovementSpeed * multiplier) * Cam.Zoom;
                     };
                     w.MouseHeld += dTime =>
                     {
@@ -2212,7 +2212,7 @@ namespace Barotrauma
                     {
                         if (w.IsSelected)
                         {
-                            GUI.DrawLine(spriteBatch, w.DrawPos, referencePoint, Color.Turquoise);
+                            GUI.DrawLine(spriteBatch, w.DrawPos, SimToScreen(head != null ? head.SimPosition : collider.SimPosition), Color.Turquoise);
                         }
                     };
                 }).Draw(spriteBatch, deltaTime);
@@ -2329,9 +2329,9 @@ namespace Barotrauma
                         w.tooltip = "Step Size";
                         w.refresh = () =>
                         {
-                            referencePoint = SimToScreen(character.AnimController.GetColliderBottom());
+                            var refPoint = SimToScreen(character.AnimController.GetColliderBottom());
                             var stepSize = ConvertUnits.ToDisplayUnits(groundedParams.StepSize);
-                            w.DrawPos = referencePoint + new Vector2(stepSize.X * character.AnimController.Dir, -stepSize.Y) * Cam.Zoom;
+                            w.DrawPos = refPoint + new Vector2(stepSize.X * character.AnimController.Dir, -stepSize.Y) * Cam.Zoom;
                         };
                         w.MouseHeld += dTime =>
                         {
@@ -2359,12 +2359,12 @@ namespace Barotrauma
                     GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_HandMoveAmount", Color.LightGreen, initMethod: w =>
                     {
                         w.tooltip = "Hand Move Amount";
-                        float offset = 0.2f;
+                        float offset = 0.1f;
                         w.refresh = () =>
                         {
-                            referencePoint = SimToScreen(collider.SimPosition + GetSimSpaceForward() * offset);
+                            var refPoint = SimToScreen(collider.SimPosition + GetSimSpaceForward() * offset);
                             var handMovement = ConvertUnits.ToDisplayUnits(humanGroundedParams.HandMoveAmount);
-                            w.DrawPos = referencePoint + new Vector2(handMovement.X * character.AnimController.Dir, handMovement.Y) * Cam.Zoom;
+                            w.DrawPos = refPoint + new Vector2(handMovement.X * character.AnimController.Dir, handMovement.Y) * Cam.Zoom;
                         };
                         w.MouseHeld += dTime =>
                         {
@@ -2444,19 +2444,33 @@ namespace Barotrauma
                     GUI.DrawSineWithDots(spriteBatch, referencePoint, -toRefPoint, legMoveAmount, legCycleLength, 5000, points, Color.NavajoWhite);
                 });
                 // Arms
-                referencePoint = colliderDrawPos + screenSpaceForward * 10;
-                Vector2 handMoveAmount = ConvertUnits.ToDisplayUnits(humanSwimParams.HandMoveAmount) * Cam.Zoom;
-                drawPos = referencePoint + new Vector2(handMoveAmount.X * dir, handMoveAmount.Y);
-                Vector2 origin = drawPos - new Vector2(widgetDefaultSize / 2, 0) * -dir;
-                DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.LightGreen, "Hand Move Amount", () =>
+                GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_HandMoveAmount", Color.LightGreen, initMethod: w =>
                 {
-                    Vector2 transformedInput = ConvertUnits.ToSimUnits(new Vector2(scaledMouseSpeed.X * dir, scaledMouseSpeed.Y)) / Cam.Zoom;
-                    Vector2 handMovement = humanSwimParams.HandMoveAmount + transformedInput;
-                    TryUpdateAnimParam("handmoveamount", handMovement);
-                    TryUpdateAnimParam("handcyclespeed", handMovement.X * 4);
-                    GUI.DrawLine(spriteBatch, origin, referencePoint, Color.LightGreen);
-                });
-                GUI.DrawLine(spriteBatch, origin, origin + Vector2.UnitX * 5 * dir, Color.LightGreen);
+                    w.tooltip = "Hand Move Amount";
+                    float offset = 0.4f;
+                    w.refresh = () =>
+                    {
+                        var refPoint = SimToScreen(collider.SimPosition + GetSimSpaceForward() * offset);
+                        var handMovement = ConvertUnits.ToDisplayUnits(humanSwimParams.HandMoveAmount);
+                        w.DrawPos = refPoint + new Vector2(handMovement.X * character.AnimController.Dir, handMovement.Y) * Cam.Zoom;
+                    };
+                    w.MouseHeld += dTime =>
+                    {
+                        w.DrawPos = PlayerInput.MousePosition;
+                        Vector2 transformedInput = ConvertUnits.ToSimUnits(new Vector2(PlayerInput.MouseSpeed.X * character.AnimController.Dir, PlayerInput.MouseSpeed.Y)) / Cam.Zoom;
+                        Vector2 handMovement = humanSwimParams.HandMoveAmount + transformedInput;
+                        TryUpdateAnimParam("handmoveamount", handMovement);
+                        TryUpdateAnimParam("handcyclespeed", handMovement.X * 4);
+                        w.tooltip = $"Hand Move Amount: {humanSwimParams.HandMoveAmount.FormatDoubleDecimal()}";
+                    };
+                    w.PostDraw += (sp, dTime) =>
+                    {
+                        if (w.IsSelected)
+                        {
+                            GUI.DrawLine(sp, w.DrawPos, SimToScreen(collider.SimPosition + GetSimSpaceForward() * offset), Color.LightGreen);
+                        }
+                    };
+                }).Draw(spriteBatch, deltaTime);
             }
         }
         #endregion

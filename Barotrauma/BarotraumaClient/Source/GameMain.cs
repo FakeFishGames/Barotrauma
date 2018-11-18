@@ -495,11 +495,8 @@ namespace Barotrauma
                 fixedTime.TotalGameTime.Add(addTime);
                 base.Update(fixedTime);
                 
-                if (WindowActive)
-                {
-                    PlayerInput.Update(Timing.Step);
-                }
-
+                PlayerInput.Update(Timing.Step);
+                
                 if (loadingScreenOpen)
                 {
                     //reset accumulator if loading
