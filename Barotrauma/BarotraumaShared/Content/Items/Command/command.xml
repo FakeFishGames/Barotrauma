@@ -12,6 +12,10 @@
     <BrokenSprite texture="Content/Items/Command/navigator.png" sourcerect="188,0,188,194" depth="0.8" maxcondition="55" fadein="true" />
     <BrokenSprite texture="Content/Items/Command/navigator.png" sourcerect="376,0,188,194" depth="0.8" maxcondition="0" />
 
+    <CustomInterface>
+      <Button text="Activate siren" connection="signal_out"/>
+    </CustomInterface>
+    
     <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10" linkuitocomponent="3">
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" style="OuterGlow" color="0,0,0,0.8" absoluteoffset="30,0"/>
       <StatusEffect type="InWater" target="This" condition="-1.0"/>
@@ -144,7 +148,7 @@
     identifier="sonartransducer"
     tags="command"
     category="Machine"
-    spritecolor="0,0,0,1">
+    spritecolor="255,255,255,255">
 
     <!-- TODO: sonar transducer light implementation -->
     <Sprite texture="Content/Items/Command/sonarTransducer.png" sourcerect="0,0,97,97" depth="0.8"/>
