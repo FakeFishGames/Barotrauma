@@ -37,10 +37,11 @@ namespace Barotrauma
             };
 
 #if LINUX || OSX
-            var blurEffect = content.Load<Effect>("Effects/blurshader_opengl");
+            //var blurEffect = content.Load<Effect>("Effects/blurshader_opengl");
             damageEffect = content.Load<Effect>("Effects/damageshader_opengl");
+            postProcessEffect = content.Load<Effect>("Effects/postprocess_opengl");
 #else
-            var blurEffect = content.Load<Effect>("Effects/blurshader");
+            //var blurEffect = content.Load<Effect>("Effects/blurshader");
             damageEffect = content.Load<Effect>("Effects/damageshader");
             postProcessEffect = content.Load<Effect>("Effects/postprocess");
 #endif

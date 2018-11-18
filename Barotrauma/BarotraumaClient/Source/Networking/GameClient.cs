@@ -61,6 +61,12 @@ namespace Barotrauma.Networking
             get { return myID; }
         }
 
+        public VoipClient VoipClient
+        {
+            get;
+            private set;
+        }
+
         public override List<Client> ConnectedClients
         {
             get

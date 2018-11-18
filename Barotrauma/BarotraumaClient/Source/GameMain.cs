@@ -197,12 +197,7 @@ namespace Barotrauma
         public void SetWindowMode(WindowMode windowMode)
         {
             WindowMode = windowMode;
-#if !(OSX)
             GraphicsDeviceManager.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed;
-#else
-            // Force borderless on macOS.
-            GraphicsDeviceManager.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed && Config.WindowMode != WindowMode.Fullscreen;
-#endif
             GraphicsDeviceManager.IsFullScreen = Config.WindowMode == WindowMode.Fullscreen || Config.WindowMode == WindowMode.BorderlessWindowed;
             Window.IsBorderless = !GraphicsDeviceManager.HardwareModeSwitch;
 

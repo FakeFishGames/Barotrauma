@@ -2464,6 +2464,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\RespawnManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\SteamManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Voip\VoipConfig.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Voip\VoipQueue.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\WhiteList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\ProcGen\PerlinNoise.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerInfo.cs" />
