@@ -18,6 +18,8 @@ namespace Barotrauma.Networking
         SERVER_SETTINGS, //change server settings
 
         FILE_REQUEST,   //request a (submarine) file from the server
+
+        VOICE,
         
         RESPONSE_STARTGAME, //tell the server whether you're ready to start
         SERVER_COMMAND,     //tell the server to end a round or kick/ban someone (special permissions required)
@@ -51,6 +53,8 @@ namespace Barotrauma.Networking
         ACHIEVEMENT,        //give the client a steam achievement
 
         FILE_TRANSFER,
+
+        VOICE,
 
         QUERY_STARTGAME,    //ask the clients whether they're ready to start
         STARTGAME,          //start a new round

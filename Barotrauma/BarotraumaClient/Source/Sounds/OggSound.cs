@@ -8,7 +8,7 @@ namespace Barotrauma.Sounds
     {
         private VorbisReader reader;
 
-        public OggSound(SoundManager owner,string filename,bool stream) : base(owner,filename,stream)
+        public OggSound(SoundManager owner,string filename,bool stream) : base(owner,filename,stream,false)
         {
             reader = new VorbisReader(filename);
 

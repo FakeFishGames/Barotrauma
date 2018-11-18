@@ -224,6 +224,7 @@
     <Compile Include="Source\Map\WayPoint.cs" />
     <Compile Include="Source\Networking\BanList.cs" />
     <Compile Include="Source\Networking\ChatMessage.cs" />
+    <Compile Include="Source\Networking\Client.cs" />
     <Compile Include="Source\Networking\EntitySpawner.cs" />
     <Compile Include="Source\Networking\FileTransfer\FileReceiver.cs" />
     <Compile Include="Source\Networking\GameClient.cs" />
@@ -234,6 +235,9 @@
     <Compile Include="Source\Networking\ServerInfo.cs" />
     <Compile Include="Source\Networking\ServerLog.cs" />
     <Compile Include="Source\Networking\ServerSettings.cs" />
+    <Compile Include="Source\Networking\Voip\VoipCapture.cs" />
+    <Compile Include="Source\Networking\Voip\VoipClient.cs" />
+    <Compile Include="Source\Networking\Voip\VoipConfig.cs" />
     <Compile Include="Source\Networking\Voting.cs" />
     <Compile Include="Source\Networking\WhiteList.cs" />
     <Compile Include="Source\Particles\Decal.cs" />
@@ -263,11 +267,13 @@
     <Compile Include="Source\Screens\Screen.cs" />
     <Compile Include="Source\Screens\ServerListScreen.cs" />
     <Compile Include="Source\Serialization\SerializableEntityEditor.cs" />
+    <Compile Include="Source\Sounds\InputPlaybackSound.cs" />
     <Compile Include="Source\Sounds\OggSound.cs" />
     <Compile Include="Source\Sounds\Sound.cs" />
     <Compile Include="Source\Sounds\SoundChannel.cs" />
     <Compile Include="Source\Sounds\SoundManager.cs" />
     <Compile Include="Source\Sounds\SoundPlayer.cs" />
+    <Compile Include="Source\Sounds\VoipSound.cs" />
     <Compile Include="Source\Sprite\DeformableSprite.cs" />
     <Compile Include="Source\Sprite\DeformAnimations\CustomDeformation.cs" />
     <Compile Include="Source\Sprite\DeformAnimations\Inflate.cs" />
@@ -282,6 +288,9 @@
     <Compile Include="Source\Utils\ToolBox.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Concentus, Version=1.1.6.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\Libraries\NuGet\Concentus.1.1.7\lib\portable-net45+win+wpa81+wp80\Concentus.dll</HintPath>
+    </Reference>
     <Reference Include="GameAnalytics.Mono, Version=1.0.6710.29255, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.1.1.12\lib\net45\GameAnalytics.Mono.dll</HintPath>
     </Reference>

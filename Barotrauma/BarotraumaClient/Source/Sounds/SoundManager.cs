@@ -211,7 +211,6 @@ namespace Barotrauma.Sounds
             ListenerPosition = Vector3.Zero;
             ListenerTargetVector = new Vector3(0.0f, 0.0f, 1.0f);
             ListenerUpVector = new Vector3(0.0f, -1.0f, 0.0f);
-
         }
 
         public Sound LoadSound(string filename, bool stream = false)
@@ -452,8 +451,15 @@ namespace Barotrauma.Sounds
                         }
                     }
                 }
-                Thread.Sleep(300);
+                Thread.Sleep(50); //TODO: use a separate thread for network audio?
             }
+        }
+
+        public string GetCaptureDeviceName(int i)
+        {
+            if (alcCaptureDeviceNames == null) return "[N/A]";
+            if (i < 0 || i >= alcCaptureDeviceNames.Count) return "[N/A]";
+            return alcCaptureDeviceNames[i];
         }
 
         public void Dispose()

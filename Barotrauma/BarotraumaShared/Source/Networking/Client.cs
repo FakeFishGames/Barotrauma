@@ -22,6 +22,13 @@ namespace Barotrauma.Networking
                 if (character != null) HasSpawned = true;
             }
         }
+
+        public VoipQueue VoipQueue
+        {
+            get;
+            private set;
+        }
+
         public bool InGame;
         public bool HasSpawned; //has the client spawned as a character during the current round
         
@@ -50,6 +57,8 @@ namespace Barotrauma.Networking
         }
 
         partial void InitProjSpecific();
+        partial void InitVoipProjSpecific(); //TODO: call
+        partial void DisposeProjSpecific(); //TODO: call
         public Client(string name, byte ID)
         {
             this.Name = name;

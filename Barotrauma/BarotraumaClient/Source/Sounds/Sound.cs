@@ -25,6 +25,12 @@ namespace Barotrauma.Sounds
             protected set;
         }
 
+        public bool FilledByNetwork
+        {
+            get;
+            protected set;
+        }
+
         private uint alBuffer;
         public uint ALBuffer
         {
@@ -53,11 +59,12 @@ namespace Barotrauma.Sounds
         public float BaseNear;
         public float BaseFar;
         
-        public Sound(SoundManager owner,string filename,bool stream)
+        public Sound(SoundManager owner,string filename,bool stream,bool filledByNetwork)
         {
             Owner = owner;
             Filename = Path.GetFullPath(filename);
             Stream = stream;
+            FilledByNetwork = filledByNetwork;
 
             BaseGain = 1.0f;
             BaseNear = 100.0f;
@@ -105,22 +112,22 @@ namespace Barotrauma.Sounds
             return Owner.IsPlaying(this);
         }
 
-        public SoundChannel Play(float gain, float range, Vector2 position, bool muffle = false)
+        public virtual SoundChannel Play(float gain, float range, Vector2 position, bool muffle = false)
         {
             return new SoundChannel(this, gain, new Vector3(position.X, position.Y, 0.0f), range * 0.4f, range, "default", muffle);
         }
-        
-        public SoundChannel Play(Vector3? position, float gain, bool muffle = false)
+
+        public virtual SoundChannel Play(Vector3? position, float gain, bool muffle = false)
         {
             return new SoundChannel(this, gain, position, BaseNear, BaseFar, "default", muffle);
         }
 
-        public SoundChannel Play(float gain)
+        public virtual SoundChannel Play(float gain)
         {
             return Play(null, gain);
         }
 
-        public SoundChannel Play()
+        public virtual SoundChannel Play()
         {
             return Play(BaseGain);
         }

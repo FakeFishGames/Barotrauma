@@ -34,7 +34,7 @@ namespace Barotrauma
         public bool VSyncEnabled { get; set; }
 
         public bool EnableSplashScreen { get; set; }
-        
+
         public int ParticleLimit { get; set; }
 
         public float LightMapScale { get; set; }
@@ -93,7 +93,18 @@ namespace Barotrauma
         public WindowMode WindowMode
         {
             get { return windowMode; }
-            set { windowMode = value; }
+            set
+            {
+#if OSX
+                // Fullscreen is broken on macOS, so just force any usage of it to borderless windowed.
+                if (value == WindowMode.Fullscreen)
+                {
+                    windowMode = WindowMode.BorderlessWindowed;
+                    return;
+                }
+#endif
+                windowMode = value;
+            }
         }
 
         public List<string> JobPreferences
@@ -324,10 +335,12 @@ namespace Barotrauma
             //FullScreenEnabled = ToolBox.GetAttributeBool(graphicsMode, "fullscreen", true);
 
             var windowModeStr = graphicsMode.GetAttributeString("displaymode", "Fullscreen");
-            if (!Enum.TryParse<WindowMode>(windowModeStr, out windowMode))
+            WindowMode wm = 0;
+            if (!Enum.TryParse(windowModeStr, out wm))
             {
-                windowMode = WindowMode.Fullscreen;
+                wm = WindowMode.Fullscreen;
             }
+            WindowMode = wm;
 
             SoundVolume = doc.Root.GetAttributeFloat("soundvolume", 1.0f);
             MusicVolume = doc.Root.GetAttributeFloat("musicvolume", 0.3f);
