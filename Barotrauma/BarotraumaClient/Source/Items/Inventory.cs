@@ -447,7 +447,7 @@ namespace Barotrauma
                 if (HideSlot(i)) continue;
 
                 //don't draw the item if it's being dragged out of the slot
-                bool drawItem = draggingItem == null || draggingItem != Items[i] || slots[i].IsHighlighted;
+                bool drawItem = draggingItem == null || draggingItem != Items[i] || slots[i].InteractRect.Contains(PlayerInput.MousePosition);
 
                 DrawSlot(spriteBatch, this, slots[i], Items[i], drawItem);
             }
