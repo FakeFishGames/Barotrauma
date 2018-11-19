@@ -2,6 +2,7 @@
 using Barotrauma.Lights;
 using Barotrauma.Particles;
 using Barotrauma.SpriteDeformations;
+using Barotrauma.Extensions;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
@@ -361,56 +362,23 @@ namespace Barotrauma
             }
             float depthStep = 0.000001f;
             WearableSprite onlyDrawable = wearingItems.Find(w => w.HideOtherWearables);
+            SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+            foreach (WearableSprite wearable in OtherWearables)
+            {
+                DrawWearable(wearable, depthStep, spriteBatch, color, spriteEffect);
+                //if there are multiple sprites on this limb, make the successive ones be drawn in front
+                depthStep += 0.000001f;
+            }
             foreach (WearableSprite wearable in WearingItems)
             {
                 if (onlyDrawable != null && onlyDrawable != wearable) continue;
-
-                SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
-
-                Vector2 origin = wearable.InheritOrigin ? ActiveSprite.Origin : wearable.Sprite.Origin;
-                // If the wearable inherits the origin, flipping is already handled.
-                if (!wearable.InheritOrigin && body.Dir == -1.0f) origin.X = wearable.Sprite.SourceRect.Width - origin.X;
-
-                if (wearable.InheritSourceRect)
-                {
-                    wearable.Sprite.SourceRect = ActiveSprite.SourceRect;
-                }
-                
-                float depth = wearable.Sprite.Depth;
-
-                if (wearable.InheritLimbDepth)
-                {
-                    depth = ActiveSprite.Depth - depthStep;
-                    if (wearable.DepthLimb != LimbType.None)
-                    {
-                        Limb depthLimb = character.AnimController.GetLimb(wearable.DepthLimb);
-                        if (depthLimb != null)
-                        {
-                            depth = depthLimb.ActiveSprite.Depth - depthStep;
-                        }
-                    }
-                }
-                // Draw outer cloths on top of inner cloths.
-                if (wearable.WearableComponent.AllowedSlots.Contains(InvSlotType.OuterClothes))
-                {
-                    depth -= depthStep;
-                }
+                DrawWearable(wearable, depthStep, spriteBatch, color, spriteEffect);
                 //if there are multiple sprites on this limb, make the successive ones be drawn in front
                 depthStep += 0.000001f;
-
-                float textureScale = wearable.InheritTextureScale ? TextureScale : 1;
-                Color wearableColor = wearable.WearableComponent.Item.GetSpriteColor();
-                wearable.Sprite.Draw(spriteBatch,
-                    new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
-                    new Color((color.R * wearableColor.R) / (255.0f * 255.0f), (color.G * wearableColor.G) / (255.0f * 255.0f), (color.B * wearableColor.B) / (255.0f * 255.0f)) * ((color.A * wearableColor.A) / (255.0f * 255.0f)),
-                    origin, -body.DrawRotation,
-                    Scale * textureScale, spriteEffect, depth);
             }
 
             if (damageOverlayStrength > 0.0f && DamagedSprite != null && !hideLimb)
             {
-                SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
-
                 float depth = ActiveSprite.Depth - 0.0000015f;
 
                 DamagedSprite.Draw(spriteBatch,
@@ -428,6 +396,71 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.Red, true);
                 }
             }
+        }
+
+        private void DrawWearable(WearableSprite wearable, float depthStep, SpriteBatch spriteBatch, Color color, SpriteEffects spriteEffect)
+        {
+            if (wearable.InheritSourceRect)
+            {
+                if (wearable.SheetIndex.HasValue)
+                {
+                    Point location = (ActiveSprite.SourceRect.Location + ActiveSprite.SourceRect.Size) * wearable.SheetIndex.Value;
+                    wearable.Sprite.SourceRect = new Rectangle(location, ActiveSprite.SourceRect.Size);
+                }
+                else
+                {
+                    wearable.Sprite.SourceRect = ActiveSprite.SourceRect;
+                }
+            }
+
+            Vector2 origin = wearable.Sprite.Origin;
+            if (wearable.InheritOrigin)
+            {
+                origin = ActiveSprite.Origin;
+                wearable.Sprite.Origin = origin;
+            }
+            else
+            {
+                origin = wearable.Sprite.Origin;
+                // If the wearable inherits the origin, flipping is already handled.
+                if (body.Dir == -1.0f)
+                {
+                    origin.X = wearable.Sprite.SourceRect.Width - origin.X;
+                }
+            }
+
+            float depth = wearable.Sprite.Depth;
+
+            if (wearable.InheritLimbDepth)
+            {
+                depth = ActiveSprite.Depth - depthStep;
+                if (wearable.DepthLimb != LimbType.None)
+                {
+                    Limb depthLimb = character.AnimController.GetLimb(wearable.DepthLimb);
+                    if (depthLimb != null)
+                    {
+                        depth = depthLimb.ActiveSprite.Depth - depthStep;
+                    }
+                }
+            }
+            var wearableItemComponent = wearable.WearableComponent;
+            Color wearableColor = Color.White;
+            if (wearableItemComponent != null)
+            {
+                // Draw outer cloths on top of inner cloths.
+                if (wearableItemComponent.AllowedSlots.Contains(InvSlotType.OuterClothes))
+                {
+                    depth -= depthStep;
+                }
+                wearableColor = wearableItemComponent.Item.GetSpriteColor();
+            }
+            float textureScale = wearable.InheritTextureScale ? TextureScale : 1;
+
+            wearable.Sprite.Draw(spriteBatch,
+                new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
+                new Color((color.R * wearableColor.R) / (255.0f * 255.0f), (color.G * wearableColor.G) / (255.0f * 255.0f), (color.B * wearableColor.B) / (255.0f * 255.0f)) * ((color.A * wearableColor.A) / (255.0f * 255.0f)),
+                origin, -body.DrawRotation,
+                Scale * textureScale, spriteEffect, depth);
         }
 
         partial void RemoveProjSpecific()

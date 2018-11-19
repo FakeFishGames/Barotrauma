@@ -198,6 +198,8 @@ namespace Barotrauma
             get { return wearingItems; }
         }
 
+        public List<WearableSprite> OtherWearables { get; private set; } = new List<WearableSprite>();
+
         public bool PullJointEnabled
         {
             get { return pullJoint.Enabled; }

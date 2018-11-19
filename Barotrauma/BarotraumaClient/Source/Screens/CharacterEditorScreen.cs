@@ -1889,6 +1889,7 @@ namespace Barotrauma
                 {
                     limb.ActiveSprite.ReloadTexture();
                     limb.WearingItems.ForEach(i => i.Sprite.ReloadTexture());
+                    limb.OtherWearables.ForEach(w => w.Sprite.ReloadTexture());
                 }
                 return true;
             };

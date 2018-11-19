@@ -3,7 +3,7 @@
   <collider height="40" radius="15" name="Secondary Collider" width="0" />
   <!-- head -->
   <limb id="0" radius="13" mass="6" type="Head" attackpriority="2" healthindex="0" name="Limb 0" flip="True" steerforce="0" stepoffset="0,0" height="0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Human/head_[HEADID].png" sourcerect="14,8,71,76" depth="0.1" origin="0.5,0.5" />
+    <sprite texture="Content/Characters/Human/head_[HEADID].png" sourcerect="0,0,96,96" depth="0.1" origin="0.5,0.5" />
     <damagedsprite texture="Content/Characters/Human/damagedhead.png" sourcerect="1,1,37,38" origin="0.5,0.5" depth="0" />
   </limb>
   <!-- body -->
@@ -63,13 +63,13 @@
   </limb>
   <!-- head to body -->
   <joint limb1="0" limb1anchor="-7.70437,-10.45948" limb2="1" limb2anchor="-2.28274,26.06059" lowerlimit="-90" upperlimit="45" canbesevered="True" name="Joint 0 - 1" limitenabled="True" />
-  <joint limb1="1" limb1anchor="2.153207,-16.98471" limb2="12" limb2anchor="0.6090249,7.371604" lowerlimit="-10" upperlimit="10" canbesevered="False" name="Joint 1 - 12" limitenabled="True" />
+  <joint limb1="1" limb1anchor="2.153207,-16.98471" limb2="12" limb2anchor="0.6090248,7.371603" lowerlimit="-10" upperlimit="10" canbesevered="False" name="Joint 1 - 12" limitenabled="True" />
   <!-- body to left arm -->
   <joint limb1="1" limb1anchor="2.852064,11.14376" limb2="2" limb2anchor="-0.4272656,17.3313" limitenabled="False" name="Joint 1 - 2" canbesevered="True" upperlimit="0" lowerlimit="0" />
-  <joint limb1="2" limb1anchor="2.521125,-12.08422" limb2="3" limb2anchor="0.7955506,11.0343" lowerlimit="5" upperlimit="170" canbesevered="True" name="Joint 2 - 3" limitenabled="True" />
+  <joint limb1="2" limb1anchor="2.521125,-12.08422" limb2="3" limb2anchor="0.7955505,11.0343" lowerlimit="5" upperlimit="170" canbesevered="True" name="Joint 2 - 3" limitenabled="True" />
   <!-- body to right arm -->
   <joint limb1="1" limb1anchor="-9.732387,12.87704" limb2="4" limb2anchor="-0.4272656,17.3313" limitenabled="False" name="Joint 1 - 4" canbesevered="True" upperlimit="0" lowerlimit="0" />
-  <joint limb1="4" limb1anchor="2.521125,-12.08422" limb2="5" limb2anchor="0.7955506,11.0343" lowerlimit="5" upperlimit="170" canbesevered="True" name="Joint 4 - 5" limitenabled="True" />
+  <joint limb1="4" limb1anchor="2.521125,-12.08422" limb2="5" limb2anchor="0.7955505,11.0343" lowerlimit="5" upperlimit="170" canbesevered="True" name="Joint 4 - 5" limitenabled="True" />
   <!-- body to left leg -->
   <joint limb1="12" limb1anchor="2.037219,-7.330195" limb2="6" limb2anchor="-2.573865,19.48612" lowerlimit="-30" upperlimit="120" canbesevered="True" name="Joint 12 - 6" limitenabled="True" />
   <joint limb1="6" limb1anchor="-0.2284773,-16.56124" limb2="7" limb2anchor="2.505955,20.17117" lowerlimit="-120" upperlimit="0" canbesevered="True" name="Joint 6 - 7" limitenabled="True" />

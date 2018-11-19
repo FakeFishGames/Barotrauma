@@ -739,6 +739,7 @@ namespace Barotrauma
                         limb.DeformSprite?.Sprite.ReloadTexture();
                         // update specular
                         limb.WearingItems.ForEach(i => i.Sprite.ReloadTexture());
+                        limb.OtherWearables.ForEach(w => w.Sprite.ReloadTexture());
                     }
                 }
                 else
