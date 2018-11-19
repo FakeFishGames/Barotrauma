@@ -16,7 +16,7 @@ namespace Barotrauma
 {
     class GameMain : Game
     {
-        public static bool ShowFPS = true;
+        public static bool ShowFPS = false;
         public static bool DebugDraw;
         
         public static FrameCounter FrameCounter;
