@@ -690,7 +690,9 @@ namespace Barotrauma
             {
                 if (HideSlot(i)) continue;
 
-                if (Items[i] == null || !Items[i].AllowedSlots.Any(a => a != InvSlotType.Any))
+                if (Items[i] == null || 
+                    (draggingItem == Items[i] && !slots[i].InteractRect.Contains(PlayerInput.MousePosition)) || 
+                    !Items[i].AllowedSlots.Any(a => a != InvSlotType.Any))
                 {
                     //draw limb icons on empty slots
                     if (limbSlotIcons.ContainsKey(SlotTypes[i]))
