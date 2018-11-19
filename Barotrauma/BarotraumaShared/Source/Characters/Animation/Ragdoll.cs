@@ -790,6 +790,7 @@ namespace Barotrauma
                 totalMass += limb.Mass;
             }
 
+            if (totalMass <= 0.0f) return Collider.SimPosition;
             centerOfMass /= totalMass;
 
             return centerOfMass;
