@@ -2175,7 +2175,7 @@ namespace Barotrauma
 
             Kill(CauseOfDeathType.Pressure, null, isNetworkMessage);
             CharacterHealth.PressureAffliction.Strength = CharacterHealth.PressureAffliction.Prefab.MaxStrength;
-            CharacterHealth.SetAllDamage(CharacterHealth.MaxVitality, 0.0f, 0.0f);
+            CharacterHealth.SetAllDamage(200.0f, 0.0f, 0.0f);
             BreakJoints();            
         }
 
