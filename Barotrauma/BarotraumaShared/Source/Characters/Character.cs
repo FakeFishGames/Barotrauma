@@ -313,7 +313,7 @@ namespace Barotrauma
             get { return oxygen; }
             set
             {
-                if (!MathUtils.IsValid(value)) return;
+                if (!MathUtils.IsValid(value) || !needsAir) return;
                 oxygen = MathHelper.Clamp(value, -100.0f, 100.0f);
                 if (oxygen == -100.0f) Kill(AnimController.InWater ? CauseOfDeath.Drowning : CauseOfDeath.Suffocation);
             }
