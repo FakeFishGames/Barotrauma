@@ -384,7 +384,11 @@ namespace Barotrauma
             {
                 GameMain.DebugDraw = !GameMain.DebugDraw;
                 NewMessage("Debug draw mode " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.White);
-
+            }));
+            commands.Add(new Command("fpscounter", "fpscounter: Toggle the FPS counter.", (string[] args) =>
+            {
+                GameMain.ShowFPS = !GameMain.ShowFPS;
+                NewMessage("FPS counter " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.White);
             }));
 
             commands.Add(new Command("togglehud|hud", "togglehud/hud: Toggle the character HUD (inventories, icons, buttons, etc) on/off.", (string[] args) =>
