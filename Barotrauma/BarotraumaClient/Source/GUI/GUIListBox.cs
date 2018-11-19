@@ -434,7 +434,7 @@ namespace Barotrauma
             }
 
             // Ensure that the selected element is visible. This may not be the case, if the selection is run from code. (e.g. if we have two list boxes that are synced)
-            // TODO: Does not work right.
+            // TODO: This method only works when moving one item up/down (e.g. when using the up and down arrows)
             if (autoScroll)
             {
                 if (ScrollBar.IsHorizontal)
