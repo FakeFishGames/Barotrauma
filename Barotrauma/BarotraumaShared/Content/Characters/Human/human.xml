@@ -44,26 +44,85 @@
 
   <inventory arrowslot="9" slots="InnerClothes, OuterClothes, LeftHand, RightHand, Head, Card, Headset, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any"/>
 
-  <Hair>
-    <Wearable type="hair">
-      <sprite name="Hair 1" texture="Content/Characters/Human/head_4.png" sheetindex="0,1"/>
+  <HeadAttachments>
+    
+    <Wearable type="Hair">
+      <sprite name="Head1 Hair1" texture="Content/Characters/Human/head_1.png" sheetindex="0,1"/>
     </Wearable>
-    <Wearable type="hair">
-      <sprite name="Hair 2" texture="Content/Characters/Human/head_4.png" sheetindex="1,1"/>
+    <Wearable type="Hair">
+      <sprite name="Head1 Hair2" texture="Content/Characters/Human/head_1.png" sheetindex="1,1"/>
     </Wearable>
-    <Wearable type="hair">
-      <sprite name="Hair 3" texture="Content/Characters/Human/head_4.png" sheetindex="2,1"/>
+    <Wearable type="Hair">
+      <sprite name="Head1 Hair3" texture="Content/Characters/Human/head_1.png" sheetindex="2,1"/>
     </Wearable>
-    <Wearable type="hair">
-      <sprite name="Facial Hair 1" texture="Content/Characters/Human/head_4.png" sheetindex="0,2"/>
+    <Wearable type="Beard">
+      <sprite name="Head1 Beard1" texture="Content/Characters/Human/head_1.png" sheetindex="0,2"/>
     </Wearable>
-    <Wearable type="hair">
-      <sprite name="Facial Hair 2" texture="Content/Characters/Human/head_4.png" sheetindex="1,2"/>
+    <Wearable type="Beard">
+      <sprite name="Head1 Beard2" texture="Content/Characters/Human/head_1.png" sheetindex="1,2"/>
     </Wearable>
-    <Wearable type="hair">
-      <sprite name="Facial Jewelry 1" texture="Content/Characters/Human/head_4.png" sheetindex="2,2"/>
+    <Wearable type="FaceAttachment">
+      <sprite name="Head1 Scars1" texture="Content/Characters/Human/head_1.png" sheetindex="2,2"/>
     </Wearable>
-  </Hair>
+
+    <Wearable type="Hair">
+      <sprite name="Head2 Hair1" texture="Content/Characters/Human/head_2.png" sheetindex="0,1"/>
+    </Wearable>
+    <Wearable type="Hair">
+      <sprite name="Head2 Hair2" texture="Content/Characters/Human/head_2.png" sheetindex="1,1"/>
+    </Wearable>
+    <Wearable type="Beard">
+      <sprite name="Head2 Beard1" texture="Content/Characters/Human/head_2.png" sheetindex="2,1"/>
+    </Wearable>
+    <Wearable type="Beard">
+      <sprite name="Head2 Beard2" texture="Content/Characters/Human/head_2.png" sheetindex="0,2"/>
+    </Wearable>
+    <Wearable type="Moustache">
+      <sprite name="Head2 Moustache1" texture="Content/Characters/Human/head_2.png" sheetindex="1,2"/>
+    </Wearable>
+    <Wearable type="Moustache">
+      <sprite name="Head2 Moustache2" texture="Content/Characters/Human/head_2.png" sheetindex="2,2"/>
+    </Wearable>
+
+    <Wearable type="Hair">
+      <sprite name="Head3 Hair1" texture="Content/Characters/Human/head_3.png" sheetindex="0,1"/>
+    </Wearable>
+    <Wearable type="Hair">
+      <sprite name="Head3 Hair2" texture="Content/Characters/Human/head_3.png" sheetindex="1,1"/>
+    </Wearable>
+    <Wearable type="Hair">
+      <sprite name="Head3 Hair3" texture="Content/Characters/Human/head_3.png" sheetindex="2,1"/>
+    </Wearable>
+    <Wearable type="Beard">
+      <sprite name="Head3 Beard1" texture="Content/Characters/Human/head_3.png" sheetindex="0,2"/>
+    </Wearable>
+    <Wearable type="Moustache">
+      <sprite name="Head3 Moustache1" texture="Content/Characters/Human/head_3.png" sheetindex="1,2"/>
+    </Wearable>
+    <Wearable type="FaceAttachment">
+      <sprite name="Head3 Tattoo1" texture="Content/Characters/Human/head_3.png" sheetindex="2,2"/>
+    </Wearable>
+    
+    <Wearable type="Hair">
+      <sprite name="Head4 Hair1" texture="Content/Characters/Human/head_4.png" sheetindex="0,1"/>
+    </Wearable>
+    <Wearable type="Hair">
+      <sprite name="Head4 Hair2" texture="Content/Characters/Human/head_4.png" sheetindex="1,1"/>
+    </Wearable>
+    <Wearable type="Hair">
+      <sprite name="Head4 Hair3" texture="Content/Characters/Human/head_4.png" sheetindex="2,1"/>
+    </Wearable>
+    <Wearable type="Beard">
+      <sprite name="Head4 Beard1" texture="Content/Characters/Human/head_4.png" sheetindex="0,2"/>
+    </Wearable>
+    <Wearable type="Beard">
+      <sprite name="Head4 Beard2" texture="Content/Characters/Human/head_4.png" sheetindex="1,2"/>
+    </Wearable>
+    <Wearable type="FaceAttachment">
+      <sprite name="Head4 Jewelry1" texture="Content/Characters/Human/head_4.png" sheetindex="2,2"/>
+    </Wearable>
+    
+  </HeadAttachments>
 
 </Character>
 
