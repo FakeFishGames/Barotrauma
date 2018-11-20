@@ -1582,20 +1582,27 @@ namespace Barotrauma
                     return;
                 }
             }
-            if ((!isLocalPlayer && IsKeyHit(InputType.Select) && GameMain.Server == null) || 
-                (isLocalPlayer && (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.SubEditorScreen)))
-            {
-                focusedCharacter = FindCharacterAtPosition(mouseSimPos);
-                focusedItem = CanInteract ? 
-                    FindItemAtPosition(mouseSimPos, GameMain.Config.AimAssistAmount * (AnimController.InWater ? 1.5f : 1.0f)) : null;
-                
-                findFocusedTimer = 0.05f;
-            }
-            else
-            {
-                findFocusedTimer -= deltaTime;
-            }
 
+#if CLIENT
+            if (isLocalPlayer)
+            {
+                if (GUI.MouseOn == null && !CharacterInventory.IsMouseOnInventory())
+                {
+                    if (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.SubEditorScreen)
+                    {
+                        focusedCharacter = FindCharacterAtPosition(mouseSimPos);
+                        focusedItem = CanInteract ?
+                            FindItemAtPosition(mouseSimPos, GameMain.Config.AimAssistAmount * (AnimController.InWater ? 1.5f : 1.0f)) : null;
+                        findFocusedTimer = 0.05f;
+                    }
+                }
+                else
+                {
+                    focusedItem = null; 
+                }
+                findFocusedTimer -= deltaTime;
+            }            
+#endif
             //climb ladders automatically when pressing up/down inside their trigger area
             if (SelectedConstruction == null && !AnimController.InWater && Screen.Selected != GameMain.SubEditorScreen)
             {
