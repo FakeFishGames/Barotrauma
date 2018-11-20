@@ -659,28 +659,32 @@ namespace Barotrauma
             IPAddress address = IPAddress.Parse(serverInfo.IP);
             if (address != null)
             {
-                Ping ping = new Ping();
-                byte[] buffer = new byte[32];
-                try
+                //don't attempt to ping if the address is IPv6 and it's not supported
+                if (address.AddressFamily != AddressFamily.InterNetworkV6 || Socket.OSSupportsIPv6)
                 {
-                    PingReply pingReply = ping.Send(address, timeOut, buffer, new PingOptions(128, true));
-
-                    if (pingReply != null)
+                    Ping ping = new Ping();
+                    byte[] buffer = new byte[32];
+                    try
                     {
-                        switch (pingReply.Status)
+                        PingReply pingReply = ping.Send(address, timeOut, buffer, new PingOptions(128, true));
+
+                        if (pingReply != null)
                         {
-                            case IPStatus.Success:
-                                rtt = pingReply.RoundtripTime;
-                                break;
-                            default:
-                                rtt = -1;
-                                break;
+                            switch (pingReply.Status)
+                            {
+                                case IPStatus.Success:
+                                    rtt = pingReply.RoundtripTime;
+                                    break;
+                                default:
+                                    rtt = -1;
+                                    break;
+                            }
                         }
                     }
-                }
-                catch (PingException ex)
-                {
-                    DebugConsole.ThrowError("Ping Error", ex);
+                    catch (PingException ex)
+                    {
+                        DebugConsole.NewMessage("Failed to ping a server - " + ex.Message, Color.Red);
+                    }
                 }
             }
 
