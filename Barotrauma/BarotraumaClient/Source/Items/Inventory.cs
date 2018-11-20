@@ -491,7 +491,7 @@ namespace Barotrauma
                 foreach (ItemComponent ic in Character.Controlled.SelectedConstruction.components)
                 {
                     var itemContainer = ic as ItemContainer;
-                    if (itemContainer == null) continue;
+                    if (itemContainer?.Inventory?.slots == null) continue;
 
                     foreach (InventorySlot slot in itemContainer.Inventory.slots)
                     {
