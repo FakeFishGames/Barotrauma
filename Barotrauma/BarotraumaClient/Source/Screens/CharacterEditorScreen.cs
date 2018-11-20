@@ -1056,7 +1056,6 @@ namespace Barotrauma
         private GUITickBox animTestPoseToggle;
         private GUIScrollBar jointScaleBar;
         private GUIScrollBar limbScaleBar;
-        private GUIScrollBar textureScaleBar;
         private GUIScrollBar spriteSheetZoomBar;
         private GUITickBox copyJointsToggle;
         private GUITickBox jointsToggle;
@@ -1163,17 +1162,17 @@ namespace Barotrauma
                     return true;
                 }
             };
-            new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), "Texture scale:", Color.White);
-            textureScaleBar = new GUIScrollBar(new RectTransform(new Point((int)(elementSize.X * 1.75f), textAreaHeight), layoutGroupSpriteSheet.RectTransform), barSize: 0.2f)
-            {
-                BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(textureMinScale, textureMaxScale, RagdollParams.TextureScale)),
-                Step = 0.01f,
-                OnMoved = (scrollBar, value) =>
-                {
-                    RagdollParams.TextureScale = MathHelper.Lerp(textureMinScale, textureMaxScale, value);
-                    return true;
-                }
-            };
+            //new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), "Texture scale:", Color.White);
+            //new GUIScrollBar(new RectTransform(new Point((int)(elementSize.X * 1.75f), textAreaHeight), layoutGroupSpriteSheet.RectTransform), barSize: 0.2f)
+            //{
+            //    BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(textureMinScale, textureMaxScale, RagdollParams.TextureScale)),
+            //    Step = 0.01f,
+            //    OnMoved = (scrollBar, value) =>
+            //    {
+            //        RagdollParams.TextureScale = MathHelper.Lerp(textureMinScale, textureMaxScale, value);
+            //        return true;
+            //    }
+            //};
             // Limb controls
             limbControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupLimbControls = new GUILayoutGroup(new RectTransform(Vector2.One, limbControls.RectTransform)) { CanBeFocused = false };
