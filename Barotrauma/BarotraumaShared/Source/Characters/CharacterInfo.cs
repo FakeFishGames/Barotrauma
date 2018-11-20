@@ -290,7 +290,7 @@ namespace Barotrauma
                     // Let's add an empty element so that there's a chance that we don't get any actual element -> allows bald and beardless guys, for example.
                     var emptyElement = new XElement("Empty");
                     var list = elements.ToList();
-                    list.Add(null);
+                    list.Add(emptyElement);
                     var element = ToolBox.SelectWeightedRandom(list, GetWeights(list).ToList(), Rand.RandSync.Server);
                     return element == emptyElement ? null : element;
                 }
