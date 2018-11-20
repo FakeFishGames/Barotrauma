@@ -185,8 +185,8 @@ namespace Barotrauma.RuinGeneration
         public enum RoomPlacement
         {
             Any,
-            FirstRoom,
-            LastRoom
+            First,
+            Last
         }
 
         public string Name
@@ -271,9 +271,13 @@ namespace Barotrauma.RuinGeneration
         {
             SameRoom,
             NextRoom,
+            NextCorridor,
             PreviousRoom,
+            PreviousCorridor,
             FirstRoom,
-            LastRoom
+            FirstCorridor,
+            LastRoom,
+            LastCorridor
         }
 
         public class EntityConnection
