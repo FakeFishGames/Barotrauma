@@ -44,5 +44,26 @@
 
   <inventory arrowslot="9" slots="InnerClothes, OuterClothes, LeftHand, RightHand, Head, Card, Headset, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any"/>
 
+  <Hair>
+    <Wearable type="hair">
+      <sprite name="Hair 1" texture="Content/Characters/Human/head_4.png" sheetindex="0,1"/>
+    </Wearable>
+    <Wearable type="hair">
+      <sprite name="Hair 2" texture="Content/Characters/Human/head_4.png" sheetindex="1,1"/>
+    </Wearable>
+    <Wearable type="hair">
+      <sprite name="Hair 3" texture="Content/Characters/Human/head_4.png" sheetindex="2,1"/>
+    </Wearable>
+    <Wearable type="hair">
+      <sprite name="Facial Hair 1" texture="Content/Characters/Human/head_4.png" sheetindex="0,2"/>
+    </Wearable>
+    <Wearable type="hair">
+      <sprite name="Facial Hair 2" texture="Content/Characters/Human/head_4.png" sheetindex="1,2"/>
+    </Wearable>
+    <Wearable type="hair">
+      <sprite name="Facial Jewelry 1" texture="Content/Characters/Human/head_4.png" sheetindex="2,2"/>
+    </Wearable>
+  </Hair>
+
 </Character>
 

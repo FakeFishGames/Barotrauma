@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Barotrauma.Extensions;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
@@ -78,6 +79,8 @@ namespace Barotrauma
         private int headSpriteId;
         private Sprite headSprite;
         private Sprite portrait;
+
+        public XElement HairElement { get; private set; }
 
         public bool StartItemsGiven;
 
@@ -262,6 +265,17 @@ namespace Barotrauma
             if (ragdoll != null)
             {
                 this.ragdoll = ragdoll;
+            }
+
+            var hairRoot = doc.Root.Element("Hair");
+            if (hairRoot == null)
+            {
+                hairRoot = doc.Root.Element("hair");
+            }
+            if (hairRoot != null)
+            {
+                // TODO: allow only the one with the same head
+                HairElement = hairRoot.Elements("Wearable").GetRandom();
             }
         }
 

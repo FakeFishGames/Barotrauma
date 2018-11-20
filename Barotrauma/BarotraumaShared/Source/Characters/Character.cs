@@ -623,19 +623,10 @@ namespace Barotrauma
                 Spawner.CreateNetworkEvent(newCharacter, false);
             }
 
-            if (file == humanConfigFile)
+            if (characterInfo != null)
             {
-                // Test load hair, TODO: refactor
                 var head = newCharacter.AnimController.GetLimb(LimbType.Head);
-                string hairConfig = GameMain.Instance.GetFilesOfType(ContentType.Hair).GetRandom();
-                XDocument doc = XMLExtensions.TryLoadXml(hairConfig);
-                if (doc != null && doc.Root != null)
-                {
-                    doc.Root.Elements("Wearable")
-                        .GetRandom()
-                        .Elements("sprite")
-                        .ForEach(s => head.OtherWearables.Add(new WearableSprite(s)));
-                }
+                characterInfo.HairElement.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.Hair)));
             }
 
             return newCharacter;

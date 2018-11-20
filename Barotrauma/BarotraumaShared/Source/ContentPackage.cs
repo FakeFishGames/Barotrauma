@@ -30,8 +30,7 @@ namespace Barotrauma
         NPCConversations,
         Afflictions,
         Tutorials,
-        UIStyle,
-        Hair
+        UIStyle
     }
 
     public class ContentPackage

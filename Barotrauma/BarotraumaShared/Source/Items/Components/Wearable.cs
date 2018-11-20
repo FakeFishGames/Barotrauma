@@ -7,8 +7,15 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
+    public enum WearableType
+    {
+        Item,
+        Hair
+    }
+
     class WearableSprite
     {
+        public WearableType Type { get; private set; }
         public Sprite Sprite { get; private set; }
         public LimbType Limb { get; private set; }
         public bool HideLimb { get; private set; }
@@ -24,18 +31,30 @@ namespace Barotrauma.Items.Components
 
         public LightComponent LightComponent { get; set; }
 
-        public WearableSprite(XElement subElement)
+        public WearableSprite(XElement subElement, WearableType type)
         {
+            Type = type;
             Init(subElement, subElement.Attribute("texture").Value);
             var index = subElement.GetAttributePoint("sheetindex", new Point(-1, -1));
             if (index.X > -1 && index.Y > -1)
             {
                 SheetIndex = index;
             }
+            if (Type == WearableType.Hair)
+            {
+                Limb = LimbType.Head;
+                HideLimb = false;
+                HideOtherWearables = false;
+                InheritLimbDepth = true;
+                InheritTextureScale = true;
+                InheritOrigin = true;
+                InheritSourceRect = true;
+            }
         }
 
         public WearableSprite(XElement subElement, Wearable item)
         {
+            Type = WearableType.Item;
             WearableComponent = item;
             Init(subElement, Path.GetDirectoryName(item.Item.Prefab.ConfigFile) + "/" + subElement.Attribute("texture").Value);
         }
