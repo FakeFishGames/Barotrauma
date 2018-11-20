@@ -282,8 +282,24 @@ namespace Barotrauma
                 bool FilterWearable(XElement element, WearableType targetType)
                 {
                     if (!Enum.TryParse(element.GetAttributeString("type", ""), true, out WearableType type) || type != targetType) { return false; }
-                    var p = element.Element("sprite").GetAttributeString("texture", string.Empty);
-                    return System.IO.File.Exists(p) && Path.GetFullPath(p) == Path.GetFullPath(HeadSprite.FilePath);
+                    var spriteElement = element.Element("sprite");
+                    var p = spriteElement.GetAttributeString("texture", string.Empty);
+                    if (!System.IO.File.Exists(p) || Path.GetFullPath(p) != Path.GetFullPath(HeadSprite.FilePath)) { return false; }
+                    string spriteName = spriteElement.GetAttributeString("name", string.Empty);
+                    return IsAllowed(HairElement, spriteName) && IsAllowed(BeardElement, spriteName) && IsAllowed(MoustacheElement, spriteName) && IsAllowed(FaceAttachment, spriteName);
+                }
+
+                bool IsAllowed(XElement element, string spriteName)
+                {
+                    if (element != null)
+                    {
+                        var disallowed = element.Element("sprite").GetAttributeStringArray("disallow", new string[0]);
+                        if (disallowed.Any(s => spriteName.Contains(s)))
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
                 }
             }
         }
