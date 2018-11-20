@@ -200,7 +200,7 @@
 
       <StatusEffect type="OnUse" target="Contained" Condition="-5.0"/>
       
-      <sound file="Content/Items/Artifacts/alienweapon.ogg" type="OnUse" range="800.0" loop="true"/>
+      <sound file="Content/Items/Alien/alienweapon.ogg" type="OnUse" range="800.0" loop="true"/>
       
       <LightComponent LightColor="0.8,0.7,1.0,1.0" Flicker="0.5" range="500">
         <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5"/>
@@ -217,7 +217,7 @@
       </Attack>
 
       <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
-        <sound file="Content/Items/Artifacts/alienweapon.ogg"/>
+        <sound file="Content/Items/Alien/alienweapon.ogg"/>
         <Explosion range="1000.0" structuredamage="5000" force="50.0">
           <Affliction identifier="burn" strength="50"/>
           <Affliction identifier="stun" strength="10"/>
@@ -245,7 +245,7 @@
 
     <Door canbeselected="true" horizontal="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0">
       <Sprite texture="Content/Map/ruins.png" sourcerect="0,842,260,54"  depth="0.6" origin="0.0,0.5"/>
-      <sound file="Content/Items/Artifacts/aliendoor.ogg" type="OnUse" range="3000.0"/>
+      <sound file="Content/Items/Alien/aliendoor.ogg" type="OnUse" range="3000.0"/>
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0"/>
     </Door>
 
@@ -266,7 +266,7 @@
 
     <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0">
       <Sprite texture="Content/Map/ruins.png" sourcerect="842,192,54,259" depth="0.6" origin="0.5,0.0"/>
-      <sound file="Content/Items/Artifacts/aliendoor.ogg" type="OnUse" range="3000.0"/>
+      <sound file="Content/Items/Alien/aliendoor.ogg" type="OnUse" range="3000.0"/>
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0"/>
     </Door>
 
@@ -317,5 +317,87 @@
     <ConnectionPanel canbeselected="false" hudpriority="10">
       <output name="power_out"/>
     </ConnectionPanel>
+  </Item>
+
+  <Item
+    name="Alien Power Cell"
+    identifier="alienpowercell"
+    category="Alien"
+    Tags="alien">
+
+    <!-- TODO: alien power cell sprite -->
+    <Sprite texture="artifactholder.png" depth="0.8" sourcerect="74,50,113,167"/>
+
+    <LightComponent lightcolor="112,146,190,255" canbeselected="false" range="800.0" IsOn="true"/>
+
+    <PowerContainer capacity="2000.0" canbeselected="false" maxrechargespeed="1000.0" maxoutput="1000.0">
+      <!-- recharge constantly -->
+      <StatusEffect type="Always" target="This" charge="100"/>  
+    </PowerContainer>
+
+    <ConnectionPanel canbeselected="false">
+      <!-- break the item when a shutdown signal is received -->
+      <input name="shutdown">
+        <StatusEffect type="OnUse" target="This" condition="-100" setvalue="true"/>
+      </input>
+      <output name="power_out"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item name="Alien Turret" identifier="alienturret" Tags="turret,alien" category="Alien">
+    <!-- TODO: alien turret sprite -->
+    <Sprite texture="Content/Items/Weapons/coilgunbase.png" depth="0.01" sourcerect="0,0,256,256" canflipy="false"/>
+    <ItemContainer hideitems="true" drawinventory="true" capacity="1" canbeselected="false" characterusable="true">
+      <Containable identifiers="alienturretammo" />
+      <!-- when the turret is fired, it triggers this statuseffect and spawns new ammo -->
+      <StatusEffect type="OnUse" target="Contained">
+        <SpawnItem identifiers="alienturretammo" spawnposition="ThisInventory" />
+      </StatusEffect>
+    </ItemContainer>
+    <Turret canbeselected="false" characterusable="false" linkable="true" barrelpos="128,88" rotationlimits="0,360" powerconsumption="100.0" 
+            showchargeindicator="true" showprojectileindicator="true" recoildistance="50" 
+            reload="0.25" springstiffnesslowskill="2" springstiffnesshighskill="50" springdampinglowskill="0.5" 
+            springdampinghighskill="10" rotationspeedlowskill="1" rotationspeedhighskill="8">
+      <sound file="Content/Items/Weapons/coilgun.ogg" range="10000" type="OnUse" />
+      <BarrelSprite texture="Content/Items/Weapons/coilgunbarrel.png" origin="0.6, 0.8"/>
+      <RailSprite texture="Content/Items/Weapons/coilgunrail.png" origin="0.64, 0.7"/>
+      <MoveSound file="Content/Items/Weapons/railgunloop.ogg" />
+      <StartMoveSound file="Content/Items/Weapons/railgunstart.ogg" />
+      <EndMoveSound file="Content/Items/Weapons/railgunstop.ogg" />
+      <LightComponent lightcolor="112,146,190,255" Flicker="0.0" range="2500" IsOn="true">
+        <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="1.0,0.2"/>
+      </LightComponent>
+    </Turret>
+    <ConnectionPanel canbeselected="false">
+      <input name="power_in" />
+      <input name="position_in" />
+      <input name="trigger_in" />
+      <input name="toggle_light" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="Alien Projectile" identifier="alienturretammo" category="Alien">
+    <Price locationtype="Outpost" buyprice="300" />
+    <Price locationtype="Military" buyprice="200" />
+    <Price locationtype="City" buyprice="300" />
+    <!-- TODO: alien projectile sprite -->
+    <Sprite texture="artifact.png" depth="0.7" sourcerect="1,0,57,56"/>
+    <Body radius="25" density="10" />
+    <Projectile characterusable="false" launchimpulse="20.0">
+      <Attack structuredamage="5" severlimbsprobability="0.5">
+        <Affliction identifier="internaldamage" strength="10" />
+        <Affliction identifier="bleeding" strength="0.5" />
+      </Attack>
+      <StatusEffect type="OnActive" target="This">
+        <ParticleEmitter particle="blackwaterblood" anglemin="0" anglemax="360" particlespersecond="60" scalemin="1" scalemax="2" />
+      </StatusEffect>
+      <!-- reduce condition to give the bolt a 5 second lifetime -->
+      <StatusEffect type="OnNotContained" target="This" condition="-20" />
+      <StatusEffect type="OnImpact" target="This">
+        <Remove />
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
+      </StatusEffect>
+    </Projectile>
   </Item>
 </Items>
