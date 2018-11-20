@@ -4,13 +4,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Items.Components;
 
-namespace Barotrauma.Items.Components
+namespace Barotrauma
 {
     public enum WearableType
     {
         Item,
-        Hair
+        Hair,
+        Beard,
+        Moustache,
+        FaceAttachment
     }
 
     class WearableSprite
@@ -40,15 +44,20 @@ namespace Barotrauma.Items.Components
             {
                 SheetIndex = index;
             }
-            if (Type == WearableType.Hair)
+            switch (type)
             {
-                Limb = LimbType.Head;
-                HideLimb = false;
-                HideOtherWearables = false;
-                InheritLimbDepth = true;
-                InheritTextureScale = true;
-                InheritOrigin = true;
-                InheritSourceRect = true;
+                case WearableType.Hair:
+                case WearableType.Beard:
+                case WearableType.Moustache:
+                case WearableType.FaceAttachment:
+                    Limb = LimbType.Head;
+                    HideLimb = false;
+                    HideOtherWearables = false;
+                    InheritLimbDepth = true;
+                    InheritTextureScale = true;
+                    InheritOrigin = true;
+                    InheritSourceRect = true;
+                    break;
             }
         }
 
@@ -73,7 +82,10 @@ namespace Barotrauma.Items.Components
             Sound = subElement.GetAttributeString("sound", "");
         }
     }
+}
 
+namespace Barotrauma.Items.Components
+{
     class Wearable : Pickable
     {
         private WearableSprite[] wearableSprites;

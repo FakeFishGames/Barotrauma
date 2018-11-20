@@ -626,7 +626,10 @@ namespace Barotrauma
             if (characterInfo != null)
             {
                 var head = newCharacter.AnimController.GetLimb(LimbType.Head);
-                characterInfo.HairElement.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.Hair)));
+                characterInfo.HairElement?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.Hair)));
+                characterInfo.BeardElement?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.Beard)));
+                characterInfo.MoustacheElement?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.Moustache)));
+                characterInfo.FaceAttachment?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.FaceAttachment)));
             }
 
             return newCharacter;

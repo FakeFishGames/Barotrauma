@@ -81,6 +81,9 @@ namespace Barotrauma
         private Sprite portrait;
 
         public XElement HairElement { get; private set; }
+        public XElement BeardElement { get; private set; }
+        public XElement MoustacheElement { get; private set; }
+        public XElement FaceAttachment { get; private set; }
 
         public bool StartItemsGiven;
 
@@ -267,15 +270,21 @@ namespace Barotrauma
                 this.ragdoll = ragdoll;
             }
 
-            var hairRoot = doc.Root.Element("Hair");
-            if (hairRoot == null)
+            var attachments = doc.Root.Element("HeadAttachments");
+            if (attachments != null)
             {
-                hairRoot = doc.Root.Element("hair");
-            }
-            if (hairRoot != null)
-            {
-                // TODO: allow only the one with the same head
-                HairElement = hairRoot.Elements("Wearable").GetRandom();
+                // TODO: also allow no element -> bald/nofacial hair
+                HairElement = attachments.Elements("Wearable").GetRandom(e => FilterWearable(e, WearableType.Hair));
+                BeardElement = attachments.Elements("Wearable").GetRandom(e => FilterWearable(e, WearableType.Beard));
+                MoustacheElement = attachments.Elements("Wearable").GetRandom(e => FilterWearable(e, WearableType.Moustache));
+                FaceAttachment = attachments.Elements("Wearable").GetRandom(e => FilterWearable(e, WearableType.FaceAttachment));
+
+                bool FilterWearable(XElement element, WearableType targetType)
+                {
+                    if (!Enum.TryParse(element.GetAttributeString("type", ""), true, out WearableType type) || type != targetType) { return false; }
+                    var p = element.Element("sprite").GetAttributeString("texture", string.Empty);
+                    return System.IO.File.Exists(p) && Path.GetFullPath(p) == Path.GetFullPath(HeadSprite.FilePath);
+                }
             }
         }
 
