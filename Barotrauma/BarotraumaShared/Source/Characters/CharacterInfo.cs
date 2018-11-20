@@ -273,11 +273,27 @@ namespace Barotrauma
             var attachments = doc.Root.Element("HeadAttachments");
             if (attachments != null)
             {
-                // TODO: also allow no element -> bald/nofacial hair
-                HairElement = attachments.Elements("Wearable").GetRandom(e => FilterWearable(e, WearableType.Hair));
-                BeardElement = attachments.Elements("Wearable").GetRandom(e => FilterWearable(e, WearableType.Beard));
-                MoustacheElement = attachments.Elements("Wearable").GetRandom(e => FilterWearable(e, WearableType.Moustache));
-                FaceAttachment = attachments.Elements("Wearable").GetRandom(e => FilterWearable(e, WearableType.FaceAttachment));
+                var hairs = attachments.Elements("Wearable").Where(e => FilterWearable(e, WearableType.Hair));
+                var beards = attachments.Elements("Wearable").Where(e => FilterWearable(e, WearableType.Beard));
+                var moustaches = attachments.Elements("Wearable").Where(e => FilterWearable(e, WearableType.Moustache));
+                var faceAttachments = attachments.Elements("Wearable").Where(e => FilterWearable(e, WearableType.FaceAttachment));
+
+                HairElement = GetRandomElement(hairs);
+                BeardElement = GetRandomElement(beards);
+                MoustacheElement = GetRandomElement(moustaches);
+                FaceAttachment = GetRandomElement(faceAttachments);
+
+                IEnumerable<float> GetWeights(IEnumerable<XElement> elements) => elements.Select(h => h.GetAttributeFloat("commonness", 1f));
+
+                XElement GetRandomElement(IEnumerable<XElement> elements)
+                {
+                    // Let's add an empty element so that there's a chance that we don't get any actual element -> allows bald and beardless guys, for example.
+                    var emptyElement = new XElement("Empty");
+                    var list = elements.ToList();
+                    list.Add(null);
+                    var element = ToolBox.SelectWeightedRandom(list, GetWeights(list).ToList(), Rand.RandSync.Server);
+                    return element == emptyElement ? null : element;
+                }
 
                 bool FilterWearable(XElement element, WearableType targetType)
                 {
@@ -293,7 +309,7 @@ namespace Barotrauma
                 {
                     if (element != null)
                     {
-                        var disallowed = element.Element("sprite").GetAttributeStringArray("disallow", new string[0]);
+                        var disallowed = element.GetAttributeStringArray("disallow", new string[0]);
                         if (disallowed.Any(s => spriteName.Contains(s)))
                         {
                             return false;
