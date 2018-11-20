@@ -301,6 +301,24 @@ namespace Barotrauma.RuinGeneration
             allShapes = GenerateRuinEntities(caveCells, area, mirror);
         }
 
+
+        class RuinEntity
+        {
+            public readonly RuinEntityConfig Config;
+            public readonly MapEntity Entity;
+            public readonly MapEntity Parent;
+            public readonly RuinShape Room;
+
+            public RuinEntity(RuinEntityConfig config, MapEntity entity, RuinShape room, MapEntity parent = null)
+            {
+                Config = config;
+                Entity = entity;
+                Room = room;
+                Parent = parent;
+            }
+        }
+        private List<RuinEntity> ruinEntities = new List<RuinEntity>();
+
         private List<RuinShape> GenerateRuinEntities(List<VoronoiCell> caveCells, Rectangle ruinArea, bool mirror)
         {
             List<RuinShape> shapes = new List<RuinShape>(rooms);
@@ -395,18 +413,20 @@ namespace Barotrauma.RuinGeneration
                     };
                     structure.SetCollisionCategory(Physics.CollisionLevel);
                     CreateChildEntities(ruinEntityConfig, structure, room);
+                    ruinEntities.Add(new RuinEntity(ruinEntityConfig, structure, room));
                 }
 
                 //generate backgrounds --------------------------------------------------------------
-                var background = room.RoomType.GetRandomEntity(RuinEntityType.Back, Alignment.Center);
-                if (background != null)
+                var backgroundConfig = room.RoomType.GetRandomEntity(RuinEntityType.Back, Alignment.Center);
+                if (backgroundConfig != null)
                 {
                     Rectangle backgroundRect = new Rectangle(room.Rect.X, room.Rect.Y + room.Rect.Height, room.Rect.Width, room.Rect.Height);
-                    var backgroundStructure = new Structure(backgroundRect, (background.Prefab as StructurePrefab), null)
+                    var backgroundStructure = new Structure(backgroundRect, (backgroundConfig.Prefab as StructurePrefab), null)
                     {
                         ShouldBeSaved = false
                     };
-                    CreateChildEntities(background, backgroundStructure, room);
+                    CreateChildEntities(backgroundConfig, backgroundStructure, room);
+                    ruinEntities.Add(new RuinEntity(backgroundConfig, backgroundStructure, room));
                 }
 
                 var submarineBlocker = BodyFactory.CreateRectangle(GameMain.World,
@@ -447,6 +467,7 @@ namespace Barotrauma.RuinGeneration
                             };
                             CreateChildEntities(doorConfig, door, corridor);
                             door.GetComponent<Items.Components.Door>().IsOpen = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < 0.8f;
+                            ruinEntities.Add(new RuinEntity(doorConfig, door, room));
                         }
                     }
                 }
@@ -455,90 +476,19 @@ namespace Barotrauma.RuinGeneration
                 var props = room.RoomType.GetPropList();
                 foreach (RuinEntityConfig prop in props)
                 {
-                    CreateEntity(prop, room);
+                    CreateEntity(prop, room, parent: null);
+                }
+
+                //create connections between all generated entities ---------------------------
+                foreach (RuinEntity ruinEntity in ruinEntities)
+                {
+                    CreateConnections(ruinEntity);
                 }
             }
-
-            /*List<RuinShape> doorlessRooms = new List<RuinShape>(shapes);
-
-            //generate doors & hatches -------------------------------------------------------------
-
-            foreach (Corridor corridor in corridors)
-            {
-                RuinEntityConfig.RoomType corridorType = GetRoomType(corridor, maxDistanceFromEntrance);
-
-                var doorConfig = generationParams.GetRandomEntity(
-                    corridor.IsHorizontal ? RuinEntityType.Door : RuinEntityType.Hatch, Alignment.Center, corridorType);
-                if (doorConfig == null) continue;
-
-                //find all walls that are parallel to the corridor
-                var suitableWalls = corridor.IsHorizontal ?
-                    corridor.Walls.FindAll(c => c.A.Y == c.B.Y) : corridor.Walls.FindAll(c => c.A.X == c.B.X);
-
-                if (!suitableWalls.Any()) continue;
-
-                doorlessRooms.Remove(corridor);
-                Vector2 doorPos = corridor.Center;
-
-                //choose a random wall to place the door next to
-                var wall = suitableWalls[Rand.Int(suitableWalls.Count, Rand.RandSync.Server)];
-                if (corridor.IsHorizontal)
-                {
-                    doorPos.X = (wall.A.X + wall.B.X) / 2.0f;
-                }
-                else
-                {
-                    doorPos.Y = (wall.A.Y + wall.B.Y) / 2.0f;
-                }
-                
-                var door = new Item(doorConfig.Prefab as ItemPrefab, doorPos, null)
-                {
-                    ShouldBeSaved = false
-                };
-
-                CreateChildEntities(doorConfig, door, corridor);
-
-                door.GetComponent<Items.Components.Door>().IsOpen = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < 0.8f;
-            }
-
-            //generate props --------------------------------------------------------------
-            for (int i = 0; i < shapes.Count * 2; i++)
-            {
-                RuinShape room = shapes[Rand.Int(shapes.Count, Rand.RandSync.Server)];
-
-                Alignment[] alignments = new Alignment[] { Alignment.Top, Alignment.Bottom, Alignment.Right, Alignment.Left, Alignment.Center };
-
-                var prop = generationParams.GetRandomEntity(
-                    RuinEntityType.Prop, 
-                    alignments[Rand.Int(alignments.Length, Rand.RandSync.Server)], 
-                    GetRoomType(room, maxDistanceFromEntrance));
-
-                if (prop == null) { continue; }
-
-                //if the prop is placed at the center of the room, we have to use a room without a door (because they're also placed at the center)                
-                if (!doorlessRooms.Contains(room) && prop.Alignment.HasFlag(Alignment.Center)) continue;
-
-                CreateEntity(prop, room);
-            }*/
-
             return shapes;
         }
-
-        /*private RuinEntityConfig.RoomType GetRoomType(RuinShape room, int maxDistanceFromEntrance)
-        {
-            RuinEntityConfig.RoomType roomType = RuinEntityConfig.RoomType.Any;
-            if (room.DistanceFromEntrance <= 1)
-            {
-                roomType = RuinEntityConfig.RoomType.FirstRoom;
-            }
-            else if (room.DistanceFromEntrance == maxDistanceFromEntrance)
-            {
-                roomType = RuinEntityConfig.RoomType.LastRoom;
-            }
-            return roomType;
-        }*/
-
-        private MapEntity CreateEntity(RuinEntityConfig entityConfig, RuinShape room)
+        
+        private MapEntity CreateEntity(RuinEntityConfig entityConfig, RuinShape room, MapEntity parent)
         {
             Alignment[] alignments = new Alignment[] { Alignment.Top, Alignment.Bottom, Alignment.Right, Alignment.Left, Alignment.Center };
             
@@ -587,61 +537,108 @@ namespace Barotrauma.RuinGeneration
             }
 
             CreateChildEntities(entityConfig, entity, room);
+            ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
             return entity;
         }
 
         private void CreateChildEntities(RuinEntityConfig parentEntityConfig, MapEntity parentEntity, RuinShape room)
         {
-            /*foreach (RuinEntityConfig childEntity in parentEntityConfig.ChildEntities)
+            foreach (RuinEntityConfig childEntity in parentEntityConfig.ChildEntities)
             {
-                MapEntity createdEntity = null;
-                switch (childEntity.Placement)
+                switch (childEntity.PlacementRelativeToParent)
                 {
-                    case RuinEntityConfig.RoomType.SameRoom:
-                        createdEntity = CreateEntity(childEntity, room);
+                    case RuinEntityConfig.RelativePlacement.SameRoom:
+                        CreateEntity(childEntity, room, parentEntity);
                         break;
-                    case RuinEntityConfig.RoomType.NextRoom:
+                    case RuinEntityConfig.RelativePlacement.NextRoom:
                         var nextRoom = rooms.Find(r => r.DistanceFromEntrance == room.DistanceFromEntrance + 1);
-                        if (nextRoom != null) { createdEntity = CreateEntity(childEntity, nextRoom); };
+                        CreateEntity(childEntity, nextRoom, parentEntity);
                         break;
-                    case RuinEntityConfig.RoomType.PreviousRoom:
+                    case RuinEntityConfig.RelativePlacement.PreviousRoom:
                         var prevRoom = rooms.Find(r => r.DistanceFromEntrance == room.DistanceFromEntrance - 1);
-                        if (prevRoom != null) { createdEntity = CreateEntity(childEntity, prevRoom); };
+                        CreateEntity(childEntity, prevRoom, parentEntity);
                         break;
-                    case RuinEntityConfig.RoomType.FirstRoom:
+                    case RuinEntityConfig.RelativePlacement.FirstRoom:
                         var firstRoom = rooms.Find(r => r.DistanceFromEntrance <= 1);
-                        if (firstRoom != null) { createdEntity = CreateEntity(childEntity, firstRoom); };
+                        CreateEntity(childEntity, firstRoom, parentEntity);
                         break;
-                    case RuinEntityConfig.RoomType.LastRoom:
+                    case RuinEntityConfig.RelativePlacement.LastRoom:
                         int maxDistFromEntrance = rooms.Max(r => r.DistanceFromEntrance);
                         var lastRoom = rooms.Find(r => r.DistanceFromEntrance == maxDistFromEntrance);
-                        if (lastRoom != null) { createdEntity = CreateEntity(childEntity, lastRoom); };
+                        CreateEntity(childEntity, lastRoom, parentEntity);
                         break;
                 }
+            }
+        }
 
-                if (createdEntity == null) continue;
-                
-                if (childEntity.LinkToParent)
+        private void CreateConnections(RuinEntity entity)
+        {
+            foreach (RuinEntityConfig.EntityConnection connection in entity.Config.EntityConnections)
+            {
+                MapEntity targetEntity = null;
+                if (connection.TargetEntityIdentifier == "parent")
                 {
-                    createdEntity.linkedTo.Add(parentEntity);
-                    parentEntity.linkedTo.Add(createdEntity);
+                    targetEntity = entity.Parent;
+                }
+                else if (!string.IsNullOrEmpty(connection.RoomName))
+                {
+                    RuinShape targetRoom = null;
+                    switch (connection.RoomName)
+                    {
+                        case "sameroom":
+                            targetRoom = entity.Room;
+                            break;
+                        case "firstroom":
+                            targetRoom = allShapes.Find(s => s.DistanceFromEntrance == 1);
+                            break;
+                        case "lastroom":
+                            int maxDistFromEntrance = rooms.Max(r => r.DistanceFromEntrance);
+                            targetRoom = allShapes.Find(s => s.DistanceFromEntrance == maxDistFromEntrance);
+                            break;
+                        case "nextroom":
+                            targetRoom = allShapes.Find(s => s.DistanceFromEntrance == entity.Room.DistanceFromEntrance + 1);
+                            break;
+                        case "previousroom":
+                            targetRoom = allShapes.Find(s => s.DistanceFromEntrance == entity.Room.DistanceFromEntrance - 1);
+                            break;
+                        default:
+                            targetRoom = allShapes.Find(s => s.RoomType?.Name == connection.RoomName);
+                            break;
+                    }
+
+                    if (targetRoom == null)
+                    {
+                        DebugConsole.ThrowError("Error while generating ruins - could not find a room of the type \"" + connection.RoomName + "\".");
+                    }
+                    else
+                    {
+                        targetEntity = ruinEntities.GetRandom(e => 
+                            e.Room == targetRoom && 
+                            e.Entity.prefab?.Identifier == connection.TargetEntityIdentifier)?.Entity;
+                    }
+                }
+                else
+                {
+                    targetEntity = ruinEntities.GetRandom(e => e.Entity.prefab?.Identifier == connection.TargetEntityIdentifier)?.Entity;
                 }
 
-                if (childEntity.WireToParent.Count > 0)
+                if (targetEntity == null) continue;
+
+                if (connection.WireConnection != null)
                 {
-                    Item item = createdEntity as Item;
+                    Item item = entity.Entity as Item;
                     if (item == null)
                     {
-                        DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + createdEntity.Name + "\" - the entity is not an item.");
+                        DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + entity.Entity.Name + "\" - the entity is not an item.");
                         return;
                     }
                     else if (item.Connections == null)
                     {
-                        DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + createdEntity.Name + "\" - the item does not have a connection panel component.");
+                        DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + entity.Entity.Name + "\" - the item does not have a connection panel component.");
                         return;
                     }
 
-                    Item parentItem = parentEntity as Item;
+                    Item parentItem = entity.Parent as Item;
                     if (parentItem == null)
                     {
                         DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + parentItem.Name + "\" - the entity is not an item.");
@@ -655,30 +652,35 @@ namespace Barotrauma.RuinGeneration
 
                     //TODO: alien wire prefab w/ custom sprite?
                     var wirePrefab = MapEntityPrefab.Find(null, "blackwire") as ItemPrefab;
-                    foreach (Pair<string, string> wireToParent in childEntity.WireToParent)
-                    {
-                        var conn1 = item.Connections.Find(c => c.Name == wireToParent.First);
-                        if (conn1 == null)
-                        {
-                            DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + item.Name + "\" - the item does not have a connection named \"" + wireToParent.First + "\".");
-                            continue;
-                        }
-                        var conn2 = parentItem.Connections.Find(c => c.Name == wireToParent.Second);
-                        if (conn2 == null)
-                        {
-                            DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + parentItem.Name + "\" - the item does not have a connection named \"" + wireToParent.Second + "\".");
-                            continue;
-                        }
 
-                        var wire = new Item(wirePrefab, parentItem.WorldPosition, null).GetComponent<Items.Components.Wire>();
-                        wire.Item.ShouldBeSaved = false;
-                        conn1.TryAddLink(wire);
-                        wire.Connect(conn1, true);
-                        conn2.TryAddLink(wire);
-                        wire.Connect(conn2, true);
+                    var conn1 = item.Connections.Find(c => c.Name == connection.WireConnection.First);
+                    if (conn1 == null)
+                    {
+                        DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + item.Name +
+                            "\" - the item does not have a connection named \"" + connection.WireConnection.First + "\".");
+                        continue;
                     }
+                    var conn2 = parentItem.Connections.Find(c => c.Name == connection.WireConnection.Second);
+                    if (conn2 == null)
+                    {
+                        DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + parentItem.Name +
+                            "\" - the item does not have a connection named \"" + connection.WireConnection.Second + "\".");
+                        continue;
+                    }
+
+                    var wire = new Item(wirePrefab, parentItem.WorldPosition, null).GetComponent<Items.Components.Wire>();
+                    wire.Item.ShouldBeSaved = false;
+                    conn1.TryAddLink(wire);
+                    wire.Connect(conn1, true);
+                    conn2.TryAddLink(wire);
+                    wire.Connect(conn2, true);                    
                 }
-            }*/
+                else
+                {
+                    entity.Entity.linkedTo.Add(targetEntity);
+                    targetEntity.linkedTo.Add(entity.Entity);
+                }
+            }
         }
     }
 }
