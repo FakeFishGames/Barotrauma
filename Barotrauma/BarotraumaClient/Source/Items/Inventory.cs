@@ -962,9 +962,16 @@ namespace Barotrauma
                 if (receivedItemIDs[i] > 0)
                 {
                     var item = Entity.FindEntityByID(receivedItemIDs[i]) as Item;
-                    if (item == null) continue;
+                    if (item == null || Items[i] == item) continue;
 
                     TryPutItem(item, i, true, true, null, false);
+                    for (int j = 0; j < capacity; j++)
+                    {
+                        if (Items[j] == item && receivedItemIDs[j] != item.ID)
+                        {
+                            Items[j] = null;
+                        }
+                    }
                 }
             }
 

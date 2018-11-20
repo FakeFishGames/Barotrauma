@@ -434,6 +434,13 @@ namespace Barotrauma
                         if (!item.CanClientAccess(c)) continue;
                     }
                     TryPutItem(item, i, true, true, c.Character, false);
+                    for (int j = 0; j < capacity; j++)
+                    {
+                        if (Items[j] == item && newItemIDs[j] != item.ID)
+                        {
+                            Items[j] = null;
+                        }
+                    }
                 }
             }
 
