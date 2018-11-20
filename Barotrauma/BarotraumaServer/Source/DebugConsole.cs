@@ -73,13 +73,18 @@ namespace Barotrauma
                 List<string> commandMemory = new List<string>();
                 while (true)
                 {
+                    int consoleWidth = Console.WindowWidth;
+                    if (consoleWidth < 5) consoleWidth = 5;
+                    int consoleHeight = Console.WindowHeight;
+                    if (consoleHeight < 5) consoleHeight = 5;
+
                     //dequeue messages
                     lock (queuedMessages)
                     {
                         if (queuedMessages.Count>0)
                         {
                             Console.CursorLeft = 0;
-                            Console.Write(new string(' ', Console.WindowWidth));
+                            Console.Write(new string(' ', consoleWidth));
                             Console.CursorTop--; Console.CursorLeft = 0;
                             while (queuedMessages.Count > 0)
                             {
@@ -89,7 +94,7 @@ namespace Barotrauma
 
                                 if (msg.IsCommand) commandMemory.Add(msgTxt);
 
-                                int paddingLen = Console.WindowWidth - (msg.Text.Length % Console.WindowWidth)-1;
+                                int paddingLen = consoleWidth - (msg.Text.Length % consoleWidth)-1;
                                 msgTxt += new string(' ', paddingLen>0 ? paddingLen : 0);
 
                                 Console.ForegroundColor = XnaToConsoleColor.Convert(msg.Color);
@@ -171,8 +176,13 @@ namespace Barotrauma
 
         private static void RewriteInputToCommandLine(string input)
         {
+            int consoleWidth = Console.WindowWidth;
+            if (consoleWidth < 5) consoleWidth = 5;
+            int consoleHeight = Console.WindowHeight;
+            if (consoleHeight < 5) consoleHeight = 5;
+
             string ln = input.Length>0 ? AutoComplete(input,0) : "";
-            ln += new string(' ', Console.WindowWidth - (ln.Length % Console.WindowWidth));
+            ln += new string(' ', consoleWidth - (ln.Length % consoleWidth));
             Console.ForegroundColor = ConsoleColor.DarkGray;
             Console.CursorLeft = 0;
             Console.Write(ln);

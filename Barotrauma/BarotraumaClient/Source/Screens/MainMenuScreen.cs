@@ -419,10 +419,16 @@ namespace Barotrauma
                                    " -playercount " + maxPlayersBox.Text +
                                     " -ownerkey " + ownerKey.ToString();
 
+                string filename = "DedicatedServer.exe";
+#if LINUX
+                filename = "mono";
+                arguments = "./DedicatedServer.exe " + arguments;
+#endif
+
                 var processInfo = new ProcessStartInfo
                 {
-                    FileName = "DedicatedServer.exe",
-                    Arguments = arguments,
+                    FileName = filename,
+                    Arguments = arguments
 #if !DEBUG
                     WindowStyle = ProcessWindowStyle.Hidden
 #endif

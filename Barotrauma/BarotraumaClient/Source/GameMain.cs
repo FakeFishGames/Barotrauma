@@ -22,7 +22,7 @@ namespace Barotrauma
         public static bool ShowFPS = false;
         public static bool ShowPerf = false;
         public static bool DebugDraw;
-        public static bool IsMultiplayer => NetworkMember!=null;
+        public static bool IsMultiplayer => NetworkMember != null;
 
         public static PerformanceCounter PerformanceCounter;
 
@@ -36,10 +36,10 @@ namespace Barotrauma
         public static ServerListScreen ServerListScreen;
         public static SteamWorkshopScreen SteamWorkshopScreen;
 
-        public static SubEditorScreen       SubEditorScreen;
-        public static ParticleEditorScreen  ParticleEditorScreen;
-        public static LevelEditorScreen     LevelEditorScreen;
-        public static SpriteEditorScreen    SpriteEditorScreen;
+        public static SubEditorScreen SubEditorScreen;
+        public static ParticleEditorScreen ParticleEditorScreen;
+        public static LevelEditorScreen LevelEditorScreen;
+        public static SpriteEditorScreen SpriteEditorScreen;
         public static CharacterEditorScreen CharacterEditorScreen;
 
         public static Lights.LightManager LightManager;
@@ -110,7 +110,7 @@ namespace Barotrauma
         {
             get { return Instance == null || Instance.IsActive; }
         }
-        
+
         public static GameClient Client;
         public static NetworkMember NetworkMember
         {
@@ -147,7 +147,7 @@ namespace Barotrauma
             }
 
             TextManager.LoadTextPacks(Path.Combine("Content", "Texts"));
-            
+
             ApplyGraphicsSettings();
 
             Content.RootDirectory = "Content";
@@ -158,7 +158,7 @@ namespace Barotrauma
 
             Timing.Accumulator = 0.0f;
             fixedTime = new GameTime();
-            
+
             World = new World(new Vector2(0, -9.82f));
             FarseerPhysics.Settings.AllowSleep = true;
             FarseerPhysics.Settings.ContinuousPhysics = false;
@@ -218,7 +218,7 @@ namespace Barotrauma
         protected override void Initialize()
         {
             base.Initialize();
-            
+
             ScissorTestEnable = new RasterizerState() { ScissorTestEnable = true };
 
             Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Character));
@@ -235,7 +235,7 @@ namespace Barotrauma
         {
             GraphicsWidth = GraphicsDevice.Viewport.Width;
             GraphicsHeight = GraphicsDevice.Viewport.Height;
-            
+
             ConvertUnits.SetDisplayUnitToSimUnitRatio(Physics.DisplayToSimRation);
 
             spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -246,11 +246,14 @@ namespace Barotrauma
 
             loadingCoroutine = CoroutineManager.StartCoroutine(Load());
 
+#if WINDOWS
             var myForm = (System.Windows.Forms.Form)System.Windows.Forms.Form.FromHandle(Window.Handle);
             myForm.Deactivate += new EventHandler(HandleDefocus);
             myForm.Activated += new EventHandler(HandleFocus);
+#endif
         }
 
+#if WINDOWS
         private void HandleDefocus(object sender, EventArgs e)
         {
             if (GraphicsDeviceManager.IsFullScreen && GraphicsDeviceManager.HardwareModeSwitch)
@@ -273,7 +276,7 @@ namespace Barotrauma
                 Thread.Sleep(500);
             }
         }
-
+#endif
 
 
         private void InitUserStats()
