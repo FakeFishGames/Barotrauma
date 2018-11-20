@@ -1610,12 +1610,12 @@ namespace Barotrauma
                 else
                 {
                     character.AnimController.ResetRagdoll(forceReload: false);
-                    ResetParamsEditor();
-                    ClearWidgets();
+                    //ResetParamsEditor();
+                    //ClearWidgets();
                 }
-                // These should be unnecessary here
-                //ResetParamsEditor();
-                //ClearWidgets();
+                // These should be unnecessary here, but they are not?
+                ResetParamsEditor();
+                ClearWidgets();
                 CreateCenterPanel();
                 GUI.AddMessage($"Ragdoll reset", Color.WhiteSmoke, font: GUI.Font);
                 return true;
