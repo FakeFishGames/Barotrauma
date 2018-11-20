@@ -297,8 +297,7 @@ namespace Barotrauma.RuinGeneration
             }
             
             BTRoom.CalculateDistancesFromEntrance(entranceRoom, rooms, corridors);
-
-            allShapes = GenerateRuinEntities(caveCells, area, mirror);
+            GenerateRuinEntities(caveCells, area, mirror);
         }
 
 
@@ -319,69 +318,72 @@ namespace Barotrauma.RuinGeneration
         }
         private List<RuinEntity> ruinEntities = new List<RuinEntity>();
 
-        private List<RuinShape> GenerateRuinEntities(List<VoronoiCell> caveCells, Rectangle ruinArea, bool mirror)
+        private void GenerateRuinEntities(List<VoronoiCell> caveCells, Rectangle ruinArea, bool mirror)
         {
-            List<RuinShape> shapes = new List<RuinShape>(rooms);
-            shapes.AddRange(corridors);
+            allShapes = new List<RuinShape>(rooms);
+            allShapes.AddRange(corridors);
 
             if (mirror)
             {
-                foreach (RuinShape shape in shapes)
+                foreach (RuinShape shape in allShapes)
                 {
                     shape.MirrorX(ruinArea.Center.ToVector2());
                 }
             }
 
-            int maxDistanceFromEntrance = shapes.Max(s => s.DistanceFromEntrance);
-            
+            int maxRoomDistanceFromEntrance = rooms.Max(s => s.DistanceFromEntrance);
+            int maxCorridorDistanceFromEntrance = corridors.Max(s => s.DistanceFromEntrance);
+
             //assign the room types for the first and last rooms
             foreach (RuinRoom roomType in generationParams.RoomTypeList)
             {
+                RuinShape selectedRoom = null;
                 switch (roomType.Placement)
                 {
-                    case RuinRoom.RoomPlacement.FirstRoom:
-                        {
-                            var selectedShape = shapes.GetRandom(s =>
-                                s is BTRoom && s.DistanceFromEntrance == 1 + roomType.PlacementOffset,
-                                Rand.RandSync.Server);
-                            if (selectedShape != null)
-                            {
-                                selectedShape.RoomType = roomType;
-                            }
-                            break;
-                        }
-                    case RuinRoom.RoomPlacement.LastRoom:
-                        {
-                            var selectedShape = shapes.GetRandom(s =>
-                                s is BTRoom && s.DistanceFromEntrance == maxDistanceFromEntrance + roomType.PlacementOffset,
-                                Rand.RandSync.Server);
-                            if (selectedShape != null)
-                            {
-                                selectedShape.RoomType = roomType;
-                            }
-                            break;
-                        }
+                    case RuinRoom.RoomPlacement.First:
+                        //find the room nearest to the entrance
+                        //there may be multiple ones, choose one that hasn't been assigned yet
+                        selectedRoom = roomType.IsCorridor ? FindFirstRoom(corridors, r => r.RoomType == null) : FindFirstRoom(rooms, r => r.RoomType == null);
+
+                        break;
+                    case RuinRoom.RoomPlacement.Last:
+                        //find the room furthest to the entrance
+                        //there may be multiple ones, choose one that hasn't been assigned yet
+                        selectedRoom = roomType.IsCorridor ? FindLastRoom(corridors, r => r.RoomType == null) : FindLastRoom(rooms, r => r.RoomType == null);
+                        break;
                 }
+                if (selectedRoom == null) continue;
+
+                //step forwards/backwards from the selected room according to the placement offset
+                for (int i = 0; i < Math.Abs(roomType.PlacementOffset); i++)
+                {
+                    selectedRoom = FindNearestRoom(
+                        selectedRoom, 
+                        roomType.IsCorridor ? corridors : (IEnumerable<RuinShape>)rooms, 
+                        roomType.PlacementOffset,
+                        r => r.RoomType == null);
+                }
+
+                if (selectedRoom != null) selectedRoom.RoomType = roomType;
             }
 
             //go through the unassigned rooms
-            foreach (RuinShape room in shapes)
+            foreach (RuinShape room in allShapes)
             {
+                if (room.RoomType != null) continue;
+                
+                room.RoomType = generationParams.RoomTypeList.GetRandom(rt =>
+                    rt.IsCorridor == room is Corridor &&
+                    rt.Placement == RuinRoom.RoomPlacement.Any,
+                    Rand.RandSync.Server);
+
                 if (room.RoomType == null)
                 {
-                    room.RoomType = generationParams.RoomTypeList.GetRandom(rt =>
-                        rt.IsCorridor == room is Corridor &&
-                        rt.Placement == RuinRoom.RoomPlacement.Any,
-                        Rand.RandSync.Server);
-
-                    if (room.RoomType == null)
-                    {
-                        DebugConsole.ThrowError("Could not find a suitable room type for a room (is corridor: " + (room is Corridor) + ")");
-                    }
-                }
+                    DebugConsole.ThrowError("Could not find a suitable room type for a room (is corridor: " + (room is Corridor) + ")");
+                }                
             }
 
-            foreach (RuinShape room in shapes)
+            foreach (RuinShape room in allShapes)
             {
                 if (room.RoomType == null) continue;
                 //generate walls  --------------------------------------------------------------
@@ -442,7 +444,7 @@ namespace Barotrauma.RuinGeneration
                 if (room is Corridor corridor)
                 {
                     var doorConfig = room.RoomType.GetRandomEntity(corridor.IsHorizontal ? RuinEntityType.Door : RuinEntityType.Hatch, Alignment.Center);
-                    if (corridor != null)
+                    if (corridor != null && doorConfig != null)
                     {
                         //find all walls that are parallel to the corridor
                         var suitableWalls = corridor.IsHorizontal ?
@@ -485,13 +487,12 @@ namespace Barotrauma.RuinGeneration
                     CreateConnections(ruinEntity);
                 }
             }
-            return shapes;
         }
         
-        private MapEntity CreateEntity(RuinEntityConfig entityConfig, RuinShape room, MapEntity parent)
+        private void CreateEntity(RuinEntityConfig entityConfig, RuinShape room, MapEntity parent)
         {
-            Alignment[] alignments = new Alignment[] { Alignment.Top, Alignment.Bottom, Alignment.Right, Alignment.Left, Alignment.Center };
-            
+            if (room == null) return;
+
             Vector2 size = (entityConfig.Prefab is StructurePrefab) ? ((StructurePrefab)entityConfig.Prefab).Size : Vector2.Zero;
             
             Vector2 position = room.Rect.Center.ToVector2();
@@ -538,35 +539,16 @@ namespace Barotrauma.RuinGeneration
 
             CreateChildEntities(entityConfig, entity, room);
             ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
-            return entity;
         }
 
         private void CreateChildEntities(RuinEntityConfig parentEntityConfig, MapEntity parentEntity, RuinShape room)
         {
             foreach (RuinEntityConfig childEntity in parentEntityConfig.ChildEntities)
             {
-                switch (childEntity.PlacementRelativeToParent)
+                var childRoom = FindRoom(childEntity.PlacementRelativeToParent, room);
+                if (childRoom != null)
                 {
-                    case RuinEntityConfig.RelativePlacement.SameRoom:
-                        CreateEntity(childEntity, room, parentEntity);
-                        break;
-                    case RuinEntityConfig.RelativePlacement.NextRoom:
-                        var nextRoom = rooms.Find(r => r.DistanceFromEntrance == room.DistanceFromEntrance + 1);
-                        CreateEntity(childEntity, nextRoom, parentEntity);
-                        break;
-                    case RuinEntityConfig.RelativePlacement.PreviousRoom:
-                        var prevRoom = rooms.Find(r => r.DistanceFromEntrance == room.DistanceFromEntrance - 1);
-                        CreateEntity(childEntity, prevRoom, parentEntity);
-                        break;
-                    case RuinEntityConfig.RelativePlacement.FirstRoom:
-                        var firstRoom = rooms.Find(r => r.DistanceFromEntrance <= 1);
-                        CreateEntity(childEntity, firstRoom, parentEntity);
-                        break;
-                    case RuinEntityConfig.RelativePlacement.LastRoom:
-                        int maxDistFromEntrance = rooms.Max(r => r.DistanceFromEntrance);
-                        var lastRoom = rooms.Find(r => r.DistanceFromEntrance == maxDistFromEntrance);
-                        CreateEntity(childEntity, lastRoom, parentEntity);
-                        break;
+                    CreateEntity(childEntity, childRoom, parentEntity);
                 }
             }
         }
@@ -583,27 +565,13 @@ namespace Barotrauma.RuinGeneration
                 else if (!string.IsNullOrEmpty(connection.RoomName))
                 {
                     RuinShape targetRoom = null;
-                    switch (connection.RoomName)
+                    if (Enum.TryParse(connection.RoomName, out RuinEntityConfig.RelativePlacement placement))
                     {
-                        case "sameroom":
-                            targetRoom = entity.Room;
-                            break;
-                        case "firstroom":
-                            targetRoom = allShapes.Find(s => s.DistanceFromEntrance == 1);
-                            break;
-                        case "lastroom":
-                            int maxDistFromEntrance = rooms.Max(r => r.DistanceFromEntrance);
-                            targetRoom = allShapes.Find(s => s.DistanceFromEntrance == maxDistFromEntrance);
-                            break;
-                        case "nextroom":
-                            targetRoom = allShapes.Find(s => s.DistanceFromEntrance == entity.Room.DistanceFromEntrance + 1);
-                            break;
-                        case "previousroom":
-                            targetRoom = allShapes.Find(s => s.DistanceFromEntrance == entity.Room.DistanceFromEntrance - 1);
-                            break;
-                        default:
-                            targetRoom = allShapes.Find(s => s.RoomType?.Name == connection.RoomName);
-                            break;
+                        targetRoom = FindRoom(placement, entity.Room);
+                    }
+                    else
+                    {
+                        targetRoom = allShapes.Find(s => s.RoomType?.Name == connection.RoomName);
                     }
 
                     if (targetRoom == null)
@@ -682,5 +650,105 @@ namespace Barotrauma.RuinGeneration
                 }
             }
         }
+
+        private RuinShape FindRoom(RuinEntityConfig.RelativePlacement placement, RuinShape relativeTo)
+        {
+            switch (placement)
+            {
+                case RuinEntityConfig.RelativePlacement.SameRoom:
+                    return relativeTo;
+                case RuinEntityConfig.RelativePlacement.NextRoom:
+                    return FindNearestRoom(relativeTo, rooms, 1);
+                case RuinEntityConfig.RelativePlacement.NextCorridor:
+                    return FindNearestRoom(relativeTo, corridors, 1);
+                case RuinEntityConfig.RelativePlacement.PreviousRoom:
+                    return FindNearestRoom(relativeTo, rooms, -1);
+                case RuinEntityConfig.RelativePlacement.PreviousCorridor:
+                    return FindNearestRoom(relativeTo, corridors, -1);
+                case RuinEntityConfig.RelativePlacement.FirstRoom:
+                    return FindFirstRoom(rooms);
+                case RuinEntityConfig.RelativePlacement.FirstCorridor:
+                    return FindFirstRoom(corridors);
+                case RuinEntityConfig.RelativePlacement.LastRoom:
+                    return FindLastRoom(rooms);
+                case RuinEntityConfig.RelativePlacement.LastCorridor:
+                    return FindLastRoom(corridors);
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Find the nearest room relative to a specific room.
+        /// </summary>
+        /// <param name="relativeTo">The room to compare the distance with</param>
+        /// <param name="roomList">List of rooms to check (use a list that only contains rooms/corridors if you want a specific types of rooms)</param>
+        /// <param name="dir">Direction to check: 1 = find the next room, -1 = find the previous room</param>
+        private RuinShape FindNearestRoom(RuinShape relativeTo, IEnumerable<RuinShape> roomList, int dir, Func<RuinShape, bool> predicate = null)
+        {
+            dir = Math.Sign(dir);
+            RuinShape selectedRoom = null;
+            foreach (RuinShape room in roomList)
+            {
+                if (room == relativeTo) continue;
+                if (predicate != null && !predicate(room)) continue;
+                int roomDir = Math.Sign(room.DistanceFromEntrance - relativeTo.DistanceFromEntrance);
+
+                if (roomDir == 0 || roomDir == dir)
+                {
+                    if (selectedRoom == null)
+                    {
+                        selectedRoom = room;
+                    }
+                    else //room already selected, check if this one is closer
+                    {
+                        //closer than the previously selected room
+                        if (Math.Abs(room.DistanceFromEntrance - relativeTo.DistanceFromEntrance) < 
+                            Math.Abs(selectedRoom.DistanceFromEntrance - relativeTo.DistanceFromEntrance))
+                        {
+                            selectedRoom = room;
+                        }
+                        //same distance measured in room indices, select the room if the actual distance is smaller
+                        else if (room.DistanceFromEntrance == selectedRoom.DistanceFromEntrance &&
+                            Vector2.DistanceSquared(relativeTo.Center, room.Center) < Vector2.DistanceSquared(relativeTo.Center, selectedRoom.Center))
+                        {
+                            selectedRoom = room;
+                        }
+                    }
+                }
+            }
+            return selectedRoom;
+        }
+
+        private RuinShape FindFirstRoom(IEnumerable<RuinShape> roomList, Func<RuinShape, bool> predicate = null)
+        {
+            if (!roomList.Any()) { return null; }
+            RuinShape firstRoom = null;
+            foreach (RuinShape room in roomList)
+            {
+                if (predicate != null && !predicate(room)) continue;
+                if (firstRoom == null || room.DistanceFromEntrance < firstRoom.DistanceFromEntrance)
+                {
+                    firstRoom = room;
+                }
+            }
+            return firstRoom;
+        }
+
+        private RuinShape FindLastRoom(IEnumerable<RuinShape> roomList, Func<RuinShape, bool> predicate = null)
+        {
+            if (!roomList.Any()) { return null; }
+            RuinShape lastRoom = null;
+            foreach (RuinShape room in roomList)
+            {
+                if (predicate != null && !predicate(room)) continue;
+                if (lastRoom == null || room.DistanceFromEntrance > lastRoom.DistanceFromEntrance)
+                {
+                    lastRoom = room;
+                }
+            }
+            return lastRoom;
+        }
+
     }
 }

@@ -135,6 +135,8 @@ namespace Barotrauma.RuinGeneration
         {
             DistanceFromEntrance = DistanceFromEntrance == 0 ? currentDist : Math.Min(currentDist, DistanceFromEntrance);
 
+            currentDist++;
+
             var roomRect = Rect;
             roomRect.Inflate(5, 5);
             foreach (var corridor in corridors)
@@ -144,8 +146,9 @@ namespace Barotrauma.RuinGeneration
                 if (!corridorRect.Intersects(roomRect)) continue;
 
                 corridor.DistanceFromEntrance = corridor.DistanceFromEntrance == 0 ?
-                    DistanceFromEntrance :
-                    Math.Min(corridor.DistanceFromEntrance, DistanceFromEntrance);
+                    DistanceFromEntrance + 1 :
+                    Math.Min(corridor.DistanceFromEntrance, DistanceFromEntrance + 1);
+
                 
                 List<BTRoom> connectedRooms = new List<BTRoom>();
                 foreach (var otherRoom in rooms)

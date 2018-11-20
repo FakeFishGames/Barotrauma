@@ -7,7 +7,7 @@
   RoomHeightRange="0.5,0.9"
   CorridorWidthRange="200,256">
   
-  <RoomType name="vault" placement="lastroom">
+  <RoomType name="vault" placement="last">
     <structure prefab="RuinWallHeavyHorizontal" alignment="Top, Bottom" type="Wall"/>
     <structure prefab="RuinWallHeavyVertical" alignment="Left,Right" type="Wall"/>  
     <structure prefab="RuinBackCarvings" alignment="Center" type="Back" commonness="1"/>
@@ -16,8 +16,8 @@
     <item prefab="artifactholder" alignment="Center" type="Prop" commonness="5"/>
   </RoomType>
   
-  <!-- "lastroom" and a placement offset of -1 means that this is used as the second-to-last room-->
-  <RoomType name="armory" placement="lastroom" placementoffset="-1">
+  <!-- "last" and a placement offset of -1 means that this is used as the second-to-last room-->
+  <RoomType name="armory" placement="last" placementoffset="-1">
     <structure prefab="RuinWallHeavyHorizontal" alignment="Top, Bottom" type="Wall"/>
     <structure prefab="RuinWallHeavyVertical" alignment="Left,Right" type="Wall"/>
     <structure prefab="RuinBackCarvings" alignment="Center" type="Back" commonness="1"/>
@@ -32,6 +32,12 @@
     <item prefab="RuinBlock" alignment="Right,Top,Bottom,Left" type="Prop" commonness="5"/>    
     <item prefab="oxygeniteshard" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
     <item prefab="sulphuriteshard" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
+  </RoomType>
+
+  <RoomType name="entrancecorridor" placement="first" iscorridor="true">
+    <structure prefab="RuinWallHorizontal" alignment="Top,Bottom" type="Wall"/>
+    <structure prefab="RuinWallVertical" alignment="Left,Right" type="Wall"/>
+    <structure prefab="RuinBackFractal" alignment="Center" type="Back" commonness="3"/>
   </RoomType>
   
   <RoomType name="genericcorridor1" placement="any" iscorridor="true">
