@@ -19,15 +19,15 @@ namespace Barotrauma.Extensions
             return source.OrderBy(i => Rand.Range(0f, 1f));
         }
 
-        public static T GetRandom<T>(this IEnumerable<T> source, Func<T, bool> predicate)
+        public static T GetRandom<T>(this IEnumerable<T> source, Func<T, bool> predicate, Rand.RandSync randSync = Rand.RandSync.Unsynced)
         {
-            return source.Where(predicate).GetRandom();
+            return source.Where(predicate).GetRandom(randSync);
         }
 
-        public static T GetRandom<T>(this IEnumerable<T> source)
+        public static T GetRandom<T>(this IEnumerable<T> source, Rand.RandSync randSync = Rand.RandSync.Unsynced)
         {
             int count = source.Count();
-            return count == 0 ? default(T) : source.ElementAt(Rand.Range(0, count));
+            return count == 0 ? default(T) : source.ElementAt(Rand.Range(0, count, randSync));
         }
 
         /// <summary>
