@@ -1422,7 +1422,7 @@ namespace Barotrauma
             };
             if (currentCharacterConfig == Character.HumanConfigFile)
             {
-                var jobDropDown = new GUIDropDown(new RectTransform(new Vector2(1, 0.04f), layoutGroup.RectTransform), elementCount: 6, style: null);
+                var jobDropDown = new GUIDropDown(new RectTransform(new Vector2(1, 0.04f), layoutGroup.RectTransform), elementCount: 7, style: null);
                 jobDropDown.ListBox.Color = new Color(jobDropDown.ListBox.Color.R, jobDropDown.ListBox.Color.G, jobDropDown.ListBox.Color.B, byte.MaxValue);
                 jobDropDown.AddItem("None");
                 JobPrefab.List.ForEach(j => jobDropDown.AddItem(j.Name, j.Identifier));
