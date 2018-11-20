@@ -318,6 +318,34 @@ namespace Barotrauma
             // Update widgets
             jointSelectionWidgets.Values.ForEach(w => w.Update((float)deltaTime));
             animationWidgets.Values.ForEach(w => w.Update((float)deltaTime));
+            // Handle limb selection
+            if (editLimbs && PlayerInput.LeftButtonDown() && GUI.MouseOn == null && Widget.selectedWidgets.None())
+            {
+                foreach (Limb limb in character.AnimController.Limbs)
+                {
+                    if (limb == null || limb.ActiveSprite == null) { continue; }
+                    var origin = limb.ActiveSprite.Origin;
+                    var relativeOrigin = limb.ActiveSprite.RelativeOrigin;
+                    var sourceRect = limb.ActiveSprite.SourceRect;
+                    Vector2 size = sourceRect.Size.ToVector2() * Cam.Zoom * limb.Scale * limb.TextureScale;
+                    Vector2 up = VectorExtensions.Backward(limb.Rotation);
+                    Vector2 left = up.Right();
+                    Vector2 limbScreenPos = SimToScreen(limb.SimPosition);
+                    Vector2 offset = relativeOrigin.X * left + relativeOrigin.Y * up;
+                    Vector2 center = limbScreenPos + offset;
+                    corners = MathUtils.GetImaginaryRect(corners, up, center, size);
+                    // Select limbs on ragdoll
+                    if (MathUtils.RectangleContainsPoint(corners, PlayerInput.MousePosition))
+                    {
+                        HandleLimbSelection(limb);
+                    }
+                    // Select limbs on sprite sheet
+                    if (GetLimbSpritesheetRect(limb).Contains(PlayerInput.MousePosition))
+                    {
+                        HandleLimbSelection(limb);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -2107,6 +2135,24 @@ namespace Barotrauma
             }
             spriteSheetZoom = MathHelper.Clamp(1, spriteSheetMinZoom, spriteSheetMaxZoom);
         }
+
+        private void HandleLimbSelection(Limb limb)
+        {
+            if (!selectedLimbs.Contains(limb))
+            {
+                if (!Widget.EnableMultiSelect)
+                {
+                    selectedLimbs.Clear();
+                }
+                selectedLimbs.Add(limb);
+                ResetParamsEditor();
+            }
+            else if (Widget.EnableMultiSelect)
+            {
+                selectedLimbs.Remove(limb);
+                ResetParamsEditor();
+            }
+        }
         #endregion
 
         #region Animation Controls
@@ -2543,24 +2589,6 @@ namespace Barotrauma
                 }
                 if (MathUtils.RectangleContainsPoint(corners, PlayerInput.MousePosition) && GUI.MouseOn == null)
                 {
-                    // Select limbs
-                    if (PlayerInput.LeftButtonDown())
-                    {
-                        if (!selectedLimbs.Contains(limb))
-                        {
-                            if (!Widget.EnableMultiSelect)
-                            {
-                                selectedLimbs.Clear();
-                            }
-                            selectedLimbs.Add(limb);
-                            ResetParamsEditor();
-                        }
-                        else if (Widget.EnableMultiSelect)
-                        {
-                            selectedLimbs.Remove(limb);
-                            ResetParamsEditor();
-                        }
-                    }
                     // Origin
                     if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && selectedLimbs.Contains(limb))
                     {
@@ -2915,31 +2943,7 @@ namespace Barotrauma
                         var topLeft = rect.Location.ToVector2();
                         var topRight = new Vector2(topLeft.X + rect.Width, topLeft.Y);
                         var bottomRight = new Vector2(topRight.X, topRight.Y + rect.Height);
-                        //var bottomLeft = new Vector2(topLeft.X, bottomRight.Y);
-                        // Select limbs
                         bool isMouseOnRect = rect.Contains(PlayerInput.MousePosition);
-                        if (isMouseOnRect && GUI.MouseOn == null)
-                        {
-                            if (PlayerInput.LeftButtonDown())
-                            {
-                                if (!selectedLimbs.Contains(limb))
-                                {
-                                    if (!Widget.EnableMultiSelect)
-                                    {
-                                        selectedLimbs.Clear();
-                                    }
-                                    selectedLimbs.Add(limb);
-                                }
-                                else if (Widget.EnableMultiSelect)
-                                {
-                                    selectedLimbs.Remove(limb);
-                                }
-                            }
-                            if (PlayerInput.LeftButtonClicked())
-                            {
-                                ResetParamsEditor();
-                            }
-                        }
                         if (selectedLimbs.Contains(limb))
                         {
                             // Draw the sprite origins
@@ -2948,7 +2952,7 @@ namespace Barotrauma
                             GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.Yellow);
                             GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.Yellow);
 
-                            if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && isMouseOnRect && GUI.MouseOn == null)
+                            if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && isMouseOnRect && GUI.MouseOn == null && Widget.selectedWidgets.None())
                             {
                                 var input = scaledMouseSpeed / spriteSheetZoom;
                                 input.X *= character.AnimController.Dir;
