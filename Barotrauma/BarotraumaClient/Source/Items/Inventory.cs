@@ -486,6 +486,24 @@ namespace Barotrauma
                 }
             }
 
+            if (Character.Controlled.SelectedConstruction != null)
+            {
+                foreach (ItemComponent ic in Character.Controlled.SelectedConstruction.components)
+                {
+                    var itemContainer = ic as ItemContainer;
+                    if (itemContainer == null) continue;
+
+                    foreach (InventorySlot slot in itemContainer.Inventory.slots)
+                    {
+                        if (slot.InteractRect.Contains(PlayerInput.MousePosition) ||
+                            slot.EquipButtonRect.Contains(PlayerInput.MousePosition))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+
             foreach (SlotReference highlightedSubInventorySlot in highlightedSubInventorySlots)
             {
                 if (GetSubInventoryHoverArea(highlightedSubInventorySlot).Contains(PlayerInput.MousePosition)) return true;
