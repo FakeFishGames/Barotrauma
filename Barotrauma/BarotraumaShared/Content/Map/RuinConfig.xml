@@ -39,13 +39,17 @@
     <structure prefab="RuinWallVerticalSmall" alignment="Left,Right" type="Wall"/>
     <structure prefab="RuinBack" alignment="Center" type="Back" commonness="3"/>
     <item prefab="aliendoor" alignment="Center" type="Door">
-      <item prefab="alienmotionsensor" alignment="Center" type="Prop" roomplacement="nextroom">
-        <Wire from="state_out" to="set_state"/>
+      <item prefab="alienmotionsensor" alignment="Center" type="Prop" placementrelativetoparent="nextroom">
+        <Connection targetentity="parent">
+          <Wire from="state_out" to="set_state"/>
+        </Connection>
       </item>
     </item>
     <item prefab="alienhatch" alignment="Center" type="Hatch">
-      <item prefab="alienmotionsensor" alignment="Center" type="Prop" roomplacement="nextroom">
-        <Wire from="state_out" to="set_state"/>
+      <item prefab="alienmotionsensor" alignment="Center" type="Prop" placementrelativetoparent="nextroom">
+        <Connection targetentity="parent">
+          <Wire from="state_out" to="set_state"/>
+        </Connection>
       </item>
     </item>
   </RoomType> 

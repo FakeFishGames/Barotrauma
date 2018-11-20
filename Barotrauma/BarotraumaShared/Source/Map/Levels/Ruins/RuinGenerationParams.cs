@@ -267,22 +267,68 @@ namespace Barotrauma.RuinGeneration
     {
         public readonly MapEntityPrefab Prefab;
 
+        public enum RelativePlacement
+        {
+            SameRoom,
+            NextRoom,
+            PreviousRoom,
+            FirstRoom,
+            LastRoom
+        }
+
+        public class EntityConnection
+        {
+            //which type of room to search for the item to connect to
+            //sameroom, nextroom, previousroom, firstroom and lastroom are also valid
+            public string RoomName
+            {
+                get;
+                private set;
+            }
+
+            public string TargetEntityIdentifier
+            {
+                get;
+                private set;
+            }
+
+            //if set, the connection is done by running a wire from 
+            //(Pair.First = the name of the connection in this item) to (Pair.Second = the name of the connection in the target item)
+            public Pair<string, string> WireConnection
+            {
+                get;
+                private set;
+            }
+
+            public EntityConnection(XElement element)
+            {
+                RoomName = element.GetAttributeString("roomname", "");
+                TargetEntityIdentifier = element.GetAttributeString("targetentity", "");
+                foreach (XElement subElement in element.Elements())
+                {
+                    if (subElement.Name.ToString().ToLowerInvariant() == "wire")
+                    {
+                        WireConnection = new Pair<string, string>(
+                            subElement.GetAttributeString("from", ""),
+                            subElement.GetAttributeString("to", ""));
+                    }
+                }
+            }
+        }
+
         [Serialize(Alignment.Bottom, false), Editable]
         public Alignment Alignment { get; private set; }
 
         [Serialize(RuinEntityType.Prop, false), Editable]
         public RuinEntityType Type { get; private set; }
 
+        [Serialize(RelativePlacement.SameRoom, false), Editable]
+        public RelativePlacement PlacementRelativeToParent { get; private set; }
+
         [Serialize(1.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
         public float Commonness { get; private set; }
         
-        [Serialize(false, false), Editable]
-        public bool LinkToParent { get; private set; }
-
-        /// <summary>
-        /// Pair.First = the name of the connection in this item, Pair.Second = the name of the connection in the parent item
-        /// </summary>
-        public List<Pair<string, string>> WireToParent { get; private set; } = new List<Pair<string, string>>();
+        public List<EntityConnection> EntityConnections { get; private set; } = new List<EntityConnection>();
 
         private readonly List<RuinEntityConfig> childEntities = new List<RuinEntityConfig>();
 
@@ -298,7 +344,7 @@ namespace Barotrauma.RuinGeneration
             get;
             private set;
         } = new Dictionary<string, SerializableProperty>();
-        
+
         public RuinEntityConfig(XElement element)
         {
             string name = element.GetAttributeString("prefab", "");
@@ -314,17 +360,17 @@ namespace Barotrauma.RuinGeneration
 
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() == "wire")
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    WireToParent.Add(new Pair<string, string>(
-                        subElement.GetAttributeString("from", ""),
-                        subElement.GetAttributeString("to", "")));
-                }
-                else
-                {
-                    childEntities.Add(new RuinEntityConfig(subElement));
+                    case "connection":
+                    case "entityconnection":
+                        EntityConnections.Add(new EntityConnection(subElement));
+                        break;
+                    default:
+                        childEntities.Add(new RuinEntityConfig(subElement));
+                        break;
                 }
             }
-        }        
+        }
     }
 }
