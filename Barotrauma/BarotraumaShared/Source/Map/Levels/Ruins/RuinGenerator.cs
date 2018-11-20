@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Voronoi2;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.RuinGeneration
 {
@@ -28,6 +29,8 @@ namespace Barotrauma.RuinGeneration
         {
             get { return rect.Center.ToVector2(); }
         }
+
+        public RuinRoom RoomType;
 
         public List<Line> Walls;
         
@@ -86,18 +89,18 @@ namespace Barotrauma.RuinGeneration
                     //point A is within the rectangle -> cut a portion from the top of the line
                     else if (line.A.Y >= rectangle.Y && line.A.Y <= rectangle.Bottom)
                     {
-                        newLines.Add(new Line(new Vector2(line.A.X, rectangle.Bottom), line.B, line.Type));
+                        newLines.Add(new Line(new Vector2(line.A.X, rectangle.Bottom), line.B));
                     }
                     //point B is within the rectangle -> cut a portion from the bottom of the line
                     else if (line.B.Y >= rectangle.Y && line.B.Y <= rectangle.Bottom)
                     {
-                        newLines.Add(new Line(line.A, new Vector2(line.A.X, rectangle.Y), line.Type));
+                        newLines.Add(new Line(line.A, new Vector2(line.A.X, rectangle.Y)));
                     }
                     //rect is in between the lines -> split the line into two
                     else
                     {
-                        newLines.Add(new Line(line.A, new Vector2(line.A.X, rectangle.Y), line.Type));
-                        newLines.Add(new Line(new Vector2(line.A.X, rectangle.Bottom), line.B, line.Type));
+                        newLines.Add(new Line(line.A, new Vector2(line.A.X, rectangle.Y)));
+                        newLines.Add(new Line(new Vector2(line.A.X, rectangle.Bottom), line.B));
                     }
                 }
                 else
@@ -116,18 +119,18 @@ namespace Barotrauma.RuinGeneration
                     //point A is within the rectangle -> cut a portion from the left side of the line
                     else if (line.A.X >= rectangle.X && line.A.X <= rectangle.Right)
                     {
-                        newLines.Add(new Line(new Vector2(rectangle.Right, line.A.Y), line.B, line.Type));
+                        newLines.Add(new Line(new Vector2(rectangle.Right, line.A.Y), line.B));
                     }
                     //point B is within the rectangle -> cut a portion from the right side of the line
                     else if (line.B.X >= rectangle.X && line.B.X <= rectangle.Right)
                     {
-                        newLines.Add(new Line(line.A, new Vector2(rectangle.X, line.A.Y), line.Type));
+                        newLines.Add(new Line(line.A, new Vector2(rectangle.X, line.A.Y)));
                     }
                     //rect is in between the lines -> split the line into two
                     else
                     {
-                        newLines.Add(new Line(line.A, new Vector2(rectangle.X, line.A.Y), line.Type));
-                        newLines.Add(new Line(new Vector2(rectangle.Right, line.A.Y), line.B, line.Type));
+                        newLines.Add(new Line(line.A, new Vector2(rectangle.X, line.A.Y)));
+                        newLines.Add(new Line(new Vector2(rectangle.Right, line.A.Y), line.B));
                     }
                 }
             }
@@ -156,22 +159,19 @@ namespace Barotrauma.RuinGeneration
     class Line
     {
         public Vector2 A, B;
-
-        public readonly RuinEntityType Type;
-
+        
         public bool IsHorizontal
         {
             get { return Math.Abs(A.Y - B.Y) < Math.Abs(A.X - B.X); }
         }
 
-        public Line(Vector2 a, Vector2 b, RuinEntityType type)
+        public Line(Vector2 a, Vector2 b)
         {
             Debug.Assert(a.X <= b.X);
             Debug.Assert(a.Y <= b.Y);
 
             A = a;
             B = b;
-            Type = type;
         }
     }  
 
@@ -316,25 +316,60 @@ namespace Barotrauma.RuinGeneration
 
             int maxDistanceFromEntrance = shapes.Max(s => s.DistanceFromEntrance);
             
-            foreach (RuinShape leaf in shapes)
+            //assign the room types for the first and last rooms
+            foreach (RuinRoom roomType in generationParams.RoomTypeList)
             {
-                RuinEntityType wallType = RuinEntityType.Wall;
-                RuinEntityConfig.RoomType roomType = GetRoomType(leaf, maxDistanceFromEntrance);
-
-                if (!(leaf is BTRoom))
+                switch (roomType.Placement)
                 {
-                    wallType = RuinEntityType.CorridorWall;
+                    case RuinRoom.RoomPlacement.FirstRoom:
+                        {
+                            var selectedShape = shapes.GetRandom(s =>
+                                s is BTRoom && s.DistanceFromEntrance == 1 + roomType.PlacementOffset,
+                                Rand.RandSync.Server);
+                            if (selectedShape != null)
+                            {
+                                selectedShape.RoomType = roomType;
+                            }
+                            break;
+                        }
+                    case RuinRoom.RoomPlacement.LastRoom:
+                        {
+                            var selectedShape = shapes.GetRandom(s =>
+                                s is BTRoom && s.DistanceFromEntrance == maxDistanceFromEntrance + roomType.PlacementOffset,
+                                Rand.RandSync.Server);
+                            if (selectedShape != null)
+                            {
+                                selectedShape.RoomType = roomType;
+                            }
+                            break;
+                        }
                 }
-                //rooms further from the entrance are more likely to have hard-to-break walls
-                else if (Rand.Range(0.0f, leaf.DistanceFromEntrance, Rand.RandSync.Server) > 1.5f)
-                {
-                    wallType = RuinEntityType.HeavyWall;
-                }
+            }
 
+            //go through the unassigned rooms
+            foreach (RuinShape room in shapes)
+            {
+                if (room.RoomType == null)
+                {
+                    room.RoomType = generationParams.RoomTypeList.GetRandom(rt =>
+                        rt.IsCorridor == room is Corridor &&
+                        rt.Placement == RuinRoom.RoomPlacement.Any,
+                        Rand.RandSync.Server);
+
+                    if (room.RoomType == null)
+                    {
+                        DebugConsole.ThrowError("Could not find a suitable room type for a room (is corridor: " + (room is Corridor) + ")");
+                    }
+                }
+            }
+
+            foreach (RuinShape room in shapes)
+            {
+                if (room.RoomType == null) continue;
                 //generate walls  --------------------------------------------------------------
-                foreach (Line wall in leaf.Walls)
+                foreach (Line wall in room.Walls)
                 {
-                    var ruinEntityConfig = generationParams.GetRandomEntity(wallType, leaf.GetLineAlignment(wall), roomType);
+                    var ruinEntityConfig = room.RoomType.GetRandomEntity(RuinEntityType.Wall, room.GetLineAlignment(wall));
                     if (ruinEntityConfig == null) continue;
 
                     float radius = (wall.A.X == wall.B.X) ?
@@ -359,30 +394,72 @@ namespace Barotrauma.RuinGeneration
                         ShouldBeSaved = false
                     };
                     structure.SetCollisionCategory(Physics.CollisionLevel);
+                    CreateChildEntities(ruinEntityConfig, structure, room);
                 }
 
                 //generate backgrounds --------------------------------------------------------------
-                var background = generationParams.GetRandomEntity(RuinEntityType.Back, Alignment.Center, roomType);
-                if (background == null) continue;
-
-                Rectangle backgroundRect = new Rectangle(leaf.Rect.X, leaf.Rect.Y + leaf.Rect.Height, leaf.Rect.Width, leaf.Rect.Height);
-
-                new Structure(backgroundRect, (background.Prefab as StructurePrefab), null)
+                var background = room.RoomType.GetRandomEntity(RuinEntityType.Back, Alignment.Center);
+                if (background != null)
                 {
-                    ShouldBeSaved = false
-                };
+                    Rectangle backgroundRect = new Rectangle(room.Rect.X, room.Rect.Y + room.Rect.Height, room.Rect.Width, room.Rect.Height);
+                    var backgroundStructure = new Structure(backgroundRect, (background.Prefab as StructurePrefab), null)
+                    {
+                        ShouldBeSaved = false
+                    };
+                    CreateChildEntities(background, backgroundStructure, room);
+                }
 
                 var submarineBlocker = BodyFactory.CreateRectangle(GameMain.World,
-                    ConvertUnits.ToSimUnits(leaf.Rect.Width),
-                    ConvertUnits.ToSimUnits(leaf.Rect.Height),
-                    1, ConvertUnits.ToSimUnits(leaf.Center));
+                    ConvertUnits.ToSimUnits(room.Rect.Width),
+                    ConvertUnits.ToSimUnits(room.Rect.Height),
+                    1, ConvertUnits.ToSimUnits(room.Center));
 
                 submarineBlocker.IsStatic = true;
                 submarineBlocker.CollisionCategories = Physics.CollisionWall;
                 submarineBlocker.CollidesWith = Physics.CollisionWall;
+
+                //generate doors --------------------------------------------------------------
+                if (room is Corridor corridor)
+                {
+                    var doorConfig = room.RoomType.GetRandomEntity(corridor.IsHorizontal ? RuinEntityType.Door : RuinEntityType.Hatch, Alignment.Center);
+                    if (corridor != null)
+                    {
+                        //find all walls that are parallel to the corridor
+                        var suitableWalls = corridor.IsHorizontal ?
+                            corridor.Walls.FindAll(c => c.A.Y == c.B.Y) : corridor.Walls.FindAll(c => c.A.X == c.B.X);
+
+                        if (suitableWalls.Any())
+                        {
+                            //choose a random wall to place the door next to
+                            Vector2 doorPos = corridor.Center;
+                            var wall = suitableWalls[Rand.Int(suitableWalls.Count, Rand.RandSync.Server)];
+                            if (corridor.IsHorizontal)
+                            {
+                                doorPos.X = (wall.A.X + wall.B.X) / 2.0f;
+                            }
+                            else
+                            {
+                                doorPos.Y = (wall.A.Y + wall.B.Y) / 2.0f;
+                            }
+                            var door = new Item(doorConfig.Prefab as ItemPrefab, doorPos, null)
+                            {
+                                ShouldBeSaved = false
+                            };
+                            CreateChildEntities(doorConfig, door, corridor);
+                            door.GetComponent<Items.Components.Door>().IsOpen = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < 0.8f;
+                        }
+                    }
+                }
+
+                //generate props --------------------------------------------------------------
+                var props = room.RoomType.GetPropList();
+                foreach (RuinEntityConfig prop in props)
+                {
+                    CreateEntity(prop, room);
+                }
             }
 
-            List<RuinShape> doorlessRooms = new List<RuinShape>(shapes);
+            /*List<RuinShape> doorlessRooms = new List<RuinShape>(shapes);
 
             //generate doors & hatches -------------------------------------------------------------
 
@@ -442,12 +519,12 @@ namespace Barotrauma.RuinGeneration
                 if (!doorlessRooms.Contains(room) && prop.Alignment.HasFlag(Alignment.Center)) continue;
 
                 CreateEntity(prop, room);
-            }
+            }*/
 
             return shapes;
         }
 
-        private RuinEntityConfig.RoomType GetRoomType(RuinShape room, int maxDistanceFromEntrance)
+        /*private RuinEntityConfig.RoomType GetRoomType(RuinShape room, int maxDistanceFromEntrance)
         {
             RuinEntityConfig.RoomType roomType = RuinEntityConfig.RoomType.Any;
             if (room.DistanceFromEntrance <= 1)
@@ -459,7 +536,7 @@ namespace Barotrauma.RuinGeneration
                 roomType = RuinEntityConfig.RoomType.LastRoom;
             }
             return roomType;
-        }
+        }*/
 
         private MapEntity CreateEntity(RuinEntityConfig entityConfig, RuinShape room)
         {
@@ -515,10 +592,10 @@ namespace Barotrauma.RuinGeneration
 
         private void CreateChildEntities(RuinEntityConfig parentEntityConfig, MapEntity parentEntity, RuinShape room)
         {
-            foreach (RuinEntityConfig childEntity in parentEntityConfig.ChildEntities)
+            /*foreach (RuinEntityConfig childEntity in parentEntityConfig.ChildEntities)
             {
                 MapEntity createdEntity = null;
-                switch (childEntity.RoomPlacement)
+                switch (childEntity.Placement)
                 {
                     case RuinEntityConfig.RoomType.SameRoom:
                         createdEntity = CreateEntity(childEntity, room);
@@ -601,7 +678,7 @@ namespace Barotrauma.RuinGeneration
                         wire.Connect(conn2, true);
                     }
                 }
-            }
+            }*/
         }
     }
 }

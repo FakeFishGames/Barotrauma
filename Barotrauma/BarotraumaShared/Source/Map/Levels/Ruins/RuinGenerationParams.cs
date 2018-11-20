@@ -10,7 +10,7 @@ namespace Barotrauma.RuinGeneration
     [Flags]
     enum RuinEntityType
     {
-        Wall = 1, CorridorWall = 2, Prop = 4, Back = 8, Door = 16, Hatch = 32, HeavyWall = 64
+        Wall, Back, Door, Hatch, Prop
     }
 
     class RuinGenerationParams : ISerializableEntity
@@ -31,8 +31,8 @@ namespace Barotrauma.RuinGeneration
 
         private string filePath;
 
-        private List<RuinEntityConfig> entityList;
-        
+        private List<RuinRoom> roomTypeList;
+                
         public string Name => "RuinGenerationParams";
 
         [Serialize(3, false), Editable(MinValueInt = 1, MaxValueInt = 10, ToolTip = "The ruin generation algorithm \"splits\" the ruin area into two, splits these areas again, repeats this for some number of times and creates a room at each of the final split areas. This is value determines the minimum number of times the split is done.")]
@@ -89,15 +89,20 @@ namespace Barotrauma.RuinGeneration
             private set;
         } = new Dictionary<string, SerializableProperty>();
 
+        public IEnumerable<RuinRoom> RoomTypeList
+        {
+            get { return roomTypeList; }
+        }
+
         private RuinGenerationParams(XElement element)
         {
-            entityList = new List<RuinEntityConfig>();
+            roomTypeList = new List<RuinRoom>();
 
             if (element != null)
-            {
+            {                
                 foreach (XElement subElement in element.Elements())
                 {
-                    entityList.Add(new RuinEntityConfig(subElement));
+                    roomTypeList.Add(new RuinRoom(subElement));
                 }
             }
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
@@ -116,12 +121,12 @@ namespace Barotrauma.RuinGeneration
             return paramsList[Rand.Int(paramsList.Count, Rand.RandSync.Server)];
         }
 
-        public RuinEntityConfig GetRandomEntity(RuinEntityType type, Alignment alignment, RuinEntityConfig.RoomType roomType = RuinEntityConfig.RoomType.Any)
+        /*public RuinEntityConfig GetRandomRoom(RuinEntityType type, Alignment alignment, RuinRoom ruinRoom)
         {
-            var matchingEntities = entityList.FindAll(rs => 
-                rs.Type.HasFlag(type) && 
-                rs.Alignment.HasFlag(alignment) && 
-                (roomType == RuinEntityConfig.RoomType.Any || rs.RoomPlacement == RuinEntityConfig.RoomType.Any || rs.RoomPlacement.HasFlag(roomType)));
+            var matchingEntities = entityList.FindAll(rs =>
+                rs.Type.HasFlag(type) &&
+                rs.Alignment.HasFlag(alignment));// && 
+                //(roomType == RuinEntityConfig.RoomType.Any || rs.Placement == RuinEntityConfig.RoomType.Any || rs.Placement.HasFlag(roomType)));
 
             if (!matchingEntities.Any()) return null;
 
@@ -129,7 +134,7 @@ namespace Barotrauma.RuinGeneration
                 matchingEntities,
                 matchingEntities.Select(s => s.Commonness).ToList(),
                 Rand.RandSync.Server);
-        }
+        }*/
 
         private static void LoadAll()
         {
@@ -175,6 +180,89 @@ namespace Barotrauma.RuinGeneration
         }
     }
 
+    class RuinRoom : ISerializableEntity
+    {
+        public enum RoomPlacement
+        {
+            Any,
+            FirstRoom,
+            LastRoom
+        }
+
+        public string Name
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(1.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
+        public float Commonness { get; private set; }
+
+        public Dictionary<string, SerializableProperty> SerializableProperties
+        {
+            get;
+            private set;
+        } = new Dictionary<string, SerializableProperty>();
+        
+        [Serialize(RoomPlacement.Any, false), Editable()]
+        public RoomPlacement Placement
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0, false), Editable()]
+        public int PlacementOffset
+        {
+            get;
+            set;
+        }
+
+        [Serialize(false, false), Editable()]
+        public bool IsCorridor
+        {
+            get;
+            set;
+        }
+
+        private List<RuinEntityConfig> entityList = new List<RuinEntityConfig>();
+
+        public RuinRoom(XElement element)
+        {
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+
+            Name = element.GetAttributeString("name", "");
+
+            if (element != null)
+            {
+                foreach (XElement subElement in element.Elements())
+                {
+                    entityList.Add(new RuinEntityConfig(subElement));
+                }
+            }
+        }
+
+        public RuinEntityConfig GetRandomEntity(RuinEntityType type, Alignment alignment)
+        {
+            var matchingEntities = entityList.FindAll(rs =>
+                rs.Type == type &&
+                rs.Alignment.HasFlag(alignment));
+
+            if (!matchingEntities.Any()) return null;
+
+            return ToolBox.SelectWeightedRandom(
+                matchingEntities,
+                matchingEntities.Select(s => s.Commonness).ToList(),
+                Rand.RandSync.Server);
+        }
+
+        public List<RuinEntityConfig> GetPropList()
+        {
+            var matchingEntities = entityList.FindAll(rs => rs.Type == RuinEntityType.Prop);
+            return matchingEntities;
+        }
+    }
+
     class RuinEntityConfig : ISerializableEntity
     {
         public readonly MapEntityPrefab Prefab;
@@ -187,10 +275,7 @@ namespace Barotrauma.RuinGeneration
 
         [Serialize(1.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
         public float Commonness { get; private set; }
-
-        [Serialize(RoomType.Any, false), Editable]
-        public RoomType RoomPlacement { get; private set; }
-
+        
         [Serialize(false, false), Editable]
         public bool LinkToParent { get; private set; }
 
@@ -214,16 +299,6 @@ namespace Barotrauma.RuinGeneration
             private set;
         } = new Dictionary<string, SerializableProperty>();
         
-        public enum RoomType
-        {
-            Any = 0,
-            SameRoom = 1,
-            PreviousRoom = 2,
-            NextRoom = 4,
-            FirstRoom = 8,
-            LastRoom = 16
-        }
-
         public RuinEntityConfig(XElement element)
         {
             string name = element.GetAttributeString("prefab", "");

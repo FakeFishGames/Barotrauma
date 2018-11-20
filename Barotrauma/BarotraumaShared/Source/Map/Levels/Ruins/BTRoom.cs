@@ -78,13 +78,13 @@ namespace Barotrauma.RuinGeneration
 
         public override void CreateWalls()
         {
-            Walls = new List<Line>();
-
-            Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.Right, Rect.Y), RuinEntityType.Wall));
-            Walls.Add(new Line(new Vector2(Rect.X, Rect.Bottom), new Vector2(Rect.Right, Rect.Bottom), RuinEntityType.Wall));
-
-            Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.X, Rect.Bottom), RuinEntityType.Wall));
-            Walls.Add(new Line(new Vector2(Rect.Right, Rect.Y), new Vector2(Rect.Right, Rect.Bottom), RuinEntityType.Wall));
+            Walls = new List<Line>
+            {
+                new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.Right, Rect.Y)),
+                new Line(new Vector2(Rect.X, Rect.Bottom), new Vector2(Rect.Right, Rect.Bottom)),
+                new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.X, Rect.Bottom)),
+                new Line(new Vector2(Rect.Right, Rect.Y), new Vector2(Rect.Right, Rect.Bottom))
+            };
         }
 
         public void Scale(Vector2 scale)
