@@ -7,11 +7,10 @@ using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.NetworkInformation;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Barotrauma
 {
@@ -24,7 +23,7 @@ namespace Barotrauma
 
         private GUIListBox serverList;
 
-        private GUIButton joinButton, directJoinButton;
+        private GUIButton joinButton;
 
         private GUITextBox clientNameBox, ipBox;
 
@@ -72,12 +71,12 @@ namespace Barotrauma
             {
                 Text = GameMain.Config.DefaultPlayerName
             };
-            clientNameBox.OnTextChanged += SelectServer;
+            clientNameBox.OnTextChanged += RefreshJoinButtonState;
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("ServerIP"));
             // TODO: Show IP on server info window
             ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.045f), leftColumn.RectTransform), "");
-            ipBox.OnTextChanged += ManualConnectServer;
+            ipBox.OnTextChanged += RefreshJoinButtonState;
             ipBox.OnSelected += (sender, key) => 
             {
                 if (sender.UserData is ServerInfo)
@@ -191,7 +190,7 @@ namespace Barotrauma
             }
         }
 
-        private bool ManualConnectServer(GUIComponent component, object obj)
+        private bool RefreshJoinButtonState(GUIComponent component, object obj)
         {
             if (obj == null || waitingForRefresh) return false;
 
@@ -201,7 +200,7 @@ namespace Barotrauma
             }
             else
             {
-                clientNameBox.Flash();
+                if (string.IsNullOrWhiteSpace(clientNameBox.Text)) { clientNameBox.Flash(); }
                 joinButton.Enabled = false;
             }
 
@@ -683,7 +682,7 @@ namespace Barotrauma
                     }
                     catch (PingException ex)
                     {
-                        DebugConsole.NewMessage("Failed to ping a server - " + ex.Message, Color.Red);
+                        DebugConsole.NewMessage("Failed to ping a server (" + serverInfo.ServerName + ", " + serverInfo.IP + ") - " + ex.Message, Color.Red);
                     }
                 }
             }
