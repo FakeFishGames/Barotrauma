@@ -24,6 +24,7 @@ namespace Barotrauma
         private GUIScrollBar zoomBar;
         private string xmlPath;
         private List<Sprite> selectedSprites = new List<Sprite>();
+        private List<Sprite> dirtySprites = new List<Sprite>();
         private Texture2D selectedTexture;
         private Rectangle textureRect;
         private float zoom = 1;
@@ -271,12 +272,14 @@ namespace Barotrauma
                         else
                         {
                             selectedSprites.Add(sprite);
+                            dirtySprites.Add(sprite);
                         }
                     }
                     else
                     {
                         selectedSprites.Clear();
                         selectedSprites.Add(sprite);
+                        dirtySprites.Add(sprite);
                     }
                     if (selectedTexture != sprite.Texture)
                     {
@@ -492,8 +495,6 @@ namespace Barotrauma
 
             GUI.Draw(Cam, spriteBatch);
 
-            //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 100, 0), "widgets: " + widgets.Count, Color.LightGreen);
-            //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 100, 20), "sprites: " + spriteCount, Color.LightGreen);
             spriteCount = 0;
 
             spriteBatch.End();
@@ -513,6 +514,20 @@ namespace Barotrauma
             loadedSprites.ForEach(s => s.Remove());
             loadedSprites.Clear();
             ResetWidgets();
+            // Automatically reload all sprites that have been selected at least once (and thus might have been edited)
+            var reloadedSprites = new List<Sprite>();
+            foreach (var sprite in dirtySprites)
+            {
+                foreach (var s in Sprite.LoadedSprites)
+                {
+                    if (s.Texture == sprite.Texture && !reloadedSprites.Contains(s))
+                    {
+                        s.ReloadXML();
+                        reloadedSprites.Add(s);
+                    }
+                }
+            }
+            dirtySprites.Clear();
         }
 
         public void SelectSprite(Sprite sprite)
