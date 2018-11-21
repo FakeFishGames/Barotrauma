@@ -843,7 +843,7 @@ namespace Barotrauma
                 //far from an ideal solution, but monsters getting lodged inside the sub seems to be 
                 //pretty rare during normal gameplay (requires abnormally high velocities), so I think
                 //this is preferable to the cost of using continuous collision detection for the character collider
-                if (newHull != null)
+                if (newHull?.Submarine != null)
                 {
                     Vector2 hullDiff = WorldPosition - newHull.WorldPosition;
                     Vector2 moveDir = hullDiff.LengthSquared() < 0.001f ? Vector2.UnitY : Vector2.Normalize(hullDiff);
