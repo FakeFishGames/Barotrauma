@@ -326,6 +326,9 @@ namespace Barotrauma.RuinGeneration
         [Serialize(RuinEntityType.Prop, false), Editable]
         public RuinEntityType Type { get; private set; }
 
+        [Serialize(false, false), Editable]
+        public bool Expand { get; private set; }
+
         [Serialize(RelativePlacement.SameRoom, false), Editable]
         public RelativePlacement PlacementRelativeToParent { get; private set; }
 
