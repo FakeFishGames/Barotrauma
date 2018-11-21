@@ -110,7 +110,7 @@ namespace Barotrauma.Particles
             
             velocity = MathUtils.IsValid(speed) ? speed : Vector2.Zero;
 
-            if (currentHull != null && currentHull.Submarine != null)
+            if (currentHull?.Submarine != null)
             {
                 velocity += ConvertUnits.ToDisplayUnits(currentHull.Submarine.Velocity);
             }

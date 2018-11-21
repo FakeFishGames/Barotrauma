@@ -349,7 +349,7 @@ namespace Barotrauma
             rect.X += (int)amount.X;
             rect.Y += (int)amount.Y;
 
-            if (Submarine==null || !Submarine.Loading)
+            if (Submarine == null || !Submarine.Loading)
             {
                 Item.UpdateHulls();
                 Gap.UpdateHulls();
@@ -783,13 +783,13 @@ namespace Barotrauma
         {
             if (other == this) return true;
 
-            if (other != null && other.Submarine==Submarine)
+            if (other != null && other.Submarine == Submarine)
             {
                 bool retVal = false;
                 foreach (Gap g in ConnectedGaps)
                 {
                     if (g.ConnectedWall != null && g.ConnectedWall.CastShadow) continue;
-                    List<Hull> otherHulls = Hull.hullList.FindAll(h => h.ConnectedGaps.Contains(g) && h!=this);
+                    List<Hull> otherHulls = hullList.FindAll(h => h.ConnectedGaps.Contains(g) && h != this);
                     retVal = otherHulls.Any(h => h == other);
                     if (!retVal && allowIndirect) retVal = otherHulls.Any(h => h.CanSeeOther(other, false));
                     if (retVal) return true;
@@ -799,9 +799,9 @@ namespace Barotrauma
             {
                 foreach (Gap g in ConnectedGaps)
                 {
-                    if (g.ConnectedDoor != null && !hullList.Any(h => h.ConnectedGaps.Contains(g) && h!=this)) return true;
+                    if (g.ConnectedDoor != null && !hullList.Any(h => h.ConnectedGaps.Contains(g) && h != this)) return true;
                 }
-                List<MapEntity> structures = MapEntity.mapEntityList.FindAll(me => me is Structure && me.Rect.Intersects(Rect));
+                List<MapEntity> structures = mapEntityList.FindAll(me => me is Structure && me.Rect.Intersects(Rect));
                 return structures.Any(st => !(st as Structure).CastShadow);
             }
             return false;
@@ -901,7 +901,9 @@ namespace Barotrauma
                         rect.Y - rect.Height + (rect.Height * pos.Y));
                     size = size * rect.Width;
                     
-                    var newFire = i < fireSources.Count ? fireSources[i] : new FireSource(pos + Submarine.Position, null, true);
+                    var newFire = i < fireSources.Count ? 
+                        fireSources[i] : 
+                        new FireSource(Submarine == null ? pos : pos + Submarine.Position, null, true);
                     newFire.Position = pos;
                     newFire.Size = new Vector2(size, newFire.Size.Y);
 
@@ -946,8 +948,15 @@ namespace Barotrauma
 
         public override XElement Save(XElement parentElement)
         {
-            XElement element = new XElement("Hull");
+            if (Submarine == null)
+            {
+                string errorMsg = "Error - tried to save a hull that's not a part of any submarine.\n" + Environment.StackTrace;
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Hull.Save:WorldHull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return null;
+            }
 
+            XElement element = new XElement("Hull");
             element.Add
             (
                 new XAttribute("ID", ID),
