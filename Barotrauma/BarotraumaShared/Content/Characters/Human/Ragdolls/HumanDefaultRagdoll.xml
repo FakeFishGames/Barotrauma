@@ -8,11 +8,11 @@
   </limb>
   <!-- body -->
   <limb id="1" radius="14" height="21" mass="20" type="Torso" attackpriority="3" healthindex="1" name="Limb 1" flip="True" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Human/NewHuman_mTorso.png" sourcerect="10,32,113,264" depth="0.06" origin="0.43,0.36" />
+    <sprite texture="Content/Characters/Human/NewHuman_mTorso.png" sourcerect="0,38,118,213" depth="0.06" origin="0.5709323,0.3994389" />
     <damagedsprite texture="Content/Characters/Human/damagedtorso.png" sourcerect="0,0,29,58" origin="0.5,0.6" depth="0" />
   </limb>
   <limb id="12" radius="13" mass="20" type="Waist" healthindex="1" name="Limb 12" flip="True" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Human/NewHuman_mLegs_TEMP.png" sourcerect="24,0,116,130" depth="0.11" origin="0.42,0.51" />
+    <sprite texture="Content/Characters/Human/NewHuman_mLegs_TEMP.png" sourcerect="24,0,116,130" depth="0.11" origin="0.3942117,0.3940344" />
     <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="0,0,32,29" origin="0.5,0.5" depth="0" />
   </limb>
   <!-- left arm -->
@@ -43,7 +43,7 @@
     <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="32,0,22,50" origin="0.5,0.5" depth="0" />
   </limb>
   <limb id="8" radius="5" height="13" mass="2" type="LeftFoot" flip="True" pullpos="-5,0" healthindex="4" name="Limb 8" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Human/NewHuman_mLegs_TEMP.png" sourcerect="155,17,60,90" depth="0.14" origin="0.5,0.5" />
+    <sprite texture="Content/Characters/Human/NewHuman_mLegs_TEMP.png" sourcerect="155,17,60,90" depth="0.17" origin="0.5,0.5" />
     <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="35,53,16,25" origin="0.5,0.5" depth="0" />
     <sound tag="footstep_metal" />
   </limb>
@@ -57,25 +57,25 @@
     <damagedsprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="32,0,22,50" origin="0.5,0.5" depth="0" />
   </limb>
   <limb id="11" radius="5" height="13" mass="2" type="RightFoot" flip="True" pullpos="-5,0" healthindex="5" name="Limb 11" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Human/NewHuman_mLegs_TEMP.png" sourcerect="155,17,60,90" origin="0.5,0.5" depth="0" />
+    <sprite texture="Content/Characters/Human/NewHuman_mLegs_TEMP.png" sourcerect="155,17,60,90" origin="0.5,0.5" depth="0.14" />
     <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="35,53,16,25" origin="0.5,0.5" depth="0" />
     <sound tag="footstep_metal" />
   </limb>
   <!-- head to body -->
-  <joint limb1="0" limb1anchor="-7.70437,-10.45948" limb2="1" limb2anchor="-2.28274,26.06059" lowerlimit="-90" upperlimit="45" canbesevered="True" name="Joint 0 - 1" limitenabled="True" />
-  <joint limb1="1" limb1anchor="2.153207,-16.98471" limb2="12" limb2anchor="0.6090248,7.371603" lowerlimit="-10" upperlimit="10" canbesevered="False" name="Joint 1 - 12" limitenabled="True" />
+  <joint limb1="0" limb1anchor="-4.924872,-11.69676" limb2="1" limb2anchor="-3.147434,25.30401" lowerlimit="-90" upperlimit="45" canbesevered="True" name="Joint 0 - 1" limitenabled="True" />
+  <joint limb1="1" limb1anchor="-1.660346,-19.45286" limb2="12" limb2anchor="0.779992,8.406446" lowerlimit="-17.57775" upperlimit="48.46047" canbesevered="False" name="Joint 1 - 12" limitenabled="True" />
   <!-- body to left arm -->
-  <joint limb1="1" limb1anchor="2.852064,11.14376" limb2="2" limb2anchor="-0.4272656,17.3313" limitenabled="False" name="Joint 1 - 2" canbesevered="True" upperlimit="0" lowerlimit="0" />
-  <joint limb1="2" limb1anchor="2.521125,-12.08422" limb2="3" limb2anchor="0.7955505,11.0343" lowerlimit="5" upperlimit="170" canbesevered="True" name="Joint 2 - 3" limitenabled="True" />
+  <joint limb1="1" limb1anchor="-0.2385139,12.38297" limb2="2" limb2anchor="-0.4272656,17.3313" limitenabled="False" name="Joint 1 - 2" canbesevered="True" upperlimit="0" lowerlimit="0" />
+  <joint limb1="2" limb1anchor="3.134372,-11.80684" limb2="3" limb2anchor="0.8112237,10.73602" lowerlimit="5" upperlimit="170" canbesevered="True" name="Joint 2 - 3" limitenabled="True" />
   <!-- body to right arm -->
-  <joint limb1="1" limb1anchor="-9.732387,12.87704" limb2="4" limb2anchor="-0.4272656,17.3313" limitenabled="False" name="Joint 1 - 4" canbesevered="True" upperlimit="0" lowerlimit="0" />
-  <joint limb1="4" limb1anchor="2.521125,-12.08422" limb2="5" limb2anchor="0.7955505,11.0343" lowerlimit="5" upperlimit="170" canbesevered="True" name="Joint 4 - 5" limitenabled="True" />
+  <joint limb1="1" limb1anchor="-11.94751,11.37278" limb2="4" limb2anchor="-0.4272656,17.3313" limitenabled="False" name="Joint 1 - 4" canbesevered="True" upperlimit="0" lowerlimit="0" />
+  <joint limb1="4" limb1anchor="3.134372,-11.80684" limb2="5" limb2anchor="0.8112237,10.73602" lowerlimit="5" upperlimit="170" canbesevered="True" name="Joint 4 - 5" limitenabled="True" />
   <!-- body to left leg -->
-  <joint limb1="12" limb1anchor="2.037219,-7.330195" limb2="6" limb2anchor="-2.573865,19.48612" lowerlimit="-30" upperlimit="120" canbesevered="True" name="Joint 12 - 6" limitenabled="True" />
-  <joint limb1="6" limb1anchor="-0.2284773,-16.56124" limb2="7" limb2anchor="2.505955,20.17117" lowerlimit="-120" upperlimit="0" canbesevered="True" name="Joint 6 - 7" limitenabled="True" />
+  <joint limb1="12" limb1anchor="1.803198,-6.885391" limb2="6" limb2anchor="-0.8503575,18.79904" lowerlimit="-30" upperlimit="107.245" canbesevered="True" name="Joint 12 - 6" limitenabled="True" />
+  <joint limb1="6" limb1anchor="-2.659554,-16.87968" limb2="7" limb2anchor="0.1114249,13.57194" lowerlimit="-120" upperlimit="0" canbesevered="True" name="Joint 6 - 7" limitenabled="True" />
   <joint limb1="7" limb1anchor="-0.2701069,-15.89246" limb2="8" limb2anchor="3.114142,6.030468" lowerlimit="20" upperlimit="90" canbesevered="True" name="Joint 7 - 8" limitenabled="True" />
   <!-- body to right leg -->
-  <joint limb1="12" limb1anchor="2.178576,-7.134206" limb2="9" limb2anchor="-2.573865,19.48612" lowerlimit="-30" upperlimit="120" canbesevered="True" name="Joint 12 - 9" limitenabled="True" />
-  <joint limb1="9" limb1anchor="-0.2284773,-16.56124" limb2="10" limb2anchor="2.505955,20.17117" lowerlimit="-120" upperlimit="0" canbesevered="True" name="Joint 9 - 10" limitenabled="True" />
+  <joint limb1="12" limb1anchor="0.6738557,-6.158801" limb2="9" limb2anchor="-0.8503575,18.79904" lowerlimit="-30" upperlimit="120" canbesevered="True" name="Joint 12 - 9" limitenabled="True" />
+  <joint limb1="9" limb1anchor="-2.659554,-16.87968" limb2="10" limb2anchor="0.1114249,13.57194" lowerlimit="-120" upperlimit="0" canbesevered="True" name="Joint 9 - 10" limitenabled="True" />
   <joint limb1="10" limb1anchor="-0.2701069,-15.89246" limb2="11" limb2anchor="3.114142,6.030468" lowerlimit="20" upperlimit="90" canbesevered="True" name="Joint 10 - 11" limitenabled="True" />
 </Ragdoll>
