@@ -361,7 +361,7 @@ namespace Barotrauma.Particles
         {
             Rectangle prevHullRect = prevHull.WorldRect;
 
-            Vector2 subVel = ConvertUnits.ToDisplayUnits(prevHull.Submarine.Velocity);
+            Vector2 subVel = prevHull?.Submarine != null ? ConvertUnits.ToDisplayUnits(prevHull.Submarine.Velocity) : Vector2.Zero;
             velocity -= subVel;
 
             if (Math.Abs(collisionNormal.X) > Math.Abs(collisionNormal.Y))

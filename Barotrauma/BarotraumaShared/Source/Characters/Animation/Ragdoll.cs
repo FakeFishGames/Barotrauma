@@ -962,7 +962,7 @@ namespace Barotrauma
 
         private void UpdateCollisionCategories()
         {
-            Category wall = currentHull == null ? 
+            Category wall = currentHull?.Submarine == null ? 
                 Physics.CollisionLevel | Physics.CollisionWall 
                 : Physics.CollisionWall;
 

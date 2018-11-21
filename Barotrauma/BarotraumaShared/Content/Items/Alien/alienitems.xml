@@ -358,8 +358,8 @@
     </ItemContainer>
     <Turret canbeselected="false" characterusable="false" linkable="true" barrelpos="128,88" rotationlimits="0,360" powerconsumption="100.0" 
             showchargeindicator="true" showprojectileindicator="true" recoildistance="50" 
-            reload="0.25" springstiffnesslowskill="2" springstiffnesshighskill="50" springdampinglowskill="0.5" 
-            springdampinghighskill="10" rotationspeedlowskill="1" rotationspeedhighskill="8">
+            reload="0.5" springstiffnesslowskill="2" springstiffnesshighskill="2" springdampinglowskill="0.5" 
+            springdampinghighskill="0.5" rotationspeedlowskill="1" rotationspeedhighskill="1">
       <sound file="Content/Items/Weapons/coilgun.ogg" range="10000" type="OnUse" />
       <BarrelSprite texture="Content/Items/Weapons/coilgunbarrel.png" origin="0.6, 0.8"/>
       <RailSprite texture="Content/Items/Weapons/coilgunrail.png" origin="0.64, 0.7"/>
@@ -387,18 +387,18 @@
     <Body radius="25" density="10" />
     <Projectile characterusable="false" launchimpulse="20.0">
       <Attack structuredamage="5" severlimbsprobability="0.5">
-        <Affliction identifier="internaldamage" strength="10" />
-        <Affliction identifier="bleeding" strength="0.5" />
+        <Affliction identifier="psychosis" strength="1" />
       </Attack>
       <StatusEffect type="OnActive" target="This">
         <ParticleEmitter particle="blackwaterblood" anglemin="0" anglemax="360" particlespersecond="60" scalemin="1" scalemax="2" />
       </StatusEffect>
       <!-- reduce condition to give the bolt a 5 second lifetime -->
       <StatusEffect type="OnNotContained" target="This" condition="-20" />
-      <StatusEffect type="OnImpact" target="This">
-        <Remove />
-      </StatusEffect>
+      <StatusEffect type="OnImpact" target="This" condition="-100" />
       <StatusEffect type="OnBroken" target="This">
+        <Explosion range="100.0" structuredamage="100" force="20.0">
+          <Affliction identifier="internaldamage" strength="10"/>
+        </Explosion>
         <Remove />
       </StatusEffect>
     </Projectile>

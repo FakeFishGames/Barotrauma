@@ -255,6 +255,9 @@ namespace Barotrauma
         {
             Vector2 submarinePos = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
 
+            //TODO: support rendering hulls that are not part of a submarine
+            if (Submarine == null) return;
+
             if (!renderer.IndoorsVertices.ContainsKey(Submarine))
             {
                 renderer.IndoorsVertices[Submarine] = new VertexPositionColorTexture[WaterRenderer.DefaultIndoorsBufferSize];

@@ -280,13 +280,18 @@ namespace Barotrauma
         {
             return new Hull(MapEntityPrefab.Find(null, "hull"), rect, Submarine);
         }
-        
+
+        public static EntityGrid GenerateEntityGrid(Rectangle worldRect)
+        {
+            var newGrid = new EntityGrid(worldRect, 200.0f);
+            entityGrids.Add(newGrid);
+            return newGrid;
+        }
+
         public static EntityGrid GenerateEntityGrid(Submarine submarine)
         {
             var newGrid = new EntityGrid(submarine, 200.0f);
-
-            entityGrids.Add(newGrid);
-            
+            entityGrids.Add(newGrid);            
             foreach (Hull hull in hullList)
             {
                 if (hull.Submarine == submarine) newGrid.InsertEntity(hull);
@@ -709,7 +714,7 @@ namespace Barotrauma
                 }
 
                 Vector2 transformedPosition = position;
-                if (useWorldCoordinates) transformedPosition -= entityGrid.Submarine.Position;
+                if (useWorldCoordinates && entityGrid.Submarine != null) transformedPosition -= entityGrid.Submarine.Position;
 
                 var entities = entityGrid.GetEntities(transformedPosition);
                 if (entities == null) continue;

@@ -64,6 +64,8 @@ namespace Barotrauma
                     existingEntity.id = id;
                     DebugConsole.Log("The id of " + existingEntity + " is now " + id);
                     DebugConsole.Log("The id of " + this + " is now " + value);
+                    System.Diagnostics.Debug.WriteLine("The id of " + existingEntity + " is now " + id);
+                    System.Diagnostics.Debug.WriteLine("The id of " + this + " is now " + value);
                 }
 
                 id = value;
