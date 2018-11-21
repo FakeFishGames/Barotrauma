@@ -2736,28 +2736,30 @@ namespace Barotrauma
                                 if (joint.BodyA == limb.body.FarseerBody)
                                 {
                                     joint.LocalAnchorA += input;
-                                    TryUpdateJointParam(joint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
+                                    Vector2 transformedValue = ConvertUnits.ToDisplayUnits(joint.LocalAnchorA / RagdollParams.JointScale);
+                                    TryUpdateJointParam(joint, "limb1anchor", transformedValue);
                                     // Snap all selected joints to the first selected
                                     if (copyJointSettings)
                                     {
                                         foreach (var j in selectedJoints)
                                         {
                                             j.LocalAnchorA = joint.LocalAnchorA;
-                                            TryUpdateJointParam(j, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
+                                            TryUpdateJointParam(j, "limb1anchor", transformedValue);
                                         }
                                     }
                                 }
                                 else if (joint.BodyB == limb.body.FarseerBody)
                                 {
                                     joint.LocalAnchorB += input;
-                                    TryUpdateJointParam(joint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
+                                    Vector2 transformedValue = ConvertUnits.ToDisplayUnits(joint.LocalAnchorB / RagdollParams.JointScale);
+                                    TryUpdateJointParam(joint, "limb2anchor", transformedValue);
                                     // Snap all selected joints to the first selected
                                     if (copyJointSettings)
                                     {
                                         foreach (var j in selectedJoints)
                                         {
                                             j.LocalAnchorA = joint.LocalAnchorA;
-                                            TryUpdateJointParam(j, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
+                                            TryUpdateJointParam(j, "limb2anchor", transformedValue);
                                         }
                                     }
                                 }
@@ -2769,12 +2771,12 @@ namespace Barotrauma
                                         if (joint.BodyA == limb.body.FarseerBody && otherJoint.BodyA == otherLimb.body.FarseerBody)
                                         {
                                             otherJoint.LocalAnchorA = joint.LocalAnchorA;
-                                            TryUpdateJointParam(otherJoint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
+                                            TryUpdateJointParam(otherJoint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA / RagdollParams.JointScale));
                                         }
                                         else if (joint.BodyB == limb.body.FarseerBody && otherJoint.BodyB == otherLimb.body.FarseerBody)
                                         {
                                             otherJoint.LocalAnchorB = joint.LocalAnchorB;
-                                            TryUpdateJointParam(otherJoint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
+                                            TryUpdateJointParam(otherJoint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB / RagdollParams.JointScale));
                                         }
                                     });
                                 }
@@ -3127,28 +3129,30 @@ namespace Barotrauma
                         if (joint.BodyA == limb.body.FarseerBody)
                         {
                             joint.LocalAnchorA += input;
-                            TryUpdateJointParam(joint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
+                            Vector2 transformedValue = ConvertUnits.ToDisplayUnits(joint.LocalAnchorA / RagdollParams.JointScale);
+                            TryUpdateJointParam(joint, "limb1anchor", transformedValue);
                             // Snap all selected joints to the first selected
                             if (copyJointSettings)
                             {
                                 foreach (var j in selectedJoints)
                                 {
                                     j.LocalAnchorA = joint.LocalAnchorA;
-                                    TryUpdateJointParam(j, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
+                                    TryUpdateJointParam(j, "limb1anchor", transformedValue);
                                 }
                             }
                         }
                         else if (joint.BodyB == limb.body.FarseerBody)
                         {
                             joint.LocalAnchorB += input;
-                            TryUpdateJointParam(joint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
+                            Vector2 transformedValue = ConvertUnits.ToDisplayUnits(joint.LocalAnchorB / RagdollParams.JointScale);
+                            TryUpdateJointParam(joint, "limb2anchor", transformedValue);
                             // Snap all selected joints to the first selected
                             if (copyJointSettings)
                             {
                                 foreach (var j in selectedJoints)
                                 {
                                     j.LocalAnchorB = joint.LocalAnchorB;
-                                    TryUpdateJointParam(j, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
+                                    TryUpdateJointParam(j, "limb2anchor", transformedValue);
                                 }
                             }
                         }
@@ -3159,12 +3163,12 @@ namespace Barotrauma
                                 if (joint.BodyA == limb.body.FarseerBody && otherJoint.BodyA == otherLimb.body.FarseerBody)
                                 {
                                     otherJoint.LocalAnchorA = joint.LocalAnchorA;
-                                    TryUpdateJointParam(otherJoint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
+                                    TryUpdateJointParam(otherJoint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA / RagdollParams.JointScale));
                                 }
                                 else if (joint.BodyB == limb.body.FarseerBody && otherJoint.BodyB == otherLimb.body.FarseerBody)
                                 {
                                     otherJoint.LocalAnchorB = joint.LocalAnchorB;
-                                    TryUpdateJointParam(otherJoint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
+                                    TryUpdateJointParam(otherJoint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB / RagdollParams.JointScale));
                                 }
                             });
                         }
