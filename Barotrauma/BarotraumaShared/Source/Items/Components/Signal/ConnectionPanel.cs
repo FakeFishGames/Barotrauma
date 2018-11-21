@@ -62,12 +62,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            Vector2 itemPos = item.SimPosition;
-            if (user.Submarine == null)
-            {
-                itemPos = ConvertUnits.ToSimUnits(item.WorldPosition);
-            }
-            user.AnimController.UpdateUseItem(true, itemPos + Vector2.UnitY * (((float)Timing.TotalTime / 10.0f) % 0.1f));
+            user.AnimController.UpdateUseItem(true, item.WorldPosition + new Vector2(0.0f, 100.0f) * (((float)Timing.TotalTime / 10.0f) % 0.1f));
 
             if (user.IsKeyHit(InputType.Aim))
             {

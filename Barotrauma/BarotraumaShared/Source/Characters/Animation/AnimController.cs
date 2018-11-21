@@ -119,7 +119,7 @@ namespace Barotrauma
 
         public virtual void DragCharacter(Character target, float deltaTime) { }
 
-        public virtual void UpdateUseItem(bool allowMovement, Vector2 handPos) { }
+        public virtual void UpdateUseItem(bool allowMovement, Vector2 handWorldPos) { }
 
         public float GetSpeed(AnimationType type)
         {

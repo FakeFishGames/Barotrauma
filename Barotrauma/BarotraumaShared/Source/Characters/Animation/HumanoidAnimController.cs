@@ -1775,7 +1775,7 @@ namespace Barotrauma
             hand?.body.SmoothRotate((ang2 + handAngle * Dir), 100.0f * force * hand.Mass);
         }
 
-        public override void UpdateUseItem(bool allowMovement, Vector2 handPos)
+        public override void UpdateUseItem(bool allowMovement, Vector2 handWorldPos)
         {
             var leftHand = GetLimb(LimbType.LeftHand);
             var rightHand = GetLimb(LimbType.RightHand);
@@ -1786,20 +1786,26 @@ namespace Barotrauma
             if (!allowMovement)
             {
                 TargetMovement = Vector2.Zero;
-                TargetDir = handPos.X > character.SimPosition.X ? Direction.Right : Direction.Left;
-                if (Vector2.Distance(character.SimPosition, handPos) > 1.0f)
+                TargetDir = handWorldPos.X > character.WorldPosition.X ? Direction.Right : Direction.Left;
+                if (Vector2.DistanceSquared(character.WorldPosition, handWorldPos) > 1.0f)
                 {
-                    TargetMovement = Vector2.Normalize(handPos - character.SimPosition);
+                    TargetMovement = Vector2.Normalize(handWorldPos - character.WorldPosition);
                 }
+            }
+
+            Vector2 handSimPos = ConvertUnits.ToSimUnits(handWorldPos);
+            if (character.Submarine != null)
+            {
+                handSimPos -= character.Submarine.SimPosition;
             }
 
             leftHand.Disabled = true;
             leftHand.PullJointEnabled = true;
-            leftHand.PullJointWorldAnchorB = handPos;
+            leftHand.PullJointWorldAnchorB = handSimPos;
 
             rightHand.Disabled = true;
             rightHand.PullJointEnabled = true;
-            rightHand.PullJointWorldAnchorB = handPos;
+            rightHand.PullJointWorldAnchorB = handSimPos;
         }
 
         public override void Flip()

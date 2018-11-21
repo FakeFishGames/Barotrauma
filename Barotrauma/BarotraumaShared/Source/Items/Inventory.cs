@@ -181,6 +181,7 @@ namespace Barotrauma
 
             //swap to InvSlotType.Any if possible
             Inventory otherInventory = item.ParentInventory;
+            bool otherIsEquipped = false;
             int otherIndex = -1;
             for (int i = 0; i < otherInventory.Items.Length; i++)
             {
@@ -191,6 +192,10 @@ namespace Barotrauma
                     {
                         otherIndex = i;
                         break;
+                    }
+                    else
+                    {
+                        otherIsEquipped = true;
                     }
                 }
             }
@@ -207,10 +212,25 @@ namespace Barotrauma
                 if (Items[j] == existingItem) Items[j] = null;
             }
 
-            //if the item in the slot can be moved to the slot of the moved item
-            if (otherInventory.TryPutItem(existingItem, otherIndex, false, false, user, createNetworkEvent) &&
-                TryPutItem(item, index, false, false, user, createNetworkEvent))
+            bool swapSuccessful = false;
+            if (otherIsEquipped)
             {
+                swapSuccessful =
+                    TryPutItem(item, index, false, false, user, createNetworkEvent) && 
+                    otherInventory.TryPutItem(existingItem, otherIndex, false, false, user, createNetworkEvent);
+            }
+            else
+            {
+                swapSuccessful = 
+                    otherInventory.TryPutItem(existingItem, otherIndex, false, false, user, createNetworkEvent) &&
+                    TryPutItem(item, index, false, false, user, createNetworkEvent);
+            }
+
+            //if the item in the slot can be moved to the slot of the moved item
+            if (swapSuccessful)
+            {
+                System.Diagnostics.Debug.Assert(Items[index] == item, "Something when wrong when swapping items, item is not present in the inventory.");
+                System.Diagnostics.Debug.Assert(otherInventory.Items[otherIndex] == existingItem, "Something when wrong when swapping items, item is not present in the other inventory.");
 #if CLIENT
                 if (slots != null)
                 {
@@ -237,9 +257,20 @@ namespace Barotrauma
                     if (otherInventory.Items[j] == existingItem) otherInventory.Items[j] = null;
                 }
 
+                if (otherIsEquipped)
+                {
+                    TryPutItem(existingItem, index, false, false, user, createNetworkEvent);
+                    otherInventory.TryPutItem(item, otherIndex, false, false, user, createNetworkEvent);
+                }
+                else
+                {
+                    otherInventory.TryPutItem(item, otherIndex, false, false, user, createNetworkEvent);
+                    TryPutItem(existingItem, index, false, false, user, createNetworkEvent);
+                }
+
                 //swapping the items failed -> move them back to where they were
-                otherInventory.TryPutItem(item, otherIndex, false, false, user, createNetworkEvent);
-                TryPutItem(existingItem, index, false, false, user, createNetworkEvent);
+                //otherInventory.TryPutItem(item, otherIndex, false, false, user, createNetworkEvent);
+                //TryPutItem(existingItem, index, false, false, user, createNetworkEvent);
 #if CLIENT                
                 if (slots != null)
                 {
@@ -254,19 +285,6 @@ namespace Barotrauma
 #endif
                 return false;
             }
-
-            /*
-                    if (character.HasEquippedItem(existingItem) && existingItem.AllowedSlots.Contains(InvSlotType.Any))
-                    {
-                        for (int i = 0; i < capacity; i++)
-                        {
-                            if (Items[i] == existingItem && SlotTypes[i] != InvSlotType.Any)
-                            {
-                                Items[i] = null;
-                            }
-                        }
-                    }*/
-
         }
 
         protected virtual void CreateNetworkEvent()
@@ -416,6 +434,13 @@ namespace Barotrauma
                         if (!item.CanClientAccess(c)) continue;
                     }
                     TryPutItem(item, i, true, true, c.Character, false);
+                    for (int j = 0; j < capacity; j++)
+                    {
+                        if (Items[j] == item && newItemIDs[j] != item.ID)
+                        {
+                            Items[j] = null;
+                        }
+                    }
                 }
             }
 

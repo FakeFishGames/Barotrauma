@@ -92,6 +92,7 @@ namespace Barotrauma.Items.Components
             {
                 case "signal_in":
                     receivedSignal = signal;
+                    nonContinuousOutputSent = false;
                     break;
                 case "set_output":
                     Output = signal;

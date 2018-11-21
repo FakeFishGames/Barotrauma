@@ -123,19 +123,16 @@ namespace Barotrauma.RuinGeneration
 
         public override void CreateWalls()
         {
-
-
             Walls = new List<Line>();
-
             if (IsHorizontal)
             {
-                Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.Right, Rect.Y), RuinEntityType.CorridorWall));
-                Walls.Add(new Line(new Vector2(Rect.X, Rect.Bottom), new Vector2(Rect.Right, Rect.Bottom), RuinEntityType.CorridorWall));
+                Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.Right, Rect.Y)));
+                Walls.Add(new Line(new Vector2(Rect.X, Rect.Bottom), new Vector2(Rect.Right, Rect.Bottom)));
             }
             else
             {
-                Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.X, Rect.Bottom), RuinEntityType.CorridorWall));
-                Walls.Add(new Line(new Vector2(Rect.Right, Rect.Y), new Vector2(Rect.Right, Rect.Bottom), RuinEntityType.CorridorWall));
+                Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.X, Rect.Bottom)));
+                Walls.Add(new Line(new Vector2(Rect.Right, Rect.Y), new Vector2(Rect.Right, Rect.Bottom)));
             }
         }
 
