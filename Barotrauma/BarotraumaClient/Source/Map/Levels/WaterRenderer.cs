@@ -49,7 +49,7 @@ namespace Barotrauma
         public readonly WaterVertexData IndoorsSurfaceBottomColor = new WaterVertexData(0.2f, 0.1f, 0.9f, 1.0f);
 
         public VertexPositionTexture[] vertices = new VertexPositionTexture[DefaultBufferSize];
-        public Dictionary<Submarine, VertexPositionColorTexture[]> IndoorsVertices = new Dictionary<Submarine, VertexPositionColorTexture[]>();// VertexPositionColorTexture[DefaultBufferSize * 2];
+        public Dictionary<EntityGrid, VertexPositionColorTexture[]> IndoorsVertices = new Dictionary<EntityGrid, VertexPositionColorTexture[]>();// VertexPositionColorTexture[DefaultBufferSize * 2];
 
         public Effect WaterEffect
         {
@@ -59,14 +59,9 @@ namespace Barotrauma
         private BasicEffect basicEffect;
 
         public int PositionInBuffer = 0;
-        public Dictionary<Submarine, int> PositionInIndoorsBuffer = new Dictionary<Submarine, int>();
+        public Dictionary<EntityGrid, int> PositionInIndoorsBuffer = new Dictionary<EntityGrid, int>();
 
-        private Texture2D waterTexture;
-
-        public Texture2D WaterTexture
-        {
-            get { return waterTexture; }
-        }
+        public Texture2D WaterTexture { get; }
 
         public WaterRenderer(GraphicsDevice graphicsDevice, ContentManager content)
         {
@@ -78,8 +73,8 @@ namespace Barotrauma
             WaterEffect = content.Load<Effect>("Effects/watershader_opengl");
 #endif
 
-            waterTexture = TextureLoader.FromFile("Content/Effects/waterbump.png");
-            WaterEffect.Parameters["xWaterBumpMap"].SetValue(waterTexture);
+            WaterTexture = TextureLoader.FromFile("Content/Effects/waterbump.png");
+            WaterEffect.Parameters["xWaterBumpMap"].SetValue(WaterTexture);
             WaterEffect.Parameters["waterColor"].SetValue(waterColor.ToVector4());
 
             if (basicEffect == null)
@@ -160,11 +155,12 @@ namespace Barotrauma
 
             spriteBatch.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, verts, 0, 2);
 
-            foreach (KeyValuePair<Submarine, VertexPositionColorTexture[]> subVerts in IndoorsVertices)
+            foreach (KeyValuePair<EntityGrid, VertexPositionColorTexture[]> subVerts in IndoorsVertices)
             {
                 if (!PositionInIndoorsBuffer.ContainsKey(subVerts.Key) || PositionInIndoorsBuffer[subVerts.Key] == 0) continue;
 
-                offset = WavePos - subVerts.Key.WorldPosition;
+                offset = WavePos;
+                if (subVerts.Key.Submarine != null) { offset -= subVerts.Key.Submarine.WorldPosition; }
                 if (cam != null)
                 {
                     offset += cam.Position - new Vector2(cam.WorldView.Width / 2.0f, -cam.WorldView.Height / 2.0f);
