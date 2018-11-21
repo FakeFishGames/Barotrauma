@@ -323,6 +323,8 @@ namespace Barotrauma.RuinGeneration
 
         private void GenerateRuinEntities(List<VoronoiCell> caveCells, Rectangle ruinArea, bool mirror)
         {
+            var entityGrid = Hull.GenerateEntityGrid(new Rectangle(ruinArea.X, ruinArea.Y + ruinArea.Height, ruinArea.Width, ruinArea.Height));
+
             allShapes = new List<RuinShape>(rooms);
             allShapes.AddRange(corridors);
 
@@ -421,11 +423,14 @@ namespace Barotrauma.RuinGeneration
                     ruinEntities.Add(new RuinEntity(ruinEntityConfig, structure, room));
                 }
 
+                Rectangle backgroundRect = new Rectangle(room.Rect.X, room.Rect.Y + room.Rect.Height, room.Rect.Width, room.Rect.Height);
+                var hull = new Hull(MapEntityPrefab.Find(null, "hull"), backgroundRect, submarine: null);
+                entityGrid.InsertEntity(hull);
+
                 //generate backgrounds --------------------------------------------------------------
                 var backgroundConfig = room.RoomType.GetRandomEntity(RuinEntityType.Back, Alignment.Center);
                 if (backgroundConfig != null)
                 {
-                    Rectangle backgroundRect = new Rectangle(room.Rect.X, room.Rect.Y + room.Rect.Height, room.Rect.Width, room.Rect.Height);
                     var backgroundStructure = new Structure(backgroundRect, (backgroundConfig.Prefab as StructurePrefab), null)
                     {
                         ShouldBeSaved = false

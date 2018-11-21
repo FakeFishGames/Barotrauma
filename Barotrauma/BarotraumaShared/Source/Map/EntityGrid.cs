@@ -27,7 +27,18 @@ namespace Barotrauma
                 submarine.Borders.Height + padding * 2);
             this.Submarine = submarine;
             this.cellSize = cellSize;
+            InitializeGrid();
+        }
 
+        public EntityGrid(Rectangle worldRect, float cellSize)
+        {
+            this.limits = worldRect;
+            this.cellSize = cellSize;
+            InitializeGrid();
+        }
+
+        private void InitializeGrid()
+        {
             entities = new List<MapEntity>[(int)Math.Ceiling(limits.Width / cellSize), (int)Math.Ceiling(limits.Height / cellSize)];
             for (int x = 0; x < entities.GetLength(0); x++)
             {
