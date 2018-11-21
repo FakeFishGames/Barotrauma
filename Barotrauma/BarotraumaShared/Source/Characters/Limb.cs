@@ -135,6 +135,9 @@ namespace Barotrauma
         public float AttackPriority => limbParams.AttackPriority;
         public bool DoesFlip => limbParams.Flip;
         public float SteerForce => limbParams.SteerForce;
+        
+        public Vector2 DebugTargetPos;
+        public Vector2 DebugRefPos;
 
         public bool IsSevered
         {
