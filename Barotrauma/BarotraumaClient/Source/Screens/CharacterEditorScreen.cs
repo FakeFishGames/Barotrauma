@@ -1002,8 +1002,8 @@ namespace Barotrauma
             character.AnimController.Recreate(ragdoll);
             TeleportTo(spawnPosition);
             CreateTextures();
-            ResetParamsEditor();
             ClearWidgets();
+            ResetParamsEditor();
         }
 
         private void TeleportTo(Vector2 position)
@@ -1610,12 +1610,9 @@ namespace Barotrauma
                 else
                 {
                     character.AnimController.ResetRagdoll(forceReload: false);
-                    //ResetParamsEditor();
-                    //ClearWidgets();
+                    ClearWidgets();
+                    ResetParamsEditor();
                 }
-                // These should be unnecessary here, but they are not?
-                ResetParamsEditor();
-                ClearWidgets();
                 CreateCenterPanel();
                 GUI.AddMessage($"Ragdoll reset", Color.WhiteSmoke, font: GUI.Font);
                 return true;
