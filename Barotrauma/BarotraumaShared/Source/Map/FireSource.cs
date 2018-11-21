@@ -84,7 +84,7 @@ namespace Barotrauma
             }
 
 #if CLIENT
-            lightSource = new LightSource(this.position, 50.0f, new Color(1.0f, 0.9f, 0.7f), hull == null ? null : hull.Submarine);
+            lightSource = new LightSource(this.position, 50.0f, new Color(1.0f, 0.9f, 0.7f), hull?.Submarine);
 #endif
 
             size = new Vector2(10.0f, 10.0f);

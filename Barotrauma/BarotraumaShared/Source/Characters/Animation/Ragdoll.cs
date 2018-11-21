@@ -258,7 +258,7 @@ namespace Barotrauma
                 if (value == currentHull) return;
 
                 currentHull = value;
-                Submarine currSubmarine = currentHull == null ? null : currentHull.Submarine;
+                Submarine currSubmarine = currentHull?.Submarine;
                 foreach (Limb limb in Limbs)
                 {
                     limb.body.Submarine = currSubmarine;
@@ -1432,7 +1432,7 @@ namespace Barotrauma
                     if (character.MemState[i].Position.Y > lowestSubPos)
                         character.MemState[i].TransformInToOutside();
                 }
-                else if (currentHull != null)
+                else if (currentHull?.Submarine != null)
                 {
                     //transform outside coordinates to in-sub coordinates
                     if (character.MemState[i].Position.Y < lowestSubPos)
@@ -1539,7 +1539,7 @@ namespace Barotrauma
                             character.MemLocalState[i].TransformInToOutside();
                         }
                     }
-                    else if (currentHull != null)
+                    else if (currentHull?.Submarine != null)
                     {
                         //transform outside coordinates to in-sub coordinates
                         if (character.MemLocalState[i].Position.Y < lowestSubPos)
