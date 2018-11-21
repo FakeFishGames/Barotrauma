@@ -1216,6 +1216,7 @@ namespace Barotrauma
                             if (IgnorePlatforms || (colliderBottomDisplay.Y < platform.Rect.Y - 16 && (targetMovement.Y <= 0.0f || onStairs))) return -1;
                             break;
                         case Physics.CollisionWall:
+                        case Physics.CollisionLevel:
                             break;
                         default:
                             return -1;
@@ -1298,6 +1299,7 @@ namespace Barotrauma
                         if (IgnorePlatforms || lowestLimb.Position.Y < platform.Rect.Y) return -1;
                         break;
                     case Physics.CollisionWall:
+                    case Physics.CollisionLevel:
                         break;
                     default:
                         return -1;

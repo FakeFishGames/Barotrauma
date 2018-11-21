@@ -6,13 +6,32 @@ namespace Barotrauma
 {
     class EntityGrid
     {
+        private List<MapEntity> allEntities;
         private List<MapEntity>[,] entities;
 
-        private Rectangle limits;
+        private readonly Rectangle limits;
 
-        private float cellSize;
+        private readonly float cellSize;
 
         public readonly Submarine Submarine;
+
+        public Rectangle WorldRect
+        {
+            get
+            {
+                if (Submarine == null)
+                {
+                    return limits;
+                }
+                else
+                {
+                    return new Rectangle(
+                        (int)(limits.X + Submarine.WorldPosition.X),
+                        (int)(limits.Y + Submarine.WorldPosition.Y), 
+                        limits.Width, limits.Height);
+                }
+            }
+        }
 
         public EntityGrid(Submarine submarine, float cellSize)
         {
@@ -39,6 +58,7 @@ namespace Barotrauma
 
         private void InitializeGrid()
         {
+            allEntities = new List<MapEntity>();
             entities = new List<MapEntity>[(int)Math.Ceiling(limits.Width / cellSize), (int)Math.Ceiling(limits.Height / cellSize)];
             for (int x = 0; x < entities.GetLength(0); x++)
             {
@@ -62,13 +82,14 @@ namespace Barotrauma
                 return;
             }
 
-            for (int x = Math.Max(indices.X, 0); x <= Math.Min(indices.Width, entities.GetLength(0)-1); x++)
+            for (int x = Math.Max(indices.X, 0); x <= Math.Min(indices.Width, entities.GetLength(0) - 1); x++)
             {
-                for (int y = Math.Max(indices.Y,0); y <= Math.Min(indices.Height, entities.GetLength(1)-1); y++)
+                for (int y = Math.Max(indices.Y, 0); y <= Math.Min(indices.Height, entities.GetLength(1) - 1); y++)
                 {
                     entities[x, y].Add(entity);
                 }
             }
+            allEntities.Add(entity);
         }
 
         public void RemoveEntity(MapEntity entity)
@@ -80,6 +101,7 @@ namespace Barotrauma
                     if (entities[x, y].Contains(entity)) entities[x, y].Remove(entity);
                 }
             }
+            allEntities.Remove(entity);
         }
 
         public void Clear()
@@ -91,8 +113,14 @@ namespace Barotrauma
                     entities[x, y].Clear();
                 }
             }
+            allEntities.Clear();
         }
-        
+
+        public IEnumerable<MapEntity> GetAllEntities()
+        {
+            return allEntities;
+        }
+
         public List<MapEntity> GetEntities(Vector2 position)
         {
             if (!MathUtils.IsValid(position)) return null;

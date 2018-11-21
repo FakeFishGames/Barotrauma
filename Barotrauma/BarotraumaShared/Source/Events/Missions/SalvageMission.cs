@@ -18,7 +18,7 @@ namespace Barotrauma
         {
             get
             {
-                return state>0 ? Vector2.Zero : ConvertUnits.ToDisplayUnits(item.SimPosition);
+                return state > 0 ? Vector2.Zero : ConvertUnits.ToDisplayUnits(item.SimPosition);
             }
         }
 
@@ -87,8 +87,8 @@ namespace Barotrauma
             {
                 case 0:
                     //item.body.LinearVelocity = Vector2.Zero;
-                    if (item.ParentInventory!=null) item.body.FarseerBody.IsKinematic = false;
-                    if (item.CurrentHull == null) return;
+                    if (item.ParentInventory != null) item.body.FarseerBody.IsKinematic = false;
+                    if (item.CurrentHull?.Submarine == null) return;
 
 #if CLIENT
                     ShowMessage(state);

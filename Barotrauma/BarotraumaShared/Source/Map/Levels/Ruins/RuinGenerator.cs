@@ -424,7 +424,10 @@ namespace Barotrauma.RuinGeneration
                 }
 
                 Rectangle backgroundRect = new Rectangle(room.Rect.X, room.Rect.Y + room.Rect.Height, room.Rect.Width, room.Rect.Height);
-                var hull = new Hull(MapEntityPrefab.Find(null, "hull"), backgroundRect, submarine: null);
+                var hull = new Hull(MapEntityPrefab.Find(null, "hull"), backgroundRect, submarine: null)
+                {
+                    ShouldBeSaved = false
+                };
                 entityGrid.InsertEntity(hull);
 
                 //generate backgrounds --------------------------------------------------------------

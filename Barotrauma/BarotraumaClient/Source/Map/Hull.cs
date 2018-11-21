@@ -226,7 +226,7 @@ namespace Barotrauma
                 }
                 GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, 100), Color.Black);
 
-                foreach (FireSource fs in fireSources)
+                foreach (FireSource fs in FireSources)
                 {
                     Rectangle fireSourceRect = new Rectangle((int)fs.WorldPosition.X, -(int)fs.WorldPosition.Y, (int)fs.Size.X, (int)fs.Size.Y);
                     GUI.DrawRectangle(spriteBatch, fireSourceRect, Color.Orange, false, 0, 5);
@@ -251,29 +251,39 @@ namespace Barotrauma
             }
         }
 
-        public void UpdateVertices(GraphicsDevice graphicsDevice, Camera cam, WaterRenderer renderer)
+        public static void UpdateVertices(GraphicsDevice graphicsDevice, Camera cam, WaterRenderer renderer)
+        {
+            foreach (EntityGrid entityGrid in EntityGrids)
+            {
+                if (entityGrid.WorldRect.X > cam.WorldView.Right || entityGrid.WorldRect.Right < cam.WorldView.X) continue;
+                if (entityGrid.WorldRect.Y - entityGrid.WorldRect.Height > cam.WorldView.Y || entityGrid.WorldRect.Y < cam.WorldView.Y - cam.WorldView.Height) continue;
+
+                var allEntities = entityGrid.GetAllEntities();
+                foreach (Hull hull in allEntities)
+                {
+                    hull.UpdateVertices(graphicsDevice, cam, entityGrid, renderer);
+                }
+            }
+        }
+
+        private void UpdateVertices(GraphicsDevice graphicsDevice, Camera cam, EntityGrid entityGrid, WaterRenderer renderer)
         {
             Vector2 submarinePos = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
 
-            //TODO: support rendering hulls that are not part of a submarine
-            if (Submarine == null) return;
-
-            if (!renderer.IndoorsVertices.ContainsKey(Submarine))
+            if (!renderer.IndoorsVertices.ContainsKey(entityGrid))
             {
-                renderer.IndoorsVertices[Submarine] = new VertexPositionColorTexture[WaterRenderer.DefaultIndoorsBufferSize];
-                renderer.PositionInIndoorsBuffer[Submarine] = 0;
+                renderer.IndoorsVertices[entityGrid] = new VertexPositionColorTexture[WaterRenderer.DefaultIndoorsBufferSize];
+                renderer.PositionInIndoorsBuffer[entityGrid] = 0;
             }
 
             //calculate where the surface should be based on the water volume
             float top = rect.Y + submarinePos.Y;
             float bottom = top - rect.Height;
-
             float renderSurface = drawSurface + submarinePos.Y;
 
-            Matrix transform = cam.Transform * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
-            
             if (bottom > cam.WorldView.Y || top < cam.WorldView.Y - cam.WorldView.Height) return;
 
+            Matrix transform = cam.Transform * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;            
             if (!update)
             {
                 // create the four corners of our triangle.
@@ -306,12 +316,13 @@ namespace Barotrauma
                 return;
             }
 
-            float x = rect.X + Submarine.DrawPosition.X;
+            float x = rect.X;
+            if (Submarine != null) { x += Submarine.DrawPosition.X; }
+
             int start = (int)Math.Floor((cam.WorldView.X - x) / WaveWidth);
             start = Math.Max(start, 0);
 
-            int end = (waveY.Length - 1)
-                - (int)Math.Floor((float)((x + rect.Width) - (cam.WorldView.X + cam.WorldView.Width)) / WaveWidth);
+            int end = (waveY.Length - 1) - (int)Math.Floor(((x + rect.Width) - (cam.WorldView.Right)) / WaveWidth);
             end = Math.Min(end, waveY.Length - 1);
 
             x += start * WaveWidth;
@@ -376,7 +387,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (renderer.PositionInIndoorsBuffer[Submarine] <= renderer.IndoorsVertices[Submarine].Length - 12)
+                if (renderer.PositionInIndoorsBuffer[entityGrid] <= renderer.IndoorsVertices[entityGrid].Length - 12)
                 {
                     const float SurfaceSize = 10.0f;
                     const float SineFrequency1 = 0.01f;
@@ -395,30 +406,30 @@ namespace Barotrauma
                     surfaceOffset2.Y += (float)Math.Sin((rect.X + i * WaveWidth + width) * SineFrequency2 - renderer.WavePos.X) * 2;
                     surfaceOffset2 *= surfaceScale;
 
-                    int posInBuffer = renderer.PositionInIndoorsBuffer[Submarine];
+                    int posInBuffer = renderer.PositionInIndoorsBuffer[entityGrid];
 
-                    renderer.IndoorsVertices[Submarine][posInBuffer + 0] = new VertexPositionColorTexture(corners[3] + surfaceOffset, renderer.IndoorsWaterColor, Vector2.Zero);
-                    renderer.IndoorsVertices[Submarine][posInBuffer + 1] = new VertexPositionColorTexture(corners[2] + surfaceOffset2, renderer.IndoorsWaterColor, Vector2.Zero);
-                    renderer.IndoorsVertices[Submarine][posInBuffer + 2] = new VertexPositionColorTexture(corners[5], renderer.IndoorsWaterColor, Vector2.Zero);
+                    renderer.IndoorsVertices[entityGrid][posInBuffer + 0] = new VertexPositionColorTexture(corners[3] + surfaceOffset, renderer.IndoorsWaterColor, Vector2.Zero);
+                    renderer.IndoorsVertices[entityGrid][posInBuffer + 1] = new VertexPositionColorTexture(corners[2] + surfaceOffset2, renderer.IndoorsWaterColor, Vector2.Zero);
+                    renderer.IndoorsVertices[entityGrid][posInBuffer + 2] = new VertexPositionColorTexture(corners[5], renderer.IndoorsWaterColor, Vector2.Zero);
 
-                    renderer.IndoorsVertices[Submarine][posInBuffer + 3] = new VertexPositionColorTexture(corners[3] + surfaceOffset, renderer.IndoorsWaterColor, Vector2.Zero);
-                    renderer.IndoorsVertices[Submarine][posInBuffer + 4] = new VertexPositionColorTexture(corners[5], renderer.IndoorsWaterColor, Vector2.Zero);
-                    renderer.IndoorsVertices[Submarine][posInBuffer + 5] = new VertexPositionColorTexture(corners[4], renderer.IndoorsWaterColor, Vector2.Zero);
+                    renderer.IndoorsVertices[entityGrid][posInBuffer + 3] = new VertexPositionColorTexture(corners[3] + surfaceOffset, renderer.IndoorsWaterColor, Vector2.Zero);
+                    renderer.IndoorsVertices[entityGrid][posInBuffer + 4] = new VertexPositionColorTexture(corners[5], renderer.IndoorsWaterColor, Vector2.Zero);
+                    renderer.IndoorsVertices[entityGrid][posInBuffer + 5] = new VertexPositionColorTexture(corners[4], renderer.IndoorsWaterColor, Vector2.Zero);
 
                     posInBuffer += 6;
-                    renderer.PositionInIndoorsBuffer[Submarine] = posInBuffer;
+                    renderer.PositionInIndoorsBuffer[entityGrid] = posInBuffer;
 
                     if (surfaceScale > 0)
                     {
-                        renderer.IndoorsVertices[Submarine][posInBuffer + 0] = new VertexPositionColorTexture(corners[3], renderer.IndoorsSurfaceTopColor, Vector2.Zero);
-                        renderer.IndoorsVertices[Submarine][posInBuffer + 1] = new VertexPositionColorTexture(corners[2], renderer.IndoorsSurfaceTopColor, Vector2.Zero);
-                        renderer.IndoorsVertices[Submarine][posInBuffer + 2] = new VertexPositionColorTexture(corners[2] + surfaceOffset2, renderer.IndoorsSurfaceBottomColor, Vector2.Zero);
+                        renderer.IndoorsVertices[entityGrid][posInBuffer + 0] = new VertexPositionColorTexture(corners[3], renderer.IndoorsSurfaceTopColor, Vector2.Zero);
+                        renderer.IndoorsVertices[entityGrid][posInBuffer + 1] = new VertexPositionColorTexture(corners[2], renderer.IndoorsSurfaceTopColor, Vector2.Zero);
+                        renderer.IndoorsVertices[entityGrid][posInBuffer + 2] = new VertexPositionColorTexture(corners[2] + surfaceOffset2, renderer.IndoorsSurfaceBottomColor, Vector2.Zero);
 
-                        renderer.IndoorsVertices[Submarine][posInBuffer + 3] = new VertexPositionColorTexture(corners[3], renderer.IndoorsSurfaceTopColor, Vector2.Zero);
-                        renderer.IndoorsVertices[Submarine][posInBuffer + 4] = new VertexPositionColorTexture(corners[2] + surfaceOffset2, renderer.IndoorsSurfaceBottomColor, Vector2.Zero);
-                        renderer.IndoorsVertices[Submarine][posInBuffer + 5] = new VertexPositionColorTexture(corners[3] + surfaceOffset, renderer.IndoorsSurfaceBottomColor, Vector2.Zero);
+                        renderer.IndoorsVertices[entityGrid][posInBuffer + 3] = new VertexPositionColorTexture(corners[3], renderer.IndoorsSurfaceTopColor, Vector2.Zero);
+                        renderer.IndoorsVertices[entityGrid][posInBuffer + 4] = new VertexPositionColorTexture(corners[2] + surfaceOffset2, renderer.IndoorsSurfaceBottomColor, Vector2.Zero);
+                        renderer.IndoorsVertices[entityGrid][posInBuffer + 5] = new VertexPositionColorTexture(corners[3] + surfaceOffset, renderer.IndoorsSurfaceBottomColor, Vector2.Zero);
 
-                        renderer.PositionInIndoorsBuffer[Submarine] += 6;
+                        renderer.PositionInIndoorsBuffer[entityGrid] += 6;
                     }
                 }
 
@@ -426,7 +437,7 @@ namespace Barotrauma
                 //clamp the last segment to the right edge of the hull
                 if (i == end - 2)
                 {
-                    width -= (int)Math.Max((x + WaveWidth) - (rect.Right + Submarine.DrawPosition.X), 0);
+                    width -= (int)Math.Max((x + WaveWidth) - (Submarine == null ? rect.Right : (rect.Right + Submarine.DrawPosition.X)), 0);
                 }
             }
         }        
