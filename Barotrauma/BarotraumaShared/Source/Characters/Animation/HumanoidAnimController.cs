@@ -652,7 +652,9 @@ namespace Barotrauma
 
                     if (!foot.Disabled)
                     {
-                        MoveLimb(foot, footPos + colliderPos, CurrentGroundedParams.FootMoveStrength, true);
+                        foot.DebugRefPos = colliderPos;
+                        foot.DebugTargetPos = colliderPos + footPos;
+                        MoveLimb(foot, colliderPos + footPos, CurrentGroundedParams.FootMoveStrength, true);
                         foot.body.SmoothRotate(leg.body.Rotation + (CurrentGroundedParams.FootAngleInRadians + MathHelper.PiOver2) * Dir * 1.6f, CurrentGroundedParams.FootRotateStrength);
                     }
                 }

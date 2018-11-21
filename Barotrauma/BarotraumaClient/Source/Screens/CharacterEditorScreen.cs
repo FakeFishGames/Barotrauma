@@ -2549,6 +2549,15 @@ namespace Barotrauma
                     };
                 }).Draw(spriteBatch, deltaTime);
             }
+
+            foreach (Limb limb in character.AnimController.Limbs)
+            {
+                if (limb.type == LimbType.LeftFoot || limb.type == LimbType.RightFoot)
+                {
+                    GUI.DrawRectangle(spriteBatch, SimToScreen(limb.DebugRefPos) - Vector2.One * 3, Vector2.One * 6, Color.White, isFilled: true);
+                    GUI.DrawRectangle(spriteBatch, SimToScreen(limb.DebugTargetPos) - Vector2.One * 3, Vector2.One * 6, Color.LightGreen, isFilled: true);
+                }
+            }
         }
         #endregion
 

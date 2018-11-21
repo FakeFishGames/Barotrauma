@@ -489,17 +489,19 @@ namespace Barotrauma
 
                         if (limb.type == LimbType.LeftFoot)
                         {
-                            limb.MoveToPos(footPos + new Vector2(
+                            limb.DebugRefPos = footPos + Vector2.UnitX * movement.X * 0.1f;
+                            limb.DebugTargetPos = footPos + new Vector2(
                                 transformedStepSize.X + movement.X * 0.1f,
-                                (transformedStepSize.Y > 0.0f) ? transformedStepSize.Y : 0.0f),
-                            CurrentGroundedParams.FootMoveForce);
+                                (transformedStepSize.Y > 0.0f) ? transformedStepSize.Y : 0.0f);
+                            limb.MoveToPos(limb.DebugTargetPos, CurrentGroundedParams.FootMoveForce);
                         }
                         else if (limb.type == LimbType.RightFoot)
                         {
-                            limb.MoveToPos(footPos + new Vector2(
+                            limb.DebugRefPos = footPos + Vector2.UnitX * movement.X * 0.1f;
+                            limb.DebugTargetPos = footPos + new Vector2(
                                 -transformedStepSize.X + movement.X * 0.1f,
-                                (-transformedStepSize.Y > 0.0f) ? -transformedStepSize.Y : 0.0f),
-                            CurrentGroundedParams.FootMoveForce);
+                                (-transformedStepSize.Y > 0.0f) ? -transformedStepSize.Y : 0.0f);
+                            limb.MoveToPos(limb.DebugTargetPos, CurrentGroundedParams.FootMoveForce);
                         }
                         
                         if (CurrentGroundedParams.FootAnglesInRadians.ContainsKey(limb.limbParams.ID))
