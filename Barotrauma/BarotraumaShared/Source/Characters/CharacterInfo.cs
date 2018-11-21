@@ -365,7 +365,7 @@ namespace Barotrauma
             }
         }
 
-        private void LoadHeadSprite()
+        public void LoadHeadSprite()
         {
             foreach (XElement limbElement in XMLExtensions.TryLoadXml(Ragdoll.FullPath).Root.Elements())
             {
@@ -404,7 +404,7 @@ namespace Barotrauma
             }
         }
 
-        private void LoadPortrait()
+        public void LoadPortrait()
         {
             string headSpriteDir = Path.GetDirectoryName(HeadSprite.FilePath);
 
