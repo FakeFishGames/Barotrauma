@@ -596,7 +596,7 @@ namespace Barotrauma.Items.Components
                 case "position_in":
                     if (float.TryParse(signal, out float newRotation))
                     {
-                        targetRotation = newRotation;
+                        targetRotation = MathHelper.ToRadians(newRotation);
                         IsActive = true;
                     }
                     user = sender;

@@ -520,7 +520,7 @@ namespace Barotrauma.RuinGeneration
             }
             else if (entityConfig.Prefab is ItemAssemblyPrefab itemAssemblyPrefab)
             {
-                var entities = itemAssemblyPrefab.CreateInstance(position);
+                var entities = itemAssemblyPrefab.CreateInstance(position, sub: null);
                 foreach (MapEntity e in entities)
                 {
                     if (e is Structure) e.ShouldBeSaved = false;

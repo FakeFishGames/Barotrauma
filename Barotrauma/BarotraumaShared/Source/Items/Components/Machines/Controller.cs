@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -239,7 +240,7 @@ namespace Barotrauma.Items.Components
 
         private Item GetFocusTarget()
         {
-            item.SendSignal(0, targetRotation.ToString(), "position_out", character);
+            item.SendSignal(0, MathHelper.ToDegrees(targetRotation).ToString("G", CultureInfo.InvariantCulture), "position_out", character);
 
             for (int i = item.LastSentSignalRecipients.Count - 1; i >= 0; i--)
             {
