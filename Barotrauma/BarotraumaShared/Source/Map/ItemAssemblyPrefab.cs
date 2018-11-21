@@ -64,8 +64,11 @@ namespace Barotrauma
 
             MapEntity.MapLoaded(entities, true);
 #if CLIENT
-            MapEntity.SelectedList.Clear();
-            MapEntity.SelectedList.AddRange(entities);
+            if (Screen.Selected == GameMain.SubEditorScreen)
+            {
+                MapEntity.SelectedList.Clear();
+                MapEntity.SelectedList.AddRange(entities);
+            }
 #endif   
             return entities;
 

@@ -54,6 +54,32 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public void MoveConnectedWires(Vector2 amount)
+        {
+            Vector2 wireNodeOffset = item.Submarine == null ? Vector2.Zero : item.Submarine.HiddenSubPosition + amount;
+            foreach (Connection c in Connections)
+            {
+                foreach (Wire wire in c.Wires)
+                {
+                    if (wire == null) continue;
+#if CLIENT
+                    if (wire.Item.IsSelected) continue;
+#endif
+                    var wireNodes = wire.GetNodes();
+                    if (wireNodes.Count == 0) continue;
+
+                    if (Submarine.RectContains(item.Rect, wireNodes[0] + wireNodeOffset))
+                    {
+                        wire.MoveNode(0, amount);
+                    }
+                    else if (Submarine.RectContains(item.Rect, wireNodes[wireNodes.Count - 1] + wireNodeOffset))
+                    {
+                        wire.MoveNode(wireNodes.Count - 1, amount);
+                    }
+                }
+            }
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             if (user == null || user.SelectedConstruction != item)

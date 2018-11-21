@@ -14,6 +14,7 @@
     <item prefab="RuinFractalBall" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
     <item prefab="RuinClaw" alignment="Bottom" type="Prop" commonness="5"/>
     <item prefab="artifactholder" alignment="Center" type="Prop" commonness="5"/>
+    <itemassembly prefab="alienturretassembly" alignment="Center" type="Prop" expand="true" commonness="1"/>
   </RoomType>
   
   <!-- "last" and a placement offset of -1 means that this is used as the second-to-last room-->
@@ -32,7 +33,6 @@
     <item prefab="RuinBlock" alignment="Right,Top,Bottom,Left" type="Prop" commonness="5"/>    
     <item prefab="oxygeniteshard" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
     <item prefab="sulphuriteshard" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
-    <itemassembly prefab="alienturretassembly" alignment="Center" type="Prop" commonness="1"/>
   </RoomType>
 
   <RoomType name="entrancecorridor" placement="first" iscorridor="true">

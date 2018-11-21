@@ -443,7 +443,7 @@ namespace Barotrauma
             if (Level.Loaded != null)
             {
                 Level.Loaded.DrawBack(graphics, spriteBatch, cam);
-                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap, DepthStencilState.Default, transformMatrix: cam.Transform);
+                spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, SamplerState.LinearWrap, DepthStencilState.DepthRead, transformMatrix: cam.Transform);
                 Level.Loaded.DrawFront(spriteBatch, cam);
                 Submarine.Draw(spriteBatch, false);
                 Submarine.DrawFront(spriteBatch);

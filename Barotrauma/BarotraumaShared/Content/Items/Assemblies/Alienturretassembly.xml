@@ -42,7 +42,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Alien Motion Sensor" identifier="alienmotionsensor" ID="19" rect="-48,304,81,103" displaysidebysidewhenlinked="False" description="" spritecolor="1,1,1,1" inventoryiconcolor="1,1,1,1" containercolor="1,1,1,1" tags="alien" spritedepth="0.8" scale="1">
-    <MotionSensor rangex="150" rangey="150" detectoffset="0,0" output="90" falseoutput="" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
+    <MotionSensor rangex="150" rangey="150" detectoffset="0,0" output="270" falseoutput="" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
       <output name="state_out">
         <link w="25" />
@@ -51,7 +51,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Alien Motion Sensor" identifier="alienmotionsensor" ID="9" rect="-48,-224,81,103" displaysidebysidewhenlinked="False" description="" spritecolor="1,1,1,1" inventoryiconcolor="1,1,1,1" containercolor="1,1,1,1" tags="alien" spritedepth="0.8" scale="1">
-    <MotionSensor rangex="150" rangey="150" detectoffset="0,0" output="270" falseoutput="" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
+    <MotionSensor rangex="150" rangey="150" detectoffset="0,0" output="90" falseoutput="" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
       <output name="state_out">
         <link w="27" />
