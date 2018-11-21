@@ -388,6 +388,50 @@ namespace Barotrauma.RuinGeneration
                 }                
             }
 
+            List<Rectangle> hullRects = new List<Rectangle>(allShapes.Select(s => s.Rect));
+            //split intersecting hulls into multiple parts to prevent overlaps
+            for (int i = 0; i < hullRects.Count; i++)
+            {
+                if (hullRects[i].Width <= 0 || hullRects[i].Height <= 0) continue;
+                for (int j = 0; j < hullRects.Count; j++)
+                {
+                    if (i == j) continue;
+                    if (hullRects[j].Width <= 0 || hullRects[j].Height <= 0) continue;
+                    if (!hullRects[i].Intersects(hullRects[j])) continue;
+                    
+                    //hull i goes through hull j vertically
+                    if (hullRects[i].X >= hullRects[j].X && hullRects[i].Right <= hullRects[j].Right &&
+                        hullRects[i].Y <= hullRects[j].Y && hullRects[i].Bottom >= hullRects[j].Bottom)
+                    {
+                        Rectangle rectLeft = new Rectangle(hullRects[j].X, hullRects[j].Y, hullRects[i].X - hullRects[j].X, hullRects[j].Height);
+                        Rectangle rectRight = new Rectangle(hullRects[i].Right, hullRects[j].Y, hullRects[j].Right - hullRects[i].Right, hullRects[j].Height);
+
+                        hullRects[i] = rectLeft;
+                        hullRects.Add(rectRight);
+                    }                    
+                    else if //hull i goes through hull j horizontally
+                    (hullRects[i].Y >= hullRects[j].Y && hullRects[i].Bottom <= hullRects[j].Bottom &&
+                    hullRects[i].X <= hullRects[j].X && hullRects[i].Right >= hullRects[j].Right)
+                    {
+                        Rectangle rectBottom = new Rectangle(hullRects[j].X, hullRects[j].Y, hullRects[i].Width, hullRects[i].Y - hullRects[j].Y);
+                        Rectangle rectTop = new Rectangle(hullRects[j].X, hullRects[i].Bottom, hullRects[j].Width, hullRects[j].Bottom - hullRects[i].Bottom);
+                        hullRects[i] = rectBottom;
+                        hullRects.Add(rectTop);
+                    }
+                }
+            }
+
+            foreach (Rectangle hullRect in hullRects)
+            {
+                if (hullRect.Width <= 0 || hullRect.Height <= 0) continue;
+                var hull = new Hull(MapEntityPrefab.Find(null, "hull"),
+                    new Rectangle(hullRect.X, hullRect.Y + hullRect.Height, hullRect.Width, hullRect.Height), submarine: null)
+                {
+                    ShouldBeSaved = false
+                };
+                entityGrid.InsertEntity(hull);
+            }
+
             foreach (RuinShape room in allShapes)
             {
                 if (room.RoomType == null) continue;
@@ -423,17 +467,11 @@ namespace Barotrauma.RuinGeneration
                     ruinEntities.Add(new RuinEntity(ruinEntityConfig, structure, room));
                 }
 
-                Rectangle backgroundRect = new Rectangle(room.Rect.X, room.Rect.Y + room.Rect.Height, room.Rect.Width, room.Rect.Height);
-                var hull = new Hull(MapEntityPrefab.Find(null, "hull"), backgroundRect, submarine: null)
-                {
-                    ShouldBeSaved = false
-                };
-                entityGrid.InsertEntity(hull);
-
                 //generate backgrounds --------------------------------------------------------------
                 var backgroundConfig = room.RoomType.GetRandomEntity(RuinEntityType.Back, Alignment.Center);
                 if (backgroundConfig != null)
                 {
+                    Rectangle backgroundRect = new Rectangle(room.Rect.X, room.Rect.Y + room.Rect.Height, room.Rect.Width, room.Rect.Height);
                     var backgroundStructure = new Structure(backgroundRect, (backgroundConfig.Prefab as StructurePrefab), null)
                     {
                         ShouldBeSaved = false
