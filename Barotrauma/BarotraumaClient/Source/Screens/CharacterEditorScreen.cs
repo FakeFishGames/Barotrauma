@@ -2077,7 +2077,6 @@ namespace Barotrauma
                     rect.Location = rect.Location.Multiply(spriteSheetZoom);
                     rect.X += offsetX;
                     rect.Y += offsetY;
-                    Vector2 origin = limb.ActiveSprite.Origin;
                     break;
                 }
             }
