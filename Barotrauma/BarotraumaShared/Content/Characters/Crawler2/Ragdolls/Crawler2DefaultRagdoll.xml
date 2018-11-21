@@ -1,36 +1,36 @@
-﻿<Ragdoll type="crawler2" colliderheightfromfloor="35" impacttolerance="6" draggable="True" limbscale="0.7" jointscale="0.7" canentersubmarine="True">
-  <collider height="80" radius="40" />
+﻿<Ragdoll type="crawler2" colliderheightfromfloor="35" impacttolerance="6" draggable="True" limbscale="0.7" jointscale="0.7" canentersubmarine="True" texturescale="1">
+  <collider height="80" radius="40" name="Main Collider" width="0" />
   <!-- Head -->
-  <limb id="0" radius="50" type="Head" flip="True" steerforce="15" mouthpos="50,0" healthindex="0" attackpriority="0" stepoffset="0,0" bodytype="Dynamic" height="0" width="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False">
+  <limb id="0" radius="50" type="Head" flip="True" steerforce="15" mouthpos="50,0" healthindex="0" attackpriority="0" stepoffset="0,0" bodytype="Dynamic" height="0" width="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 0" notes="">
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
-    <deformablesprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="153,0,106,86" depth="0" origin="0.3101506,0.6336168" subdivisions="3,3">
+    <deformablesprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="153,2,102,82" depth="0.1" origin="0.3188142,0.586172" subdivisions="3,3">
       <spritedeformation type="noise" resolution="3,3" frequency="2" amplitude="0.05" changespeed="2" blendmode="add" />
       <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="0,0 0,0 0,0" row1="0,0 0,0 1,1" row2="0,0 1,2 1,2" />
     </deformablesprite>
   </limb>
   <!-- BodyUpper (main torso) -->
-  <limb id="1" width="50" height="0" type="Torso" flip="True" steerforce="0.1" healthindex="0" attackpriority="0" stepoffset="0,0" bodytype="Dynamic" radius="35" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False">
+  <limb id="1" width="50" height="0" type="Torso" flip="True" steerforce="0.1" healthindex="0" attackpriority="0" stepoffset="0,0" bodytype="Dynamic" radius="35" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 1" notes="">
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
-    <deformablesprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="38,0,115,113" depth="0.2" origin="0.4654222,0.5" subdivisions="5,5">
+    <deformablesprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="36,0,115,113" depth="0.2" origin="0.4606622,0.4951695" subdivisions="5,5">
       <SpriteDeformation type="inflate" resolution="5,5" frequency="2" scale="0.2" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply" row0="0,0 0.5,1 1,1 0.5,1 0,0" row1="0,0 0.5,1 1,1 0.5,1 0,0" row2="0,0 0.5,1 1,1 0.5,1 0,0" row3="0,0 0.5,1 1,1 0.5,1 0,0" row4="0,0 0.5,1 1,1 0.5,1 0,0" />
       <spritedeformation type="bendjoint" resolution="5,5" blendmode="add" />
     </deformablesprite>
   </limb>
   <!-- BodyLower1 -->
-  <limb id="2" width="80" height="70" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False">
+  <limb id="2" width="80" height="70" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 2" notes="">
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
-    <deformablesprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="167,172,91,87" depth="0.21" origin="0.5135868,0.5523771" subdivisions="5,5">
+    <deformablesprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="167,173,91,87" depth="0.21" origin="0.5135868,0.5523771" subdivisions="5,5">
       <SpriteDeformation type="inflate" resolution="5,5" frequency="2" scale="0.2" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply" row0="0,0 0.5,1 1,1 0.5,1 0,0" row1="0,0 0.5,1 1,1 0.5,1 0,0" row2="0,0 0.5,1 1,1 0.5,1 0,0" row3="0,0 0.5,1 1,1 0.5,1 0,0" row4="0,0 0.5,1 1,1 0.5,1 0,0" />
       <spritedeformation type="bendjoint" resolution="5,5" blendmode="add" />
     </deformablesprite>
   </limb>
   <!-- BodyLower2 -->
-  <limb id="3" width="62" height="52" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False">
+  <limb id="3" width="62" height="52" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 3" notes="">
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
     <deformablesprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="71,179,84,78" depth="0.22" origin="0.5427743,0.5" subdivisions="5,5">
@@ -38,15 +38,15 @@
     </deformablesprite>
   </limb>
   <!-- BodyLower3 -->
-  <limb id="4" width="45" height="33" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False">
+  <limb id="4" width="45" height="33" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 4" notes="">
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
-    <deformablesprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="97,113,70,59" depth="0.023" origin="0.5571429,0.4577771" subdivisions="5,5">
+    <deformablesprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="97,113,63,57" depth="0.023" origin="0.5571429,0.4577771" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" />
     </deformablesprite>
   </limb>
   <!-- BodyLower4 -->
-  <limb id="5" width="30" height="0" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="12" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False">
+  <limb id="5" width="30" height="0" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="12" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 5" notes="">
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
     <deformablesprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="0,135,48,36" depth="0.24" origin="0.524421,0.5587717" subdivisions="5,5">
@@ -54,7 +54,7 @@
     </deformablesprite>
   </limb>
   <!-- BodyLower5 -->
-  <limb id="6" width="30" height="0" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="8" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False">
+  <limb id="6" width="30" height="0" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="8" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 6" notes="">
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
     <deformablesprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="50,114,43,30" depth="0.025" origin="0.5984064,0.5294023" subdivisions="5,5">
@@ -62,7 +62,7 @@
     </deformablesprite>
   </limb>
   <!-- BodyLower6 -->
-  <limb id="7" width="53" height="10" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False">
+  <limb id="7" width="53" height="10" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 7" notes="">
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
     <deformablesprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="47,142,48,26" depth="0.26" origin="0.7888877,0.5378913" subdivisions="5,5">
@@ -70,8 +70,8 @@
     </deformablesprite>
   </limb>
   <!-- Jaw -->
-  <limb id="8" width="42" height="44" ignorecollisions="True" flip="True" type="None" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1">
-    <sprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="160,86,41,43" depth="0.01" origin="0.4026982,0.2012291" />
+  <limb id="8" width="42" height="44" ignorecollisions="True" flip="True" type="None" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" name="Limb 8" notes="">
+    <sprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="164,83,43,45" depth="0.06" origin="0.3893303,0.1502767" />
     <attack range="120" damagerange="60" duration="0.25" stun="0.3" structuredamage="5" itemdamage="10" structuresoundtype="StructureSlash" targetimpulse="10" targetimpulseworld="0,-20" severlimbsprobability="0.5" force="25" applyforceonlimbs="0,9" torque="50">
       <Affliction identifier="bleeding" strength="30" />
       <Affliction identifier="stun" strength="0.25" />
@@ -79,44 +79,49 @@
     </attack>
   </limb>
   <!-- ArmUpper -->
-  <limb id="9" width="68" height="86" type="RightLeg" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False">
+  <limb id="9" width="68" height="86" type="RightLeg" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 9" notes="">
     <sprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="0,170,70,87" depth="0.11" origin="0.3381624,0.3895404" />
   </limb>
   <!-- ArmLower -->
-  <limb id="10" width="60" height="0" type="RightFoot" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="15" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="13.06022,-3.164046" refjoint="-1" ignorecollisions="False">
-    <sprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="160,130,96,40" depth="0.1" origin="0.2300953,0.301666" />
+  <limb id="10" width="60" height="0" type="RightFoot" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="15" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="13.06022,-3.164046" refjoint="-1" ignorecollisions="False" name="Limb 10" notes="">
+    <sprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="160,130,92,41" depth="0.1" origin="0.09917846,0.2338638" />
     <sound tag="footstep_armor_heavy" />
   </limb>
   <!-- FakeFoot1 -->
-  <limb id="11" width="38" height="50" ignorecollisions="True" flip="True" mass="0.5" type="None" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1">
+  <limb id="11" width="38" height="50" ignorecollisions="True" flip="True" mass="0.5" type="None" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" name="Limb 11" notes="">
     <sprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="0,0,38,52" depth="0.1" origin="0.6557441,0.2100956" />
   </limb>
   <!-- FakeFoot2 -->
-  <limb id="12" width="38" height="51" ignorecollisions="True" flip="True" mass="0.5" type="None" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1">
-    <sprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="0,50,38,52" depth="0.1" origin="0.6557441,0.2120187" />
+  <limb id="12" width="38" height="51" ignorecollisions="True" flip="True" mass="0.5" type="None" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" name="Limb 12" notes="">
+    <sprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="0,50,26,50" depth="0.1" origin="0.6557441,0.2120187" />
   </limb>
   <!-- FakeFoot3 -->
-  <limb id="13" width="21" height="22" ignorecollisions="True" flip="True" mass="0.5" type="None" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1">
+  <limb id="13" width="21" height="22" ignorecollisions="True" flip="True" mass="0.5" type="None" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" name="Limb 13" notes="">
     <sprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="0,101,21,22" depth="0.1" origin="0.7,0.2351012" />
+  </limb>
+  <!-- NeckFur -->
+  <limb id="14" width="45" height="45" ignorecollisions="True" flip="True" mass="0" type="None" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" name="NeckFur" notes="">
+    <sprite texture="Content/Characters/Crawler2/crawler2.png" sourcerect="205,87,48,43" depth="0.4" origin="0.4948099,0.4213339" />
   </limb>
   <!-- Joints -->
   <!--Head to Torso-->
-  <joint limb1="0" limb2="1" limb1anchor="-8.376499,13.93317" limb2anchor="41.83706,-3.272205" canbesevered="True" limitenabled="True" upperlimit="57.46242" lowerlimit="-25.10567" />
+  <joint limb1="0" limb2="1" limb1anchor="-9.747147,8.62288" limb2anchor="51.99524,-11.39729" canbesevered="True" limitenabled="True" upperlimit="46.14165" lowerlimit="-25.10567" name="Joint 0 - 1" />
   <!--Torso to Tail-->
-  <joint limb1="1" limb2="2" limb1anchor="-25.66738,11.05594" limb2anchor="31.82122,5.477781" canbesevered="True" limitenabled="True" upperlimit="8.367105" lowerlimit="-66.20706" />
-  <joint limb1="2" limb2="3" limb1anchor="-17.075,-2.707342" limb2anchor="19.4793,-2.334701" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-30" />
-  <joint limb1="3" limb2="4" limb1anchor="-20.74999,-1.282803" limb2anchor="13.49095,7.263193" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-30" />
-  <joint limb1="4" limb2="5" limb1anchor="-32.7074,-0.9014408" limb2anchor="12.23051,0.2277253" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-30.02529" />
-  <joint limb1="5" limb2="6" limb1anchor="-9.358315,-1.319017" limb2anchor="18.53379,-3.801998" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-30.37127" />
-  <joint limb1="6" limb2="7" limb1anchor="-15.96048,0.8675636" limb2anchor="4.395853,-0.1564362" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-30" />
+  <joint limb1="1" limb2="2" limb1anchor="-36.31292,11.69211" limb2anchor="31.70557,9.561213" canbesevered="True" limitenabled="True" upperlimit="8.367105" lowerlimit="-66.20706" name="Joint 1 - 2" />
+  <joint limb1="2" limb2="3" limb1anchor="-30.1382,4.003509" limb2anchor="29.08622,-2.871607" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-30" name="Joint 2 - 3" />
+  <joint limb1="3" limb2="4" limb1anchor="-28.35653,-4.043511" limb2anchor="17.33471,5.577527" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-30" name="Joint 3 - 4" />
+  <joint limb1="4" limb2="5" limb1anchor="-28.23166,-1.542519" limb2anchor="15.0248,-0.9074891" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-30.02529" name="Joint 4 - 5" />
+  <joint limb1="5" limb2="6" limb1anchor="-9.538347,0.2451426" limb2anchor="10.1332,-0.387835" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-30.37127" name="Joint 5 - 6" />
+  <joint limb1="6" limb2="7" limb1anchor="-19.86527,-0.2580455" limb2anchor="4.395853,-0.1564362" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-30" name="Joint 6 - 7" />
   <!--Head To Jaw-->
-  <joint limb1="0" limb2="8" limb1anchor="3.052869,-25.49709" limb2anchor="0.6521592,1.017442" canbesevered="True" limitenabled="True" upperlimit="102.673" lowerlimit="29.41474" />
+  <joint limb1="0" limb2="8" limb1anchor="2.455253,-14.90523" limb2anchor="-0.6345358,-0.8523989" canbesevered="True" limitenabled="True" upperlimit="23.76226" lowerlimit="-21.58732" name="Joint 0 - 8" />
   <!--Shoulder-->
-  <joint limb1="1" limb2="9" limb1anchor="11.54731,-23.31197" limb2anchor="-0.6222226,14.19223" canbesevered="True" limitenabled="True" upperlimit="-64.59682" lowerlimit="-105.544" />
+  <joint limb1="1" limb2="9" limb1anchor="15.05702,-15.9578" limb2anchor="-5.180432,12.44821" canbesevered="True" limitenabled="True" upperlimit="358.7352" lowerlimit="247.4892" name="Joint 1 - 9" />
   <!--Elbow-->
-  <joint limb1="9" limb2="10" limb1anchor="-0.6235327,-31.32381" limb2anchor="-9.55594,5.383872" canbesevered="True" limitenabled="True" upperlimit="60.05338" lowerlimit="-65.67323" />
+  <joint limb1="9" limb2="10" limb1anchor="-1.649204,-26.6898" limb2anchor="3.525423,5.513155" canbesevered="True" limitenabled="True" upperlimit="60.05338" lowerlimit="-65.67323" name="Joint 9 - 10" />
   <!--FakeFeet-->
-  <joint limb1="2" limb2="11" limb1anchor="-2.906425,-19.42669" limb2anchor="-1.215703,10.49663" canbesevered="True" limitenabled="True" upperlimit="55.2636" lowerlimit="-71.75" />
-  <joint limb1="3" limb2="12" limb1anchor="12.48289,-22.7742" limb2anchor="7.128497,8.439569" canbesevered="True" limitenabled="True" upperlimit="30" lowerlimit="-57.98726" />
-  <joint limb1="4" limb2="13" limb1anchor="3.457966,-4.977207" limb2anchor="-5.09082,12.62049" canbesevered="True" limitenabled="True" upperlimit="56.54782" lowerlimit="-30" />
+  <joint limb1="2" limb2="11" limb1anchor="-2.906425,-19.42669" limb2anchor="-1.215703,10.49663" canbesevered="True" limitenabled="True" upperlimit="55.2636" lowerlimit="-71.75" name="Joint 2 - 11" />
+  <joint limb1="3" limb2="12" limb1anchor="12.48289,-22.7742" limb2anchor="7.128497,8.439569" canbesevered="True" limitenabled="True" upperlimit="30" lowerlimit="-57.98726" name="Joint 3 - 12" />
+  <joint limb1="4" limb2="13" limb1anchor="-0.6206234,-3.981927" limb2anchor="-5.09082,12.62049" canbesevered="True" limitenabled="True" upperlimit="56.54782" lowerlimit="-30" name="Joint 4 - 13" />
+  <joint limb1="1" limb2="14" limb1anchor="37.08093,-27.01655" limb2anchor="0.9317667,1.725608" canbesevered="True" limitenabled="True" upperlimit="7.579085" lowerlimit="3.64738" name="Joint 1 - 14" />
 </Ragdoll>
