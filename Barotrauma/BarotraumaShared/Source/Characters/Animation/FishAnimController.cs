@@ -518,6 +518,8 @@ namespace Barotrauma
         
         void UpdateDying(float deltaTime)
         {
+            if (deathAnimDuration <= 0.0f) return;
+
             float animStrength = (1.0f - deathAnimTimer / deathAnimDuration);
 
             Limb head = GetLimb(LimbType.Head);
@@ -538,7 +540,7 @@ namespace Barotrauma
                     limb.LightSource.Color = Color.Lerp(limb.InitialLightSourceColor, Color.TransparentBlack, deathAnimTimer / deathAnimDuration);
                 }
 #endif
-                if (limb.type == LimbType.Head || limb.type == LimbType.Tail || limb.IsSevered) continue;
+                if (limb.type == LimbType.Head || limb.type == LimbType.Tail || limb.IsSevered || limb.Mass <= 0.0f) continue;
                 limb.body.ApplyForce((centerOfMass - limb.SimPosition) * (float)(Math.Sin(WalkPos) * Math.Sqrt(limb.Mass)) * 30.0f * animStrength);
             }
         }

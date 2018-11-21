@@ -447,7 +447,7 @@ namespace Barotrauma
                 if (HideSlot(i)) continue;
 
                 //don't draw the item if it's being dragged out of the slot
-                bool drawItem = draggingItem == null || draggingItem != Items[i] || slots[i].IsHighlighted;
+                bool drawItem = draggingItem == null || draggingItem != Items[i] || slots[i].InteractRect.Contains(PlayerInput.MousePosition);
 
                 DrawSlot(spriteBatch, this, slots[i], Items[i], drawItem);
             }
@@ -482,6 +482,24 @@ namespace Barotrauma
                         slot.EquipButtonRect.Contains(PlayerInput.MousePosition))
                     {
                         return true;
+                    }
+                }
+            }
+
+            if (Character.Controlled.SelectedConstruction != null)
+            {
+                foreach (ItemComponent ic in Character.Controlled.SelectedConstruction.components)
+                {
+                    var itemContainer = ic as ItemContainer;
+                    if (itemContainer?.Inventory?.slots == null) continue;
+
+                    foreach (InventorySlot slot in itemContainer.Inventory.slots)
+                    {
+                        if (slot.InteractRect.Contains(PlayerInput.MousePosition) ||
+                            slot.EquipButtonRect.Contains(PlayerInput.MousePosition))
+                        {
+                            return true;
+                        }
                     }
                 }
             }
@@ -944,9 +962,16 @@ namespace Barotrauma
                 if (receivedItemIDs[i] > 0)
                 {
                     var item = Entity.FindEntityByID(receivedItemIDs[i]) as Item;
-                    if (item == null) continue;
+                    if (item == null || Items[i] == item) continue;
 
                     TryPutItem(item, i, true, true, null, false);
+                    for (int j = 0; j < capacity; j++)
+                    {
+                        if (Items[j] == item && receivedItemIDs[j] != item.ID)
+                        {
+                            Items[j] = null;
+                        }
+                    }
                 }
             }
 

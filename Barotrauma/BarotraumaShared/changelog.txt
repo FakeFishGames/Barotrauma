@@ -1,4 +1,31 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.2.2
+---------------------------------------------------------------------------------------------------------
+
+- Fixed clients not seeing explosions from items that explode on impact or when their condition reaches zero.
+- Fixed conditionals being ignored on delayed status effects.
+- Fixed clients staying in an unsynced state if they rejoin while their character is dead or unconscious,
+causing the camera not to follow the character and preventing the player from giving up.
+- Fixed LightComponent sprites and broken device sprites not being mirrored in mirrored subs.
+- Fixed a few ragdoll animation bugs that caused "attempted to move pulljoint anchor extremely far" errors.
+- Fixed AI characters (most often mantises) being able to attack through walls.
+- Fixed alien ruins occasionally overlapping with each other or being above the upper boundary of the level.
+- Docking ports automatically stretch the hulls between them to cover the area between the docked subs. 
+Otherwise there may be areas uncovered by hulls if the docking port is positioned slightly outside the 
+extents of the submarine's hulls, causing characters to implode or get thrown back when they try to pass 
+from sub to another.
+- Fixed client-side docking ports creating duplicate bodies on doors, causing characters to collide with 
+an invisible door when trying to move between docked subs (until the server forces them through it).
+- Fixed characters occasionally getting teleported outside the sub for a few frames when moving between 
+docked subs.
+- Fixed status effects that deplete oxygen affecting characters that don't need air to breathe.
+- More error logging to diagnose syncing errors.
+- Melee weapons can only hit one character per swing (makes stun batons and medical syringes less OP).
+- Option to make RegEx component only send a signal when it receives a signal (not continuously according 
+to the last received signal).
+- Added FalseOutput property to RegEx components.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.2.1
 ---------------------------------------------------------------------------------------------------------
 
