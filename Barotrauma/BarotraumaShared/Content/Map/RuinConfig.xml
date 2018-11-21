@@ -32,6 +32,7 @@
     <item prefab="RuinBlock" alignment="Right,Top,Bottom,Left" type="Prop" commonness="5"/>    
     <item prefab="oxygeniteshard" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
     <item prefab="sulphuriteshard" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
+    <itemassembly prefab="alienturretassembly" alignment="Center" type="Prop" commonness="1"/>
   </RoomType>
 
   <RoomType name="entrancecorridor" placement="first" iscorridor="true">

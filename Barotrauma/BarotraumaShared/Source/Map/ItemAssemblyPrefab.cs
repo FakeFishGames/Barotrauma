@@ -43,15 +43,15 @@ namespace Barotrauma
         
         protected override void CreateInstance(Rectangle rect)
         {
-            CreateInstance(rect.Location.ToVector2());
+            CreateInstance(rect.Location.ToVector2(), Submarine.MainSub);
         }
 
-        public List<MapEntity> CreateInstance(Vector2 position)
+        public List<MapEntity> CreateInstance(Vector2 position, Submarine sub)
         {
-            List<MapEntity> entities = MapEntity.LoadAll(Submarine.MainSub, configElement, configPath);
+            List<MapEntity> entities = MapEntity.LoadAll(sub, configElement, configPath);
             if (entities.Count == 0) return entities;
 
-            Vector2 offset = Submarine.MainSub == null ? Vector2.Zero : Submarine.MainSub.HiddenSubPosition;
+            Vector2 offset = sub == null ? Vector2.Zero : sub.HiddenSubPosition;
 
             foreach (MapEntity me in entities)
             {

@@ -287,7 +287,8 @@
 
     <MotionSensor range="300" output="0"/>
 
-    <ConnectionPanel canbeselected="false" hudpriority="10">
+    <ConnectionPanel canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <output name="state_out"/>
     </ConnectionPanel>
   </Item>
@@ -335,7 +336,8 @@
       <StatusEffect type="Always" target="This" charge="100"/>  
     </PowerContainer>
 
-    <ConnectionPanel canbeselected="false">
+    <ConnectionPanel canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <!-- break the item when a shutdown signal is received -->
       <input name="shutdown">
         <StatusEffect type="OnUse" target="This" condition="-100" setvalue="true"/>
@@ -368,7 +370,8 @@
         <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="1.0,0.2"/>
       </LightComponent>
     </Turret>
-    <ConnectionPanel canbeselected="false">
+    <ConnectionPanel canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <input name="power_in" />
       <input name="position_in" />
       <input name="trigger_in" />
