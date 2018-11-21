@@ -235,7 +235,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        xmlPath = ParsePathFromUri(element.BaseUri);
+                        xmlPath = element.ParseContentPathFromUri();
                         xmlPathText.Text = xmlPath;
                         xmlPathText.TextColor = Color.LightGray;
                     }
@@ -325,7 +325,7 @@ namespace Barotrauma
                 if (textureElement.Contains("[GENDER]") || textureElement.Contains("[HEADID]")) { return; }
                 if (!textureElement.Contains("/"))
                 {
-                    spriteFolder = Path.GetDirectoryName(ParsePathFromUri(element.BaseUri));
+                    spriteFolder = Path.GetDirectoryName(element.ParseContentPathFromUri());
                 }
                 // Uncomment if we do multiple passes -> there can be duplicates
                 //string identifier = Sprite.GetID(element);
@@ -574,13 +574,6 @@ namespace Barotrauma
         #endregion
 
         #region Helpers
-        private string ParsePathFromUri(string uri)
-        {
-            string[] splitted = uri.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
-            IEnumerable<string> filtered = splitted.SkipWhile(part => part != "Content");
-            return string.Join("/", filtered);
-        }
-
         private float GetBarScrollValue() => MathHelper.Lerp(0, 1, MathUtils.InverseLerp(minZoom, maxZoom, zoom));
 
         private string GetSpriteName(Sprite sprite)
