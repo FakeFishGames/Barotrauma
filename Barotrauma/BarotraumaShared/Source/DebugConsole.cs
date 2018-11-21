@@ -2199,6 +2199,23 @@ namespace Barotrauma
             {
                 Submarine.MainSub?.FlipX();
             }));
+
+            commands.Add(new Command("loadhead", "Load head sprite (by id).", args =>
+            {
+                var character = Character.Controlled;
+                if (character == null)
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+                if (int.TryParse(args.FirstOrDefault(), out int id))
+                {
+                    character.Info.HeadSpriteId = id;
+                    character.Info.LoadHeadSprite();
+                    character.Info.LoadPortrait();
+                    // load head attachmenets
+                }
+            }));
 #endif
             InitProjectSpecific();
 
