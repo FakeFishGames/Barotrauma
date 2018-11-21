@@ -68,7 +68,7 @@
       <sprite name="Mechanic Right Upper Arm" texture="NewHuman_Mechanic_torso.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
 
       <sprite name="Mechanic Left Lower Arm" texture="NewHuman_Mechanic_torso.png" limb="LeftHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Mechanic Right Upper Arm" texture="NewHuman_Mechanic_torso.png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Mechanic Right Lower Arm" texture="NewHuman_Mechanic_torso.png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
 
       <sprite name="Mechanic Waist" texture="NewHuman_Mechanic_legs.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
       <sprite name="Mechanic Right Thigh" texture="NewHuman_Mechanic_legs.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
