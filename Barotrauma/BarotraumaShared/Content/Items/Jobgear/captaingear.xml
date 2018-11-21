@@ -5,10 +5,10 @@
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="100" />
-    <Sprite texture="captainhat.png" depth="0.6" sourcerect="0,0,32,32" />
+    <Sprite name="Captain's Cap Icon" texture="captainhat.png" depth="0.6" sourcerect="0,0,32,32" />
     <Body width="25" height="15" density="30" />
     <Wearable limbtype="Head" slots="Any,Head">
-      <sprite texture="captainhat.png" limb="Head" origin="0.5,0.9" />
+      <sprite name="Captain's Cap" texture="captainhat.png" limb="Head" origin="0.5,0.9" />
     </Wearable>
   </Item>
   <Item name="Captain's Uniform" identifier="captainsuniform" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem">
