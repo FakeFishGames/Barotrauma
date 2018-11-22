@@ -764,15 +764,19 @@ namespace Barotrauma
         }
         partial void InitProjSpecific(XDocument doc);
 
-        public void ReloadHead(int? id = null)
+        public void ReloadHead(int? headId = null, int? hairIndex = null, int? beardIndex = null, int? moustacheIndex = null, int? faceAttachmentIndex = null)
         {
             if (Info == null) { return; }
             var head = AnimController.GetLimb(LimbType.Head);
             if (head == null) { return; }
-            if (id.HasValue)
+            if (headId.HasValue)
             {
-                Info.HeadSpriteId = id.Value;
+                Info.HeadSpriteId = headId.Value;
                 Info.LoadHeadSprite();
+                Info.HairIndex = hairIndex ?? -1;
+                Info.BeardIndex = beardIndex ?? -1;
+                Info.MoustacheIndex = moustacheIndex ?? -1;
+                Info.FaceAttachmentIndex = faceAttachmentIndex ?? -1;
                 Info.LoadHeadAttachments();
             }
             head.RecreateSprite();

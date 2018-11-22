@@ -1601,6 +1601,10 @@ namespace Barotrauma.Networking
 
             msg.Write(characterInfo.Gender == Gender.Male);
             msg.Write((byte)characterInfo.HeadSpriteId);
+            msg.Write((byte)characterInfo.HairIndex);
+            msg.Write((byte)characterInfo.BeardIndex);
+            msg.Write((byte)characterInfo.MoustacheIndex);
+            msg.Write((byte)characterInfo.FaceAttachmentIndex);
 
             var jobPreferences = GameMain.NetLobbyScreen.JobPreferences;
             int count = Math.Min(jobPreferences.Count, 3);

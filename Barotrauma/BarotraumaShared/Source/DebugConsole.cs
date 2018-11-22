@@ -2208,9 +2208,32 @@ namespace Barotrauma
                     ThrowError("Not controlling any character!");
                     return;
                 }
-                if (int.TryParse(args.FirstOrDefault(), out int id))
+                if (args.Length == 0)
                 {
-                    character.ReloadHead(id);
+                    ThrowError("No head id provided!");
+                    return;
+                }
+                if (int.TryParse(args[0], out int id))
+                {
+                    int hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex;
+                    hairIndex = beardIndex = moustacheIndex = faceAttachmentIndex = -1;
+                    if (args.Length > 1)
+                    {
+                        int.TryParse(args[1], out hairIndex);
+                    }
+                    if (args.Length > 2)
+                    {
+                        int.TryParse(args[2], out beardIndex);
+                    }
+                    if (args.Length > 3)
+                    {
+                        int.TryParse(args[3], out moustacheIndex);
+                    }
+                    if (args.Length > 4)
+                    {
+                        int.TryParse(args[4], out faceAttachmentIndex);
+                    }
+                    character.ReloadHead(id, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
                 }
             }));
 #endif
