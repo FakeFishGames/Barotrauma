@@ -2200,7 +2200,7 @@ namespace Barotrauma
                 Submarine.MainSub?.FlipX();
             }));
 
-            commands.Add(new Command("loadhead", "Load head sprite (by id).", args =>
+            commands.Add(new Command("loadhead", "Load head sprite(s). Required argument: head id. Optional arguments: hair index, beard index, moustache index, face attachment index.", args =>
             {
                 var character = Character.Controlled;
                 if (character == null)
