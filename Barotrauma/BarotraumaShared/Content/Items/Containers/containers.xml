@@ -155,7 +155,6 @@
     <Sprite texture="containers.png" depth="0.84" sourcerect="113,0,54,169"/>
 
     <ItemContainer capacity="15" canbeselected="true" hideitems="true">
-      <RequiredItem identifiers="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess"/>
       <Containable identifiers="smallitem,mediumitem"/>
     </ItemContainer>
   </Item>
