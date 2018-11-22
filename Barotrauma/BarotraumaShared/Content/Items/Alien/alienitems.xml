@@ -244,6 +244,7 @@
     <Sprite texture="Content/Map/ruins.png" sourcerect="747,0,260,95" depth="0.8" origin="0.5,0.5"/>
 
     <Door canbeselected="true" horizontal="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0">
+      <RequiredItem identifier="crowbar" type="Equipped"/>
       <Sprite texture="Content/Map/ruins.png" sourcerect="0,842,260,54"  depth="0.6" origin="0.0,0.5"/>
       <sound file="Content/Items/Alien/aliendoor.ogg" type="OnUse" range="3000.0"/>
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0"/>
@@ -265,6 +266,7 @@
     <Sprite texture="Content/Map/ruins.png" sourcerect="746,101,93,259" depth="0.8" origin="0.5,0.5"/>
 
     <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0">
+      <RequiredItem identifier="crowbar" type="Equipped"/>
       <Sprite texture="Content/Map/ruins.png" sourcerect="842,192,54,259" depth="0.6" origin="0.5,0.0"/>
       <sound file="Content/Items/Alien/aliendoor.ogg" type="OnUse" range="3000.0"/>
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0"/>
