@@ -1895,7 +1895,7 @@ namespace Barotrauma
 				if (++i >= Messages.Count) break;
 			} while (!Messages[selectedIndex].IsCommand);
 
-            return Messages[selectedIndex].Text;            
+            return !Messages[selectedIndex].IsCommand ? "" : Messages[selectedIndex].Text;            
         }
 
         public static void ExecuteCommand(string command)
