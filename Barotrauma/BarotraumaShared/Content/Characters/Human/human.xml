@@ -2,6 +2,9 @@
 <Character name ="human" humanoid="true" needsair="true" genders="false" maleheadid="1,4" femaleheadid="1,8" canspeak="true" blooddecal="blood">
 
   <name firstname="Content/Characters/Human/[GENDER]firstnames.txt" lastname="Content/Characters/Human/lastnames.txt" />
+  <portraitbackground>
+    <sprite name="Human Portrait Background" texture="Content/Characters/Human/mugshotCircle.png" origin="0,0.05"/>
+  </portraitbackground>
   
   <ragdolls folder="default"/>
   <animations folder="default"/>

@@ -78,7 +78,8 @@ namespace Barotrauma
 
         private int headSpriteId;
         private Sprite headSprite;
-        private Sprite portrait;
+        public Sprite Portrait { get; private set; }
+        public Sprite PortraitBackground { get; private set; }
 
         public XElement HairElement { get; private set; }
         public XElement BeardElement { get; private set; }
@@ -108,14 +109,6 @@ namespace Barotrauma
             {
                 if (headSprite == null) LoadHeadSprite();
                 return headSprite;
-            }
-        }
-        public Sprite Portrait
-        {
-            get
-            {
-                if (portrait == null) LoadPortrait();
-                return portrait;
             }
         }
 
@@ -318,6 +311,12 @@ namespace Barotrauma
                     return true;
                 }
             }
+
+            var portraitBackgroundElement = doc.Root.Element("portraitbackground");
+            if (portraitBackgroundElement != null)
+            {
+                PortraitBackground = new Sprite(portraitBackgroundElement.Element("sprite"));
+            }
         }
 
         public CharacterInfo(XElement element)
@@ -387,8 +386,9 @@ namespace Barotrauma
                     string fileWithoutTags = Path.GetFileNameWithoutExtension(file);
                     fileWithoutTags = fileWithoutTags.Split('[', ']').First();
                     if (fileWithoutTags != fileName) continue;
-                    
+
                     headSprite = new Sprite(spriteElement, "", file);
+                    Portrait = new Sprite(spriteElement, "", file) { RelativeOrigin = Vector2.Zero };
 
                     //extract the tags out of the filename
                     SpriteTags = file.Split('[', ']').Skip(1).ToList();
@@ -401,21 +401,6 @@ namespace Barotrauma
                 }
 
                 break;
-            }
-        }
-
-        public void LoadPortrait()
-        {
-            string headSpriteDir = Path.GetDirectoryName(HeadSprite.FilePath);
-
-            string portraitPath = Path.Combine(headSpriteDir, (gender == Gender.Male ? "portrait" + headSpriteId : "fportrait" + headSpriteId) + ".png");
-            if (System.IO.File.Exists(portraitPath))
-            {
-                portrait = new Sprite(portraitPath, Vector2.Zero);
-            }
-            else
-            {
-                portrait = new Sprite("Content/Characters/Human/defaultportrait.png", Vector2.Zero);
             }
         }
 
@@ -592,10 +577,15 @@ namespace Barotrauma
                 headSprite.Remove();
                 headSprite = null;
             }
-            if (portrait != null)
+            if (Portrait != null)
             {
-                portrait.Remove();
-                portrait = null;
+                Portrait.Remove();
+                Portrait = null;
+            }
+            if (PortraitBackground != null)
+            {
+                PortraitBackground.Remove();
+                PortraitBackground = null;
             }
         }
     }
