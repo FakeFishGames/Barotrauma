@@ -1,4 +1,5 @@
-﻿<Ragdoll type="crawler2" colliderheightfromfloor="35" impacttolerance="6" draggable="True" limbscale="0.7" jointscale="0.7" canentersubmarine="True">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Ragdoll type="crawler2" colliderheightfromfloor="35" impacttolerance="6" draggable="True" limbscale="0.7" jointscale="0.7" canentersubmarine="True">
   <collider height="80" radius="40" />
   <!-- Head -->
   <limb id="0" radius="50" type="Head" flip="True" steerforce="15" mouthpos="50,0" healthindex="0" attackpriority="0" stepoffset="0,0" bodytype="Dynamic" height="0" width="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False">

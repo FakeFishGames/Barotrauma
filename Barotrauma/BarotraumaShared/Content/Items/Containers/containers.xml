@@ -147,7 +147,7 @@
   </Item>
   
   <Item
-    name="Diving Suit Cabinet"
+    name="Diving Gear Cabinet"
     identifier="divingsuitcabinet"
     linkable="true"
     pickdistance="50">

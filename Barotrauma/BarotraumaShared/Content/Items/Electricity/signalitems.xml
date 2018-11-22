@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="Wire" identifier="wire" category="Electrical" Tags="smallitem,wire" spritecolor="210,215,218,255" InventoryIconColor="210,215,218,255" canbepicked="true" cargocontaineridentifier="metalcrate">
     <Price locationtype="City" buyprice="80" />
@@ -9,7 +9,7 @@
       <Item identifier="copperbar" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="77,106,48,20" />
+    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="77,106,48,20" origin="0.5,0.5" />
     <Body radius="7" width="30" density="30" />
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
     <Wire />
@@ -23,7 +23,7 @@
       <Item identifier="copperbar" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="77,106,48,20" />
+    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="77,106,48,20" origin="0.5,0.5" />
     <Body radius="7" width="30" density="30" />
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
     <Wire />
@@ -37,7 +37,7 @@
       <Item identifier="copperbar" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="77,106,48,20" />
+    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="77,106,48,20" origin="0.5,0.5" />
     <Body radius="7" width="30" density="30" />
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
     <Wire />
@@ -51,7 +51,7 @@
       <Item identifier="copperbar" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="77,106,48,20" />
+    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="77,106,48,20" origin="0.5,0.5" />
     <Body radius="7" width="30" density="30" />
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
     <Wire />
@@ -65,7 +65,7 @@
       <Item identifier="copperbar" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="77,106,48,20" />
+    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="77,106,48,20" origin="0.5,0.5" />
     <Body radius="7" width="30" density="30" />
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
     <Wire />
@@ -79,7 +79,7 @@
       <Item identifier="copperbar" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="77,106,48,20" />
+    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="77,106,48,20" origin="0.5,0.5" />
     <Body radius="7" width="30" density="30" />
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
     <Wire />
@@ -93,7 +93,7 @@
       <Item identifier="copperbar" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="77,106,48,20" />
+    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="77,106,48,20" origin="0.5,0.5" />
     <Body radius="7" width="30" density="30" />
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
     <Wire />
@@ -108,7 +108,7 @@
       <Item identifier="copperbar" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,64,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,16,16,16" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,16,16,16" origin="0.5,0.5" />
     <Body width="16" height="16" density="30" />
     <Holdable slots="Any,RightHand,LeftHand" />
   </Item>
@@ -121,8 +121,8 @@
       <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,384,64,64"/>
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,0,16,16" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,384,64,64" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,0,16,16" origin="0.5,0.5" />
     <AndComponent canbeselected="true" />
     <Body width="16" height="16" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
@@ -146,8 +146,8 @@
       <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,384,64,64"/>
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,80,16,16" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,384,64,64" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,80,16,16" origin="0.5,0.5" />
     <AdderComponent canbeselected="true" />
     <Body width="16" height="16" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
@@ -170,8 +170,8 @@
       <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,384,64,64"/>
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,0,16,16" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,384,64,64" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,0,16,16" origin="0.5,0.5" />
     <OrComponent canbeselected="true" />
     <Body width="16" height="16" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
@@ -195,8 +195,8 @@
       <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,384,64,64"/>
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,0,15,15" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,384,64,64" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,0,15,15" origin="0.5,0.5" />
     <NotComponent canbeselected="true" />
     <Body width="16" height="16" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
@@ -218,8 +218,8 @@
       <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,384,64,64"/>
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="48,16,16,16" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,384,64,64" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="48,16,16,16" origin="0.5,0.5" />
     <RelayComponent canbeselected="true" vulnerabletoemp="false">
       <GuiFrame relativesize="0.2,0.15" minsize="350,160" maxsize="420,190" anchor="Center" style="ItemUI" />
     </RelayComponent>
@@ -255,8 +255,8 @@
       <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,384,64,64"/>
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,35,16,16" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,384,64,64" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,35,16,16" origin="0.5,0.5" />
     <DelayComponent canbeselected="true" />
     <Body width="16" height="8" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
@@ -279,9 +279,9 @@
       <Item identifier="fpgacircuit" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="959,128,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="48,0,16,16" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="48,0,16,16" origin="0.5,0.5" />
     <LightComponent canbeselected="true" color="1.0,0.0,0.0,1.0" castshadows="false">
-      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="0,96,31,32" />
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="0,96,31,32" origin="0.5,0.5" />
     </LightComponent>
     <Body width="16" height="16" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
@@ -305,7 +305,7 @@
       <Item identifier="fpgacircuit" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,256,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="94,0,25,23" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="94,0,25,23" origin="0.5,0.5" />
     <OxygenDetector canbeselected="true" />
     <Body width="31" height="24" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
@@ -327,7 +327,7 @@
       <Item identifier="fpgacircuit" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,256,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="67,0,26,23" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="67,0,26,23" origin="0.5,0.5" />
     <WaterDetector canbeselected="true" />
     <Body width="31" height="24" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
@@ -348,7 +348,7 @@
       <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="67,0,26,23" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="67,0,26,23" origin="0.5,0.5" />
     <SmokeDetector FireSizeThreshold="50" />
     <Body width="31" height="24" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
@@ -370,7 +370,7 @@
       <Item identifier="fpgacircuit" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,256,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="68,24,24,27" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="68,24,24,27" origin="0.5,0.5" />
     <MotionSensor range="100" canbeselected="true" />
     <Body width="31" height="24" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
@@ -391,8 +391,8 @@
       <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,384,64,64"/>
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,16,16,16" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,384,64,64" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,16,16,16" origin="0.5,0.5" />
     <SignalCheckComponent canbeselected="true" />
     <Body width="16" height="16" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
@@ -416,8 +416,8 @@
       <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,384,64,64"/>
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,16,16,16" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,384,64,64" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,16,16,16" origin="0.5,0.5" />
     <RegExFindComponent canbeselected="true" />
     <Body width="16" height="16" density="30" />
     <Holdable selectkey="Select" pickkey="Use" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true" PickingTime="5.0" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench">
@@ -439,8 +439,8 @@
       <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,384,64,64"/>
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,64,16,16" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,384,64,64" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,64,16,16" origin="0.5,0.5" />
     <OscillatorComponent canbeselected="true" outputtype="Pulse" frequency="1" />
     <Body width="16" height="16" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
@@ -463,8 +463,8 @@
       <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,384,64,64"/>
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,35,16,16" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,384,64,64" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,35,16,16" origin="0.5,0.5" />
     <WifiComponent canbeselected="true" MinChatMessageInterval="1.0" DiscardDuplicateChatMessages="true" />
     <Body width="16" height="16" density="30" />
     <Holdable selectkey="Select" pickkey="Use" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true" PickingTime="5.0" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench">
@@ -487,7 +487,7 @@
       <Item identifier="fpgacircuit" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,128,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,32,32,32" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="38,32,20,31" origin="0.5,0.5" />
     <Body width="32" height="30" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
@@ -512,7 +512,7 @@
       <Item identifier="fpgacircuit" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,128,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="34,64,23,23" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="34,64,23,23" origin="0.5,0.5" />
     <Body width="20" height="16" density="20" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
@@ -532,7 +532,7 @@
       <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,64,16,32" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,64,16,32" origin="0.5,0.5" />
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
