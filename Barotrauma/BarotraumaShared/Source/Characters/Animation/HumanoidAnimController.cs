@@ -1143,60 +1143,63 @@ namespace Barotrauma
                     }
 
                     //only pull with one hand when swimming
-                    if (i < 1 || !inWater)
+                    if (i > 0 && inWater) continue;
+                    
+                    Vector2 diff = ConvertUnits.ToSimUnits(targetLimb.WorldPosition - pullLimb.WorldPosition);
+
+                    pullLimb.PullJointEnabled = true;
+                    targetLimb.PullJointEnabled = true;
+                    if (targetLimb.type == LimbType.Torso || targetLimb == target.AnimController.MainLimb)
                     {
-                        Vector2 diff = ConvertUnits.ToSimUnits(targetLimb.WorldPosition - pullLimb.WorldPosition);
+                        Vector2 pullLimbAnchor = pullLimb.SimPosition;
+                        Vector2 targetAnchor = targetLimb.SimPosition;
+                        pullLimbAnchor = targetLimb.SimPosition;
+                        pullLimb.PullJointMaxForce = 5000.0f;
+                        targetMovement *= MathHelper.Clamp(Mass / target.Mass, 0.5f, 1.0f);
 
-                        pullLimb.PullJointEnabled = true;
-                        targetLimb.PullJointEnabled = true;
-                        if (targetLimb.type == LimbType.Torso || targetLimb == target.AnimController.MainLimb)
+                        //hand length
+                        float a = 37.0f;
+                        //arm length
+                        float b = 28.0f;
+
+                        Vector2 shoulderPos = LimbJoints[2].WorldAnchorA;
+                        Vector2 dragDir = inWater ? Vector2.Normalize(targetLimb.SimPosition - shoulderPos) : Vector2.UnitY;
+                        targetAnchor = shoulderPos - dragDir * ConvertUnits.ToSimUnits(a + b);
+                        targetLimb.PullJointMaxForce = 200.0f;
+
+                        if (target.Submarine != character.Submarine)
                         {
-                            pullLimb.PullJointWorldAnchorB = targetLimb.SimPosition;
-                            pullLimb.PullJointMaxForce = 5000.0f;
-                            targetMovement *= MathHelper.Clamp(Mass / target.Mass, 0.5f, 1.0f);
-
-                            //hand length
-                            float a = 37.0f;
-                            //arm length
-                            float b = 28.0f;
-
-                            Vector2 shoulderPos = LimbJoints[2].WorldAnchorA;
-                            Vector2 dragDir = inWater ? Vector2.Normalize(targetLimb.SimPosition - shoulderPos) : Vector2.UnitY;
-                            targetLimb.PullJointWorldAnchorB = shoulderPos - dragDir * ConvertUnits.ToSimUnits(a + b);
-                            targetLimb.PullJointMaxForce = 200.0f;
-
-                            if (target.Submarine != character.Submarine)
+                            if (character.Submarine == null)
                             {
-                                if (character.Submarine == null)
-                                {
-                                    pullLimb.PullJointWorldAnchorB += target.Submarine.SimPosition;
-                                    targetLimb.PullJointWorldAnchorB -= target.Submarine.SimPosition;
-                                }
-                                else if (target.Submarine == null)
-                                {
-                                    pullLimb.PullJointWorldAnchorB -= character.Submarine.SimPosition;
-                                    targetLimb.PullJointWorldAnchorB += character.Submarine.SimPosition;
-                                }
-                                else
-                                {
-                                    pullLimb.PullJointWorldAnchorB -= target.Submarine.SimPosition;
-                                    pullLimb.PullJointWorldAnchorB += character.Submarine.SimPosition;
-                                    targetLimb.PullJointWorldAnchorB -= character.Submarine.SimPosition;
-                                    targetLimb.PullJointWorldAnchorB += target.Submarine.SimPosition;
-                                }
+                                pullLimbAnchor += target.Submarine.SimPosition;
+                                targetAnchor -= target.Submarine.SimPosition;
+                            }
+                            else if (target.Submarine == null)
+                            {
+                                pullLimbAnchor -= character.Submarine.SimPosition;
+                                targetAnchor += character.Submarine.SimPosition;
+                            }
+                            else
+                            {
+                                pullLimbAnchor -= target.Submarine.SimPosition;
+                                pullLimbAnchor += character.Submarine.SimPosition;
+                                targetAnchor -= character.Submarine.SimPosition;
+                                targetAnchor += target.Submarine.SimPosition;
                             }
                         }
-                        else
-                        {
-                            pullLimb.PullJointWorldAnchorB = pullLimb.SimPosition + diff;
-                            pullLimb.PullJointMaxForce = 5000.0f;
-
-                            targetLimb.PullJointWorldAnchorB = targetLimb.SimPosition - diff;
-                            targetLimb.PullJointMaxForce = 5000.0f;
-                        }
-
-                        target.AnimController.movement = -diff;
+                        pullLimb.PullJointWorldAnchorB = pullLimbAnchor;
+                        targetLimb.PullJointWorldAnchorB = targetAnchor;
                     }
+                    else
+                    {
+                        pullLimb.PullJointWorldAnchorB = pullLimb.SimPosition + diff;
+                        pullLimb.PullJointMaxForce = 5000.0f;
+
+                        targetLimb.PullJointWorldAnchorB = targetLimb.SimPosition - diff;
+                        targetLimb.PullJointMaxForce = 5000.0f;
+                    }
+
+                    target.AnimController.movement = -diff;                    
                 }
 
                 float dist = Vector2.Distance(target.SimPosition, Collider.SimPosition);
