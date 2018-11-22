@@ -320,7 +320,6 @@ namespace Barotrauma.RuinGeneration
             }
         }
         private List<RuinEntity> ruinEntities = new List<RuinEntity>();
-
         private void GenerateRuinEntities(List<VoronoiCell> caveCells, Rectangle ruinArea, bool mirror)
         {
             var entityGrid = Hull.GenerateEntityGrid(new Rectangle(ruinArea.X, ruinArea.Y + ruinArea.Height, ruinArea.Width, ruinArea.Height));
@@ -389,6 +388,7 @@ namespace Barotrauma.RuinGeneration
             }
 
             List<Rectangle> hullRects = new List<Rectangle>(allShapes.Select(s => s.Rect));
+            
             //split intersecting hulls into multiple parts to prevent overlaps
             for (int i = 0; i < hullRects.Count; i++)
             {
@@ -405,7 +405,6 @@ namespace Barotrauma.RuinGeneration
                     {
                         Rectangle rectLeft = new Rectangle(hullRects[j].X, hullRects[j].Y, hullRects[i].X - hullRects[j].X, hullRects[j].Height);
                         Rectangle rectRight = new Rectangle(hullRects[i].Right, hullRects[j].Y, hullRects[j].Right - hullRects[i].Right, hullRects[j].Height);
-
                         hullRects[i] = rectLeft;
                         hullRects.Add(rectRight);
                     }                    
@@ -413,25 +412,34 @@ namespace Barotrauma.RuinGeneration
                     (hullRects[i].Y >= hullRects[j].Y && hullRects[i].Bottom <= hullRects[j].Bottom &&
                     hullRects[i].X <= hullRects[j].X && hullRects[i].Right >= hullRects[j].Right)
                     {
-                        Rectangle rectBottom = new Rectangle(hullRects[j].X, hullRects[j].Y, hullRects[i].Width, hullRects[i].Y - hullRects[j].Y);
+                        Rectangle rectBottom = new Rectangle(hullRects[j].X, hullRects[j].Y, hullRects[j].Width, hullRects[i].Y - hullRects[j].Y);
                         Rectangle rectTop = new Rectangle(hullRects[j].X, hullRects[i].Bottom, hullRects[j].Width, hullRects[j].Bottom - hullRects[i].Bottom);
-                        hullRects[i] = rectBottom;
+                        hullRects[j] = rectBottom;
                         hullRects.Add(rectTop);
+                    }
+                    //upper side of hull i is inside hull j
+                    else if (hullRects[j].Contains(hullRects[i].Location) && hullRects[j].Contains(new Vector2(hullRects[i].Right, hullRects[i].Y)))
+                    {
+                        hullRects[i] = new Rectangle(hullRects[i].X, hullRects[j].Bottom, hullRects[i].Width, hullRects[i].Bottom - hullRects[j].Bottom);
+                    }
+                    //lower side of hull i is inside hull j 
+                    else if (hullRects[j].Contains(new Vector2(hullRects[i].X, hullRects[i].Bottom)) && hullRects[j].Contains(new Vector2(hullRects[i].Right, hullRects[i].Bottom)))
+                    {
+                        hullRects[i] = new Rectangle(hullRects[i].X, hullRects[i].Y, hullRects[i].Width, hullRects[j].Y - hullRects[i].Y);
+                    }
+                    //left side of hull i is inside hull j
+                    else if (hullRects[j].Contains(hullRects[i].Location) && hullRects[j].Contains(new Vector2(hullRects[i].X, hullRects[i].Bottom)))
+                    {
+                        hullRects[i] = new Rectangle(hullRects[j].X, hullRects[i].Y, hullRects[i].Right - hullRects[j].X, hullRects[i].Height);
+                    }
+                    //right side of hull i is inside hull j 
+                    else if (hullRects[j].Contains(new Vector2(hullRects[i].Right, hullRects[i].Y)) && hullRects[j].Contains(new Vector2(hullRects[i].Right, hullRects[i].Bottom)))
+                    {
+                        hullRects[i] = new Rectangle(hullRects[i].X, hullRects[i].Y, hullRects[i].X, hullRects[j].X - hullRects[i].X);
                     }
                 }
             }
-
-            foreach (Rectangle hullRect in hullRects)
-            {
-                if (hullRect.Width <= 0 || hullRect.Height <= 0) continue;
-                var hull = new Hull(MapEntityPrefab.Find(null, "hull"),
-                    new Rectangle(hullRect.X, hullRect.Y + hullRect.Height, hullRect.Width, hullRect.Height), submarine: null)
-                {
-                    ShouldBeSaved = false
-                };
-                entityGrid.InsertEntity(hull);
-            }
-
+            
             foreach (RuinShape room in allShapes)
             {
                 if (room.RoomType == null) continue;
@@ -517,8 +525,30 @@ namespace Barotrauma.RuinGeneration
                                 ShouldBeSaved = false
                             };
                             CreateChildEntities(doorConfig, door, corridor);
-                            door.GetComponent<Items.Components.Door>().IsOpen = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < 0.8f;
+                            door.GetComponent<Door>().IsOpen = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < 0.8f;
                             ruinEntities.Add(new RuinEntity(doorConfig, door, room));
+
+                            //split the hull the door is inside
+                            for (int i = 0; i < hullRects.Count; i++)
+                            {
+                                if (!hullRects[i].Contains(doorPos)) continue;
+
+                                if (corridor.IsHorizontal)
+                                {
+                                    Rectangle rectLeft = new Rectangle(hullRects[i].X, hullRects[i].Y, (int)doorPos.X - hullRects[i].X, hullRects[i].Height);
+                                    Rectangle rectRight = new Rectangle((int)doorPos.X, hullRects[i].Y, hullRects[i].Right - (int)doorPos.X, hullRects[i].Height);
+                                    hullRects[i] = rectLeft;
+                                    hullRects.Add(rectRight);
+                                }
+                                else
+                                {
+                                    Rectangle rectBottom = new Rectangle(hullRects[i].X, hullRects[i].Y, hullRects[i].Width, (int)doorPos.Y - hullRects[i].Y);
+                                    Rectangle rectTop = new Rectangle(hullRects[i].X, (int)doorPos.Y, hullRects[i].Width, hullRects[i].Bottom - (int)doorPos.Y);
+                                    hullRects[i] = rectBottom;
+                                    hullRects.Add(rectTop);
+                                }
+                                break;
+                            }
                         }
                     }
                 }
@@ -536,8 +566,75 @@ namespace Barotrauma.RuinGeneration
                     CreateConnections(ruinEntity);
                 }
             }
+
+            //create hulls ---------------------------
+            foreach (Rectangle hullRect in hullRects)
+            {
+                if (hullRect.Width <= 0 || hullRect.Height <= 0) continue;
+                var hull = new Hull(MapEntityPrefab.Find(null, "hull"),
+                    new Rectangle(hullRect.X, hullRect.Y + hullRect.Height, hullRect.Width, hullRect.Height), submarine: null)
+                {
+                    ShouldBeSaved = false
+                };
+                entityGrid.InsertEntity(hull);
+            }
+
+            //create gaps between hulls ---------------------------
+            for (int i = 0; i < hullRects.Count; i++)
+            {
+                if (hullRects[i].Width <= 0 || hullRects[i].Height <= 0) continue;
+                for (int j = i + 1; j < hullRects.Count; j++)
+                {
+                    Rectangle? gapRect = null;
+                    if (Math.Abs(hullRects[i].X - hullRects[j].Right) <= 1 && hullYIntersect(hullRects[i], hullRects[j]))
+                    {
+                        gapRect = new Rectangle(
+                            hullRects[i].X - 3, Math.Max(hullRects[i].Y, hullRects[j].Y),
+                            6, Math.Min(hullRects[i].Bottom, hullRects[j].Bottom) - Math.Max(hullRects[i].Y, hullRects[j].Y));
+                    }
+                    else if (Math.Abs(hullRects[i].Right - hullRects[j].X) <= 1 && hullYIntersect(hullRects[i], hullRects[j]))
+                    {
+                        gapRect = new Rectangle(
+                            hullRects[i].Right - 3, Math.Max(hullRects[i].Y, hullRects[j].Y),
+                            6, Math.Min(hullRects[i].Bottom, hullRects[j].Bottom) - Math.Max(hullRects[i].Y, hullRects[j].Y));
+                    }
+                    else if (Math.Abs(hullRects[i].Y - hullRects[j].Bottom) <= 1 && hullXIntersect(hullRects[i], hullRects[j]))
+                    {
+                        gapRect = new Rectangle(
+                            Math.Max(hullRects[i].X, hullRects[j].X), hullRects[i].Y - 3,
+                            Math.Min(hullRects[i].Right, hullRects[j].Right) - Math.Max(hullRects[i].X, hullRects[j].X), 6);
+                    }
+                    else if (Math.Abs(hullRects[i].Bottom - hullRects[j].Y) <= 1 && hullXIntersect(hullRects[i], hullRects[j]))
+                    {
+                        gapRect = new Rectangle(
+                            Math.Max(hullRects[i].X, hullRects[j].X), hullRects[i].Bottom - 3,
+                            Math.Min(hullRects[i].Right, hullRects[j].Right) - Math.Max(hullRects[i].X, hullRects[j].X), 6);
+                    }
+
+                    if (!gapRect.HasValue || gapRect.Value.Width <= 0 || gapRect.Value.Height <= 0) continue;
+                    
+                    new Gap(new Rectangle(gapRect.Value.X, gapRect.Value.Y + gapRect.Value.Height, gapRect.Value.Width, gapRect.Value.Height), 
+                        isHorizontal: gapRect.Value.Height > gapRect.Value.Width, submarine: null)
+                    {
+                        ShouldBeSaved = false
+                    };
+                }
+            }
+
+            bool hullXIntersect(Rectangle rect1, Rectangle rect2)
+            {
+                return
+                    (rect1.X >= rect2.X && rect1.X <= rect2.Right) ||
+                    (rect2.X >= rect1.X && rect2.X <= rect1.Right);
+            }
+            bool hullYIntersect(Rectangle rect1, Rectangle rect2)
+            {
+                return
+                    (rect1.Y >= rect2.Y && rect1.Y <= rect2.Bottom) ||
+                    (rect2.Y >= rect1.Y && rect2.Y <= rect1.Bottom);
+            }
         }
-        
+
         private void CreateEntity(RuinEntityConfig entityConfig, RuinShape room, MapEntity parent)
         {
             if (room == null) return;
