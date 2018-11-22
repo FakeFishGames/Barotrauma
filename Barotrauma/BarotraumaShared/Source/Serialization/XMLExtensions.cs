@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -10,6 +12,13 @@ namespace Barotrauma
 {
     public static class XMLExtensions
     {
+        public static string ParseContentPathFromUri(this XObject element)
+        {
+            string[] splitted = element.BaseUri.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+            IEnumerable<string> filtered = splitted.SkipWhile(part => part != "Content");
+            return string.Join("/", filtered);
+        }
+
         public static XDocument TryLoadXml(string filePath)
         {
             XDocument doc;
