@@ -189,6 +189,8 @@ namespace Barotrauma.RuinGeneration
 
         private RuinGenerationParams generationParams;
 
+        private BTRoom entranceRoom;
+
         public List<RuinShape> RuinShapes
         {
             get { return allShapes; }
@@ -250,8 +252,7 @@ namespace Barotrauma.RuinGeneration
             rooms.ForEach(leaf => { leaf.CreateWalls(); });
 
             //---------------------------
-
-            BTRoom entranceRoom = null;
+            
             float shortestDistance = 0.0f;
             foreach (BTRoom leaf in rooms)
             {
@@ -303,6 +304,9 @@ namespace Barotrauma.RuinGeneration
             GenerateRuinEntities(caveCells, area, mirror);
         }
 
+#if DEBUG
+        public List<List<Rectangle>> hullSplitIter = new List<List<Rectangle>>();
+#endif
 
         class RuinEntity
         {
@@ -388,7 +392,12 @@ namespace Barotrauma.RuinGeneration
             }
 
             List<Rectangle> hullRects = new List<Rectangle>(allShapes.Select(s => s.Rect));
-            
+            List<Door> doors = new List<Door>();
+
+#if DEBUG
+            hullSplitIter.Add(new List<Rectangle>());
+            hullSplitIter.Last().AddRange(hullRects);
+#endif
             //split intersecting hulls into multiple parts to prevent overlaps
             for (int i = 0; i < hullRects.Count; i++)
             {
@@ -405,7 +414,7 @@ namespace Barotrauma.RuinGeneration
                     {
                         Rectangle rectLeft = new Rectangle(hullRects[j].X, hullRects[j].Y, hullRects[i].X - hullRects[j].X, hullRects[j].Height);
                         Rectangle rectRight = new Rectangle(hullRects[i].Right, hullRects[j].Y, hullRects[j].Right - hullRects[i].Right, hullRects[j].Height);
-                        hullRects[i] = rectLeft;
+                        hullRects[j] = rectLeft;
                         hullRects.Add(rectRight);
                     }                    
                     else if //hull i goes through hull j horizontally
@@ -435,8 +444,13 @@ namespace Barotrauma.RuinGeneration
                     //right side of hull i is inside hull j 
                     else if (hullRects[j].Contains(new Vector2(hullRects[i].Right, hullRects[i].Y)) && hullRects[j].Contains(new Vector2(hullRects[i].Right, hullRects[i].Bottom)))
                     {
-                        hullRects[i] = new Rectangle(hullRects[i].X, hullRects[i].Y, hullRects[i].X, hullRects[j].X - hullRects[i].X);
+                        hullRects[i] = new Rectangle(hullRects[i].X, hullRects[i].Y, hullRects[j].X - hullRects[i].X, hullRects[i].Height);
                     }
+                    
+#if DEBUG
+                    hullSplitIter.Add(new List<Rectangle>());
+                    hullSplitIter.Last().AddRange(hullRects);
+#endif
                 }
             }
             
@@ -496,7 +510,7 @@ namespace Barotrauma.RuinGeneration
                 submarineBlocker.IsStatic = true;
                 submarineBlocker.CollisionCategories = Physics.CollisionWall;
                 submarineBlocker.CollidesWith = Physics.CollisionWall;
-
+                
                 //generate doors --------------------------------------------------------------
                 if (room is Corridor corridor)
                 {
@@ -520,13 +534,15 @@ namespace Barotrauma.RuinGeneration
                             {
                                 doorPos.Y = (wall.A.Y + wall.B.Y) / 2.0f;
                             }
-                            var door = new Item(doorConfig.Prefab as ItemPrefab, doorPos, null)
+                            var doorItem = new Item(doorConfig.Prefab as ItemPrefab, doorPos, null)
                             {
                                 ShouldBeSaved = false
                             };
-                            CreateChildEntities(doorConfig, door, corridor);
-                            door.GetComponent<Door>().IsOpen = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < 0.8f;
-                            ruinEntities.Add(new RuinEntity(doorConfig, door, room));
+                            CreateChildEntities(doorConfig, doorItem, corridor);
+                            Door door = doorItem.GetComponent<Door>();
+                            doors.Add(door);
+                            door.IsOpen = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < 0.8f;
+                            ruinEntities.Add(new RuinEntity(doorConfig, doorItem, room));
 
                             //split the hull the door is inside
                             for (int i = 0; i < hullRects.Count; i++)
@@ -580,6 +596,7 @@ namespace Barotrauma.RuinGeneration
             }
 
             //create gaps between hulls ---------------------------
+            hullRects.Add(entranceRoom.Rect);
             for (int i = 0; i < hullRects.Count; i++)
             {
                 if (hullRects[i].Width <= 0 || hullRects[i].Height <= 0) continue;
@@ -612,6 +629,19 @@ namespace Barotrauma.RuinGeneration
                     }
 
                     if (!gapRect.HasValue || gapRect.Value.Width <= 0 || gapRect.Value.Height <= 0) continue;
+
+                    //doors create their own gaps, don't create an additional one if there's a door at this 
+                    bool doorFound = false;
+                    foreach (Door door in doors)
+                    {
+                        if (Math.Abs(door.Item.WorldPosition.X - gapRect.Value.Center.X) < 5 &&
+                            Math.Abs(door.Item.WorldPosition.Y - gapRect.Value.Center.Y) < 5)
+                        {
+                            doorFound = true;
+                            break;
+                        }
+                    }
+                    if (doorFound) { continue; }
                     
                     new Gap(new Rectangle(gapRect.Value.X, gapRect.Value.Y + gapRect.Value.Height, gapRect.Value.Width, gapRect.Value.Height), 
                         isHorizontal: gapRect.Value.Height > gapRect.Value.Width, submarine: null)

@@ -135,6 +135,7 @@ namespace Barotrauma
                     {
                         param.TextColor = param.UserData == selectedParams ? Color.LightGreen : param.Style.textColor;
                     }
+                    seedBox.Deselect();
                     return true;
                 }
             };
