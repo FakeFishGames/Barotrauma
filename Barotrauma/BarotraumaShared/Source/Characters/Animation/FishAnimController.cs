@@ -400,9 +400,27 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
-                if (limb.type == LimbType.Head || limb.type == LimbType.Tail || limb.IsSevered) continue;
+                if (limb.type == LimbType.Head || limb.type == LimbType.Tail || limb.IsSevered || !limb.body.Enabled) continue;
+                if (limb.Mass <= 0.0f)
+                {
+                    string errorMsg = "Creature death animation error: invalid limb mass on character \"" + character.SpeciesName + "\" (type: " + limb.type + ", mass: " + limb.Mass + ")";
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("FishAnimController.UpdateDying:InvalidMass" + character.ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    deathAnimTimer = deathAnimDuration;
+                    return;
+                }
 
-                limb.body.ApplyForce((centerOfMass - limb.SimPosition) * (float)(Math.Sin(walkPos) * Math.Sqrt(limb.Mass)) * 10.0f);
+                Vector2 diff = (centerOfMass - limb.SimPosition);
+                if (!MathUtils.IsValid(diff))
+                {
+                    string errorMsg = "Creature death animation error: invalid diff (center of mass: " + centerOfMass + ", limb position: " + limb.SimPosition + ")";
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("FishAnimController.UpdateDying:InvalidDiff" + character.ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    deathAnimTimer = deathAnimDuration;
+                    return;
+                }
+
+                limb.body.ApplyForce(diff * (float)(Math.Sin(walkPos) * Math.Sqrt(limb.Mass)) * 10.0f);
             }
         }
 
