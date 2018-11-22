@@ -22,7 +22,7 @@ namespace Barotrauma
 
     class RagdollParams : EditableParams
     {
-        public const float MIN_SCALE = 0.2f;
+        public const float MIN_SCALE = 0.1f;
         public const float MAX_SCALE = 2;
 
         public string SpeciesName { get; private set; }
