@@ -256,7 +256,8 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    newNodePos = RoundNode(item.Position, item.CurrentHull) - sub.HiddenSubPosition;
+                    newNodePos = RoundNode(item.Position, item.CurrentHull);
+                    if (sub != null) { newNodePos -= sub.HiddenSubPosition; }
                     canPlaceNode = true;
                 }
 
@@ -267,7 +268,7 @@ namespace Barotrauma.Items.Components
                     if (user == null) return;
 
                     Vector2 prevNodePos = nodes[nodes.Count - 1];
-                    if (sub != null) prevNodePos += sub.HiddenSubPosition;
+                    if (sub != null) { prevNodePos += sub.HiddenSubPosition; }
 
                     float currLength = 0.0f;
                     for (int i = 0; i < nodes.Count - 1; i++)
