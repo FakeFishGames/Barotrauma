@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using Voronoi2;
 using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma.RuinGeneration
 {
@@ -159,7 +160,9 @@ namespace Barotrauma.RuinGeneration
     class Line
     {
         public Vector2 A, B;
-        
+
+        public float Radius;
+
         public bool IsHorizontal
         {
             get { return Math.Abs(A.Y - B.Y) < Math.Abs(A.X - B.X); }
@@ -392,15 +395,15 @@ namespace Barotrauma.RuinGeneration
                     var ruinEntityConfig = room.RoomType.GetRandomEntity(RuinEntityType.Wall, room.GetLineAlignment(wall));
                     if (ruinEntityConfig == null) continue;
 
-                    float radius = (wall.A.X == wall.B.X) ?
+                    wall.Radius = (wall.A.X == wall.B.X) ?
                         (ruinEntityConfig.Prefab as StructurePrefab).Size.X * 0.5f :
                         (ruinEntityConfig.Prefab as StructurePrefab).Size.Y * 0.5f;
 
                     Rectangle rect = new Rectangle(
-                        (int)(wall.A.X - radius),
-                        (int)(wall.B.Y + radius),
-                        (int)((wall.B.X - wall.A.X) + radius * 2.0f),
-                        (int)((wall.B.Y - wall.A.Y) + radius * 2.0f));
+                        (int)(wall.A.X - wall.Radius),
+                        (int)(wall.B.Y + wall.Radius),
+                        (int)((wall.B.X - wall.A.X) + wall.Radius * 2.0f),
+                        (int)((wall.B.Y - wall.A.Y) + wall.Radius * 2.0f));
 
                     //cut a section off from both ends of a horizontal wall to get nicer looking corners 
                     if (wall.A.Y == wall.B.Y)
@@ -520,10 +523,14 @@ namespace Barotrauma.RuinGeneration
             }
             else if (entityConfig.Prefab is ItemAssemblyPrefab itemAssemblyPrefab)
             {
-                var entities = itemAssemblyPrefab.CreateInstance(position);
+                var entities = itemAssemblyPrefab.CreateInstance(position, sub: null);
                 foreach (MapEntity e in entities)
                 {
                     if (e is Structure) e.ShouldBeSaved = false;
+                }
+                if (entityConfig.Expand)
+                {
+                    ExpandEntities(entities);
                 }
             }
             else
@@ -647,6 +654,60 @@ namespace Barotrauma.RuinGeneration
                 {
                     entity.Entity.linkedTo.Add(targetEntity);
                     targetEntity.linkedTo.Add(entity.Entity);
+                }
+            }
+        }
+
+        private void ExpandEntities(IEnumerable<MapEntity> entities)
+        {
+            float minX = entities.Min(e => e.WorldPosition.X);
+            float maxX = entities.Max(e => e.WorldPosition.X);
+            float minY = entities.Min(e => e.WorldPosition.Y);
+            float maxY = entities.Max(e => e.WorldPosition.Y);
+            Vector2 center = new Vector2((minX + maxX) / 2.0f, (minY + maxY) / 2.0f);
+
+            foreach (MapEntity entity in entities)
+            {
+                Vector2 diff = entity.WorldPosition - center;
+                if (diff.LengthSquared() < 0.0001f) continue;
+
+                float rayLength = 1000.0f;
+                Vector2 rayStart = entity.WorldPosition;
+                Vector2 rayEnd = entity.WorldPosition + Vector2.Normalize(diff) * rayLength;
+                Vector2? closestIntersection = null;
+                float closestDist = rayLength * rayLength;
+                foreach (Line line in walls)
+                {
+                    Vector2? intersection = MathUtils.GetLineIntersection(line.A, line.B, rayStart, rayEnd);
+                    if (!intersection.HasValue) continue;
+
+                    intersection = line.IsHorizontal ?
+                        new Vector2(intersection.Value.X, intersection.Value.Y - Math.Sign(diff.Y) * line.Radius) :
+                        new Vector2(intersection.Value.X - Math.Sign(diff.X) * line.Radius, intersection.Value.Y);
+
+                    float dist = Vector2.DistanceSquared(rayStart, intersection.Value);
+                    if (dist < closestDist)
+                    {
+                        closestIntersection = intersection.Value;
+                        closestDist = dist;
+                    }
+                }
+
+                if (closestIntersection.HasValue)
+                {
+                    Vector2 moveAmount = closestIntersection.Value - entity.WorldPosition;
+                    Vector2 moveRatio = new Vector2(
+                        Math.Abs(diff.X) / ((maxX - minX) * 0.5f),
+                        Math.Abs(diff.Y) / ((maxY - minY) * 0.5f));
+                    moveAmount = new Vector2(moveAmount.X * moveRatio.X, moveAmount.Y * moveRatio.Y);
+
+                    if (entity is Item item)
+                    {
+                        var connectionPanel = item.GetComponent<ConnectionPanel>();
+                        connectionPanel?.MoveConnectedWires(moveAmount);
+                    }
+
+                    entity.Move(moveAmount);
                 }
             }
         }
