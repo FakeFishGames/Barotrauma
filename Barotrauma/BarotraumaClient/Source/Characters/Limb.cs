@@ -199,6 +199,13 @@ namespace Barotrauma
             }
         }
 
+        public void RecreateSprite()
+        {
+            if (Sprite == null) { return; }
+            var source = Sprite.SourceElement;
+            Sprite = new Sprite(source, file: GetSpritePath(source));
+        }
+
         /// <summary>
         /// Get the full path of a limb sprite, taking into account tags, gender and head id
         /// </summary>

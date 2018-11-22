@@ -2210,8 +2210,7 @@ namespace Barotrauma
                 }
                 if (int.TryParse(args.FirstOrDefault(), out int id))
                 {
-                    character.Info.HeadSpriteId = id;
-                    character.Info.LoadHeadSprite();
+                    character.ReloadHead(id);
                 }
             }));
 #endif
