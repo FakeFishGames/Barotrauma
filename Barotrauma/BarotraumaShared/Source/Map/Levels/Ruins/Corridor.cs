@@ -69,9 +69,8 @@ namespace Barotrauma.RuinGeneration
                 int right = Math.Max(room1.X, room2.X);
 
                 int top = Math.Max(room1.Y, room2.Y);
-                int bottom = Math.Min(room1.Bottom, room2.Bottom);
-
-                int yPos = Rand.Range(top, bottom - width, Rand.RandSync.Server);
+                //int bottom = Math.Min(room1.Bottom, room2.Bottom);
+                int yPos = top;//Rand.Range(top, bottom - width, Rand.RandSync.Server);
 
                 rect = new Rectangle(left, yPos, right - left, width);
             }

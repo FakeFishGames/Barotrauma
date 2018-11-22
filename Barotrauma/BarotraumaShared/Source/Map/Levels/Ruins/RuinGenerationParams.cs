@@ -121,21 +121,6 @@ namespace Barotrauma.RuinGeneration
             return paramsList[Rand.Int(paramsList.Count, Rand.RandSync.Server)];
         }
 
-        /*public RuinEntityConfig GetRandomRoom(RuinEntityType type, Alignment alignment, RuinRoom ruinRoom)
-        {
-            var matchingEntities = entityList.FindAll(rs =>
-                rs.Type.HasFlag(type) &&
-                rs.Alignment.HasFlag(alignment));// && 
-                //(roomType == RuinEntityConfig.RoomType.Any || rs.Placement == RuinEntityConfig.RoomType.Any || rs.Placement.HasFlag(roomType)));
-
-            if (!matchingEntities.Any()) return null;
-
-            return ToolBox.SelectWeightedRandom(
-                matchingEntities,
-                matchingEntities.Select(s => s.Commonness).ToList(),
-                Rand.RandSync.Server);
-        }*/
-
         private static void LoadAll()
         {
             paramsList = new List<RuinGenerationParams>();
@@ -220,6 +205,19 @@ namespace Barotrauma.RuinGeneration
 
         [Serialize(false, false), Editable()]
         public bool IsCorridor
+        {
+            get;
+            set;
+        }
+        
+        [Serialize(1.0f, false), Editable()]
+        public float MinWaterAmount
+        {
+            get;
+            set;
+        }
+        [Serialize(1.0f, false), Editable()]
+        public float MaxWaterAmount
         {
             get;
             set;

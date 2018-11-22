@@ -592,6 +592,11 @@ namespace Barotrauma.RuinGeneration
                 {
                     ShouldBeSaved = false
                 };
+                RuinShape room = allShapes.Find(s => s.Rect.Contains(hullRect.Center));
+                if (room?.RoomType != null)
+                {
+                    hull.WaterVolume = hull.Volume * Rand.Range(room.RoomType.MinWaterAmount, room.RoomType.MaxWaterAmount, Rand.RandSync.Server);
+                }
                 entityGrid.InsertEntity(hull);
             }
 
