@@ -2212,8 +2212,6 @@ namespace Barotrauma
                 {
                     character.Info.HeadSpriteId = id;
                     character.Info.LoadHeadSprite();
-                    character.Info.LoadPortrait();
-                    // load head attachmenets
                 }
             }));
 #endif
