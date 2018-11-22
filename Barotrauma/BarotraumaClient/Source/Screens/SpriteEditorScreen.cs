@@ -376,16 +376,6 @@ namespace Barotrauma
             widgets.Values.ForEach(w => w.Update((float)deltaTime));
         }
 
-        private Rectangle GetViewArea
-        {
-            get
-            {
-                int margin = 20;
-                var viewArea = new Rectangle(leftPanel.Rect.Right + margin, topPanel.Rect.Bottom + margin, rightPanel.Rect.Left - leftPanel.Rect.Right - margin * 2, Frame.Rect.Height - topPanel.Rect.Height - margin * 2);
-                return viewArea;
-            }
-        }
-
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             graphics.Clear(new Color(0.051f, 0.149f, 0.271f, 1.0f));
@@ -589,6 +579,16 @@ namespace Barotrauma
         #endregion
 
         #region Helpers
+        private Rectangle GetViewArea
+        {
+            get
+            {
+                int margin = 20;
+                var viewArea = new Rectangle(leftPanel.Rect.Right + margin, topPanel.Rect.Bottom + margin, rightPanel.Rect.Left - leftPanel.Rect.Right - margin * 2, Frame.Rect.Height - topPanel.Rect.Height - margin * 2);
+                return viewArea;
+            }
+        }
+
         private float GetBarScrollValue() => MathHelper.Lerp(0, 1, MathUtils.InverseLerp(minZoom, maxZoom, zoom));
 
         private string GetSpriteName(Sprite sprite)
