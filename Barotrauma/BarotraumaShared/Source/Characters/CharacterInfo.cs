@@ -83,10 +83,16 @@ namespace Barotrauma
 
 
         public XElement SourceElement { get; private set; }
+
         public XElement HairElement { get; private set; }
         public XElement BeardElement { get; private set; }
         public XElement MoustacheElement { get; private set; }
         public XElement FaceAttachment { get; private set; }
+
+        public int HairIndex { get; set; } = -1;
+        public int BeardIndex { get; set; } = -1;
+        public int MoustacheIndex { get; set; } = -1;
+        public int FaceAttachmentIndex { get; set; } = -1;
 
         public bool StartItemsGiven;
 
@@ -133,7 +139,7 @@ namespace Barotrauma
                 int oldId = headSpriteId;
 
                 headSpriteId = value;
-                Vector2 spriteRange = headSpriteRange[gender == Gender.Male ? 0 : 1];
+                Vector2 spriteRange = headSpriteRange[gender == Gender.Male || gender == Gender.None ? 0 : 1];
                 
                 if (headSpriteId < (int)spriteRange.X) headSpriteId = (int)(spriteRange.Y);
                 if (headSpriteId > (int)spriteRange.Y) headSpriteId = (int)(spriteRange.X);
@@ -363,36 +369,96 @@ namespace Barotrauma
             }
         }
 
+        private List<XElement> hairs;
+        private List<XElement> beards;
+        private List<XElement> moustaches;
+        private List<XElement> faceAttachments;
         public void LoadHeadAttachments()
         {
             var attachments = SourceElement.Element("HeadAttachments");
             if (attachments != null)
             {
-                var hairs = attachments.Elements("Wearable").Where(e => FilterWearable(e, WearableType.Hair));
-                var beards = attachments.Elements("Wearable").Where(e => FilterWearable(e, WearableType.Beard));
-                var moustaches = attachments.Elements("Wearable").Where(e => FilterWearable(e, WearableType.Moustache));
-                var faceAttachments = attachments.Elements("Wearable").Where(e => FilterWearable(e, WearableType.FaceAttachment));
+                var wearables = attachments.Elements("Wearable");
+                if (hairs == null)
+                {
+                    hairs = AddEmpty(FilterByType(wearables, WearableType.Hair));
+                }
+                if (beards == null)
+                {
+                    beards = AddEmpty(FilterByType(wearables, WearableType.Beard));
+                }
+                if (moustaches == null)
+                {
+                    moustaches = AddEmpty(FilterByType(wearables, WearableType.Moustache));
+                }
+                if (faceAttachments == null)
+                {
+                    faceAttachments = AddEmpty(FilterByType(wearables, WearableType.FaceAttachment));
+                }
 
-                HairElement = GetRandomElement(hairs);
-                BeardElement = GetRandomElement(beards);
-                MoustacheElement = GetRandomElement(moustaches);
-                FaceAttachment = GetRandomElement(faceAttachments);
+                if (IsValidIndex(HairIndex, hairs))
+                {
+                    HairElement = hairs[HairIndex];
+                }
+                else
+                {
+                    HairElement = GetRandomElement(hairs);
+                    HairIndex = hairs.IndexOf(HairElement);
+                }
+                if (IsValidIndex(BeardIndex, beards))
+                {
+                    BeardElement = beards[BeardIndex];
+                }
+                else
+                {
+                    BeardElement = GetRandomElement(beards);
+                    BeardIndex = beards.IndexOf(BeardElement);
+                }
+                if (IsValidIndex(MoustacheIndex, moustaches))
+                {
+                    MoustacheElement = moustaches[MoustacheIndex];
+                }
+                else
+                {
+                    MoustacheElement = GetRandomElement(moustaches);
+                    MoustacheIndex = moustaches.IndexOf(MoustacheElement);
+                }
+                if (IsValidIndex(FaceAttachmentIndex, faceAttachments))
+                {
+                    FaceAttachment = faceAttachments[FaceAttachmentIndex];
+                }
+                else
+                {
+                    FaceAttachment = GetRandomElement(faceAttachments);
+                    FaceAttachmentIndex = faceAttachments.IndexOf(FaceAttachment);
+                }
+
+                bool IsValidIndex(int index, List<XElement> list) => index >= 0 && index < list.Count - 1;
 
                 IEnumerable<float> GetWeights(IEnumerable<XElement> elements) => elements.Select(h => h.GetAttributeFloat("commonness", 1f));
 
-                XElement GetRandomElement(IEnumerable<XElement> elements)
+                List<XElement> AddEmpty(IEnumerable<XElement> elements)
                 {
                     // Let's add an empty element so that there's a chance that we don't get any actual element -> allows bald and beardless guys, for example.
                     var emptyElement = new XElement("Empty");
-                    var list = elements.ToList();
-                    list.Add(emptyElement);
-                    var element = ToolBox.SelectWeightedRandom(list, GetWeights(list).ToList(), Rand.RandSync.Server);
-                    return element == emptyElement ? null : element;
+                    var list = new List<XElement>() { emptyElement };
+                    list.AddRange(elements);
+                    return list;
                 }
 
-                bool FilterWearable(XElement element, WearableType targetType)
+                XElement GetRandomElement(IEnumerable<XElement> elements)
                 {
-                    if (!Enum.TryParse(element.GetAttributeString("type", ""), true, out WearableType type) || type != targetType) { return false; }
+                    var filtered = elements.Where(e => IsWearableAllowed(e));
+                    if (filtered.Count() == 0) { return null; }
+                    var element = ToolBox.SelectWeightedRandom(filtered.ToList(), GetWeights(filtered).ToList(), Rand.RandSync.Server);
+                    return element == null || element.Name == "Empty" ? null : element;
+                }
+
+                IEnumerable<XElement> FilterByType(IEnumerable<XElement> elements, WearableType targetType) 
+                    => elements.Where(e => Enum.TryParse(e.GetAttributeString("type", ""), true, out WearableType type) && type == targetType);
+
+                bool IsWearableAllowed(XElement element)
+                {
                     var spriteElement = element.Element("sprite");
                     var p = spriteElement.GetAttributeString("texture", string.Empty);
                     if (!System.IO.File.Exists(p) || Path.GetFullPath(p) != Path.GetFullPath(HeadSprite.FilePath)) { return false; }

@@ -2384,6 +2384,10 @@ namespace Barotrauma.Networking
 
                 DebugConsole.Log("Received invalid characterinfo from \"" + sender.Name + "\"! { " + e.Message + " }");
             }
+            int hairIndex = message.ReadByte();
+            int beardIndex = message.ReadByte();
+            int moustacheIndex = message.ReadByte();
+            int faceAttachmentIndex = message.ReadByte();
 
             List<JobPrefab> jobPreferences = new List<JobPrefab>();
             int count = message.ReadByte();
@@ -2397,7 +2401,11 @@ namespace Barotrauma.Networking
 
             sender.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, sender.Name, gender)
             {
-                HeadSpriteId = headSpriteId
+                HeadSpriteId = headSpriteId,
+                HairIndex = hairIndex,
+                BeardIndex = beardIndex,
+                MoustacheIndex = moustacheIndex,
+                FaceAttachmentIndex = faceAttachmentIndex
             };
 
             //if the client didn't provide job preferences, we'll use the preferences that are randomly assigned in the Client constructor

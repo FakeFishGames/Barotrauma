@@ -1503,6 +1503,7 @@ namespace Barotrauma
         private void UpdatePlayerHead(CharacterInfo characterInfo)
         {
             playerHeadSprite.Sprite = characterInfo.HeadSprite;
+            // TODO: update wearables
         }
 
         private bool ToggleHead(GUIButton button, object userData)
