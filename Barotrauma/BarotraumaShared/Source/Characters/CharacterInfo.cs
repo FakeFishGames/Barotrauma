@@ -81,6 +81,8 @@ namespace Barotrauma
         public Sprite Portrait { get; private set; }
         public Sprite PortraitBackground { get; private set; }
 
+
+        public XElement SourceElement { get; private set; }
         public XElement HairElement { get; private set; }
         public XElement BeardElement { get; private set; }
         public XElement MoustacheElement { get; private set; }
@@ -200,6 +202,8 @@ namespace Barotrauma
                 cachedConfigs.Add(file, doc);
             }
 
+            SourceElement = doc.Root;
+
             if (doc.Root.GetAttributeBool("genders", false))
             {
                 if (gender == Gender.None)
@@ -263,54 +267,7 @@ namespace Barotrauma
                 this.ragdoll = ragdoll;
             }
 
-            var attachments = doc.Root.Element("HeadAttachments");
-            if (attachments != null)
-            {
-                var hairs = attachments.Elements("Wearable").Where(e => FilterWearable(e, WearableType.Hair));
-                var beards = attachments.Elements("Wearable").Where(e => FilterWearable(e, WearableType.Beard));
-                var moustaches = attachments.Elements("Wearable").Where(e => FilterWearable(e, WearableType.Moustache));
-                var faceAttachments = attachments.Elements("Wearable").Where(e => FilterWearable(e, WearableType.FaceAttachment));
-
-                HairElement = GetRandomElement(hairs);
-                BeardElement = GetRandomElement(beards);
-                MoustacheElement = GetRandomElement(moustaches);
-                FaceAttachment = GetRandomElement(faceAttachments);
-
-                IEnumerable<float> GetWeights(IEnumerable<XElement> elements) => elements.Select(h => h.GetAttributeFloat("commonness", 1f));
-
-                XElement GetRandomElement(IEnumerable<XElement> elements)
-                {
-                    // Let's add an empty element so that there's a chance that we don't get any actual element -> allows bald and beardless guys, for example.
-                    var emptyElement = new XElement("Empty");
-                    var list = elements.ToList();
-                    list.Add(emptyElement);
-                    var element = ToolBox.SelectWeightedRandom(list, GetWeights(list).ToList(), Rand.RandSync.Server);
-                    return element == emptyElement ? null : element;
-                }
-
-                bool FilterWearable(XElement element, WearableType targetType)
-                {
-                    if (!Enum.TryParse(element.GetAttributeString("type", ""), true, out WearableType type) || type != targetType) { return false; }
-                    var spriteElement = element.Element("sprite");
-                    var p = spriteElement.GetAttributeString("texture", string.Empty);
-                    if (!System.IO.File.Exists(p) || Path.GetFullPath(p) != Path.GetFullPath(HeadSprite.FilePath)) { return false; }
-                    string spriteName = spriteElement.GetAttributeString("name", string.Empty);
-                    return IsAllowed(HairElement, spriteName) && IsAllowed(BeardElement, spriteName) && IsAllowed(MoustacheElement, spriteName) && IsAllowed(FaceAttachment, spriteName);
-                }
-
-                bool IsAllowed(XElement element, string spriteName)
-                {
-                    if (element != null)
-                    {
-                        var disallowed = element.GetAttributeStringArray("disallow", new string[0]);
-                        if (disallowed.Any(s => spriteName.Contains(s)))
-                        {
-                            return false;
-                        }
-                    }
-                    return true;
-                }
-            }
+            LoadHeadAttachments();
 
             var portraitBackgroundElement = doc.Root.Element("portraitbackground");
             if (portraitBackgroundElement != null)
@@ -323,6 +280,8 @@ namespace Barotrauma
         {
             ID = idCounter;
             idCounter++;
+
+            SourceElement = element;
 
             Name = element.GetAttributeString("name", "unnamed");
 
@@ -401,6 +360,58 @@ namespace Barotrauma
                 }
 
                 break;
+            }
+        }
+
+        public void LoadHeadAttachments()
+        {
+            var attachments = SourceElement.Element("HeadAttachments");
+            if (attachments != null)
+            {
+                var hairs = attachments.Elements("Wearable").Where(e => FilterWearable(e, WearableType.Hair));
+                var beards = attachments.Elements("Wearable").Where(e => FilterWearable(e, WearableType.Beard));
+                var moustaches = attachments.Elements("Wearable").Where(e => FilterWearable(e, WearableType.Moustache));
+                var faceAttachments = attachments.Elements("Wearable").Where(e => FilterWearable(e, WearableType.FaceAttachment));
+
+                HairElement = GetRandomElement(hairs);
+                BeardElement = GetRandomElement(beards);
+                MoustacheElement = GetRandomElement(moustaches);
+                FaceAttachment = GetRandomElement(faceAttachments);
+
+                IEnumerable<float> GetWeights(IEnumerable<XElement> elements) => elements.Select(h => h.GetAttributeFloat("commonness", 1f));
+
+                XElement GetRandomElement(IEnumerable<XElement> elements)
+                {
+                    // Let's add an empty element so that there's a chance that we don't get any actual element -> allows bald and beardless guys, for example.
+                    var emptyElement = new XElement("Empty");
+                    var list = elements.ToList();
+                    list.Add(emptyElement);
+                    var element = ToolBox.SelectWeightedRandom(list, GetWeights(list).ToList(), Rand.RandSync.Server);
+                    return element == emptyElement ? null : element;
+                }
+
+                bool FilterWearable(XElement element, WearableType targetType)
+                {
+                    if (!Enum.TryParse(element.GetAttributeString("type", ""), true, out WearableType type) || type != targetType) { return false; }
+                    var spriteElement = element.Element("sprite");
+                    var p = spriteElement.GetAttributeString("texture", string.Empty);
+                    if (!System.IO.File.Exists(p) || Path.GetFullPath(p) != Path.GetFullPath(HeadSprite.FilePath)) { return false; }
+                    string spriteName = spriteElement.GetAttributeString("name", string.Empty);
+                    return IsAllowed(HairElement, spriteName) && IsAllowed(BeardElement, spriteName) && IsAllowed(MoustacheElement, spriteName) && IsAllowed(FaceAttachment, spriteName);
+                }
+
+                bool IsAllowed(XElement element, string spriteName)
+                {
+                    if (element != null)
+                    {
+                        var disallowed = element.GetAttributeStringArray("disallow", new string[0]);
+                        if (disallowed.Any(s => spriteName.Contains(s)))
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
             }
         }
 

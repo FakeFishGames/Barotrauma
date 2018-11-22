@@ -625,11 +625,7 @@ namespace Barotrauma
 
             if (characterInfo != null)
             {
-                var head = newCharacter.AnimController.GetLimb(LimbType.Head);
-                characterInfo.HairElement?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.Hair)));
-                characterInfo.BeardElement?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.Beard)));
-                characterInfo.MoustacheElement?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.Moustache)));
-                characterInfo.FaceAttachment?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.FaceAttachment)));
+               newCharacter.LoadHeadAttachments();
             }
 
             return newCharacter;
@@ -767,6 +763,34 @@ namespace Barotrauma
             Enabled = GameMain.NetworkMember == null;
         }
         partial void InitProjSpecific(XDocument doc);
+
+        public void ReloadHead(int? id = null)
+        {
+            if (Info == null) { return; }
+            var head = AnimController.GetLimb(LimbType.Head);
+            if (head == null) { return; }
+            if (id.HasValue)
+            {
+                Info.HeadSpriteId = id.Value;
+                Info.LoadHeadSprite();
+                Info.LoadHeadAttachments();
+            }
+            head.RecreateSprite();
+            LoadHeadAttachments();
+        }
+
+        private void LoadHeadAttachments()
+        {
+            var head = AnimController.GetLimb(LimbType.Head);
+            if (head == null) { return; }
+            // Note that if there are any other wearables on the head, they are removed here.
+            head.OtherWearables.ForEach(w => w.Sprite.Remove());
+            head.OtherWearables.Clear();
+            Info.HairElement?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.Hair)));
+            Info.BeardElement?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.Beard)));
+            Info.MoustacheElement?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.Moustache)));
+            Info.FaceAttachment?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.FaceAttachment)));
+        }
 
         private static string humanConfigFile;
         public static string HumanConfigFile
