@@ -273,13 +273,13 @@ namespace Barotrauma
                 this.ragdoll = ragdoll;
             }
 
-            LoadHeadAttachments();
-
             var portraitBackgroundElement = doc.Root.Element("portraitbackground");
             if (portraitBackgroundElement != null)
             {
                 PortraitBackground = new Sprite(portraitBackgroundElement.Element("sprite"));
             }
+
+            LoadHeadAttachments();
         }
 
         public CharacterInfo(XElement element)
@@ -327,6 +327,17 @@ namespace Barotrauma
                 Job = new Job(subElement);
                 break;
             }
+
+            string ragdollFile = element.GetAttributeString("ragdoll", string.Empty);
+            ragdoll = HumanRagdollParams.GetRagdollParams("human", ragdollFile);
+
+            var portraitBackgroundElement = element.Element("portraitbackground");
+            if (portraitBackgroundElement != null)
+            {
+                PortraitBackground = new Sprite(portraitBackgroundElement.Element("sprite"));
+            }
+
+            LoadHeadAttachments();
         }
 
         public void LoadHeadSprite()
@@ -551,9 +562,16 @@ namespace Barotrauma
                 new XAttribute("gender", gender == Gender.Male ? "m" : "f"),
                 new XAttribute("salary", Salary),
                 new XAttribute("headspriteid", HeadSpriteId),
+                new XAttribute("hairindex", HairIndex),
+                new XAttribute("beardindex", BeardIndex),
+                new XAttribute("moustacheindex", MoustacheIndex),
+                new XAttribute("faceattachmentindex", FaceAttachmentIndex),
                 new XAttribute("startitemsgiven", StartItemsGiven),
+                new XAttribute("ragdoll", Ragdoll.FileName),
                 new XAttribute("personality", personalityTrait == null ? "" : personalityTrait.Name));
             
+            // TODO: animations?
+
             if (Character != null)
             {
                 if (Character.Inventory != null)
@@ -585,6 +603,10 @@ namespace Barotrauma
             msg.Write(Name);
             msg.Write(Gender == Gender.Female);
             msg.Write((byte)HeadSpriteId);
+            msg.Write((byte)HairIndex);
+            msg.Write((byte)BeardIndex);
+            msg.Write((byte)MoustacheIndex);
+            msg.Write((byte)FaceAttachmentIndex);
             if (Job != null)
             {
                 msg.Write(Job.Prefab.Identifier);
@@ -599,15 +621,23 @@ namespace Barotrauma
             {
                 msg.Write("");
             }
+            msg.Write(Ragdoll.FileName);
+            // TODO: animations
         }
 
         public static CharacterInfo ClientRead(string configPath, NetBuffer inc)
         {
-            ushort infoID       = inc.ReadUInt16();
-            string newName      = inc.ReadString();
-            bool isFemale       = inc.ReadBoolean();
-            int headSpriteID    = inc.ReadByte();
-            string jobIdentifier      = inc.ReadString();
+            ushort infoID               = inc.ReadUInt16();
+            string newName              = inc.ReadString();
+            bool isFemale               = inc.ReadBoolean();
+            int headSpriteID            = inc.ReadByte();
+            int hairIndex               = inc.ReadByte();
+            int beardIndex              = inc.ReadByte();
+            int moustacheIndex          = inc.ReadByte();
+            int faceAttachmentIndex     = inc.ReadByte();
+            string jobIdentifier        = inc.ReadString();
+            string ragdoll              = inc.ReadString();
+            // TODO: animations
 
             JobPrefab jobPrefab = null;
             Dictionary<string, float> skillLevels = new Dictionary<string, float>();
@@ -623,11 +653,17 @@ namespace Barotrauma
                 }
             }
 
-            CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab)
+            CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab, HumanRagdollParams.GetRagdollParams("human", ragdoll))
             {
                 ID = infoID,
-                HeadSpriteId = headSpriteID
+                HeadSpriteId = headSpriteID,
+                HairIndex = hairIndex,
+                BeardIndex = beardIndex,
+                MoustacheIndex = moustacheIndex,
+                FaceAttachmentIndex = faceAttachmentIndex
             };
+            // Need to reload the attachments, because the indices were changed.
+            ch.LoadHeadAttachments();
 
             System.Diagnostics.Debug.Assert(skillLevels.Count == ch.Job.Skills.Count);
             if (ch.Job != null)

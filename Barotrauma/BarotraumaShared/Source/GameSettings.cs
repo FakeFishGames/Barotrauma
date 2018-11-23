@@ -102,29 +102,13 @@ namespace Barotrauma
             set { jobPreferences = value; }
         }
 
-        private int characterHeadIndex;
-        public int CharacterHeadIndex
-        {
-            get { return characterHeadIndex; }
-            set
-            {
-                if (value == characterHeadIndex) return;
-                characterHeadIndex = value;
-                Save();
-            }
-        }
+        public int CharacterHeadIndex { get; set; }
+        public int CharacterHairIndex { get; set; }
+        public int CharacterBeardIndex { get; set; }
+        public int CharacterMoustacheIndex { get; set; }
+        public int CharacterFaceAttachmentIndex { get; set; }
 
-        private Gender characterGender;
-        public Gender CharacterGender
-        {
-            get { return characterGender; }
-            set
-            {
-                if (value == characterGender) return;
-                characterGender = value;
-                Save();
-            }
-        }
+        public Gender CharacterGender { get; set; }
 
         private float aimAssistAmount;
         public float AimAssistAmount
@@ -198,7 +182,7 @@ namespace Barotrauma
         public bool     WasGameUpdated { get; set; }
 
         private string defaultPlayerName;
-        public string   DefaultPlayerName
+        public string DefaultPlayerName
         {
             get
             {
@@ -209,7 +193,6 @@ namespace Barotrauma
                 if (defaultPlayerName != value)
                 {
                     defaultPlayerName = value;
-                    Save();
                 }
             }
         }
@@ -393,9 +376,13 @@ namespace Barotrauma
                         break;
                     case "player":
                         defaultPlayerName = subElement.GetAttributeString("name", "");
-                        characterHeadIndex = subElement.GetAttributeInt("headindex", Rand.Int(10));
-                        characterGender = subElement.GetAttributeString("gender", Rand.Range(0.0f, 1.0f) < 0.5f ? "male" : "female")
+                        CharacterHeadIndex = subElement.GetAttributeInt("headindex", Rand.Int(10));
+                        CharacterGender = subElement.GetAttributeString("gender", Rand.Range(0.0f, 1.0f) < 0.5f ? "male" : "female")
                             .ToLowerInvariant() == "male" ? Gender.Male : Gender.Female;
+                        CharacterHairIndex = subElement.GetAttributeInt("hairindex", -1);
+                        CharacterBeardIndex = subElement.GetAttributeInt("beardindex", -1);
+                        CharacterMoustacheIndex = subElement.GetAttributeInt("moustacheindex", -1);
+                        CharacterFaceAttachmentIndex = subElement.GetAttributeInt("faceattachmentindex", -1);
                         break;
                     case "tutorials":
                         foreach (XElement tutorialElement in subElement.Elements())
@@ -539,8 +526,12 @@ namespace Barotrauma
 
             var playerElement = new XElement("player",
                 new XAttribute("name", defaultPlayerName ?? ""),
-                new XAttribute("headindex", characterHeadIndex),
-                new XAttribute("gender", characterGender));
+                new XAttribute("headindex", CharacterHeadIndex),
+                new XAttribute("gender", CharacterGender),
+                new XAttribute("hairindex", CharacterHairIndex),
+                new XAttribute("beardindex", CharacterBeardIndex),
+                new XAttribute("moustacheindex", CharacterMoustacheIndex),
+                new XAttribute("faceattachmentindex", CharacterFaceAttachmentIndex));
             doc.Root.Add(playerElement);
             
 #if CLIENT
