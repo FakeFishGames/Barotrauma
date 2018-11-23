@@ -115,6 +115,7 @@ namespace Barotrauma.Items.Components
             HashSet<Submarine> subs = new HashSet<Submarine>();
             foreach (Hull hull in Hull.hullList)
             {
+                if (hull.Submarine == null) continue;
                 var hullFrame = submarineContainer.Children.First().FindChild(hull);
                 if (hullFrame == null) continue;
 

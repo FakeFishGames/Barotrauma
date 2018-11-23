@@ -2,12 +2,12 @@
 <Structures
   RoomDivisionIterationsMin="3"
   RoomDivisionIterationsMax="4"
-  VerticalSplitProbability="0.5"
-  RoomWidthRange="0.5,0.9"
+  VerticalSplitProbability="0.1"
+  RoomWidthRange="0.75,0.9"
   RoomHeightRange="0.5,0.9"
   CorridorWidthRange="200,256">
   
-  <RoomType name="vault" placement="last">
+  <RoomType name="vault" placement="last" minwateramount="0.0" maxwateramount="0.0">
     <structure prefab="RuinWallHeavyHorizontal" alignment="Top, Bottom" type="Wall"/>
     <structure prefab="RuinWallHeavyVertical" alignment="Left,Right" type="Wall"/>  
     <structure prefab="RuinBackCarvings" alignment="Center" type="Back" commonness="1"/>
@@ -18,7 +18,7 @@
   </RoomType>
   
   <!-- "last" and a placement offset of -1 means that this is used as the second-to-last room-->
-  <RoomType name="armory" placement="last" placementoffset="-1">
+  <RoomType name="armory" placement="last" placementoffset="-1" minwateramount="0.0" maxwateramount="0.5">
     <structure prefab="RuinWallHeavyHorizontal" alignment="Top, Bottom" type="Wall"/>
     <structure prefab="RuinWallHeavyVertical" alignment="Left,Right" type="Wall"/>
     <structure prefab="RuinBackCarvings" alignment="Center" type="Back" commonness="1"/>
@@ -26,12 +26,12 @@
     <item prefab="ancientweapon" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="1"/>
   </RoomType>
   
-  <RoomType name="genericroom1" placement="any">
+  <RoomType name="genericroom1" placement="any" minwateramount="0.0" maxwateramount="1.0">
     <structure prefab="RuinWallHorizontal" alignment="Top, Bottom" type="Wall"/>
     <structure prefab="RuinWallVertical" alignment="Left,Right" type="Wall"/>
     <structure prefab="RuinBackFractal" alignment="Center" type="Back" commonness="2"/> 
     <item prefab="RuinBlock" alignment="Right,Top,Bottom,Left" type="Prop" commonness="5"/>    
-    <item prefab="oxygeniteshard" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
+    <item prefab="oxygeniteshard" alignment="Bottom" type="Prop" commonness="5"/>
     <item prefab="sulphuriteshard" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
   </RoomType>
 

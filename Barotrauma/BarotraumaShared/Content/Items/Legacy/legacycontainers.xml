@@ -3,7 +3,8 @@
     name="Steel Cabinet"
     category="Legacy"
     linkable="true"
-    pickdistance ="150">
+    pickdistance="150"
+    waterproof="true">
 
     <Sprite texture="locker.png" depth="0.84" sourcerect="0,0,128,128"/>
 
@@ -16,7 +17,8 @@
     name="Medicine Cabinet"
     category="Legacy"
     linkable="true"
-    pickdistance ="150">
+    pickdistance="150"
+    waterproof="true">
 
     <Sprite texture ="cabinets.png" depth="0.84" sourcerect="0,0,48,64" canflipx="false"/>
 
@@ -29,7 +31,8 @@
     name="Toxic Cabinet"
     category="Legacy"
     linkable="true"
-    pickdistance ="150">
+    pickdistance="150"
+    waterproof="true">
 
     <Sprite texture="cabinets.png" depth="0.84" sourcerect="0,64,48,64" canflipx="false"/>
 

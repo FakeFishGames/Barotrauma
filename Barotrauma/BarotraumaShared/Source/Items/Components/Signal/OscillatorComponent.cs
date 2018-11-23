@@ -78,7 +78,7 @@ namespace Barotrauma.Items.Components
                 case "set_frequency":
                 case "frequency_in":
                     float newFrequency;
-                    if (float.TryParse(signal, out newFrequency))
+                    if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out newFrequency))
                     {
                         Frequency = newFrequency;
                     }

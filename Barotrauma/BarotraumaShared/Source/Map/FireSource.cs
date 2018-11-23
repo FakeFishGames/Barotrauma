@@ -1,7 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using Barotrauma.Networking;
 #if CLIENT
 using Barotrauma.Sounds;
 using Barotrauma.Lights;
@@ -39,7 +39,7 @@ namespace Barotrauma
 
         public Vector2 WorldPosition
         {
-            get { return Submarine.Position + position; }
+            get { return Submarine == null ? position : Submarine.Position + position; }
         }
 
         public Vector2 Size
@@ -75,13 +75,16 @@ namespace Barotrauma
             if (!isNetworkMessage && GameMain.Client != null) return;
             
             hull.AddFireSource(this);
-
-            Submarine = hull.Submarine;
-
-            this.position = worldPosition - new Vector2(-5.0f, 5.0f) - Submarine.Position;
+            
+            position = worldPosition - new Vector2(-5.0f, 5.0f);
+            if (hull.Submarine != null)
+            {
+                Submarine = hull.Submarine;
+                position -= Submarine.Position;
+            }
 
 #if CLIENT
-            lightSource = new LightSource(this.position, 50.0f, new Color(1.0f, 0.9f, 0.7f), hull == null ? null : hull.Submarine);
+            lightSource = new LightSource(this.position, 50.0f, new Color(1.0f, 0.9f, 0.7f), hull?.Submarine);
 #endif
 
             size = new Vector2(10.0f, 10.0f);

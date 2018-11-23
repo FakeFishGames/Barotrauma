@@ -145,6 +145,19 @@
       <Containable identifiers="divingsuit"/>
     </ItemContainer>
   </Item>
+  
+  <Item
+    name="Diving Gear Cabinet"
+    identifier="divingsuitcabinet"
+    linkable="true"
+    pickdistance="50">
+
+    <Sprite texture="containers.png" depth="0.84" sourcerect="113,0,54,169"/>
+
+    <ItemContainer capacity="15" canbeselected="true" hideitems="true">
+      <Containable identifiers="smallitem,mediumitem"/>
+    </ItemContainer>
+  </Item>
 
   <Item
     name="Metal Crate"    
