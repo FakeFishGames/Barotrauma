@@ -719,6 +719,7 @@ namespace Barotrauma
                     new CharacterInfo(Character.HumanConfigFile, GameMain.NetworkMember.Name, GameMain.Config.CharacterGender, null)
                     {
                         HeadSpriteId = GameMain.Config.CharacterHeadIndex
+                        // TODO: hair etc?
                     };
                 GameMain.NetworkMember.CharacterInfo = characterInfo;
             }
@@ -1513,7 +1514,12 @@ namespace Barotrauma
             int dir = (int)userData;
             GameMain.NetworkMember.CharacterInfo.HeadSpriteId += dir;
             GameMain.Config.CharacterHeadIndex = GameMain.NetworkMember.CharacterInfo.HeadSpriteId;
+            GameMain.Config.CharacterHairIndex = GameMain.NetworkMember.CharacterInfo.HairIndex;
+            GameMain.Config.CharacterBeardIndex = GameMain.NetworkMember.CharacterInfo.BeardIndex;
+            GameMain.Config.CharacterMoustacheIndex = GameMain.NetworkMember.CharacterInfo.MoustacheIndex;
+            GameMain.Config.CharacterFaceAttachmentIndex = GameMain.NetworkMember.CharacterInfo.FaceAttachmentIndex;
             UpdatePlayerHead(GameMain.NetworkMember.CharacterInfo);
+            GameMain.Config.Save();
             return true;
         }
 
@@ -1523,6 +1529,7 @@ namespace Barotrauma
             GameMain.NetworkMember.CharacterInfo.Gender = gender;
             GameMain.Config.CharacterGender = GameMain.NetworkMember.CharacterInfo.Gender;
             UpdatePlayerHead(GameMain.NetworkMember.CharacterInfo);
+            GameMain.Config.Save();
             return true;
         }
 
