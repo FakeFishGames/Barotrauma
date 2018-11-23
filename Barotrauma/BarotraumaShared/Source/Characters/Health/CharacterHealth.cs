@@ -182,24 +182,18 @@ namespace Barotrauma
             DoesBleed = true;
             UseHealthWindow = false;
 
-            irremovableAfflictions.Add(bloodlossAffliction = new Affliction(AfflictionPrefab.Bloodloss, 0.0f));
-            irremovableAfflictions.Add(stunAffliction = new Affliction(AfflictionPrefab.Stun, 0.0f));
-            irremovableAfflictions.Add(pressureAffliction = new Affliction(AfflictionPrefab.Pressure, 0.0f));
-            irremovableAfflictions.Add(oxygenLowAffliction = new Affliction(AfflictionPrefab.OxygenLow, 0.0f));
-            
-            foreach (Affliction affliction in irremovableAfflictions)
-            {
-                afflictions.Add(affliction);
-            }
+            InitIrremovableAfflictions();
 
             limbHealths.Add(new LimbHealth());
 
-            InitProjSpecific(character);
+            InitProjSpecific(null, character);
         }
 
         public CharacterHealth(XElement element, Character character)
-            : this(character) 
         {
+            this.character = character;
+            InitIrremovableAfflictions();
+
             crushDepth = element.GetAttributeFloat("crushdepth", float.NegativeInfinity);
 
             maxVitality = element.GetAttributeFloat("vitality", 100.0f);
@@ -220,9 +214,23 @@ namespace Barotrauma
             {
                 limbHealths.Add(new LimbHealth());
             }
+
+            InitProjSpecific(element, character);
         }
 
-        partial void InitProjSpecific(Character character);
+        private void InitIrremovableAfflictions()
+        {
+            irremovableAfflictions.Add(bloodlossAffliction = new Affliction(AfflictionPrefab.Bloodloss, 0.0f));
+            irremovableAfflictions.Add(stunAffliction = new Affliction(AfflictionPrefab.Stun, 0.0f));
+            irremovableAfflictions.Add(pressureAffliction = new Affliction(AfflictionPrefab.Pressure, 0.0f));
+            irremovableAfflictions.Add(oxygenLowAffliction = new Affliction(AfflictionPrefab.OxygenLow, 0.0f));
+            foreach (Affliction affliction in irremovableAfflictions)
+            {
+                afflictions.Add(affliction);
+            }
+        }
+
+        partial void InitProjSpecific(XElement element, Character character);
 
         public IEnumerable<Affliction> GetAllAfflictions()
         {
