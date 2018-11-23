@@ -94,16 +94,43 @@ namespace Barotrauma.Items.Components
 
         public void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
-            //TODO: proper sprite for the battery recharge indicator
+            //old way
+            //GUI.DrawRectangle(spriteBatch,
+            //    new Vector2(item.DrawPosition.X - 4, -item.DrawPosition.Y),
+            //    new Vector2(8, 22), Color.Black);
 
+            //if (charge > 0)
+            //    GUI.DrawRectangle(spriteBatch,
+            //        new Vector2(item.DrawPosition.X - 3, -item.DrawPosition.Y + 1 + (20.0f * (1.0f - charge / capacity))),
+            //        new Vector2(6, 20 * (charge / capacity)), Color.Green, true);
+
+            // new way
             GUI.DrawRectangle(spriteBatch,
-                new Vector2(item.DrawPosition.X - 4, -item.DrawPosition.Y),
-                new Vector2(8, 22), Color.Black);
+                new Vector2(
+                    item.DrawPosition.X - item.Sprite.SourceRect.Width / 2 * item.Scale + indicatorPosition.X * item.Scale,
+                    -item.DrawPosition.Y - item.Sprite.SourceRect.Height / 2 * item.Scale + indicatorPosition.Y * item.Scale),
+                indicatorSize * item.Scale, Color.Black);
 
             if (charge > 0)
-                GUI.DrawRectangle(spriteBatch,
-                    new Vector2(item.DrawPosition.X - 3, -item.DrawPosition.Y + 1 + (20.0f * (1.0f - charge / capacity))),
-                    new Vector2(6, 20 * (charge / capacity)), Color.Green, true);
+            {
+                if (indicatorDirection.ToLowerInvariant() == "vertical")
+                {
+                    GUI.DrawRectangle(spriteBatch,
+                    new Vector2(
+                        item.DrawPosition.X - item.Sprite.SourceRect.Width / 2 * item.Scale + indicatorPosition.X * item.Scale + 1,
+                        -item.DrawPosition.Y - item.Sprite.SourceRect.Height / 2 * item.Scale + indicatorPosition.Y * item.Scale + 1 + ((indicatorSize.Y * item.Scale) * (1.0f - charge / capacity))),
+                    new Vector2(indicatorSize.X * item.Scale - 2, indicatorSize.Y * item.Scale * (charge / capacity) - 2), Color.Green, true);
+                }
+                else if (indicatorDirection.ToLowerInvariant() == "horizontal")
+                {
+                    GUI.DrawRectangle(spriteBatch,
+                    new Vector2(
+                        item.DrawPosition.X - item.Sprite.SourceRect.Width / 2 * item.Scale + indicatorPosition.X * item.Scale + 1 ,
+                        -item.DrawPosition.Y - item.Sprite.SourceRect.Height / 2 * item.Scale + indicatorPosition.Y * item.Scale + 1),
+                    new Vector2(indicatorSize.X * item.Scale * (charge / capacity) - 2, indicatorSize.Y * item.Scale - 2), Color.Green, true);
+                }
+            }
+
         }
         
         public void ClientWrite(NetBuffer msg, object[] extraData)
