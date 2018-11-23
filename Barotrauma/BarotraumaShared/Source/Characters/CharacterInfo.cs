@@ -607,6 +607,7 @@ namespace Barotrauma
             msg.Write((byte)BeardIndex);
             msg.Write((byte)MoustacheIndex);
             msg.Write((byte)FaceAttachmentIndex);
+            msg.Write(Ragdoll.FileName);
             if (Job != null)
             {
                 msg.Write(Job.Prefab.Identifier);
@@ -621,7 +622,6 @@ namespace Barotrauma
             {
                 msg.Write("");
             }
-            msg.Write(Ragdoll.FileName);
             // TODO: animations
         }
 
@@ -635,10 +635,9 @@ namespace Barotrauma
             int beardIndex              = inc.ReadByte();
             int moustacheIndex          = inc.ReadByte();
             int faceAttachmentIndex     = inc.ReadByte();
-            string jobIdentifier        = inc.ReadString();
             string ragdoll              = inc.ReadString();
-            // TODO: animations
 
+            string jobIdentifier        = inc.ReadString();
             JobPrefab jobPrefab = null;
             Dictionary<string, float> skillLevels = new Dictionary<string, float>();
             if (!string.IsNullOrEmpty(jobIdentifier))
@@ -652,6 +651,8 @@ namespace Barotrauma
                     skillLevels.Add(skillIdentifier, skillLevel);
                 }
             }
+
+            // TODO: animations
 
             CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab, HumanRagdollParams.GetRagdollParams("human", ragdoll))
             {
