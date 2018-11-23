@@ -114,7 +114,7 @@ namespace Barotrauma
         /// </summary>
         public static string GetRandomFilePath(IEnumerable<string> filePaths, AnimationType type)
         {
-            return filePaths.GetRandom(f => AnimationPredicate(f, type));
+            return filePaths.GetRandom(f => AnimationPredicate(f, type), Rand.RandSync.Server);
         }
 
         /// <summary>
@@ -172,7 +172,7 @@ namespace Barotrauma
                     {
                         // Files found, but none specified.
                         DebugConsole.Log($"[AnimationParams] Selecting random animation of type {animType} for {speciesName}");
-                        selectedFile = filteredFiles.GetRandom();
+                        selectedFile = filteredFiles.GetRandom(Rand.RandSync.Server);
                     }
                     else
                     {
