@@ -3,6 +3,7 @@
   <Item
     name="Supplies Cabinet"
     identifier="suppliescabinet"
+    tags="cabinet"
     linkable="true"
     pickdistance="150">
 
@@ -16,6 +17,7 @@
   <Item
     name="Small Windowed Steel Cabinet"
     identifier="smallwindowedsteelcabinet"
+    tags="cabinet"
     linkable="true"
     pickdistance="150">
 
@@ -29,6 +31,7 @@
   <Item
     name="Small Steel Cabinet"
     identifier="smallsteelcabinet"
+    tags="cabinet"
     linkable="true"
     pickdistance="150">
 
@@ -42,6 +45,7 @@
   <Item
     name="Medium Steel Cabinet"
     identifier="mediumsteelcabinet"
+    tags="cabinet"
     linkable="true"
     pickdistance="150">
 
@@ -55,6 +59,7 @@
   <Item
     name="Medium Windowed Steel Cabinet"
     identifier="mediumwindowedsteelcabinet"
+    tags="cabinet"
     linkable="true"
     pickdistance="150">
 
@@ -68,6 +73,7 @@
   <Item
     name="Large Steel Cabinet"    
     identifier="steelcabinet"
+    tags="cabinet"
     linkable="true"
     pickdistance="150">
 
@@ -75,12 +81,14 @@
 
     <ItemContainer capacity="30" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,mediumitem"/>
+      <GuiFrame relativesize="0.15,0.35" minsize="300,400" maxsize="360,480" style="ItemUI" absoluteoffset="-60,30"/>
     </ItemContainer>
   </Item>
 
   <Item
     name="Secure Steel Cabinet"
     identifier="securesteelcabinet"
+    tags="cabinet"
     linkable="true"
     spritecolor="255,255,255,255"
     pickdistance="150">
@@ -149,6 +157,7 @@
   <Item
     name="Diving Gear Cabinet"
     identifier="divingsuitcabinet"
+    tags="cabinet"
     linkable="true"
     pickdistance="50">
 
