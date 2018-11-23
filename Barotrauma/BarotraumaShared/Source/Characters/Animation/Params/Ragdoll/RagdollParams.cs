@@ -117,7 +117,7 @@ namespace Barotrauma
                     {
                         // Files found, but none specified
                         DebugConsole.NewMessage($"[RagdollParams] Selecting random ragdoll for {speciesName}", Color.White);
-                        selectedFile = files.GetRandom();
+                        selectedFile = files.GetRandom(Rand.RandSync.Server);
                     }
                     else
                     {
