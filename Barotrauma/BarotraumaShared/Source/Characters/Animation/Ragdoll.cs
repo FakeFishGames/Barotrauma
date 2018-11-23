@@ -1217,6 +1217,7 @@ namespace Barotrauma
                             break;
                         case Physics.CollisionWall:
                         case Physics.CollisionLevel:
+                            if (!fixture.CollidesWith.HasFlag(Physics.CollisionCharacter)) return -1;
                             break;
                         default:
                             return -1;
@@ -1300,6 +1301,7 @@ namespace Barotrauma
                         break;
                     case Physics.CollisionWall:
                     case Physics.CollisionLevel:
+                        if (!fixture.CollidesWith.HasFlag(Physics.CollisionCharacter)) return -1;
                         break;
                     default:
                         return -1;
