@@ -242,26 +242,26 @@ namespace Barotrauma
             if (!string.IsNullOrEmpty(name))
             {
                 this.Name = name;
-                return;
             }
-
-            name = "";
-
-            if (doc.Root.Element("name") != null)
+            else
             {
-                string firstNamePath = doc.Root.Element("name").GetAttributeString("firstname", "");
-                if (firstNamePath != "")
+                name = "";
+                if (doc.Root.Element("name") != null)
                 {
-                    firstNamePath = firstNamePath.Replace("[GENDER]", (this.gender == Gender.Female) ? "f" : "");
-                    this.Name = ToolBox.GetRandomLine(firstNamePath);
-                }
+                    string firstNamePath = doc.Root.Element("name").GetAttributeString("firstname", "");
+                    if (firstNamePath != "")
+                    {
+                        firstNamePath = firstNamePath.Replace("[GENDER]", (this.gender == Gender.Female) ? "f" : "");
+                        this.Name = ToolBox.GetRandomLine(firstNamePath);
+                    }
 
-                string lastNamePath = doc.Root.Element("name").GetAttributeString("lastname", "");
-                if (lastNamePath != "")
-                {
-                    lastNamePath = lastNamePath.Replace("[GENDER]", (this.gender == Gender.Female) ? "f" : "");
-                    if (this.Name != "") this.Name += " ";
-                    this.Name += ToolBox.GetRandomLine(lastNamePath);
+                    string lastNamePath = doc.Root.Element("name").GetAttributeString("lastname", "");
+                    if (lastNamePath != "")
+                    {
+                        lastNamePath = lastNamePath.Replace("[GENDER]", (this.gender == Gender.Female) ? "f" : "");
+                        if (this.Name != "") this.Name += " ";
+                        this.Name += ToolBox.GetRandomLine(lastNamePath);
+                    }
                 }
             }
 

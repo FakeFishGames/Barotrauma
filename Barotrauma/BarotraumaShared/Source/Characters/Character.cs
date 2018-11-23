@@ -779,7 +779,9 @@ namespace Barotrauma
                 Info.FaceAttachmentIndex = faceAttachmentIndex ?? -1;
                 Info.LoadHeadAttachments();
             }
+#if CLIENT
             head.RecreateSprite();
+#endif
             LoadHeadAttachments();
         }
 
@@ -790,9 +792,15 @@ namespace Barotrauma
             // Note that if there are any other wearables on the head, they are removed here.
             head.OtherWearables.ForEach(w => w.Sprite.Remove());
             head.OtherWearables.Clear();
+
+            //if the element has not been set at this point, the character has no hair and the index should be zero (= no hair)
+            if (info.HairElement == null) { info.HairIndex = 0; }
             Info.HairElement?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.Hair)));
+            if (info.BeardElement == null) { info.BeardIndex = 0; }
             Info.BeardElement?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.Beard)));
+            if (info.MoustacheElement == null) { info.MoustacheIndex = 0; }
             Info.MoustacheElement?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.Moustache)));
+            if (info.FaceAttachment == null) { info.FaceAttachmentIndex = 0; }
             Info.FaceAttachment?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.FaceAttachment)));
         }
 
