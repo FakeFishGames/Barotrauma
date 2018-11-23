@@ -112,9 +112,9 @@ namespace Barotrauma.Items.Components
                     continue;
                 }
 
-                if (!c.AnimController.Limbs.Any(l => l.body.FarseerBody.Awake)) continue;
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
+                    if (limb.LinearVelocity.LengthSquared() <= 0.001f) continue;
                     if (MathUtils.CircleIntersectsRectangle(limb.WorldPosition, ConvertUnits.ToDisplayUnits(limb.body.GetMaxExtent()), detectRect))
                     {
                         motionDetected = true;

@@ -712,7 +712,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        footPos = new Vector2(GetCenterOfMass().X + stepSize.X * i * 0.2f, colliderPos.Y - 0.1f);
+                        footPos = new Vector2(colliderPos.X + stepSize.X * i * 0.2f, colliderPos.Y - 0.1f);
                     }
 
                     if (Stairs == null)
