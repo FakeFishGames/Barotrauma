@@ -4,6 +4,7 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -594,7 +595,7 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "position_in":
-                    if (float.TryParse(signal, out float newRotation))
+                    if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float newRotation))
                     {
                         targetRotation = MathHelper.ToRadians(newRotation);
                         IsActive = true;
