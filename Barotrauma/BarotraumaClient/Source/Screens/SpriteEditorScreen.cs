@@ -22,7 +22,7 @@ namespace Barotrauma
         private GUITextBlock texturePathText;
         private GUITextBlock xmlPathText;
         private GUIScrollBar zoomBar;
-        private string xmlPath;
+        private List<string> xmlPaths = new List<string>();
         private List<Sprite> selectedSprites = new List<Sprite>();
         private List<Sprite> dirtySprites = new List<Sprite>();
         private Texture2D selectedTexture;
@@ -104,32 +104,7 @@ namespace Barotrauma
             {
                 OnClicked = (button, userData) =>
                 {
-                    if (selectedSprites.None()) { return false; }
-                    foreach (var sprite in selectedSprites)
-                    {
-                        var element = sprite.SourceElement;
-                        if (element == null)
-                        {
-                            xmlPathText.Text = "No xml element defined for the sprite";
-                            xmlPathText.TextColor = Color.Red;
-                            return false;
-                        }
-                        element.SetAttributeValue("sourcerect", XMLExtensions.RectToString(sprite.SourceRect));
-                        element.SetAttributeValue("origin", XMLExtensions.Vector2ToString(sprite.RelativeOrigin));
-                    }
-                    var firstSprite = selectedSprites.First();
-                    XElement e = firstSprite.SourceElement;
-                    var d = XMLExtensions.TryLoadXml(xmlPath);
-                    if (d == null || d.BaseUri != e.Document.BaseUri)
-                    {
-                        xmlPathText.Text = "Failed to save to " + xmlPath;
-                        xmlPathText.TextColor = Color.Red;
-                        return false;
-                    }
-                    e.Document.Save(xmlPath);
-                    xmlPathText.Text = "Selected sprites saved to " + xmlPath;
-                    xmlPathText.TextColor = Color.LightGreen;
-                    return true;
+                    return SaveSprites(selectedSprites);
                 }
             };
             new GUIButton(new RectTransform(new Vector2(0.12f, 0.4f), topPanelContents.RectTransform, Anchor.BottomLeft)
@@ -139,37 +114,7 @@ namespace Barotrauma
             {
                 OnClicked = (button, userData) =>
                 {
-                    if (selectedTexture == null) { return false; }
-                    XDocument doc = null;
-                    foreach (Sprite sprite in loadedSprites)
-                    {
-                        if (sprite.Texture != selectedTexture) { continue; }
-                        var element = sprite.SourceElement;
-                        if (element == null) { continue; }
-                        element.SetAttributeValue("sourcerect", XMLExtensions.RectToString(sprite.SourceRect));
-                        element.SetAttributeValue("origin", XMLExtensions.Vector2ToString(sprite.RelativeOrigin));
-                        doc = element.Document;
-                    }
-                    if (doc != null)
-                    {
-                        var d = XMLExtensions.TryLoadXml(xmlPath);
-                        if (d == null || d.BaseUri != doc.BaseUri)
-                        {
-                            xmlPathText.Text = "Failed to save to " + xmlPath;
-                            xmlPathText.TextColor = Color.Red;
-                            return false;
-                        }
-                        doc.Save(xmlPath);
-                        xmlPathText.Text = "All changes saved to " + xmlPath;
-                        xmlPathText.TextColor = Color.LightGreen;
-                        return true;
-                    }
-                    else
-                    {
-                        xmlPathText.Text = "Failed to save to " + xmlPath;
-                        xmlPathText.TextColor = Color.Red;
-                        return false;
-                    }
+                    return SaveSprites(loadedSprites);
                 }
             };
             new GUITextBlock(new RectTransform(new Vector2(0.2f, 0.2f), topPanelContents.RectTransform, Anchor.TopCenter, Pivot.CenterRight) { RelativeOffset = new Vector2(0, 0.3f) }, "Zoom: ");
@@ -226,20 +171,7 @@ namespace Barotrauma
                         spriteList.Select(loadedSprites.First(s => s.Texture == selectedTexture), false);
                         UpdateScrollBar(spriteList);
                     }
-                    var firstSprite = selectedSprites.First();
-                    texturePathText.Text = firstSprite.FilePath;
                     texturePathText.TextColor = Color.LightGray;
-                    var element = firstSprite.SourceElement;
-                    if (element == null)
-                    {
-                        xmlPathText.Text = string.Empty;
-                    }
-                    else
-                    {
-                        xmlPath = element.ParseContentPathFromUri();
-                        xmlPathText.Text = xmlPath;
-                        xmlPathText.TextColor = Color.LightGray;
-                    }
                     topPanelContents.Visible = true;
                     return true;
                 }
@@ -286,6 +218,21 @@ namespace Barotrauma
                         textureList.Select(sprite.Texture, autoScroll: false);
                         UpdateScrollBar(textureList);
                     }
+                    xmlPathText.Text = string.Empty;
+                    foreach (var s in selectedSprites)
+                    {
+                        texturePathText.Text = s.FilePath;
+                        var element = s.SourceElement;
+                        if (element != null)
+                        {
+                            string xmlPath = element.ParseContentPathFromUri();
+                            if (!xmlPathText.Text.Contains(xmlPath))
+                            {
+                                xmlPathText.Text += "\n" + xmlPath;
+                            }
+                        }
+                    }
+                    xmlPathText.TextColor = Color.LightGray;
                     return true;
                 }
             };
@@ -318,6 +265,8 @@ namespace Barotrauma
             {
                 element.Elements("sprite").ForEach(s => CreateSprite(s));
                 element.Elements("Sprite").ForEach(s => CreateSprite(s));
+                element.Elements("brokensprite").ForEach(s => CreateSprite(s));
+                element.Elements("BrokenSprite").ForEach(s => CreateSprite(s));
                 element.Elements().ForEach(e => LoadSprites(e));
             }
 
@@ -338,6 +287,31 @@ namespace Barotrauma
                 //}
                 loadedSprites.Add(new Sprite(element, spriteFolder));
             }
+        }
+
+        private bool SaveSprites(IEnumerable<Sprite> sprites)
+        {
+            if (selectedTexture == null) { return false; }
+            if (sprites.None()) { return false; }
+            HashSet<XDocument> docsToSave = new HashSet<XDocument>();
+            foreach (Sprite sprite in sprites)
+            {
+                if (sprite.Texture != selectedTexture) { continue; }
+                var element = sprite.SourceElement;
+                if (element == null) { continue; }
+                element.SetAttributeValue("sourcerect", XMLExtensions.RectToString(sprite.SourceRect));
+                element.SetAttributeValue("origin", XMLExtensions.Vector2ToString(sprite.RelativeOrigin));
+                docsToSave.Add(element.Document);
+            }
+            xmlPathText.Text = "All changes saved to:";
+            foreach (XDocument doc in docsToSave)
+            {
+                string xmlPath = doc.ParseContentPathFromUri();
+                xmlPathText.Text += "\n" + xmlPath;
+                doc.Save(xmlPath);
+            }
+            xmlPathText.TextColor = Color.LightGreen;
+            return true;
         }
         #endregion
 
