@@ -1,0 +1,17 @@
+﻿<HammerheadSwimSlow
+  animationtype="SwimSlow"
+  flip="True"
+  mirror="False"
+  waveamplitude="1"
+  wavelength="10"
+  rotatetowardsmovement="True"
+  torsotorque="25"
+  headtorque="25"
+  foottorque="25"
+  tailtorque="50"
+  footangles=""
+  steertorque="25"
+  movementspeed="1"
+  cyclespeed="1"
+  headangle="NaN"
+  torsoangle="NaN" />
