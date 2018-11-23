@@ -14,6 +14,8 @@ namespace Barotrauma
             public Sprite IndicatorSprite;
 
             public Rectangle HighlightArea;
+
+            public readonly string Name;
                         
             public readonly List<Affliction> Afflictions = new List<Affliction>();
 
@@ -31,6 +33,7 @@ namespace Barotrauma
 
             public LimbHealth(XElement element, CharacterHealth characterHealth)
             {
+                Name = TextManager.Get("HealthLimbName." + element.GetAttributeString("name", ""));
                 this.characterHealth = characterHealth;
                 foreach (XElement subElement in element.Elements())
                 {

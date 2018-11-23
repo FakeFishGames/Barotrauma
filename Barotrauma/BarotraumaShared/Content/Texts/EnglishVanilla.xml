@@ -750,6 +750,15 @@
   <!-- Health interface -->
   <Vitality>Vitality</Vitality>
   <HealthItemUseTip>Drop items here to use them on the selected limb. You can also use items with the inventory hotkeys or by double clicking.</HealthItemUseTip>
+  <AfflictionStrengthLow>Light</AfflictionStrengthLow>
+  <AfflictionStrengthMedium>Medium</AfflictionStrengthMedium>
+  <AfflictionStrengthHigh>Heavy</AfflictionStrengthHigh>
+  <HealthLimbName.Head>Head</HealthLimbName.Head>
+  <HealthLimbName.Torso>Torso</HealthLimbName.Torso>
+  <HealthLimbName.LeftArm>Left arm</HealthLimbName.LeftArm>
+  <HealthLimbName.RightArm>Right arm</HealthLimbName.RightArm>
+  <HealthLimbName.LeftLeg>Left leg</HealthLimbName.LeftLeg>
+  <HealthLimbName.RightLeg>Right leg</HealthLimbName.RightLeg>
 
   <!-- Item fixing -->
   <FixHeader>Attempting to fix [itemname]</FixHeader>

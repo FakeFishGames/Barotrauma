@@ -18,6 +18,8 @@ namespace Barotrauma
 
         private static Sprite damageOverlay;
 
+        private static string[] strengthTexts;
+
         private GUIButton cprButton;
 
         private Point screenResolution;
@@ -36,22 +38,26 @@ namespace Barotrauma
 
         private GUIButton suicideButton;
 
+        // healthbars
         private GUIProgressBar healthBar;
         private GUIProgressBar healthBarShadow;
+        private GUIProgressBar healthWindowHealthBar;
+        private GUIProgressBar healthWindowHealthBarShadow;
+        private float healthShadowSize;
+        private float healthShadowDelay;
+        private float healthBarPulsateTimer;
+        private float healthBarPulsatePhase;
 
         private float damageOverlayTimer;
-
-        private GUILayoutGroup afflictionContainer;
-        private GUIFrame afflictionInfoContainer;
+        
+        private GUIFrame afflictionInfoFrame;
+        private GUIListBox afflictionInfoContainer;
 
         private float bloodParticleTimer;
         
         private GUIListBox healItemContainer;
 
         private GUIFrame healthWindow;
-
-        private GUIProgressBar healthWindowHealthBar;
-        private GUIProgressBar healthWindowHealthBarShadow;
 
         private GUIComponent deadIndicator;
 
@@ -71,14 +77,9 @@ namespace Barotrauma
 
         private float distortTimer;
 
-        private float healthShadowSize;
-        private float healthShadowDelay;
-
         // 0-1
         private float damageIntensity;
         private float damageIntensityDropdownRate = 0.1f;
-        private float healthBarPulsateTimer;
-        private float healthBarPulsatePhase;
 
         public float DamageOverlayTimer
         {
@@ -122,6 +123,16 @@ namespace Barotrauma
 
         partial void InitProjSpecific(XElement element, Character character)
         {
+            if (strengthTexts == null)
+            {
+                strengthTexts = new string[]
+                {
+                    TextManager.Get("AfflictionStrengthLow"),
+                    TextManager.Get("AfflictionStrengthMedium"),
+                    TextManager.Get("AfflictionStrengthHigh")
+                };
+            }
+
             character.OnAttacked += OnAttacked;
 
             bool horizontal = HUDLayoutSettings.HealthBarAreaLeft.Width > HUDLayoutSettings.HealthBarAreaLeft.Height;
@@ -137,18 +148,25 @@ namespace Barotrauma
             };
             healthShadowSize = 1.0f;
 
-            afflictionContainer = new GUILayoutGroup(new RectTransform(new Point(HUDLayoutSettings.HealthWindowAreaLeft.Width / 2, 200), GUI.Canvas), isHorizontal: true);
+            //afflictionContainer = new GUILayoutGroup(new RectTransform(new Point(HUDLayoutSettings.HealthWindowAreaLeft.Width / 2, 200), GUI.Canvas), isHorizontal: true);
             
-            var afflictionInfoFrame = new GUIFrame(new RectTransform(new Point(HUDLayoutSettings.HealthWindowAreaLeft.Width / 2, 200), GUI.Canvas));
-            afflictionInfoContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.35f), afflictionInfoFrame.RectTransform, Anchor.TopCenter)
-                { RelativeOffset = new Vector2(0.0f, 0.1f) }, style: null);
+            afflictionInfoFrame = new GUIFrame(new RectTransform(new Point(HUDLayoutSettings.HealthWindowAreaLeft.Width / 2, 200), GUI.Canvas));
+            var paddedInfoFrame = new GUIFrame(new RectTransform(new Vector2(0.95f,0.9f), afflictionInfoFrame.RectTransform, Anchor.Center), style: null);
+            new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.15f), paddedInfoFrame.RectTransform), "", font: GUI.LargeFont)
+            {
+                UserData = "selectedlimbname"
+            };
+            afflictionInfoContainer = new GUIListBox(new RectTransform(new Vector2(0.7f, 0.85f), paddedInfoFrame.RectTransform, Anchor.BottomLeft));
+                
+            /*new GUIFrame(new RectTransform(new Vector2(0.9f, 0.35f), afflictionInfoFrame.RectTransform, Anchor.TopCenter)
+                { RelativeOffset = new Vector2(0.0f, 0.1f) }, style: null);*/
 
-            dropItemArea = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), afflictionInfoFrame.RectTransform, Anchor.BottomCenter)
-            { RelativeOffset = new Vector2(0.0f, 0.05f) }, style: null)
+            dropItemArea = new GUIFrame(new RectTransform(new Vector2(0.28f, 0.5f), paddedInfoFrame.RectTransform, Anchor.BottomRight)
+            { RelativeOffset = new Vector2(0.0f, 0.0f) }, style: null)
             {
                 ToolTip = TextManager.Get("HealthItemUseTip")
             };
-            dropItemArea.RectTransform.NonScaledSize = new Point(dropItemArea.Rect.Height);
+            dropItemArea.RectTransform.NonScaledSize = new Point(dropItemArea.Rect.Width);
 
             string[] healthCircleStyles = new string[] { "HealthCircleInner", "HealthCircleMid", "HealthCircleOuter" };
             foreach (string healthCircleStyle in healthCircleStyles)
@@ -304,12 +322,12 @@ namespace Barotrauma
                     HUDLayoutSettings.HealthWindowAreaLeft.Width / 3 - healthWindowHealthBarWidth, 
                     HUDLayoutSettings.HealthWindowAreaLeft.Height);
 
-                afflictionContainer.RectTransform.AbsoluteOffset = new Point(
+                /*afflictionContainer.RectTransform.AbsoluteOffset = new Point(
                     HUDLayoutSettings.HealthWindowAreaLeft.X + HUDLayoutSettings.HealthWindowAreaLeft.Width / 3,
                     HUDLayoutSettings.HealthWindowAreaLeft.Y);
                 afflictionContainer.RectTransform.NonScaledSize = new Point((int)(
                     HUDLayoutSettings.HealthWindowAreaLeft.Width * 0.66f),
-                    (int)(100 * GUI.Scale));
+                    (int)(100 * GUI.Scale));*/
 
                 healthWindowHealthBar.RectTransform.NonScaledSize = healthWindowHealthBarShadow.RectTransform.NonScaledSize =
                     new Point(healthWindowHealthBarWidth, healthWindow.Rect.Height);
@@ -331,10 +349,10 @@ namespace Barotrauma
                     HUDLayoutSettings.HealthWindowAreaRight.Width / 3 - healthWindowHealthBarWidth, 
                     HUDLayoutSettings.HealthWindowAreaRight.Height);
 
-                afflictionContainer.RectTransform.AbsoluteOffset = HUDLayoutSettings.HealthWindowAreaRight.Location;
+                /*afflictionContainer.RectTransform.AbsoluteOffset = HUDLayoutSettings.HealthWindowAreaRight.Location;
                 afflictionContainer.RectTransform.NonScaledSize = new Point((int)(
                     HUDLayoutSettings.HealthWindowAreaRight.Width * 0.66f),
-                    (int)(100 * GUI.Scale));
+                    (int)(100 * GUI.Scale));*/
 
                 healthWindowHealthBar.RectTransform.NonScaledSize = healthWindowHealthBarShadow.RectTransform.NonScaledSize =
                     new Point(healthWindowHealthBarWidth, healthWindow.Rect.Height);
@@ -342,12 +360,12 @@ namespace Barotrauma
                     new Point(HUDLayoutSettings.HealthWindowAreaRight.Right - healthWindowHealthBarWidth, HUDLayoutSettings.HealthWindowAreaRight.Y);
             }
             
-            afflictionInfoContainer.Parent.RectTransform.AbsoluteOffset = new Point(
-                afflictionContainer.RectTransform.AbsoluteOffset.X, 
-                HUDLayoutSettings.HealthWindowAreaLeft.Y + afflictionContainer.Rect.Height);
-            afflictionInfoContainer.Parent.RectTransform.NonScaledSize = new Point(
+            afflictionInfoFrame.RectTransform.AbsoluteOffset = new Point(
+                HUDLayoutSettings.HealthWindowAreaRight.X, 
+                HUDLayoutSettings.HealthWindowAreaLeft.Y);
+            afflictionInfoFrame.RectTransform.NonScaledSize = new Point(
                 (int)(HUDLayoutSettings.HealthWindowAreaLeft.Width * 0.66f),
-                (int)(HUDLayoutSettings.HealthWindowAreaLeft.Height - afflictionContainer.Rect.Height));
+                (int)(HUDLayoutSettings.HealthWindowAreaLeft.Height));
 
             int cprButtonSize = (int)(100 * GUI.Scale);
             cprButton.RectTransform.AbsoluteOffset = HUDLayoutSettings.HealthWindowAreaLeft.Location;
@@ -357,13 +375,13 @@ namespace Barotrauma
             {
                 healItemContainer.RectTransform.AbsoluteOffset = new Point(
                     HUDLayoutSettings.HealthWindowAreaLeft.X + HUDLayoutSettings.HealthWindowAreaLeft.Width / 3,
-                    afflictionInfoContainer.Parent.Rect.Bottom + (int)(10 * GUI.Scale));
+                    afflictionInfoFrame.Rect.Bottom + (int)(10 * GUI.Scale));
                 healItemContainer.RectTransform.NonScaledSize = new Point(
                     (int)(HUDLayoutSettings.HealthWindowAreaLeft.Width * 0.66f), 
                     healthWindow.Rect.Bottom - healItemContainer.Rect.Y);
             }
             
-            dropItemArea.RectTransform.NonScaledSize = new Point(dropItemArea.Rect.Height);
+            dropItemArea.RectTransform.NonScaledSize = new Point(dropItemArea.Rect.Width);
 
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
@@ -581,10 +599,10 @@ namespace Barotrauma
                     }
                 }
 
-                if (GUI.MouseOn?.UserData is Affliction affliction)
+                /*if (GUI.MouseOn?.UserData is Affliction affliction)
                 {
                     ShowAfflictionInfo(affliction, afflictionInfoContainer);
-                }
+                }*/
 
                 if (dropItemAnimTimer > 0.0f)
                 {
@@ -634,8 +652,8 @@ namespace Barotrauma
             if (GUI.DisableHUD) return;
             if (OpenHealthWindow == this)
             {
-                afflictionContainer.AddToGUIUpdateList();
-                afflictionInfoContainer.Parent.AddToGUIUpdateList();
+                //afflictionContainer.AddToGUIUpdateList();
+                afflictionInfoFrame.AddToGUIUpdateList();
                 healthWindow.AddToGUIUpdateList();
                 healthWindowHealthBarShadow.AddToGUIUpdateList();
                 healthWindowHealthBar.AddToGUIUpdateList();
@@ -820,122 +838,108 @@ namespace Barotrauma
 
         private void UpdateAfflictionContainer(LimbHealth selectedLimb)
         {
+            ((GUITextBlock)afflictionInfoContainer.Parent.GetChildByUserData("selectedlimbname")).Text = selectedLimb == null ? "" : selectedLimb.Name;
+
             if (selectedLimb == null)
             {
-                afflictionInfoContainer.ClearChildren();
-                afflictionContainer.ClearChildren();
+                afflictionInfoContainer.Content.ClearChildren();
                 return;
             }
-
-            List<Affliction> limbAfflictions = new List<Affliction>(selectedLimb.Afflictions);
-            limbAfflictions.AddRange(afflictions.FindAll(a =>
+            
+            var currentAfflictions = selectedLimb.Afflictions.Where(a => a.Strength >= a.Prefab.ShowIconThreshold).ToList();
+            currentAfflictions.AddRange(afflictions.Where(a => a.Strength >= 
+                a.Prefab.ShowIconThreshold &&
                 limbHealths[character.AnimController.GetLimb(a.Prefab.IndicatorLimb).HealthIndex] == selectedLimb));
-            
-            (afflictionContainer as GUILayoutGroup).ChildAnchor = Anchor.TopLeft;
-            List<GUIComponent> currentChildren = new List<GUIComponent>();
-            foreach (Affliction affliction in limbAfflictions)
-            {
-                if (affliction.Strength < affliction.Prefab.ShowIconThreshold) continue;
-                var icon = new GUIFrame(new RectTransform(new Point(afflictionContainer.Rect.Height), afflictionContainer.RectTransform), "AfflictionIconSlot")
-                {
-                    UserData = affliction
-                };
 
-                new GUIImage(new RectTransform(Vector2.One, icon.RectTransform), affliction.Prefab.Icon, scaleToFit: true)
-                {
-                    Color = affliction.Prefab.IconColor * 0.8f,
-                    HoverColor = affliction.Prefab.IconColor * 0.9f,
-                    SelectedColor = affliction.Prefab.IconColor,
-                    CanBeFocused = false
-                };
-                if (afflictionInfoContainer.FindChild(affliction) != null)
-                {
-                    icon.RectTransform.LocalScale *= 1.2f;
-                    icon.State = GUIComponent.ComponentState.Selected;
-                }
-                if (icon.Rect.Contains(PlayerInput.MousePosition))
-                {
-                    icon.State = GUIComponent.ComponentState.Hover;
-                }
-                currentChildren.Add(icon);
-            }
-            
-            for (int i = afflictionContainer.CountChildren - 1; i>= 0; i--)
+            var displayedAfflictions = afflictionInfoContainer.Content.Children.Select(c => c.UserData as Affliction);
+            if (currentAfflictions.Any(a => !displayedAfflictions.Contains(a)) || 
+                displayedAfflictions.Any(a => !currentAfflictions.Contains(a)))
             {
-                var child = afflictionContainer.GetChild(i);
-                if (!currentChildren.Contains(child))
-                {
-                    afflictionContainer.RemoveChild(child);
-                }
+                CreateAfflictionInfos(currentAfflictions);
             }
 
-            afflictionContainer.RectTransform.SortChildren((c1, c2) =>
-            {
-                Affliction affliction1 = c1.GUIComponent.UserData as Affliction;
-                Affliction affliction2 = c2.GUIComponent.UserData as Affliction;
-                return (int)(affliction2.GetVitalityDecrease(this) - affliction1.GetVitalityDecrease(this));
-            });
-
-            if (afflictionInfoContainer.CountChildren == 0 && currentChildren.Count > 0)
-            {
-                ShowAfflictionInfo(afflictionContainer.RectTransform.Children.First().GUIComponent.UserData as Affliction, afflictionInfoContainer);
-            }
-            else if (afflictionInfoContainer.CountChildren > 0)
-            {
-                if (currentChildren.Count == 0 || !limbAfflictions.Contains(afflictionInfoContainer.GetChild(0).UserData as Affliction))
-                {
-                    afflictionInfoContainer.ClearChildren();
-                }
-                else
-                {
-                    ShowAfflictionInfo(afflictionInfoContainer.GetChild(0).UserData as Affliction, afflictionInfoContainer);
-                }
-            }
-
-            //UpdateTreatmentSuitabilityHints();
+            UpdateAfflictionInfos(displayedAfflictions);
         }
 
-        private void ShowAfflictionInfo(Affliction affliction, GUIComponent afflictionContainer)
+        private void CreateAfflictionInfos(IEnumerable<Affliction> afflictions)
         {
-            var child = afflictionInfoContainer.FindChild(affliction);
-            if (child == null)
+            afflictionInfoContainer.Content.ClearChildren();
+
+            foreach (Affliction affliction in afflictions)
             {
-                afflictionInfoContainer.ClearChildren();
-                child = new GUILayoutGroup(new RectTransform(Vector2.One, afflictionInfoContainer.RectTransform, Anchor.Center))
+                var child = new GUILayoutGroup(new RectTransform(Vector2.One * 0.95f, afflictionInfoContainer.Content.RectTransform, Anchor.TopCenter))
                 {
                     Stretch = true,
-                    RelativeSpacing = 0.1f,
+                    RelativeSpacing = 0.02f,
                     UserData = affliction
                 };
-                
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), child.RectTransform), affliction.Prefab.Name, font: GUI.LargeFont);
-                var strengthBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.15f), child.RectTransform),
-                    barSize: 1.0f, color: Color.Green)
+
+                var headerContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), child.RectTransform), isHorizontal: true)
                 {
-                    IsHorizontal = true,
-                    UserData = "strength"
+                    Stretch = true,
+                    UserData = "header"
                 };
 
-                new GUITextBlock(new RectTransform(strengthBar.Rect.Size, child.RectTransform), "")
+                new GUIImage(new RectTransform(new Vector2(0.15f, 1.0f), headerContainer.RectTransform), affliction.Prefab.Icon, scaleToFit: true)
                 {
+                    Color = affliction.Prefab.IconColor
+                };
+
+                var labelContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 1.0f), headerContainer.RectTransform), isHorizontal: true)
+                {
+                    Stretch = true,
+                    AbsoluteSpacing = 10,
+                    UserData = "label"
+                };
+                var afflictionName = new GUITextBlock(new RectTransform(new Vector2(0.65f, 1.0f), labelContainer.RectTransform), affliction.Prefab.Name, textAlignment: Alignment.CenterLeft, font: GUI.LargeFont);
+                var afflictionStrength = new GUITextBlock(new RectTransform(new Vector2(0.35f, 1.0f), labelContainer.RectTransform), "", textAlignment: Alignment.TopRight, font: GUI.LargeFont)
+                {
+                    Padding = Vector4.Zero,
+                    UserData = "strength"
+                };
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.9f), labelContainer.RectTransform), "", textAlignment: Alignment.BottomRight)
+                {
+                    IgnoreLayoutGroups = true,
                     UserData = "vitality"
                 };
 
-                var description = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), child.RectTransform),
-                    affliction.Prefab.Description, wrap: true);
-                ((GUILayoutGroup)child).Recalculate();
+                var description = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), child.RectTransform),
+                    affliction.Prefab.Description, textAlignment: Alignment.TopLeft, wrap: true);
                 if (description.Font.MeasureString(description.WrappedText).Y > description.Rect.Height)
                 {
                     description.Font = GUI.SmallFont;
                 }
+                description.RectTransform.Resize(new Point(description.Rect.Width, (int)(description.TextSize.Y + 10)));
+                child.RectTransform.Resize(new Point(child.Rect.Width, child.Children.Sum(c => c.Rect.Height)));
+                child.Recalculate();
+                afflictionStrength.AutoScale = true;
+                afflictionName.AutoScale = true;
+                
             }
-            else
-            {
-                var strengthBar = child.GetChildByUserData("strength") as GUIProgressBar;
-                strengthBar.BarSize = Math.Max(affliction.Strength / affliction.Prefab.MaxStrength, 0.05f);
-                strengthBar.Color = Color.Lerp(Color.Orange, Color.Red, affliction.Strength / affliction.Prefab.MaxStrength);
 
-                var vitalityText = child.GetChildByUserData("vitality") as GUITextBlock;
+            afflictionInfoContainer.Content.RectTransform.SortChildren((r1,r2) => 
+            {
+                return Math.Sign(((Affliction)r2.GUIComponent.UserData).GetVitalityDecrease(this) - ((Affliction)r1.GUIComponent.UserData).GetVitalityDecrease(this));
+            });
+        }
+
+        private void UpdateAfflictionInfos(IEnumerable<Affliction> afflictions)
+        {
+            foreach (Affliction affliction in afflictions)
+            {
+                var child = afflictionInfoContainer.Content.FindChild(affliction);
+                var headerContainer = child.GetChildByUserData("header");
+                var labelContainer = headerContainer.GetChildByUserData("label");
+                var strengthText = labelContainer.GetChildByUserData("strength") as GUITextBlock;
+
+                strengthText.Text = strengthTexts[
+                    MathHelper.Clamp((int)Math.Floor((affliction.Strength / affliction.Prefab.MaxStrength) * strengthTexts.Length), 0, strengthTexts.Length - 1)];
+
+                strengthText.TextColor = ToolBox.GradientLerp(
+                    affliction.Strength / affliction.Prefab.MaxStrength,
+                    Color.Yellow, Color.Orange, Color.Red);
+
+                var vitalityText = labelContainer.GetChildByUserData("vitality") as GUITextBlock;
                 int vitalityDecrease = (int)affliction.GetVitalityDecrease(this);
                 if (vitalityDecrease == 0)
                 {
@@ -956,7 +960,7 @@ namespace Barotrauma
             //items can be dropped outside the health window
             if (!ignoreMousePos && 
                 !healthWindow.Rect.Contains(PlayerInput.MousePosition) && 
-                !afflictionInfoContainer.Parent.Rect.Contains(PlayerInput.MousePosition))
+                !afflictionInfoFrame.Rect.Contains(PlayerInput.MousePosition))
             {
                 return false;
             }
@@ -1188,10 +1192,10 @@ namespace Barotrauma
             if (item == null) return 0.0f;
 
             List<Affliction> selectedAfflictions = new List<Affliction>();
-            foreach (GUIComponent child in afflictionContainer.Children)
+            /*foreach (GUIComponent child in afflictionContainer.Children)
             {
                 if (child.UserData is Affliction affliction) selectedAfflictions.Add(affliction);
-            }
+            }*/
             
             float suitability = 0.0f;
             if (selectedAfflictions.Count > 0)
@@ -1251,7 +1255,7 @@ namespace Barotrauma
             if (PlayerInput.LeftButtonClicked() && highlightedLimbIndex > -1)
             {
                 selectedLimbIndex = highlightedLimbIndex;
-                afflictionContainer.ClearChildren();
+                //afflictionContainer.ClearChildren();
                 afflictionInfoContainer.ClearChildren();
             }
         }
@@ -1302,7 +1306,7 @@ namespace Barotrauma
 
             System.Diagnostics.Debug.WriteLine(frame);
 
-            limbIndicatorOverlay.Draw(spriteBatch, frame, drawArea.Center.ToVector2(), Color.White * 0.5f, origin: limbIndicatorOverlay.FrameSize.ToVector2() / 2, rotate: 0.0f,
+            limbIndicatorOverlay.Draw(spriteBatch, frame, drawArea.Center.ToVector2(), Color.Gray, origin: limbIndicatorOverlay.FrameSize.ToVector2() / 2, rotate: 0.0f,
                 scale: Vector2.One * overlayScale);
 
             spriteBatch.End();
