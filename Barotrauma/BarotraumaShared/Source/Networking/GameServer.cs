@@ -2407,6 +2407,8 @@ namespace Barotrauma.Networking
                 MoustacheIndex = moustacheIndex,
                 FaceAttachmentIndex = faceAttachmentIndex
             };
+            // Need to reload the attachments because the indices may have changed
+            sender.CharacterInfo.LoadHeadAttachments();
 
             //if the client didn't provide job preferences, we'll use the preferences that are randomly assigned in the Client constructor
             Debug.Assert(sender.JobPreferences.Count > 0);
