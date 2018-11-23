@@ -79,4 +79,5 @@
   <Tutorials file="Content/Tutorials/Tutorials.xml" />
   <Executable file="Barotrauma.exe" />
   <Character file="Content/Characters/Testhuman/Testhuman.xml" />
+  <Character file="Content/Characters/Hammerhead/Hammerhead.xml" />
 </contentpackage>

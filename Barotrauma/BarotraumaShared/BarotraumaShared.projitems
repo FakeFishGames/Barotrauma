@@ -87,6 +87,27 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Fractalguardian\Ragdolls\FractalguardianDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerhead\Animations\HammerheadRun.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerhead\Animations\HammerheadSwimFast.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>    	
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerhead\Animations\HammerheadSwimSlow.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>    	
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerhead\Animations\HammerheadWalk.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>    	
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerhead\Hammerhead.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>    	
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerhead\Hammerhead.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>    	
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerhead\Ragdolls\HammerheadDefaultRagdoll.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>    	
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Animations\HumanhuskRun.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
