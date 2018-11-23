@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -53,6 +54,9 @@ namespace Barotrauma
         private GUIProgressBar healthWindowHealthBarShadow;
 
         private GUIComponent deadIndicator;
+
+        private SpriteSheet limbIndicatorOverlay;
+        private float limbIndicatorOverlayAnimState;
 
         private GUIFrame dropItemArea;
 
@@ -116,7 +120,7 @@ namespace Barotrauma
             damageOverlay = new Sprite("Content/UI/damageOverlay.png", Vector2.Zero);
         }
 
-        partial void InitProjSpecific(Character character)
+        partial void InitProjSpecific(XElement element, Character character)
         {
             character.OnAttacked += OnAttacked;
 
@@ -178,7 +182,7 @@ namespace Barotrauma
                 RelativeSpacing = 0.03f
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedHealthWindow.RectTransform), "", textAlignment: Alignment.Center);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedHealthWindow.RectTransform), "", textAlignment: Alignment.Center);
             new GUICustomComponent(new RectTransform(new Vector2(1.0f, 0.9f), paddedHealthWindow.RectTransform),
                 (spriteBatch, component) => 
                 {
@@ -186,7 +190,7 @@ namespace Barotrauma
                 },
                 (deltaTime, component) => 
                 {
-                    UpdateLimbIndicators(component.RectTransform.Rect);
+                    UpdateLimbIndicators(deltaTime, component.RectTransform.Rect);
                 }
             );
             deadIndicator = new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.1f), healthWindow.RectTransform, Anchor.Center),
@@ -232,27 +236,39 @@ namespace Barotrauma
             UpdateAlignment();
 
             suicideButton = new GUIButton(new RectTransform(new Vector2(0.06f, 0.02f), GUI.Canvas, Anchor.TopCenter)
-                { MinSize = new Point(120, 20), RelativeOffset = new Vector2(0.0f, 0.01f) },
-                TextManager.Get("GiveInButton"));
-            suicideButton.ToolTip = TextManager.Get(GameMain.NetworkMember == null ? "GiveInHelpSingleplayer" : "GiveInHelpMultiplayer");
-            suicideButton.OnClicked = (button, userData) =>
+            { MinSize = new Point(120, 20), RelativeOffset = new Vector2(0.0f, 0.01f) },
+                TextManager.Get("GiveInButton"))
             {
-                GUI.ForceMouseOn(null);
-                if (Character.Controlled != null)
+                ToolTip = TextManager.Get(GameMain.NetworkMember == null ? "GiveInHelpSingleplayer" : "GiveInHelpMultiplayer"),
+                OnClicked = (button, userData) =>
                 {
-                    if (GameMain.Client != null)
+                    GUI.ForceMouseOn(null);
+                    if (Character.Controlled != null)
                     {
-                        GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Status });
+                        if (GameMain.Client != null)
+                        {
+                            GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Status });
+                        }
+                        else
+                        {
+                            var causeOfDeath = GetCauseOfDeath();
+                            Character.Controlled.Kill(causeOfDeath.First, causeOfDeath.Second);
+                            Character.Controlled = null;
+                        }
                     }
-                    else
-                    {
-                        var causeOfDeath = GetCauseOfDeath();
-                        Character.Controlled.Kill(causeOfDeath.First, causeOfDeath.Second);
-                        Character.Controlled = null;
-                    }
+                    return true;
                 }
-                return true;
             };
+
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "sprite":
+                        limbIndicatorOverlay = new SpriteSheet(subElement);
+                        break;
+                }
+            }
         }
         
         private void OnAttacked(Character attacker, AttackResult attackResult)
@@ -1211,8 +1227,10 @@ namespace Barotrauma
             return true;
         }
 
-        private void UpdateLimbIndicators(Rectangle drawArea)
+        private void UpdateLimbIndicators(float deltaTime, Rectangle drawArea)
         {
+            limbIndicatorOverlayAnimState += deltaTime * 8.0f;
+
             highlightedLimbIndex = -1;
             int i = 0;
             foreach (LimbHealth limbHealth in limbHealths)
@@ -1263,6 +1281,33 @@ namespace Barotrauma
                 i++;
             }
 
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Deferred, Lights.CustomBlendStates.Multiplicative);
+
+            float overlayScale = Math.Min(
+                drawArea.Width / (float)limbIndicatorOverlay.FrameSize.X,
+                drawArea.Height / (float)limbIndicatorOverlay.FrameSize.Y);
+            
+            int frame = 0;
+            int frameCount = 17;
+            if (limbIndicatorOverlayAnimState >= frameCount * 2) limbIndicatorOverlayAnimState = 0.0f;
+            if (limbIndicatorOverlayAnimState < frameCount)
+            {
+                frame = (int)limbIndicatorOverlayAnimState;
+            }
+            else
+            {
+                frame = frameCount - (int)(limbIndicatorOverlayAnimState - (frameCount - 1));
+            }
+
+            System.Diagnostics.Debug.WriteLine(frame);
+
+            limbIndicatorOverlay.Draw(spriteBatch, frame, drawArea.Center.ToVector2(), Color.White * 0.5f, origin: limbIndicatorOverlay.FrameSize.ToVector2() / 2, rotate: 0.0f,
+                scale: Vector2.One * overlayScale);
+
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Deferred, blendState: BlendState.AlphaBlend, rasterizerState: GameMain.ScissorTestEnable);
+
             i = 0;
             foreach (LimbHealth limbHealth in limbHealths)
             {
@@ -1296,32 +1341,18 @@ namespace Barotrauma
                 var slot = GUI.Style.GetComponentStyle("AfflictionIconSlot");
 
                 float iconScale = 0.3f * scale;
-                Vector2 iconPos = highlightArea.Center.ToVector2() - new Vector2(24.0f, 24.0f) * iconScale;
+                Vector2 iconPos = highlightArea.Center.ToVector2();
                 foreach (Affliction affliction in limbHealth.Afflictions)
                 {
-                    if (affliction.Strength < affliction.Prefab.ShowIconThreshold) continue;
-                    slot.Sprites[GUIComponent.ComponentState.None][0].Draw(
-                        spriteBatch, 
-                        new Rectangle(iconPos.ToPoint(), (affliction.Prefab.Icon.size * iconScale).ToPoint()), 
-                        slot.Color);
-                    affliction.Prefab.Icon.Draw(spriteBatch, iconPos, affliction.Prefab.IconColor, 0, iconScale);
-                    iconPos += new Vector2(30.0f, 40.0f) * iconScale;
-                    iconScale *= 0.9f;
+                    DrawLimbAfflictionIcon(spriteBatch, affliction, slot, iconScale, ref iconPos);
                 }
 
                 foreach (Affliction affliction in afflictions)
                 {
-                    if (affliction.Strength < affliction.Prefab.ShowIconThreshold) continue;
                     Limb indicatorLimb = character.AnimController.GetLimb(affliction.Prefab.IndicatorLimb);
                     if (indicatorLimb != null && indicatorLimb.HealthIndex == i)
                     {
-                        slot.Sprites[GUIComponent.ComponentState.None][0].Draw(
-                            spriteBatch,
-                            new Rectangle(iconPos.ToPoint(), (affliction.Prefab.Icon.size * iconScale).ToPoint()),
-                            slot.Color);
-                        affliction.Prefab.Icon.Draw(spriteBatch, iconPos, affliction.Prefab.IconColor, 0, iconScale);
-                        iconPos += new Vector2(30.0f, 40.0f) * iconScale;
-                        iconScale *= 0.9f;
+                        DrawLimbAfflictionIcon(spriteBatch, affliction, slot, iconScale, ref iconPos);
                     }
                 }
                 i++;
@@ -1342,6 +1373,23 @@ namespace Barotrauma
                     origin: droppedItemSprite.size / 2,
                     scale: MathHelper.SmoothStep(0.0f, 100.0f / droppedItemSprite.size.Length(), dropItemAnimTimer / dropItemAnimDuration));
             }
+        }
+
+        private void DrawLimbAfflictionIcon(SpriteBatch spriteBatch, Affliction affliction, GUIComponentStyle slotStyle, float iconScale, ref Vector2 iconPos)
+        {
+            Vector2 iconSize = (affliction.Prefab.Icon.size * iconScale);
+            if (affliction.Strength < affliction.Prefab.ShowIconThreshold) return;
+
+            //afflictions that have a strength of less than 10 are faded out slightly
+            float alpha = MathHelper.Lerp(0.3f, 1.0f,
+                (affliction.Strength - affliction.Prefab.ShowIconThreshold) / Math.Min(affliction.Prefab.MaxStrength - affliction.Prefab.ShowIconThreshold, 10.0f));
+
+            slotStyle.Sprites[GUIComponent.ComponentState.None][0].Draw(
+                spriteBatch,
+                new Rectangle((iconPos - iconSize / 2.0f).ToPoint(), iconSize.ToPoint()),
+                slotStyle.Color * alpha);
+            affliction.Prefab.Icon.Draw(spriteBatch, iconPos - iconSize / 2.0f, affliction.Prefab.IconColor * alpha, 0, iconScale);
+            iconPos += new Vector2(10.0f, 20.0f) * iconScale;
         }
 
         private Rectangle GetLimbHighlightArea(LimbHealth limbHealth, Rectangle drawArea)
@@ -1438,6 +1486,9 @@ namespace Barotrauma
                     limbHealth.IndicatorSprite = null;
                 }
             }
+
+            limbIndicatorOverlay?.Remove();
+            limbIndicatorOverlay = null;
         }
     }
 }
