@@ -1497,12 +1497,12 @@ namespace Barotrauma
                     
                     Vector2 diff = ConvertUnits.ToSimUnits(targetLimb.WorldPosition - pullLimb.WorldPosition);
 
-                    Vector2 targetAnchor = targetLeftHand.PullJointWorldAnchorB;
+                    Vector2 targetAnchor = targetLimb.SimPosition;
                     float targetForce = 0.0f;
                     pullLimb.PullJointEnabled = true;
                     if (targetLimb.type == LimbType.Torso || targetLimb == target.AnimController.MainLimb)
                     {
-                        pullLimb.PullJointWorldAnchorB = targetLimb.SimPosition;
+                        Vector2 pullLimbAnchor = targetLimb.SimPosition;
                         pullLimb.PullJointMaxForce = 5000.0f;
                         targetMovement *= MathHelper.Clamp(Mass / target.Mass, 0.5f, 1.0f);
                             
@@ -1511,33 +1511,32 @@ namespace Barotrauma
 
                         targetAnchor = shoulderPos - dragDir * ConvertUnits.ToSimUnits(upperArmLength + forearmLength);
                         targetForce = 200.0f;
-
                         if (target.Submarine != character.Submarine)
                         {
                             if (character.Submarine == null)
                             {
-                                pullLimb.PullJointWorldAnchorB += target.Submarine.SimPosition;
+                                pullLimbAnchor += target.Submarine.SimPosition;
                                 targetAnchor -= target.Submarine.SimPosition;
                             }
                             else if (target.Submarine == null)
                             {
-                                pullLimb.PullJointWorldAnchorB -= character.Submarine.SimPosition;
+                                pullLimbAnchor -= character.Submarine.SimPosition;
                                 targetAnchor += character.Submarine.SimPosition;
                             }
                             else
                             {
-                                pullLimb.PullJointWorldAnchorB -= target.Submarine.SimPosition;
-                                pullLimb.PullJointWorldAnchorB += character.Submarine.SimPosition;
+                                pullLimbAnchor -= target.Submarine.SimPosition;
+                                pullLimbAnchor += character.Submarine.SimPosition;
                                 targetAnchor -= character.Submarine.SimPosition;
                                 targetAnchor += target.Submarine.SimPosition;
                             }
                         }
+                        pullLimb.PullJointWorldAnchorB = pullLimbAnchor;
                     }
                     else
                     {
                         pullLimb.PullJointWorldAnchorB = pullLimb.SimPosition + diff;
                         pullLimb.PullJointMaxForce = 5000.0f;
-
                         targetAnchor = targetLimb.SimPosition - diff;
                         targetForce = 5000.0f;
                     }
@@ -1549,20 +1548,20 @@ namespace Barotrauma
                         targetLimb.PullJointWorldAnchorB = targetAnchor;
                     }
 
-                    target.AnimController.movement = -diff;                    
+                    target.AnimController.movement = -diff;
                 }
 
-                float dist = Vector2.Distance(target.SimPosition, Collider.SimPosition);
+                float dist = ConvertUnits.ToSimUnits(Vector2.Distance(target.WorldPosition, WorldPosition));
                 //let the target break free if it's moving away and gets far enough
-                if (GameMain.Client == null && dist > 1.4f && 
-                    Vector2.Dot(target.SimPosition - Collider.SimPosition, target.AnimController.TargetMovement) > 0)
+                if (GameMain.Client == null && dist > 1.4f && target.AllowInput &&
+                    Vector2.Dot(target.WorldPosition - WorldPosition, target.AnimController.TargetMovement) > 0)
                 {
                     character.DeselectCharacter();
                     return;
                 }
 
                 //limit movement if moving away from the target
-                if (Vector2.Dot(target.SimPosition - Collider.SimPosition, targetMovement) < 0)
+                if (Vector2.Dot(target.WorldPosition - WorldPosition, targetMovement) < 0)
                 {
                     targetMovement *= MathHelper.Clamp(1.5f - dist, 0.0f, 1.0f);
                 }
