@@ -26,10 +26,36 @@ namespace Barotrauma.Items.Components
 
         private float lastSentCharge;
 
+        //charge indicator description
+        protected Vector2 indicatorPosition, indicatorSize;
+
+        protected string indicatorDirection;
+
         public float CurrPowerOutput
         {
             get;
             private set;
+        }
+
+        [Serialize(null, true)]
+        public Vector2 IndicatorPosition
+        {
+            get { return indicatorPosition; }
+            set { indicatorPosition = value; }
+        }
+
+        [Serialize(null, true)]
+        public Vector2 IndicatorSize
+        {
+            get { return indicatorSize; }
+            set { indicatorSize = value; }
+        }
+
+        [Serialize("", true)]
+        public string IndicatorDirection
+        {
+            get { return indicatorDirection; }
+            set { indicatorDirection = value; }
         }
 
         [Editable(ToolTip = "Maximum output of the device when fully charged (kW)."), Serialize(10.0f, true)]
