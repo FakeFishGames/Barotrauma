@@ -37,20 +37,21 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
-        [Serialize(null, true)]
+        [Serialize("0,0", true)]
         public Vector2 IndicatorPosition
         {
             get { return indicatorPosition; }
             set { indicatorPosition = value; }
         }
 
-        [Serialize(null, true)]
+        [Serialize("0,0", true)]
         public Vector2 IndicatorSize
         {
             get { return indicatorSize; }
             set { indicatorSize = value; }
         }
 
+        //TODO: this should not be a string, we don't need a string to represent what is essentially a boolean value
         [Serialize("", true)]
         public string IndicatorDirection
         {
