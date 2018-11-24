@@ -332,7 +332,18 @@ namespace Barotrauma.RuinGeneration
 
         [Serialize(1.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
         public float Commonness { get; private set; }
-        
+
+        [Serialize(1, false)]
+        public int MinAmount { get; private set; }
+        [Serialize(1, false)]
+        public int MaxAmount { get; private set; }
+
+        [Serialize("0,0", false)]
+        public Point MinRoomSize { get; private set; }
+
+        [Serialize("100000,100000", false)]
+        public Point MaxRoomSize { get; private set; }
+
         public List<EntityConnection> EntityConnections { get; private set; } = new List<EntityConnection>();
 
         private readonly List<RuinEntityConfig> childEntities = new List<RuinEntityConfig>();
