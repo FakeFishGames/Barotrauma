@@ -64,7 +64,11 @@ namespace Barotrauma
             clientNameBox.Text = GameMain.Config.DefaultPlayerName;
 
             new GUITextBlock(new Rectangle(0, 100, 0, 30), TextManager.Get("ServerIP"), "", menu);
-            ipBox = new GUITextBox(new Rectangle(0, 130, 200, 30), "", menu);
+            ipBox = new GUITextBox(new Rectangle(0, 130, 200, 30), "", menu)
+            {
+                //max IPv6 address length + port
+                MaxTextLength = 45 + 6
+            };
 
             int middleX = (int)(width * 0.35f);
 
