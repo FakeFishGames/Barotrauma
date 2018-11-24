@@ -1737,6 +1737,8 @@ namespace Barotrauma
                 return;
             }
 
+            ApplyStatusEffects(ActionType.Always, deltaTime);
+
             PreviousHull = CurrentHull;
             CurrentHull = Hull.FindHull(WorldPosition, CurrentHull, true);
 
