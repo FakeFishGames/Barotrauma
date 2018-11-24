@@ -2340,7 +2340,7 @@ namespace Barotrauma
 				if (++i >= Messages.Count) break;
 			} while (!Messages[selectedIndex].IsCommand || Messages[selectedIndex].Text == currentText);
 
-            return Messages[selectedIndex].Text;            
+            return !Messages[selectedIndex].IsCommand ? "" : Messages[selectedIndex].Text;            
         }
 
         public static void ExecuteCommand(string command)
