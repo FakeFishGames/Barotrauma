@@ -256,8 +256,6 @@ namespace Barotrauma
 
         public virtual void Update(float deltaTime, Camera cam, bool subInventory = false)
         {
-            syncItemsDelay = Math.Max(syncItemsDelay - deltaTime, 0.0f);
-
             if (slots == null || isSubInventory != subInventory || 
                 (RectTransform != null && RectTransform.Rect != prevRect))
             {
@@ -931,6 +929,7 @@ namespace Barotrauma
         {
             while (syncItemsDelay > 0.0f || (GameMain.Client != null && GameMain.Client.MidRoundSyncing))
             {
+                syncItemsDelay = Math.Max((float)(syncItemsDelay - Timing.Step), 0.0f);
                 yield return CoroutineStatus.Running;
             }
 

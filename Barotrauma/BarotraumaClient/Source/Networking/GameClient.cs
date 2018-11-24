@@ -159,11 +159,10 @@ namespace Barotrauma.Networking
             }
             else
             {
-                serverIP = address[0];
-
-                if (!int.TryParse(address[1], out int port))
+                serverIP = string.Join(":", address.Take(address.Length - 1));
+                if (!int.TryParse(address[address.Length - 1], out int port))
                 {
-                    DebugConsole.ThrowError("Invalid port: " + address[1] + "!");
+                    DebugConsole.ThrowError("Invalid port: " + address[address.Length - 1] + "!");
                     Port = NetConfig.DefaultPort;
                 }
                 else
