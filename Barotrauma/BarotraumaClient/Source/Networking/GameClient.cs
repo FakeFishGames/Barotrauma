@@ -122,25 +122,23 @@ namespace Barotrauma.Networking
         public void ConnectToServer(string hostIP)
         {
             string[] address = hostIP.Split(':');
-            if (address.Length==1)
+            if (address.Length == 1)
             {
                 serverIP = hostIP;
                 Port = NetConfig.DefaultPort;
             }
             else
             {
-                serverIP = address[0];
-
-                int port = 0;
-                if (!int.TryParse(address[1], out port))
+                serverIP = string.Join(":", address.Take(address.Length - 1));
+                if (!int.TryParse(address[address.Length - 1], out int port))
                 {
-                    DebugConsole.ThrowError("Invalid port: "+address[1]+"!");
+                    DebugConsole.ThrowError("Invalid port: " + address[address.Length - 1] + "!");
                     Port = NetConfig.DefaultPort;
                 }
                 else
                 {
                     Port = port;
-                }     
+                }
             }
 
             myCharacter = Character.Controlled;
@@ -172,7 +170,7 @@ namespace Barotrauma.Networking
             }
             catch
             {
-                new GUIMessageBox("Could not connect to server", "Failed to resolve address \""+serverIP+":"+Port+"\". Please make sure you have entered a valid IP address.");
+                new GUIMessageBox("Could not connect to server", "Failed to resolve address \"" + serverIP + ":" + Port + "\". Please make sure you have entered a valid IP address.");
                 return;
             }
 
@@ -186,13 +184,13 @@ namespace Barotrauma.Networking
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Couldn't connect to "+hostIP+". Error message: "+e.Message);
+                DebugConsole.ThrowError("Couldn't connect to " + hostIP + ". Error message: " + e.Message);
                 Disconnect();
 
                 GameMain.ServerListScreen.Select();
                 return;
             }
-            
+
             updateInterval = new TimeSpan(0, 0, 0, 0, 150);
 
             CoroutineManager.StartCoroutine(WaitForStartingInfo());
