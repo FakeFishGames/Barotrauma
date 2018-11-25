@@ -182,6 +182,7 @@ namespace Barotrauma
             if (ScreenChanged)
             {
                 updateList.Clear();
+                updateListSet.Clear();
                 Screen.Selected?.AddToGUIUpdateList();
                 ScreenChanged = false;
             }
@@ -372,7 +373,7 @@ namespace Barotrauma
             {
                 MouseOn.DrawToolTip(spriteBatch);
             }
-
+            
             if (!DisableHUD)
             {
                 Cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);
@@ -410,14 +411,14 @@ namespace Barotrauma
 
         #region Update list
         private static List<GUIComponent> updateList = new List<GUIComponent>();
+        //essentially a copy of the update list, used as an optimization to quickly check if the component is present in the update list
+        private static HashSet<GUIComponent> updateListSet = new HashSet<GUIComponent>();
         private static Queue<GUIComponent> removals = new Queue<GUIComponent>();
         private static Queue<GUIComponent> additions = new Queue<GUIComponent>();
         // A helpers list for all elements that have a draw order less than 0.
         private static List<GUIComponent> first = new List<GUIComponent>();
         // A helper list for all elements that have a draw order greater than 0.
         private static List<GUIComponent> last = new List<GUIComponent>();
-
-        public static IEnumerable<GUIComponent> ComponentsToUpdate => updateList;
 
         /// <summary>
         /// Adds the component on the addition queue.
@@ -451,7 +452,7 @@ namespace Barotrauma
         /// </summary>
         public static void RemoveFromUpdateList(GUIComponent component, bool alsoChildren = true)
         {
-            if (updateList.Contains(component))
+            if (updateListSet.Contains(component))
             {
                 removals.Enqueue(component);
             }
@@ -475,6 +476,7 @@ namespace Barotrauma
                 KeyboardDispatcher.Subscriber = null;
             }
             updateList.Clear();
+            updateListSet.Clear();
         }
 
         private static void RefreshUpdateList()
@@ -497,9 +499,10 @@ namespace Barotrauma
             while (additions.Count > 0)
             {
                 var component = additions.Dequeue();
-                if (!updateList.Contains(component))
+                if (!updateListSet.Contains(component))
                 {
                     updateList.Add(component);
+                    updateListSet.Add(component);
                 }
             }
         }
@@ -510,6 +513,7 @@ namespace Barotrauma
             {
                 var component = removals.Dequeue();
                 updateList.Remove(component);
+                updateListSet.Remove(component);
                 if (component as IKeyboardSubscriber == KeyboardDispatcher.Subscriber)
                 {
                     KeyboardDispatcher.Subscriber = null;
@@ -527,9 +531,10 @@ namespace Barotrauma
                 {
                     i--;
                 }
-                if (!updateList.Contains(item))
+                if (!updateListSet.Contains(item))
                 {
                     updateList.Insert(Math.Max(i, 0), item);
+                    updateListSet.Add(item);
                 }
             }
             list.Clear();
@@ -596,6 +601,7 @@ namespace Barotrauma
             HandlePersistingElements(deltaTime);
             RefreshUpdateList();
             UpdateMouseOn();
+            System.Diagnostics.Debug.Assert(updateList.Count == updateListSet.Count);
             updateList.ForEach(c => c.UpdateAuto(deltaTime));
             UpdateMessages(deltaTime);
         }
