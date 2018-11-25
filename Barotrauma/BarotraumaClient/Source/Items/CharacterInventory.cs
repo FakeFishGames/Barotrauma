@@ -332,6 +332,11 @@ namespace Barotrauma
             }
             
             CreateSlots();
+            if (layout == Layout.Default)
+            {
+                HUDLayoutSettings.InventoryTopY = slots[0].EquipButtonRect.Y - (int)(15 * GUI.Scale);
+            }
+
         }
 
         protected override void ControlInput(Camera cam)
@@ -668,10 +673,12 @@ namespace Barotrauma
             if (slots == null) CreateSlots();
             if (GameMain.GraphicsWidth != screenResolution.X ||
                 GameMain.GraphicsHeight != screenResolution.Y ||
-                prevUIScale != UIScale)
+                prevUIScale != UIScale ||
+                prevHUDScale != GUI.Scale)
             {
                 SetSlotPositions(layout);
                 prevUIScale = UIScale;
+                prevHUDScale = GUI.Scale;
             }
 
             if (layout == Layout.Center)

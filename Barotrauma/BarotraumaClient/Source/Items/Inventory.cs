@@ -126,6 +126,8 @@ namespace Barotrauma
         }
 
         protected float prevUIScale = UIScale;
+        protected float prevHUDScale = GUI.Scale;
+
 
         protected static Sprite slotSpriteSmall, slotSpriteHorizontal, slotSpriteVertical, slotSpriteRound;
         public static Sprite EquipIndicator, EquipIndicatorHighlight;
