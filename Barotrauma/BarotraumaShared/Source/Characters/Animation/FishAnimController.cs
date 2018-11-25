@@ -128,6 +128,9 @@ namespace Barotrauma
             {
                 Collider.Enabled = false;
                 Collider.FarseerBody.FixedRotation = false;
+                //set linear velocity even though the collider is disabled, 
+                //because the character won't be able to switch back from ragdoll mode until the velocity of the collider is low enough
+                Collider.LinearVelocity = MainLimb.LinearVelocity;
                 Collider.SetTransformIgnoreContacts(MainLimb.SimPosition, MainLimb.Rotation);
 
                 if (character.IsDead && deathAnimTimer < deathAnimDuration)
