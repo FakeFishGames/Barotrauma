@@ -207,10 +207,9 @@ namespace Barotrauma.RuinGeneration
             private set;
         }
 
-        public Ruin(VoronoiCell closestPathCell, List<VoronoiCell> caveCells, Rectangle area, bool mirror = false)
+        public Ruin(VoronoiCell closestPathCell, List<VoronoiCell> caveCells, RuinGenerationParams generationParams, Rectangle area, bool mirror = false)
         {
-            generationParams = RuinGenerationParams.GetRandom();
-
+            this.generationParams = generationParams;
             Area = area;
             corridors = new List<Corridor>();
             rooms = new List<BTRoom>();
