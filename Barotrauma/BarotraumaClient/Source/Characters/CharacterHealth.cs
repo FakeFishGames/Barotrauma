@@ -24,6 +24,8 @@ namespace Barotrauma
 
         private Point screenResolution;
 
+        private float uiScale, inventoryScale;
+
         private Alignment alignment = Alignment.Left;
         public Alignment Alignment
         {
@@ -322,12 +324,12 @@ namespace Barotrauma
                     HUDLayoutSettings.HealthWindowAreaLeft.Width / 3 - healthWindowHealthBarWidth, 
                     HUDLayoutSettings.HealthWindowAreaLeft.Height);
 
-                /*afflictionContainer.RectTransform.AbsoluteOffset = new Point(
-                    HUDLayoutSettings.HealthWindowAreaLeft.X + HUDLayoutSettings.HealthWindowAreaLeft.Width / 3,
+                afflictionInfoFrame.RectTransform.AbsoluteOffset = new Point(
+                    healthWindow.Rect.Right,
                     HUDLayoutSettings.HealthWindowAreaLeft.Y);
-                afflictionContainer.RectTransform.NonScaledSize = new Point((int)(
-                    HUDLayoutSettings.HealthWindowAreaLeft.Width * 0.66f),
-                    (int)(100 * GUI.Scale));*/
+                afflictionInfoFrame.RectTransform.NonScaledSize = new Point(
+                    (int)(HUDLayoutSettings.HealthWindowAreaLeft.Width * 0.66f),
+                    (int)(HUDLayoutSettings.HealthWindowAreaLeft.Height));
 
                 healthWindowHealthBar.RectTransform.NonScaledSize = healthWindowHealthBarShadow.RectTransform.NonScaledSize =
                     new Point(healthWindowHealthBarWidth, healthWindow.Rect.Height);
@@ -349,10 +351,12 @@ namespace Barotrauma
                     HUDLayoutSettings.HealthWindowAreaRight.Width / 3 - healthWindowHealthBarWidth, 
                     HUDLayoutSettings.HealthWindowAreaRight.Height);
 
-                /*afflictionContainer.RectTransform.AbsoluteOffset = HUDLayoutSettings.HealthWindowAreaRight.Location;
-                afflictionContainer.RectTransform.NonScaledSize = new Point((int)(
-                    HUDLayoutSettings.HealthWindowAreaRight.Width * 0.66f),
-                    (int)(100 * GUI.Scale));*/
+                afflictionInfoFrame.RectTransform.AbsoluteOffset = new Point(
+                    HUDLayoutSettings.HealthWindowAreaRight.X,
+                    HUDLayoutSettings.HealthWindowAreaLeft.Y);
+                afflictionInfoFrame.RectTransform.NonScaledSize = new Point(
+                    (int)(HUDLayoutSettings.HealthWindowAreaLeft.Width * 0.66f),
+                    (int)(HUDLayoutSettings.HealthWindowAreaLeft.Height));
 
                 healthWindowHealthBar.RectTransform.NonScaledSize = healthWindowHealthBarShadow.RectTransform.NonScaledSize =
                     new Point(healthWindowHealthBarWidth, healthWindow.Rect.Height);
@@ -360,12 +364,6 @@ namespace Barotrauma
                     new Point(HUDLayoutSettings.HealthWindowAreaRight.Right - healthWindowHealthBarWidth, HUDLayoutSettings.HealthWindowAreaRight.Y);
             }
             
-            afflictionInfoFrame.RectTransform.AbsoluteOffset = new Point(
-                HUDLayoutSettings.HealthWindowAreaRight.X, 
-                HUDLayoutSettings.HealthWindowAreaLeft.Y);
-            afflictionInfoFrame.RectTransform.NonScaledSize = new Point(
-                (int)(HUDLayoutSettings.HealthWindowAreaLeft.Width * 0.66f),
-                (int)(HUDLayoutSettings.HealthWindowAreaLeft.Height));
 
             int cprButtonSize = (int)(100 * GUI.Scale);
             cprButton.RectTransform.AbsoluteOffset = HUDLayoutSettings.HealthWindowAreaLeft.Location;
@@ -384,6 +382,8 @@ namespace Barotrauma
             dropItemArea.RectTransform.NonScaledSize = new Point(dropItemArea.Rect.Width);
 
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            inventoryScale = Inventory.UIScale;
+            uiScale = GUI.Scale;
         }
 
         partial void UpdateOxygenProjSpecific(float prevOxygen)
@@ -567,12 +567,17 @@ namespace Barotrauma
 
                     img.State = GUI.MouseOn == dropItemArea ? GUIComponent.ComponentState.Hover : GUIComponent.ComponentState.None;
 
-
                     byte alpha = img.Color.A;
                     byte hoverAlpha = img.HoverColor.A;
                     img.Color = ToolBox.GradientLerp(vitality / MaxVitality, Color.Red, Color.Orange, Color.Green);
                     img.Color = new Color(img.Color.R, img.Color.G, img.Color.B, alpha);
                     img.HoverColor = new Color(img.Color.R, img.Color.G, img.Color.B, hoverAlpha);
+                    img.HoverColor = Color.Lerp(img.HoverColor, Color.White, 0.5f);
+
+                    if (img.State == GUIComponent.ComponentState.Hover && droppedItem == null)
+                    {
+                        dropItemAnimTimer = Math.Min(0.3f, dropItemAnimTimer + deltaTime * 0.5f);
+                    }
 
                     if (i < 4)
                     {
@@ -607,7 +612,7 @@ namespace Barotrauma
                 if (dropItemAnimTimer > 0.0f)
                 {
                     dropItemAnimTimer -= deltaTime;
-                    //if (dropItemAnimTimer <= 0.0f) dropItemArea.Children.First().Flash(Color.Green);
+                    if (dropItemAnimTimer <= 0.0f) droppedItem = null;
                 }
             }
             else
@@ -675,7 +680,10 @@ namespace Barotrauma
         public void DrawHUD(SpriteBatch spriteBatch)
         {
             if (GUI.DisableHUD) return;
-            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
+            if (GameMain.GraphicsWidth != screenResolution.X || 
+                GameMain.GraphicsHeight != screenResolution.Y ||
+                Math.Abs(inventoryScale - Inventory.UIScale) > 0.01f ||
+                Math.Abs(uiScale - GUI.Scale) > 0.01f)
             {
                 UpdateAlignment();
             }
@@ -892,12 +900,12 @@ namespace Barotrauma
                     UserData = "label"
                 };
                 var afflictionName = new GUITextBlock(new RectTransform(new Vector2(0.65f, 1.0f), labelContainer.RectTransform), affliction.Prefab.Name, textAlignment: Alignment.CenterLeft, font: GUI.LargeFont);
-                var afflictionStrength = new GUITextBlock(new RectTransform(new Vector2(0.35f, 1.0f), labelContainer.RectTransform), "", textAlignment: Alignment.TopRight, font: GUI.LargeFont)
+                var afflictionStrength = new GUITextBlock(new RectTransform(new Vector2(0.35f, 0.6f), labelContainer.RectTransform), "", textAlignment: Alignment.TopRight, font: GUI.LargeFont)
                 {
                     Padding = Vector4.Zero,
                     UserData = "strength"
                 };
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.9f), labelContainer.RectTransform), "", textAlignment: Alignment.BottomRight)
+                var vitality = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), labelContainer.RectTransform, Anchor.BottomRight), "", textAlignment: Alignment.BottomRight)
                 {
                     IgnoreLayoutGroups = true,
                     UserData = "vitality"
@@ -914,6 +922,7 @@ namespace Barotrauma
                 child.Recalculate();
                 afflictionStrength.AutoScale = true;
                 afflictionName.AutoScale = true;
+                vitality.AutoDraw = true;
                 
             }
 
@@ -1369,7 +1378,7 @@ namespace Barotrauma
                 itemImage.Sprite.Draw(spriteBatch, PlayerInput.MousePosition, itemImage.Color, 0, scale);
             }
 
-            if (dropItemAnimTimer > 0.0f)
+            if (dropItemAnimTimer > 0.0f && droppedItem?.Prefab.InventoryIcon != null)
             {
                 var droppedItemSprite = droppedItem.Prefab.InventoryIcon ?? droppedItem.Sprite;
                 droppedItemSprite.Draw(spriteBatch, dropItemArea.Rect.Center.ToVector2(),
