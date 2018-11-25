@@ -47,8 +47,8 @@ namespace Barotrauma
                 if (prefab.ClusteringAmount <= 0.0f) return Length;
 
                 float noise = (float)(
-                    PerlinNoise.Perlin(GraphEdge.Point1.X / 10000.0f, GraphEdge.Point1.Y / 10000.0f, prefab.ClusteringGroup) +
-                    PerlinNoise.Perlin(GraphEdge.Point1.X / 20000.0f, GraphEdge.Point1.Y / 20000.0f, prefab.ClusteringGroup));
+                    PerlinNoise.CalculatePerlin(GraphEdge.Point1.X / 10000.0f, GraphEdge.Point1.Y / 10000.0f, prefab.ClusteringGroup) +
+                    PerlinNoise.CalculatePerlin(GraphEdge.Point1.X / 20000.0f, GraphEdge.Point1.Y / 20000.0f, prefab.ClusteringGroup));
 
                 return Length * (float)Math.Pow(noise, prefab.ClusteringAmount);
             }

@@ -384,7 +384,7 @@ namespace Barotrauma
             double aberrationT = (Timing.TotalTime * 0.5f);
             GameMain.GameScreen.PostProcessEffect.Parameters["blurDistance"].SetValue(0.001f);
             GameMain.GameScreen.PostProcessEffect.Parameters["chromaticAberrationStrength"].SetValue(new Vector3(-0.025f, -0.01f, -0.05f) *
-                (float)(PerlinNoise.Perlin(aberrationT, aberrationT, 0) + 0.5f));
+                (float)(PerlinNoise.CalculatePerlin(aberrationT, aberrationT, 0) + 0.5f));
             GameMain.GameScreen.PostProcessEffect.CurrentTechnique = GameMain.GameScreen.PostProcessEffect.Techniques["BlurChromaticAberration"];
             GameMain.GameScreen.PostProcessEffect.CurrentTechnique.Passes[0].Apply();
 
@@ -397,7 +397,7 @@ namespace Barotrauma
             float paddingY = backgroundSprite.SourceRect.Height * scale - GameMain.GraphicsHeight;
                 
             double noiseT = (Timing.TotalTime * 0.02f);
-            Vector2 pos = new Vector2((float)PerlinNoise.Perlin(noiseT, noiseT, 0) - 0.5f, (float)PerlinNoise.Perlin(noiseT, noiseT, 0.5f) - 0.5f);
+            Vector2 pos = new Vector2((float)PerlinNoise.CalculatePerlin(noiseT, noiseT, 0) - 0.5f, (float)PerlinNoise.CalculatePerlin(noiseT, noiseT, 0.5f) - 0.5f);
             pos = new Vector2(pos.X * paddingX, pos.Y * paddingY);
 
             spriteBatch.Draw(backgroundSprite.Texture,
