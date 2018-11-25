@@ -2,8 +2,8 @@
 <Items>
   <Item name="Junction Box" identifier="junctionbox" category="Electrical" description="Serves as a hub for power distribution and relaying signals between devices.">
     <Sprite texture="FF_junctionbox.png" sourcerect="0,0,73,121" depth="0.8" canflipx="false" origin="0.5,0.5" />
-    <BrokenSprite texture="FF_junctionbox.png" sourcerect="70,0,70,123" depth="0.8" maxcondition="55" fadein="true" />
-    <BrokenSprite texture="FF_junctionbox.png" sourcerect="140,0,70,123" depth="0.8" maxcondition="0" />
+    <BrokenSprite texture="FF_junctionbox.png" sourcerect="73,0,73,123" depth="0.8" maxcondition="55" fadein="true" />
+    <BrokenSprite texture="FF_junctionbox.png" sourcerect="146,0,73,123" depth="0.8" maxcondition="0" />
     <PowerTransfer canbeselected="true">
       <GuiFrame relativesize="0.2,0.15" minsize="350,160" maxsize="420,190" anchor="Center" style="ItemUI" />
       <StatusEffect type="InWater" target="This" condition="-0.5">
