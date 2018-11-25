@@ -34,6 +34,19 @@ namespace Barotrauma.RuinGeneration
         private List<RuinRoom> roomTypeList;
                 
         public string Name => "RuinGenerationParams";
+        
+        [Serialize("5000,5000", false), Editable()]
+        public Point SizeMin
+        {
+            get;
+            set;
+        }
+        [Serialize("8000,8000", false), Editable()]
+        public Point SizeMax
+        {
+            get;
+            set;
+        }
 
         [Serialize(3, false), Editable(MinValueInt = 1, MaxValueInt = 10, ToolTip = "The ruin generation algorithm \"splits\" the ruin area into two, splits these areas again, repeats this for some number of times and creates a room at each of the final split areas. This is value determines the minimum number of times the split is done.")]
         public int RoomDivisionIterationsMin
