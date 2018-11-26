@@ -29,7 +29,7 @@ namespace Barotrauma.Items.Components
         //charge indicator description
         protected Vector2 indicatorPosition, indicatorSize;
 
-        protected string indicatorDirection;
+        protected bool isHorizontal;
 
         public float CurrPowerOutput
         {
@@ -51,12 +51,11 @@ namespace Barotrauma.Items.Components
             set { indicatorSize = value; }
         }
 
-        //TODO: this should not be a string, we don't need a string to represent what is essentially a boolean value
-        [Serialize("", true)]
-        public string IndicatorDirection
+        [Serialize(false, true)]
+        public bool IsHorizontal
         {
-            get { return indicatorDirection; }
-            set { indicatorDirection = value; }
+            get { return isHorizontal; }
+            set { isHorizontal = value; }
         }
 
         [Editable(ToolTip = "Maximum output of the device when fully charged (kW)."), Serialize(10.0f, true)]
