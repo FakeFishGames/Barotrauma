@@ -336,6 +336,10 @@ namespace Barotrauma
                     new Point(healthWindowHealthBarWidth, healthWindow.Rect.Height);
                 healthWindowHealthBar.RectTransform.AbsoluteOffset = healthWindowHealthBarShadow.RectTransform.AbsoluteOffset = 
                     HUDLayoutSettings.HealthWindowAreaLeft.Location;
+
+                int cprButtonSize = (int)(100 * GUI.Scale);
+                cprButton.RectTransform.AbsoluteOffset = new Point(HUDLayoutSettings.HealthWindowAreaLeft.Right, dropItemArea.Rect.Center.Y - cprButtonSize / 2);
+                cprButton.RectTransform.NonScaledSize = new Point(cprButtonSize);
             }
             else
             {
@@ -363,13 +367,12 @@ namespace Barotrauma
                     new Point(healthWindowHealthBarWidth, healthWindow.Rect.Height);
                 healthWindowHealthBar.RectTransform.AbsoluteOffset = healthWindowHealthBarShadow.RectTransform.AbsoluteOffset =
                     new Point(HUDLayoutSettings.HealthWindowAreaRight.Right - healthWindowHealthBarWidth, HUDLayoutSettings.HealthWindowAreaRight.Y);
+
+                int cprButtonSize = (int)(100 * GUI.Scale);
+                cprButton.RectTransform.AbsoluteOffset = new Point(HUDLayoutSettings.HealthWindowAreaRight.X - cprButtonSize, dropItemArea.Rect.Center.Y - cprButtonSize / 2);
+                cprButton.RectTransform.NonScaledSize = new Point(cprButtonSize);
             }
             
-
-            int cprButtonSize = (int)(100 * GUI.Scale);
-            cprButton.RectTransform.AbsoluteOffset = HUDLayoutSettings.HealthWindowAreaLeft.Location;
-            cprButton.RectTransform.NonScaledSize = new Point(cprButtonSize);
-
             if (HideNormalInventory)
             {
                 healItemContainer.RectTransform.AbsoluteOffset = new Point(
