@@ -2320,7 +2320,7 @@ namespace Barotrauma
                         GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_HeadPosition", Color.Red, initMethod: w =>
                         {
                             w.tooltip = "Head";
-                            w.refresh = () => w.DrawPos = SimToScreen(head.SimPosition.X + humanGroundedParams.HeadLeanAmount * character.AnimController.Dir, head.PullJointWorldAnchorB.Y);
+                            w.refresh = () => w.DrawPos = SimToScreen(head.SimPosition.X + humanGroundedParams.HeadLeanAmount * character.AnimController.Dir * RagdollParams.JointScale, head.PullJointWorldAnchorB.Y);
                             w.MouseHeld += dTime =>
                             {
                                 w.DrawPos = PlayerInput.MousePosition;
@@ -2379,7 +2379,7 @@ namespace Barotrauma
                         GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_TorsoPosition", Color.DarkRed, initMethod: w =>
                         {
                             w.tooltip = "Torso";
-                            w.refresh = () => w.DrawPos = SimToScreen(torso.SimPosition.X + humanGroundedParams.TorsoLeanAmount * character.AnimController.Dir, torso.PullJointWorldAnchorB.Y);
+                            w.refresh = () => w.DrawPos = SimToScreen(torso.SimPosition.X + humanGroundedParams.TorsoLeanAmount * character.AnimController.Dir * RagdollParams.JointScale, torso.PullJointWorldAnchorB.Y);
                             w.MouseHeld += dTime =>
                             {
                                 w.DrawPos = PlayerInput.MousePosition;

@@ -423,12 +423,12 @@ namespace Barotrauma
                 if (TorsoAngle.HasValue) torso.body.SmoothRotate(TorsoAngle.Value * Dir, CurrentGroundedParams.TorsoTorque);
                 if (TorsoPosition.HasValue)
                 {
-                    Vector2 pos = colliderBottom + Vector2.UnitY * TorsoPosition.Value;
+                    Vector2 pos = colliderBottom + Vector2.UnitY * TorsoPosition.Value * RagdollParams.JointScale;
 
                     if (torso != MainLimb)
                         pos.X = torso.SimPosition.X;
                     else
-                        mainLimbHeight = TorsoPosition.Value;
+                        mainLimbHeight = TorsoPosition.Value * RagdollParams.JointScale;
 
                     torso.MoveToPos(pos, CurrentGroundedParams.TorsoMoveForce);
                     torso.PullJointEnabled = true;
@@ -442,12 +442,12 @@ namespace Barotrauma
                 if (HeadAngle.HasValue) head.body.SmoothRotate(HeadAngle.Value * Dir, CurrentGroundedParams.HeadTorque);
                 if (HeadPosition.HasValue)
                 {
-                    Vector2 pos = colliderBottom + Vector2.UnitY * HeadPosition.Value;
+                    Vector2 pos = colliderBottom + Vector2.UnitY * HeadPosition.Value * RagdollParams.JointScale;
 
                     if (head != MainLimb)
                         pos.X = head.SimPosition.X;
                     else
-                        mainLimbHeight = HeadPosition.Value;
+                        mainLimbHeight = HeadPosition.Value * RagdollParams.JointScale;
 
                     head.MoveToPos(pos, CurrentGroundedParams.HeadMoveForce);
                     head.PullJointEnabled = true;
