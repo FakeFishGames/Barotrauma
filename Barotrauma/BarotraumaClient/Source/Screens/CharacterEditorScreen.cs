@@ -1018,7 +1018,7 @@ namespace Barotrauma
             }
         }
 
-        private void CreateCharacter(string name, bool isHumanoid, params object[] ragdollConfig)
+        private void CreateCharacter(string name, bool isHumanoid, bool canEnterSubmarine, params object[] ragdollConfig)
         {
             string speciesName = name;
             string mainFolder = $"Content/Characters/{speciesName}";
@@ -1030,6 +1030,7 @@ namespace Barotrauma
                 XElement mainElement = new XElement("Character",
                     new XAttribute("name", speciesName),
                     new XAttribute("humanoid", isHumanoid),
+                    new XAttribute("canentersubmarine", canEnterSubmarine),
                     new XElement("ragdolls"),
                     new XElement("animations"),
                     new XElement("health"),
@@ -3478,6 +3479,7 @@ namespace Barotrauma
             // Ragdoll data
             private string name = string.Empty;
             private bool isHumanoid = false;
+            private bool canEnterSubmarine = true;
             private string texturePath;
             private string xmlPath;
             private Dictionary<string, XElement> limbXElements = new Dictionary<string, XElement>();
@@ -3551,7 +3553,7 @@ namespace Barotrauma
                         texturePathElement.Text = TexturePath;
                         xmlPathElement.Text = XMLPath;
                     }
-                    for (int i = 0; i < 4; i++)
+                    for (int i = 0; i < 5; i++)
                     {
                         var mainElement = new GUIFrame(new RectTransform(new Point(topGroup.RectTransform.Rect.Width, elementSize), topGroup.RectTransform), style: null, color: Color.Gray * 0.25f);
                         fields.Add(mainElement);
@@ -3580,6 +3582,14 @@ namespace Barotrauma
                                 };
                                 break;
                             case 2:
+                                new GUITextBlock(leftElement, "Can Enter Submarine?");
+                                new GUITickBox(rightElement, string.Empty)
+                                {
+                                    Selected = CanEnterSubmarine,
+                                    OnSelected = (tB) => CanEnterSubmarine = tB.Selected
+                                };
+                                break;
+                            case 3:
                                 new GUITextBlock(leftElement, "Config File Output");
                                 xmlPathElement = new GUITextBox(rightElement, string.Empty)
                                 {
@@ -3591,7 +3601,7 @@ namespace Barotrauma
                                     return true;
                                 };
                                 break;
-                            case 3:
+                            case 4:
                                 new GUITextBlock(leftElement, "Texture Path");
                                 texturePathElement = new GUITextBox(rightElement, string.Empty)
                                 {
@@ -3844,7 +3854,7 @@ namespace Barotrauma
                                 LimbXElements.Values,
                                 JointXElements
                         };
-                        CharacterEditorScreen.instance.CreateCharacter(Name, IsHumanoid, ragdollParams);
+                        CharacterEditorScreen.instance.CreateCharacter(Name, IsHumanoid, CanEnterSubmarine, ragdollParams);
                         GUI.AddMessage($"Character {Name} Created", Color.Green, font: GUI.Font);
                         Instance.SelectTab(Tab.None);
                         return true;
@@ -3950,6 +3960,11 @@ namespace Barotrauma
                 {
                     get => Instance.isHumanoid;
                     set => Instance.isHumanoid = value;
+                }
+                public bool CanEnterSubmarine
+                {
+                    get => Instance.canEnterSubmarine;
+                    set => Instance.canEnterSubmarine = value;
                 }
                 public string TexturePath
                 {
