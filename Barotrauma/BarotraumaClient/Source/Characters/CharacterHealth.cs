@@ -595,6 +595,14 @@ namespace Barotrauma
                 UpdateAfflictionContainer(
                     selectedLimbIndex < 0 ? (highlightedLimbIndex < 0 ? null : limbHealths[highlightedLimbIndex]) : limbHealths[selectedLimbIndex]);
 
+                if (Inventory.draggingItem != null)
+                {
+                    if (highlightedLimbIndex > -1)
+                    {
+                        selectedLimbIndex = highlightedLimbIndex;
+                    }
+                }
+
                 if (draggingMed != null)
                 {
                     if (!PlayerInput.LeftButtonHeld())
@@ -967,19 +975,28 @@ namespace Barotrauma
         public bool OnItemDropped(Item item, bool ignoreMousePos)
         {
             //items can be dropped outside the health window
-            if (!ignoreMousePos && 
-                !healthWindow.Rect.Contains(PlayerInput.MousePosition) && 
+            if (!ignoreMousePos &&
+                !healthWindow.Rect.Contains(PlayerInput.MousePosition) &&
                 !afflictionInfoFrame.Rect.Contains(PlayerInput.MousePosition))
             {
                 return false;
             }
-                        
+
             //can't apply treatment to dead characters
             if (character.IsDead) return true;
             if (item == null || !item.UseInHealthInterface) return true;
-            if (!ignoreMousePos && !dropItemArea.Rect.Contains(PlayerInput.MousePosition)) return true;
-
-
+            if (!ignoreMousePos)
+            {
+                if (highlightedLimbIndex > -1)
+                {
+                    selectedLimbIndex = highlightedLimbIndex;
+                }
+                else if (!dropItemArea.Rect.Contains(PlayerInput.MousePosition))
+                {
+                    return true;
+                }
+            }
+            
             Limb targetLimb = character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex);
 #if CLIENT
             if (GameMain.Client != null)
