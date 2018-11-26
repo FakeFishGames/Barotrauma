@@ -2462,31 +2462,56 @@ namespace Barotrauma
             {
                 float amplitudeMultiplier = 0.5f;
                 float lengthMultiplier = 20;
-                float amplitude = ConvertUnits.ToDisplayUnits(fishSwimParams.WaveAmplitude) * Cam.Zoom / amplitudeMultiplier;
-                float length = ConvertUnits.ToDisplayUnits(fishSwimParams.WaveLength) * Cam.Zoom / lengthMultiplier;
-                referencePoint = colliderDrawPos - screenSpaceForward * ConvertUnits.ToDisplayUnits(collider.radius) * 3 * Cam.Zoom;
-                drawPos = referencePoint;
-                drawPos -= screenSpaceForward * length;
-                Vector2 toRefPoint = referencePoint - drawPos;
-                var start = drawPos + toRefPoint / 2;
-                var control = start + (screenSpaceLeft * dir * amplitude);
                 int points = 1000;
-                // Length
-                DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 15, Color.NavajoWhite, "Wave Length", () =>
+                float GetAmplitude() => ConvertUnits.ToDisplayUnits(fishSwimParams.WaveAmplitude) * Cam.Zoom / amplitudeMultiplier;
+                float GetWaveLength() => ConvertUnits.ToDisplayUnits(fishSwimParams.WaveLength) * Cam.Zoom / lengthMultiplier;
+                Vector2 GetRefPoint() => SimToScreen(collider.SimPosition) - GetScreenSpaceForward() * ConvertUnits.ToDisplayUnits(collider.radius) * 3 * Cam.Zoom;
+                Vector2 GetDrawPos() => GetRefPoint() - GetScreenSpaceForward() * GetWaveLength();
+                Vector2 GetDir() => GetRefPoint() - GetDrawPos();
+                Vector2 GetStartPoint() => GetDrawPos() + GetDir() / 2;
+                Vector2 GetControlPoint() => GetStartPoint() + GetScreenSpaceForward().Right() * character.AnimController.Dir * GetAmplitude();
+                var lengthWidget = GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_WaveLength", Color.NavajoWhite, size: 15, shape: Widget.Shape.Circle, initMethod: w =>
                 {
-                    var input = Vector2.Multiply(ConvertUnits.ToSimUnits(scaledMouseSpeed), screenSpaceForward).Combine() / Cam.Zoom * lengthMultiplier;
-                    TryUpdateAnimParam("wavelength", MathHelper.Clamp(fishSwimParams.WaveLength - input, 0, 150));
-                    GUI.DrawSineWithDots(spriteBatch, referencePoint, -toRefPoint, amplitude, length, 5000, points, Color.NavajoWhite);
-
+                    w.tooltip = "Tail Movement Speed";
+                    w.refresh = () => w.DrawPos = GetDrawPos();
+                    w.MouseHeld += dTime =>
+                    {
+                        float input = Vector2.Multiply(ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed), GetScreenSpaceForward()).Combine() / Cam.Zoom * lengthMultiplier;
+                        TryUpdateAnimParam("wavelength", MathHelper.Clamp(fishSwimParams.WaveLength - input, 0, 150));
+                    };
+                    // Additional
+                    w.PreDraw += (sp, dTime) =>
+                    {
+                        if (w.IsControlled)
+                        {
+                            w.refresh();
+                        }
+                    };
                 });
-                // Amplitude
-                DrawWidget(spriteBatch, control, WidgetType.Circle, 15, Color.NavajoWhite, "Wave Amplitude", () =>
+                var amplitudeWidget = GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_WaveAmplitude", Color.NavajoWhite, size: 15, shape: Widget.Shape.Circle, initMethod: w =>
                 {
-                    var input = Vector2.Multiply(ConvertUnits.ToSimUnits(scaledMouseSpeed), screenSpaceLeft).Combine() * dir / Cam.Zoom * amplitudeMultiplier;
-                    TryUpdateAnimParam("waveamplitude", MathHelper.Clamp(fishSwimParams.WaveAmplitude + input, -4, 4));
-                    GUI.DrawSineWithDots(spriteBatch, referencePoint, -toRefPoint, amplitude, length, 5000, points, Color.NavajoWhite);
-
+                    w.tooltip = "Tail Movement Amount";
+                    w.refresh = () => w.DrawPos = GetControlPoint();
+                    w.MouseHeld += dTime =>
+                    {
+                        float input = Vector2.Multiply(ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed), GetScreenSpaceForward().Right()).Combine() * character.AnimController.Dir / Cam.Zoom * amplitudeMultiplier;
+                        TryUpdateAnimParam("waveamplitude", MathHelper.Clamp(fishSwimParams.WaveAmplitude + input, -4, 4));
+                    };
+                    // Additional
+                    w.PreDraw += (sp, dTime) =>
+                    {
+                        if (w.IsControlled)
+                        {
+                            w.refresh();
+                        }
+                    };
                 });
+                if (lengthWidget.IsControlled || amplitudeWidget.IsControlled)
+                {
+                    GUI.DrawSineWithDots(spriteBatch, GetRefPoint(), -GetDir(), GetAmplitude(), GetWaveLength(), 5000, points, Color.NavajoWhite);
+                }
+                lengthWidget.Draw(spriteBatch, deltaTime);
+                amplitudeWidget.Draw(spriteBatch, deltaTime);
             }
             // Human swim only -->
             else if (humanSwimParams != null)
@@ -2495,20 +2520,20 @@ namespace Barotrauma
                 float amplitudeMultiplier = 5;
                 float lengthMultiplier = 5;
                 int points = 1000;
-                float GetMoveAmount() => ConvertUnits.ToDisplayUnits(humanSwimParams.LegMoveAmount) * Cam.Zoom / amplitudeMultiplier;
-                float GetCycleLength() => ConvertUnits.ToDisplayUnits(humanSwimParams.LegCycleLength) * Cam.Zoom / lengthMultiplier;
+                float GetAmplitude() => ConvertUnits.ToDisplayUnits(humanSwimParams.LegMoveAmount) * Cam.Zoom / amplitudeMultiplier;
+                float GetWaveLength() => ConvertUnits.ToDisplayUnits(humanSwimParams.LegCycleLength) * Cam.Zoom / lengthMultiplier;
                 Vector2 GetRefPoint() => SimToScreen(character.SimPosition - GetScreenSpaceForward() / 2);
-                Vector2 GetDrawPos() => GetRefPoint() - GetScreenSpaceForward() * GetCycleLength();
+                Vector2 GetDrawPos() => GetRefPoint() - GetScreenSpaceForward() * GetWaveLength();
                 Vector2 GetDir() => GetRefPoint() - GetDrawPos();
                 Vector2 GetStartPoint() => GetDrawPos() + GetDir() / 2;
-                Vector2 GetControlPoint() => GetStartPoint() + GetScreenSpaceForward().Right() * dir * GetMoveAmount();
-                var legSpeedWidget = GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_LegMovementSpeed", Color.NavajoWhite, size: 15, shape: Widget.Shape.Circle, initMethod: w =>
+                Vector2 GetControlPoint() => GetStartPoint() + GetScreenSpaceForward().Right() * character.AnimController.Dir * GetAmplitude();
+                var lengthWidget = GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_LegMovementSpeed", Color.NavajoWhite, size: 15, shape: Widget.Shape.Circle, initMethod: w =>
                 {
                     w.tooltip = "Leg Movement Speed";
                     w.refresh = () => w.DrawPos = GetDrawPos();
                     w.MouseHeld += dTime =>
                     {
-                        float input = Vector2.Multiply(ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed), GetScreenSpaceForward()).Combine() / Cam.Zoom * amplitudeMultiplier;
+                        float input = Vector2.Multiply(ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed), GetScreenSpaceForward()).Combine() / Cam.Zoom * lengthMultiplier;
                         TryUpdateAnimParam("legcyclelength", MathHelper.Clamp(humanSwimParams.LegCycleLength - input, 0, 20));
                     };
                     // Additional
@@ -2520,13 +2545,13 @@ namespace Barotrauma
                         }
                     };
                 });
-                var legMoveAmountWidget = GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_LegMovementAmount", Color.NavajoWhite, size: 15, shape: Widget.Shape.Circle, initMethod: w =>
+                var amplitudeWidget = GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_LegMovementAmount", Color.NavajoWhite, size: 15, shape: Widget.Shape.Circle, initMethod: w =>
                 {
                     w.tooltip = "Leg Movement Amount";
                     w.refresh = () => w.DrawPos = GetControlPoint();
                     w.MouseHeld += dTime =>
                     {
-                        float input = Vector2.Multiply(ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed), GetScreenSpaceForward().Right()).Combine() * dir / Cam.Zoom * lengthMultiplier;
+                        float input = Vector2.Multiply(ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed), GetScreenSpaceForward().Right()).Combine() * character.AnimController.Dir / Cam.Zoom * amplitudeMultiplier;
                         TryUpdateAnimParam("legmoveamount", MathHelper.Clamp(humanSwimParams.LegMoveAmount + input, -2, 2));
                     };
                     // Additional
@@ -2538,12 +2563,12 @@ namespace Barotrauma
                         }
                     };
                 });
-                if (legSpeedWidget.IsControlled || legMoveAmountWidget.IsControlled)
+                if (lengthWidget.IsControlled || amplitudeWidget.IsControlled)
                 {
-                    GUI.DrawSineWithDots(spriteBatch, GetRefPoint(), -GetDir(), GetMoveAmount(), GetCycleLength(), 5000, points, Color.NavajoWhite);
+                    GUI.DrawSineWithDots(spriteBatch, GetRefPoint(), -GetDir(), GetAmplitude(), GetWaveLength(), 5000, points, Color.NavajoWhite);
                 }
-                legSpeedWidget.Draw(spriteBatch, deltaTime);
-                legMoveAmountWidget.Draw(spriteBatch, deltaTime);
+                lengthWidget.Draw(spriteBatch, deltaTime);
+                amplitudeWidget.Draw(spriteBatch, deltaTime);
                 // Arms
                 GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_HandMoveAmount", Color.LightGreen, initMethod: w =>
                 {
