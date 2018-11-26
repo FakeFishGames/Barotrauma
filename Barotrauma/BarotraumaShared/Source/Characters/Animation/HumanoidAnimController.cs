@@ -567,8 +567,8 @@ namespace Barotrauma
             if (Stairs != null || onSlope)
             {
                 torso.PullJointWorldAnchorB = new Vector2(
-                    MathHelper.SmoothStep(torso.SimPosition.X, footMid + movement.X * CurrentGroundedParams.TorsoLeanAmount, getUpForce * 0.8f),
-                    MathHelper.SmoothStep(torso.SimPosition.Y, colliderPos.Y + TorsoPosition.Value - Math.Abs(walkPosX * 0.05f), getUpForce * 2.0f));
+                    MathHelper.SmoothStep(torso.SimPosition.X, footMid + movement.X * CurrentGroundedParams.TorsoLeanAmount * RagdollParams.JointScale, getUpForce * 0.8f),
+                    MathHelper.SmoothStep(torso.SimPosition.Y, colliderPos.Y + TorsoPosition.Value * RagdollParams.JointScale - Math.Abs(walkPosX * 0.05f), getUpForce * 2.0f));
 
                 head.PullJointWorldAnchorB = new Vector2(
                     MathHelper.SmoothStep(head.SimPosition.X, footMid + movement.X * CurrentGroundedParams.HeadLeanAmount, getUpForce * 0.8f),
@@ -586,16 +586,16 @@ namespace Barotrauma
                 float y = colliderPos.Y;
                 if (TorsoPosition.HasValue)
                 {
-                    y += TorsoPosition.Value;
+                    y += TorsoPosition.Value * RagdollParams.JointScale;
                 }
                 torso.PullJointWorldAnchorB =
                     MathUtils.SmoothStep(torso.SimPosition,
-                    new Vector2(footMid + movement.X * CurrentGroundedParams.TorsoLeanAmount, y), getUpForce);
+                    new Vector2(footMid + movement.X * CurrentGroundedParams.TorsoLeanAmount * RagdollParams.JointScale, y), getUpForce);
 
                 y = colliderPos.Y;
                 if (HeadPosition.HasValue)
                 {
-                    y += HeadPosition.Value;
+                    y += HeadPosition.Value * RagdollParams.JointScale;
                 }
                 head.PullJointWorldAnchorB =
                     MathUtils.SmoothStep(head.SimPosition,
@@ -1290,7 +1290,7 @@ namespace Barotrauma
                 float yPos = (float)Math.Sin(cprAnimTimer) * 0.2f;
                 head.PullJointWorldAnchorB = new Vector2(targetHead.SimPosition.X, targetHead.SimPosition.Y + 0.3f + yPos);
                 head.PullJointEnabled = true;
-                torso.PullJointWorldAnchorB = new Vector2(torso.SimPosition.X, colliderPos.Y + (TorsoPosition.Value - 0.2f));
+                torso.PullJointWorldAnchorB = new Vector2(torso.SimPosition.X, colliderPos.Y + (TorsoPosition.Value - 0.2f) * RagdollParams.JointScale);
                 torso.PullJointEnabled = true;
 
                 //Serverside code
@@ -1313,7 +1313,7 @@ namespace Barotrauma
                     head.PullJointEnabled = true;
                 }
 
-                torso.PullJointWorldAnchorB = new Vector2(torso.SimPosition.X, colliderPos.Y + (TorsoPosition.Value - 0.1f));
+                torso.PullJointWorldAnchorB = new Vector2(torso.SimPosition.X, colliderPos.Y + (TorsoPosition.Value - 0.1f) * RagdollParams.JointScale);
                 torso.PullJointEnabled = true;
 
                 if (cprPump >= 1)
