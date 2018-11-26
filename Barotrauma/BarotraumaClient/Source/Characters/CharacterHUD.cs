@@ -16,9 +16,7 @@ namespace Barotrauma
         
         private static List<Item> brokenItems = new List<Item>();
         private static float brokenItemsCheckTimer;
-
-        private static SpriteSheet focusIndicator;
-
+        
         public static void AddToGUIUpdateList(Character character)
         {
             if (GUI.DisableHUD) return;
@@ -138,10 +136,9 @@ namespace Barotrauma
             {
                 float dist = Vector2.Distance(character.WorldPosition, brokenItem.WorldPosition);
                 Vector2 drawPos = brokenItem.DrawPosition;
-                //TODO: proper icon
                 float alpha = Math.Min((1000.0f - dist) / 1000.0f * 2.0f, 1.0f);
                 if (alpha <= 0.0f) continue;
-                GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, GUI.SubmarineIcon, 
+                GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, GUI.BrokenIcon, 
                     Color.Lerp(Color.DarkRed, Color.Orange * 0.5f, brokenItem.Condition / 100.0f) * alpha);                
             }
 

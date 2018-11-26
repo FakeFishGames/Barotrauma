@@ -104,13 +104,14 @@ namespace Barotrauma.Items.Components
 
             if (charge > 0)
             {
+                Color indicatorColor = ToolBox.GradientLerp(charge / capacity, Color.Red, Color.Orange, Color.Green);
                 if (indicatorDirection.ToLowerInvariant() == "vertical")
                 {
                     GUI.DrawRectangle(spriteBatch,
                     new Vector2(
                         item.DrawPosition.X - item.Sprite.SourceRect.Width / 2 * item.Scale + indicatorPosition.X * item.Scale + 1,
                         -item.DrawPosition.Y - item.Sprite.SourceRect.Height / 2 * item.Scale + indicatorPosition.Y * item.Scale + 1 + ((indicatorSize.Y * item.Scale) * (1.0f - charge / capacity))),
-                    new Vector2(indicatorSize.X * item.Scale - 2, indicatorSize.Y * item.Scale * (charge / capacity) - 2), Color.Green, true);
+                    new Vector2(indicatorSize.X * item.Scale - 2, indicatorSize.Y * item.Scale * (charge / capacity) - 2), indicatorColor, true);
                 }
                 else if (indicatorDirection.ToLowerInvariant() == "horizontal")
                 {
@@ -118,7 +119,7 @@ namespace Barotrauma.Items.Components
                     new Vector2(
                         item.DrawPosition.X - item.Sprite.SourceRect.Width / 2 * item.Scale + indicatorPosition.X * item.Scale + 1 ,
                         -item.DrawPosition.Y - item.Sprite.SourceRect.Height / 2 * item.Scale + indicatorPosition.Y * item.Scale + 1),
-                    new Vector2(indicatorSize.X * item.Scale * (charge / capacity) - 2, indicatorSize.Y * item.Scale - 2), Color.Green, true);
+                    new Vector2(indicatorSize.X * item.Scale * (charge / capacity) - 2, indicatorSize.Y * item.Scale - 2), indicatorColor, true);
                 }
             }
 

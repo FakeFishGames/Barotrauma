@@ -56,7 +56,7 @@ namespace Barotrauma
         private static Sound[] sounds;
         private static bool pauseMenuOpen, settingsMenuOpen;
         private static GUIFrame pauseMenu;
-        private static Sprite submarineIcon, arrow, lockIcon, checkmarkIcon, timerIcon;
+        private static Sprite arrow, lockIcon, checkmarkIcon, timerIcon;
 
         public static KeyboardDispatcher KeyboardDispatcher { get; private set; }
 
@@ -73,7 +73,14 @@ namespace Barotrauma
 
         public static Sprite SubmarineIcon
         {
-            get { return submarineIcon; }
+            get;
+            private set;
+        }
+
+        public static Sprite BrokenIcon
+        {
+            get;
+            private set;
         }
 
         public static Sprite SpeechBubbleIcon
@@ -157,22 +164,14 @@ namespace Barotrauma
             // create 1x1 texture for line drawing
             t = new Texture2D(GraphicsDevice, 1, 1);
             t.SetData(new Color[] { Color.White });// fill the texture with white
-            submarineIcon = new Sprite("Content/UI/IconAtlas.png", new Rectangle(452, 385, 182, 81));
-            submarineIcon.Origin = submarineIcon.size / 2;
-            arrow = new Sprite("Content/UI/IconAtlas.png", new Rectangle(392, 393, 49, 45));
-            arrow.Origin = arrow.size / 2;
-            SpeechBubbleIcon = new Sprite("Content/UI/IconAtlas.png", new Rectangle(385, 449, 66, 60));
-            SpeechBubbleIcon.Origin = SpeechBubbleIcon.size / 2;
-
-            lockIcon = new Sprite("Content/UI/UI_Atlas.png", new Rectangle(996, 677, 21, 25));
-            lockIcon.Origin = lockIcon.size / 2;
-
-            checkmarkIcon = new Sprite("Content/UI/UI_Atlas.png", new Rectangle(932, 398, 33, 28));
-            checkmarkIcon.Origin = checkmarkIcon.size / 2;
-
-			timerIcon = new Sprite("Content/UI/UI_Atlas.png", new Rectangle(997, 653, 18, 21));
-			timerIcon.Origin = timerIcon.size / 2;
-		}
+            SubmarineIcon = new Sprite("Content/UI/IconAtlas.png", new Rectangle(452, 385, 182, 81), new Vector2(0.5f, 0.5f));
+            arrow = new Sprite("Content/UI/IconAtlas.png", new Rectangle(392, 393, 49, 45), new Vector2(0.5f, 0.5f));
+            SpeechBubbleIcon = new Sprite("Content/UI/IconAtlas.png", new Rectangle(385, 449, 66, 60), new Vector2(0.5f, 0.5f));
+            BrokenIcon = new Sprite("Content/UI/IconAtlas.png", new Rectangle(898, 386, 123, 123), new Vector2(0.5f, 0.5f));
+            lockIcon = new Sprite("Content/UI/UI_Atlas.png", new Rectangle(996, 677, 21, 25), new Vector2(0.5f, 0.5f));
+            checkmarkIcon = new Sprite("Content/UI/UI_Atlas.png", new Rectangle(932, 398, 33, 28), new Vector2(0.5f, 0.5f));
+            timerIcon = new Sprite("Content/UI/UI_Atlas.png", new Rectangle(997, 653, 18, 21), new Vector2(0.5f, 0.5f));
+        }
 
         /// <summary>
         /// By default, all the gui elements are drawn automatically in the same order they appear on the update list. 
