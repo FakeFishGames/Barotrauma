@@ -2174,8 +2174,10 @@ namespace Barotrauma
             var colliderDrawPos = SimToScreen(collider.SimPosition);
             var animParams = character.AnimController.CurrentAnimationParams;
             var groundedParams = animParams as GroundedMovementParams;
+            var humanParams = animParams as IHumanAnimation;
             var humanGroundedParams = animParams as HumanGroundedParams;
             var humanSwimParams = animParams as HumanSwimParams;
+            var fishParams = animParams as IFishAnimation;
             var fishGroundedParams = animParams as FishGroundedParams;
             var fishSwimParams = animParams as FishSwimParams;
             var head = character.AnimController.GetLimb(LimbType.Head);
@@ -2419,10 +2421,16 @@ namespace Barotrauma
                     }
                 }
             }
+            // Tail angle
+            if (tail != null && fishParams != null)
+            {
+                DrawRadialWidget(spriteBatch, SimToScreen(tail.SimPosition), fishParams.TailAngle, "Tail Angle", Color.White,
+                    angle => TryUpdateAnimParam("tailangle", angle), circleRadius: 25, rotationOffset: collider.Rotation + MathHelper.Pi, clockWise: dir < 0);
+            }
             // Foot angle
             if (foot != null)
             {
-                if (animParams is IFishAnimation fishParams)
+                if (fishParams != null)
                 {
                     foreach (Limb limb in character.AnimController.Limbs)
                     {
@@ -2445,7 +2453,7 @@ namespace Barotrauma
                             circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0);
                     }
                 }
-                else if (animParams is IHumanAnimation humanParams)
+                else if (humanParams != null)
                 {
                     DrawRadialWidget(spriteBatch, SimToScreen(foot.SimPosition), humanParams.FootAngle, "Foot Angle", Color.White,
                         angle => TryUpdateAnimParam("footangle", angle), circleRadius: 25, rotationOffset: collider.Rotation + MathHelper.Pi, clockWise: dir < 0);

@@ -90,7 +90,7 @@ namespace Barotrauma
         public new FishGroundedParams CurrentGroundedParams => base.CurrentGroundedParams as FishGroundedParams;
         public new FishSwimParams CurrentSwimParams => base.CurrentSwimParams as FishSwimParams;
 
-        //protected float? FootAngle => GetValidOrNull(CurrentSwimParams, CurrentSwimParams?.FootAngleInRadians);
+        protected float? TailAngle => GetValidOrNull(CurrentAnimationParams, CurrentFishAnimation?.TailAngleInRadians);
 
         public override GroundedMovementParams WalkParams
         {
@@ -339,6 +339,11 @@ namespace Barotrauma
                     Limb head = GetLimb(LimbType.Head);
                     head?.body.SmoothRotate(movementAngle + HeadAngle.Value * Dir, CurrentSwimParams.HeadTorque);
                 }
+                if (TailAngle.HasValue)
+                {
+                    Limb tail = GetLimb(LimbType.Tail);
+                    tail?.body.SmoothRotate(movementAngle + TailAngle.Value * Dir, CurrentSwimParams.TailTorque);
+                }
             }
             else
             {
@@ -359,6 +364,11 @@ namespace Barotrauma
                 {
                     Limb head = GetLimb(LimbType.Head);
                     head?.body.SmoothRotate(HeadAngle.Value * Dir, CurrentSwimParams.HeadTorque);
+                }
+                if (TailAngle.HasValue)
+                {
+                    Limb tail = GetLimb(LimbType.Tail);
+                    tail?.body.SmoothRotate(TailAngle.Value * Dir, CurrentSwimParams.TailTorque);
                 }
             }
 
@@ -453,6 +463,11 @@ namespace Barotrauma
                     head.PullJointEnabled = true;
                     head.PullJointWorldAnchorB = pos;
                 }
+            }
+
+            if (TailAngle.HasValue)
+            {
+                GetLimb(LimbType.Tail)?.body.SmoothRotate(TailAngle.Value * Dir, CurrentGroundedParams.TailTorque);
             }
                         
             WalkPos -= MainLimb.LinearVelocity.X * (CurrentAnimationParams.CycleSpeed / 100.0f);
