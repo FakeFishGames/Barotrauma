@@ -105,7 +105,7 @@ namespace Barotrauma.Items.Components
             if (charge > 0)
             {
                 Color indicatorColor = ToolBox.GradientLerp(charge / capacity, Color.Red, Color.Orange, Color.Green);
-                if (indicatorDirection.ToLowerInvariant() == "vertical")
+                if (!isHorizontal)
                 {
                     GUI.DrawRectangle(spriteBatch,
                     new Vector2(
@@ -113,7 +113,7 @@ namespace Barotrauma.Items.Components
                         -item.DrawPosition.Y - item.Sprite.SourceRect.Height / 2 * item.Scale + indicatorPosition.Y * item.Scale + 1 + ((indicatorSize.Y * item.Scale) * (1.0f - charge / capacity))),
                     new Vector2(indicatorSize.X * item.Scale - 2, indicatorSize.Y * item.Scale * (charge / capacity) - 2), indicatorColor, true);
                 }
-                else if (indicatorDirection.ToLowerInvariant() == "horizontal")
+                else
                 {
                     GUI.DrawRectangle(spriteBatch,
                     new Vector2(
