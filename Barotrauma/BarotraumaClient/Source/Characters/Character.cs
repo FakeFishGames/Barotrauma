@@ -184,7 +184,7 @@ namespace Barotrauma
                 }
 
                 cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
-                if (AnimController.CurrentHull != null && AnimController.CurrentHull.Submarine != null)
+                if (AnimController.CurrentHull?.Submarine != null)
                 {
                     cursorPosition -= AnimController.CurrentHull.Submarine.Position;
                 }

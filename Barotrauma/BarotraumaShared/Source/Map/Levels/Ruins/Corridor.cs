@@ -69,9 +69,8 @@ namespace Barotrauma.RuinGeneration
                 int right = Math.Max(room1.X, room2.X);
 
                 int top = Math.Max(room1.Y, room2.Y);
-                int bottom = Math.Min(room1.Bottom, room2.Bottom);
-
-                int yPos = Rand.Range(top, bottom - width, Rand.RandSync.Server);
+                //int bottom = Math.Min(room1.Bottom, room2.Bottom);
+                int yPos = top;//Rand.Range(top, bottom - width, Rand.RandSync.Server);
 
                 rect = new Rectangle(left, yPos, right - left, width);
             }
@@ -123,19 +122,16 @@ namespace Barotrauma.RuinGeneration
 
         public override void CreateWalls()
         {
-
-
             Walls = new List<Line>();
-
             if (IsHorizontal)
             {
-                Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.Right, Rect.Y), RuinEntityType.CorridorWall));
-                Walls.Add(new Line(new Vector2(Rect.X, Rect.Bottom), new Vector2(Rect.Right, Rect.Bottom), RuinEntityType.CorridorWall));
+                Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.Right, Rect.Y)));
+                Walls.Add(new Line(new Vector2(Rect.X, Rect.Bottom), new Vector2(Rect.Right, Rect.Bottom)));
             }
             else
             {
-                Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.X, Rect.Bottom), RuinEntityType.CorridorWall));
-                Walls.Add(new Line(new Vector2(Rect.Right, Rect.Y), new Vector2(Rect.Right, Rect.Bottom), RuinEntityType.CorridorWall));
+                Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.X, Rect.Bottom)));
+                Walls.Add(new Line(new Vector2(Rect.Right, Rect.Y), new Vector2(Rect.Right, Rect.Bottom)));
             }
         }
 

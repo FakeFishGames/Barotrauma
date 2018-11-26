@@ -448,13 +448,14 @@ namespace Barotrauma.Items.Components
             if (swingAmount != Vector2.Zero)
             {
                 swingState += deltaTime;
+                swingState %= 1.0f;
                 if (SwingWhenHolding ||
                     (SwingWhenAiming && picker.IsKeyDown(InputType.Aim)) ||
                     (SwingWhenUsing && picker.IsKeyDown(InputType.Aim) && picker.IsKeyDown(InputType.Use)))
                 {
                     swing = swingAmount * new Vector2(
-                    (float)PerlinNoise.Perlin((swingState * SwingSpeed) % 255, (swingState * SwingSpeed) % 255, 0) - 0.5f,
-                    (float)PerlinNoise.Perlin((swingState * SwingSpeed) % 255, (swingState * SwingSpeed) % 255, 0.5) - 0.5f);
+                        PerlinNoise.GetPerlin(swingState * SwingSpeed * 0.1f, swingState * SwingSpeed * 0.1f) - 0.5f,
+                        PerlinNoise.GetPerlin(swingState * SwingSpeed * 0.1f + 0.5f, swingState * SwingSpeed * 0.1f + 0.5f) - 0.5f);
                 }
             }
 

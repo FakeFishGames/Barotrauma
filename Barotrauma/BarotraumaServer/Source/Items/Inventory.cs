@@ -19,7 +19,7 @@ namespace Barotrauma
                 newItemIDs[i] = msg.ReadUInt16();
             }
 
-
+            
             if (c == null || c.Character == null) return;
 
             bool accessible = c.Character.CanAccessInventory(this);
@@ -52,7 +52,7 @@ namespace Barotrauma
                 }
                 return;
             }
-
+            
             List<Inventory> prevItemInventories = new List<Inventory>(Items.Select(i => i?.ParentInventory));
 
             for (int i = 0; i < capacity; i++)
@@ -82,6 +82,13 @@ namespace Barotrauma
                         if (!item.CanClientAccess(c)) continue;
                     }
                     TryPutItem(item, i, true, true, c.Character, false);
+                    for (int j = 0; j < capacity; j++)
+                    {
+                        if (Items[j] == item && newItemIDs[j] != item.ID)
+                        {
+                            Items[j] = null;
+                        }
+                    }
                 }
             }
 
@@ -98,7 +105,7 @@ namespace Barotrauma
                 {
                     if (Owner == c.Character)
                     {
-                        GameServer.Log(c.Character.LogName + " picked up " + item.Name, ServerLog.MessageType.Inventory);
+                        GameServer.Log(c.Character.LogName+ " picked up " + item.Name, ServerLog.MessageType.Inventory);
                     }
                     else
                     {

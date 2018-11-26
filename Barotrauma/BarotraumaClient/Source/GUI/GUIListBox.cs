@@ -195,7 +195,7 @@ namespace Barotrauma
             ScrollBar.RectTransform.NonScaledSize = ScrollBar.IsHorizontal ? new Point(Rect.Width, 20) : new Point(20, Rect.Height);
         }
         
-        public void Select(object userData, bool force = false)
+        public void Select(object userData, bool force = false, bool autoScroll = true)
         {
             var children = Content.Children;
 
@@ -205,7 +205,7 @@ namespace Barotrauma
                 if ((child.UserData != null && child.UserData.Equals(userData)) ||
                     (child.UserData == null && userData == null))
                 {
-                    Select(i, force);
+                    Select(i, force, autoScroll);
                     if (!SelectMultiple) return;
                 }
                 i++;
@@ -434,6 +434,7 @@ namespace Barotrauma
             }
 
             // Ensure that the selected element is visible. This may not be the case, if the selection is run from code. (e.g. if we have two list boxes that are synced)
+            // TODO: This method only works when moving one item up/down (e.g. when using the up and down arrows)
             if (autoScroll)
             {
                 if (ScrollBar.IsHorizontal)

@@ -4,6 +4,7 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -271,10 +272,10 @@ namespace Barotrauma.Items.Components
 #endif
                 return false;
             }
-
+            
             foreach (MapEntity e in item.linkedTo)
             {
-                //use linked projectile containers in case they have to react to it somehow
+                //use linked projectile containers in case they have to react to the turret being launched somehow
                 //(play a sound, spawn more projectiles)
                 Item linkedItem = e as Item;
                 if (linkedItem == null) continue;
@@ -512,40 +513,45 @@ namespace Barotrauma.Items.Components
         private List<Projectile> GetLoadedProjectiles(bool returnFirst = false)
         {
             List<Projectile> projectiles = new List<Projectile>();
+            //check the item itself first
+            CheckProjectileContainer(item, projectiles, returnFirst);
             foreach (MapEntity e in item.linkedTo)
             {
-                var projectileContainer = e as Item;
-                if (projectileContainer == null) continue;
-
-                var containedItems = projectileContainer.ContainedItems;
-                if (containedItems == null) continue;
-
-                for (int i = 0; i < containedItems.Length; i++)
-                {
-                    var projectileComponent = containedItems[i].GetComponent<Projectile>();
-                    if (projectileComponent != null)
-                    {
-                        projectiles.Add(projectileComponent);
-                        if (returnFirst) return projectiles;
-                    }
-                    else
-                    {
-                        //check if the contained item is another itemcontainer with projectiles inside it
-                        if (containedItems[i].ContainedItems == null) continue;
-                        for (int j = 0; j < containedItems[i].ContainedItems.Length; j++)
-                        {
-                            projectileComponent = containedItems[i].ContainedItems[j].GetComponent<Projectile>();
-                            if (projectileComponent != null)
-                            {
-                                projectiles.Add(projectileComponent);
-                                if (returnFirst) return projectiles;
-                            }
-                        }
-                    }                    
-                }
+                if (e is Item projectileContainer) { CheckProjectileContainer(projectileContainer, projectiles, returnFirst); }
+                if (returnFirst && projectiles.Any()) return projectiles;
             }
 
             return projectiles;
+        }
+
+        private void CheckProjectileContainer(Item projectileContainer, List<Projectile> projectiles, bool returnFirst)
+        {
+            var containedItems = projectileContainer.ContainedItems;
+            if (containedItems == null) return;
+
+            for (int i = 0; i < containedItems.Length; i++)
+            {
+                var projectileComponent = containedItems[i].GetComponent<Projectile>();
+                if (projectileComponent != null)
+                {
+                    projectiles.Add(projectileComponent);
+                    if (returnFirst) return;
+                }
+                else
+                {
+                    //check if the contained item is another itemcontainer with projectiles inside it
+                    if (containedItems[i].ContainedItems == null) continue;
+                    for (int j = 0; j < containedItems[i].ContainedItems.Length; j++)
+                    {
+                        projectileComponent = containedItems[i].ContainedItems[j].GetComponent<Projectile>();
+                        if (projectileComponent != null)
+                        {
+                            projectiles.Add(projectileComponent);
+                            if (returnFirst) return;
+                        }
+                    }
+                }
+            }
         }
 
         public override void FlipX(bool relativeToSub)
@@ -595,9 +601,9 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "position_in":
-                    if (float.TryParse(signal, out float newRotation))
+                    if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float newRotation))
                     {
-                        targetRotation = newRotation;
+                        targetRotation = MathHelper.ToRadians(newRotation);
                         IsActive = true;
                     }
                     user = sender;

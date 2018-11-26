@@ -25,30 +25,9 @@ namespace Barotrauma.Items.Components
         public override void Move(Vector2 amount)
         {
             if (item.Submarine == null || item.Submarine.Loading || Screen.Selected != GameMain.SubEditorScreen) return;
-
-            Vector2 wireNodeOffset = item.Submarine == null ? Vector2.Zero : item.Submarine.HiddenSubPosition + amount;
-            //move the end of the connected wires when moving the item in sub editor
-            foreach (Connection c in Connections)
-            {
-                foreach (Wire wire in c.Wires)
-                {
-                    if (wire == null) continue;
-                    if (wire.Item.IsSelected) continue;
-                    var wireNodes = wire.GetNodes();
-                    if (wireNodes.Count == 0) continue;
-
-                    if (wire.Connections[0]?.Item == item && Submarine.RectContains(item.Rect, wireNodes[0] + wireNodeOffset))
-                    {
-                        wire.MoveNode(0, amount);
-                    }                    
-                    else if (wire.Connections[1]?.Item == item && Submarine.RectContains(item.Rect, wireNodes[wireNodes.Count - 1] + wireNodeOffset))
-                    {
-                        wire.MoveNode(wireNodes.Count - 1, amount);                        
-                    }
-                }
-            }            
+            MoveConnectedWires(amount);
         }
-
+        
         public override bool ShouldDrawHUD(Character character)
         {
             return character == Character.Controlled && character == user;

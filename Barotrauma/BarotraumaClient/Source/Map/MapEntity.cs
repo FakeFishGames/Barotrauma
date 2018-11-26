@@ -255,6 +255,8 @@ namespace Barotrauma
                     //mouse released -> move the entities to the new position of the mouse
 
                     Vector2 moveAmount = position - startMovingPos;
+                    moveAmount.X = (float)(moveAmount.X > 0.0f ? Math.Floor(moveAmount.X / Submarine.GridSize.X) : Math.Ceiling(moveAmount.X / Submarine.GridSize.X)) * Submarine.GridSize.X;
+                    moveAmount.Y = (float)(moveAmount.Y > 0.0f ? Math.Floor(moveAmount.Y / Submarine.GridSize.Y) : Math.Ceiling(moveAmount.Y / Submarine.GridSize.Y)) * Submarine.GridSize.Y;
                     if (Math.Abs(moveAmount.X) >= Submarine.GridSize.X || Math.Abs(moveAmount.Y) >= Submarine.GridSize.Y)
                     {
                         moveAmount = Submarine.VectorToWorldGrid(moveAmount);
@@ -415,10 +417,12 @@ namespace Barotrauma
             if (startMovingPos != Vector2.Zero)
             {
                 Vector2 moveAmount = position - startMovingPos;
-                moveAmount = Submarine.VectorToWorldGrid(moveAmount);
                 moveAmount.Y = -moveAmount.Y;
+                moveAmount.X = (float)(moveAmount.X > 0.0f ? Math.Floor(moveAmount.X / Submarine.GridSize.X) : Math.Ceiling(moveAmount.X / Submarine.GridSize.X)) * Submarine.GridSize.X;
+                moveAmount.Y = (float)(moveAmount.Y > 0.0f ? Math.Floor(moveAmount.Y / Submarine.GridSize.Y) : Math.Ceiling(moveAmount.Y / Submarine.GridSize.Y)) * Submarine.GridSize.Y;
+
                 //started moving the selected entities
-                if (moveAmount != Vector2.Zero)
+                if (Math.Abs(moveAmount.X) >= Submarine.GridSize.X || Math.Abs(moveAmount.Y) >= Submarine.GridSize.Y)
                 {
                     foreach (MapEntity e in selectedList)
                         GUI.DrawRectangle(spriteBatch,

@@ -343,7 +343,7 @@ namespace Barotrauma
             else
             {
                 shakeTimer += deltaTime * 5.0f;
-                Vector2 noisePos = new Vector2((float)PerlinNoise.Perlin(shakeTimer, shakeTimer, 0) - 0.5f, (float)PerlinNoise.Perlin(shakeTimer, shakeTimer, 0.5f) - 0.5f);
+                Vector2 noisePos = new Vector2((float)PerlinNoise.CalculatePerlin(shakeTimer, shakeTimer, 0) - 0.5f, (float)PerlinNoise.CalculatePerlin(shakeTimer, shakeTimer, 0.5f) - 0.5f);
 
                 shakePosition = noisePos * Shake * 2.0f;
                 Shake = MathHelper.Lerp(Shake, 0.0f, deltaTime * 2.0f);

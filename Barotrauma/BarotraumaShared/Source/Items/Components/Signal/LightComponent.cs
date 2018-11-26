@@ -130,7 +130,7 @@ namespace Barotrauma.Items.Components
         {
 #if CLIENT
             light = new LightSource(element);
-            light.ParentSub = item.CurrentHull == null ? null : item.CurrentHull.Submarine;
+            light.ParentSub = item.CurrentHull?.Submarine;
             light.Position = item.Position;
             light.CastShadows = castShadows;
 #endif

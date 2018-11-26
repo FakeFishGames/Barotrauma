@@ -221,10 +221,7 @@ namespace Barotrauma
             graphics.SetRenderTarget(renderTargetFinal);
             
             WaterRenderer.Instance.ResetBuffers();
-            foreach (Hull hull in Hull.hullList)
-			{
-				hull.UpdateVertices(graphics, cam, WaterRenderer.Instance);
-			}
+            Hull.UpdateVertices(graphics, cam, WaterRenderer.Instance);			
             WaterRenderer.Instance.RenderWater(spriteBatch, renderTargetWater, cam);
             WaterRenderer.Instance.RenderAir(graphics, cam, renderTarget, Cam.ShaderTransform);
             graphics.DepthStencilState = DepthStencilState.None;

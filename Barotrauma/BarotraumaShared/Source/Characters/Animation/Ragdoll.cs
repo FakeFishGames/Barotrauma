@@ -258,7 +258,7 @@ namespace Barotrauma
                 if (value == currentHull) return;
 
                 currentHull = value;
-                Submarine currSubmarine = currentHull == null ? null : currentHull.Submarine;
+                Submarine currSubmarine = currentHull?.Submarine;
                 foreach (Limb limb in Limbs)
                 {
                     limb.body.Submarine = currSubmarine;
@@ -784,6 +784,12 @@ namespace Barotrauma
 
         public Vector2 GetCenterOfMass()
         {
+            //all limbs disabled -> use the position of the collider
+            if (!Limbs.Any(l => !l.IsSevered && l.body.Enabled))
+            {
+                return Collider.SimPosition;
+            }
+
             Vector2 centerOfMass = Vector2.Zero;
             float totalMass = 0.0f;
             foreach (Limb limb in Limbs)
@@ -793,7 +799,17 @@ namespace Barotrauma
                 totalMass += limb.Mass;
             }
 
+            if (totalMass <= 0.0f) return Collider.SimPosition;
             centerOfMass /= totalMass;
+
+            if (!MathUtils.IsValid(centerOfMass))
+            {
+                string errorMsg = "Ragdoll.GetCenterOfMass returned an invalid value (" + centerOfMass + "). Limb positions: {"
+                    + string.Join(", ", limbs.Select(l => l.SimPosition)) + "}, total mass: " + totalMass + ".";
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Ragdoll.GetCenterOfMass", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return Collider.SimPosition;
+            }
 
             return centerOfMass;
         }
@@ -845,7 +861,7 @@ namespace Barotrauma
                 //far from an ideal solution, but monsters getting lodged inside the sub seems to be 
                 //pretty rare during normal gameplay (requires abnormally high velocities), so I think
                 //this is preferable to the cost of using continuous collision detection for the character collider
-                if (newHull != null)
+                if (newHull?.Submarine != null)
                 {
                     Vector2 hullDiff = WorldPosition - newHull.WorldPosition;
                     Vector2 moveDir = hullDiff.LengthSquared() < 0.001f ? Vector2.UnitY : Vector2.Normalize(hullDiff);
@@ -964,7 +980,7 @@ namespace Barotrauma
 
         private void UpdateCollisionCategories()
         {
-            Category wall = currentHull == null ? 
+            Category wall = currentHull?.Submarine == null ? 
                 Physics.CollisionLevel | Physics.CollisionWall 
                 : Physics.CollisionWall;
 
@@ -1218,6 +1234,8 @@ namespace Barotrauma
                             if (IgnorePlatforms || (colliderBottomDisplay.Y < platform.Rect.Y - 16 && (targetMovement.Y <= 0.0f || onStairs))) return -1;
                             break;
                         case Physics.CollisionWall:
+                        case Physics.CollisionLevel:
+                            if (!fixture.CollidesWith.HasFlag(Physics.CollisionCharacter)) return -1;
                             break;
                         default:
                             return -1;
@@ -1300,6 +1318,8 @@ namespace Barotrauma
                         if (IgnorePlatforms || lowestLimb.Position.Y < platform.Rect.Y) return -1;
                         break;
                     case Physics.CollisionWall:
+                    case Physics.CollisionLevel:
+                        if (!fixture.CollidesWith.HasFlag(Physics.CollisionCharacter)) return -1;
                         break;
                     default:
                         return -1;
@@ -1435,7 +1455,7 @@ namespace Barotrauma
                     if (character.MemState[i].Position.Y > lowestSubPos)
                         character.MemState[i].TransformInToOutside();
                 }
-                else if (currentHull != null)
+                else if (currentHull?.Submarine != null)
                 {
                     //transform outside coordinates to in-sub coordinates
                     if (character.MemState[i].Position.Y < lowestSubPos)

@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Voronoi2;
+using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma.RuinGeneration
 {
@@ -17,7 +19,7 @@ namespace Barotrauma.RuinGeneration
         {
             get { return rect; }
         }
-        
+
         public int DistanceFromEntrance
         {
             get;
@@ -29,8 +31,10 @@ namespace Barotrauma.RuinGeneration
             get { return rect.Center.ToVector2(); }
         }
 
+        public RuinRoom RoomType;
+
         public List<Line> Walls;
-        
+
         public virtual void CreateWalls() { }
 
         public Alignment GetLineAlignment(Line line)
@@ -61,7 +65,7 @@ namespace Barotrauma.RuinGeneration
             return Alignment.Center;
         }
 
-         /// <summary>
+        /// <summary>
         /// Goes through all the walls of the ruin shape and clips off parts that are inside the rectangle
         /// </summary>
         public void SplitWalls(Rectangle rectangle)
@@ -86,18 +90,18 @@ namespace Barotrauma.RuinGeneration
                     //point A is within the rectangle -> cut a portion from the top of the line
                     else if (line.A.Y >= rectangle.Y && line.A.Y <= rectangle.Bottom)
                     {
-                        newLines.Add(new Line(new Vector2(line.A.X, rectangle.Bottom), line.B, line.Type));
+                        newLines.Add(new Line(new Vector2(line.A.X, rectangle.Bottom), line.B));
                     }
                     //point B is within the rectangle -> cut a portion from the bottom of the line
                     else if (line.B.Y >= rectangle.Y && line.B.Y <= rectangle.Bottom)
                     {
-                        newLines.Add(new Line(line.A, new Vector2(line.A.X, rectangle.Y), line.Type));
+                        newLines.Add(new Line(line.A, new Vector2(line.A.X, rectangle.Y)));
                     }
                     //rect is in between the lines -> split the line into two
                     else
                     {
-                        newLines.Add(new Line(line.A, new Vector2(line.A.X, rectangle.Y), line.Type));
-                        newLines.Add(new Line(new Vector2(line.A.X, rectangle.Bottom), line.B, line.Type));
+                        newLines.Add(new Line(line.A, new Vector2(line.A.X, rectangle.Y)));
+                        newLines.Add(new Line(new Vector2(line.A.X, rectangle.Bottom), line.B));
                     }
                 }
                 else
@@ -116,18 +120,18 @@ namespace Barotrauma.RuinGeneration
                     //point A is within the rectangle -> cut a portion from the left side of the line
                     else if (line.A.X >= rectangle.X && line.A.X <= rectangle.Right)
                     {
-                        newLines.Add(new Line(new Vector2(rectangle.Right, line.A.Y), line.B, line.Type));
+                        newLines.Add(new Line(new Vector2(rectangle.Right, line.A.Y), line.B));
                     }
                     //point B is within the rectangle -> cut a portion from the right side of the line
                     else if (line.B.X >= rectangle.X && line.B.X <= rectangle.Right)
                     {
-                        newLines.Add(new Line(line.A, new Vector2(rectangle.X, line.A.Y), line.Type));
+                        newLines.Add(new Line(line.A, new Vector2(rectangle.X, line.A.Y)));
                     }
                     //rect is in between the lines -> split the line into two
                     else
                     {
-                        newLines.Add(new Line(line.A, new Vector2(rectangle.X, line.A.Y), line.Type));
-                        newLines.Add(new Line(new Vector2(rectangle.Right, line.A.Y), line.B, line.Type));
+                        newLines.Add(new Line(line.A, new Vector2(rectangle.X, line.A.Y)));
+                        newLines.Add(new Line(new Vector2(rectangle.Right, line.A.Y), line.B));
                     }
                 }
             }
@@ -157,23 +161,22 @@ namespace Barotrauma.RuinGeneration
     {
         public Vector2 A, B;
 
-        public readonly RuinEntityType Type;
+        public float Radius;
 
         public bool IsHorizontal
         {
             get { return Math.Abs(A.Y - B.Y) < Math.Abs(A.X - B.X); }
         }
 
-        public Line(Vector2 a, Vector2 b, RuinEntityType type)
+        public Line(Vector2 a, Vector2 b)
         {
             Debug.Assert(a.X <= b.X);
             Debug.Assert(a.Y <= b.Y);
 
             A = a;
             B = b;
-            Type = type;
         }
-    }  
+    }
 
     partial class Ruin
     {
@@ -185,6 +188,8 @@ namespace Barotrauma.RuinGeneration
         private List<RuinShape> allShapes;
 
         private RuinGenerationParams generationParams;
+
+        private BTRoom entranceRoom;
 
         public List<RuinShape> RuinShapes
         {
@@ -202,10 +207,9 @@ namespace Barotrauma.RuinGeneration
             private set;
         }
 
-        public Ruin(VoronoiCell closestPathCell, List<VoronoiCell> caveCells, Rectangle area, bool mirror = false)
+        public Ruin(VoronoiCell closestPathCell, List<VoronoiCell> caveCells, RuinGenerationParams generationParams, Rectangle area, bool mirror = false)
         {
-            generationParams = RuinGenerationParams.GetRandom();
-
+            this.generationParams = generationParams;
             Area = area;
             corridors = new List<Corridor>();
             rooms = new List<BTRoom>();
@@ -213,12 +217,12 @@ namespace Barotrauma.RuinGeneration
             allShapes = new List<RuinShape>();
             Generate(closestPathCell, caveCells, area, mirror);
         }
-             
+
         public void Generate(VoronoiCell closestPathCell, List<VoronoiCell> caveCells, Rectangle area, bool mirror = false)
         {
             corridors.Clear();
             rooms.Clear();
-            
+
             int iterations = Rand.Range(generationParams.RoomDivisionIterationsMin, generationParams.RoomDivisionIterationsMax, Rand.RandSync.Server);
             float verticalProbability = generationParams.VerticalSplitProbability;
 
@@ -236,7 +240,7 @@ namespace Barotrauma.RuinGeneration
                 leaf.Scale
                     (
                         new Vector2(
-                            Rand.Range(generationParams.RoomWidthRange.X, generationParams.RoomWidthRange.Y, Rand.RandSync.Server), 
+                            Rand.Range(generationParams.RoomWidthRange.X, generationParams.RoomWidthRange.Y, Rand.RandSync.Server),
                             Rand.Range(generationParams.RoomHeightRange.X, generationParams.RoomHeightRange.Y, Rand.RandSync.Server))
                     );
             }
@@ -248,7 +252,6 @@ namespace Barotrauma.RuinGeneration
 
             //---------------------------
 
-            BTRoom entranceRoom = null;
             float shortestDistance = 0.0f;
             foreach (BTRoom leaf in rooms)
             {
@@ -295,57 +298,179 @@ namespace Barotrauma.RuinGeneration
                 }
                 walls.AddRange(corridor.Walls);
             }
-            
-            BTRoom.CalculateDistancesFromEntrance(entranceRoom, rooms, corridors);
 
-            allShapes = GenerateRuinEntities(caveCells, area, mirror);
+            BTRoom.CalculateDistancesFromEntrance(entranceRoom, rooms, corridors);
+            GenerateRuinEntities(caveCells, area, mirror);
         }
 
-        private List<RuinShape> GenerateRuinEntities(List<VoronoiCell> caveCells, Rectangle ruinArea, bool mirror)
+#if DEBUG
+        public List<List<Rectangle>> hullSplitIter = new List<List<Rectangle>>();
+#endif
+
+        class RuinEntity
         {
-            List<RuinShape> shapes = new List<RuinShape>(rooms);
-            shapes.AddRange(corridors);
+            public readonly RuinEntityConfig Config;
+            public readonly MapEntity Entity;
+            public readonly MapEntity Parent;
+            public readonly RuinShape Room;
+
+            public RuinEntity(RuinEntityConfig config, MapEntity entity, RuinShape room, MapEntity parent = null)
+            {
+                Config = config;
+                Entity = entity;
+                Room = room;
+                Parent = parent;
+            }
+        }
+        private List<RuinEntity> ruinEntities = new List<RuinEntity>();
+        private void GenerateRuinEntities(List<VoronoiCell> caveCells, Rectangle ruinArea, bool mirror)
+        {
+            var entityGrid = Hull.GenerateEntityGrid(new Rectangle(ruinArea.X, ruinArea.Y + ruinArea.Height, ruinArea.Width, ruinArea.Height));
+
+            allShapes = new List<RuinShape>(rooms);
+            allShapes.AddRange(corridors);
 
             if (mirror)
             {
-                foreach (RuinShape shape in shapes)
+                foreach (RuinShape shape in allShapes)
                 {
                     shape.MirrorX(ruinArea.Center.ToVector2());
                 }
             }
 
-            int maxDistanceFromEntrance = shapes.Max(s => s.DistanceFromEntrance);
-            
-            foreach (RuinShape leaf in shapes)
+            int maxRoomDistanceFromEntrance = rooms.Max(s => s.DistanceFromEntrance);
+            int maxCorridorDistanceFromEntrance = corridors.Max(s => s.DistanceFromEntrance);
+
+            //assign the room types for the first and last rooms
+            foreach (RuinRoom roomType in generationParams.RoomTypeList)
             {
-                RuinEntityType wallType = RuinEntityType.Wall;
-                RuinEntityConfig.RoomType roomType = GetRoomType(leaf, maxDistanceFromEntrance);
-
-                if (!(leaf is BTRoom))
+                RuinShape selectedRoom = null;
+                switch (roomType.Placement)
                 {
-                    wallType = RuinEntityType.CorridorWall;
+                    case RuinRoom.RoomPlacement.First:
+                        //find the room nearest to the entrance
+                        //there may be multiple ones, choose one that hasn't been assigned yet
+                        selectedRoom = roomType.IsCorridor ? FindFirstRoom(corridors, r => r.RoomType == null) : FindFirstRoom(rooms, r => r.RoomType == null);
+
+                        break;
+                    case RuinRoom.RoomPlacement.Last:
+                        //find the room furthest to the entrance
+                        //there may be multiple ones, choose one that hasn't been assigned yet
+                        selectedRoom = roomType.IsCorridor ? FindLastRoom(corridors, r => r.RoomType == null) : FindLastRoom(rooms, r => r.RoomType == null);
+                        break;
                 }
-                //rooms further from the entrance are more likely to have hard-to-break walls
-                else if (Rand.Range(0.0f, leaf.DistanceFromEntrance, Rand.RandSync.Server) > 1.5f)
+                if (selectedRoom == null) continue;
+
+                //step forwards/backwards from the selected room according to the placement offset
+                for (int i = 0; i < Math.Abs(roomType.PlacementOffset); i++)
                 {
-                    wallType = RuinEntityType.HeavyWall;
+                    selectedRoom = FindNearestRoom(
+                        selectedRoom,
+                        roomType.IsCorridor ? corridors : (IEnumerable<RuinShape>)rooms,
+                        roomType.PlacementOffset,
+                        r => r.RoomType == null);
                 }
 
+                if (selectedRoom != null) selectedRoom.RoomType = roomType;
+            }
+
+            //go through the unassigned rooms
+            foreach (RuinShape room in allShapes)
+            {
+                if (room.RoomType != null) continue;
+
+                room.RoomType = generationParams.RoomTypeList.GetRandom(rt =>
+                    rt.IsCorridor == room is Corridor &&
+                    rt.Placement == RuinRoom.RoomPlacement.Any,
+                    Rand.RandSync.Server);
+
+                if (room.RoomType == null)
+                {
+                    DebugConsole.ThrowError("Could not find a suitable room type for a room (is corridor: " + (room is Corridor) + ")");
+                }
+            }
+
+            List<Rectangle> hullRects = new List<Rectangle>(allShapes.Select(s => s.Rect));
+            List<Door> doors = new List<Door>();
+
+#if DEBUG
+            hullSplitIter.Add(new List<Rectangle>());
+            hullSplitIter.Last().AddRange(hullRects);
+#endif
+            //split intersecting hulls into multiple parts to prevent overlaps
+            for (int i = 0; i < hullRects.Count; i++)
+            {
+                if (hullRects[i].Width <= 0 || hullRects[i].Height <= 0) continue;
+                for (int j = 0; j < hullRects.Count; j++)
+                {
+                    if (i == j) continue;
+                    if (hullRects[j].Width <= 0 || hullRects[j].Height <= 0) continue;
+                    if (!hullRects[i].Intersects(hullRects[j])) continue;
+
+                    //hull i goes through hull j vertically
+                    if (hullRects[i].X >= hullRects[j].X && hullRects[i].Right <= hullRects[j].Right &&
+                        hullRects[i].Y <= hullRects[j].Y && hullRects[i].Bottom >= hullRects[j].Bottom)
+                    {
+                        Rectangle rectLeft = new Rectangle(hullRects[j].X, hullRects[j].Y, hullRects[i].X - hullRects[j].X, hullRects[j].Height);
+                        Rectangle rectRight = new Rectangle(hullRects[i].Right, hullRects[j].Y, hullRects[j].Right - hullRects[i].Right, hullRects[j].Height);
+                        hullRects[j] = rectLeft;
+                        hullRects.Add(rectRight);
+                    }
+                    else if //hull i goes through hull j horizontally
+                    (hullRects[i].Y >= hullRects[j].Y && hullRects[i].Bottom <= hullRects[j].Bottom &&
+                    hullRects[i].X <= hullRects[j].X && hullRects[i].Right >= hullRects[j].Right)
+                    {
+                        Rectangle rectBottom = new Rectangle(hullRects[j].X, hullRects[j].Y, hullRects[j].Width, hullRects[i].Y - hullRects[j].Y);
+                        Rectangle rectTop = new Rectangle(hullRects[j].X, hullRects[i].Bottom, hullRects[j].Width, hullRects[j].Bottom - hullRects[i].Bottom);
+                        hullRects[j] = rectBottom;
+                        hullRects.Add(rectTop);
+                    }
+                    //upper side of hull i is inside hull j
+                    else if (hullRects[j].Contains(hullRects[i].Location) && hullRects[j].Contains(new Vector2(hullRects[i].Right, hullRects[i].Y)))
+                    {
+                        hullRects[i] = new Rectangle(hullRects[i].X, hullRects[j].Bottom, hullRects[i].Width, hullRects[i].Bottom - hullRects[j].Bottom);
+                    }
+                    //lower side of hull i is inside hull j 
+                    else if (hullRects[j].Contains(new Vector2(hullRects[i].X, hullRects[i].Bottom)) && hullRects[j].Contains(new Vector2(hullRects[i].Right, hullRects[i].Bottom)))
+                    {
+                        hullRects[i] = new Rectangle(hullRects[i].X, hullRects[i].Y, hullRects[i].Width, hullRects[j].Y - hullRects[i].Y);
+                    }
+                    //left side of hull i is inside hull j
+                    else if (hullRects[j].Contains(hullRects[i].Location) && hullRects[j].Contains(new Vector2(hullRects[i].X, hullRects[i].Bottom)))
+                    {
+                        hullRects[i] = new Rectangle(hullRects[j].X, hullRects[i].Y, hullRects[i].Right - hullRects[j].X, hullRects[i].Height);
+                    }
+                    //right side of hull i is inside hull j 
+                    else if (hullRects[j].Contains(new Vector2(hullRects[i].Right, hullRects[i].Y)) && hullRects[j].Contains(new Vector2(hullRects[i].Right, hullRects[i].Bottom)))
+                    {
+                        hullRects[i] = new Rectangle(hullRects[i].X, hullRects[i].Y, hullRects[j].X - hullRects[i].X, hullRects[i].Height);
+                    }
+
+#if DEBUG
+                    hullSplitIter.Add(new List<Rectangle>());
+                    hullSplitIter.Last().AddRange(hullRects);
+#endif
+                }
+            }
+
+            foreach (RuinShape room in allShapes)
+            {
+                if (room.RoomType == null) continue;
                 //generate walls  --------------------------------------------------------------
-                foreach (Line wall in leaf.Walls)
+                foreach (Line wall in room.Walls)
                 {
-                    var ruinEntityConfig = generationParams.GetRandomEntity(wallType, leaf.GetLineAlignment(wall), roomType);
+                    var ruinEntityConfig = room.RoomType.GetRandomEntity(RuinEntityType.Wall, room.GetLineAlignment(wall));
                     if (ruinEntityConfig == null) continue;
 
-                    float radius = (wall.A.X == wall.B.X) ?
+                    wall.Radius = (wall.A.X == wall.B.X) ?
                         (ruinEntityConfig.Prefab as StructurePrefab).Size.X * 0.5f :
                         (ruinEntityConfig.Prefab as StructurePrefab).Size.Y * 0.5f;
 
                     Rectangle rect = new Rectangle(
-                        (int)(wall.A.X - radius),
-                        (int)(wall.B.Y + radius),
-                        (int)((wall.B.X - wall.A.X) + radius * 2.0f),
-                        (int)((wall.B.Y - wall.A.Y) + radius * 2.0f));
+                        (int)(wall.A.X - wall.Radius),
+                        (int)(wall.B.Y + wall.Radius),
+                        (int)((wall.B.X - wall.A.X) + wall.Radius * 2.0f),
+                        (int)((wall.B.Y - wall.A.Y) + wall.Radius * 2.0f));
 
                     //cut a section off from both ends of a horizontal wall to get nicer looking corners 
                     if (wall.A.Y == wall.B.Y)
@@ -359,114 +484,203 @@ namespace Barotrauma.RuinGeneration
                         ShouldBeSaved = false
                     };
                     structure.SetCollisionCategory(Physics.CollisionLevel);
+                    CreateChildEntities(ruinEntityConfig, structure, room);
+                    ruinEntities.Add(new RuinEntity(ruinEntityConfig, structure, room));
                 }
 
                 //generate backgrounds --------------------------------------------------------------
-                var background = generationParams.GetRandomEntity(RuinEntityType.Back, Alignment.Center, roomType);
-                if (background == null) continue;
-
-                Rectangle backgroundRect = new Rectangle(leaf.Rect.X, leaf.Rect.Y + leaf.Rect.Height, leaf.Rect.Width, leaf.Rect.Height);
-
-                new Structure(backgroundRect, (background.Prefab as StructurePrefab), null)
+                var backgroundConfig = room.RoomType.GetRandomEntity(RuinEntityType.Back, Alignment.Center);
+                if (backgroundConfig != null)
                 {
-                    ShouldBeSaved = false
-                };
+                    Rectangle backgroundRect = new Rectangle(room.Rect.X, room.Rect.Y + room.Rect.Height, room.Rect.Width, room.Rect.Height);
+                    var backgroundStructure = new Structure(backgroundRect, (backgroundConfig.Prefab as StructurePrefab), null)
+                    {
+                        ShouldBeSaved = false
+                    };
+                    CreateChildEntities(backgroundConfig, backgroundStructure, room);
+                    ruinEntities.Add(new RuinEntity(backgroundConfig, backgroundStructure, room));
+                }
 
                 var submarineBlocker = BodyFactory.CreateRectangle(GameMain.World,
-                    ConvertUnits.ToSimUnits(leaf.Rect.Width),
-                    ConvertUnits.ToSimUnits(leaf.Rect.Height),
-                    1, ConvertUnits.ToSimUnits(leaf.Center));
+                    ConvertUnits.ToSimUnits(room.Rect.Width),
+                    ConvertUnits.ToSimUnits(room.Rect.Height),
+                    1, ConvertUnits.ToSimUnits(room.Center));
 
                 submarineBlocker.IsStatic = true;
                 submarineBlocker.CollisionCategories = Physics.CollisionWall;
                 submarineBlocker.CollidesWith = Physics.CollisionWall;
+
+                //generate doors --------------------------------------------------------------
+                if (room is Corridor corridor)
+                {
+                    var doorConfig = room.RoomType.GetRandomEntity(corridor.IsHorizontal ? RuinEntityType.Door : RuinEntityType.Hatch, Alignment.Center);
+                    if (corridor != null && doorConfig != null)
+                    {
+                        //find all walls that are parallel to the corridor
+                        var suitableWalls = corridor.IsHorizontal ?
+                            corridor.Walls.FindAll(c => c.A.Y == c.B.Y) : corridor.Walls.FindAll(c => c.A.X == c.B.X);
+
+                        if (suitableWalls.Any())
+                        {
+                            //choose a random wall to place the door next to
+                            Vector2 doorPos = corridor.Center;
+                            var wall = suitableWalls[Rand.Int(suitableWalls.Count, Rand.RandSync.Server)];
+                            if (corridor.IsHorizontal)
+                            {
+                                doorPos.X = (wall.A.X + wall.B.X) / 2.0f;
+                            }
+                            else
+                            {
+                                doorPos.Y = (wall.A.Y + wall.B.Y) / 2.0f;
+                            }
+                            var doorItem = new Item(doorConfig.Prefab as ItemPrefab, doorPos, null)
+                            {
+                                ShouldBeSaved = false
+                            };
+                            CreateChildEntities(doorConfig, doorItem, corridor);
+                            Door door = doorItem.GetComponent<Door>();
+                            doors.Add(door);
+                            door.IsOpen = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < 0.8f;
+                            ruinEntities.Add(new RuinEntity(doorConfig, doorItem, room));
+
+                            //split the hull the door is inside
+                            for (int i = 0; i < hullRects.Count; i++)
+                            {
+                                if (!hullRects[i].Contains(doorPos)) continue;
+
+                                if (corridor.IsHorizontal)
+                                {
+                                    Rectangle rectLeft = new Rectangle(hullRects[i].X, hullRects[i].Y, (int)doorPos.X - hullRects[i].X, hullRects[i].Height);
+                                    Rectangle rectRight = new Rectangle((int)doorPos.X, hullRects[i].Y, hullRects[i].Right - (int)doorPos.X, hullRects[i].Height);
+                                    hullRects[i] = rectLeft;
+                                    hullRects.Add(rectRight);
+                                }
+                                else
+                                {
+                                    Rectangle rectBottom = new Rectangle(hullRects[i].X, hullRects[i].Y, hullRects[i].Width, (int)doorPos.Y - hullRects[i].Y);
+                                    Rectangle rectTop = new Rectangle(hullRects[i].X, (int)doorPos.Y, hullRects[i].Width, hullRects[i].Bottom - (int)doorPos.Y);
+                                    hullRects[i] = rectBottom;
+                                    hullRects.Add(rectTop);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                //generate props --------------------------------------------------------------
+                var props = room.RoomType.GetPropList();
+                foreach (RuinEntityConfig prop in props)
+                {
+                    if (room.Rect.Width < prop.MinRoomSize.X || room.Rect.Width > prop.MaxRoomSize.X) continue;
+                    if (room.Rect.Height < prop.MinRoomSize.Y || room.Rect.Height > prop.MaxRoomSize.Y) continue;
+                    int amount = Rand.Range(prop.MinAmount, prop.MaxAmount + 1, Rand.RandSync.Server);
+                    for (int i = 0; i < amount; i++)
+                    {
+                        CreateEntity(prop, room, parent: null);
+                    }
+                }
+
+                //create connections between all generated entities ---------------------------
+                foreach (RuinEntity ruinEntity in ruinEntities)
+                {
+                    CreateConnections(ruinEntity);
+                }
             }
 
-            List<RuinShape> doorlessRooms = new List<RuinShape>(shapes);
-
-            //generate doors & hatches -------------------------------------------------------------
-
-            foreach (Corridor corridor in corridors)
+            //create hulls ---------------------------
+            foreach (Rectangle hullRect in hullRects)
             {
-                RuinEntityConfig.RoomType corridorType = GetRoomType(corridor, maxDistanceFromEntrance);
-
-                var doorConfig = generationParams.GetRandomEntity(
-                    corridor.IsHorizontal ? RuinEntityType.Door : RuinEntityType.Hatch, Alignment.Center, corridorType);
-                if (doorConfig == null) continue;
-
-                //find all walls that are parallel to the corridor
-                var suitableWalls = corridor.IsHorizontal ?
-                    corridor.Walls.FindAll(c => c.A.Y == c.B.Y) : corridor.Walls.FindAll(c => c.A.X == c.B.X);
-
-                if (!suitableWalls.Any()) continue;
-
-                doorlessRooms.Remove(corridor);
-                Vector2 doorPos = corridor.Center;
-
-                //choose a random wall to place the door next to
-                var wall = suitableWalls[Rand.Int(suitableWalls.Count, Rand.RandSync.Server)];
-                if (corridor.IsHorizontal)
-                {
-                    doorPos.X = (wall.A.X + wall.B.X) / 2.0f;
-                }
-                else
-                {
-                    doorPos.Y = (wall.A.Y + wall.B.Y) / 2.0f;
-                }
-                
-                var door = new Item(doorConfig.Prefab as ItemPrefab, doorPos, null)
+                if (hullRect.Width <= 0 || hullRect.Height <= 0) continue;
+                var hull = new Hull(MapEntityPrefab.Find(null, "hull"),
+                    new Rectangle(hullRect.X, hullRect.Y + hullRect.Height, hullRect.Width, hullRect.Height), submarine: null)
                 {
                     ShouldBeSaved = false
                 };
-
-                CreateChildEntities(doorConfig, door, corridor);
-
-                door.GetComponent<Items.Components.Door>().IsOpen = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < 0.8f;
+                RuinShape room = allShapes.Find(s => s.Rect.Contains(hullRect.Center));
+                if (room?.RoomType != null)
+                {
+                    hull.WaterVolume = hull.Volume * Rand.Range(room.RoomType.MinWaterAmount, room.RoomType.MaxWaterAmount, Rand.RandSync.Server);
+                }
+                entityGrid.InsertEntity(hull);
             }
 
-            //generate props --------------------------------------------------------------
-            for (int i = 0; i < shapes.Count * 2; i++)
+            //create gaps between hulls ---------------------------
+            hullRects.Add(entranceRoom.Rect);
+            for (int i = 0; i < hullRects.Count; i++)
             {
-                RuinShape room = shapes[Rand.Int(shapes.Count, Rand.RandSync.Server)];
+                if (hullRects[i].Width <= 0 || hullRects[i].Height <= 0) continue;
+                for (int j = i + 1; j < hullRects.Count; j++)
+                {
+                    Rectangle? gapRect = null;
+                    if (Math.Abs(hullRects[i].X - hullRects[j].Right) <= 1 && hullYIntersect(hullRects[i], hullRects[j]))
+                    {
+                        gapRect = new Rectangle(
+                            hullRects[i].X - 3, Math.Max(hullRects[i].Y, hullRects[j].Y),
+                            6, Math.Min(hullRects[i].Bottom, hullRects[j].Bottom) - Math.Max(hullRects[i].Y, hullRects[j].Y));
+                    }
+                    else if (Math.Abs(hullRects[i].Right - hullRects[j].X) <= 1 && hullYIntersect(hullRects[i], hullRects[j]))
+                    {
+                        gapRect = new Rectangle(
+                            hullRects[i].Right - 3, Math.Max(hullRects[i].Y, hullRects[j].Y),
+                            6, Math.Min(hullRects[i].Bottom, hullRects[j].Bottom) - Math.Max(hullRects[i].Y, hullRects[j].Y));
+                    }
+                    else if (Math.Abs(hullRects[i].Y - hullRects[j].Bottom) <= 1 && hullXIntersect(hullRects[i], hullRects[j]))
+                    {
+                        gapRect = new Rectangle(
+                            Math.Max(hullRects[i].X, hullRects[j].X), hullRects[i].Y - 3,
+                            Math.Min(hullRects[i].Right, hullRects[j].Right) - Math.Max(hullRects[i].X, hullRects[j].X), 6);
+                    }
+                    else if (Math.Abs(hullRects[i].Bottom - hullRects[j].Y) <= 1 && hullXIntersect(hullRects[i], hullRects[j]))
+                    {
+                        gapRect = new Rectangle(
+                            Math.Max(hullRects[i].X, hullRects[j].X), hullRects[i].Bottom - 3,
+                            Math.Min(hullRects[i].Right, hullRects[j].Right) - Math.Max(hullRects[i].X, hullRects[j].X), 6);
+                    }
 
-                Alignment[] alignments = new Alignment[] { Alignment.Top, Alignment.Bottom, Alignment.Right, Alignment.Left, Alignment.Center };
+                    if (!gapRect.HasValue || gapRect.Value.Width <= 0 || gapRect.Value.Height <= 0) continue;
 
-                var prop = generationParams.GetRandomEntity(
-                    RuinEntityType.Prop, 
-                    alignments[Rand.Int(alignments.Length, Rand.RandSync.Server)], 
-                    GetRoomType(room, maxDistanceFromEntrance));
+                    //doors create their own gaps, don't create an additional one if there's a door at this 
+                    bool doorFound = false;
+                    foreach (Door door in doors)
+                    {
+                        if (Math.Abs(door.Item.WorldPosition.X - gapRect.Value.Center.X) < 5 &&
+                            Math.Abs(door.Item.WorldPosition.Y - gapRect.Value.Center.Y) < 5)
+                        {
+                            doorFound = true;
+                            break;
+                        }
+                    }
+                    if (doorFound) { continue; }
 
-                if (prop == null) { continue; }
-
-                //if the prop is placed at the center of the room, we have to use a room without a door (because they're also placed at the center)                
-                if (!doorlessRooms.Contains(room) && prop.Alignment.HasFlag(Alignment.Center)) continue;
-
-                CreateEntity(prop, room);
+                    new Gap(new Rectangle(gapRect.Value.X, gapRect.Value.Y + gapRect.Value.Height, gapRect.Value.Width, gapRect.Value.Height),
+                        isHorizontal: gapRect.Value.Height > gapRect.Value.Width, submarine: null)
+                    {
+                        ShouldBeSaved = false
+                    };
+                }
             }
 
-            return shapes;
+            bool hullXIntersect(Rectangle rect1, Rectangle rect2)
+            {
+                return
+                    (rect1.X >= rect2.X && rect1.X <= rect2.Right) ||
+                    (rect2.X >= rect1.X && rect2.X <= rect1.Right);
+            }
+            bool hullYIntersect(Rectangle rect1, Rectangle rect2)
+            {
+                return
+                    (rect1.Y >= rect2.Y && rect1.Y <= rect2.Bottom) ||
+                    (rect2.Y >= rect1.Y && rect2.Y <= rect1.Bottom);
+            }
         }
 
-        private RuinEntityConfig.RoomType GetRoomType(RuinShape room, int maxDistanceFromEntrance)
+        private void CreateEntity(RuinEntityConfig entityConfig, RuinShape room, MapEntity parent)
         {
-            RuinEntityConfig.RoomType roomType = RuinEntityConfig.RoomType.Any;
-            if (room.DistanceFromEntrance <= 1)
-            {
-                roomType = RuinEntityConfig.RoomType.FirstRoom;
-            }
-            else if (room.DistanceFromEntrance == maxDistanceFromEntrance)
-            {
-                roomType = RuinEntityConfig.RoomType.LastRoom;
-            }
-            return roomType;
-        }
+            if (room == null) return;
 
-        private MapEntity CreateEntity(RuinEntityConfig entityConfig, RuinShape room)
-        {
-            Alignment[] alignments = new Alignment[] { Alignment.Top, Alignment.Bottom, Alignment.Right, Alignment.Left, Alignment.Center };
-            
             Vector2 size = (entityConfig.Prefab is StructurePrefab) ? ((StructurePrefab)entityConfig.Prefab).Size : Vector2.Zero;
-            
+
             Vector2 position = room.Rect.Center.ToVector2();
             if (entityConfig.Alignment.HasFlag(Alignment.Top))
             {
@@ -492,10 +706,14 @@ namespace Barotrauma.RuinGeneration
             }
             else if (entityConfig.Prefab is ItemAssemblyPrefab itemAssemblyPrefab)
             {
-                var entities = itemAssemblyPrefab.CreateInstance(position);
+                var entities = itemAssemblyPrefab.CreateInstance(position, sub: null);
                 foreach (MapEntity e in entities)
                 {
                     if (e is Structure) e.ShouldBeSaved = false;
+                }
+                if (entityConfig.Expand)
+                {
+                    ExpandEntities(entities);
                 }
             }
             else
@@ -507,64 +725,82 @@ namespace Barotrauma.RuinGeneration
                 {
                     ShouldBeSaved = false
                 };
+                if (entityConfig.Expand)
+                {
+                    ExpandEntities(new List<MapEntity>() { entity });
+                }
             }
 
             CreateChildEntities(entityConfig, entity, room);
-            return entity;
+            ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
         }
 
         private void CreateChildEntities(RuinEntityConfig parentEntityConfig, MapEntity parentEntity, RuinShape room)
         {
             foreach (RuinEntityConfig childEntity in parentEntityConfig.ChildEntities)
             {
-                MapEntity createdEntity = null;
-                switch (childEntity.RoomPlacement)
+                var childRoom = FindRoom(childEntity.PlacementRelativeToParent, room);
+                if (childRoom != null)
                 {
-                    case RuinEntityConfig.RoomType.SameRoom:
-                        createdEntity = CreateEntity(childEntity, room);
-                        break;
-                    case RuinEntityConfig.RoomType.NextRoom:
-                        var nextRoom = rooms.Find(r => r.DistanceFromEntrance == room.DistanceFromEntrance + 1);
-                        if (nextRoom != null) { createdEntity = CreateEntity(childEntity, nextRoom); };
-                        break;
-                    case RuinEntityConfig.RoomType.PreviousRoom:
-                        var prevRoom = rooms.Find(r => r.DistanceFromEntrance == room.DistanceFromEntrance - 1);
-                        if (prevRoom != null) { createdEntity = CreateEntity(childEntity, prevRoom); };
-                        break;
-                    case RuinEntityConfig.RoomType.FirstRoom:
-                        var firstRoom = rooms.Find(r => r.DistanceFromEntrance <= 1);
-                        if (firstRoom != null) { createdEntity = CreateEntity(childEntity, firstRoom); };
-                        break;
-                    case RuinEntityConfig.RoomType.LastRoom:
-                        int maxDistFromEntrance = rooms.Max(r => r.DistanceFromEntrance);
-                        var lastRoom = rooms.Find(r => r.DistanceFromEntrance == maxDistFromEntrance);
-                        if (lastRoom != null) { createdEntity = CreateEntity(childEntity, lastRoom); };
-                        break;
+                    CreateEntity(childEntity, childRoom, parentEntity);
+                }
+            }
+        }
+
+        private void CreateConnections(RuinEntity entity)
+        {
+            foreach (RuinEntityConfig.EntityConnection connection in entity.Config.EntityConnections)
+            {
+                MapEntity targetEntity = null;
+                if (connection.TargetEntityIdentifier == "parent")
+                {
+                    targetEntity = entity.Parent;
+                }
+                else if (!string.IsNullOrEmpty(connection.RoomName))
+                {
+                    RuinShape targetRoom = null;
+                    if (Enum.TryParse(connection.RoomName, out RuinEntityConfig.RelativePlacement placement))
+                    {
+                        targetRoom = FindRoom(placement, entity.Room);
+                    }
+                    else
+                    {
+                        targetRoom = allShapes.Find(s => s.RoomType?.Name == connection.RoomName);
+                    }
+
+                    if (targetRoom == null)
+                    {
+                        DebugConsole.ThrowError("Error while generating ruins - could not find a room of the type \"" + connection.RoomName + "\".");
+                    }
+                    else
+                    {
+                        targetEntity = ruinEntities.GetRandom(e =>
+                            e.Room == targetRoom &&
+                            e.Entity.prefab?.Identifier == connection.TargetEntityIdentifier)?.Entity;
+                    }
+                }
+                else
+                {
+                    targetEntity = ruinEntities.GetRandom(e => e.Entity.prefab?.Identifier == connection.TargetEntityIdentifier)?.Entity;
                 }
 
-                if (createdEntity == null) continue;
-                
-                if (childEntity.LinkToParent)
-                {
-                    createdEntity.linkedTo.Add(parentEntity);
-                    parentEntity.linkedTo.Add(createdEntity);
-                }
+                if (targetEntity == null) continue;
 
-                if (childEntity.WireToParent.Count > 0)
+                if (connection.WireConnection != null)
                 {
-                    Item item = createdEntity as Item;
+                    Item item = entity.Entity as Item;
                     if (item == null)
                     {
-                        DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + createdEntity.Name + "\" - the entity is not an item.");
+                        DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + entity.Entity.Name + "\" - the entity is not an item.");
                         return;
                     }
                     else if (item.Connections == null)
                     {
-                        DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + createdEntity.Name + "\" - the item does not have a connection panel component.");
+                        DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + entity.Entity.Name + "\" - the item does not have a connection panel component.");
                         return;
                     }
 
-                    Item parentItem = parentEntity as Item;
+                    Item parentItem = entity.Parent as Item;
                     if (parentItem == null)
                     {
                         DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + parentItem.Name + "\" - the entity is not an item.");
@@ -578,30 +814,253 @@ namespace Barotrauma.RuinGeneration
 
                     //TODO: alien wire prefab w/ custom sprite?
                     var wirePrefab = MapEntityPrefab.Find(null, "blackwire") as ItemPrefab;
-                    foreach (Pair<string, string> wireToParent in childEntity.WireToParent)
-                    {
-                        var conn1 = item.Connections.Find(c => c.Name == wireToParent.First);
-                        if (conn1 == null)
-                        {
-                            DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + item.Name + "\" - the item does not have a connection named \"" + wireToParent.First + "\".");
-                            continue;
-                        }
-                        var conn2 = parentItem.Connections.Find(c => c.Name == wireToParent.Second);
-                        if (conn2 == null)
-                        {
-                            DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + parentItem.Name + "\" - the item does not have a connection named \"" + wireToParent.Second + "\".");
-                            continue;
-                        }
 
-                        var wire = new Item(wirePrefab, parentItem.WorldPosition, null).GetComponent<Items.Components.Wire>();
-                        wire.Item.ShouldBeSaved = false;
-                        conn1.TryAddLink(wire);
-                        wire.Connect(conn1, true);
-                        conn2.TryAddLink(wire);
-                        wire.Connect(conn2, true);
+                    var conn1 = item.Connections.Find(c => c.Name == connection.WireConnection.First);
+                    if (conn1 == null)
+                    {
+                        DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + item.Name +
+                            "\" - the item does not have a connection named \"" + connection.WireConnection.First + "\".");
+                        continue;
                     }
+                    var conn2 = parentItem.Connections.Find(c => c.Name == connection.WireConnection.Second);
+                    if (conn2 == null)
+                    {
+                        DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + parentItem.Name +
+                            "\" - the item does not have a connection named \"" + connection.WireConnection.Second + "\".");
+                        continue;
+                    }
+
+                    var wire = new Item(wirePrefab, parentItem.WorldPosition, null).GetComponent<Items.Components.Wire>();
+                    wire.Item.ShouldBeSaved = false;
+                    conn1.TryAddLink(wire);
+                    wire.Connect(conn1, true);
+                    conn2.TryAddLink(wire);
+                    wire.Connect(conn2, true);
+                }
+                else
+                {
+                    entity.Entity.linkedTo.Add(targetEntity);
+                    targetEntity.linkedTo.Add(entity.Entity);
                 }
             }
         }
+
+        private void ExpandEntities(IEnumerable<MapEntity> entities)
+        {
+            Vector2 xBounds = new Vector2(entities.Min(e => e.Rect.X), entities.Max(e => e.Rect.Right));
+            Vector2 yBounds = new Vector2(entities.Min(e => e.Rect.Y - e.Rect.Height), entities.Max(e => e.Rect.Y));
+            Vector2 center = new Vector2((xBounds.X + xBounds.Y) / 2.0f, (yBounds.X + yBounds.Y) / 2.0f);
+
+            foreach (MapEntity entity in entities)
+            {
+                if (entity is Item item)
+                {
+                    Vector2 moveTo = StretchPoint(entity.WorldPosition, center, xBounds, yBounds);
+                    Vector2 moveAmount = moveTo - entity.WorldPosition;
+                    var connectionPanel = item.GetComponent<ConnectionPanel>();
+                    connectionPanel?.MoveConnectedWires(moveAmount);
+                    entity.Move(moveAmount);
+                }
+                else if (entity is Structure structure)
+                {
+                    if (!entity.ResizeHorizontal && !entity.ResizeVertical)
+                    {
+                        Vector2 moveTo = StretchPoint(entity.WorldPosition, center, xBounds, yBounds);
+                        entity.Move(moveTo - entity.WorldPosition);
+                        continue;
+                    }
+
+                    Vector2 structureBoundsMin = new Vector2(structure.Rect.X, structure.Rect.Y - structure.Rect.Height);
+                    Vector2 structureBoundsMax = new Vector2(structure.Rect.Right, structure.Rect.Y);
+
+                    if (structure.ResizeHorizontal)
+                    {
+                        if (structure.Rect.Right > center.X)
+                        {
+                            Vector2 moveTo = StretchPoint(
+                                new Vector2(structureBoundsMax.X, structure.Rect.Y - structure.Rect.Height / 2),
+                                new Vector2(center.X, structure.Rect.Y - structure.Rect.Height / 2),
+                                xBounds, yBounds);
+                            structureBoundsMax.X = moveTo.X;
+                        }
+                        if (structure.Rect.X < center.X)
+                        {
+                            Vector2 moveTo = StretchPoint(
+                                new Vector2(structureBoundsMin.X, structure.Rect.Y - structure.Rect.Height / 2),
+                                new Vector2(center.X, structure.Rect.Y - structure.Rect.Height / 2),
+                                xBounds, yBounds);
+                            structureBoundsMin.X = moveTo.X;
+                        }
+                    }
+                    if (structure.ResizeVertical)
+                    {
+                        if (structure.Rect.Y > center.X)
+                        {
+                            Vector2 moveTo = StretchPoint(
+                                new Vector2(structure.Rect.Center.X, structureBoundsMax.Y),
+                                new Vector2(structure.Rect.Center.X, center.Y),
+                                xBounds, yBounds);
+                            structureBoundsMax.Y = moveTo.Y;
+                        }
+                        if (structure.Rect.Y - structure.Rect.Height < center.Y)
+                        {
+                            Vector2 moveTo = StretchPoint(
+                                new Vector2(structure.Rect.Center.X, structureBoundsMin.Y),
+                                new Vector2(structure.Rect.Center.X, center.Y),
+                                xBounds, yBounds);
+                            structureBoundsMin.Y = moveTo.Y;
+                        }
+                    }
+
+                    structure.Rect = new Rectangle(
+                        (int)structureBoundsMin.X,
+                        (int)structureBoundsMax.Y,
+                        (int)(structureBoundsMax.X - structureBoundsMin.X),
+                        (int)(structureBoundsMax.Y - structureBoundsMin.Y));
+                }
+            }
+        }
+
+        private Vector2 StretchPoint(Vector2 point, Vector2 center, Vector2 xBounds, Vector2 yBounds)
+        {
+            Vector2 diff = point - center;
+            if (diff.LengthSquared() < 0.0001f) return point;
+
+            Vector2? closestIntersection = RayCastWalls(point, Vector2.Normalize(diff));
+
+            if (!closestIntersection.HasValue) return point;
+            
+            Vector2 moveAmount = closestIntersection.Value - point;
+            Vector2 moveRatio = new Vector2(
+                Math.Abs(diff.X) / ((xBounds.Y - xBounds.X) * 0.5f),
+                Math.Abs(diff.Y) / ((yBounds.Y - yBounds.X) * 0.5f));
+            return point + new Vector2(moveAmount.X * moveRatio.X, moveAmount.Y * moveRatio.Y);                 
+        }
+
+        private Vector2? RayCastWalls(Vector2 worldPosition, Vector2 dir)
+        {
+            float rayLength = 10000.0f;
+            Vector2 rayStart = worldPosition;
+            Vector2 rayEnd = worldPosition + dir * rayLength;
+            Vector2? closestIntersection = null;
+            float closestDist = rayLength * rayLength;
+            foreach (Line line in walls)
+            {
+                Vector2? intersection = MathUtils.GetLineIntersection(line.A, line.B, rayStart, rayEnd);
+                if (!intersection.HasValue) continue;
+
+                intersection = line.IsHorizontal ?
+                    new Vector2(intersection.Value.X, intersection.Value.Y - Math.Sign(dir.Y) * line.Radius) :
+                    new Vector2(intersection.Value.X - Math.Sign(dir.X) * line.Radius, intersection.Value.Y);
+
+                float dist = Vector2.DistanceSquared(rayStart, intersection.Value);
+                if (dist < closestDist)
+                {
+                    closestIntersection = intersection.Value;
+                    closestDist = dist;
+                }
+            }
+            return closestIntersection;
+        }
+
+        private RuinShape FindRoom(RuinEntityConfig.RelativePlacement placement, RuinShape relativeTo)
+        {
+            switch (placement)
+            {
+                case RuinEntityConfig.RelativePlacement.SameRoom:
+                    return relativeTo;
+                case RuinEntityConfig.RelativePlacement.NextRoom:
+                    return FindNearestRoom(relativeTo, rooms, 1);
+                case RuinEntityConfig.RelativePlacement.NextCorridor:
+                    return FindNearestRoom(relativeTo, corridors, 1);
+                case RuinEntityConfig.RelativePlacement.PreviousRoom:
+                    return FindNearestRoom(relativeTo, rooms, -1);
+                case RuinEntityConfig.RelativePlacement.PreviousCorridor:
+                    return FindNearestRoom(relativeTo, corridors, -1);
+                case RuinEntityConfig.RelativePlacement.FirstRoom:
+                    return FindFirstRoom(rooms);
+                case RuinEntityConfig.RelativePlacement.FirstCorridor:
+                    return FindFirstRoom(corridors);
+                case RuinEntityConfig.RelativePlacement.LastRoom:
+                    return FindLastRoom(rooms);
+                case RuinEntityConfig.RelativePlacement.LastCorridor:
+                    return FindLastRoom(corridors);
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Find the nearest room relative to a specific room.
+        /// </summary>
+        /// <param name="relativeTo">The room to compare the distance with</param>
+        /// <param name="roomList">List of rooms to check (use a list that only contains rooms/corridors if you want a specific types of rooms)</param>
+        /// <param name="dir">Direction to check: 1 = find the next room, -1 = find the previous room</param>
+        private RuinShape FindNearestRoom(RuinShape relativeTo, IEnumerable<RuinShape> roomList, int dir, Func<RuinShape, bool> predicate = null)
+        {
+            dir = Math.Sign(dir);
+            RuinShape selectedRoom = null;
+            foreach (RuinShape room in roomList)
+            {
+                if (room == relativeTo) continue;
+                if (predicate != null && !predicate(room)) continue;
+                int roomDir = Math.Sign(room.DistanceFromEntrance - relativeTo.DistanceFromEntrance);
+
+                if (roomDir == 0 || roomDir == dir)
+                {
+                    if (selectedRoom == null)
+                    {
+                        selectedRoom = room;
+                    }
+                    else //room already selected, check if this one is closer
+                    {
+                        //closer than the previously selected room
+                        if (Math.Abs(room.DistanceFromEntrance - relativeTo.DistanceFromEntrance) <
+                            Math.Abs(selectedRoom.DistanceFromEntrance - relativeTo.DistanceFromEntrance))
+                        {
+                            selectedRoom = room;
+                        }
+                        //same distance measured in room indices, select the room if the actual distance is smaller
+                        else if (room.DistanceFromEntrance == selectedRoom.DistanceFromEntrance &&
+                            Vector2.DistanceSquared(relativeTo.Center, room.Center) < Vector2.DistanceSquared(relativeTo.Center, selectedRoom.Center))
+                        {
+                            selectedRoom = room;
+                        }
+                    }
+                }
+            }
+            return selectedRoom;
+        }
+
+        private RuinShape FindFirstRoom(IEnumerable<RuinShape> roomList, Func<RuinShape, bool> predicate = null)
+        {
+            if (!roomList.Any()) { return null; }
+            RuinShape firstRoom = null;
+            foreach (RuinShape room in roomList)
+            {
+                if (predicate != null && !predicate(room)) continue;
+                if (firstRoom == null || room.DistanceFromEntrance < firstRoom.DistanceFromEntrance)
+                {
+                    firstRoom = room;
+                }
+            }
+            return firstRoom;
+        }
+
+        private RuinShape FindLastRoom(IEnumerable<RuinShape> roomList, Func<RuinShape, bool> predicate = null)
+        {
+            if (!roomList.Any()) { return null; }
+            RuinShape lastRoom = null;
+            foreach (RuinShape room in roomList)
+            {
+                if (predicate != null && !predicate(room)) continue;
+                if (lastRoom == null || room.DistanceFromEntrance > lastRoom.DistanceFromEntrance)
+                {
+                    lastRoom = room;
+                }
+            }
+            return lastRoom;
+        }
+
     }
 }

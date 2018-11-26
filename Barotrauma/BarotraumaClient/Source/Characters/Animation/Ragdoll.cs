@@ -106,18 +106,18 @@ namespace Barotrauma
                 //remove states with a timestamp (there may still timestamp-based states 
                 //in the list if the controlled character switches from timestamp-based interpolation to ID-based)
                 character.MemState.RemoveAll(m => m.Timestamp > 0.0f);
-
+                
                 for (int i = 0; i < character.MemLocalState.Count; i++)
                 {
                     if (character.Submarine == null)
                     {
                         //transform in-sub coordinates to outside coordinates
                         if (character.MemLocalState[i].Position.Y > lowestSubPos)
-                        {
+                        {                            
                             character.MemLocalState[i].TransformInToOutside();
                         }
                     }
-                    else if (currentHull != null)
+                    else if (currentHull?.Submarine != null)
                     {
                         //transform outside coordinates to in-sub coordinates
                         if (character.MemLocalState[i].Position.Y < lowestSubPos)
@@ -147,7 +147,7 @@ namespace Barotrauma
                 if (localPosIndex > -1)
                 {
                     CharacterStateInfo localPos = character.MemLocalState[localPosIndex];
-
+                    
                     //the entity we're interacting with doesn't match the server's
                     if (localPos.Interact != serverPos.Interact)
                     {
@@ -177,7 +177,7 @@ namespace Barotrauma
                         {
                             character.AnimController.Anim = AnimController.Animation.CPR;
                         }
-                        else if (character.AnimController.Anim == AnimController.Animation.CPR)
+                        else if (character.AnimController.Anim == AnimController.Animation.CPR) 
                         {
                             character.AnimController.Anim = AnimController.Animation.None;
                         }
@@ -185,7 +185,7 @@ namespace Barotrauma
 
                     Hull serverHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(serverPos.Position), character.CurrentHull, serverPos.Position.Y < lowestSubPos);
                     Hull clientHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(localPos.Position), serverHull, localPos.Position.Y < lowestSubPos);
-
+                    
                     if (serverHull != null && clientHull != null && serverHull.Submarine != clientHull.Submarine)
                     {
                         //hull subs don't match => teleport the camera to the other sub
@@ -212,7 +212,7 @@ namespace Barotrauma
                             Collider.SetTransform(Collider.SimPosition + positionError, Collider.Rotation + rotationError);
                             if (errorMagnitude > 0.5f)
                             {
-                                character.MemLocalState.Clear();
+                                character.MemLocalState.Clear();                 
                                 foreach (Limb limb in Limbs)
                                 {
                                     limb.body.SetTransform(limb.body.SimPosition + positionError, limb.body.Rotation);
@@ -220,6 +220,7 @@ namespace Barotrauma
                             }
                         }
                     }
+
                 }
 
                 if (character.MemLocalState.Count > 120) character.MemLocalState.RemoveRange(0, character.MemLocalState.Count - 120);
@@ -269,10 +270,10 @@ namespace Barotrauma
         partial void Splash(Limb limb, Hull limbHull)
         {
             //create a splash particle
-            for (int i = 0; i <MathHelper.Clamp(Math.Abs(limb.LinearVelocity.Y), 1.0f, 5.0f); i++)
+            for (int i = 0; i < MathHelper.Clamp(Math.Abs(limb.LinearVelocity.Y), 1.0f, 5.0f); i++)
             {
                 var splash = GameMain.ParticleManager.CreateParticle("watersplash",
-                    new Vector2(limb.Position.X, limbHull.Surface) + limbHull.Submarine.Position,
+                    new Vector2(limb.WorldPosition.X, limbHull.WorldSurface),
                     new Vector2(0.0f, Math.Abs(-limb.LinearVelocity.Y * 20.0f)) + Rand.Vector(Math.Abs(limb.LinearVelocity.Y * 10)),
                     Rand.Range(0.0f, MathHelper.TwoPi), limbHull);
 
@@ -282,11 +283,11 @@ namespace Barotrauma
                 }
             }
 
-           GameMain.ParticleManager.CreateParticle("bubbles",
-                new Vector2(limb.Position.X, limbHull.Surface) + limbHull.Submarine.Position,
+            GameMain.ParticleManager.CreateParticle("bubbles",
+                new Vector2(limb.WorldPosition.X, limbHull.WorldSurface),
                 limb.LinearVelocity * 0.001f,
                 0.0f, limbHull);
-            
+
             //if the Character dropped into water, create a wave
             if (limb.LinearVelocity.Y < 0.0f)
             {
@@ -295,10 +296,10 @@ namespace Barotrauma
                     SoundPlayer.PlaySplashSound(limb.WorldPosition, Math.Abs(limb.LinearVelocity.Y) + Rand.Range(-5.0f, 0.0f));
                     splashSoundTimer = 0.5f;
                 }
-                
+
                 //+ some extra bubbles to follow the character underwater
                 GameMain.ParticleManager.CreateParticle("bubbles",
-                    new Vector2(limb.Position.X, limbHull.Surface) + limbHull.Submarine.Position,
+                    new Vector2(limb.WorldPosition.X, limbHull.WorldSurface),
                     limb.LinearVelocity * 10.0f,
                     0.0f, limbHull);
             }
@@ -401,7 +402,7 @@ namespace Barotrauma
                 if (limb.PullJointEnabled)
                 {
                     Vector2 pos = ConvertUnits.ToDisplayUnits(limb.PullJointWorldAnchorA);
-                    if (currentHull != null) pos += currentHull.Submarine.DrawPosition;
+                    if (currentHull?.Submarine != null) pos += currentHull.Submarine.DrawPosition;
                     pos.Y = -pos.Y;
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)pos.Y, 5, 5), Color.Red, true, 0.01f);
                 }
@@ -426,7 +427,7 @@ namespace Barotrauma
                 if (limb.body.TargetPosition != null)
                 {
                     Vector2 pos = ConvertUnits.ToDisplayUnits((Vector2)limb.body.TargetPosition);
-                    if (currentHull != null) pos += currentHull.Submarine.DrawPosition;
+                    if (currentHull?.Submarine != null) pos += currentHull.Submarine.DrawPosition;
                     pos.Y = -pos.Y;
 
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - 10, (int)pos.Y - 10, 20, 20), Color.Cyan, false, 0.01f);
@@ -442,7 +443,7 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 4, 4), Color.Green, true);
             }
 
-            if (outsideCollisionBlocker.Enabled && currentHull.Submarine != null)
+            if (outsideCollisionBlocker.Enabled && currentHull?.Submarine != null)
             {
                 var edgeShape = outsideCollisionBlocker.FixtureList[0].Shape as FarseerPhysics.Collision.Shapes.EdgeShape;
                 Vector2 startPos = ConvertUnits.ToDisplayUnits(outsideCollisionBlocker.GetWorldPoint(edgeShape.Vertex1)) + currentHull.Submarine.Position;
@@ -455,13 +456,13 @@ namespace Barotrauma
             if (character.MemState.Count > 1)
             {
                 Vector2 prevPos = ConvertUnits.ToDisplayUnits(character.MemState[0].Position);
-                if (currentHull != null) prevPos += currentHull.Submarine.DrawPosition;
+                if (currentHull?.Submarine != null) prevPos += currentHull.Submarine.DrawPosition;
                 prevPos.Y = -prevPos.Y;
 
                 for (int i = 1; i < character.MemState.Count; i++)
                 {
                     Vector2 currPos = ConvertUnits.ToDisplayUnits(character.MemState[i].Position);
-                    if (currentHull != null) currPos += currentHull.Submarine.DrawPosition;
+                    if (currentHull?.Submarine != null) currPos += currentHull.Submarine.DrawPosition;
                     currPos.Y = -currPos.Y;
 
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)currPos.X - 3, (int)currPos.Y - 3, 6, 6), Color.Cyan * 0.6f, true, 0.01f);
