@@ -2,46 +2,63 @@
 <Structures
   RoomDivisionIterationsMin="3"
   RoomDivisionIterationsMax="4"
-  VerticalSplitProbability="0.5"
-  RoomWidthRange="0.5,0.9"
+  VerticalSplitProbability="0.1"
+  RoomWidthRange="0.75,0.9"
   RoomHeightRange="0.5,0.9"
   CorridorWidthRange="200,256">
   
-  <structure prefab="RuinWallHorizontal" alignment="Top, Bottom" type="Wall"/>
-  <structure prefab="RuinWallHorizontalSmall" alignment="Top, Bottom" type="CorridorWall"/>
-
-  <structure prefab="RuinWallVertical" alignment="Left,Right" type="Wall"/>
-  <structure prefab="RuinWallVerticalSmall" alignment="Left,Right" type="CorridorWall"/>
-
-  <structure prefab="RuinWallHeavyHorizontal" alignment="Top, Bottom" type="HeavyWall"/>
-  <structure prefab="RuinWallHeavyVertical" alignment="Left,Right" type="HeavyWall"/>  
-
-  <structure prefab="RuinBack" alignment="Center" type="Back" commonness="3"/>
-  <structure prefab="RuinBackFractal" alignment="Center" type="Back" commonness="2"/>  
-  <structure prefab="RuinBackCarvings" alignment="Center" type="Back" commonness="1"/>
-
-  <item prefab="RuinBlock" alignment="Right,Top,Bottom,Left" type="Prop" commonness="5"/>
-
-  <item prefab="RuinFractalBall" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
-
-  <item prefab="RuinClaw" alignment="Bottom" type="Prop" commonness="5"/>
-
-  <item prefab="oxygeniteshard" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
-  <item prefab="sulphuriteshard" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
+  <RoomType name="vault" placement="last" minwateramount="0.0" maxwateramount="0.0">
+    <structure prefab="RuinWallHeavyHorizontal" alignment="Top, Bottom" type="Wall"/>
+    <structure prefab="RuinWallHeavyVertical" alignment="Left,Right" type="Wall"/>  
+    <structure prefab="RuinBackCarvings" alignment="Center" type="Back" commonness="1"/>
+    <item prefab="RuinFractalBall" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
+    <item prefab="RuinClaw" alignment="Bottom" type="Prop" commonness="5"/>
+    <item prefab="artifactholder" alignment="Center" type="Prop" commonness="5"/>
+    <itemassembly prefab="alienturretassembly" alignment="Center" type="Prop" expand="true" commonness="1"/>
+  </RoomType>
   
-  <item prefab="ancientweapon" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="1"/>
-
-  <item prefab="aliendoor" alignment="Center" type="Door">
-    <item prefab="alienmotionsensor" alignment="Center" type="Prop" roomplacement="nextroom">
-      <Wire from="state_out" to="set_state"/>
-    </item>
-  </item>
+  <!-- "last" and a placement offset of -1 means that this is used as the second-to-last room-->
+  <RoomType name="armory" placement="last" placementoffset="-1" minwateramount="0.0" maxwateramount="0.5">
+    <structure prefab="RuinWallHeavyHorizontal" alignment="Top, Bottom" type="Wall"/>
+    <structure prefab="RuinWallHeavyVertical" alignment="Left,Right" type="Wall"/>
+    <structure prefab="RuinBackCarvings" alignment="Center" type="Back" commonness="1"/>
+    <item prefab="RuinFractalBall" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
+    <item prefab="ancientweapon" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="1"/>
+  </RoomType>
   
-  <item prefab="alienhatch" alignment="Center" type="Hatch">
-    <item prefab="alienmotionsensor" alignment="Center" type="Prop" roomplacement="nextroom">
-      <Wire from="state_out" to="set_state"/>
-    </item>
-  </item>
+  <RoomType name="genericroom1" placement="any" minwateramount="0.0" maxwateramount="1.0">
+    <structure prefab="RuinWallHorizontal" alignment="Top, Bottom" type="Wall"/>
+    <structure prefab="RuinWallVertical" alignment="Left,Right" type="Wall"/>
+    <structure prefab="RuinBackFractal" alignment="Center" type="Back" commonness="2"/> 
+    <item prefab="RuinBlock" alignment="Right,Top,Bottom,Left" type="Prop" commonness="5"/>    
+    <item prefab="oxygeniteshard" alignment="Bottom" type="Prop" commonness="5"/>
+    <item prefab="sulphuriteshard" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
+  </RoomType>
 
-  <item prefab="artifactholder" alignment="Center" type="Prop" commonness="5"/>
+  <RoomType name="entrancecorridor" placement="first" iscorridor="true">
+    <structure prefab="RuinWallHorizontal" alignment="Top,Bottom" type="Wall"/>
+    <structure prefab="RuinWallVertical" alignment="Left,Right" type="Wall"/>
+    <structure prefab="RuinBackFractal" alignment="Center" type="Back" commonness="3"/>
+  </RoomType>
+  
+  <RoomType name="genericcorridor1" placement="any" iscorridor="true">
+    <structure prefab="RuinWallHorizontalSmall" alignment="Top,Bottom" type="Wall"/>
+    <structure prefab="RuinWallVerticalSmall" alignment="Left,Right" type="Wall"/>
+    <structure prefab="RuinBack" alignment="Center" type="Back" commonness="3"/>
+    <item prefab="aliendoor" alignment="Center" type="Door">
+      <item prefab="alienmotionsensor" alignment="Center" type="Prop" placementrelativetoparent="nextroom">
+        <Connection targetentity="parent">
+          <Wire from="state_out" to="set_state"/>
+        </Connection>
+      </item>
+    </item>
+    <item prefab="alienhatch" alignment="Center" type="Hatch">
+      <item prefab="alienmotionsensor" alignment="Center" type="Prop" placementrelativetoparent="nextroom">
+        <Connection targetentity="parent">
+          <Wire from="state_out" to="set_state"/>
+        </Connection>
+      </item>
+    </item>
+  </RoomType> 
+  
 </Structures>

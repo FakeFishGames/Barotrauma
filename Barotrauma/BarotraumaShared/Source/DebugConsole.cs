@@ -676,7 +676,7 @@ namespace Barotrauma
             commands.Add(new Command("kill", "kill [character]: Immediately kills the specified character.", (string[] args) =>
             {
                 Character killedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args);
-                killedCharacter.SetAllDamage(killedCharacter.MaxVitality * 2, 0.0f, 0.0f);
+                killedCharacter?.SetAllDamage(200.0f, 0.0f, 0.0f);
             },
             () =>
             {
@@ -691,7 +691,7 @@ namespace Barotrauma
                 foreach (Character c in Character.CharacterList)
                 {
                     if (!(c.AIController is EnemyAIController)) continue;
-                    c.SetAllDamage(c.MaxVitality, 0.0f, 0.0f);
+                    c.SetAllDamage(200.0f, 0.0f, 0.0f);
                 }
             }, null, true));
 
@@ -1053,7 +1053,7 @@ namespace Barotrauma
 				if (++i >= Messages.Count) break;
 			} while (!Messages[selectedIndex].IsCommand || Messages[selectedIndex].Text == currentText);
 
-            return Messages[selectedIndex].Text;            
+            return !Messages[selectedIndex].IsCommand ? "" : Messages[selectedIndex].Text;            
         }
 
         public static void ExecuteCommand(string command)

@@ -1,215 +1,161 @@
-﻿<Items>
-  <Item
-    name="Door"    
-    identifier="door"
-    tags="door">
-
-    <Sprite texture="door.png" sourcerect="1,0,48,208" depth="0.01" origin="0.5,0.5"/>
-
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="Door" identifier="door" tags="door">
+    <Sprite texture="door.png" sourcerect="1,0,48,208" depth="0.01" origin="0.5,0.5" />
     <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="10.0">
-      <RequiredItem identifier="crowbar" type="Equipped"/>
-      <Sprite texture ="door.png" sourcerect="80,0,19,208" depth="0.05" origin="0.5,0.0"/>
-      <WeldedSprite texture ="door.png" sourcerect="99,0,32,188" depth="0.0" origin="0.5,0.5"/>
-      <BrokenSprite texture ="door.png" sourcerect="133,0,58,208" depth="0.051" origin="0.5,0.0" scale="true"/>
-      <sound file="Content/Items/Door/door.ogg" type="OnUse" range="500.0"/>
-      <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0"/>
-      <sound file="Content/Items/Door/doorBreak1.ogg" type="OnBroken" selectionmode="Random" range="3000"/>
-      <sound file="Content/Items/Door/doorBreak2.ogg" type="OnBroken" range="3000"/>
+      <RequiredItem identifier="crowbar" type="Equipped" />
+      <Sprite texture="door.png" sourcerect="80,0,19,208" depth="0.05" origin="0.5,0.0" />
+      <WeldedSprite texture="door.png" sourcerect="99,0,32,188" depth="0.0" origin="0.5,0.5" />
+      <BrokenSprite texture="door.png" sourcerect="133,0,58,208" depth="0.051" origin="0.5,0.0" scale="true" />
+      <sound file="Content/Items/Door/door.ogg" type="OnUse" range="500.0" />
+      <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0" />
+      <sound file="Content/Items/Door/doorBreak1.ogg" type="OnBroken" selectionmode="Random" range="3000" />
+      <sound file="Content/Items/Door/doorBreak2.ogg" type="OnBroken" range="3000" />
     </Door>
-
-    <AiTarget sightrange="1500.0"/>
-
+    <AiTarget sightrange="1500.0" />
     <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWeldingTool" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
-      <RequiredSkill identifier="mechanical" level="40"/>
-      <RequiredItem identifier="weldingtool" type="equipped"/>
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
+      <RequiredSkill identifier="mechanical" level="40" />
+      <RequiredItem identifier="weldingtool" type="equipped" />
     </Repairable>
-  
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem identifier="screwdriver" type="Equipped"/>
-      <input name="toggle"/>
-      <input name="set_state"/>
-      <output name="state_out"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <input name="toggle" />
+      <input name="set_state" />
+      <output name="state_out" />
     </ConnectionPanel>
   </Item>
-
-  <Item
-    name="Windowed Door"    
-    identifier="windoweddoor"
-    tags="door">
-
-    <Sprite texture="door.png" sourcerect="1,0,48,208" depth="0.01" origin="0.5,0.5"/>
-
+  <Item name="Windowed Door" identifier="windoweddoor" tags="door">
+    <Sprite texture="door.png" sourcerect="1,0,48,208" depth="0.01" origin="0.5,0.5" />
     <Door window="0,-32,10,75" canbepicked="true" canbeselected="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="10.0">
-      <RequiredItem identifier="crowbar" type="Equipped"/>
-      <Sprite texture="door.png" sourcerect="56,0,19,208" depth="0.05" origin="0.5,0.0"/>
-      <WeldedSprite texture="door.png" sourcerect="9,0,32,188" depth="0.0" origin="0.5,0.5"/>
-      <BrokenSprite texture="door.png" sourcerect="192,0,40,208" depth="0.051" origin="0.5,0.0" scale="true"/>
-      <sound file="Content/Items/Door/door.ogg" type="OnUse" range="500.0"/>
-      <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0"/>
-      <sound file="Content/Items/Door/doorBreak1.ogg" type="OnBroken" selectionmode="Random" range="3000"/>
-      <sound file="Content/Items/Door/doorBreak2.ogg" type="OnBroken" range="3000"/>
+      <RequiredItem identifier="crowbar" type="Equipped" />
+      <Sprite texture="door.png" sourcerect="56,0,19,208" depth="0.05" origin="0.5,0.0" />
+      <WeldedSprite texture="door.png" sourcerect="9,0,32,188" depth="0.0" origin="0.5,0.5" />
+      <BrokenSprite texture="door.png" sourcerect="192,0,40,208" depth="0.051" origin="0.5,0.0" scale="true" />
+      <sound file="Content/Items/Door/door.ogg" type="OnUse" range="500.0" />
+      <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0" />
+      <sound file="Content/Items/Door/doorBreak1.ogg" type="OnBroken" selectionmode="Random" range="3000" />
+      <sound file="Content/Items/Door/doorBreak2.ogg" type="OnBroken" range="3000" />
     </Door>
-
-    <AiTarget sightrange="1500.0"/>
-
+    <AiTarget sightrange="1500.0" />
     <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWeldingTool" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
-      <RequiredSkill identifier="mechanical" level="40"/>
-      <RequiredItem identifier="weldingtool" type="equipped"/>
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
+      <RequiredSkill identifier="mechanical" level="40" />
+      <RequiredItem identifier="weldingtool" type="equipped" />
     </Repairable>
-
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem identifier="screwdriver" type="Equipped"/>
-      <input name="toggle"/>
-      <input name="set_state"/>
-      <output name="state_out"/>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <input name="toggle" />
+      <input name="set_state" />
+      <output name="state_out" />
     </ConnectionPanel>
   </Item>
-
-  <Item
-    name="Hatch"    
-    identifier="hatch"
-    allowedlinks="gap, hull"
-    tags="door">
-
-    <Sprite texture="hatch.png" sourcerect="0,0,128,46" depth="0.01" origin="0.5,0.5"/>
-
+  <Item name="Hatch" identifier="hatch" allowedlinks="gap, hull" tags="door">
+    <Sprite texture="hatch.png" sourcerect="0,0,128,49" depth="0.01" origin="0.5,0.5" />
     <Door canbeselected="true" canbepicked="true" horizontal="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="10.0">
-      <RequiredItem identifier="crowbar" type="Equipped"/>
-      <Sprite texture="hatch.png" sourcerect="128,0,128,19" depth="0.05" origin="0.0,0.5"/>
-      <WeldedSprite texture="hatch.png" sourcerect="0,56,108,33" depth="0.0" origin="0.5,0.5"/>
-      <BrokenSprite texture="hatch.png" sourcerect="128,21,128,58" depth="0.051" origin="0.0,0.5" scale="true"/>
-      <sound file="Content/Items/Door/door.ogg" type="OnUse" range="500.0"/>
-      <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0"/>
-      <sound file="Content/Items/Door/doorBreak1.ogg" type="OnBroken" selectionmode="Random" range="3000"/>
-      <sound file="Content/Items/Door/doorBreak2.ogg" type="OnBroken" range="3000"/>
+      <RequiredItem identifier="crowbar" type="Equipped" />
+      <Sprite texture="hatch.png" sourcerect="128,0,128,19" depth="0.05" origin="0.0,0.5" />
+      <WeldedSprite texture="hatch.png" sourcerect="0,56,108,33" depth="0.0" origin="0.5,0.5" />
+      <BrokenSprite texture="hatch.png" sourcerect="128,21,128,58" depth="0.051" origin="0.0,0.5" scale="true" />
+      <sound file="Content/Items/Door/door.ogg" type="OnUse" range="500.0" />
+      <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0" />
+      <sound file="Content/Items/Door/doorBreak1.ogg" type="OnBroken" selectionmode="Random" range="3000" />
+      <sound file="Content/Items/Door/doorBreak2.ogg" type="OnBroken" range="3000" />
     </Door>
-
-    <AiTarget sightrange="500.0"/>
-
+    <AiTarget sightrange="500.0" />
     <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWeldingTool" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
-      <RequiredSkill identifier="mechanical" level="40"/>
-      <RequiredItem identifier="weldingtool" type="equipped"/>
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
+      <RequiredSkill identifier="mechanical" level="40" />
+      <RequiredItem identifier="weldingtool" type="equipped" />
     </Repairable>
-
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem identifier="screwdriver" type="Equipped"/>
-      <input name="toggle"/>
-      <input name="set_state"/>
-      <output name="state_out"/>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <input name="toggle" />
+      <input name="set_state" />
+      <output name="state_out" />
     </ConnectionPanel>
   </Item>
-
-  <Item
-    name="Docking Port"    
-    identifier="dockingport"
-    tags="dock"
-    linkable="true">
-
-    <Sprite texture ="dockingport.png" sourcerect="0,0,112,208" depth="0.94" origin="0.5,0.5"/>
-
+  <Item name="Docking Port" identifier="dockingport" tags="dock" linkable="true">
+    <Sprite texture="dockingport.png" sourcerect="0,0,113,209" depth="0.94" origin="0.5,0.5" />
     <DockingPort IsHorizontal="true" DistanceTolerance="128,64" DockedDistance="64">
-      <Sprite texture ="dockingport.png" sourcerect="127,0,112,144" depth="0.05" origin="0.5,0.5"/>
-      <sound file="Content/Items/Door/dockingport1.ogg" type="OnUse" range="1000.0"/>
-      <sound file="Content/Items/Door/dockingport2.ogg" type="OnSecondaryUse" range="1000.0"/>
+      <Sprite texture="dockingport.png" sourcerect="127,0,113,144" depth="0.05" origin="0.5,0.5" />
+      <sound file="Content/Items/Door/dockingport1.ogg" type="OnUse" range="1000.0" />
+      <sound file="Content/Items/Door/dockingport2.ogg" type="OnSecondaryUse" range="1000.0" />
       <StatusEffect type="OnBroken" target="This">
-        <sound file="Content/Items/Door/doorBreak2.ogg" range="3000"/>
+        <sound file="Content/Items/Door/doorBreak2.ogg" range="3000" />
       </StatusEffect>
     </DockingPort>
-
-    <PowerTransfer CanBeOverloaded="false" FireProbability="0.0"/>
-    <Wire/>
-
+    <PowerTransfer CanBeOverloaded="false" FireProbability="0.0" />
+    <Wire />
     <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWeldingTool" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
-      <RequiredSkill identifier="mechanical" level="40"/>
-      <RequiredItem identifier="weldingtool" type="equipped"/>
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
+      <RequiredSkill identifier="mechanical" level="40" />
+      <RequiredItem identifier="weldingtool" type="equipped" />
     </Repairable>
-
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem identifier="screwdriver" type="Equipped"/>
-      <input name="toggle"/>
-      <input name="set_state"/>
-      <input name="power"/>
-      <output name="state_out"/>
-      <output name="proximity_sensor"/>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <input name="toggle" />
+      <input name="set_state" />
+      <input name="power" />
+      <output name="state_out" />
+      <output name="proximity_sensor" />
     </ConnectionPanel>
   </Item>
-
-  <Item
-    name="Docking Hatch"
-    identifier="dockinghatch"
-    tags="dock"
-    linkable="true">
-
-    <Sprite texture ="dockingport2.png" sourcerect="0,0,128,112" depth="0.94" origin="0.5,0.5"/>
-
+  <Item name="Docking Hatch" identifier="dockinghatch" tags="dock" linkable="true">
+    <Sprite texture="dockingport2.png" sourcerect="0,0,128,112" depth="0.94" origin="0.5,0.5" />
     <DockingPort IsHorizontal="false" DistanceTolerance="64,128" DockedDistance="64">
-      <Sprite texture ="dockingport.png" sourcerect="127,144,48,112" depth="0.05" origin="0.5,0.5"/>
-      <sound file="Content/Items/Door/dockingport1.ogg" type="OnUse" range="1000.0"/>
-      <sound file="Content/Items/Door/dockingport2.ogg" type="OnSecondaryUse" range="1000.0"/>
+      <Sprite texture="dockingport.png" sourcerect="127,144,50,112" depth="0.05" origin="0.5,0.5" />
+      <sound file="Content/Items/Door/dockingport1.ogg" type="OnUse" range="1000.0" />
+      <sound file="Content/Items/Door/dockingport2.ogg" type="OnSecondaryUse" range="1000.0" />
       <StatusEffect type="OnBroken" target="This">
-        <sound file="Content/Items/Door/doorBreak2.ogg" range="3000"/>
+        <sound file="Content/Items/Door/doorBreak2.ogg" range="3000" />
       </StatusEffect>
     </DockingPort>
-
-    <PowerTransfer CanBeOverloaded="false" FireProbability="0.0"/>
-    <Wire/>
-
+    <PowerTransfer CanBeOverloaded="false" FireProbability="0.0" />
+    <Wire />
     <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWeldingTool" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
-      <RequiredSkill identifier="mechanical" level="40"/>
-      <RequiredItem identifier="weldingtool" type="equipped"/>
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
+      <RequiredSkill identifier="mechanical" level="40" />
+      <RequiredItem identifier="weldingtool" type="equipped" />
     </Repairable>
-
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem identifier="screwdriver" type="Equipped"/>
-      <input name="toggle"/>
-      <input name="set_state"/>
-      <input name="power"/>
-      <output name="state_out"/>
-      <output name="proximity_sensor"/>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <input name="toggle" />
+      <input name="set_state" />
+      <input name="power" />
+      <output name="state_out" />
+      <output name="proximity_sensor" />
     </ConnectionPanel>
   </Item>
-  
-  <Item
-    name="Duct Block"    
-    identifier="ductblock">
-
-    <Sprite texture ="duct.png" sourcerect="0,0,33,33" depth="0.01" origin="0.5,0.5"/>
-
+  <Item name="Duct Block" identifier="ductblock">
+    <Sprite texture="duct.png" sourcerect="0,0,33,33" depth="0.01" origin="0.5,0.5" />
     <Door canbeselected="true" horizontal="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="3.0" autoorientgap="true">
-      <RequiredItem identifier="crowbar" type="Equipped"/>
-      <Sprite texture ="duct.png" sourcerect="66,0,19,19" depth="0.05" origin="-0.4,0.5"/>
-      <WeldedSprite texture ="duct.png" sourcerect="33,0,33,33" depth="0.0" origin="0.5,0.5"/>
-      <BrokenSprite texture="duct.png" sourcerect="0,34,52,52" depth="0.051" origin="0.2,0.5" scale="true"/>
-      <sound file="Content/Items/Door/duct1.ogg" type="OnUse" selectionmode="Random" range="300"/>
-      <sound file="Content/Items/Door/duct2.ogg" type="OnUse" range="300"/>
-      <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="500.0"/>
-      <sound file="Content/Items/Door/ductBreak.ogg" type="OnBroken" range="2000"/>
+      <RequiredItem identifier="crowbar" type="Equipped" />
+      <Sprite texture="duct.png" sourcerect="66,0,19,19" depth="0.05" origin="-0.4,0.5" />
+      <WeldedSprite texture="duct.png" sourcerect="33,0,33,33" depth="0.0" origin="0.5,0.5" />
+      <BrokenSprite texture="duct.png" sourcerect="0,34,52,52" depth="0.051" origin="0.2,0.5" scale="true" />
+      <sound file="Content/Items/Door/duct1.ogg" type="OnUse" selectionmode="Random" range="300" />
+      <sound file="Content/Items/Door/duct2.ogg" type="OnUse" range="300" />
+      <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="500.0" />
+      <sound file="Content/Items/Door/ductBreak.ogg" type="OnBroken" range="2000" />
     </Door>
-
-    <AiTarget sightrange="500.0"/>
-
+    <AiTarget sightrange="500.0" />
     <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWeldingTool" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
-      <RequiredSkill identifier="mechanical" level="40"/>
-      <RequiredItem identifier="weldingtool" type="equipped"/>
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
+      <RequiredSkill identifier="mechanical" level="40" />
+      <RequiredItem identifier="weldingtool" type="equipped" />
     </Repairable>
-
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem identifier="screwdriver" type="Equipped"/>
-      <input name="toggle"/>
-      <input name="set_state"/>
-      <output name="state_out"/>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <input name="toggle" />
+      <input name="set_state" />
+      <output name="state_out" />
     </ConnectionPanel>
   </Item>
 </Items>

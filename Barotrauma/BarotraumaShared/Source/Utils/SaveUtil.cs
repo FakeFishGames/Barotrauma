@@ -159,7 +159,7 @@ namespace Barotrauma
 
             if (!Directory.Exists(folder))
             {
-                DebugConsole.ThrowError("Save folder \"" + folder + " not found! Attempting to create a new folder");
+                DebugConsole.Log("Save folder \"" + folder + " not found! Attempting to create a new folder");
                 try
                 {
                     Directory.CreateDirectory(folder);

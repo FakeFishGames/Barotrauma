@@ -195,7 +195,7 @@ namespace Barotrauma.Items.Components
                 for (float x = 0.0f; x <= Submarine.LastPickedFraction; x += 0.1f)
                 {
                     Vector2 displayPos = ConvertUnits.ToDisplayUnits(rayStart + (rayEnd - rayStart) * x);
-                    displayPos += item.CurrentHull.Submarine.Position;
+                    if (item.CurrentHull.Submarine != null) { displayPos += item.CurrentHull.Submarine.Position; }                    
 
                     Hull hull = Hull.FindHull(displayPos, item.CurrentHull);
                     if (hull == null) continue;

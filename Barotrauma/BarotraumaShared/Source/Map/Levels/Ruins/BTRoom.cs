@@ -78,13 +78,13 @@ namespace Barotrauma.RuinGeneration
 
         public override void CreateWalls()
         {
-            Walls = new List<Line>();
-
-            Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.Right, Rect.Y), RuinEntityType.Wall));
-            Walls.Add(new Line(new Vector2(Rect.X, Rect.Bottom), new Vector2(Rect.Right, Rect.Bottom), RuinEntityType.Wall));
-
-            Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.X, Rect.Bottom), RuinEntityType.Wall));
-            Walls.Add(new Line(new Vector2(Rect.Right, Rect.Y), new Vector2(Rect.Right, Rect.Bottom), RuinEntityType.Wall));
+            Walls = new List<Line>
+            {
+                new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.Right, Rect.Y)),
+                new Line(new Vector2(Rect.X, Rect.Bottom), new Vector2(Rect.Right, Rect.Bottom)),
+                new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.X, Rect.Bottom)),
+                new Line(new Vector2(Rect.Right, Rect.Y), new Vector2(Rect.Right, Rect.Bottom))
+            };
         }
 
         public void Scale(Vector2 scale)
@@ -135,6 +135,8 @@ namespace Barotrauma.RuinGeneration
         {
             DistanceFromEntrance = DistanceFromEntrance == 0 ? currentDist : Math.Min(currentDist, DistanceFromEntrance);
 
+            currentDist++;
+
             var roomRect = Rect;
             roomRect.Inflate(5, 5);
             foreach (var corridor in corridors)
@@ -144,8 +146,9 @@ namespace Barotrauma.RuinGeneration
                 if (!corridorRect.Intersects(roomRect)) continue;
 
                 corridor.DistanceFromEntrance = corridor.DistanceFromEntrance == 0 ?
-                    DistanceFromEntrance :
-                    Math.Min(corridor.DistanceFromEntrance, DistanceFromEntrance);
+                    DistanceFromEntrance + 1 :
+                    Math.Min(corridor.DistanceFromEntrance, DistanceFromEntrance + 1);
+
                 
                 List<BTRoom> connectedRooms = new List<BTRoom>();
                 foreach (var otherRoom in rooms)

@@ -7,34 +7,35 @@
   <bloodemitter particle="blackblood" particleamount="5"/>
   <bloodemitter particle="blackwaterblood" particleamount="1"/>
   <gibemitter particle="heavygib" particleamount="10" velocitymin="50" velocitymax="500" anglemin="0" anglemax="360"/>
-  
+
   <health
-    usehealthwindow="false"
+    usehealthwindow="true"
     vitality="100"
-    doesbleed="false">
-    <!-- head -->
-    <Limb>
-      <Sprite texture="Content/UI/Health/HealthIndicatorHead.png" sourcerect="69,0,118,256" highlightarea="112,0,30,36"/>
+    crushdepth="-30000.0"
+    doesbleed="true">
+    <Sprite texture="Content/UI/Health/MedUI_Silhouette.png" columns="7" rows="3" sourcerect="0,0,980,1056"/>
+    <Limb name="Head">
+      <Sprite texture="Content/UI/Health/MedUI_Head.png" sourcerect="0,0,140,352" highlightarea="44,0,52,58"/>
       <VitalityMultiplier type="damage" multiplier="2.0"/>
     </Limb>
-    <Limb>
-      <Sprite texture="Content/UI/Health/HealthIndicatorTorso.png" sourcerect="69,0,118,256" highlightarea="107,36,40,108"/>
+    <Limb name="Torso">
+      <Sprite texture="Content/UI/Health/MedUI_Torso.png" sourcerect="0,0,140,352" highlightarea="39,59,62,109"/>
       <VitalityMultiplier type="bleeding" multiplier="2.0"/>
     </Limb>
-    <Limb>
-      <Sprite texture="Content/UI/Health/HealthIndicatorLeftArm.png" sourcerect="69,0,118,256" highlightarea="71,42,38,110"/>
+    <Limb name="LeftArm">
+      <Sprite texture="Content/UI/Health/MedUI_LeftArm.png" sourcerect="0,0,140,352" highlightarea="104,70,36,145"/>
       <VitalityMultiplier type="damage" multiplier="0.5"/>
     </Limb>
-    <Limb>
-      <Sprite texture="Content/UI/Health/HealthIndicatorRightArm.png" sourcerect="69,0,118,256" highlightarea="146,42,38,110"/>
+    <Limb name="RightArm">
+      <Sprite texture="Content/UI/Health/MedUI_RightArm.png" sourcerect="0,0,140,352" highlightarea="0,70,36,145"/>
       <VitalityMultiplier type="damage" multiplier="0.5"/>
     </Limb>
-    <Limb>
-      <Sprite texture="Content/UI/Health/HealthIndicatorLeftLeg.png" sourcerect="69,0,118,256" highlightarea="103,135,22,121"/>
+    <Limb name="LeftLeg">
+      <Sprite texture="Content/UI/Health/MedUI_LeftLeg.png" sourcerect="0,0,140,352" highlightarea="74,187,34,165"/>
       <VitalityMultiplier type="damage" multiplier="0.5"/>
     </Limb>
-    <Limb>
-      <Sprite texture="Content/UI/Health/HealthIndicatorRightLeg.png" sourcerect="69,0,118,256" highlightarea="130,135,22,121"/>
+    <Limb name="RightLeg">
+      <Sprite texture="Content/UI/Health/MedUI_RightLeg.png" sourcerect="0,0,140,352" highlightarea="31,187,34,165"/>
       <VitalityMultiplier type="damage" multiplier="0.5"/>
     </Limb>
   </health>

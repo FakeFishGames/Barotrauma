@@ -246,7 +246,16 @@ namespace Barotrauma
                     switch (eventType)
                     {
                         case 0:
-                            Inventory.ClientRead(type, msg, sendingTime);
+                            if (Inventory == null)
+                            {
+                                string errorMsg = "Received an inventory update message for an entity with no inventory (" + Name + ")";
+                                DebugConsole.ThrowError(errorMsg);
+                                GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ClientRead:NoInventory" + ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                            }
+                            else
+                            {
+                                Inventory.ClientRead(type, msg, sendingTime);
+                            }
                             break;
                         case 1:
                             byte ownerID = msg.ReadByte();

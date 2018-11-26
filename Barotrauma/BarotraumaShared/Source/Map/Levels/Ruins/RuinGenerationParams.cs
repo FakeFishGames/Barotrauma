@@ -10,7 +10,7 @@ namespace Barotrauma.RuinGeneration
     [Flags]
     enum RuinEntityType
     {
-        Wall = 1, CorridorWall = 2, Prop = 4, Back = 8, Door = 16, Hatch = 32, HeavyWall = 64
+        Wall, Back, Door, Hatch, Prop
     }
 
     class RuinGenerationParams : ISerializableEntity
@@ -31,9 +31,22 @@ namespace Barotrauma.RuinGeneration
 
         private string filePath;
 
-        private List<RuinEntityConfig> entityList;
-        
+        private List<RuinRoom> roomTypeList;
+                
         public string Name => "RuinGenerationParams";
+        
+        [Serialize("5000,5000", false), Editable()]
+        public Point SizeMin
+        {
+            get;
+            set;
+        }
+        [Serialize("8000,8000", false), Editable()]
+        public Point SizeMax
+        {
+            get;
+            set;
+        }
 
         [Serialize(3, false), Editable(MinValueInt = 1, MaxValueInt = 10, ToolTip = "The ruin generation algorithm \"splits\" the ruin area into two, splits these areas again, repeats this for some number of times and creates a room at each of the final split areas. This is value determines the minimum number of times the split is done.")]
         public int RoomDivisionIterationsMin
@@ -89,15 +102,20 @@ namespace Barotrauma.RuinGeneration
             private set;
         } = new Dictionary<string, SerializableProperty>();
 
+        public IEnumerable<RuinRoom> RoomTypeList
+        {
+            get { return roomTypeList; }
+        }
+
         private RuinGenerationParams(XElement element)
         {
-            entityList = new List<RuinEntityConfig>();
+            roomTypeList = new List<RuinRoom>();
 
             if (element != null)
-            {
+            {                
                 foreach (XElement subElement in element.Elements())
                 {
-                    entityList.Add(new RuinEntityConfig(subElement));
+                    roomTypeList.Add(new RuinRoom(subElement));
                 }
             }
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
@@ -114,21 +132,6 @@ namespace Barotrauma.RuinGeneration
             }
 
             return paramsList[Rand.Int(paramsList.Count, Rand.RandSync.Server)];
-        }
-
-        public RuinEntityConfig GetRandomEntity(RuinEntityType type, Alignment alignment, RuinEntityConfig.RoomType roomType = RuinEntityConfig.RoomType.Any)
-        {
-            var matchingEntities = entityList.FindAll(rs => 
-                rs.Type.HasFlag(type) && 
-                rs.Alignment.HasFlag(alignment) && 
-                (roomType == RuinEntityConfig.RoomType.Any || rs.RoomPlacement == RuinEntityConfig.RoomType.Any || rs.RoomPlacement.HasFlag(roomType)));
-
-            if (!matchingEntities.Any()) return null;
-
-            return ToolBox.SelectWeightedRandom(
-                matchingEntities,
-                matchingEntities.Select(s => s.Commonness).ToList(),
-                Rand.RandSync.Server);
         }
 
         private static void LoadAll()
@@ -175,9 +178,158 @@ namespace Barotrauma.RuinGeneration
         }
     }
 
+    class RuinRoom : ISerializableEntity
+    {
+        public enum RoomPlacement
+        {
+            Any,
+            First,
+            Last
+        }
+
+        public string Name
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(1.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
+        public float Commonness { get; private set; }
+
+        public Dictionary<string, SerializableProperty> SerializableProperties
+        {
+            get;
+            private set;
+        } = new Dictionary<string, SerializableProperty>();
+        
+        [Serialize(RoomPlacement.Any, false), Editable()]
+        public RoomPlacement Placement
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0, false), Editable()]
+        public int PlacementOffset
+        {
+            get;
+            set;
+        }
+
+        [Serialize(false, false), Editable()]
+        public bool IsCorridor
+        {
+            get;
+            set;
+        }
+        
+        [Serialize(1.0f, false), Editable()]
+        public float MinWaterAmount
+        {
+            get;
+            set;
+        }
+        [Serialize(1.0f, false), Editable()]
+        public float MaxWaterAmount
+        {
+            get;
+            set;
+        }
+
+        private List<RuinEntityConfig> entityList = new List<RuinEntityConfig>();
+
+        public RuinRoom(XElement element)
+        {
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+
+            Name = element.GetAttributeString("name", "");
+
+            if (element != null)
+            {
+                foreach (XElement subElement in element.Elements())
+                {
+                    entityList.Add(new RuinEntityConfig(subElement));
+                }
+            }
+        }
+
+        public RuinEntityConfig GetRandomEntity(RuinEntityType type, Alignment alignment)
+        {
+            var matchingEntities = entityList.FindAll(rs =>
+                rs.Type == type &&
+                rs.Alignment.HasFlag(alignment));
+
+            if (!matchingEntities.Any()) return null;
+
+            return ToolBox.SelectWeightedRandom(
+                matchingEntities,
+                matchingEntities.Select(s => s.Commonness).ToList(),
+                Rand.RandSync.Server);
+        }
+
+        public List<RuinEntityConfig> GetPropList()
+        {
+            var matchingEntities = entityList.FindAll(rs => rs.Type == RuinEntityType.Prop);
+            return matchingEntities;
+        }
+    }
+
     class RuinEntityConfig : ISerializableEntity
     {
         public readonly MapEntityPrefab Prefab;
+
+        public enum RelativePlacement
+        {
+            SameRoom,
+            NextRoom,
+            NextCorridor,
+            PreviousRoom,
+            PreviousCorridor,
+            FirstRoom,
+            FirstCorridor,
+            LastRoom,
+            LastCorridor
+        }
+
+        public class EntityConnection
+        {
+            //which type of room to search for the item to connect to
+            //sameroom, nextroom, previousroom, firstroom and lastroom are also valid
+            public string RoomName
+            {
+                get;
+                private set;
+            }
+
+            public string TargetEntityIdentifier
+            {
+                get;
+                private set;
+            }
+
+            //if set, the connection is done by running a wire from 
+            //(Pair.First = the name of the connection in this item) to (Pair.Second = the name of the connection in the target item)
+            public Pair<string, string> WireConnection
+            {
+                get;
+                private set;
+            }
+
+            public EntityConnection(XElement element)
+            {
+                RoomName = element.GetAttributeString("roomname", "");
+                TargetEntityIdentifier = element.GetAttributeString("targetentity", "");
+                foreach (XElement subElement in element.Elements())
+                {
+                    if (subElement.Name.ToString().ToLowerInvariant() == "wire")
+                    {
+                        WireConnection = new Pair<string, string>(
+                            subElement.GetAttributeString("from", ""),
+                            subElement.GetAttributeString("to", ""));
+                    }
+                }
+            }
+        }
 
         [Serialize(Alignment.Bottom, false), Editable]
         public Alignment Alignment { get; private set; }
@@ -185,19 +337,27 @@ namespace Barotrauma.RuinGeneration
         [Serialize(RuinEntityType.Prop, false), Editable]
         public RuinEntityType Type { get; private set; }
 
+        [Serialize(false, false), Editable]
+        public bool Expand { get; private set; }
+
+        [Serialize(RelativePlacement.SameRoom, false), Editable]
+        public RelativePlacement PlacementRelativeToParent { get; private set; }
+
         [Serialize(1.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
         public float Commonness { get; private set; }
 
-        [Serialize(RoomType.Any, false), Editable]
-        public RoomType RoomPlacement { get; private set; }
+        [Serialize(1, false)]
+        public int MinAmount { get; private set; }
+        [Serialize(1, false)]
+        public int MaxAmount { get; private set; }
 
-        [Serialize(false, false), Editable]
-        public bool LinkToParent { get; private set; }
+        [Serialize("0,0", false)]
+        public Point MinRoomSize { get; private set; }
 
-        /// <summary>
-        /// Pair.First = the name of the connection in this item, Pair.Second = the name of the connection in the parent item
-        /// </summary>
-        public List<Pair<string, string>> WireToParent { get; private set; } = new List<Pair<string, string>>();
+        [Serialize("100000,100000", false)]
+        public Point MaxRoomSize { get; private set; }
+
+        public List<EntityConnection> EntityConnections { get; private set; } = new List<EntityConnection>();
 
         private readonly List<RuinEntityConfig> childEntities = new List<RuinEntityConfig>();
 
@@ -213,16 +373,6 @@ namespace Barotrauma.RuinGeneration
             get;
             private set;
         } = new Dictionary<string, SerializableProperty>();
-        
-        public enum RoomType
-        {
-            Any = 0,
-            SameRoom = 1,
-            PreviousRoom = 2,
-            NextRoom = 4,
-            FirstRoom = 8,
-            LastRoom = 16
-        }
 
         public RuinEntityConfig(XElement element)
         {
@@ -239,17 +389,17 @@ namespace Barotrauma.RuinGeneration
 
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() == "wire")
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    WireToParent.Add(new Pair<string, string>(
-                        subElement.GetAttributeString("from", ""),
-                        subElement.GetAttributeString("to", "")));
-                }
-                else
-                {
-                    childEntities.Add(new RuinEntityConfig(subElement));
+                    case "connection":
+                    case "entityconnection":
+                        EntityConnections.Add(new EntityConnection(subElement));
+                        break;
+                    default:
+                        childEntities.Add(new RuinEntityConfig(subElement));
+                        break;
                 }
             }
-        }        
+        }
     }
 }

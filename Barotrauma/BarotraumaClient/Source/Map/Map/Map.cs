@@ -204,7 +204,7 @@ namespace Barotrauma
                         int yIndex = (int)pos.Y + y;
                         if (yIndex < 0 || yIndex >= generationParams.NoiseResolution) continue;
 
-                        float perlin = (float)PerlinNoise.Perlin(
+                        float perlin = (float)PerlinNoise.CalculatePerlin(
                             xIndex / (float)generationParams.NoiseResolution * 100.0f, 
                             yIndex / (float)generationParams.NoiseResolution * 100.0f, 0);
                         
@@ -396,8 +396,8 @@ namespace Barotrauma
             drawOffset.Y = MathHelper.Clamp(drawOffset.Y, -size - edgeBuffer + viewSize.Y / 2.0f, edgeBuffer -viewSize.Y / 2.0f);
 
             drawOffsetNoise = new Vector2(
-                (float)PerlinNoise.Perlin(Timing.TotalTime * 0.1f % 255, Timing.TotalTime * 0.1f % 255, 0) - 0.5f, 
-                (float)PerlinNoise.Perlin(Timing.TotalTime * 0.2f % 255, Timing.TotalTime * 0.2f % 255, 0.5f) - 0.5f) * 10.0f;
+                (float)PerlinNoise.CalculatePerlin(Timing.TotalTime * 0.1f % 255, Timing.TotalTime * 0.1f % 255, 0) - 0.5f, 
+                (float)PerlinNoise.CalculatePerlin(Timing.TotalTime * 0.2f % 255, Timing.TotalTime * 0.2f % 255, 0.5f) - 0.5f) * 10.0f;
 
             Vector2 viewOffset = drawOffset + drawOffsetNoise;
 
@@ -722,8 +722,8 @@ namespace Barotrauma
             float t = anim.Duration <= 0.0f ? 1.0f : Math.Max(anim.Timer / anim.Duration, 0.0f);
             drawOffset = -Vector2.SmoothStep(anim.StartPos.Value, anim.EndLocation.MapPosition, t);
             drawOffset += new Vector2(
-                (float)PerlinNoise.Perlin(Timing.TotalTime * 0.3f % 255, Timing.TotalTime * 0.4f % 255, 0) - 0.5f,
-                (float)PerlinNoise.Perlin(Timing.TotalTime * 0.4f % 255, Timing.TotalTime * 0.3f % 255, 0.5f) - 0.5f) * 50.0f * (float)Math.Sin(t * MathHelper.Pi);
+                (float)PerlinNoise.CalculatePerlin(Timing.TotalTime * 0.3f % 255, Timing.TotalTime * 0.4f % 255, 0) - 0.5f,
+                (float)PerlinNoise.CalculatePerlin(Timing.TotalTime * 0.4f % 255, Timing.TotalTime * 0.3f % 255, 0.5f) - 0.5f) * 50.0f * (float)Math.Sin(t * MathHelper.Pi);
 
             zoom = MathHelper.SmoothStep(anim.StartZoom.Value, anim.EndZoom.Value, t);
 

@@ -1160,7 +1160,7 @@ namespace Barotrauma
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
                     Character killedCharacter = (args.Length == 0) ? client.Character : FindMatchingCharacter(args);
-                    killedCharacter.SetAllDamage(killedCharacter.MaxVitality * 2, 0.0f, 0.0f);
+                    killedCharacter?.SetAllDamage(200.0f, 0.0f, 0.0f);          
                 }
             );
 

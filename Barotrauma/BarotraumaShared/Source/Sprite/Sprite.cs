@@ -2,6 +2,8 @@
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -95,46 +97,33 @@ namespace Barotrauma
         partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn, bool premultiplyAlpha = true);
         partial void CalculateSourceRect();
 
-        // TODO: use the Init method below?
         public Sprite(XElement element, string path = "", string file = "")
         {
             SourceElement = element;
             if (file == "")
             {
-                file = element.GetAttributeString("texture", "");
+                file = SourceElement.GetAttributeString("texture", "");
             }
-            
             if (file == "")
             {
-                DebugConsole.ThrowError("Sprite " + element + " doesn't have a texture specified!");
+                DebugConsole.ThrowError("Sprite " + SourceElement + " doesn't have a texture specified!");
                 return;
             }
-
             if (!string.IsNullOrEmpty(path))
             {
                 if (!path.EndsWith("/")) path += "/";
             }
-
             this.file = path + file;
-            
-            Vector4 sourceVector = element.GetAttributeVector4("sourcerect", Vector4.Zero);
-
+            Vector4 sourceVector = SourceElement.GetAttributeVector4("sourcerect", Vector4.Zero);
             bool shouldReturn = false;
-            LoadTexture(ref sourceVector, ref shouldReturn, element.GetAttributeBool("premultiplyalpha", false));
+            LoadTexture(ref sourceVector, ref shouldReturn, SourceElement.GetAttributeBool("premultiplyalpha", false));
             if (shouldReturn) return;
-
-            sourceRect = new Rectangle(
-                (int)sourceVector.X, (int)sourceVector.Y,
-                (int)sourceVector.Z, (int)sourceVector.W);
-
-            size = element.GetAttributeVector2("size", Vector2.One);
+            sourceRect = new Rectangle((int)sourceVector.X, (int)sourceVector.Y, (int)sourceVector.Z, (int)sourceVector.W);
+            size = SourceElement.GetAttributeVector2("size", Vector2.One);
             size.X *= sourceRect.Width;
             size.Y *= sourceRect.Height;
-
-            RelativeOrigin = element.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
-
-            Depth = element.GetAttributeFloat("depth", 0.001f);
-
+            RelativeOrigin = SourceElement.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
+            Depth = SourceElement.GetAttributeFloat("depth", 0.001f);
             ID = GetID(SourceElement);
             list.Add(this);
         }
@@ -155,11 +144,13 @@ namespace Barotrauma
         public Sprite(string newFile, Vector2 newOrigin, bool preMultiplyAlpha = true)
         {
             Init(newFile, newOrigin: newOrigin, preMultiplyAlpha: preMultiplyAlpha);
+            list.Add(this);
         }
         
         public Sprite(string newFile, Rectangle? sourceRectangle, Vector2? origin = null, float rotation = 0, bool preMultiplyAlpha = true)
         {
             Init(newFile, sourceRectangle: sourceRectangle, newOrigin: origin, newRotation: rotation, preMultiplyAlpha: preMultiplyAlpha);
+            list.Add(this);
         }
         
         private void Init(string newFile, Rectangle? sourceRectangle = null, Vector2? newOrigin = null, Vector2? newOffset = null, float newRotation = 0, 
@@ -185,10 +176,6 @@ namespace Barotrauma
             }
             size = new Vector2(sourceRect.Width, sourceRect.Height);
             rotation = newRotation;
-            if (!list.Contains(this))
-            {
-                list.Add(this);
-            }
         }
 
         /// <summary>
@@ -210,6 +197,38 @@ namespace Barotrauma
         }
 
         partial void DisposeTexture();
+
+        /// <summary>
+        /// Works only if there is a name attribute defined for the sprite.
+        /// </summary>
+        public void ReloadXML()
+        {
+            if (SourceElement == null) { return; }
+            var doc = XMLExtensions.TryLoadXml(SourceElement.ParseContentPathFromUri());
+            if (doc == null || doc.Root == null) { return; }
+            string name = SourceElement.GetAttributeString("name", string.Empty);
+            var sourceElements = doc.Descendants("sprite").Where(e => e.GetAttributeString("name", "Not found") == name);
+            if (sourceElements.Multiple())
+            {
+                DebugConsole.NewMessage($"[Sprite] Multiple matching elements found by name {name}! Cannot reload the xml for element \"{SourceElement.ToString()}\"!", Color.Yellow);
+            }
+            else if (sourceElements.None())
+            {
+                //DebugConsole.NewMessage($"[Sprite] Cannot find matching source element by comparing the name attribute ({name})! Cannot reload the xml for element \"{SourceElement.ToString()}\"!", Color.Yellow);
+            }
+            else
+            {
+                SourceElement = sourceElements.Single();
+                Vector4 sourceVector = SourceElement.GetAttributeVector4("sourcerect", Vector4.Zero);
+                sourceRect = new Rectangle((int)sourceVector.X, (int)sourceVector.Y, (int)sourceVector.Z, (int)sourceVector.W);
+                size = SourceElement.GetAttributeVector2("size", Vector2.One);
+                size.X *= sourceRect.Width;
+                size.Y *= sourceRect.Height;
+                RelativeOrigin = SourceElement.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
+                Depth = SourceElement.GetAttributeFloat("depth", 0.001f);
+                ID = GetID(SourceElement);
+            }
+        }
     }
 }
 

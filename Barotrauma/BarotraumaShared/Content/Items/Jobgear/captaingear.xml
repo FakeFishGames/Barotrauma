@@ -1,59 +1,35 @@
-﻿<Items>
-  <Item
-    name="Captain's Cap"
-    identifier="captainscap"    
-    category="Equipment"
-    tags="smallitem"
-    cargocontaineridentifier="metalcrate"
-    description="A token of the Captain's unquestionable authority.">
-
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="50"/>
-    <Price locationtype="City" buyprice="50"/>
-    <Price locationtype="Outpost" buyprice="100"/>
-    
-    <Sprite texture="captainhat.png" depth="0.6" sourcerect="0,0,32,32"/>
-
-    <Body width="25" height="15" density="30"/>
-
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="Captain's Cap" identifier="captainscap" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="A token of the Captain's unquestionable authority.">
+    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Military" buyprice="50" />
+    <Price locationtype="City" buyprice="50" />
+    <Price locationtype="Outpost" buyprice="100" />
+    <Sprite texture="captainhat.png" depth="0.6" sourcerect="0,0,32,32" />
+    <Body width="25" height="15" density="30" />
     <Wearable limbtype="Head" slots="Any,Head">
-      <sprite texture="captainhat.png" limb="Head" origin="0.5,0.9"/>
+      <sprite texture="captainhat.png" limb="Head" origin="0.5,0.9" />
     </Wearable>
   </Item>
-
-  <Item
-    name="Captain's Uniform"
-    identifier="captainsuniform"
-    category="Equipment"      
-    cargocontaineridentifier="metalcrate"  
-    tags="smallitem">
-
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="50"/>
-    <Price locationtype="City" buyprice="50"/>
-    <Price locationtype="Outpost" buyprice="100"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,320,64,64"/>
-    <Sprite texture ="captainLegs.png" sourcerect="0,49,52,17" depth="0.6"/>
-
-    <Body width="52" height="17" density="30"/>
-
+  <Item name="Captain's Uniform" identifier="captainsuniform" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem">
+    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Military" buyprice="50" />
+    <Price locationtype="City" buyprice="50" />
+    <Price locationtype="Outpost" buyprice="100" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,320,64,64" />
+    <Sprite texture="captainLegs.png" sourcerect="0,49,52,17" depth="0.6" />
+    <Body width="52" height="17" density="30" />
     <Wearable slots="Any,InnerClothes">
-      <sprite texture="captainTorso.png" limb="Torso" sourcerect="0,3,30,58" origin="0.5,0.48" depthlimb="Head"/>
-
-      <sprite texture="captainTorso.png" limb="RightHand" sourcerect="47,0,15,39" origin="0.45,0.65"/>
-      <sprite texture="captainTorso.png" limb="LeftHand" sourcerect="47,0,15,39" origin="0.45,0.65"/>
-
-      <sprite texture="captainTorso.png" limb="RightArm" sourcerect="30,0,17,42" origin="0.5,0.5" hidelimb="true"/>
-      <sprite texture="captainTorso.png" limb="LeftArm" sourcerect="30,0,17,42" origin="0.5,0.5" hidelimb="true"/>
-      
-      <sprite texture="captainLegs.png" limb="Waist" sourcerect="0,0,1,1" origin="0.5,0.5" hidelimb="true"/>
-      <sprite texture="captainLegs.png" limb="RightThigh" sourcerect="52,34,28,46" origin="0.5,0.5" hidelimb="true"/>
-      <sprite texture="captainLegs.png" limb="LeftThigh" sourcerect="52,34,28,46" origin="0.5,0.5" hidelimb="true"/>
-
-      <sprite texture="captainLegs.png" limb="RightLeg" sourcerect="31,0,21,49" origin="0.5,0.5" hidelimb="true"/>
-      <sprite texture="captainLegs.png" limb="LeftLeg" sourcerect="31,0,21,49" origin="0.5,0.5" hidelimb="true"/>
+      <sprite texture="captainTorso.png" limb="Torso" sourcerect="0,0,30,58" origin="0.5,0.48" depthlimb="Head" />
+      <sprite texture="captainTorso.png" limb="RightHand" sourcerect="47,0,15,39" origin="0.45,0.65" />
+      <sprite texture="captainTorso.png" limb="LeftHand" sourcerect="47,0,15,39" origin="0.45,0.65" />
+      <sprite texture="captainTorso.png" limb="RightArm" sourcerect="30,0,17,42" origin="0.5,0.5" hidelimb="true" />
+      <sprite texture="captainTorso.png" limb="LeftArm" sourcerect="30,0,17,42" origin="0.5,0.5" hidelimb="true" />
+      <sprite texture="captainLegs.png" limb="Waist" sourcerect="0,0,1,1" origin="0.5,0.5" hidelimb="true" />
+      <sprite texture="captainLegs.png" limb="RightThigh" sourcerect="52,34,28,46" origin="0.5,0.5" hidelimb="true" />
+      <sprite texture="captainLegs.png" limb="LeftThigh" sourcerect="52,34,28,46" origin="0.5,0.5" hidelimb="true" />
+      <sprite texture="captainLegs.png" limb="RightLeg" sourcerect="31,0,21,49" origin="0.5,0.5" hidelimb="true" />
+      <sprite texture="captainLegs.png" limb="LeftLeg" sourcerect="31,0,21,49" origin="0.5,0.5" hidelimb="true" />
     </Wearable>
   </Item>
 </Items>
-

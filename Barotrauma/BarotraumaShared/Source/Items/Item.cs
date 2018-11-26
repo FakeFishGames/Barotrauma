@@ -389,7 +389,11 @@ namespace Barotrauma
 
         }
 
-        public Item(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine)
+        /// <summary>
+        /// Creates a new item
+        /// </summary>
+        /// <param name="callOnItemLoaded">Should the OnItemLoaded methods of the ItemComponents be called. Use false if the item needs additional initialization before it can be considered fully loaded (e.g. when loading an item from a sub file or cloning an item).</param>
+        public Item(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine, bool callOnItemLoaded = true)
             : base(itemPrefab, submarine)
         {
             spriteColor = prefab.SpriteColor;
@@ -505,15 +509,18 @@ namespace Barotrauma
             InsertToList();
             ItemList.Add(this);
 
-            foreach (ItemComponent ic in components)
+            if (callOnItemLoaded)
             {
-                ic.OnItemLoaded();
+                foreach (ItemComponent ic in components)
+                {
+                    ic.OnItemLoaded();
+                }
             }
         }
 
         public override MapEntity Clone()
         {
-            Item clone = new Item(rect, Prefab, Submarine);
+            Item clone = new Item(rect, Prefab, Submarine, callOnItemLoaded: false);
             foreach (KeyValuePair<string, SerializableProperty> property in properties)
             {
                 if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
@@ -556,6 +563,11 @@ namespace Barotrauma
 
             if (FlippedX) clone.FlipX(false);
             if (FlippedY) clone.FlipY(false);
+            
+            foreach (ItemComponent component in clone.components)
+            {
+                component.OnItemLoaded();
+            }
 
             if (ContainedItems != null)
             {
@@ -564,7 +576,7 @@ namespace Barotrauma
                     var containedClone = containedItem.Clone();
                     clone.ownInventory.TryPutItem(containedClone as Item, null);
                 }
-            }
+            }            
             return clone;
         }
 
@@ -712,7 +724,7 @@ namespace Barotrauma
             CurrentHull = Hull.FindHull(WorldPosition, CurrentHull);
             if (body != null && body.Enabled)
             {
-                Submarine = CurrentHull == null ? null : CurrentHull.Submarine;
+                Submarine = CurrentHull?.Submarine;
                 body.Submarine = Submarine;
             }
 
@@ -1726,7 +1738,7 @@ namespace Barotrauma
                 rect.Height = (int)(prefab.Size.Y * prefab.Scale);
             }
 
-            Item item = new Item(rect, prefab, submarine)
+            Item item = new Item(rect, prefab, submarine, callOnItemLoaded: false)
             {
                 Submarine = submarine,
                 ID = (ushort)int.Parse(element.Attribute("ID").Value),
@@ -1776,6 +1788,11 @@ namespace Barotrauma
 
             item.condition = element.GetAttributeFloat("condition", item.Prefab.Health);
             item.SetActiveSprite();
+
+            foreach (ItemComponent component in item.components)
+            {
+                component.OnItemLoaded();
+            }
 
             return item;
         }

@@ -258,7 +258,8 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    newNodePos = RoundNode(item.Position, item.CurrentHull) - sub.HiddenSubPosition;
+                    newNodePos = RoundNode(item.Position, item.CurrentHull);
+                    if (sub != null) { newNodePos -= sub.HiddenSubPosition; }
                     canPlaceNode = true;
                 }
 
@@ -269,7 +270,7 @@ namespace Barotrauma.Items.Components
                     if (user == null) return;
 
                     Vector2 prevNodePos = nodes[nodes.Count - 1];
-                    if (sub != null) prevNodePos += sub.HiddenSubPosition;
+                    if (sub != null) { prevNodePos += sub.HiddenSubPosition; }
 
                     float currLength = 0.0f;
                     for (int i = 0; i < nodes.Count - 1; i++)
@@ -284,7 +285,7 @@ namespace Barotrauma.Items.Components
                         Vector2 pullBackDir = diff == Vector2.Zero ? Vector2.Zero : Vector2.Normalize(diff);
 
                         user.AnimController.Collider.ApplyForce(pullBackDir * user.Mass * 50.0f);
-                        user.AnimController.UpdateUseItem(true, user.SimPosition + pullBackDir * 2.0f);
+                        user.AnimController.UpdateUseItem(true, user.WorldPosition + pullBackDir * 200.0f);
 #if CLIENT
                         if (GameMain.Client == null)
                         {

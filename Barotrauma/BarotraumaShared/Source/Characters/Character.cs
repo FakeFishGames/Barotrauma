@@ -721,18 +721,24 @@ namespace Barotrauma
                         
             if (file == humanConfigFile && Info.PickedItemIDs.Any())
             {
-                for (ushort i = 0; i < Info.PickedItemIDs.Count; i++ )
+                for (int j = 0; j < 2; j++)
                 {
-                    if (Info.PickedItemIDs[i] == 0) continue;
+                    for (ushort i = 0; i < Info.PickedItemIDs.Count; i++)
+                    {
+                        //put items in the "Any" slots first, 
+                        //otherwise equipped items may end up taking up "Any" slots they shouldn't be in, 
+                        //and prevent other items from fitting in the inventory
+                        if ((Inventory.SlotTypes[i] == InvSlotType.Any) != (j == 0)) continue;
+                        if (Info.PickedItemIDs[i] == 0) continue;
 
-                    Item item = FindEntityByID(Info.PickedItemIDs[i]) as Item;
+                        Item item = FindEntityByID(Info.PickedItemIDs[i]) as Item;
+                        System.Diagnostics.Debug.Assert(item != null);
+                        if (item == null) continue;
 
-                    System.Diagnostics.Debug.Assert(item != null);
-                    if (item == null) continue;
-
-                    item.TryInteract(this, true, true, true);
-                    Inventory.TryPutItem(item, i, false, false, null, false);
-                }                
+                        item.TryInteract(this, true, true, true);
+                        Inventory.TryPutItem(item, i, false, false, null, false);
+                    }
+                }
             }
 
             AnimController.FindHull(null);
@@ -1580,22 +1586,27 @@ namespace Barotrauma
                     return;
                 }
             }
-            bool canFocus = (isLocalPlayer && (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.SubEditorScreen));
-            canFocus = canFocus||(!isLocalPlayer && IsKeyHit(InputType.Select) && (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsServer));
 
-            if (canFocus)
+#if CLIENT
+            if (isLocalPlayer)
             {
-                focusedCharacter = FindCharacterAtPosition(mouseSimPos);
-                focusedItem = CanInteract ? 
-                    FindItemAtPosition(mouseSimPos, GameMain.Config.AimAssistAmount * (AnimController.InWater ? 1.5f : 1.0f)) : null;
-                
-                findFocusedTimer = 0.05f;
-            }
-            else
-            {
+                if (GUI.MouseOn == null && !CharacterInventory.IsMouseOnInventory())
+                {
+                    if (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.SubEditorScreen)
+                    {
+                        focusedCharacter = FindCharacterAtPosition(mouseSimPos);
+                        focusedItem = CanInteract ?
+                            FindItemAtPosition(mouseSimPos, GameMain.Config.AimAssistAmount * (AnimController.InWater ? 1.5f : 1.0f)) : null;
+                        findFocusedTimer = 0.05f;
+                    }
+                }
+                else
+                {
+                    focusedItem = null; 
+                }
                 findFocusedTimer -= deltaTime;
-            }
-
+            }            
+#endif
             //climb ladders automatically when pressing up/down inside their trigger area
             if (SelectedConstruction == null && !AnimController.InWater && Screen.Selected != GameMain.SubEditorScreen)
             {
@@ -1731,6 +1742,8 @@ namespace Barotrauma
                 Kill(CauseOfDeathType.Pressure, null);
                 return;
             }
+
+            ApplyStatusEffects(ActionType.Always, deltaTime);
 
             PreviousHull = CurrentHull;
             CurrentHull = Hull.FindHull(WorldPosition, CurrentHull, true);
@@ -2170,7 +2183,7 @@ namespace Barotrauma
 
             Kill(CauseOfDeathType.Pressure, null, isNetworkMessage);
             CharacterHealth.PressureAffliction.Strength = CharacterHealth.PressureAffliction.Prefab.MaxStrength;
-            CharacterHealth.SetAllDamage(CharacterHealth.MaxVitality, 0.0f, 0.0f);
+            CharacterHealth.SetAllDamage(200.0f, 0.0f, 0.0f);
             BreakJoints();            
         }
 

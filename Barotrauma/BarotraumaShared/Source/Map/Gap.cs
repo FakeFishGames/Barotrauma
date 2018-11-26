@@ -319,17 +319,15 @@ namespace Barotrauma
             if (linkedTo.Count < 2) return;
             Hull hull1 = (Hull)linkedTo[0];
             Hull hull2 = (Hull)linkedTo[1];
-            
+
             Vector2 subOffset = Vector2.Zero;
             if (hull1.Submarine != Submarine)
             {
-                subOffset =Submarine.Position - hull1.Submarine.Position;
+                subOffset = Submarine.Position - hull1.Submarine.Position;
             }
             else if (hull2.Submarine != Submarine)
             {
-
                 subOffset = hull2.Submarine.Position - Submarine.Position;
-
             }
 
             if (hull1.WaterVolume <= 0.0 && hull2.WaterVolume <= 0.0) return;

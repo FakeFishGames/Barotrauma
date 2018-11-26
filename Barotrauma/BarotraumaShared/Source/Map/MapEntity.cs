@@ -440,10 +440,12 @@ namespace Barotrauma
         /// Has to be done after all the entities have been loaded (an entity can't
         /// be linked to some other entity that hasn't been loaded yet)
         /// </summary>
+        private bool mapLoadedCalled;
         public static void MapLoaded(List<MapEntity> entities, bool updateHulls)
         {
             foreach (MapEntity e in entities)
             {
+                if (e.mapLoadedCalled) continue;
                 if (e.linkedToID == null) continue;
                 if (e.linkedToID.Count == 0) continue;
 
@@ -458,6 +460,7 @@ namespace Barotrauma
             List<LinkedSubmarine> linkedSubs = new List<LinkedSubmarine>();
             for (int i = 0; i < entities.Count; i++)
             {
+                if (entities[i].mapLoadedCalled) continue;
                 if (entities[i] is LinkedSubmarine)
                 {
                     linkedSubs.Add((LinkedSubmarine)entities[i]);
@@ -472,6 +475,8 @@ namespace Barotrauma
                 Item.UpdateHulls();
                 Gap.UpdateHulls();
             }
+
+            entities.ForEach(e => e.mapLoadedCalled = true);
 
             foreach (LinkedSubmarine linkedSub in linkedSubs)
             {

@@ -6,7 +6,7 @@ Before downloading the source code, please read the [EULA](EULA.txt).
 
 ## Links:
 
-**Official Website:** www.undertowgames.com/barotrauma
+**Official Website:** www.barotraumagame.com
 
 **Forums:** http://undertowgames.com/forum/
 

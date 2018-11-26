@@ -28,7 +28,7 @@
   </Item>
   <Item name="Coilgun Loader" identifier="coilgunloader" tags="coilgunequipment" category="Machine" linkable="true" allowedlinks="coilgun">
     <Sprite texture="coilgunloader.png" depth="0.8" sourcerect="0,0,80,128" />
-	<Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
+	  <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI"/>
       <RequiredSkill identifier="mechanical" level="40"/>
       <RequiredItem identifier="wrench" type="Equipped"/>
