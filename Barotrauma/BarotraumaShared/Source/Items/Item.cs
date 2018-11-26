@@ -834,7 +834,17 @@ namespace Barotrauma
                 }
             }
 
-            if (effect.HasTargetType(StatusEffect.TargetType.Character)) targets.Add(character);
+            if (effect.HasTargetType(StatusEffect.TargetType.Character))
+            {
+                if (type == ActionType.OnContained && ParentInventory is CharacterInventory characterInventory)
+                {
+                    targets.Add(characterInventory.Owner as ISerializableEntity);
+                }
+                else
+                {
+                    targets.Add(character);
+                }
+            }
 
             if (effect.HasTargetType(StatusEffect.TargetType.Limb))
             {
