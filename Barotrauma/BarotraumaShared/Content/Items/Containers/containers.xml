@@ -9,7 +9,7 @@
 
     <Sprite texture="suppliesCabinet.png" depth="0.84" sourcerect="0,0,52,78"/>
 
-    <ItemContainer capacity="6" canbeselected="true" hideitems="true">
+    <ItemContainer capacity="6" slotsperrow="3" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,mediumitem"/>
     </ItemContainer>
   </Item>
