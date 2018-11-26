@@ -749,6 +749,7 @@
 
   <!-- Health interface -->
   <Vitality>Vitality</Vitality>
+  <SuitableTreatments>Suitable treatments:</SuitableTreatments>
   <HealthItemUseTip>Drop items here to use them on the selected limb. You can also use items with the inventory hotkeys or by double clicking.</HealthItemUseTip>
   <AfflictionStrengthLow>Light</AfflictionStrengthLow>
   <AfflictionStrengthMedium>Medium</AfflictionStrengthMedium>

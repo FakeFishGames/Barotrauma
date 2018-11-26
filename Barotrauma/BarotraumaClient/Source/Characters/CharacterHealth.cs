@@ -54,6 +54,7 @@ namespace Barotrauma
         
         private GUIFrame afflictionInfoFrame;
         private GUIListBox afflictionInfoContainer;
+        private GUIListBox recommendedTreatmentContainer;
 
         private float bloodParticleTimer;
         
@@ -149,21 +150,21 @@ namespace Barotrauma
                 IsHorizontal = horizontal
             };
             healthShadowSize = 1.0f;
-
-            //afflictionContainer = new GUILayoutGroup(new RectTransform(new Point(HUDLayoutSettings.HealthWindowAreaLeft.Width / 2, 200), GUI.Canvas), isHorizontal: true);
             
             afflictionInfoFrame = new GUIFrame(new RectTransform(new Point(HUDLayoutSettings.HealthWindowAreaLeft.Width / 2, 200), GUI.Canvas));
-            var paddedInfoFrame = new GUIFrame(new RectTransform(new Vector2(0.95f,0.9f), afflictionInfoFrame.RectTransform, Anchor.Center), style: null);
-            new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.15f), paddedInfoFrame.RectTransform), "", font: GUI.LargeFont)
+            var paddedInfoFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), afflictionInfoFrame.RectTransform, Anchor.Center), style: null);
+            new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.1f), paddedInfoFrame.RectTransform), "", font: GUI.LargeFont)
             {
                 UserData = "selectedlimbname"
             };
-            afflictionInfoContainer = new GUIListBox(new RectTransform(new Vector2(0.7f, 0.85f), paddedInfoFrame.RectTransform, Anchor.BottomLeft));
-                
-            /*new GUIFrame(new RectTransform(new Vector2(0.9f, 0.35f), afflictionInfoFrame.RectTransform, Anchor.TopCenter)
-                { RelativeOffset = new Vector2(0.0f, 0.1f) }, style: null);*/
+            afflictionInfoContainer = new GUIListBox(new RectTransform(new Vector2(0.7f, 0.9f), paddedInfoFrame.RectTransform, Anchor.BottomLeft));
 
-            dropItemArea = new GUIFrame(new RectTransform(new Vector2(0.28f, 0.5f), paddedInfoFrame.RectTransform, Anchor.BottomRight)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedInfoFrame.RectTransform), TextManager.Get("SuitableTreatments"), textAlignment: Alignment.TopRight);
+            recommendedTreatmentContainer = new GUIListBox(new RectTransform(new Vector2(0.28f, 0.55f), paddedInfoFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, 0.1f) })
+            {
+                Spacing = 10
+            };
+            dropItemArea = new GUIFrame(new RectTransform(new Vector2(0.28f, 0.3f), paddedInfoFrame.RectTransform, Anchor.BottomRight)
             { RelativeOffset = new Vector2(0.0f, 0.0f) }, style: null)
             {
                 ToolTip = TextManager.Get("HealthItemUseTip")
@@ -880,6 +881,33 @@ namespace Barotrauma
         private void CreateAfflictionInfos(IEnumerable<Affliction> afflictions)
         {
             afflictionInfoContainer.Content.ClearChildren();
+            recommendedTreatmentContainer.Content.ClearChildren();
+
+            //key = item identifier
+            //float = suitability
+            Dictionary<string, float> treatmentSuitability = new Dictionary<string, float>();
+            float minSuitability = -10, maxSuitability = 10;
+            foreach (Affliction affliction in afflictions)
+            {
+                foreach (KeyValuePair<string, float> treatment in affliction.Prefab.TreatmentSuitability)
+                {
+                    if (!treatmentSuitability.ContainsKey(treatment.Key))
+                    {
+                        treatmentSuitability[treatment.Key] = treatment.Value * affliction.Strength;
+                    }
+                    else
+                    {
+                        treatmentSuitability[treatment.Key] += treatment.Value * affliction.Strength;
+                    }
+                    minSuitability = Math.Min(treatmentSuitability[treatment.Key], minSuitability);
+                    maxSuitability = Math.Max(treatmentSuitability[treatment.Key], maxSuitability);
+                }
+            }
+            //normalize the suitabilities to a range of 0 to 1
+            foreach (string treatment in treatmentSuitability.Keys.ToList())
+            {
+                treatmentSuitability[treatment] = (treatmentSuitability[treatment] - minSuitability) / (maxSuitability - minSuitability);
+            }
 
             foreach (Affliction affliction in afflictions)
             {
@@ -930,8 +958,35 @@ namespace Barotrauma
                 child.Recalculate();
                 afflictionStrength.AutoScale = true;
                 afflictionName.AutoScale = true;
-                vitality.AutoDraw = true;
-                
+                vitality.AutoDraw = true;                                
+            }
+
+            List<KeyValuePair<string, float>> treatmentSuitabilities = treatmentSuitability.OrderByDescending(t => t.Value).ToList();
+
+            foreach (KeyValuePair<string, float> treatment in treatmentSuitabilities)
+            {
+                ItemPrefab item = MapEntityPrefab.Find(name: null, identifier: treatment.Key, showErrorMessages: false) as ItemPrefab;
+                if (item == null) continue;
+                int slotSize = (int)(recommendedTreatmentContainer.Content.Rect.Width * 0.8f);
+
+                var itemSlot = new GUIButton(new RectTransform(new Point(slotSize), recommendedTreatmentContainer.Content.RectTransform, Anchor.TopCenter),
+                    text: "", style: "InventorySlotSmall")
+                {
+                    UserData = item
+                };
+                itemSlot.Color = ToolBox.GradientLerp(treatment.Value, Color.Red, Color.White, Color.LightGreen);
+
+                Sprite itemSprite = item.InventoryIcon ?? item.sprite;
+                Color itemColor = itemSprite == item.sprite ? item.SpriteColor : item.InventoryIconColor;
+                var itemIcon = new GUIImage(new RectTransform(new Vector2(0.8f, 0.8f), itemSlot.RectTransform, Anchor.Center),
+                    itemSprite, scaleToFit: true)
+                {
+                    CanBeFocused = false,
+                    Color = itemColor,
+                    HoverColor = itemColor,
+                    SelectedColor = itemColor
+                };
+                itemSlot.ToolTip = item.Name + "\n" + item.Description;
             }
 
             afflictionInfoContainer.Content.RectTransform.SortChildren((r1,r2) => 
@@ -1212,29 +1267,7 @@ namespace Barotrauma
                 child.ToolTip = itemName + "\n" + item.Description;
             }
         }
-
-        public float GetTreatmentSuitability(Item item)
-        {
-            if (item == null) return 0.0f;
-
-            List<Affliction> selectedAfflictions = new List<Affliction>();
-            /*foreach (GUIComponent child in afflictionContainer.Children)
-            {
-                if (child.UserData is Affliction affliction) selectedAfflictions.Add(affliction);
-            }*/
-            
-            float suitability = 0.0f;
-            if (selectedAfflictions.Count > 0)
-            {
-                foreach (Affliction affliction in selectedAfflictions)
-                {
-                    suitability += affliction.Prefab.GetTreatmentSuitability(item);
-                }
-                suitability /= selectedAfflictions.Count;
-            }
-            return MathHelper.Clamp(suitability / 100.0f, -1.0f, 1.0f);            
-        }
-
+        
         private bool OnTreatmentButtonClicked(GUIButton button, object userdata)
         {
             Item item = userdata as Item;
