@@ -2172,7 +2172,7 @@ namespace Barotrauma
             var hand = character.AnimController.GetLimb(LimbType.RightHand) ?? character.AnimController.GetLimb(LimbType.LeftHand);
             var arm = character.AnimController.GetLimb(LimbType.RightArm) ?? character.AnimController.GetLimb(LimbType.LeftArm);
             int widgetDefaultSize = 10;
-            // collider does not rotate when the sprite is flipped -> rotates only when swimming
+            // Note: the main collider rotates only when swimming
             float dir = character.AnimController.Dir;
             Vector2 colliderBottom = character.AnimController.GetColliderBottom();
             //Vector2 centerOfMass = character.AnimController.GetCenterOfMass();
@@ -2494,29 +2494,56 @@ namespace Barotrauma
                 // Legs
                 float amplitudeMultiplier = 5;
                 float lengthMultiplier = 5;
-                float legMoveAmount = ConvertUnits.ToDisplayUnits(humanSwimParams.LegMoveAmount) * Cam.Zoom / amplitudeMultiplier;
-                float legCycleLength = ConvertUnits.ToDisplayUnits(humanSwimParams.LegCycleLength) * Cam.Zoom / lengthMultiplier;
-                referencePoint = SimToScreen(character.SimPosition - simSpaceForward / 2);
-                drawPos = referencePoint;
-                drawPos -= screenSpaceForward * legCycleLength;
-                Vector2 toRefPoint = referencePoint - drawPos;
-                Vector2 start = drawPos + toRefPoint / 2;
-                Vector2 control = start + (screenSpaceLeft * dir * legMoveAmount);
                 int points = 1000;
-                // Cycle length
-                DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 15, Color.NavajoWhite, "Leg Movement Speed", () =>
+                float GetMoveAmount() => ConvertUnits.ToDisplayUnits(humanSwimParams.LegMoveAmount) * Cam.Zoom / amplitudeMultiplier;
+                float GetCycleLength() => ConvertUnits.ToDisplayUnits(humanSwimParams.LegCycleLength) * Cam.Zoom / lengthMultiplier;
+                Vector2 GetRefPoint() => SimToScreen(character.SimPosition - GetScreenSpaceForward() / 2);
+                Vector2 GetDrawPos() => GetRefPoint() - GetScreenSpaceForward() * GetCycleLength();
+                Vector2 GetDir() => GetRefPoint() - GetDrawPos();
+                Vector2 GetStartPoint() => GetDrawPos() + GetDir() / 2;
+                Vector2 GetControlPoint() => GetStartPoint() + GetScreenSpaceForward().Right() * dir * GetMoveAmount();
+                var legSpeedWidget = GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_LegMovementSpeed", Color.NavajoWhite, size: 15, shape: Widget.Shape.Circle, initMethod: w =>
                 {
-                    float input = Vector2.Multiply(ConvertUnits.ToSimUnits(scaledMouseSpeed), screenSpaceForward).Combine() / Cam.Zoom * amplitudeMultiplier;
-                    TryUpdateAnimParam("legcyclelength", MathHelper.Clamp(humanSwimParams.LegCycleLength - input, 0, 20));
-                    GUI.DrawSineWithDots(spriteBatch, referencePoint, -toRefPoint, legMoveAmount, legCycleLength, 5000, points, Color.NavajoWhite);
+                    w.tooltip = "Leg Movement Speed";
+                    w.refresh = () => w.DrawPos = GetDrawPos();
+                    w.MouseHeld += dTime =>
+                    {
+                        float input = Vector2.Multiply(ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed), GetScreenSpaceForward()).Combine() / Cam.Zoom * amplitudeMultiplier;
+                        TryUpdateAnimParam("legcyclelength", MathHelper.Clamp(humanSwimParams.LegCycleLength - input, 0, 20));
+                    };
+                    // Additional
+                    w.PreDraw += (sp, dTime) =>
+                    {
+                        if (w.IsControlled)
+                        {
+                            w.refresh();
+                        }
+                    };
                 });
-                // Movement amount
-                DrawWidget(spriteBatch, control, WidgetType.Circle, 15, Color.NavajoWhite, "Leg Movement Amount", () =>
+                var legMoveAmountWidget = GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_LegMovementAmount", Color.NavajoWhite, size: 15, shape: Widget.Shape.Circle, initMethod: w =>
                 {
-                    float input = Vector2.Multiply(ConvertUnits.ToSimUnits(scaledMouseSpeed), screenSpaceLeft).Combine() * dir / Cam.Zoom * lengthMultiplier;
-                    TryUpdateAnimParam("legmoveamount", MathHelper.Clamp(humanSwimParams.LegMoveAmount + input, -2, 2));
-                    GUI.DrawSineWithDots(spriteBatch, referencePoint, -toRefPoint, legMoveAmount, legCycleLength, 5000, points, Color.NavajoWhite);
+                    w.tooltip = "Leg Movement Amount";
+                    w.refresh = () => w.DrawPos = GetControlPoint();
+                    w.MouseHeld += dTime =>
+                    {
+                        float input = Vector2.Multiply(ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed), GetScreenSpaceForward().Right()).Combine() * dir / Cam.Zoom * lengthMultiplier;
+                        TryUpdateAnimParam("legmoveamount", MathHelper.Clamp(humanSwimParams.LegMoveAmount + input, -2, 2));
+                    };
+                    // Additional
+                    w.PreDraw += (sp, dTime) =>
+                    {
+                        if (w.IsControlled)
+                        {
+                            w.refresh();
+                        }
+                    };
                 });
+                if (legSpeedWidget.IsControlled || legMoveAmountWidget.IsControlled)
+                {
+                    GUI.DrawSineWithDots(spriteBatch, GetRefPoint(), -GetDir(), GetMoveAmount(), GetCycleLength(), 5000, points, Color.NavajoWhite);
+                }
+                legSpeedWidget.Draw(spriteBatch, deltaTime);
+                legMoveAmountWidget.Draw(spriteBatch, deltaTime);
                 // Arms
                 GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_HandMoveAmount", Color.LightGreen, initMethod: w =>
                 {
