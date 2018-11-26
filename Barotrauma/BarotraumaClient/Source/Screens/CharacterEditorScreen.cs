@@ -2224,7 +2224,7 @@ namespace Barotrauma
                             w.Enabled = false;
                         }
                     };
-                    // Additional (remove if the position is update when the mouse is held)
+                    // Additional (remove if the position is updated when the mouse is held)
                     w.PreDraw += (sp, dTime) =>
                     {
                         if (w.IsControlled)
@@ -2274,7 +2274,7 @@ namespace Barotrauma
                             w.Enabled = false;
                         }
                     };
-                    // Additional (remove if the position is update when the mouse is held)
+                    // Additional (remove if the position is updated when the mouse is held)
                     w.PreDraw += (sp, dTime) =>
                     {
                         if (w.IsControlled)
@@ -2302,26 +2302,46 @@ namespace Barotrauma
                 {
                     if (humanGroundedParams != null)
                     {
-                        drawPos = SimToScreen(head.SimPosition.X + humanGroundedParams.HeadLeanAmount * dir, head.PullJointWorldAnchorB.Y);
-                        DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Head", () =>
+                        GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_HeadPosition", Color.Red, initMethod: w =>
                         {
-                            var scaledInput = ConvertUnits.ToSimUnits(scaledMouseSpeed) / Cam.Zoom;
-                            TryUpdateAnimParam("headleanamount", humanGroundedParams.HeadLeanAmount + scaledInput.X * dir);
-                            TryUpdateAnimParam("headposition", humanGroundedParams.HeadPosition - scaledInput.Y * 1.5f / RagdollParams.JointScale);
-                            GUI.DrawLine(spriteBatch, drawPos, SimToScreen(head.SimPosition), Color.Red);
-                        }, autoFreeze: false);
-                        var origin = drawPos + new Vector2(widgetDefaultSize / 2, 0) * dir;
-                        GUI.DrawLine(spriteBatch, origin, origin + Vector2.UnitX * 5 * dir, Color.Red);
+                            w.tooltip = "Head Position and Leaning";
+                            w.refresh = () => w.DrawPos = SimToScreen(head.SimPosition.X + humanGroundedParams.HeadLeanAmount * character.AnimController.Dir, head.PullJointWorldAnchorB.Y);
+                            w.MouseHeld += dTime =>
+                            {
+                                w.DrawPos = PlayerInput.MousePosition;
+                                var scaledInput = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed) / Cam.Zoom / RagdollParams.JointScale;
+                                TryUpdateAnimParam("headleanamount", humanGroundedParams.HeadLeanAmount + scaledInput.X * character.AnimController.Dir);
+                                TryUpdateAnimParam("headposition", humanGroundedParams.HeadPosition - scaledInput.Y);
+                            };
+                            w.PostDraw += (sB, dTime) =>
+                            {
+                                if (w.IsSelected)
+                                {
+                                    GUI.DrawLine(spriteBatch, w.DrawPos, SimToScreen(head.SimPosition), Color.Red);
+                                }
+                            };
+                        }).Draw(spriteBatch, deltaTime);
                     }
                     else
                     {
-                        drawPos = SimToScreen(head.SimPosition.X, head.PullJointWorldAnchorB.Y);
-                        DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Head Position", () =>
+                        GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_HeadPosition", Color.Red, initMethod: w =>
                         {
-                            float v = groundedParams.HeadPosition - ConvertUnits.ToSimUnits(scaledMouseSpeed.Y) / Cam.Zoom / RagdollParams.JointScale;
-                            TryUpdateAnimParam("headposition", v);
-                            GUI.DrawLine(spriteBatch, new Vector2(drawPos.X, 0), new Vector2(drawPos.X, GameMain.GraphicsHeight), Color.Red);
-                        }, autoFreeze: false);
+                            w.tooltip = "Head Position";
+                            w.refresh = () => w.DrawPos = SimToScreen(head.SimPosition.X, head.PullJointWorldAnchorB.Y);
+                            w.MouseHeld += dTime =>
+                            {
+                                w.DrawPos = SimToScreen(head.SimPosition.X, head.PullJointWorldAnchorB.Y);
+                                var scaledInput = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed) / Cam.Zoom / RagdollParams.JointScale;
+                                TryUpdateAnimParam("headposition", groundedParams.HeadPosition - scaledInput.Y);
+                            };
+                            w.PostDraw += (sB, dTime) =>
+                            {
+                                if (w.IsControlled)
+                                {
+                                    GUI.DrawLine(spriteBatch, new Vector2(w.DrawPos.X, 0), new Vector2(w.DrawPos.X, GameMain.GraphicsHeight), Color.Red);
+                                }
+                            };
+                        }).Draw(spriteBatch, deltaTime);
                     }
                 }
             }
