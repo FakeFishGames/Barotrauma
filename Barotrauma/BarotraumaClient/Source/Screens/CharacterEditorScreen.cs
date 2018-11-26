@@ -107,6 +107,7 @@ namespace Barotrauma
                 character = Character.Controlled;
                 OnPostSpawn();
             }
+            OpenDoors();
             GameMain.Instance.OnResolutionChanged += OnResolutionChanged;
             instance = this;
         }
@@ -2148,6 +2149,20 @@ namespace Barotrauma
             {
                 selectedLimbs.Remove(limb);
                 ResetParamsEditor();
+            }
+        }
+
+        private void OpenDoors()
+        {
+            foreach (var item in Item.ItemList)
+            {
+                foreach (var component in item.components)
+                {
+                    if (component is Items.Components.Door door)
+                    {
+                        door.IsOpen = true;
+                    }
+                }
             }
         }
         #endregion
