@@ -363,14 +363,17 @@ namespace Barotrauma
         /// <summary>
         /// In degrees.
         /// </summary>
-        [Serialize(0f, true), Editable(-360f, 360f)]
+        [Serialize(0f, true), Editable]
         public float UpperLimit { get; set; }
 
         /// <summary>
         /// In degrees.
         /// </summary>
-        [Serialize(0f, true), Editable(-360f, 360f)]
+        [Serialize(0f, true), Editable]
         public float LowerLimit { get; set; }
+
+        [Serialize(0.25f, true), Editable]
+        public float Stiffness { get; set; }
     }
 
     class LimbParams : RagdollSubParams

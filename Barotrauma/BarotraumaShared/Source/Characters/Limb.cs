@@ -38,7 +38,6 @@ namespace Barotrauma
         {
             CollideConnected = false;
             MotorEnabled = true;
-            //TODO: expose this to character editor (a torque that makes the joint more stiff)
             MaxMotorTorque = 0.25f;
             LimbA = limbA;
             LimbB = limbB;
@@ -46,6 +45,7 @@ namespace Barotrauma
 
         public void SaveParams()
         {
+            jointParams.Stiffness = MaxMotorTorque;
             if (ragdoll.IsFlipped)
             {
                 jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorA.X, LocalAnchorA.Y) / jointParams.Ragdoll.JointScale);
@@ -64,6 +64,7 @@ namespace Barotrauma
 
         public void LoadParams()
         {
+            MaxMotorTorque = jointParams.Stiffness;
             LimitEnabled = jointParams.LimitEnabled;
             if (float.IsNaN(jointParams.LowerLimit))
             {
