@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma.Items.Components
 {
-    partial class ElectricalDischarger : ItemComponent, IDrawableComponent
+    partial class ElectricalDischarger : Powered
     {
         private static SpriteSheet electricitySprite;
 
@@ -22,10 +22,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing)
+        partial void DischargeProjSpecific()
         {
-            IsActive = true;
-            DrawElectricity(spriteBatch);
+            PlaySound(ActionType.OnUse, item.WorldPosition);
+            foreach (Node node in nodes)
+            {
+                GameMain.ParticleManager.CreateParticle("swirlysmoke", node.WorldPosition, Vector2.Zero);
+            }
         }
 
         public void DrawElectricity(SpriteBatch spriteBatch)
@@ -37,9 +40,20 @@ namespace Barotrauma.Items.Components
                 electricitySprite.Draw(spriteBatch,
                     (i + frameOffset) % electricitySprite.FrameCount,
                     new Vector2(node.WorldPosition.X, -node.WorldPosition.Y),
-                    Color.Lerp(Color.LightBlue, Color.White, Rand.Range(0.0f, 1.0f)) * Rand.Range(0.5f, 1.0f),
+                    Color.Lerp(Color.LightBlue, Color.White, Rand.Range(0.0f, 1.0f)),
                     electricitySprite.Origin, -node.Angle - MathHelper.PiOver2,
-                    new Vector2(Math.Min(node.Length / electricitySprite.FrameSize.X, 2.0f), node.Length / electricitySprite.FrameSize.Y));
+                    new Vector2(
+                        Math.Min(node.Length / electricitySprite.FrameSize.X, 1.0f) * Rand.Range(0.5f, 2.0f), 
+                        node.Length / electricitySprite.FrameSize.Y) * Rand.Range(1.0f, 1.2f));
+            }
+
+            if (GameMain.DebugDraw)
+            {
+                for (int i = 0; i < nodes.Count; i++)
+                {
+                    if (nodes[i].Length <= 1.0f) continue;
+                    GUI.DrawRectangle(spriteBatch, new Vector2(nodes[i].WorldPosition.X, -nodes[i].WorldPosition.Y), Vector2.One * 5, Color.LightCyan, isFilled: true);
+                }
             }
         }
     }
