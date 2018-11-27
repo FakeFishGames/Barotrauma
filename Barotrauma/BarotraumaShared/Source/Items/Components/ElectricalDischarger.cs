@@ -42,17 +42,40 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        private List<Node> nodes = new List<Node>();
-
+        [Serialize(0.25f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
+        public float Duration
+        {
+            get;
+            set;
+        }
+        
+        private readonly List<Node> nodes = new List<Node>();
         public IEnumerable<Node> Nodes
         {
             get { return nodes; }
         }
 
+        private readonly List<Character> charactersInRange = new List<Character>();
+
+        private float timer;
+
+        private Attack attack;
+
         public ElectricalDischarger(Item item, XElement element) : 
             base(item, element)
         {
             list.Add(this);
+
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "attack":
+                    attack = new Attack(subElement, item.Name);
+                    break;
+                }
+            }
+
             InitProjSpecific();
         }
 
@@ -61,6 +84,8 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             FindNodes(item.WorldPosition);
+            timer = Duration;
+            IsActive = true;
             return true;
         }
 
@@ -69,6 +94,23 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             frameOffset = Rand.Int(electricitySprite.FrameCount);
 #endif
+            if (timer > 0.0f)
+            {
+                timer -= deltaTime;
+                if (attack != null)
+                {
+                    foreach (Character character in charactersInRange)
+                    {
+                        character.ApplyAttack(null, character.WorldPosition, attack, deltaTime);
+                    }
+                }
+            }
+            else
+            {
+                nodes.Clear();
+                charactersInRange.Clear();
+                IsActive = false;
+            }
         }
 
         private void FindNodes(Vector2 worldPosition)
@@ -95,7 +137,7 @@ namespace Barotrauma.Items.Components
             }
 
             //get all walls within range
-            List<Structure> structuresInRange = new List<Structure>(100);
+            List<Entity> entitiesInRange = new List<Entity>(100);
             foreach (Structure structure in Structure.WallList)
             {
                 if (!structure.HasBody || structure.IsPlatform) { continue; }
@@ -110,12 +152,23 @@ namespace Barotrauma.Items.Components
                 if (worldPosition.Y > structureWorldRect.Y + Range) continue;
                 if (worldPosition.Y < structureWorldRect.Y -structureWorldRect.Height - Range) continue;
 
-                structuresInRange.Add(structure);
+                entitiesInRange.Add(structure);
+            }
+
+            foreach (Character character in Character.CharacterList)
+            {
+                if (!character.Enabled) continue;
+                if (character.Submarine != null && !submarinesInRange.Contains(character.Submarine)) continue;
+
+                if (Vector2.DistanceSquared(character.WorldPosition, worldPosition) < Range * Range)
+                {
+                    entitiesInRange.Add(character);
+                }
             }
 
             nodes.Clear();
             nodes.Add(new Node(worldPosition, -1));
-            FindNodes(structuresInRange, worldPosition, 0, Range);
+            FindNodes(entitiesInRange, worldPosition, 0, Range);
 
             //construct final nodes (w/ lengths and angles so they don't have to be recalculated when rendering the discharge)
             for (int i = 0; i < nodes.Count; i++)
@@ -128,33 +181,40 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private void FindNodes(List<Structure> structuresInRange, Vector2 currPos, int parentNodeIndex, float currentRange)
+        private void FindNodes(List<Entity> entitiesInRange, Vector2 currPos, int parentNodeIndex, float currentRange)
         {
             if (currentRange <= 0.0f || nodes.Count >= MaxNodes) return;
 
             //find the closest structure
             int closestIndex = -1;
             float closestDist = float.MaxValue;
-            for (int i = 0; i < structuresInRange.Count; i++)
+            for (int i = 0; i < entitiesInRange.Count; i++)
             {
-                float dist = 0.0f;
+                float dist = float.MaxValue;
 
-                if (structuresInRange[i].IsHorizontal)
+                if (entitiesInRange[i] is Structure structure)
                 {
-                    dist = Math.Abs(structuresInRange[i].WorldPosition.Y - currPos.Y);
-                    if (currPos.X < structuresInRange[i].WorldRect.X)
-                        dist += structuresInRange[i].WorldRect.X - currPos.X;
-                    else if (currPos.X > structuresInRange[i].WorldRect.Right)
-                        dist += currPos.X - structuresInRange[i].WorldRect.Right;
+                    if (structure.IsHorizontal)
+                    {
+                        dist = Math.Abs(structure.WorldPosition.Y - currPos.Y);
+                        if (currPos.X < structure.WorldRect.X)
+                            dist += structure.WorldRect.X - currPos.X;
+                        else if (currPos.X > structure.WorldRect.Right)
+                            dist += currPos.X - structure.WorldRect.Right;
+                    }
+                    else
+                    {
+                        dist = Math.Abs(structure.WorldPosition.X - currPos.X);
+                        if (currPos.Y < structure.WorldRect.Y - structure.Rect.Height)
+                            dist += (structure.WorldRect.Y - structure.Rect.Height) - currPos.Y;
+                        else if (currPos.Y > structure.WorldRect.Y)
+                            dist += currPos.Y - structure.WorldRect.Y;
+                    }
                 }
-                else
+                else if (entitiesInRange[i] is Character character)
                 {
-                    dist = Math.Abs(structuresInRange[i].WorldPosition.X - currPos.X);
-                    if (currPos.Y < structuresInRange[i].WorldRect.Y - structuresInRange[i].Rect.Height)
-                        dist += (structuresInRange[i].WorldRect.Y - structuresInRange[i].Rect.Height) - currPos.Y;
-                    else if (currPos.Y > structuresInRange[i].WorldRect.Y)
-                        dist += currPos.Y - structuresInRange[i].WorldRect.Y;
-                }                
+                    dist = Vector2.Distance(character.WorldPosition, currPos);
+                }
 
                 if (dist < closestDist)
                 {
@@ -165,61 +225,72 @@ namespace Barotrauma.Items.Components
 
             if (closestIndex == -1 || closestDist > currentRange) return;
             currentRange -= closestDist;
-            Structure targetStructure = structuresInRange[closestIndex];
 
-            Vector2 targetPos = targetStructure.IsHorizontal ?
-                new Vector2(MathHelper.Clamp(currPos.X, targetStructure.WorldRect.X, targetStructure.WorldRect.Right), targetStructure.WorldPosition.Y) :
-                new Vector2(targetStructure.WorldPosition.X, MathHelper.Clamp(currPos.Y, targetStructure.WorldRect.Y - targetStructure.Rect.Height, targetStructure.WorldRect.Y));
-                        
-            //create nodes from the current position to the closest point on the structure
-            AddNodesBetweenPoints(currPos, targetPos, ref parentNodeIndex);
-
-            if (targetStructure.IsHorizontal)
+            if (entitiesInRange[closestIndex] is Structure targetStructure)
             {
-                //add a node at the closest point
-                nodes.Add(new Node(targetPos, parentNodeIndex));
-                int nodeIndex = nodes.Count - 1;
-                structuresInRange.RemoveAt(closestIndex);
+                Vector2 targetPos = targetStructure.IsHorizontal ?
+                    new Vector2(MathHelper.Clamp(currPos.X, targetStructure.WorldRect.X, targetStructure.WorldRect.Right), targetStructure.WorldPosition.Y) :
+                    new Vector2(targetStructure.WorldPosition.X, MathHelper.Clamp(currPos.Y, targetStructure.WorldRect.Y - targetStructure.Rect.Height, targetStructure.WorldRect.Y));
 
-                float newRange = currentRange - (targetStructure.Rect.Width / 2) * (1.0f / RangeMultiplierInWalls);
+                //create nodes from the current position to the closest point on the structure
+                AddNodesBetweenPoints(currPos, targetPos, ref parentNodeIndex);
 
-                //continue the discharge to the left edge of the structure and extend from there
-                int leftNodeIndex = nodeIndex;
-                Vector2 leftPos = new Vector2(targetStructure.WorldRect.X, targetStructure.WorldPosition.Y);
-                AddNodesBetweenPoints(targetPos, leftPos, ref leftNodeIndex);
-                nodes.Add(new Node(leftPos, leftNodeIndex));
-                FindNodes(structuresInRange, leftPos, nodes.Count - 1, newRange);
+                if (targetStructure.IsHorizontal)
+                {
+                    //add a node at the closest point
+                    nodes.Add(new Node(targetPos, parentNodeIndex));
+                    int nodeIndex = nodes.Count - 1;
+                    entitiesInRange.RemoveAt(closestIndex);
 
-                //continue the discharge to the right edge of the structure and extend from there
-                int rightNodeIndex = nodeIndex; 
-                Vector2 rightPos = new Vector2(targetStructure.WorldRect.Right, targetStructure.WorldPosition.Y);
-                AddNodesBetweenPoints(targetPos, rightPos, ref rightNodeIndex);
-                nodes.Add(new Node(rightPos, rightNodeIndex));
-                FindNodes(structuresInRange, rightPos, nodes.Count - 1, newRange);
+                    float newRange = currentRange - (targetStructure.Rect.Width / 2) * (1.0f / RangeMultiplierInWalls);
+
+                    //continue the discharge to the left edge of the structure and extend from there
+                    int leftNodeIndex = nodeIndex;
+                    Vector2 leftPos = new Vector2(targetStructure.WorldRect.X, targetStructure.WorldPosition.Y);
+                    AddNodesBetweenPoints(targetPos, leftPos, ref leftNodeIndex);
+                    nodes.Add(new Node(leftPos, leftNodeIndex));
+                    FindNodes(entitiesInRange, leftPos, nodes.Count - 1, newRange);
+
+                    //continue the discharge to the right edge of the structure and extend from there
+                    int rightNodeIndex = nodeIndex;
+                    Vector2 rightPos = new Vector2(targetStructure.WorldRect.Right, targetStructure.WorldPosition.Y);
+                    AddNodesBetweenPoints(targetPos, rightPos, ref rightNodeIndex);
+                    nodes.Add(new Node(rightPos, rightNodeIndex));
+                    FindNodes(entitiesInRange, rightPos, nodes.Count - 1, newRange);
+                }
+                else
+                {
+                    //add a node at the closest point
+                    nodes.Add(new Node(targetPos, parentNodeIndex));
+                    int nodeIndex = nodes.Count - 1;
+                    entitiesInRange.RemoveAt(closestIndex);
+
+                    float newRange = currentRange - (targetStructure.Rect.Height / 2) * (1.0f / RangeMultiplierInWalls);
+
+                    //continue the discharge to the top edge of the structure and extend from there
+                    int topNodeIndex = nodeIndex;
+                    Vector2 topPos = new Vector2(targetStructure.WorldPosition.X, targetStructure.WorldRect.Y);
+                    AddNodesBetweenPoints(targetPos, topPos, ref topNodeIndex);
+                    nodes.Add(new Node(topPos, topNodeIndex));
+                    FindNodes(entitiesInRange, topPos, nodes.Count - 1, newRange);
+
+                    //continue the discharge to the bottom edge of the structure and extend from there
+                    int bottomNodeIndex = nodeIndex;
+                    Vector2 bottomBos = new Vector2(targetStructure.WorldPosition.X, targetStructure.WorldRect.Y - targetStructure.Rect.Height);
+                    AddNodesBetweenPoints(targetPos, bottomBos, ref bottomNodeIndex);
+                    nodes.Add(new Node(bottomBos, bottomNodeIndex));
+                    FindNodes(entitiesInRange, bottomBos, nodes.Count - 1, newRange);
+                }
             }
-            else
+            else if (entitiesInRange[closestIndex] is Character character)
             {
-                //add a node at the closest point
+                Vector2 targetPos = character.WorldPosition;
+                //create nodes from the current position to the closest point on the structure
+                AddNodesBetweenPoints(currPos, targetPos, ref parentNodeIndex);
                 nodes.Add(new Node(targetPos, parentNodeIndex));
-                int nodeIndex = nodes.Count - 1;
-                structuresInRange.RemoveAt(closestIndex);
-
-                float newRange = currentRange - (targetStructure.Rect.Height / 2) * (1.0f / RangeMultiplierInWalls);
-
-                //continue the discharge to the top edge of the structure and extend from there
-                int topNodeIndex = nodeIndex;
-                Vector2 topPos = new Vector2(targetStructure.WorldPosition.X, targetStructure.WorldRect.Y);
-                AddNodesBetweenPoints(targetPos, topPos, ref topNodeIndex);
-                nodes.Add(new Node(topPos, topNodeIndex));
-                FindNodes(structuresInRange, topPos, nodes.Count - 1, newRange);
-
-                //continue the discharge to the bottom edge of the structure and extend from there
-                int bottomNodeIndex = nodeIndex;
-                Vector2 bottomBos = new Vector2(targetStructure.WorldPosition.X, targetStructure.WorldRect.Y - targetStructure.Rect.Height);
-                AddNodesBetweenPoints(targetPos, bottomBos, ref bottomNodeIndex);
-                nodes.Add(new Node(bottomBos, bottomNodeIndex));
-                FindNodes(structuresInRange, bottomBos, nodes.Count - 1, newRange);
-            }            
+                entitiesInRange.RemoveAt(closestIndex);
+                FindNodes(entitiesInRange, targetPos, nodes.Count - 1, currentRange);
+            }     
         }
 
         private void AddNodesBetweenPoints(Vector2 currPos, Vector2 targetPos, ref int parentNodeIndex)
