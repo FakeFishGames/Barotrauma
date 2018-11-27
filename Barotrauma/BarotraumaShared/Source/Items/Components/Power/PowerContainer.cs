@@ -2,6 +2,7 @@
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -130,14 +131,23 @@ namespace Barotrauma.Items.Components
             float chargeRatio = (float)(Math.Sqrt(charge / capacity));
             float gridPower = 0.0f;
             float gridLoad = 0.0f;
-            
+
+            List<Pair<Powered, Connection>> directlyConnected = new List<Pair<Powered, Connection>>();
             foreach (Connection c in item.Connections)
             {
                 if (c.Name == "power_in") continue;
                 foreach (Connection c2 in c.Recipients)
                 {
                     PowerTransfer pt = c2.Item.GetComponent<PowerTransfer>();
-                    if (pt == null || !pt.IsActive) continue;
+                    if (pt == null)
+                    {
+                        Powered powered = c2.Item.GetComponent<Powered>();
+                        if (!powered.IsActive) continue;
+                        directlyConnected.Add(new Pair<Powered, Connection>(powered, c2));
+                        gridLoad += powered.CurrPowerConsumption;
+                        continue;
+                    }
+                    if (!pt.IsActive) { continue; }
 
                     gridLoad += pt.PowerLoad;
                     gridPower -= pt.CurrPowerConsumption;
@@ -161,7 +171,7 @@ namespace Barotrauma.Items.Components
                 currPowerConsumption = MathHelper.Lerp(currPowerConsumption, rechargeSpeed, 0.05f);
                 Charge += currPowerConsumption * rechargeVoltage / 3600.0f;
             }
-            
+                        
             //provide power to the grid
             if (gridLoad > 0.0f)
             {
@@ -185,6 +195,11 @@ namespace Barotrauma.Items.Components
                 }
 
                 Charge -= CurrPowerOutput / 3600.0f;
+            }
+
+            foreach (Pair<Powered, Connection> connected in directlyConnected)
+            {
+                connected.First.ReceiveSignal(0, "", connected.Second, source: item, sender: null, power: CurrPowerOutput);
             }
 
             rechargeVoltage = 0.0f;
