@@ -115,6 +115,7 @@
     <Compile Include="Source\GUI\RectTransform.cs" />
     <Compile Include="Source\GUI\UISprite.cs" />
     <Compile Include="Source\GUI\Widget.cs" />
+    <Compile Include="Source\Items\Components\ElectricalDischarger.cs" />
     <Compile Include="Source\Items\Components\Machines\Controller.cs" />
     <Compile Include="Source\Items\Components\Repairable.cs" />
     <Compile Include="Source\Items\Components\Signal\CustomInterface.cs" />
