@@ -54,6 +54,20 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void OnItemLoaded()
+        {
+            if (item.body != null)
+            {
+                var holdable = item.GetComponent<Holdable>();
+                if (holdable == null || !holdable.Attachable)
+                {
+                    DebugConsole.ThrowError("Item \"" + item.Name + "\" has a ConnectionPanel component," +
+                        " but cannot be wired because it has an active physics body that cannot be attached to a wall." +
+                        " Remove the physics body or add a Holdable component with the Attachable attribute set to true.");
+                }
+            }
+        }
+
         public void MoveConnectedWires(Vector2 amount)
         {
             Vector2 wireNodeOffset = item.Submarine == null ? Vector2.Zero : item.Submarine.HiddenSubPosition + amount;
