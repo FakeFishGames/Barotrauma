@@ -533,12 +533,50 @@ namespace Barotrauma.RuinGeneration
                             {
                                 doorPos.Y = (wall.A.Y + wall.B.Y) / 2.0f;
                             }
-                            var doorItem = new Item(doorConfig.Prefab as ItemPrefab, doorPos, null)
+                            Item doorItem = null;
+                            if (doorConfig.Prefab is ItemPrefab itemPrefab)
                             {
-                                ShouldBeSaved = false
-                            };
+                                doorItem = new Item(doorConfig.Prefab as ItemPrefab, doorPos, null)
+                                {
+                                    ShouldBeSaved = false
+                                };
+                            }
+                            else if (doorConfig.Prefab is ItemAssemblyPrefab itemAssemblyPrefab)
+                            {
+                                var entities = itemAssemblyPrefab.CreateInstance(doorPos, sub: null);
+                                foreach (MapEntity e in entities)
+                                {
+                                    if (e is Structure) e.ShouldBeSaved = false;
+                                    if (doorItem == null && e is Item item && item.GetComponent<Door>() != null)
+                                    {
+                                        doorItem = item;
+                                    }
+                                }
+                                if (doorConfig.Expand) { ExpandEntities(entities); }
+                                //make sure the door gets positioned at the correct place regardless of its position in the item assembly
+                                if (doorItem != null)
+                                {
+                                    Vector2 doorOffset = doorPos - doorItem.WorldPosition;
+                                    foreach (MapEntity e in entities)
+                                    {
+                                        e.Move(doorOffset);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                DebugConsole.ThrowError("Failed to create a ruin door. Ruin entity \"" + doorConfig.Name + "\" is marked as a door but is neither an item or an item assembly.");
+                                continue;
+                            }
+
+                            Door door = doorItem?.GetComponent<Door>();
+                            if (door == null)
+                            {
+                                DebugConsole.ThrowError("Failed to create a ruin door. Door not found in the ruin entity \"" + doorConfig.Name + "\".");
+                                continue;
+                            }
+
                             CreateChildEntities(doorConfig, doorItem, corridor);
-                            Door door = doorItem.GetComponent<Door>();
                             doors.Add(door);
                             door.IsOpen = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < 0.8f;
                             ruinEntities.Add(new RuinEntity(doorConfig, doorItem, room));
