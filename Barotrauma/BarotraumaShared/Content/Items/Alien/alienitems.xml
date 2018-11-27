@@ -219,11 +219,13 @@
     <!-- TODO: alien power cell sprite -->
     <Sprite texture="artifactholder.png" depth="0.8" sourcerect="74,50,113,167" />
     <LightComponent lightcolor="112,146,190,255" canbeselected="false" range="800.0" IsOn="true" />
-    <PowerContainer capacity="2000.0" canbeselected="false" maxrechargespeed="1000.0" maxoutput="1000.0">
-      <!-- recharge constantly -->
-      <StatusEffect type="Always" target="This" charge="100" />
-    </PowerContainer>
-    <ConnectionPanel canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+    <ItemContainer capacity="1" canbeselected="true" hideitems="false" itempos="55,-80">
+      <Containable identifiers="sulphuriteshard">
+        <StatusEffect type="OnContaining" target="This" Charge="100.0" />
+      </Containable>
+    </ItemContainer>
+    <PowerContainer capacity="10.0" canbeselected="false" maxrechargespeed="1000.0" maxoutput="10000.0"/>
+    <ConnectionPanel canbeselected="false" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <!-- break the item when a shutdown signal is received -->
       <input name="shutdown">
@@ -242,18 +244,18 @@
         <SpawnItem identifiers="alienturretammo" spawnposition="ThisInventory" />
       </StatusEffect>
     </ItemContainer>
-    <Turret canbeselected="false" characterusable="false" linkable="true" barrelpos="128,88" rotationlimits="0,360" powerconsumption="100.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="50" reload="0.5" springstiffnesslowskill="2" springstiffnesshighskill="2" springdampinglowskill="0.5" springdampinghighskill="0.5" rotationspeedlowskill="1" rotationspeedhighskill="1">
+    <Turret canbeselected="false" characterusable="false" linkable="true" barrelpos="128,88" rotationlimits="0,360" powerconsumption="10000.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="50" reload="2" springstiffnesslowskill="2" springstiffnesshighskill="2" springdampinglowskill="0.5" springdampinghighskill="0.5" rotationspeedlowskill="1" rotationspeedhighskill="1">
       <sound file="Content/Items/Weapons/coilgun.ogg" range="10000" type="OnUse" />
       <BarrelSprite texture="Content/Items/Weapons/coilgunbarrel.png" origin="0.6, 0.8" />
       <RailSprite texture="Content/Items/Weapons/coilgunrail.png" origin="0.64, 0.7" />
       <MoveSound file="Content/Items/Weapons/railgunloop.ogg" />
       <StartMoveSound file="Content/Items/Weapons/railgunstart.ogg" />
       <EndMoveSound file="Content/Items/Weapons/railgunstop.ogg" />
-      <LightComponent lightcolor="112,146,190,255" Flicker="0.0" range="2500" IsOn="true">
+      <LightComponent lightcolor="112,146,190,255" powerconsumption="10" Flicker="0.0" range="2500" IsOn="true">
         <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="1.0,0.2" />
       </LightComponent>
     </Turret>
-    <ConnectionPanel canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+    <ConnectionPanel canbeselected="false" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <input name="power_in" />
       <input name="position_in" />
