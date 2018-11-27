@@ -169,7 +169,7 @@ namespace Barotrauma.Lights
             get { return position; }
             set
             {
-                if (position == value) return;
+                if (Math.Abs(position.X - value.X) < 0.1f && Math.Abs(position.Y - value.Y) < 0.1f) return;
                 position = value;
 
                 if (Vector2.DistanceSquared(prevCalculatedPosition, position) < 5.0f * 5.0f) return;
@@ -186,7 +186,7 @@ namespace Barotrauma.Lights
             get { return rotation; }
             set
             {
-                if (rotation == value) return;
+                if (Math.Abs(rotation - value) < 0.01f) return;
                 rotation = value;
 
                 NeedsHullCheck = true;
@@ -626,7 +626,7 @@ namespace Barotrauma.Lights
             return output;
         }
 
-        private Pair<int,Vector2> RayCast(Vector2 rayStart, Vector2 rayEnd, List<Segment> segments)
+        private Pair<int, Vector2> RayCast(Vector2 rayStart, Vector2 rayEnd, List<Segment> segments)
         {
             float closestDist = 0.0f;
             Vector2? closestIntersection = null;
@@ -635,7 +635,7 @@ namespace Barotrauma.Lights
             for (int i = 0; i < segments.Count; i++)
             {
                 Segment s = segments[i];
-                Vector2? intersection = (s.Start.WorldPos.X == s.End.WorldPos.X || s.Start.WorldPos.Y == s.End.WorldPos.Y) ?
+                Vector2? intersection = s.IsAxisAligned ?
                     MathUtils.GetAxisAlignedLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos, s.IsHorizontal) :
                     MathUtils.GetLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos);
 
