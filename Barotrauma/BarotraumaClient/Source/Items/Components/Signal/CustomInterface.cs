@@ -26,10 +26,14 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "button":
+                        DebugConsole.Log("CustomInterface beginning Button");
                         CustomInterfaceElement CIElement = new CustomInterfaceElement();
                         CIElement.text = subElement.GetAttributeString("text", "Default name");
                         CIElement.connection = subElement.GetAttributeString("connection", "");
                         CIElement.signal = subElement.GetAttributeString("signal", "1");
+                        customInterfaceElementList.Add(CIElement);
+
+                        DebugConsole.Log("CustomInterface Button, " + CIElement.text + ", " + CIElement.connection);
 
                         var btn = new GUIButton(new RectTransform(
                             new Vector2(1.0f, 0.1f), paddedFrame.RectTransform),
@@ -37,7 +41,7 @@ namespace Barotrauma.Items.Components
                         btn.UserData = CIElement.connection;
                         btn.OnClicked += ( _, userdata) =>
                         {
-                            item.SendSignal(0, "1", (string)userdata, null);
+                            item.SendSignal(0, CIElement.signal, (string)userdata, null);
                             return true;
                         };
 
