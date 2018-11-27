@@ -13,8 +13,8 @@
     <BrokenSprite texture="Content/Items/Command/navigator.png" sourcerect="376,0,188,194" depth="0.8" maxcondition="0" />
 
     <!--
-    <CustomInterface>
-      <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" style="OuterGlow" color="0,0,0,0.8" absoluteoffset="30,0"/>
+    <CustomInterface canbeselected = "true">
+      <GuiFrame relativesize="0.15,0.1" anchor="Top"/>
       <Button text="Activate siren" connection="signal_out"/>
     </CustomInterface>
     -->
@@ -54,6 +54,7 @@
       <input name="velocity_in"/>
       <output name="velocity_x_out"/>
       <output name="velocity_y_out"/>
+      <output name="signal_out"/>
     </ConnectionPanel>
 
     <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="10" fixDurationLowSkill="20" msg="ItemMsgRepairScrewdriver" hudpriority="10">
