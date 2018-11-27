@@ -41,11 +41,10 @@ namespace Barotrauma.Items.Components
 #endif
             if (progressTimer > targetItem.Prefab.DeconstructTime)
             {
-                var containers = item.GetComponents<ItemContainer>();
+                var containers = item.GetComponents<ItemContainer>().ToList();
                 if (containers.Count < 2)
                 {
                     DebugConsole.ThrowError("Error in Deconstructor.Update: Deconstructors must have two ItemContainer components!");
-
                     return;
                 }
 

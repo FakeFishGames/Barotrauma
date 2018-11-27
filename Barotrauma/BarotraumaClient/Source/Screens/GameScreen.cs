@@ -251,7 +251,11 @@ namespace Barotrauma
 			//draw additive particles that are inside a sub
 			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, DepthStencilState.Default, null, null, cam.Transform);
 			GameMain.ParticleManager.Draw(spriteBatch, true, true, Particles.ParticleBlendState.Additive);
-			spriteBatch.End();
+            foreach (var discharger in Items.Components.ElectricalDischarger.List)
+            {
+                discharger.DrawElectricity(spriteBatch);
+            }
+            spriteBatch.End();
 			if (GameMain.LightManager.LightingEnabled)
 			{
 				spriteBatch.Begin(SpriteSortMode.Deferred, Lights.CustomBlendStates.Multiplicative, null, DepthStencilState.None, null, null, null);

@@ -141,10 +141,12 @@ namespace Barotrauma.Items.Components
                     PowerTransfer pt = c2.Item.GetComponent<PowerTransfer>();
                     if (pt == null)
                     {
-                        Powered powered = c2.Item.GetComponent<Powered>();
-                        if (!powered.IsActive) continue;
-                        directlyConnected.Add(new Pair<Powered, Connection>(powered, c2));
-                        gridLoad += powered.CurrPowerConsumption;
+                        foreach (Powered powered in c2.Item.GetComponents<Powered>())
+                        {
+                            if (!powered.IsActive) continue;
+                            directlyConnected.Add(new Pair<Powered, Connection>(powered, c2));
+                            gridLoad += powered.CurrPowerConsumption;
+                        }
                         continue;
                     }
                     if (!pt.IsActive) { continue; }
@@ -187,11 +189,11 @@ namespace Barotrauma.Items.Components
                     CurrPowerOutput = MathHelper.Lerp(
                        CurrPowerOutput,
                        Math.Min(maxOutput * chargeRatio, gridLoad),
-                       deltaTime);
+                       deltaTime * 10.0f);
                 }
                 else
                 {
-                    CurrPowerOutput = MathHelper.Lerp(CurrPowerOutput, 0.0f, deltaTime);
+                    CurrPowerOutput = MathHelper.Lerp(CurrPowerOutput, 0.0f, deltaTime * 10.0f);
                 }
 
                 Charge -= CurrPowerOutput / 3600.0f;
@@ -199,7 +201,8 @@ namespace Barotrauma.Items.Components
 
             foreach (Pair<Powered, Connection> connected in directlyConnected)
             {
-                connected.First.ReceiveSignal(0, "", connected.Second, source: item, sender: null, power: CurrPowerOutput);
+                connected.First.ReceiveSignal(0, "", connected.Second, source: item, sender: null, 
+                    power: gridLoad <= 0.0f ? 1.0f : CurrPowerOutput / gridLoad);
             }
 
             rechargeVoltage = 0.0f;

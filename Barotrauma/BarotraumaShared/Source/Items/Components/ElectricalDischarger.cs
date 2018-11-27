@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class ElectricalDischarger : ItemComponent
+    partial class ElectricalDischarger : Powered
     {
         private static List<ElectricalDischarger> list = new List<ElectricalDischarger>();
         public static IEnumerable<ElectricalDischarger> List
@@ -16,8 +16,7 @@ namespace Barotrauma.Items.Components
         }
 
         const int MaxNodes = 100;
-        const float MaxNodeDistance = 256.0f;
-        const float RangeMultiplierInWalls = 10.0f;
+        const float MaxNodeDistance = 150.0f;
 
         public struct Node
         {
@@ -42,13 +41,27 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(10.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f, ToolTip = "How much further can the discharge be carried when moving across walls.")]
+        public float RangeMultiplierInWalls
+        {
+            get;
+            set;
+        }
+
         [Serialize(0.25f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float Duration
         {
             get;
             set;
         }
-        
+
+        [Serialize(false, true), Editable()]
+        public bool OutdoorsOnly
+        {
+            get;
+            set;
+        }
+
         private readonly List<Node> nodes = new List<Node>();
         public IEnumerable<Node> Nodes
         {
@@ -56,6 +69,8 @@ namespace Barotrauma.Items.Components
         }
 
         private readonly List<Character> charactersInRange = new List<Character>();
+
+        private bool charging;
 
         private float timer;
 
@@ -83,10 +98,14 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            FindNodes(item.WorldPosition);
+            //already active, do nothing
+            if (IsActive) { return false; }
+
+            CurrPowerConsumption = powerConsumption;
+            charging = true;
             timer = Duration;
             IsActive = true;
-            return true;
+            return false;
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -96,14 +115,14 @@ namespace Barotrauma.Items.Components
 #endif
             if (timer > 0.0f)
             {
-                timer -= deltaTime;
-                if (attack != null)
+                if (charging)
                 {
-                    foreach (Character character in charactersInRange)
+                    if (voltage > minVoltage || powerConsumption <= 0.0f)
                     {
-                        character.ApplyAttack(null, character.WorldPosition, attack, deltaTime);
+                        Discharge();
                     }
                 }
+                timer -= deltaTime;
             }
             else
             {
@@ -111,9 +130,28 @@ namespace Barotrauma.Items.Components
                 charactersInRange.Clear();
                 IsActive = false;
             }
+
+            voltage = 0.0f;
         }
 
-        private void FindNodes(Vector2 worldPosition)
+        private void Discharge()
+        {
+            ApplyStatusEffects(ActionType.OnUse, 1.0f);
+            FindNodes(item.WorldPosition, Range);
+            if (attack != null)
+            {
+                foreach (Character character in charactersInRange)
+                {
+                    character.ApplyAttack(null, character.WorldPosition, attack, 1.0f);
+                }
+            }
+            DischargeProjSpecific();
+            charging = false;
+        }
+
+        partial void DischargeProjSpecific();
+
+        private void FindNodes(Vector2 worldPosition, float range)
         {
             //see which submarines are within range so we can skip structures that are in far-away subs
             List<Submarine> submarinesInRange = new List<Submarine>();
@@ -126,8 +164,8 @@ namespace Barotrauma.Items.Components
                 else
                 {
                     Rectangle subBorders = new Rectangle(
-                        sub.Borders.X - (int)Range, sub.Borders.Y + (int)Range,
-                        sub.Borders.Width + (int)(Range * 2), sub.Borders.Height + (int)(Range * 2));
+                        sub.Borders.X - (int)range, sub.Borders.Y + (int)range,
+                        sub.Borders.Width + (int)(range * 2), sub.Borders.Height + (int)(range * 2));
                     subBorders.Location += MathUtils.ToPoint(sub.SubBody.Position);
                     if (Submarine.RectContains(subBorders, worldPosition))
                     {
@@ -141,16 +179,25 @@ namespace Barotrauma.Items.Components
             foreach (Structure structure in Structure.WallList)
             {
                 if (!structure.HasBody || structure.IsPlatform) { continue; }
+                if (structure.Submarine != null&& !submarinesInRange.Contains(structure.Submarine)) { continue; }
+
+                var structureWorldRect = structure.WorldRect;
+                if (worldPosition.X < structureWorldRect.X - range) continue;
+                if (worldPosition.X > structureWorldRect.Right + range) continue;
+                if (worldPosition.Y > structureWorldRect.Y + range) continue;
+                if (worldPosition.Y < structureWorldRect.Y -structureWorldRect.Height - range) continue;
+
                 if (structure.Submarine != null)
                 {
                     if (!submarinesInRange.Contains(structure.Submarine)) { continue; }
+                    if (OutdoorsOnly)
+                    {
+                        //check if the structure is within a hull
+                        //add a small offset away from the sub's center so structures right at the edge of a hull are still valid
+                        Vector2 offset = Vector2.Normalize(structure.WorldPosition - structure.Submarine.WorldPosition);
+                        if (Hull.FindHull(structure.Position + offset * Submarine.GridSize, useWorldCoordinates: false) != null) { continue; }
+                    }
                 }
-
-                var structureWorldRect = structure.WorldRect;
-                if (worldPosition.X < structureWorldRect.X - Range) continue;
-                if (worldPosition.X > structureWorldRect.Right + Range) continue;
-                if (worldPosition.Y > structureWorldRect.Y + Range) continue;
-                if (worldPosition.Y < structureWorldRect.Y -structureWorldRect.Height - Range) continue;
 
                 entitiesInRange.Add(structure);
             }
@@ -158,9 +205,10 @@ namespace Barotrauma.Items.Components
             foreach (Character character in Character.CharacterList)
             {
                 if (!character.Enabled) continue;
+                if (OutdoorsOnly && character.Submarine != null) continue;
                 if (character.Submarine != null && !submarinesInRange.Contains(character.Submarine)) continue;
 
-                if (Vector2.DistanceSquared(character.WorldPosition, worldPosition) < Range * Range)
+                if (Vector2.DistanceSquared(character.WorldPosition, worldPosition) < range * range)
                 {
                     entitiesInRange.Add(character);
                 }
@@ -168,7 +216,7 @@ namespace Barotrauma.Items.Components
 
             nodes.Clear();
             nodes.Add(new Node(worldPosition, -1));
-            FindNodes(entitiesInRange, worldPosition, 0, Range);
+            FindNodes(entitiesInRange, worldPosition, 0, range);
 
             //construct final nodes (w/ lengths and angles so they don't have to be recalculated when rendering the discharge)
             for (int i = 0; i < nodes.Count; i++)
@@ -228,38 +276,57 @@ namespace Barotrauma.Items.Components
 
             if (entitiesInRange[closestIndex] is Structure targetStructure)
             {
-                Vector2 targetPos = targetStructure.IsHorizontal ?
-                    new Vector2(MathHelper.Clamp(currPos.X, targetStructure.WorldRect.X, targetStructure.WorldRect.Right), targetStructure.WorldPosition.Y) :
-                    new Vector2(targetStructure.WorldPosition.X, MathHelper.Clamp(currPos.Y, targetStructure.WorldRect.Y - targetStructure.Rect.Height, targetStructure.WorldRect.Y));
-
-                //create nodes from the current position to the closest point on the structure
-                AddNodesBetweenPoints(currPos, targetPos, ref parentNodeIndex);
-
                 if (targetStructure.IsHorizontal)
                 {
+                    //which side of the structure to add the nodes to
+                    //if outside the sub, use the sides that's furthers from the sub's center position
+                    //otherwise the side that's closer to the previous node
+                    int yDir = OutdoorsOnly && targetStructure.Submarine != null ?
+                        Math.Sign(targetStructure.WorldPosition.Y - targetStructure.Submarine.WorldPosition.Y) :
+                        Math.Sign(currPos.Y - targetStructure.WorldPosition.Y);
+
+                    Vector2 targetPos =
+                        new Vector2(
+                            MathHelper.Clamp(currPos.X, targetStructure.WorldRect.X, targetStructure.WorldRect.Right),
+                            targetStructure.WorldPosition.Y + targetStructure.Rect.Height / 2 * yDir);
+
+                    //create nodes from the current position to the closest point on the structure
+                    AddNodesBetweenPoints(currPos, targetPos, ref parentNodeIndex);
+
                     //add a node at the closest point
                     nodes.Add(new Node(targetPos, parentNodeIndex));
                     int nodeIndex = nodes.Count - 1;
                     entitiesInRange.RemoveAt(closestIndex);
 
                     float newRange = currentRange - (targetStructure.Rect.Width / 2) * (1.0f / RangeMultiplierInWalls);
-
+                    
                     //continue the discharge to the left edge of the structure and extend from there
                     int leftNodeIndex = nodeIndex;
-                    Vector2 leftPos = new Vector2(targetStructure.WorldRect.X, targetStructure.WorldPosition.Y);
+                    Vector2 leftPos = new Vector2(targetStructure.WorldRect.X, targetPos.Y);
                     AddNodesBetweenPoints(targetPos, leftPos, ref leftNodeIndex);
                     nodes.Add(new Node(leftPos, leftNodeIndex));
                     FindNodes(entitiesInRange, leftPos, nodes.Count - 1, newRange);
 
                     //continue the discharge to the right edge of the structure and extend from there
                     int rightNodeIndex = nodeIndex;
-                    Vector2 rightPos = new Vector2(targetStructure.WorldRect.Right, targetStructure.WorldPosition.Y);
+                    Vector2 rightPos = new Vector2(targetStructure.WorldRect.Right, targetPos.Y);
                     AddNodesBetweenPoints(targetPos, rightPos, ref rightNodeIndex);
                     nodes.Add(new Node(rightPos, rightNodeIndex));
                     FindNodes(entitiesInRange, rightPos, nodes.Count - 1, newRange);
                 }
                 else
                 {
+                    int xDir = OutdoorsOnly && targetStructure.Submarine != null ?
+                        Math.Sign(targetStructure.WorldPosition.X - targetStructure.Submarine.WorldPosition.X) :
+                        Math.Sign(currPos.X - targetStructure.WorldPosition.X);
+
+                    Vector2 targetPos = new Vector2(
+                            targetStructure.WorldPosition.X - targetStructure.Rect.Width / 2 * xDir,
+                            MathHelper.Clamp(currPos.Y, targetStructure.WorldRect.Y - targetStructure.Rect.Height, targetStructure.WorldRect.Y));
+
+                    //create nodes from the current position to the closest point on the structure
+                    AddNodesBetweenPoints(currPos, targetPos, ref parentNodeIndex);
+
                     //add a node at the closest point
                     nodes.Add(new Node(targetPos, parentNodeIndex));
                     int nodeIndex = nodes.Count - 1;
@@ -269,14 +336,14 @@ namespace Barotrauma.Items.Components
 
                     //continue the discharge to the top edge of the structure and extend from there
                     int topNodeIndex = nodeIndex;
-                    Vector2 topPos = new Vector2(targetStructure.WorldPosition.X, targetStructure.WorldRect.Y);
+                    Vector2 topPos = new Vector2(targetPos.X, targetStructure.WorldRect.Y);
                     AddNodesBetweenPoints(targetPos, topPos, ref topNodeIndex);
                     nodes.Add(new Node(topPos, topNodeIndex));
                     FindNodes(entitiesInRange, topPos, nodes.Count - 1, newRange);
 
                     //continue the discharge to the bottom edge of the structure and extend from there
                     int bottomNodeIndex = nodeIndex;
-                    Vector2 bottomBos = new Vector2(targetStructure.WorldPosition.X, targetStructure.WorldRect.Y - targetStructure.Rect.Height);
+                    Vector2 bottomBos = new Vector2(targetPos.X, targetStructure.WorldRect.Y - targetStructure.Rect.Height);
                     AddNodesBetweenPoints(targetPos, bottomBos, ref bottomNodeIndex);
                     nodes.Add(new Node(bottomBos, bottomNodeIndex));
                     FindNodes(entitiesInRange, bottomBos, nodes.Count - 1, newRange);
@@ -289,6 +356,7 @@ namespace Barotrauma.Items.Components
                 AddNodesBetweenPoints(currPos, targetPos, ref parentNodeIndex);
                 nodes.Add(new Node(targetPos, parentNodeIndex));
                 entitiesInRange.RemoveAt(closestIndex);
+                charactersInRange.Add(character);
                 FindNodes(entitiesInRange, targetPos, nodes.Count - 1, currentRange);
             }     
         }
