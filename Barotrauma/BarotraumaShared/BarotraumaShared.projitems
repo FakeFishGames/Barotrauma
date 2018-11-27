@@ -605,6 +605,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\LevelObjects\Webs.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Lights\Electricity.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Map\exteriorAtlas_A_01_back.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -2462,6 +2465,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\VectorExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\CrewManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\CharacterCampaignData.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\ElectricalDischarger.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\SonarTransducer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Repairable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\CustomInterface.cs">

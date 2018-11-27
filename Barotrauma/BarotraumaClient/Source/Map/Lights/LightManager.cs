@@ -4,12 +4,12 @@ using Microsoft.Xna.Framework.Content;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma.Lights
 {
     class LightManager
     {
-
         private const float AmbientLightUpdateInterval = 0.2f;
         private const float AmbientLightFalloff = 0.8f;
 
@@ -61,6 +61,7 @@ namespace Barotrauma.Lights
         public bool ObstructVision;
 
         private Texture2D visionCircle;
+
         
         private Dictionary<Hull, Color> hullAmbientLights;
         private Dictionary<Hull, Color> smoothedHullAmbientLights;
@@ -310,6 +311,11 @@ namespace Barotrauma.Lights
             //draw the actual light volumes, additive particles, hull ambient lights and the halo around the player
             //---------------------------------------------------------------------------------------------------
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);
+
+            foreach (ElectricalDischarger discharger in ElectricalDischarger.List)
+            {
+                discharger.DrawElectricity(spriteBatch);
+            }
 
             GUI.DrawRectangle(spriteBatch, new Rectangle(cam.WorldView.X, -cam.WorldView.Y, cam.WorldView.Width, cam.WorldView.Height), AmbientLight, isFilled:true);
 
