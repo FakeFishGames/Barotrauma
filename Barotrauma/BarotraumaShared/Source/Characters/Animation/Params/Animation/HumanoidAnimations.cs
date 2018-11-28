@@ -9,6 +9,8 @@ namespace Barotrauma
         {
             return GetAnimParams<HumanWalkParams>(character.SpeciesName, AnimationType.Walk, fileName);
         }
+
+        public override void StoreState() => StoreState<HumanWalkParams>();
     }
 
     class HumanRunParams : HumanGroundedParams
@@ -18,6 +20,8 @@ namespace Barotrauma
         {
             return GetAnimParams<HumanRunParams>(character.SpeciesName, AnimationType.Run, fileName);
         }
+
+        public override void StoreState() => StoreState<HumanRunParams>();
     }
 
     class HumanSwimFastParams: HumanSwimParams
@@ -27,6 +31,9 @@ namespace Barotrauma
         {
             return GetAnimParams<HumanSwimFastParams>(character.SpeciesName, AnimationType.SwimFast, fileName);
         }
+
+
+        public override void StoreState() => StoreState<HumanSwimFastParams>();
     }
 
     class HumanSwimSlowParams : HumanSwimParams
@@ -36,6 +43,8 @@ namespace Barotrauma
         {
             return GetAnimParams<HumanSwimSlowParams>(character.SpeciesName, AnimationType.SwimSlow, fileName);
         }
+
+        public override void StoreState() => StoreState<HumanSwimSlowParams>();
     }
 
     abstract class HumanSwimParams : SwimParams, IHumanAnimation

@@ -378,5 +378,20 @@ namespace Barotrauma
                 }
             }
         }
+
+        #region Memento
+        protected void StoreState<T>() where T : AnimationParams, new()
+        {
+            var copy = new T();
+            copy.Load(FullPath, SpeciesName);
+            Serialize();
+            this.CopyValuesTo(copy);
+            copy.doc = new XDocument(doc);
+            copy.Serialize();
+            memento.Store(copy);
+        }
+        public override void Undo() => Deserialize(memento.Undo().MainElement);
+        public override void Redo() => Deserialize(memento.Redo().MainElement);
+        #endregion
     }
 }
