@@ -185,7 +185,7 @@ namespace Barotrauma
             }
             set
             {
-                SetText(value);
+                SetText(value, store: false);
                 CaretIndex = Text.Length;
                 OnTextChanged?.Invoke(this, Text);
             }
@@ -317,6 +317,7 @@ namespace Barotrauma
 
         public void Select()
         {
+            memento.Store(Text);
             Selected = true;
             CaretIndex = GetCaretIndexFromScreenPos(PlayerInput.MousePosition);
             ClearSelection();
