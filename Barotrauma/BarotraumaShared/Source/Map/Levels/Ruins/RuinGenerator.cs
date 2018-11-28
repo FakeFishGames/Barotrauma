@@ -619,13 +619,13 @@ namespace Barotrauma.RuinGeneration
                     }
                 }
 
-                //create connections between all generated entities ---------------------------
-                foreach (RuinEntity ruinEntity in ruinEntities)
-                {
-                    CreateConnections(ruinEntity);
-                }
             }
-
+            
+            //create connections between all generated entities ---------------------------
+            foreach (RuinEntity ruinEntity in ruinEntities)
+            {
+                CreateConnections(ruinEntity);
+            }
             //create hulls ---------------------------
             foreach (Rectangle hullRect in hullRects)
             {
@@ -741,6 +741,8 @@ namespace Barotrauma.RuinGeneration
             if (entityConfig.Prefab is ItemPrefab)
             {
                 entity = new Item((ItemPrefab)entityConfig.Prefab, position, null);
+                CreateChildEntities(entityConfig, entity, room);
+                ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
             }
             else if (entityConfig.Prefab is ItemAssemblyPrefab itemAssemblyPrefab)
             {
@@ -748,6 +750,7 @@ namespace Barotrauma.RuinGeneration
                 foreach (MapEntity e in entities)
                 {
                     if (e is Structure) e.ShouldBeSaved = false;
+                    ruinEntities.Add(new RuinEntity(entityConfig, e, room, parent));
                 }
                 if (entityConfig.Expand)
                 {
@@ -767,10 +770,9 @@ namespace Barotrauma.RuinGeneration
                 {
                     ExpandEntities(new List<MapEntity>() { entity });
                 }
-            }
-
-            CreateChildEntities(entityConfig, entity, room);
-            ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
+                CreateChildEntities(entityConfig, entity, room);
+                ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
+            }            
         }
 
         private void CreateChildEntities(RuinEntityConfig parentEntityConfig, MapEntity parentEntity, RuinShape room)
@@ -789,6 +791,12 @@ namespace Barotrauma.RuinGeneration
         {
             foreach (RuinEntityConfig.EntityConnection connection in entity.Config.EntityConnections)
             {
+                if (!string.IsNullOrEmpty(connection.SourceEntityIdentifier) && 
+                    connection.SourceEntityIdentifier != entity.Entity?.prefab.Identifier)
+                {
+                    continue;
+                }
+
                 MapEntity targetEntity = null;
                 if (connection.TargetEntityIdentifier == "parent")
                 {
@@ -830,24 +838,24 @@ namespace Barotrauma.RuinGeneration
                     if (item == null)
                     {
                         DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + entity.Entity.Name + "\" - the entity is not an item.");
-                        return;
+                        continue;
                     }
                     else if (item.Connections == null)
                     {
                         DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + entity.Entity.Name + "\" - the item does not have a connection panel component.");
-                        return;
+                        continue;
                     }
 
                     Item parentItem = entity.Parent as Item;
                     if (parentItem == null)
                     {
                         DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + parentItem.Name + "\" - the entity is not an item.");
-                        return;
+                        continue;
                     }
                     else if (parentItem.Connections == null)
                     {
                         DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + parentItem.Name + "\" - the item does not have a connection panel component.");
-                        return;
+                        continue;
                     }
 
                     //TODO: alien wire prefab w/ custom sprite?
