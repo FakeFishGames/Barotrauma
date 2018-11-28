@@ -28,7 +28,6 @@
     <Folder Include="$(MSBuildThisFileDirectory)Content\Effects\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Fonts\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\BackgroundCreatures\" />
-    <Folder Include="$(MSBuildThisFileDirectory)Content\Hair\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Tutorials\" />
     <Folder Include="$(MSBuildThisFileDirectory)Data\Saves\" />
   </ItemGroup>
@@ -92,22 +91,22 @@
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerhead\Animations\HammerheadSwimFast.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerhead\Animations\HammerheadSwimSlow.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerhead\Animations\HammerheadWalk.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerhead\Hammerhead.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerhead\Hammerhead.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerhead\Ragdolls\HammerheadDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Animations\HumanhuskRun.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -140,10 +139,10 @@
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\head_4.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\mugshotCircle.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\NewHuman_mLegs_TEMP.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -2506,6 +2505,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\MapGenerationParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\PriceInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\NPCPersonalityTrait.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Memento.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\OrderChatMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\DamageModifier.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\SteamManager.cs" />
