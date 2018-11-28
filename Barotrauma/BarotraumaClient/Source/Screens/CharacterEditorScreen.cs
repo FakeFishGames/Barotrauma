@@ -270,7 +270,7 @@ namespace Barotrauma
                     {
                         CurrentAnimation.ClearHistory();
                         animSelection.Select(index);
-                        CurrentAnimation.StoreState();
+                        CurrentAnimation.CreateSnapshot();
                     }
                 }
                 if (PlayerInput.KeyHit(Keys.E))
@@ -1041,8 +1041,8 @@ namespace Barotrauma
             CreateGUI();
             ClearWidgets();
             ResetParamsEditor();
-            CurrentAnimation.StoreState();
-            RagdollParams.StoreState();
+            CurrentAnimation.CreateSnapshot();
+            RagdollParams.CreateSnapshot();
         }
 
         private void ClearWidgets()
@@ -1349,7 +1349,7 @@ namespace Barotrauma
             limbScaleBar.Bar.OnClicked += (button, data) =>
             {
                 RecreateRagdoll();
-                RagdollParams.StoreState();
+                RagdollParams.CreateSnapshot();
                 return true;
             };
             jointScaleBar.Bar.OnClicked += (button, data) =>
@@ -1358,7 +1358,7 @@ namespace Barotrauma
                 {
                     RecreateRagdoll();
                 }
-                RagdollParams.StoreState();
+                RagdollParams.CreateSnapshot();
                 return true;
             };
             var uniformScalingToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), ragdollControls.RectTransform)
@@ -2230,11 +2230,11 @@ namespace Barotrauma
         {
             if (editJoints || editLimbs || editIK)
             {
-                RagdollParams.StoreState();
+                RagdollParams.CreateSnapshot();
             }
             if (editAnimations)
             {
-                CurrentAnimation.StoreState();
+                CurrentAnimation.CreateSnapshot();
             }
         }
         #endregion
@@ -3558,7 +3558,7 @@ namespace Barotrauma
                 {
                     tooltipOffset = new Vector2(selectedSize / 2 + 5, -10)
                 };
-                widget.MouseUp += () => CurrentAnimation.StoreState();
+                widget.MouseUp += () => CurrentAnimation.CreateSnapshot();
                 widget.color = color;
                 widget.PreUpdate += dTime => widget.Enabled = editAnimations;
                 widget.PostUpdate += dTime =>
@@ -3658,7 +3658,7 @@ namespace Barotrauma
                     }
                     ResetParamsEditor();
                 };
-                widget.MouseUp += () => RagdollParams.StoreState();
+                widget.MouseUp += () => RagdollParams.CreateSnapshot();
                 widget.tooltip = joint.jointParams.Name;
                 jointSelectionWidgets.Add(ID, widget);
                 return widget;

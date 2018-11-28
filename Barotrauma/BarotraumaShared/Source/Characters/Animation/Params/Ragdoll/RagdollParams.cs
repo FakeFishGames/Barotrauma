@@ -301,12 +301,14 @@ namespace Barotrauma
         }
 
         #region Memento
-        public override void StoreState()
+        public override void CreateSnapshot()
         {
             Serialize();
-            var copy = new RagdollParams();
-            copy.IsLoaded = true;
-            copy.doc = new XDocument(doc);
+            var copy = new RagdollParams
+            {
+                IsLoaded = true,
+                doc = new XDocument(doc)
+            };
             copy.CreateColliders();
             copy.CreateLimbs();
             copy.CreateJoints();
