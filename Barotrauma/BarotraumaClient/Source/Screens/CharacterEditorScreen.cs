@@ -52,6 +52,7 @@ namespace Barotrauma
         private bool displayColliders;
         private bool displayBackgroundColor;
         private bool ragdollResetRequiresForceLoading;
+        private bool animationResetRequiresForceLoading;
 
         private bool isExtrudingJoint;
         private bool isDrawingJoint;
@@ -179,6 +180,61 @@ namespace Barotrauma
                 {
                     Character.DisableControls = true;
                     Widget.EnableMultiSelect = !editAnimations;
+                    // Undo/Redo
+                    if (PlayerInput.KeyHit(Keys.S))
+                    {
+                        // TODO: automatize
+                        if (editJoints || editLimbs || editIK)
+                        {
+                            RagdollParams.StoreState();
+                        }
+                        if (editAnimations)
+                        {
+                            CurrentAnimation.StoreState();
+                        }
+                    }
+                    else if (PlayerInput.KeyHit(Keys.Z))
+                    {
+                        if (editJoints || editLimbs || editIK)
+                        {
+                            RagdollParams.Undo();
+                            character.AnimController.ResetJoints();
+                            character.AnimController.ResetLimbs();
+                            ClearWidgets();
+                            ResetParamsEditor();
+                            CreateGUI();
+                            ragdollResetRequiresForceLoading = true;
+                        }
+                        if (editAnimations)
+                        {
+                            CurrentAnimation.Undo();
+                            ClearWidgets();
+                            ResetParamsEditor();
+                            //CreateGUI();
+                            animationResetRequiresForceLoading = true;
+                        }
+                    }
+                    else if (PlayerInput.KeyHit(Keys.R))
+                    {
+                        if (editJoints || editLimbs || editIK)
+                        {
+                            RagdollParams.Redo();
+                            character.AnimController.ResetJoints();
+                            character.AnimController.ResetLimbs();
+                            ClearWidgets();
+                            ResetParamsEditor();
+                            CreateGUI();
+                            ragdollResetRequiresForceLoading = true;
+                        }
+                        if (editAnimations)
+                        {
+                            CurrentAnimation.Redo();
+                            ClearWidgets();
+                            ResetParamsEditor();
+                            //CreateGUI();
+                            animationResetRequiresForceLoading = true;
+                        }
+                    }
                 }
                 else
                 {
@@ -972,6 +1028,7 @@ namespace Barotrauma
             }
             spawnPosition = wayPoint.WorldPosition;
             ragdollResetRequiresForceLoading = false;
+            animationResetRequiresForceLoading = false;
         }
 
         private void OnPostSpawn()
@@ -1595,9 +1652,10 @@ namespace Barotrauma
             var resetAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Reset Animations");
             resetAnimButton.OnClicked += (button, userData) =>
             {
-                AnimParams.ForEach(p => p.Reset());
+                AnimParams.ForEach(p => p.Reset(animationResetRequiresForceLoading));
                 ResetParamsEditor();
                 GUI.AddMessage($"All animations reset", Color.WhiteSmoke, font: GUI.Font);
+                animationResetRequiresForceLoading = false;
                 return true;
             };
             var resetRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Reset Ragdoll");
