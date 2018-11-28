@@ -317,7 +317,10 @@ namespace Barotrauma
 
         public void Select()
         {
-            memento.Store(Text);
+            if (memento.Current == null)
+            {
+                memento.Store(Text);
+            }
             Selected = true;
             CaretIndex = GetCaretIndexFromScreenPos(PlayerInput.MousePosition);
             ClearSelection();
@@ -327,6 +330,7 @@ namespace Barotrauma
 
         public void Deselect()
         {
+            memento.Clear();
             Selected = false;
             if (GUI.KeyboardDispatcher.Subscriber == this)
             {
