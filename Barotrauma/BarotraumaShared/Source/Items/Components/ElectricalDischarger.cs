@@ -271,7 +271,17 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (closestIndex == -1 || closestDist > currentRange) return;
+            if (closestIndex == -1 || closestDist > currentRange)
+            {
+                int originalParentNodeIndex = parentNodeIndex;
+                //nothing in range, create some arcs to random directions
+                for (int i = 0; i < Rand.Int(4); i++)
+                {
+                    Vector2 targetPos = currPos + Rand.Vector(MaxNodeDistance * Rand.Range(0.5f, 1.5f));
+                    nodes.Add(new Node(targetPos, parentNodeIndex));
+                }
+                return;
+            }
             currentRange -= closestDist;
 
             if (entitiesInRange[closestIndex] is Structure targetStructure)
@@ -291,7 +301,7 @@ namespace Barotrauma.Items.Components
                             targetStructure.WorldPosition.Y + targetStructure.Rect.Height / 2 * yDir);
 
                     //create nodes from the current position to the closest point on the structure
-                    AddNodesBetweenPoints(currPos, targetPos, ref parentNodeIndex);
+                    AddNodesBetweenPoints(currPos, targetPos, 0.25f, ref parentNodeIndex);
 
                     //add a node at the closest point
                     nodes.Add(new Node(targetPos, parentNodeIndex));
@@ -303,14 +313,14 @@ namespace Barotrauma.Items.Components
                     //continue the discharge to the left edge of the structure and extend from there
                     int leftNodeIndex = nodeIndex;
                     Vector2 leftPos = new Vector2(targetStructure.WorldRect.X, targetPos.Y);
-                    AddNodesBetweenPoints(targetPos, leftPos, ref leftNodeIndex);
+                    AddNodesBetweenPoints(targetPos, leftPos, 0.05f, ref leftNodeIndex);
                     nodes.Add(new Node(leftPos, leftNodeIndex));
                     FindNodes(entitiesInRange, leftPos, nodes.Count - 1, newRange);
 
                     //continue the discharge to the right edge of the structure and extend from there
                     int rightNodeIndex = nodeIndex;
                     Vector2 rightPos = new Vector2(targetStructure.WorldRect.Right, targetPos.Y);
-                    AddNodesBetweenPoints(targetPos, rightPos, ref rightNodeIndex);
+                    AddNodesBetweenPoints(targetPos, rightPos, 0.05f, ref rightNodeIndex);
                     nodes.Add(new Node(rightPos, rightNodeIndex));
                     FindNodes(entitiesInRange, rightPos, nodes.Count - 1, newRange);
                 }
@@ -325,7 +335,7 @@ namespace Barotrauma.Items.Components
                             MathHelper.Clamp(currPos.Y, targetStructure.WorldRect.Y - targetStructure.Rect.Height, targetStructure.WorldRect.Y));
 
                     //create nodes from the current position to the closest point on the structure
-                    AddNodesBetweenPoints(currPos, targetPos, ref parentNodeIndex);
+                    AddNodesBetweenPoints(currPos, targetPos, 0.25f, ref parentNodeIndex);
 
                     //add a node at the closest point
                     nodes.Add(new Node(targetPos, parentNodeIndex));
@@ -337,14 +347,14 @@ namespace Barotrauma.Items.Components
                     //continue the discharge to the top edge of the structure and extend from there
                     int topNodeIndex = nodeIndex;
                     Vector2 topPos = new Vector2(targetPos.X, targetStructure.WorldRect.Y);
-                    AddNodesBetweenPoints(targetPos, topPos, ref topNodeIndex);
+                    AddNodesBetweenPoints(targetPos, topPos, 0.05f, ref topNodeIndex);
                     nodes.Add(new Node(topPos, topNodeIndex));
                     FindNodes(entitiesInRange, topPos, nodes.Count - 1, newRange);
 
                     //continue the discharge to the bottom edge of the structure and extend from there
                     int bottomNodeIndex = nodeIndex;
                     Vector2 bottomBos = new Vector2(targetPos.X, targetStructure.WorldRect.Y - targetStructure.Rect.Height);
-                    AddNodesBetweenPoints(targetPos, bottomBos, ref bottomNodeIndex);
+                    AddNodesBetweenPoints(targetPos, bottomBos, 0.05f, ref bottomNodeIndex);
                     nodes.Add(new Node(bottomBos, bottomNodeIndex));
                     FindNodes(entitiesInRange, bottomBos, nodes.Count - 1, newRange);
                 }
@@ -352,8 +362,8 @@ namespace Barotrauma.Items.Components
             else if (entitiesInRange[closestIndex] is Character character)
             {
                 Vector2 targetPos = character.WorldPosition;
-                //create nodes from the current position to the closest point on the structure
-                AddNodesBetweenPoints(currPos, targetPos, ref parentNodeIndex);
+                //create nodes from the current position to the closest point on the character
+                AddNodesBetweenPoints(currPos, targetPos, 0.25f, ref parentNodeIndex);
                 nodes.Add(new Node(targetPos, parentNodeIndex));
                 entitiesInRange.RemoveAt(closestIndex);
                 charactersInRange.Add(new Pair<Character, Node>(character, nodes[parentNodeIndex]));
@@ -361,13 +371,18 @@ namespace Barotrauma.Items.Components
             }     
         }
 
-        private void AddNodesBetweenPoints(Vector2 currPos, Vector2 targetPos, ref int parentNodeIndex)
+        private void AddNodesBetweenPoints(Vector2 currPos, Vector2 targetPos, float variance, ref int parentNodeIndex)
         {
             Vector2 diff = targetPos - currPos;
             float dist = diff.Length();
-            for (float x = MaxNodeDistance; x < dist - MaxNodeDistance; x += MaxNodeDistance)
+            Vector2 normal = new Vector2(-diff.Y, diff.X) / dist;
+            for (float x = MaxNodeDistance; x < dist - MaxNodeDistance; x += MaxNodeDistance * Rand.Range(0.5f, 1.5f))
             {
-                nodes.Add(new Node(currPos + (diff / dist) * x, parentNodeIndex));
+                //0 at the edges, 1 at the center
+                float normalOffset = (0.5f - Math.Abs(x / dist - 0.5f)) * 2.0f;
+                normalOffset *= variance * dist * Rand.Range(-1.0f, 1.0f);
+
+                nodes.Add(new Node(currPos + (diff / dist) * x + normal * normalOffset, parentNodeIndex));
                 parentNodeIndex = nodes.Count - 1;
             }
         }
