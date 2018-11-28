@@ -635,22 +635,85 @@
   <sonarflorabranch4 spawnpos="None" minsize="0.8" maxsize="1.2" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" scaleoscillation="0.0,0.1" scaleoscillationfrequency="0.2" commonness="0" depthrange="-0.02,-0.02">
     <Sprite texture="Content/LevelObjects/SonarFloraBranches.png" sourcerect="38,374,499,355" origin="0.9,0.1" />
   </sonarflorabranch4>
-  <icechunk spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="10" depthrange="100,2000">
+  
+  <!-- ice chunks-->
+  <icechunk1 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
+    <overridecommonness commonness="10" leveltype="ColdCavernsBasic" />
+    <overridecommonness commonness="10" leveltype="ColdCavernsMaze" />
+    <overridecommonness commonness="10" leveltype="RidgeBasic" />
+    <overridecommonness commonness="10" leveltype="VoidBasic" />
     <Sprite texture="Content/LevelObjects/ice.png" sourcerect="0,0,668,523" origin="0.5,0.5" />
     <SpecularSprite texture="Content/LevelObjects/ice_specular.png" sourcerect="0,0,668,523" origin="0.5,0.5" />
-  </icechunk>
-  <icechunk spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="10" depthrange="100,2000">
+  </icechunk1>
+  <icechunk2 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
+    <overridecommonness commonness="10" leveltype="ColdCavernsBasic" />
+    <overridecommonness commonness="10" leveltype="ColdCavernsMaze" />
+    <overridecommonness commonness="10" leveltype="RidgeBasic" />
+    <overridecommonness commonness="10" leveltype="VoidBasic" />
     <Sprite texture="Content/LevelObjects/ice.png" sourcerect="669,0,355,513" origin="0.5,0.5" />
     <SpecularSprite texture="Content/LevelObjects/ice_specular.png" sourcerect="669,0,355,513" origin="0.5,0.5" />
-  </icechunk>
-  <icechunk spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="10" depthrange="100,2000">
+  </icechunk2>
+  <icechunk3 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
+    <overridecommonness commonness="10" leveltype="ColdCavernsBasic" />
+    <overridecommonness commonness="10" leveltype="ColdCavernsMaze" />
+    <overridecommonness commonness="10" leveltype="RidgeBasic" />
+    <overridecommonness commonness="10" leveltype="VoidBasic" />
     <Sprite texture="Content/LevelObjects/ice.png" sourcerect="0,523,331,501" origin="0.5,0.5" />
     <SpecularSprite texture="Content/LevelObjects/ice_specular.png" sourcerect="0,523,331,501" origin="0.5,0.5" />
-  </icechunk>
-  <icechunk spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="10" depthrange="100,2000">
+  </icechunk3>
+  <icechunk4 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
+    <overridecommonness commonness="10" leveltype="ColdCavernsBasic" />
+    <overridecommonness commonness="10" leveltype="ColdCavernsMaze" />
+    <overridecommonness commonness="10" leveltype="RidgeBasic" />
+    <overridecommonness commonness="10" leveltype="VoidBasic" />
     <Sprite texture="Content/LevelObjects/ice.png" sourcerect="702,513,322,511" origin="0.5,0.5" />
     <SpecularSprite texture="Content/LevelObjects/ice_specular.png" sourcerect="702,513,322,511" origin="0.5,0.5" />
-  </icechunk>
+  </icechunk4>
+
+  <!-- rocks chunks-->
+  <rock1 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
+    <overridecommonness commonness="10" leveltype="WastesBasic" />
+    <Sprite texture="Content/LevelObjects/Rock.png" sourcerect="0,0,668,523" origin="0.5,0.5" />
+    <SpecularSprite texture="Content/LevelObjects/RockSpecular.png" sourcerect="0,0,668,523" origin="0.5,0.5" />
+  </rock1>
+  <rock2 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
+    <overridecommonness commonness="10" leveltype="WastesBasic" />
+    <Sprite texture="Content/LevelObjects/Rock.png" sourcerect="669,0,355,513" origin="0.5,0.5" />
+    <SpecularSprite texture="Content/LevelObjects/RockSpecular.png" sourcerect="669,0,355,513" origin="0.5,0.5" />
+  </rock2>
+  <rock3 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
+    <overridecommonness commonness="10" leveltype="WastesBasic" />
+    <Sprite texture="Content/LevelObjects/Rock.png" sourcerect="0,523,331,501" origin="0.5,0.5" />
+    <SpecularSprite texture="Content/LevelObjects/RockSpecular.png" sourcerect="0,523,331,501" origin="0.5,0.5" />
+  </rock3>
+  <rock4 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
+    <overridecommonness commonness="10" leveltype="WastesBasic" />
+    <Sprite texture="Content/LevelObjects/Rock.png" sourcerect="702,513,322,511" origin="0.5,0.5" />
+    <SpecularSprite texture="Content/LevelObjects/RockSpecular.png" sourcerect="702,513,322,511" origin="0.5,0.5" />
+  </rock4>
+  
+  <!-- mossy rocks chunks-->
+  <mossyrock1 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
+    <overridecommonness commonness="10" leveltype="PlateauBasic" />
+    <Sprite texture="Content/LevelObjects/MossyRock.png" sourcerect="0,0,668,523" origin="0.5,0.5" />
+    <SpecularSprite texture="Content/LevelObjects/MossyRockSpecular.png" sourcerect="0,0,668,523" origin="0.5,0.5" />
+  </mossyrock1>
+  <mossyrock2 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
+    <overridecommonness commonness="10" leveltype="PlateauBasic" />
+    <Sprite texture="Content/LevelObjects/MossyRock.png" sourcerect="669,0,355,513" origin="0.5,0.5" />
+    <SpecularSprite texture="Content/LevelObjects/MossyRockSpecular.png" sourcerect="669,0,355,513" origin="0.5,0.5" />
+  </mossyrock2>
+  <mossyrock3 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
+    <overridecommonness commonness="10" leveltype="PlateauBasic" />
+    <Sprite texture="Content/LevelObjects/MossyRock.png" sourcerect="0,523,331,501" origin="0.5,0.5" />
+    <SpecularSprite texture="Content/LevelObjects/MossyRockSpecular.png" sourcerect="0,523,331,501" origin="0.5,0.5" />
+  </mossyrock3>
+  <mossyrock4 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
+    <overridecommonness commonness="10" leveltype="PlateauBasic" />
+    <Sprite texture="Content/LevelObjects/MossyRock.png" sourcerect="702,513,322,511" origin="0.5,0.5" />
+    <SpecularSprite texture="Content/LevelObjects/MossyRockSpecular.png" sourcerect="702,513,322,511" origin="0.5,0.5" />
+  </mossyrock4>
+  
   <blacksmoker1 spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="1.2" randomrotation="-5,5" commonness="0">
     <overridecommonness commonness="1" leveltype="WastesBasic" />
     <overridecommonness commonness="3" leveltype="RidgeBasic" />
