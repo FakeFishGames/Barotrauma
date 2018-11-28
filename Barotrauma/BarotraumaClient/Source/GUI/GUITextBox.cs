@@ -68,6 +68,8 @@ namespace Barotrauma
         private Vector2 selectionEndPos;
         private Vector2 selectionRectSize;
 
+        private readonly Memento<string> memento = new Memento<string>();
+
         public GUITextBlock.TextGetterHandler TextGetter
         {
             get { return textBlock.TextGetter; }
@@ -208,7 +210,7 @@ namespace Barotrauma
             rectT.ScaleChanged += () => { caretPosDirty = true; };
         }
 
-        private bool SetText(string text)
+        private bool SetText(string text, bool store = true)
         {
             if (textFilterFunction != null)
             {
@@ -230,6 +232,10 @@ namespace Barotrauma
                 {
                     textBlock.Text = textBlock.Text.Substring(0, textBlock.Text.Length - 1);
                 }
+            }
+            if (store)
+            {
+                memento.Store(textBlock.Text);
             }
             return true;
         }
@@ -564,6 +570,24 @@ namespace Barotrauma
                     break;
                 case (char)0x1: // ctrl-a
                     SelectAll();
+                    break;
+                case (char)0x1A: // ctrl-z
+                    text = memento.Undo();
+                    if (text != Text)
+                    {
+                        SetText(text, false);
+                        CaretIndex = Text.Length;
+                        OnTextChanged?.Invoke(this, Text);
+                    }
+                    break;
+                case (char)0x12: // ctrl-r
+                    text = memento.Redo();
+                    if (text != Text)
+                    {
+                        SetText(text, false);
+                        CaretIndex = Text.Length;
+                        OnTextChanged?.Invoke(this, Text);
+                    }
                     break;
             }
         }
