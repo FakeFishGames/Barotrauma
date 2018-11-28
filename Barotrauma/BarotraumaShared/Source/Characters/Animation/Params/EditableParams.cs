@@ -120,7 +120,7 @@ namespace Barotrauma
 
         #region Memento
         public readonly Memento<EditableParams> memento = new Memento<EditableParams>();
-        public abstract void StoreState();
+        public abstract void CreateSnapshot();
         public abstract void Undo();
         public abstract void Redo();
         public void ClearHistory() => memento.Clear();

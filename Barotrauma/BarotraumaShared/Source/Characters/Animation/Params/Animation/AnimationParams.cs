@@ -380,12 +380,14 @@ namespace Barotrauma
         }
 
         #region Memento
-        protected void StoreState<T>() where T : AnimationParams, new()
+        protected void CreateSnapshot<T>() where T : AnimationParams, new()
         {
             Serialize();
-            var copy = new T();
-            copy.IsLoaded = true;
-            copy.doc = new XDocument(doc);
+            var copy = new T
+            {
+                IsLoaded = true,
+                doc = new XDocument(doc)
+            };
             copy.Deserialize();
             copy.Serialize();
             memento.Store(copy);
