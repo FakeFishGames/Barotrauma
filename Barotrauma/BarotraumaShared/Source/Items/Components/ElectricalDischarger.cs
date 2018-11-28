@@ -68,7 +68,7 @@ namespace Barotrauma.Items.Components
             get { return nodes; }
         }
 
-        private readonly List<Character> charactersInRange = new List<Character>();
+        private readonly List<Pair<Character,Node>> charactersInRange = new List<Pair<Character, Node>>();
 
         private bool charging;
 
@@ -140,9 +140,9 @@ namespace Barotrauma.Items.Components
             FindNodes(item.WorldPosition, Range);
             if (attack != null)
             {
-                foreach (Character character in charactersInRange)
+                foreach (Pair<Character, Node> characterInRange in charactersInRange)
                 {
-                    character.ApplyAttack(null, character.WorldPosition, attack, 1.0f);
+                    characterInRange.First.ApplyAttack(null, characterInRange.Second.WorldPosition, attack, 1.0f);
                 }
             }
             DischargeProjSpecific();
@@ -208,7 +208,7 @@ namespace Barotrauma.Items.Components
                 if (OutdoorsOnly && character.Submarine != null) continue;
                 if (character.Submarine != null && !submarinesInRange.Contains(character.Submarine)) continue;
 
-                if (Vector2.DistanceSquared(character.WorldPosition, worldPosition) < range * range)
+                if (Vector2.DistanceSquared(character.WorldPosition, worldPosition) < range * range * RangeMultiplierInWalls)
                 {
                     entitiesInRange.Add(character);
                 }
@@ -356,7 +356,7 @@ namespace Barotrauma.Items.Components
                 AddNodesBetweenPoints(currPos, targetPos, ref parentNodeIndex);
                 nodes.Add(new Node(targetPos, parentNodeIndex));
                 entitiesInRange.RemoveAt(closestIndex);
-                charactersInRange.Add(character);
+                charactersInRange.Add(new Pair<Character, Node>(character, nodes[parentNodeIndex]));
                 FindNodes(entitiesInRange, targetPos, nodes.Count - 1, currentRange);
             }     
         }

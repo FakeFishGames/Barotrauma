@@ -4,11 +4,12 @@
     <!-- TODO: electrical discharge coil sprite -->
     <Sprite texture="coilgunbase.png" depth="0.01" sourcerect="12,184,232,38" />
     <ElectricalDischarger duration="0.25" outdoorsonly="true" powerconsumption="10000">
-      <Attack>
+      <Attack targetimpulse="50">
         <Affliction identifier="stun" strength="8"/>
         <Affliction identifier="burn" strength="10"/>
       </Attack>
       <StatusEffect type="OnUse">
+        <ParticleEmitter particle="risingbubbles" anglemin="0" anglemax="360" particleamount="50" velocitymin="50" velocitymax="100" scalemin="1" scalemax="2" />
         <Explosion range="500.0" stun="0" force="0.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
       </StatusEffect>
     </ElectricalDischarger>
