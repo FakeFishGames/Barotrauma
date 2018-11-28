@@ -123,7 +123,9 @@ namespace Barotrauma
                 isEndlessRunner = false;
                 if (character != null)
                 {
-                    character?.Remove();
+                    RagdollParams.ClearHistory();
+                    CurrentAnimation.ClearHistory();
+                    character.Remove();
                     character = null;
                 }
                 GameMain.World.ProcessChanges();
@@ -181,19 +183,7 @@ namespace Barotrauma
                     Character.DisableControls = true;
                     Widget.EnableMultiSelect = !editAnimations;
                     // Undo/Redo
-                    if (PlayerInput.KeyHit(Keys.S))
-                    {
-                        // TODO: automatize
-                        if (editJoints || editLimbs || editIK)
-                        {
-                            RagdollParams.StoreState();
-                        }
-                        if (editAnimations)
-                        {
-                            CurrentAnimation.StoreState();
-                        }
-                    }
-                    else if (PlayerInput.KeyHit(Keys.Z))
+                    if (PlayerInput.KeyHit(Keys.Z))
                     {
                         if (editJoints || editLimbs || editIK)
                         {
@@ -278,7 +268,9 @@ namespace Barotrauma
                     }
                     if (animSelection.SelectedIndex != index)
                     {
+                        CurrentAnimation.ClearHistory();
                         animSelection.Select(index);
+                        CurrentAnimation.StoreState();
                     }
                 }
                 if (PlayerInput.KeyHit(Keys.E))
@@ -684,6 +676,7 @@ namespace Barotrauma
 
         private void CopyLimb(Limb limb)
         {
+            //RagdollParams.StoreState();
             // TODO: copy all params and sub params -> use a generic method?
             var rect = limb.ActiveSprite.SourceRect;
             var spriteParams = limb.limbParams.normalSpriteParams;
@@ -726,6 +719,7 @@ namespace Barotrauma
         /// </summary>
         private void CreateJoint(int fromLimb, int toLimb, Vector2? anchor1 = null, Vector2? anchor2 = null)
         {
+            //RagdollParams.StoreState();
             Vector2 a1 = anchor1 ?? Vector2.Zero;
             Vector2 a2 = anchor2 ?? Vector2.Zero;
             var newJointElement = new XElement("joint",
@@ -752,6 +746,7 @@ namespace Barotrauma
         /// </summary>
         private void DeleteSelected()
         {
+            //RagdollParams.StoreState();
             for (int i = 0; i < selectedJoints.Count; i++)
             {
                 var joint = selectedJoints[i];
@@ -995,6 +990,8 @@ namespace Barotrauma
             if (character != null)
             {
                 dontFollowCursor = character.dontFollowCursor;
+                RagdollParams.ClearHistory();
+                CurrentAnimation.ClearHistory();
                 character.Remove();
                 character = null;
             }
@@ -1044,6 +1041,8 @@ namespace Barotrauma
             CreateGUI();
             ClearWidgets();
             ResetParamsEditor();
+            CurrentAnimation.StoreState();
+            RagdollParams.StoreState();
         }
 
         private void ClearWidgets()
@@ -1350,6 +1349,7 @@ namespace Barotrauma
             limbScaleBar.Bar.OnClicked += (button, data) =>
             {
                 RecreateRagdoll();
+                RagdollParams.StoreState();
                 return true;
             };
             jointScaleBar.Bar.OnClicked += (button, data) =>
@@ -1358,6 +1358,7 @@ namespace Barotrauma
                 {
                     RecreateRagdoll();
                 }
+                RagdollParams.StoreState();
                 return true;
             };
             var uniformScalingToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), ragdollControls.RectTransform)
@@ -2202,6 +2203,7 @@ namespace Barotrauma
                 }
                 selectedLimbs.Add(limb);
                 ResetParamsEditor();
+                //RagdollParams.StoreState();
             }
             else if (Widget.EnableMultiSelect)
             {
@@ -2221,6 +2223,18 @@ namespace Barotrauma
                         door.IsOpen = true;
                     }
                 }
+            }
+        }
+
+        private void SaveSnapshot()
+        {
+            if (editJoints || editLimbs || editIK)
+            {
+                RagdollParams.StoreState();
+            }
+            if (editAnimations)
+            {
+                CurrentAnimation.StoreState();
             }
         }
         #endregion
@@ -2755,7 +2769,6 @@ namespace Barotrauma
                 }
                 else
                 {
-
                     GUI.DrawRectangle(spriteBatch, corners, Color.Red);
                 }
                 // Draw origins
@@ -3524,6 +3537,11 @@ namespace Barotrauma
                 {
                     isFreezed = freezeToggle.Selected;
                 }
+                // Might not be entirely reliable, since the method is used inside the draw loop.
+                if (PlayerInput.LeftButtonClicked())
+                {
+                    SaveSnapshot();
+                }
             }
         }
         #endregion
@@ -3540,6 +3558,7 @@ namespace Barotrauma
                 {
                     tooltipOffset = new Vector2(selectedSize / 2 + 5, -10)
                 };
+                widget.MouseUp += () => CurrentAnimation.StoreState();
                 widget.color = color;
                 widget.PreUpdate += dTime => widget.Enabled = editAnimations;
                 widget.PostUpdate += dTime =>
@@ -3639,6 +3658,7 @@ namespace Barotrauma
                     }
                     ResetParamsEditor();
                 };
+                widget.MouseUp += () => RagdollParams.StoreState();
                 widget.tooltip = joint.jointParams.Name;
                 jointSelectionWidgets.Add(ID, widget);
                 return widget;
