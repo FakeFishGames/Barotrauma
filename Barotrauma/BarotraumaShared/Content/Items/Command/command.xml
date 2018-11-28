@@ -73,13 +73,13 @@
     linkable="true"
     allowedlinks="statusmonitor"
     category="Machine"
-    scale ="0.3">
+    scale="0.35">
 
     <Sprite texture="Content/Items/Command/ShuttleNavigator.png" depth="0.8" sourcerect="0,0,406,333"/>
     <BrokenSprite texture="Content/Items/Command/ShuttleNavigator.png" sourcerect="406,0,406,333" depth="0.8" maxcondition="55" fadein="true" />
     <BrokenSprite texture="Content/Items/Command/ShuttleNavigator.png" sourcerect="812,0,406,333" depth="0.8" maxcondition="0" />
 
-    <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10" linkuitocomponent="3">
+    <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10" linkuitocomponent="1">
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" style="OuterGlow" color="0,0,0,0.8" absoluteoffset="30,0"/>
       <StatusEffect type="InWater" target="This" condition="-1.0"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false"/>
@@ -87,12 +87,6 @@
       <sparksound file="Content/Items/Electricity/zap2.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap3.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap4.ogg" range="500" loop="false"/>
-      <LightComponent range="10.0" lightcolor="1.0,1.0,1.0,0.2" powerconsumption="5" IsOn="true" castshadows="false" allowingameediting="false">
-        <sprite texture="Content/Items/Command/navigatorLights.png" depth="0.025" origin="0.5,0.5" alpha="1.0"/>
-      </LightComponent>
-      <LightComponent range="10.0" lightcolor="1.0,1.0,1.0,0.5" powerconsumption="5" IsOn="true" castshadows="false" blinkfrequency="1" allowingameediting="false">
-        <sprite texture="Content/Items/Command/navigatorLightsBlinking.png" depth="0.025" origin="0.5,0.5" alpha="1.0"/>
-      </LightComponent>
     </Steering>
 
     <Sonar canbeselected = "true" powerconsumption="100" displaybordersize="-0.1">
