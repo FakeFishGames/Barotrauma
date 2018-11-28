@@ -29,8 +29,10 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             string signalOut = item.InWater ? output : falseOutput;
-
-            item.SendSignal(0, signalOut, "signal_out", null);
+            if (!string.IsNullOrEmpty(signalOut))
+            {
+                item.SendSignal(0, signalOut, "signal_out", null);
+            }
         }
     }
 }

@@ -588,15 +588,9 @@ namespace Barotrauma
             return default(T);
         }
 
-        public List<T> GetComponents<T>()
+        public IEnumerable<T> GetComponents<T>()
         {
-            List<T> components = new List<T>();
-            foreach (ItemComponent ic in this.components)
-            {
-                if (ic is T) components.Add((T)(object)ic);
-            }
-
-            return components;
+            return components.Where(c => c is T).Cast<T>();
         }
         
         public void RemoveContained(Item contained)
@@ -834,7 +828,17 @@ namespace Barotrauma
                 }
             }
 
-            if (effect.HasTargetType(StatusEffect.TargetType.Character)) targets.Add(character);
+            if (effect.HasTargetType(StatusEffect.TargetType.Character))
+            {
+                if (type == ActionType.OnContained && ParentInventory is CharacterInventory characterInventory)
+                {
+                    targets.Add(characterInventory.Owner as ISerializableEntity);
+                }
+                else
+                {
+                    targets.Add(character);
+                }
+            }
 
             if (effect.HasTargetType(StatusEffect.TargetType.Limb))
             {

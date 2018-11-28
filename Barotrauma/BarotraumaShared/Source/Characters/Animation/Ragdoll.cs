@@ -787,6 +787,12 @@ namespace Barotrauma
 
         public Vector2 GetCenterOfMass()
         {
+            //all limbs disabled -> use the position of the collider
+            if (!Limbs.Any(l => !l.IsSevered && l.body.Enabled))
+            {
+                return Collider.SimPosition;
+            }
+
             Vector2 centerOfMass = Vector2.Zero;
             float totalMass = 0.0f;
             foreach (Limb limb in Limbs)
@@ -798,6 +804,15 @@ namespace Barotrauma
 
             if (totalMass <= 0.0f) return Collider.SimPosition;
             centerOfMass /= totalMass;
+
+            if (!MathUtils.IsValid(centerOfMass))
+            {
+                string errorMsg = "Ragdoll.GetCenterOfMass returned an invalid value (" + centerOfMass + "). Limb positions: {"
+                    + string.Join(", ", limbs.Select(l => l.SimPosition)) + "}, total mass: " + totalMass + ".";
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Ragdoll.GetCenterOfMass", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return Collider.SimPosition;
+            }
 
             return centerOfMass;
         }

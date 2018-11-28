@@ -22,7 +22,6 @@ namespace Barotrauma
         private GUITextBlock texturePathText;
         private GUITextBlock xmlPathText;
         private GUIScrollBar zoomBar;
-        private List<string> xmlPaths = new List<string>();
         private List<Sprite> selectedSprites = new List<Sprite>();
         private List<Sprite> dirtySprites = new List<Sprite>();
         private Texture2D selectedTexture;

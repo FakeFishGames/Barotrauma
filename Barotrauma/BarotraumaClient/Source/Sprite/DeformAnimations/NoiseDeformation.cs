@@ -44,8 +44,8 @@ namespace Barotrauma.SpriteDeformations
                     float normalizedY = y / (float)(Resolution.X - 1) * NoiseDeformationParams.Frequency;
                     
                     Deformation[x, y] = new Vector2(
-                        (float)PerlinNoise.Perlin(normalizedX, normalizedY, phase) - 0.5f,
-                        (float)PerlinNoise.Perlin(normalizedX, normalizedY, phase + 0.5f) - 0.5f);
+                        PerlinNoise.GetPerlin(normalizedX + phase, normalizedY + phase) - 0.5f,
+                        PerlinNoise.GetPerlin(normalizedY - phase, normalizedX - phase) - 0.5f);
                 }
             }
         }
@@ -60,8 +60,8 @@ namespace Barotrauma.SpriteDeformations
         {
             if (NoiseDeformationParams.ChangeSpeed > 0.0f)
             {
-                phase += deltaTime * NoiseDeformationParams.ChangeSpeed;
-                phase %= 255;
+                phase += deltaTime * NoiseDeformationParams.ChangeSpeed / 100.0f;
+                phase %= 1.0f;
                 UpdateNoise();
             }
         }

@@ -77,7 +77,7 @@ namespace Barotrauma
         {
             for (int i = 0; i < character.Inventory.Items.Length; i++)
             {
-                if (character.Inventory.Items[i] == null) continue;
+                if (character.Inventory.Items[i] == null || character.Inventory.Items[i].Condition <= 0.0f) continue;
                 if (itemIdentifiers.Any(id => character.Inventory.Items[i].Prefab.Identifier == id || character.Inventory.Items[i].HasTag(id)))
                 {
                     targetItem = character.Inventory.Items[i];
@@ -91,7 +91,7 @@ namespace Barotrauma
                 {
                     foreach (Item containedItem in containedItems)
                     {
-                        if (containedItem == null) continue;
+                        if (containedItem == null || containedItem.Condition <= 0.0f) continue;
                         if (itemIdentifiers.Any(id => containedItem.Prefab.Identifier == id || containedItem.HasTag(id)))
                         {
                             targetItem = containedItem;

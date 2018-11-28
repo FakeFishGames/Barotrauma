@@ -38,6 +38,12 @@ namespace Barotrauma
         {
             var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
             if (pathSteering == null) return;
+
+            //don't keep dragging others when idling
+            if (character.SelectedCharacter != null)
+            {
+                character.DeselectCharacter();
+            }
             
             if (character.AnimController.InWater)
             {

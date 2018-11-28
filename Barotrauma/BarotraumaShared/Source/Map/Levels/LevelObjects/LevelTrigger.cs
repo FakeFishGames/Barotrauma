@@ -310,6 +310,7 @@ namespace Barotrauma
 
             if (entity is Character character)
             {
+                if (character.CurrentHull != null) return false;
                 if (character.ConfigPath == Character.HumanConfigFile)
                 {
                     if (!triggeredBy.HasFlag(TriggererType.Human)) return false;
@@ -319,8 +320,9 @@ namespace Barotrauma
                     if (!triggeredBy.HasFlag(TriggererType.Creature)) return false;
                 }
             }
-            else if (entity is Item)
+            else if (entity is Item item)
             {
+                if (item.CurrentHull != null) return false;
                 if (!triggeredBy.HasFlag(TriggererType.Item)) return false;
             }
             else if (entity is Submarine)
@@ -344,6 +346,15 @@ namespace Barotrauma
         {
             Entity entity = GetEntity(fixtureB);
             if (entity == null) return;
+
+            if (entity is Character character && 
+                (!character.Enabled || character.Removed) &&
+                triggerers.Contains(entity))
+            {
+                TriggererPosition.Remove(entity);
+                triggerers.Remove(entity);
+                return;
+            }
 
             //check if there are any other contacts with the entity
             //(the OnSeparation callback happens when two fixtures separate, 

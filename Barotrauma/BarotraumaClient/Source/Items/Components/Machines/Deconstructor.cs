@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Networking;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -35,7 +36,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
-            var itemContainers = item.GetComponents<ItemContainer>();
+            var itemContainers = item.GetComponents<ItemContainer>().ToList();
             for (int i = 0; i < 2 && i < itemContainers.Count; i++)
             {
                 itemContainers[i].AllowUIOverlap = true;

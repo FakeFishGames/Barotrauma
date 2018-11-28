@@ -34,6 +34,19 @@ namespace Barotrauma.RuinGeneration
         private List<RuinRoom> roomTypeList;
                 
         public string Name => "RuinGenerationParams";
+        
+        [Serialize("5000,5000", false), Editable()]
+        public Point SizeMin
+        {
+            get;
+            set;
+        }
+        [Serialize("8000,8000", false), Editable()]
+        public Point SizeMax
+        {
+            get;
+            set;
+        }
 
         [Serialize(3, false), Editable(MinValueInt = 1, MaxValueInt = 10, ToolTip = "The ruin generation algorithm \"splits\" the ruin area into two, splits these areas again, repeats this for some number of times and creates a room at each of the final split areas. This is value determines the minimum number of times the split is done.")]
         public int RoomDivisionIterationsMin
@@ -294,6 +307,13 @@ namespace Barotrauma.RuinGeneration
                 private set;
             }
 
+            //Identifier of the item to run the wire from. Only needed in item assemblies to determine which item in the assembly to use.
+            public string SourceEntityIdentifier
+            {
+                get;
+                private set;
+            }
+
             //if set, the connection is done by running a wire from 
             //(Pair.First = the name of the connection in this item) to (Pair.Second = the name of the connection in the target item)
             public Pair<string, string> WireConnection
@@ -306,6 +326,7 @@ namespace Barotrauma.RuinGeneration
             {
                 RoomName = element.GetAttributeString("roomname", "");
                 TargetEntityIdentifier = element.GetAttributeString("targetentity", "");
+                SourceEntityIdentifier = element.GetAttributeString("sourceentity", "");
                 foreach (XElement subElement in element.Elements())
                 {
                     if (subElement.Name.ToString().ToLowerInvariant() == "wire")
@@ -332,7 +353,18 @@ namespace Barotrauma.RuinGeneration
 
         [Serialize(1.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
         public float Commonness { get; private set; }
-        
+
+        [Serialize(1, false)]
+        public int MinAmount { get; private set; }
+        [Serialize(1, false)]
+        public int MaxAmount { get; private set; }
+
+        [Serialize("0,0", false)]
+        public Point MinRoomSize { get; private set; }
+
+        [Serialize("100000,100000", false)]
+        public Point MaxRoomSize { get; private set; }
+
         public List<EntityConnection> EntityConnections { get; private set; } = new List<EntityConnection>();
 
         private readonly List<RuinEntityConfig> childEntities = new List<RuinEntityConfig>();
