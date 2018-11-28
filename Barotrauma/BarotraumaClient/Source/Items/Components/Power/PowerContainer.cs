@@ -100,7 +100,7 @@ namespace Barotrauma.Items.Components
                 new Vector2(
                     item.DrawPosition.X - item.Sprite.SourceRect.Width / 2 * item.Scale + indicatorPosition.X * item.Scale,
                     -item.DrawPosition.Y - item.Sprite.SourceRect.Height / 2 * item.Scale + indicatorPosition.Y * item.Scale),
-                indicatorSize * item.Scale, Color.Black);
+                indicatorSize * item.Scale, Color.Black, depth: item.SpriteDepth - 0.00001f);
 
             if (charge > 0)
             {
@@ -111,7 +111,8 @@ namespace Barotrauma.Items.Components
                     new Vector2(
                         item.DrawPosition.X - item.Sprite.SourceRect.Width / 2 * item.Scale + indicatorPosition.X * item.Scale + 1,
                         -item.DrawPosition.Y - item.Sprite.SourceRect.Height / 2 * item.Scale + indicatorPosition.Y * item.Scale + 1 + ((indicatorSize.Y * item.Scale) * (1.0f - charge / capacity))),
-                    new Vector2(indicatorSize.X * item.Scale - 2, indicatorSize.Y * item.Scale * (charge / capacity) - 2), indicatorColor, true);
+                    new Vector2(indicatorSize.X * item.Scale - 2, (indicatorSize.Y * item.Scale - 2) * (charge / capacity)), indicatorColor, true, 
+                    depth: item.SpriteDepth - 0.00001f);
                 }
                 else
                 {
@@ -119,7 +120,8 @@ namespace Barotrauma.Items.Components
                     new Vector2(
                         item.DrawPosition.X - item.Sprite.SourceRect.Width / 2 * item.Scale + indicatorPosition.X * item.Scale + 1 ,
                         -item.DrawPosition.Y - item.Sprite.SourceRect.Height / 2 * item.Scale + indicatorPosition.Y * item.Scale + 1),
-                    new Vector2(indicatorSize.X * item.Scale * (charge / capacity) - 2, indicatorSize.Y * item.Scale - 2), indicatorColor, true);
+                    new Vector2((indicatorSize.X * item.Scale - 2) * (charge / capacity), indicatorSize.Y * item.Scale - 2), indicatorColor, true, 
+                    depth: item.SpriteDepth - 0.00001f);
                 }
             }
 
