@@ -307,6 +307,13 @@ namespace Barotrauma.RuinGeneration
                 private set;
             }
 
+            //Identifier of the item to run the wire from. Only needed in item assemblies to determine which item in the assembly to use.
+            public string SourceEntityIdentifier
+            {
+                get;
+                private set;
+            }
+
             //if set, the connection is done by running a wire from 
             //(Pair.First = the name of the connection in this item) to (Pair.Second = the name of the connection in the target item)
             public Pair<string, string> WireConnection
@@ -319,6 +326,7 @@ namespace Barotrauma.RuinGeneration
             {
                 RoomName = element.GetAttributeString("roomname", "");
                 TargetEntityIdentifier = element.GetAttributeString("targetentity", "");
+                SourceEntityIdentifier = element.GetAttributeString("sourceentity", "");
                 foreach (XElement subElement in element.Elements())
                 {
                     if (subElement.Name.ToString().ToLowerInvariant() == "wire")
