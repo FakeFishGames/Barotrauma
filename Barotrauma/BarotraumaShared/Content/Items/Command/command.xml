@@ -211,10 +211,11 @@
     identifier="sonartransducer"
     tags="command"
     category="Machine"
-    spritecolor="255,255,255,255">
+    spritecolor="255,255,255,255"
+    Scale="0.75">
 
     <!-- TODO: sonar transducer light implementation -->
-    <Sprite texture="Content/Items/Command/sonarTransducer.png" sourcerect="0,0,97,97" depth="0.8"/>
+    <Sprite texture="Content/Items/Command/sonarTransducer.png" sourcerect="0,0,130,130" depth="0.8"/>
 
     <SonarTransducer MinVoltage="0.5" PowerConsumption="100" canbeselected="true"/>
 

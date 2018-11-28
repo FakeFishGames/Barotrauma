@@ -257,7 +257,7 @@
       </Containable>
     </ItemContainer>
   </Item>
-  <Item name="Flare" identifier="flare" category="Equipment" cargocontaineridentifier="metalcrate" spritecolor="1.0,0.0,0.0,1.0" tags="smallitem">
+  <Item name="Flare" identifier="flare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem">
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
