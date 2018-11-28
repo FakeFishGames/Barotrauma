@@ -268,6 +268,16 @@ namespace Barotrauma
             return null;
         }
 
+        public Limb GetAfflictionLimb(Affliction affliction)
+        {
+            for (int i = 0; i < limbHealths.Count; i++)
+            {
+                if (!limbHealths[i].Afflictions.Contains(affliction)) continue;
+                return character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == i);
+            }
+            return null;
+        }
+
         /// <summary>
         /// Get the total strength of the afflictions of a specific type attached to a specific limb
         /// </summary>

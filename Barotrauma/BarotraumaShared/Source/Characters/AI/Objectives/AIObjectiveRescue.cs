@@ -1,14 +1,21 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Barotrauma
 {
     class AIObjectiveRescue : AIObjective
     {
+        const float TreatmentDelay = 0.5f;
+
         private readonly Character targetCharacter;
 
         private AIObjectiveGoTo goToObjective;
+
+        private float treatmentTimer;
 
         public override bool CanBeCompleted
         {
@@ -22,7 +29,7 @@ namespace Barotrauma
         }
 
         public AIObjectiveRescue(Character character, Character targetCharacter)
-            : base (character, "")
+            : base(character, "")
         {
             Debug.Assert(character != targetCharacter);
             this.targetCharacter = targetCharacter;
@@ -33,7 +40,7 @@ namespace Barotrauma
             AIObjectiveRescue rescueObjective = otherObjective as AIObjectiveRescue;
             return rescueObjective != null && rescueObjective.targetCharacter == targetCharacter;
         }
-        
+
         protected override void Act(float deltaTime)
         {
             //target in water -> move to a dry place first
@@ -56,13 +63,23 @@ namespace Barotrauma
                 }
                 return;
             }
-            
+
+            //target not in water -> we can start applying treatment
             if (!character.CanInteractWith(targetCharacter))
             {
                 AddSubObjective(goToObjective = new AIObjectiveGoTo(targetCharacter, character));
             }
             else
             {
+                if (character.SelectedCharacter == null)
+                {
+                    character?.Speak(TextManager.Get("DialogFoundUnconsciousTarget")
+                        .Replace("[targetname]", targetCharacter.Name).Replace("[roomname]", character.CurrentHull.RoomName),
+                        null, 1.0f,
+                        "foundunconscioustarget" + targetCharacter.Name, 60.0f);
+                }
+
+                character.SelectCharacter(targetCharacter);
                 GiveTreatment(deltaTime);
             }
         }
@@ -88,74 +105,118 @@ namespace Barotrauma
 
         private void GiveTreatment(float deltaTime)
         {
-            //TODO: reimplement AIObjectiveRescue using SuitableTreatments from the afflictions the patient has
-
-            //target is bleeding -> try to fix it before doing anything else
-            /*if (targetCharacter.Bleeding > 0.5f)
+            if (treatmentTimer > 0.0f)
             {
-                Item bandage = character.Inventory.FindItem("bandage");
-                if (bandage != null)
+                treatmentTimer -= deltaTime;
+            }
+            treatmentTimer = TreatmentDelay;
+
+            var allAfflictions = targetCharacter.CharacterHealth.GetAllAfflictions()
+                .Where(a => a.GetVitalityDecrease(targetCharacter.CharacterHealth) > 0)
+                .ToList();
+
+            allAfflictions.Sort((a1, a2) =>
+            {
+                return Math.Sign(a2.GetVitalityDecrease(targetCharacter.CharacterHealth) - a1.GetVitalityDecrease(targetCharacter.CharacterHealth));
+            });
+
+            //check if we already have a suitable treatment for any of the afflictions
+            foreach (Affliction affliction in allAfflictions)
+            {
+                foreach (KeyValuePair<string, float> treatmentSuitability in affliction.Prefab.TreatmentSuitability)
                 {
-                    if (bandage.Condition <= 0.0f)
+                    if (treatmentSuitability.Value > 0.0f)
                     {
-                        bandage.Drop();
+                        Item matchingItem = character.Inventory.FindItemByIdentifier(treatmentSuitability.Key);
+                        if (matchingItem == null) { continue; }
+                        ApplyTreatment(affliction, matchingItem);
+                        return;
+                    }
+                }
+            }
+
+            //didn't have any suitable treatments available, try to find some medical items
+            HashSet<string> suitableItemIdentifiers = new HashSet<string>();
+            foreach (Affliction affliction in allAfflictions)
+            {
+                foreach (KeyValuePair<string, float> treatmentSuitability in affliction.Prefab.TreatmentSuitability)
+                {
+                    if (treatmentSuitability.Value > 0.0f)
+                    {
+                        suitableItemIdentifiers.Add(treatmentSuitability.Key);
+                    }
+                }
+            }
+            if (suitableItemIdentifiers.Count > 0)
+            {
+                List<string> itemNameList = new List<string>();
+                foreach (string itemIdentifier in suitableItemIdentifiers)
+                {
+                    if (MapEntityPrefab.Find(null, itemIdentifier, showErrorMessages: false) is ItemPrefab itemPrefab)
+                    {
+                        itemNameList.Add(itemPrefab.Name);
+                    }
+                    //only list the first 4 items
+                    if (itemNameList.Count >= 4) break;
+                }
+
+                if (itemNameList.Count > 0)
+                {
+                    string itemListStr = "";
+                    if (itemNameList.Count == 1)
+                    {
+                        itemListStr = itemNameList[0];
                     }
                     else
                     {
-                        bandage.Use(deltaTime, character);
+                        itemListStr = string.Join(" or ", string.Join(", ", itemNameList.Take(itemNameList.Count - 1)), itemNameList.Last());
                     }
-                    return;
+                    character?.Speak(TextManager.Get("DialogListRequiredTreatments")
+                        .Replace("[targetname]", targetCharacter.Name)
+                        .Replace("[treatmentlist]", itemListStr),
+                        null, 2.0f, "listrequiredtreatments" + targetCharacter.Name, 60.0f);
                 }
 
-                Item syringe = character.Inventory.FindItem("Medical Syringe");
-                if (syringe == null)
-                {
-                    AddSubObjective(new AIObjectiveGetItem(character, "Medical Syringe", true));
-                    return;
-                }
-
-                var containItem = new AIObjectiveContainItem(character, "Fibrinozine", syringe.GetComponent<ItemContainer>());
-                if (!containItem.IsCompleted())
-                {
-                    AddSubObjective(containItem);
-                    return;
-                }
-
-                syringe.Use(deltaTime, character);
-            }*/
+                character.DeselectCharacter();
+                AddSubObjective(new AIObjectiveGetItem(character, suitableItemIdentifiers.ToArray(), true));
+            }
 
             character.AnimController.Anim = AnimController.Animation.CPR;
         }
 
-        /*private bool CheckRequiredItems()
+        private void ApplyTreatment(Affliction affliction, Item item)
         {
+            var targetLimb = targetCharacter.CharacterHealth.GetAfflictionLimb(affliction);
 
-
-            if (targetCharacter.Bleeding > 0.5f)
+            bool remove = false;
+            foreach (ItemComponent ic in item.components)
             {
-                var getItem = new AIObjectiveContainItem(character, new string[] { "Fibrinozine", "Bandage", "stopbleeding" }, syringe.GetComponent<ItemContainer>());
-                if (!getItem.IsCompleted())
-                {
-                    AddSubObjective(getItem);
-                    return false;
-                }
-            }
-            if (targetCharacter.Health < targetCharacter.MaxHealth * 0.5f)
-            {
-                var getItem = new AIObjectiveContainItem(character, new string[] { "Corrigodone", "heal" }, syringe.GetComponent<ItemContainer>());
-                if (!getItem.IsCompleted())
-                {
-                    AddSubObjective(getItem);
-                    return false;
-                }
+                if (!ic.HasRequiredContainedItems(addMessage: false)) continue;
+#if CLIENT
+                ic.PlaySound(ActionType.OnUse, character.WorldPosition, character);
+#endif
+                ic.WasUsed = true;
+                ic.ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter, targetLimb);
+                if (ic.DeleteOnUse) remove = true;
             }
 
-            return true;
-        }*/
+            if (remove)
+            {
+                Entity.Spawner?.AddToRemoveQueue(item);
+            }
+        }
 
         public override bool IsCompleted()
         {
-            return !targetCharacter.IsUnconscious || targetCharacter.IsDead;
+            bool isCompleted = !targetCharacter.IsUnconscious || targetCharacter.IsDead;
+
+            if (isCompleted)
+            {
+                character?.Speak(TextManager.Get("DialogTargetHealed").Replace("[targetname]", targetCharacter.Name),
+                    null, 1.0f, "targethealed" + targetCharacter.Name, 60.0f);
+            }
+
+            return isCompleted;
         }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
