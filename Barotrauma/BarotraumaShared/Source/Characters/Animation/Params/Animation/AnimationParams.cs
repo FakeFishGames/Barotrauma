@@ -382,11 +382,11 @@ namespace Barotrauma
         #region Memento
         protected void StoreState<T>() where T : AnimationParams, new()
         {
-            var copy = new T();
-            copy.Load(FullPath, SpeciesName);
             Serialize();
-            this.CopyValuesTo(copy);
+            var copy = new T();
+            copy.IsLoaded = true;
             copy.doc = new XDocument(doc);
+            copy.Deserialize();
             copy.Serialize();
             memento.Store(copy);
         }
