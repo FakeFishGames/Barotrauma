@@ -6,7 +6,6 @@ namespace Barotrauma
     public class Memento<T>
     {
         public T Current { get; private set; }
-        public T Previous { get; private set; }
 
         private Stack<T> undoStack = new Stack<T>();
         private Stack<T> redoStack = new Stack<T>();
@@ -16,18 +15,16 @@ namespace Barotrauma
             redoStack.Clear();
             if (Current != null)
             {
-                Previous = Current;
+                undoStack.Push(Current);
             }
             Current = newState;
-            undoStack.Push(newState);
         }
 
         public T Undo()
         {
             if (undoStack.Any())
             {
-                Previous = Current;
-                redoStack.Push(Previous);
+                redoStack.Push(Current);
                 Current = undoStack.Pop();
             }
             return Current;
@@ -37,8 +34,7 @@ namespace Barotrauma
         {
             if (redoStack.Any())
             {
-                Previous = Current;
-                undoStack.Push(Previous);
+                undoStack.Push(Current);
                 Current = redoStack.Pop();
             }
             return Current;
@@ -49,7 +45,6 @@ namespace Barotrauma
             undoStack.Clear();
             redoStack.Clear();
             Current = default(T);
-            Previous = default(T);
         }
     }
 }
