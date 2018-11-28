@@ -15,6 +15,8 @@ namespace Barotrauma
         }
 
         protected static FishWalkParams Empty = new FishWalkParams();
+
+        public override void StoreState() => StoreState<FishWalkParams>();
     }
 
     class FishRunParams : FishGroundedParams
@@ -29,6 +31,8 @@ namespace Barotrauma
         }
 
         protected static FishRunParams Empty = new FishRunParams();
+
+        public override void StoreState() => StoreState<FishRunParams>();
     }
 
     class FishSwimFastParams : FishSwimParams
@@ -38,6 +42,8 @@ namespace Barotrauma
         {
             return GetAnimParams<FishSwimFastParams>(character.SpeciesName, AnimationType.SwimFast, fileName);
         }
+
+        public override void StoreState() => StoreState<FishSwimFastParams>();
     }
 
     class FishSwimSlowParams : FishSwimParams
@@ -47,6 +53,8 @@ namespace Barotrauma
         {
             return GetAnimParams<FishSwimSlowParams>(character.SpeciesName, AnimationType.SwimSlow, fileName);
         }
+
+        public override void StoreState() => StoreState<FishSwimSlowParams>();
     }
 
     abstract class FishGroundedParams : GroundedMovementParams, IFishAnimation

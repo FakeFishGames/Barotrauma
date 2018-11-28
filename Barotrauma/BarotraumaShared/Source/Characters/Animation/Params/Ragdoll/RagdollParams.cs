@@ -59,8 +59,6 @@ namespace Barotrauma
             .Concat(Limbs.Select(j => j as RagdollSubParams)
             .Concat(Joints.Select(j => j as RagdollSubParams)));
 
-        public XElement MainElement => Doc.Root;
-
         public static string GetDefaultFileName(string speciesName) => $"{speciesName.CapitaliseFirstInvariant()}DefaultRagdoll";
         public static string GetDefaultFolder(string speciesName) => $"Content/Characters/{speciesName.CapitaliseFirstInvariant()}/Ragdolls/";
         public static string GetDefaultFile(string speciesName) => $"{GetDefaultFolder(speciesName)}{GetDefaultFileName(speciesName)}.xml";
@@ -276,25 +274,84 @@ namespace Barotrauma
             }
         }
 
-        protected override bool Deserialize(XElement element)
+        protected bool Deserialize(XElement element = null, bool recursive = true)
         {
             if (base.Deserialize(element))
             {
-                GetAllSubParams().ForEach(p => p.Deserialize());
+                if (recursive)
+                {
+                    GetAllSubParams().ForEach(p => p.Deserialize());
+                }
                 return true;
             }
             return false;
         }
 
-        protected override bool Serialize(XElement element)
+        protected bool Serialize(XElement element = null, bool recursive = true)
         {
             if (base.Serialize(element))
             {
-                GetAllSubParams().ForEach(p => p.Serialize());
+                if (recursive)
+                {
+                    GetAllSubParams().ForEach(p => p.Serialize());
+                }
                 return true;
             }
             return false;
         }
+
+        #region Memento
+        public override void StoreState()
+        {
+            var copy = new RagdollParams();
+            copy.Load(FullPath, SpeciesName);
+            Serialize();
+            this.CopyValuesTo(copy);
+            copy.doc = new XDocument(doc);
+            copy.Serialize(recursive: false);
+            var sourceSubParams = GetAllSubParams().ToList();
+            var targetSubParams = copy.GetAllSubParams().ToList();
+            for (int i = 0; i < targetSubParams.Count; i++)
+            {
+                var source = sourceSubParams[i];
+                var target = targetSubParams[i];
+                source.CopyValuesTo(target);
+                target.Element = new XElement(source.Element);
+                source.Element.CopyValuesTo(target.Element);
+                target.Serialize(recursive: false);
+                for (int j = 0; j < targetSubParams[i].SubParams.Count; j++)
+                {
+                    var subSource = source.SubParams[j];
+                    var subTarget = target.SubParams[j];
+                    subSource.CopyValuesTo(subTarget);
+                    subTarget.Element = new XElement(subSource.Element);
+                    subSource.Element.CopyValuesTo(subTarget.Element);
+                    subTarget.Serialize(recursive: false);
+                    // Since we cannot use recursion here, we have to go deeper manually, if necessary.
+                }
+            }
+            memento.Store(copy);
+        }
+        public override void Undo() => RevertTo(memento.Undo() as RagdollParams);
+        public override void Redo() => RevertTo(memento.Redo() as RagdollParams);
+
+        private void RevertTo(RagdollParams source)
+        {
+            Deserialize(source.MainElement, recursive: false);
+            var sourceSubParams = source.GetAllSubParams().ToList();
+            var subParams = GetAllSubParams().ToList();
+            for (int i = 0; i < subParams.Count; i++)
+            {
+                subParams[i].Deserialize(sourceSubParams[i].Element, recursive: false);
+                var subSubParams = subParams[i].SubParams;
+                for (int j = 0; j < subSubParams.Count; j++)
+                {
+                    subSubParams[j].Deserialize(sourceSubParams[i].SubParams[j].Element, recursive: false);
+                    // Since we cannot use recursion here, we have to go deeper manually, if necessary.
+                }
+            }
+        }
+        #endregion
 
 #if CLIENT
         public override void AddToEditor(ParamsEditor editor)
@@ -540,7 +597,7 @@ namespace Barotrauma
     {
         public virtual string Name { get; set; }
         public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
-        public XElement Element { get; private set; }
+        public XElement Element { get; set; }
         public List<RagdollSubParams> SubParams { get; set; } = new List<RagdollSubParams>();
         public RagdollParams Ragdoll { get; private set; }
 
@@ -553,17 +610,25 @@ namespace Barotrauma
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
         }
 
-        public virtual bool Deserialize()
+        public virtual bool Deserialize(XElement element = null, bool recursive = true)
         {
-            SerializableProperties = SerializableProperty.DeserializeProperties(this, Element);
-            SubParams.ForEach(sp => sp.Deserialize());
+            element = element ?? Element;
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            if (recursive)
+            {
+                SubParams.ForEach(sp => sp.Deserialize());
+            }
             return SerializableProperties != null;
         }
 
-        public virtual bool Serialize()
+        public virtual bool Serialize(XElement element = null, bool recursive = true)
         {
-            SerializableProperty.SerializeProperties(this, Element, true);
-            SubParams.ForEach(sp => sp.Serialize());
+            element = element ?? Element;
+            SerializableProperty.SerializeProperties(this, element, true);
+            if (recursive)
+            {
+                SubParams.ForEach(sp => sp.Serialize());
+            }
             return true;
         }
 
