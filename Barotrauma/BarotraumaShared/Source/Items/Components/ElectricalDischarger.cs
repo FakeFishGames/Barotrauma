@@ -358,6 +358,42 @@ namespace Barotrauma.Items.Components
                     nodes.Add(new Node(bottomBos, bottomNodeIndex));
                     FindNodes(entitiesInRange, bottomBos, nodes.Count - 1, newRange);
                 }
+
+                //check if any character is close to this structure
+                for (int j = 0; j < entitiesInRange.Count; j++)
+                {
+                    var otherEntity = entitiesInRange[j];
+                    if (!(otherEntity is Character character)) continue;
+                    if (OutdoorsOnly && character.Submarine != null) continue;
+
+                    if (targetStructure.IsHorizontal)
+                    {
+                        if (otherEntity.WorldPosition.X < targetStructure.WorldRect.X) continue;
+                        if (otherEntity.WorldPosition.X > targetStructure.WorldRect.Right) continue;
+                        if (Math.Abs(otherEntity.WorldPosition.Y - targetStructure.WorldPosition.Y) > currentRange) continue;
+                    }
+                    else
+                    {
+                        if (otherEntity.WorldPosition.Y < targetStructure.WorldRect.Y - targetStructure.Rect.Height) continue;
+                        if (otherEntity.WorldPosition.Y > targetStructure.WorldRect.Y) continue;
+                        if (Math.Abs(otherEntity.WorldPosition.X - targetStructure.WorldPosition.X) > currentRange) continue;
+                    }
+                    float closestNodeDistSqr = float.MaxValue;
+                    int closestNodeIndex = -1;
+                    for (int i = 0; i < nodes.Count; i++)
+                    {
+                        float distSqr = Vector2.DistanceSquared(character.WorldPosition, nodes[i].WorldPosition);
+                        if (distSqr < closestNodeDistSqr)
+                        {
+                            closestNodeDistSqr = distSqr;
+                            closestNodeIndex = i;
+                        }
+                    }
+                    if (closestNodeIndex > -1)
+                    {
+                        FindNodes(entitiesInRange, nodes[closestNodeIndex].WorldPosition, closestNodeIndex, currentRange - (float)Math.Sqrt(closestNodeDistSqr));
+                    }
+                }
             }
             else if (entitiesInRange[closestIndex] is Character character)
             {
