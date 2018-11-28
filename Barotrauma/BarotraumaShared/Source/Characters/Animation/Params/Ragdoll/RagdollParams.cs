@@ -303,33 +303,15 @@ namespace Barotrauma
         #region Memento
         public override void StoreState()
         {
-            var copy = new RagdollParams();
-            copy.Load(FullPath, SpeciesName);
             Serialize();
-            this.CopyValuesTo(copy);
+            var copy = new RagdollParams();
+            copy.IsLoaded = true;
             copy.doc = new XDocument(doc);
-            copy.Serialize(recursive: false);
-            var sourceSubParams = GetAllSubParams().ToList();
-            var targetSubParams = copy.GetAllSubParams().ToList();
-            for (int i = 0; i < targetSubParams.Count; i++)
-            {
-                var source = sourceSubParams[i];
-                var target = targetSubParams[i];
-                source.CopyValuesTo(target);
-                target.Element = new XElement(source.Element);
-                source.Element.CopyValuesTo(target.Element);
-                target.Serialize(recursive: false);
-                for (int j = 0; j < targetSubParams[i].SubParams.Count; j++)
-                {
-                    var subSource = source.SubParams[j];
-                    var subTarget = target.SubParams[j];
-                    subSource.CopyValuesTo(subTarget);
-                    subTarget.Element = new XElement(subSource.Element);
-                    subSource.Element.CopyValuesTo(subTarget.Element);
-                    subTarget.Serialize(recursive: false);
-                    // Since we cannot use recursion here, we have to go deeper manually, if necessary.
-                }
-            }
+            copy.CreateColliders();
+            copy.CreateLimbs();
+            copy.CreateJoints();
+            copy.Deserialize();
+            copy.Serialize();
             memento.Store(copy);
         }
         public override void Undo() => RevertTo(memento.Undo() as RagdollParams);
