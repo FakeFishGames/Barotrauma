@@ -14,6 +14,8 @@ namespace Barotrauma
             public Sprite IndicatorSprite;
 
             public Rectangle HighlightArea;
+
+            public readonly string Name;
                         
             public readonly List<Affliction> Afflictions = new List<Affliction>();
 
@@ -31,6 +33,7 @@ namespace Barotrauma
 
             public LimbHealth(XElement element, CharacterHealth characterHealth)
             {
+                Name = TextManager.Get("HealthLimbName." + element.GetAttributeString("name", ""));
                 this.characterHealth = characterHealth;
                 foreach (XElement subElement in element.Elements())
                 {
@@ -261,6 +264,16 @@ namespace Barotrauma
             foreach (Affliction affliction in limbHealths[limb.HealthIndex].Afflictions)
             {
                 if (affliction.Prefab.AfflictionType == afflictionType) return affliction;
+            }
+            return null;
+        }
+
+        public Limb GetAfflictionLimb(Affliction affliction)
+        {
+            for (int i = 0; i < limbHealths.Count; i++)
+            {
+                if (!limbHealths[i].Afflictions.Contains(affliction)) continue;
+                return character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == i);
             }
             return null;
         }

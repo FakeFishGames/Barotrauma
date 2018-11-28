@@ -5,7 +5,7 @@
     identifier="fabricator"
     category="Machine"
 		linkable="true"
-    allowedlinks="deconstructor"
+    allowedlinks="deconstructor,cabinet"
     description="A machine capable of manufacturing a wide range of items out of basic raw materials.">
 
     <Sprite texture="Content/Items/Fabricators/FF_Fabricator.png" sourcerect="0,0,182,198" depth="0.8"/>
@@ -13,8 +13,8 @@
     <BrokenSprite texture="Content/Items/Fabricators/FF_Fabricator.png" sourcerect="364,0,182,198" depth="0.8" maxcondition="0" />
 
     <Fabricator canbeselected = "true" powerconsumption="500.0">
-      <GuiFrame relativesize="0.4,0.4" minsize="600,400" maxsize="900,600" anchor="Center" style="ItemUI"/>
-      <AlternativeLayout anchor="CenterLeft"/>
+      <GuiFrame relativesize="0.4,0.4" maxsize="900,600" style="ItemUI" anchor="Center"/>
+      <AlternativeLayout absoluteoffset="500,0"/>
 
       <sound file="Content/Items/Fabricators/fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="600" loop="false"/>
@@ -397,7 +397,7 @@
     identifier="deconstructor"
     category="Machine"
 		linkable="true"
-    allowedlinks="fabricator,medicalfabricator"
+    allowedlinks="fabricator,medicalfabricator,cabinet"
     description="Disassembles and breaks down items to reusable components and material bars.">
 
     <Sprite texture="Content/Items/Fabricators/FF_deconstructor.png" depth="0.8" sourcerect="0,0,175,132"/>
@@ -405,8 +405,7 @@
     <BrokenSprite texture="Content/Items/Fabricators/FF_deconstructor.png" sourcerect="350,0,175,132" depth="0.8" maxcondition="0" />
 
     <Deconstructor canbeselected = "true" powerconsumption="500.0">
-      <GuiFrame relativesize="0.15,0.35" minsize="300,400" maxsize="360,480" anchor="Center" style="ItemUI"/>
-      <AlternativeLayout anchor="CenterRight"/>
+      <GuiFrame relativesize="0.15,0.35" maxsize="360,480" style="ItemUI" anchor="Center" absoluteoffset="-300,0"/>
       <sound file="Content/Items/Fabricators/deconstructor.ogg" type="OnActive" range="1000.0" loop="true"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="600" loop="false"/>
     </Deconstructor>

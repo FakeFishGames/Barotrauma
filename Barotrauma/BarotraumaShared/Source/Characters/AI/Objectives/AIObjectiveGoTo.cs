@@ -150,6 +150,10 @@ namespace Barotrauma
                 allowedDistance = Math.Max(ConvertUnits.ToSimUnits(item.InteractDistance), allowedDistance);
                 if (item.IsInsideTrigger(character.WorldPosition)) completed = true;
             }
+            else if (target is Character targetCharacter)
+            {
+                if (character.CanInteractWith(targetCharacter)) completed = true;
+            }
 
             completed = completed || Vector2.DistanceSquared(target != null ? target.SimPosition : targetPos, character.SimPosition) < allowedDistance * allowedDistance;
 

@@ -20,27 +20,27 @@
     crushdepth="-30000.0"
     doesbleed="true">
     <Sprite texture="Content/UI/Health/MedUI_Silhouette.png" columns="7" rows="3" sourcerect="0,0,980,1056"/>
-    <Limb>
+    <Limb name="Head">
       <Sprite texture="Content/UI/Health/MedUI_Head.png" sourcerect="0,0,140,352" highlightarea="44,0,52,58"/>
       <VitalityMultiplier type="damage" multiplier="2.0"/>
     </Limb>
-    <Limb>
+    <Limb name="Torso">
       <Sprite texture="Content/UI/Health/MedUI_Torso.png" sourcerect="0,0,140,352" highlightarea="39,59,62,109"/>
       <VitalityMultiplier type="bleeding" multiplier="2.0"/>
     </Limb>
-    <Limb>
+    <Limb name="LeftArm">
       <Sprite texture="Content/UI/Health/MedUI_LeftArm.png" sourcerect="0,0,140,352" highlightarea="104,70,36,145"/>
       <VitalityMultiplier type="damage" multiplier="0.5"/>
     </Limb>
-    <Limb>
+    <Limb name="RightArm">
       <Sprite texture="Content/UI/Health/MedUI_RightArm.png" sourcerect="0,0,140,352" highlightarea="0,70,36,145"/>
       <VitalityMultiplier type="damage" multiplier="0.5"/>
     </Limb>
-    <Limb>
+    <Limb name="LeftLeg">
       <Sprite texture="Content/UI/Health/MedUI_LeftLeg.png" sourcerect="0,0,140,352" highlightarea="74,187,34,165"/>
       <VitalityMultiplier type="damage" multiplier="0.5"/>
     </Limb>
-    <Limb>
+    <Limb name="RightLeg">
       <Sprite texture="Content/UI/Health/MedUI_RightLeg.png" sourcerect="0,0,140,352" highlightarea="31,187,34,165"/>
       <VitalityMultiplier type="damage" multiplier="0.5"/>
     </Limb>

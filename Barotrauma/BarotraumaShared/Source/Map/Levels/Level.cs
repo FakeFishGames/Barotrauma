@@ -1008,7 +1008,11 @@ namespace Barotrauma
 
         private void GenerateRuin(List<VoronoiCell> mainPath, Level level, bool mirror)
         {
-            Vector2 ruinSize = new Vector2(Rand.Range(5000.0f, 8000.0f, Rand.RandSync.Server), Rand.Range(5000.0f, 8000.0f, Rand.RandSync.Server));
+            var ruinGenerationParams = RuinGenerationParams.GetRandom();
+
+            Vector2 ruinSize = new Vector2(
+                Rand.Range(ruinGenerationParams.SizeMin.X, ruinGenerationParams.SizeMax.X, Rand.RandSync.Server), 
+                Rand.Range(ruinGenerationParams.SizeMin.Y, ruinGenerationParams.SizeMax.Y, Rand.RandSync.Server));
             float ruinRadius = Math.Max(ruinSize.X, ruinSize.Y) * 0.5f;
             
             int cellIndex = Rand.Int(cells.Count, Rand.RandSync.Server);
@@ -1081,7 +1085,7 @@ namespace Barotrauma
                 }
             }
             
-            var ruin = new Ruin(closestPathCell, cells, new Rectangle(MathUtils.ToPoint(ruinPos - ruinSize * 0.5f), MathUtils.ToPoint(ruinSize)), mirror);
+            var ruin = new Ruin(closestPathCell, cells, ruinGenerationParams, new Rectangle(MathUtils.ToPoint(ruinPos - ruinSize * 0.5f), MathUtils.ToPoint(ruinSize)), mirror);
             ruins.Add(ruin);
             
             ruin.RuinShapes.Sort((shape1, shape2) => shape2.DistanceFromEntrance.CompareTo(shape1.DistanceFromEntrance));

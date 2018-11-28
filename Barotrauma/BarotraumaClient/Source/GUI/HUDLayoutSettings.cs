@@ -8,6 +8,18 @@ namespace Barotrauma
     {
         public static bool DebugDraw;
 
+        private static int inventoryTopY;
+        public static int InventoryTopY
+        {
+            get { return inventoryTopY; }
+            set
+            {
+                if (value == inventoryTopY) return;
+                inventoryTopY = value;
+                CreateAreas();
+            }
+        }
+
         public static Rectangle ButtonAreaTop
         {
             get; private set;
@@ -103,23 +115,29 @@ namespace Barotrauma
         {
             Padding = (int)(10 * GUI.Scale);
 
+            if (inventoryTopY == 0) inventoryTopY = GameMain.GraphicsHeight;
+
             //slice from the top of the screen for misc buttons (info, end round, server controls)
             ButtonAreaTop = new Rectangle(Padding, Padding, GameMain.GraphicsWidth - Padding * 2, (int)(50 * GUI.Scale));
 
             int crewAreaHeight = (int)Math.Max(GameMain.GraphicsHeight * 0.22f, 150);
             CrewArea = new Rectangle(Padding, ButtonAreaTop.Bottom + Padding, GameMain.GraphicsWidth - InventoryAreaUpper.Width - Padding * 3, crewAreaHeight);
 
-            int portraitSize = (int)(GameMain.GraphicsHeight * 0.15f);
+            int portraitSize = (int)(140 * GUI.Scale);
             PortraitArea = new Rectangle(GameMain.GraphicsWidth - portraitSize - Padding, GameMain.GraphicsHeight - portraitSize - Padding, portraitSize, portraitSize);
-
+            
             //horizontal slices at the corners of the screen for health bar and affliction icons
-            int healthBarWidth = (int)Math.Max(250 * GUI.Scale, 100);
+            int healthBarWidth = (int)Math.Max(250 * GUI.Scale, 150);
             int healthBarHeight = (int)Math.Max(20 * GUI.Scale, 15);
             int afflictionAreaHeight = (int)(60 * GUI.Scale);
             HealthBarAreaLeft = new Rectangle(Padding, GameMain.GraphicsHeight - healthBarHeight - Padding, healthBarWidth, healthBarHeight);
             AfflictionAreaLeft = new Rectangle(Padding, HealthBarAreaLeft.Y - afflictionAreaHeight - Padding, healthBarWidth, afflictionAreaHeight);
             
-            HealthBarAreaRight = new Rectangle(PortraitArea.X - Padding - healthBarWidth, PortraitArea.Y + Padding * 3, healthBarWidth, HealthBarAreaLeft.Height);
+            HealthBarAreaRight = new Rectangle(PortraitArea.X - Padding - healthBarWidth, Math.Min(PortraitArea.Y + Padding * 3, inventoryTopY - healthBarHeight), healthBarWidth, HealthBarAreaLeft.Height);
+            if (HealthBarAreaRight.Y + healthBarHeight * 0.75f < PortraitArea.Y)
+            {
+                HealthBarAreaRight = new Rectangle(GameMain.GraphicsWidth - Padding - healthBarWidth, HealthBarAreaRight.Y, HealthBarAreaRight.Width, HealthBarAreaRight.Height);
+            }
             AfflictionAreaRight = new Rectangle(HealthBarAreaRight.X, HealthBarAreaRight.Y - Padding - afflictionAreaHeight, healthBarWidth, afflictionAreaHeight);
 
             int messageAreaPos = GameMain.GraphicsWidth - HealthBarAreaRight.X;

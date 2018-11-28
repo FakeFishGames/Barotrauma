@@ -182,11 +182,11 @@ namespace Barotrauma.Items.Components
         {
             if (hasLight == null)
             {
-                List<LightComponent> lightComponents = item.GetComponents<LightComponent>();
+                var lightComponents = item.GetComponents<LightComponent>();
                 
-                if (lightComponents != null && lightComponents.Count>0)
+                if (lightComponents != null && lightComponents.Count() > 0)
                 {
-                    lightComponent = lightComponents.Find(lc => lc.Parent == this);
+                    lightComponent = lightComponents.FirstOrDefault(lc => lc.Parent == this);
                     hasLight = (lightComponent != null);
                 }
                 else

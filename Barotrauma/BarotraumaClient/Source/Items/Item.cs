@@ -536,12 +536,20 @@ namespace Barotrauma
 
             if (Character.Controlled != null && Character.Controlled?.SelectedConstruction != this) return;
 
+            bool needsLayoutUpdate = false;
             foreach (ItemComponent ic in activeHUDs)
             {
                 if (!ic.CanBeSelected) { continue; }
 
-                ic.UseAlternativeLayout = ic.Item != this;
+                bool useAlternativeLayout = ic.Item != this;
+                needsLayoutUpdate |= ic.UseAlternativeLayout != useAlternativeLayout;
+                ic.UseAlternativeLayout = useAlternativeLayout;
                 ic.AddToGUIUpdateList();
+            }
+
+            if (needsLayoutUpdate)
+            {
+                SetHUDLayout();
             }
         }
 

@@ -3,12 +3,13 @@
   <Item
     name="Supplies Cabinet"
     identifier="suppliescabinet"
+    tags="cabinet"
     linkable="true"
     pickdistance="150">
 
     <Sprite texture="suppliesCabinet.png" depth="0.84" sourcerect="0,0,52,78"/>
 
-    <ItemContainer capacity="6" canbeselected="true" hideitems="true">
+    <ItemContainer capacity="6" slotsperrow="3" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,mediumitem"/>
     </ItemContainer>
   </Item>
@@ -16,6 +17,7 @@
   <Item
     name="Small Windowed Steel Cabinet"
     identifier="smallwindowedsteelcabinet"
+    tags="cabinet"
     linkable="true"
     pickdistance="150">
 
@@ -29,6 +31,7 @@
   <Item
     name="Small Steel Cabinet"
     identifier="smallsteelcabinet"
+    tags="cabinet"
     linkable="true"
     pickdistance="150">
 
@@ -42,6 +45,7 @@
   <Item
     name="Medium Steel Cabinet"
     identifier="mediumsteelcabinet"
+    tags="cabinet"
     linkable="true"
     pickdistance="150">
 
@@ -55,6 +59,7 @@
   <Item
     name="Medium Windowed Steel Cabinet"
     identifier="mediumwindowedsteelcabinet"
+    tags="cabinet"
     linkable="true"
     pickdistance="150">
 
@@ -68,6 +73,7 @@
   <Item
     name="Large Steel Cabinet"    
     identifier="steelcabinet"
+    tags="cabinet"
     linkable="true"
     pickdistance="150">
 
@@ -75,12 +81,15 @@
 
     <ItemContainer capacity="30" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,mediumitem"/>
+      <GuiFrame relativesize="0.25,0.45" maxsize="460,600" anchor="BottomCenter" style="ItemUI"/>
+      <AlternativeLayout relativesize="0.141,0.33" absoluteoffset="-300,0"/>
     </ItemContainer>
   </Item>
 
   <Item
     name="Secure Steel Cabinet"
     identifier="securesteelcabinet"
+    tags="cabinet"
     linkable="true"
     spritecolor="255,255,255,255"
     pickdistance="150">
@@ -149,6 +158,7 @@
   <Item
     name="Diving Gear Cabinet"
     identifier="divingsuitcabinet"
+    tags="cabinet"
     linkable="true"
     pickdistance="50">
 
@@ -172,9 +182,9 @@
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,128,64,64"/>
-    <Sprite texture ="crates.png" depth="0.54" sourcerect="0,0,79,35"/>
+    <Sprite texture="crates.png" depth="0.54" sourcerect="1,0,68,39"/>
 
-    <Body width="77" height="34" density="50"/>
+    <Body width="68" height="39" density="50"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false"/>
 
@@ -195,9 +205,10 @@
       <Item identifier="steelbar"/>
     </Deconstruct>
 
-    <Sprite texture ="crates.png" depth="0.54" sourcerect="0,0,79,35"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,128,64,64"/>
+    <Sprite texture="crates.png" depth="0.54" sourcerect="1,0,68,39"/>
 
-    <Body width="77" height="34" density="50"/>
+    <Body width="68" height="39" density="50"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false"/>
 
@@ -219,9 +230,9 @@
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64"/>
-    <Sprite texture ="crates.png" depth="0.54" sourcerect="81,0,47,42"/>
+    <Sprite texture ="crates.png" depth="0.54" sourcerect="78,5,50,40"/>
 
-    <Body width="45" height="41" density="50"/>
+    <Body width="50" height="40" density="50"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false"/>
 
@@ -242,9 +253,9 @@
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,128,64,64"/>
-    <Sprite texture ="crates.png" depth="0.54" sourcerect="1,36,47,42"/>
+    <Sprite texture ="crates.png" depth="0.54" sourcerect="2,39,49,39"/>
 
-    <Body width="45" height="41" density="50"/>
+    <Body width="49" height="39" density="50"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false"/>
 

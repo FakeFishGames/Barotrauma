@@ -14,6 +14,8 @@ namespace Barotrauma
 
         private BackgroundCreatureManager backgroundCreatureManager;
 
+        public LevelRenderer Renderer => renderer;
+
         public void ReloadTextures()
         {
             renderer.ReloadTextures();

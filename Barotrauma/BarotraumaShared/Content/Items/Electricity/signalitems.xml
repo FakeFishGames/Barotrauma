@@ -108,8 +108,8 @@
       <Item identifier="copperbar" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,64,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,16,16,16" origin="0.5,0.5" />
-    <Body width="16" height="16" density="30" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,16,16,15" origin="0.5,0.5" />
+    <Body width="16" height="15" density="30" />
     <Holdable slots="Any,RightHand,LeftHand" />
   </Item>
   <Item name="And Component" identifier="andcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal when both inputs receive a signal within a set period of each other.">

@@ -749,7 +749,17 @@
 
   <!-- Health interface -->
   <Vitality>Vitality</Vitality>
+  <SuitableTreatments>Suitable treatments:</SuitableTreatments>
   <HealthItemUseTip>Drop items here to use them on the selected limb. You can also use items with the inventory hotkeys or by double clicking.</HealthItemUseTip>
+  <AfflictionStrengthLow>Light</AfflictionStrengthLow>
+  <AfflictionStrengthMedium>Medium</AfflictionStrengthMedium>
+  <AfflictionStrengthHigh>Heavy</AfflictionStrengthHigh>
+  <HealthLimbName.Head>Head</HealthLimbName.Head>
+  <HealthLimbName.Torso>Torso</HealthLimbName.Torso>
+  <HealthLimbName.LeftArm>Left arm</HealthLimbName.LeftArm>
+  <HealthLimbName.RightArm>Right arm</HealthLimbName.RightArm>
+  <HealthLimbName.LeftLeg>Left leg</HealthLimbName.LeftLeg>
+  <HealthLimbName.RightLeg>Right leg</HealthLimbName.RightLeg>
 
   <!-- Item fixing -->
   <FixHeader>Attempting to fix [itemname]</FixHeader>
@@ -863,6 +873,13 @@
   <DialogSonarTargetLarge>Something big on the sonar at [direction]!</DialogSonarTargetLarge>
   <DialogSonarTargetMultiple>[count] targets on the sonar at [direction]!</DialogSonarTargetMultiple>
   <DialogSonarTargetMultiple>We've got [count] targets at [direction]!</DialogSonarTargetMultiple>
+  <DialogFoundUnconsciousTarget>Found [targetname] unconscious in [roomname]!</DialogFoundUnconsciousTarget>
+  <DialogFoundUnconsciousTarget>Giving first aid to [targetname] in [roomname]!</DialogFoundUnconsciousTarget>
+  <DialogListRequiredTreatments>I need to find [treatmentlist]!</DialogListRequiredTreatments>
+  <DialogListRequiredTreatments>I need [treatmentlist] to treat [targetname]!</DialogListRequiredTreatments>
+  <DialogTargetHealed>[targetname] is back in shape!</DialogTargetHealed>
+  <DialogTargetHealed>[targetname] is alright!</DialogTargetHealed>
+  <DialogTargetHealed>[targetname] has been resuscitated!</DialogTargetHealed>
   <OrderDialog.follow>[name], follow me!</OrderDialog.follow>
   <OrderDialog.wait>[name], wait there!</OrderDialog.wait>
   <OrderDialog.wait>[name], stay where you are!</OrderDialog.wait>

@@ -54,6 +54,20 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void OnItemLoaded()
+        {
+            if (item.body != null)
+            {
+                var holdable = item.GetComponent<Holdable>();
+                if (holdable == null || !holdable.Attachable)
+                {
+                    DebugConsole.ThrowError("Item \"" + item.Name + "\" has a ConnectionPanel component," +
+                        " but cannot be wired because it has an active physics body that cannot be attached to a wall." +
+                        " Remove the physics body or add a Holdable component with the Attachable attribute set to true.");
+                }
+            }
+        }
+
         public void MoveConnectedWires(Vector2 amount)
         {
             Vector2 wireNodeOffset = item.Submarine == null ? Vector2.Zero : item.Submarine.HiddenSubPosition + amount;
@@ -88,13 +102,9 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            user.AnimController.UpdateUseItem(true, item.WorldPosition + new Vector2(0.0f, 100.0f) * (((float)Timing.TotalTime / 10.0f) % 0.1f));
+            if (!user.Enabled || !HasRequiredItems(user, addMessage: false)) { return; }
 
-            if (user.IsKeyHit(InputType.Aim))
-            {
-                user.DeselectItem(item);
-                user = null;
-            }
+            user.AnimController.UpdateUseItem(true, item.WorldPosition + new Vector2(0.0f, 100.0f) * (((float)Timing.TotalTime / 10.0f) % 0.1f));
         }
 
         public override bool Select(Character picker)

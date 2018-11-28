@@ -152,7 +152,7 @@ namespace Barotrauma
                 inventory.TryPutItem(newItem, slotIndex, false, false, null);
 
                 int itemContainerIndex = 0;
-                var itemContainers = newItem.GetComponents<ItemContainer>();
+                var itemContainers = newItem.GetComponents<ItemContainer>().ToList();
                 foreach (XElement childInvElement in itemElement.Elements())
                 {
                     if (itemContainerIndex >= itemContainers.Count) break;
