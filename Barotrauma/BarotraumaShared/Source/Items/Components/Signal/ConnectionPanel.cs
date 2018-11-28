@@ -102,13 +102,9 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            user.AnimController.UpdateUseItem(true, item.WorldPosition + new Vector2(0.0f, 100.0f) * (((float)Timing.TotalTime / 10.0f) % 0.1f));
+            if (!user.Enabled || !HasRequiredItems(user, addMessage: false)) { return; }
 
-            if (user.IsKeyHit(InputType.Aim))
-            {
-                user.DeselectItem(item);
-                user = null;
-            }
+            user.AnimController.UpdateUseItem(true, item.WorldPosition + new Vector2(0.0f, 100.0f) * (((float)Timing.TotalTime / 10.0f) % 0.1f));
         }
 
         public override bool Select(Character picker)
