@@ -59,6 +59,23 @@
         </Connection>
       </item>
     </item>
-  </RoomType> 
-  
+  </RoomType>
+
+  <RoomType name="genericcorridor2" placement="any" iscorridor="true">
+    <structure prefab="RuinWallHorizontalSmall" alignment="Top,Bottom" type="Wall"/>
+    <structure prefab="RuinWallVerticalSmall" alignment="Left,Right" type="Wall"/>
+    <structure prefab="RuinBack" alignment="Center" type="Back" commonness="3"/>
+    <item prefab="aliencoil" alignment="Center">
+      <item prefab="alienmotionsensor" alignment="Center" type="Prop" placementrelativetoparent="sameroom">
+        <Connection targetentity="parent">
+          <Wire from="state_out" to="activate"/>
+        </Connection>
+      </item>
+      <itemassembly prefab="chargedalienpowercell" alignment="Center" type="Prop" placementrelativetoparent="previousroom">
+        <Connection sourceentity="alienpowercell" targetentity="parent" >
+          <Wire from="power_out" to="power_in"/>
+        </Connection>
+      </itemassembly>
+    </item>
+  </RoomType>
 </Structures>

@@ -288,4 +288,28 @@
       </StatusEffect>
     </Projectile>
   </Item>
+  <Item name="Alien Coil" identifier="aliencoil" Tags="alien" category="Alien">
+    <!-- TODO: alien coil sprite -->
+    <Sprite texture="alientools.png" depth="0.55" sourcerect="0,0,95,50" origin="0.5,0.4" />
+    <LightComponent lightcolor="112,146,190,255" canbeselected="false" range="800.0" IsOn="true" />
+    <ElectricalDischarger duration="0.25" range="500" rangemultiplierinwalls="5" powerconsumption="9000" minvoltage="0.9">
+      <Attack targetimpulse="50">
+        <Affliction identifier="stun" strength="3"/>
+        <Affliction identifier="burn" strength="10"/>
+      </Attack>
+      <StatusEffect type="OnUse">
+        <ParticleEmitter particle="risingbubbles" anglemin="0" anglemax="360" particleamount="50" velocitymin="50" velocitymax="100" scalemin="1" scalemax="2" />
+        <Explosion range="500.0" stun="0" force="0.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
+      </StatusEffect>
+    </ElectricalDischarger>
+    <ConnectionPanel canbeselected="false" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <!-- break the item when a shutdown signal is received -->
+      <input name="activate"/>
+      <input name="shutdown">
+        <StatusEffect type="OnUse" target="This" condition="-100" setvalue="true" />
+      </input>
+      <input name="power_in" />
+    </ConnectionPanel>
+  </Item>
 </Items>
