@@ -384,7 +384,7 @@ namespace Barotrauma.Lights
             {
                 Level.Loaded.LevelObjectManager.DrawObjects(spriteBatch, cam, drawFront: false, specular: true);
             }
-
+            
             Dictionary<Hull, Rectangle> visibleHulls = new Dictionary<Hull, Rectangle>();
             foreach (Hull hull in Hull.hullList)
             {
@@ -409,17 +409,10 @@ namespace Barotrauma.Lights
                     new Vector2(drawRect.Width, drawRect.Height),
                     Color.Gray, true);
             }
-
-            /*Submarine.DrawBack(spriteBatch);
-
-            foreach (Character c in Character.CharacterList)
-            {
-                c.Draw(spriteBatch, cam);
-            }
-
-            Submarine.DrawFront(spriteBatch);*/
-
             spriteBatch.End();
+
+            //TODO: specular maps for level walls
+            Level.Loaded.Renderer.RenderWalls(graphics, cam, specular: true);
 
             graphics.SetRenderTarget(null);
             graphics.BlendState = BlendState.AlphaBlend;

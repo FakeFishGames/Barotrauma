@@ -213,7 +213,7 @@ namespace Barotrauma
 
             spriteBatch.End();
 
-            RenderWalls(GameMain.Instance.GraphicsDevice, cam);
+            RenderWalls(GameMain.Instance.GraphicsDevice, cam, specular: false);
 
             spriteBatch.Begin(SpriteSortMode.Deferred,
                 BlendState.AlphaBlend,
@@ -311,7 +311,7 @@ namespace Barotrauma
         }
 
 
-        public void RenderWalls(GraphicsDevice graphicsDevice, Camera cam)
+        public void RenderWalls(GraphicsDevice graphicsDevice, Camera cam, bool specular)
         {
             if (wallVertices == null) return;
 
@@ -322,7 +322,7 @@ namespace Barotrauma
 
             Matrix transformMatrix = cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 100) * 0.5f;
-
+                        
             wallEdgeEffect.World = transformMatrix;
             wallCenterEffect.World = transformMatrix;
             
