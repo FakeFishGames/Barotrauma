@@ -873,6 +873,13 @@
   <DialogSonarTargetLarge>Something big on the sonar at [direction]!</DialogSonarTargetLarge>
   <DialogSonarTargetMultiple>[count] targets on the sonar at [direction]!</DialogSonarTargetMultiple>
   <DialogSonarTargetMultiple>We've got [count] targets at [direction]!</DialogSonarTargetMultiple>
+  <DialogFoundUnconsciousTarget>Found [targetname] unconscious in [roomname]!</DialogFoundUnconsciousTarget>
+  <DialogFoundUnconsciousTarget>Giving first aid to [targetname] in [roomname]!</DialogFoundUnconsciousTarget>
+  <DialogListRequiredTreatments>I need to find [treatmentlist]!</DialogListRequiredTreatments>
+  <DialogListRequiredTreatments>I need [treatmentlist] to treat [targetname]!</DialogListRequiredTreatments>
+  <DialogTargetHealed>[targetname] is back in shape!</DialogTargetHealed>
+  <DialogTargetHealed>[targetname] is alright!</DialogTargetHealed>
+  <DialogTargetHealed>[targetname] has been resuscitated!</DialogTargetHealed>
   <OrderDialog.follow>[name], follow me!</OrderDialog.follow>
   <OrderDialog.wait>[name], wait there!</OrderDialog.wait>
   <OrderDialog.wait>[name], stay where you are!</OrderDialog.wait>
