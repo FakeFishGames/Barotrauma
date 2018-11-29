@@ -235,13 +235,15 @@ namespace Barotrauma
             return false;
         }
 
-        public bool Reset(bool forceReload = false)
+        public override bool Reset(bool forceReload = false)
         {
             if (forceReload)
             {
                 return Load(FullPath, SpeciesName);
             }
-            return base.Reset();
+            Deserialize(OriginalElement, recursive: true);
+            GetAllSubParams().ForEach(sp => sp.Reset());
+            return true;
         }
 
         protected void CreateColliders()
@@ -582,6 +584,7 @@ namespace Barotrauma
         public virtual string Name { get; set; }
         public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
         public XElement Element { get; set; }
+        public readonly XElement originalElement;
         public List<RagdollSubParams> SubParams { get; set; } = new List<RagdollSubParams>();
         public RagdollParams Ragdoll { get; private set; }
 
@@ -590,6 +593,7 @@ namespace Barotrauma
         public RagdollSubParams(XElement element, RagdollParams ragdoll)
         {
             Element = element;
+            originalElement = new XElement(element);
             Ragdoll = ragdoll;
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
         }
@@ -614,6 +618,12 @@ namespace Barotrauma
                 SubParams.ForEach(sp => sp.Serialize());
             }
             return true;
+        }
+
+        public void Reset()
+        {
+            Deserialize(originalElement, false);
+            SubParams.ForEach(sp => sp.Reset());
         }
 
      #if CLIENT
