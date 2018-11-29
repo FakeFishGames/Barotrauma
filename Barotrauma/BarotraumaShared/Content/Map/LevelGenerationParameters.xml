@@ -48,7 +48,7 @@
     levelobjectamount="1000"
     MountainCountMin="0"
     MountainCountMax="3"
-    SeaFloorDepth="-300000.0"
+    SeaFloorDepth="-300000"
     MountainHeightMin="10000"
     MountainHeightMax="20000">
     <Background texture="Content/Map/iceBackgroundFade.png"/>
@@ -76,7 +76,7 @@
     levelobjectamount="1000"
     MountainCountMin="2"
     MountainCountMax="3"
-    SeaFloorDepth="-300000.0"
+    SeaFloorDepth="-300000"
     SeaFloorVariance="20000"
     MountainHeightMin="10000"
     MountainHeightMax="20000">
@@ -106,7 +106,7 @@
     levelobjectamount="1500"
     MountainCountMin="1"
     MountainCountMax="1"
-    SeaFloorDepth="-100000.0"
+    SeaFloorDepth="-100000"
     SeaFloorVariance="2000"
     MountainHeightMin="80000"
     MountainHeightMax="120000">
@@ -131,7 +131,7 @@
     RuinCount="1"
     BottomHoleProbability="0.9"
     levelobjectamount="1000"
-    SeaFloorDepth="0.0"
+    SeaFloorDepth="0"
     SeaFloorVariance="500"
     MountainCountMin="1"
     MountainCountMax="2"
@@ -186,7 +186,7 @@
     levelobjectamount="1000"
     MountainCountMin="2"
     MountainCountMax="3"
-    SeaFloorDepth="-50000.0"
+    SeaFloorDepth="-50000"
     SeaFloorVariance="2000"
     MountainHeightMin="40000"
     MountainHeightMax="50000"
