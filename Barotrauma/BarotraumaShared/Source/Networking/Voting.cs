@@ -8,9 +8,17 @@ namespace Barotrauma
 {
     partial class Voting
     {
-        private bool allowSubVoting, allowModeVoting;
+        private bool allowSubVoting, allowModeVoting, allowVoteKick;
 
-        public bool AllowVoteKick = true;
+        public bool AllowVoteKick {
+            get {
+                return this.allowVoteKick && !GameMain.NetworkMember.GameStarted;
+            }
+
+            set {
+                this.allowVoteKick = value;
+            }
+        }
 
         public bool AllowEndVoting = true;
 
