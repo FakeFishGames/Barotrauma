@@ -193,7 +193,7 @@ namespace Barotrauma
                             character.AnimController.ResetLimbs();
                             ClearWidgets();
                             CreateGUI();
-                            ragdollResetRequiresForceLoading = true;
+                            //ragdollResetRequiresForceLoading = true;
                             ResetParamsEditor();
                         }
                         if (editAnimations)
@@ -202,7 +202,7 @@ namespace Barotrauma
                             ClearWidgets();
                             ResetParamsEditor();
                             //CreateGUI();
-                            animationResetRequiresForceLoading = true;
+                            //animationResetRequiresForceLoading = true;
                         }
                     }
                     else if (PlayerInput.KeyHit(Keys.R))
@@ -214,7 +214,7 @@ namespace Barotrauma
                             character.AnimController.ResetLimbs();
                             ClearWidgets();
                             CreateGUI();
-                            ragdollResetRequiresForceLoading = true;
+                            //ragdollResetRequiresForceLoading = true;
                             ResetParamsEditor();
                         }
                         if (editAnimations)
@@ -223,7 +223,7 @@ namespace Barotrauma
                             ClearWidgets();
                             ResetParamsEditor();
                             //CreateGUI();
-                            animationResetRequiresForceLoading = true;
+                            //animationResetRequiresForceLoading = true;
                         }
                     }
                 }
