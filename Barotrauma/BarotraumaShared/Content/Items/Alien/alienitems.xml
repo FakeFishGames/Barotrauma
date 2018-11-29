@@ -200,7 +200,7 @@
   </Item>
   <Item name="Artifact Holder" identifier="artifactholder" category="Alien" Tags="alien">
     <Sprite texture="artifactholder.png" depth="0.8" sourcerect="0,0,256,256" />
-    <ItemContainer capacity="1" canbeselected="true" hideitems="false" itempos="128,-128">
+    <ItemContainer capacity="1" canbeselected="true" hideitems="false" itempos="128,-128" autointeractwithcontained="true">
       <Containable identifiers="alien" />
       <Containable identifiers="thermalartifact">
         <StatusEffect type="OnContaining" target="This" Charge="1000.0" />
@@ -219,7 +219,7 @@
     <!-- TODO: alien power cell sprite -->
     <Sprite texture="artifactholder.png" depth="0.8" sourcerect="74,50,113,167" />
     <LightComponent lightcolor="112,146,190,255" canbeselected="false" range="800.0" IsOn="true" />
-    <ItemContainer capacity="1" canbeselected="true" hideitems="false" itempos="55,-80">
+    <ItemContainer capacity="1" canbeselected="true" hideitems="false" itempos="55,-80" autointeractwithcontained="true">
       <Containable identifiers="sulphuriteshard">
         <StatusEffect type="OnContaining" target="This" Charge="100.0" />
       </Containable>
