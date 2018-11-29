@@ -121,6 +121,12 @@ namespace Barotrauma.Items.Components
             {
                 if (containedItem == null) continue;
 
+                if (AutoInteractWithContained)
+                {
+                    containedItem.IsHighlighted = item.IsHighlighted;
+                    item.IsHighlighted = false;
+                }
+
                 containedItem.Sprite.Draw(
                     spriteBatch,
                     new Vector2(transformedItemPos.X, -transformedItemPos.Y),
