@@ -527,7 +527,34 @@
       <input name="set_state" />
     </ConnectionPanel>
   </Item>
-  <Item name="Camera" identifier="camera" category="Electrical" Tags="smallitem" focusonselected="true" offsetonselected="500" cargocontaineridentifier="metalcrate" description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub.">
+  <Item name="Camera" 
+        identifier="camera" 
+        category="Electrical" 
+        Tags="smallitem" 
+        focusonselected="true" 
+        offsetonselected="500" 
+        cargocontaineridentifier="metalcrate" 
+        description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub."
+        Scale="0.16">
+    <Deconstruct time="10">
+      <Item identifier="steelbar" />
+      <Item identifier="fpgacircuit" />
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,320,64,64" />
+    <Sprite texture="camera.png" depth="0.8" sourcerect="0,0,176,137" origin="0.5,0.5" />
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <input name="control_in" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="Camera"
+        category="Legacy"
+        Tags="smallitem"
+        focusonselected="true"
+        offsetonselected="500"
+        cargocontaineridentifier="metalcrate"
+        description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub.">
     <Deconstruct time="10">
       <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />

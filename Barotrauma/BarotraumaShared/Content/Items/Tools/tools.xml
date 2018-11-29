@@ -241,6 +241,7 @@
       <Item identifier="copperbar" />
       <Item identifier="polycarbonatebar" />
     </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,320,64,64" />
     <Sprite texture="tools.png" sourcerect="0,35,27,12" depth="0.55" />
     <Body width="27" height="10" density="15" />
     <Holdable slots="Any,RightHand,LeftHand,Head" holdpos="30,-15" aimpos="100,0" handle1="-13,0" handle2="-13,0">
