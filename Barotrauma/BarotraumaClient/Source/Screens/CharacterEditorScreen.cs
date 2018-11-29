@@ -3422,6 +3422,7 @@ namespace Barotrauma
             {
                 joint.UpperLimit = MathHelper.ToRadians(angle);
                 ValidateJoint(joint);
+                angle = MathHelper.ToDegrees(joint.UpperLimit);
                 TryUpdateJointParam(joint, "upperlimit", angle);
                 if (copyJointSettings)
                 {
@@ -3460,6 +3461,7 @@ namespace Barotrauma
             {
                 joint.LowerLimit = MathHelper.ToRadians(angle);
                 ValidateJoint(joint);
+                angle = MathHelper.ToDegrees(joint.LowerLimit);
                 TryUpdateJointParam(joint, "lowerlimit", angle);
                 if (copyJointSettings)
                 {
