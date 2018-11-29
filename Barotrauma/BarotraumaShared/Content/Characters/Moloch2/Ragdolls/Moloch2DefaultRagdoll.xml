@@ -1,4 +1,4 @@
-﻿<Ragdoll type="Moloch2" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" canentersubmarine="True" draggable="True">
+﻿<Ragdoll type="Moloch2" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" canentersubmarine="False" draggable="True">
   <collider radius="309" width="635" name="Main Collider" height="0" />
   <limb id="0" name="Skirt11" type="None" radius="199" height="114" notes="5bl_Skirt11" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Moloch2/Moloch2.png" sourcerect="1649,0,399,513" origin="0.5,0.5" depth="0.1" />
