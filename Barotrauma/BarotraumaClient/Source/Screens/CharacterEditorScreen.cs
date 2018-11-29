@@ -2128,6 +2128,10 @@ namespace Barotrauma
         private Vector2 SimToScreen(float x, float y) => SimToScreen(new Vector2(x, y));
         private Vector2 SimToScreen(Vector2 p) => Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(p + Submarine.MainSub.SimPosition));
 
+        private bool IsMatchingLimb(Limb limb1, Limb limb2, LimbJoint joint1, LimbJoint joint2) =>
+            joint1.BodyA == limb1.body.FarseerBody && joint2.BodyA == limb2.body.FarseerBody ||
+            joint1.BodyB == limb1.body.FarseerBody && joint2.BodyB == limb2.body.FarseerBody;
+
         private void ValidateJoint(LimbJoint limbJoint)
         {
             if (limbJoint.UpperLimit < limbJoint.LowerLimit)
@@ -3497,10 +3501,6 @@ namespace Barotrauma
                     offset: -rotationOffset - joint.UpperLimit + MathHelper.PiOver2, thickness: thickness);
             }
         }
-
-        private bool IsMatchingLimb(Limb limb1, Limb limb2, LimbJoint joint1, LimbJoint joint2) =>
-            joint1.BodyA == limb1.body.FarseerBody && joint2.BodyA == limb2.body.FarseerBody ||
-            joint1.BodyB == limb1.body.FarseerBody && joint2.BodyB == limb2.body.FarseerBody;
         #endregion
 
         #region Widgets as methods
