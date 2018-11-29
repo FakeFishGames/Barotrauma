@@ -1,10 +1,7 @@
-﻿using Microsoft.Xna.Framework;
-using System.IO;
+﻿using System.IO;
 using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Linq;
-using System.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -36,6 +33,7 @@ namespace Barotrauma
         }
 
         public XElement MainElement => doc.Root;
+        public XElement OriginalElement { get; private set; }
 
         protected virtual bool Deserialize(XElement element = null)
         {
@@ -56,7 +54,8 @@ namespace Barotrauma
             UpdatePath(file);
             doc = XMLExtensions.TryLoadXml(FullPath);
             if (doc == null) { return false; }
-            IsLoaded = Deserialize(doc.Root);
+            IsLoaded = Deserialize(MainElement);
+            OriginalElement = new XElement(MainElement);
             return IsLoaded;
         }
 
@@ -96,13 +95,13 @@ namespace Barotrauma
             return true;
         }
 
-        public bool Reset(bool forceReload = false)
+        public virtual bool Reset(bool forceReload = false)
         {
             if (forceReload)
             {
                 return Load(FullPath);
             }
-            return Deserialize();
+            return Deserialize(OriginalElement);
         }
 
 #if CLIENT
