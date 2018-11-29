@@ -11,10 +11,10 @@
     <structure prefab="RuinWallHeavyHorizontal" alignment="Top, Bottom" type="Wall"/>
     <structure prefab="RuinWallHeavyVertical" alignment="Left,Right" type="Wall"/>  
     <structure prefab="RuinBackCarvings" alignment="Center" type="Back" commonness="1"/>
-    <item prefab="RuinFractalBall" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
-    <item prefab="RuinClaw" alignment="Bottom" type="Prop" commonness="5"/>
-    <item prefab="artifactholder" alignment="Center" type="Prop" commonness="5"/>
-    <itemassembly prefab="alienturretassembly" alignment="Center" type="Prop" expand="true" commonness="1"/>
+    <item prefab="RuinFractalBall"  minoffset="-0.25,-0.25" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
+    <item prefab="RuinClaw" alignment="Bottom" minoffset="-0.5,0.0" maxoffset="0.5,0.0" type="Prop" commonness="5"/>
+    <item prefab="artifactholder" alignment="Center" type="Prop" minoffset="-0.25,-0.25" maxoffset="0.25,0.25" commonness="5"/>
+    <itemassembly prefab="alienturretassembly" alignment="Center" minoffset="-0.25,-0.25" maxoffset="0.25,0.25" type="Prop" expand="true" commonness="1"/>
   </RoomType>
   
   <!-- "last" and a placement offset of -1 means that this is used as the second-to-last room-->
@@ -22,7 +22,7 @@
     <structure prefab="RuinWallHeavyHorizontal" alignment="Top, Bottom" type="Wall"/>
     <structure prefab="RuinWallHeavyVertical" alignment="Left,Right" type="Wall"/>
     <structure prefab="RuinBackCarvings" alignment="Center" type="Back" commonness="1"/>
-    <item prefab="RuinFractalBall" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
+    <item prefab="RuinFractalBall" alignment="Center,Right,Top,Bottom,Left" minoffset="-0.25,-0.25" maxoffset="0.25,0.25" type="Prop" commonness="5"/>
     <item prefab="ancientweapon" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="1"/>
   </RoomType>
   
@@ -30,9 +30,9 @@
     <structure prefab="RuinWallHorizontal" alignment="Top, Bottom" type="Wall"/>
     <structure prefab="RuinWallVertical" alignment="Left,Right" type="Wall"/>
     <structure prefab="RuinBackFractal" alignment="Center" type="Back" commonness="2"/> 
-    <item prefab="RuinBlock" alignment="Right,Top,Bottom,Left" type="Prop" commonness="5"/>    
-    <item prefab="oxygeniteshard" alignment="Bottom" type="Prop" commonness="5"/>
-    <item prefab="sulphuriteshard" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
+    <item prefab="RuinBlock" alignment="Right,Top,Bottom,Left" minoffset="-0.25,-0.25" maxoffset="0.25,0.25" type="Prop" commonness="5"/>    
+    <item prefab="oxygeniteshard" alignment="Bottom" minoffset="-0.5,0" maxoffset="0.5,0.0" type="Prop" commonness="5"/>
+    <item prefab="sulphuriteshard" alignment="Center,Right,Top,Bottom,Left" minoffset="-0.5,0" maxoffset="0.5,0.0" type="Prop" commonness="5"/>
   </RoomType>
 
   <RoomType name="entrancecorridor" placement="first" iscorridor="true">
@@ -65,7 +65,7 @@
     <structure prefab="RuinWallHorizontalSmall" alignment="Top,Bottom" type="Wall"/>
     <structure prefab="RuinWallVerticalSmall" alignment="Left,Right" type="Wall"/>
     <structure prefab="RuinBack" alignment="Center" type="Back" commonness="3"/>
-    <item prefab="aliencoil" alignment="Center">
+    <item prefab="aliencoil" minoffset="-0.5,-0.5" maxoffset="0.5,0.5" alignment="Center">
       <item prefab="alienmotionsensor" alignment="Center" type="Prop" placementrelativetoparent="sameroom">
         <Connection targetentity="parent">
           <Wire from="state_out" to="activate"/>
