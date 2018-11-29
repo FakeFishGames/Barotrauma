@@ -1101,7 +1101,7 @@ namespace Barotrauma
             }
         }
 
-        private void CreateCharacter(string name, bool isHumanoid, bool canEnterSubmarine, params object[] ragdollConfig)
+        private void CreateCharacter(string name, bool isHumanoid, params object[] ragdollConfig)
         {
             string speciesName = name;
             string mainFolder = $"Content/Characters/{speciesName}";
@@ -1113,7 +1113,6 @@ namespace Barotrauma
                 XElement mainElement = new XElement("Character",
                     new XAttribute("name", speciesName),
                     new XAttribute("humanoid", isHumanoid),
-                    new XAttribute("canentersubmarine", canEnterSubmarine),
                     new XElement("ragdolls"),
                     new XElement("animations"),
                     new XElement("health"),
@@ -4104,11 +4103,12 @@ namespace Barotrauma
                         var ragdollParams = new object[]
                         {
                             new XAttribute("type", Name),
+                            new XAttribute("canentersubmarine", CanEnterSubmarine),
                                 colliderElements,
                                 LimbXElements.Values,
                                 JointXElements
                         };
-                        CharacterEditorScreen.instance.CreateCharacter(Name, IsHumanoid, CanEnterSubmarine, ragdollParams);
+                        CharacterEditorScreen.instance.CreateCharacter(Name, IsHumanoid, ragdollParams);
                         GUI.AddMessage($"Character {Name} Created", Color.Green, font: GUI.Font);
                         Instance.SelectTab(Tab.None);
                         return true;
