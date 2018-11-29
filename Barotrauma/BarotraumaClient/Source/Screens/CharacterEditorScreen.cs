@@ -2132,17 +2132,20 @@ namespace Barotrauma
         {
             if (limbJoint.UpperLimit < limbJoint.LowerLimit)
             {
-                if (limbJoint.LowerLimit > 0.0f) limbJoint.LowerLimit -= MathHelper.TwoPi;
-                if (limbJoint.UpperLimit < 0.0f) limbJoint.UpperLimit += MathHelper.TwoPi;
+                if (limbJoint.LowerLimit > 0.0f)
+                {
+                    limbJoint.LowerLimit -= MathHelper.TwoPi;
+                }
+                if (limbJoint.UpperLimit < 0.0f)
+                {
+                    limbJoint.UpperLimit += MathHelper.TwoPi;
+                }
             }
 
             if (limbJoint.UpperLimit - limbJoint.LowerLimit > MathHelper.TwoPi)
             {
-                // Wrapping the limits between PI seems to cause the joint angles being flipped by 180 degrees.
-                //limbJoint.LowerLimit = MathUtils.WrapAnglePi(limbJoint.LowerLimit);
-                //limbJoint.UpperLimit = MathUtils.WrapAnglePi(limbJoint.UpperLimit);
-                limbJoint.LowerLimit = MathUtils.WrapAngleTwoPi(limbJoint.LowerLimit);
-                limbJoint.UpperLimit = MathUtils.WrapAngleTwoPi(limbJoint.UpperLimit);
+                limbJoint.LowerLimit = MathUtils.WrapAnglePi(limbJoint.LowerLimit);
+                limbJoint.UpperLimit = MathUtils.WrapAnglePi(limbJoint.UpperLimit);
             }
         }
 
@@ -3517,12 +3520,10 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch, drawPos, widgetDrawPos, color, width: 3);
                 ShapeExtensions.DrawCircle(spriteBatch, drawPos, circleRadius, 40, color, thickness: 1);
                 Vector2 d = PlayerInput.MousePosition - drawPos;
-                float newAngle = MathUtils.VectorToAngle(d) - MathHelper.PiOver2 + rotationOffset;
-                angle = MathHelper.ToDegrees(newAngle);
-                if (!clockWise)
-                {
-                    angle = -angle;
-                }
+                float newAngle = clockWise
+                    ? MathUtils.VectorToAngle(d) - MathHelper.PiOver2 + rotationOffset
+                    : -MathUtils.VectorToAngle(d) + MathHelper.PiOver2 - rotationOffset;
+                angle = MathHelper.ToDegrees(MathUtils.WrapAngleTwoPi(newAngle));
                 if (displayAngle)
                 {
                     GUI.DrawString(spriteBatch, drawPos, angle.FormatZeroDecimal(), Color.Black, backgroundColor: color, font: GUI.SmallFont);
