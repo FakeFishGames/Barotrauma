@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using Barotrauma.Networking;
+using Lidgren.Network;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class CustomInterface : ItemComponent
+    partial class CustomInterface : ItemComponent, IClientSerializable, IServerSerializable
     {
         class CustomInterfaceElement
         {
@@ -53,6 +55,7 @@ namespace Barotrauma.Items.Components
                         break;
                 }
             }
+            IsActive = true;
             InitProjSpecific(element);
         }
 
@@ -77,6 +80,59 @@ namespace Barotrauma.Items.Components
                 if (!ciElement.ContinuousSignal) { continue; }
                 //TODO: allow changing output when a tickbox is not selected
                 item.SendSignal(0, ciElement.State ? ciElement.signal : "0", ciElement.connection, sender: null, source: item);
+            }
+        }
+
+
+        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
+        {
+            bool[] elementStates = new bool[customInterfaceElementList.Count];
+            for (int i = 0; i < customInterfaceElementList.Count; i++)
+            {
+                elementStates[i] = msg.ReadBoolean();
+            }
+
+            CustomInterfaceElement clickedButton = null;
+            if (item.CanClientAccess(c))
+            {
+                for (int i = 0; i < customInterfaceElementList.Count; i++)
+                {
+                    if (customInterfaceElementList[i].ContinuousSignal)
+                    {
+                        TickBoxToggled(customInterfaceElementList[i], elementStates[i]);
+                    }
+                    else if (elementStates[i])
+                    {
+                        clickedButton = customInterfaceElementList[i];
+                        ButtonClicked(customInterfaceElementList[i]);
+                    }
+                }
+            }
+
+            //notify all clients of the new state
+            GameMain.Server.CreateEntityEvent(item, new object[] 
+            {
+                NetEntityEvent.Type.ComponentState,
+                item.components.IndexOf(this),
+                clickedButton
+            });
+
+            item.CreateServerEvent(this);
+        }
+
+        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        {
+            //extradata contains an array of buttons clicked by a client (or nothing if nothing was clicked)
+            for (int i = 0; i < customInterfaceElementList.Count; i++)
+            {
+                if (customInterfaceElementList[i].ContinuousSignal)
+                {
+                    msg.Write(customInterfaceElementList[i].State);
+                }
+                else
+                {
+                    msg.Write(extraData != null && extraData.Any(d => d as CustomInterfaceElement == customInterfaceElementList[i]));
+                }
             }
         }
     }
