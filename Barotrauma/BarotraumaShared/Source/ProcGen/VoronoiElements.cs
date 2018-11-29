@@ -57,21 +57,38 @@ using System.Collections.Generic;
 
 namespace Voronoi2
 {
-    public class Point
+    public class DoubleVector2
     {
         public double x, y;
-        
-        public void setPoint ( double x, double y )
+
+        public DoubleVector2()
+        {
+        }
+
+        public DoubleVector2(double x, double y)
         {
             this.x = x;
             this.y = y;
+        }
+
+        public void setPoint(double x, double y)
+        {
+            this.x = x;
+            this.y = y;
+        }
+
+        public void Normalize()
+        {
+            double length = System.Math.Sqrt(x * x + y * y);
+            x /= length;
+            y /= length;
         }
     }
     
     // use for sites and vertecies
     public class Site
     {
-        public Point coord;
+        public DoubleVector2 coord;
         public int sitenbr;
 
         public void SetPoint(Vector2 point)
@@ -81,7 +98,7 @@ namespace Voronoi2
         
         public Site ()
         {
-            coord = new Point();
+            coord = new DoubleVector2();
         }
     }
     
@@ -138,7 +155,7 @@ namespace Voronoi2
         {
             get { return new Vector2((float)site.coord.x, (float)site.coord.y) + Translation; }
         }
-
+        
         public VoronoiCell(Vector2[] vertices)
         {
             edges = new List<GraphEdge>();
@@ -248,8 +265,8 @@ namespace Voronoi2
     {
         public int Compare ( Site p1, Site p2 )
         {
-            Point s1 = p1.coord;
-            Point s2 = p2.coord;
+            DoubleVector2 s1 = p1.coord;
+            DoubleVector2 s2 = p2.coord;
             if ( s1.y < s2.y )    return -1;
             if ( s1.y > s2.y ) return 1;
             if ( s1.x < s2.x ) return -1;

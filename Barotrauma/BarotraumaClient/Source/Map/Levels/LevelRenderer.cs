@@ -249,7 +249,7 @@ namespace Barotrauma
                     }
                 }
 
-                foreach (List<Vector2> nodeList in level.SmallTunnels)
+                foreach (List<Point> nodeList in level.SmallTunnels)
                 {
                     for (int i = 1; i < nodeList.Count; i++)
                     {
