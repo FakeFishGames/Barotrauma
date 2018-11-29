@@ -34,13 +34,13 @@ namespace Barotrauma
                 {
                     Site site = (i == 0) ? ge.Site1 : ge.Site2;
 
-                    int x = (int)(Math.Floor((site.coord.x-borders.X) / gridCellSize));
-                    int y = (int)(Math.Floor((site.coord.y-borders.Y) / gridCellSize));
+                    int x = (int)(Math.Floor((site.Coord.X-borders.X) / gridCellSize));
+                    int y = (int)(Math.Floor((site.Coord.Y-borders.Y) / gridCellSize));
 
                     x = MathHelper.Clamp(x, 0, cellGrid.GetLength(0)-1);
                     y = MathHelper.Clamp(y, 0, cellGrid.GetLength(1)-1);
                         
-                    VoronoiCell cell = cellGrid[x,y].Find(c => c.site == site);
+                    VoronoiCell cell = cellGrid[x,y].Find(c => c.Site == site);
 
                     if (cell == null)
                     {
@@ -57,7 +57,7 @@ namespace Barotrauma
                     {
                         ge.Cell2 = cell;
                     }
-                    cell.edges.Add(ge);
+                    cell.Edges.Add(ge);
                 }
             }
 
@@ -146,10 +146,10 @@ namespace Barotrauma
                 int edgeIndex = 0;
 
                 allowedEdges.Clear();
-                foreach (GraphEdge edge in currentCell.edges)
+                foreach (GraphEdge edge in currentCell.Edges)
                 {
                     var adjacentCell = edge.AdjacentCell(currentCell);
-                    if (limits.Contains(adjacentCell.site.coord.x, adjacentCell.site.coord.y))
+                    if (limits.Contains(adjacentCell.Site.Coord.X, adjacentCell.Site.Coord.Y))
                     {
                         allowedEdges.Add(edge);
                     }
@@ -159,12 +159,12 @@ namespace Barotrauma
                 if (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) > wanderAmount || allowedEdges.Count == 0)
                 {
                     double smallestDist = double.PositiveInfinity;
-                    for (int i = 0; i < currentCell.edges.Count; i++)
+                    for (int i = 0; i < currentCell.Edges.Count; i++)
                     {
-                        var adjacentCell = currentCell.edges[i].AdjacentCell(currentCell);
+                        var adjacentCell = currentCell.Edges[i].AdjacentCell(currentCell);
                         double dist = MathUtils.Distance(
-                            adjacentCell.site.coord.x, adjacentCell.site.coord.y,
-                            targetCells[currentTargetIndex].site.coord.x, targetCells[currentTargetIndex].site.coord.y);
+                            adjacentCell.Site.Coord.X, adjacentCell.Site.Coord.Y,
+                            targetCells[currentTargetIndex].Site.Coord.X, targetCells[currentTargetIndex].Site.Coord.Y);
                         if (dist < smallestDist)
                         {
                             edgeIndex = i;
@@ -177,10 +177,10 @@ namespace Barotrauma
                 {
                     edgeIndex = Rand.Int(allowedEdges.Count, Rand.RandSync.Server);
                     if (mirror && edgeIndex > 0) edgeIndex = allowedEdges.Count - edgeIndex;
-                    edgeIndex = currentCell.edges.IndexOf(allowedEdges[edgeIndex]);
+                    edgeIndex = currentCell.Edges.IndexOf(allowedEdges[edgeIndex]);
                 }
 
-                currentCell = currentCell.edges[edgeIndex].AdjacentCell(currentCell);
+                currentCell = currentCell.Edges[edgeIndex].AdjacentCell(currentCell);
                 currentCell.CellType = CellType.Path;
                 pathCells.Add(currentCell);
 
@@ -208,7 +208,7 @@ namespace Barotrauma
         public static void RoundCell(VoronoiCell cell, float minEdgeLength = 500.0f, float roundingAmount = 0.5f, float irregularity = 0.1f)
         {
             List<GraphEdge> tempEdges = new List<GraphEdge>();
-            foreach (GraphEdge edge in cell.edges)
+            foreach (GraphEdge edge in cell.Edges)
             {
                 if (!edge.IsSolid)
                 {
@@ -256,7 +256,7 @@ namespace Barotrauma
                 }
             }
 
-            cell.edges = tempEdges;
+            cell.Edges = tempEdges;
         }
 
         public static Body GeneratePolygons(List<VoronoiCell> cells, Level level, out List<Vector2[]> renderTriangles)
@@ -279,7 +279,7 @@ namespace Barotrauma
                 
                 bodyPoints.Clear();
                 tempVertices.Clear();
-                foreach (GraphEdge ge in cell.edges)
+                foreach (GraphEdge ge in cell.Edges)
                 {
                     if (Vector2.DistanceSquared(ge.Point1, ge.Point2) < 0.01f) continue;
                     if (!tempVertices.Any(v => Vector2.DistanceSquared(ge.Point1, v) < 1.0f))
@@ -316,7 +316,7 @@ namespace Barotrauma
 
                 for (int i = 0; i < bodyPoints.Count; i++)
                 {
-                    cell.bodyVertices.Add(bodyPoints[i]);
+                    cell.BodyVertices.Add(bodyPoints[i]);
                     bodyPoints[i] = ConvertUnits.ToSimUnits(bodyPoints[i]);
                 }
                 
@@ -349,7 +349,7 @@ namespace Barotrauma
                     }
                 }
                 
-                cell.body = cellBody;
+                cell.Body = cellBody;
             }
 
             return cellBody;
@@ -420,7 +420,7 @@ namespace Barotrauma
                     for (int i = 0; i < cellGrid[x, y].Count; i++)
                     {
                         int dist = MathUtils.DistanceSquared(
-                            (int)cellGrid[x, y][i].site.coord.x, (int)cellGrid[x, y][i].site.coord.y, 
+                            (int)cellGrid[x, y][i].Site.Coord.X, (int)cellGrid[x, y][i].Site.Coord.Y, 
                             position.X, position.Y);
                         if (dist > closestDist) continue;
 
