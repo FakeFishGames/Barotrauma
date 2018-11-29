@@ -221,6 +221,27 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Mantis\Ragdolls\MantisDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch2\Animations\Moloch2Run.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>    	
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch2\Animations\Moloch2SwimFast.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>    	
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch2\Animations\Moloch2SwimSlow.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>    	
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch2\Animations\Moloch2Walk.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>    	
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch2\Moloch2.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>    	
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch2\Moloch2.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>    	
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch2\Ragdolls\Moloch2DefaultRagdoll.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>    	
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Molochboss\Ragdolls\MolochbossDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
