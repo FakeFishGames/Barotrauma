@@ -123,44 +123,44 @@
   <limb id="40" name="TentacleArm36" type="None" radius="69" height="84" notes="411111bc_TentacleArm36" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Moloch2/Moloch2.png" sourcerect="285,1826,138,222" origin="0.5,0.5" depth="0" />
   </limb>
-  <joint name="Joint Torso - Skirt11" limb1="3" limb2="0" limb1anchor="-260.6879,-153.727" limb2anchor="19.1217,173.8123" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Torso - Skirt21" limb1="3" limb2="1" limb1anchor="-101.5012,-236.9574" limb2anchor="19.82896,147.5322" canbesevered="True" limitenabled="True" upperlimit="5.358085" lowerlimit="-206.9403" />
-  <joint name="Joint Torso - Skirt31" limb1="3" limb2="2" limb1anchor="-194.2742,-265.1292" limb2anchor="19.64976,109.8069" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Skirt11 - Skirt12" limb1="0" limb2="4" limb1anchor="0,-204.8" limb2anchor="0,118.4" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Skirt21 - Skirt22" limb1="1" limb2="5" limb1anchor="0,-204.8" limb2anchor="0,118.4" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Skirt31 - Skirt32" limb1="2" limb2="6" limb1anchor="0,-204.8" limb2anchor="0,118.4" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Torso - TentacleArm11" limb1="3" limb2="7" limb1anchor="161.5161,-175.7701" limb2anchor="13.04373,103.2333" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Torso - TentacleArm21" limb1="3" limb2="8" limb1anchor="267.6485,-242.7005" limb2anchor="0,94.73738" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Torso - TentacleArm31" limb1="3" limb2="9" limb1anchor="388.174,-247.6138" limb2anchor="-3.873102,104.5076" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Skirt12 - Skirt13" limb1="4" limb2="10" limb1anchor="0,-118.4" limb2anchor="0,96.8" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Skirt22 - Skirt23" limb1="5" limb2="11" limb1anchor="0,-118.4" limb2anchor="0,96.8" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Skirt32 - Skirt33" limb1="6" limb2="12" limb1anchor="0,-118.4" limb2anchor="0,96.8" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint TentacleArm11 - TentacleArm12" limb1="7" limb2="13" limb1anchor="0,-130.4" limb2anchor="0,116.8" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint TentacleArm21 - TentacleArm22" limb1="8" limb2="14" limb1anchor="0,-130.4" limb2anchor="0,116.8" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint TentacleArm31 - TentacleArm32" limb1="9" limb2="15" limb1anchor="4.994125,-130.4" limb2anchor="0,116.8" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Torso - Blatter" limb1="3" limb2="16" limb1anchor="9.876232,120.6881" limb2anchor="24.60535,370.442" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Skirt13 - Skirt14" limb1="10" limb2="17" limb1anchor="0,-96.8" limb2anchor="0,91.99999" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Skirt23 - Skirt24" limb1="11" limb2="18" limb1anchor="0,-96.8" limb2anchor="0,91.99999" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Skirt33 - Skirt34" limb1="12" limb2="19" limb1anchor="0,-96.8" limb2anchor="0,91.99999" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint TentacleArm12 - TentacleArm13" limb1="13" limb2="20" limb1anchor="0,-116.8" limb2anchor="0,81.6" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint TentacleArm22 - TentacleArm23" limb1="14" limb2="21" limb1anchor="0,-116.8" limb2anchor="0,81.6" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint TentacleArm32 - TentacleArm33" limb1="15" limb2="22" limb1anchor="0,-116.8" limb2anchor="0,81.6" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Skirt14 - Skirt15" limb1="17" limb2="23" limb1anchor="0,-91.99999" limb2anchor="0,70.4" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Skirt24 - Skirt25" limb1="18" limb2="24" limb1anchor="0,-91.99999" limb2anchor="0,70.4" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Skirt34 - Skirt35" limb1="19" limb2="25" limb1anchor="0,-91.99999" limb2anchor="0,70.4" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Skirt15 - Skirt16" limb1="23" limb2="26" limb1anchor="0,-70.4" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Skirt25 - Skirt26" limb1="24" limb2="27" limb1anchor="0,-70.4" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Skirt35 - Skirt36" limb1="25" limb2="28" limb1anchor="0,-70.4" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint TentacleArm13 - TentacleArm14" limb1="20" limb2="29" limb1anchor="0,-81.6" limb2anchor="0,72.8" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint TentacleArm23 - TentacleArm24" limb1="21" limb2="30" limb1anchor="0,-81.6" limb2anchor="0,72.8" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint TentacleArm33 - TentacleArm34" limb1="22" limb2="31" limb1anchor="0,-81.6" limb2anchor="0,72.8" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint TentacleArm14 - TentacleArm15" limb1="29" limb2="32" limb1anchor="0,-72.8" limb2anchor="0,62.4" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint TentacleArm24 - TentacleArm25" limb1="30" limb2="33" limb1anchor="0,-72.8" limb2anchor="0,62.4" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint TentacleArm34 - TentacleArm35" limb1="31" limb2="34" limb1anchor="0,-72.8" limb2anchor="0,62.4" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Skirt16 - Skirt17" limb1="26" limb2="35" limb1anchor="0,-84" limb2anchor="0,151.2" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Skirt26 - Skirt27" limb1="27" limb2="36" limb1anchor="0,-84" limb2anchor="0,151.2" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Skirt36 - Skirt37" limb1="28" limb2="37" limb1anchor="0,-84" limb2anchor="0,151.2" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint TentacleArm15 - TentacleArm16" limb1="32" limb2="38" limb1anchor="0,-62.4" limb2anchor="0,88.8" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint TentacleArm25 - TentacleArm26" limb1="33" limb2="39" limb1anchor="0,-62.4" limb2anchor="0,88.8" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint TentacleArm35 - TentacleArm36" limb1="34" limb2="40" limb1anchor="0,-62.4" limb2anchor="0,88.8" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
+  <joint name="Joint Torso - Skirt11" limb1="3" limb2="0" limb1anchor="260.6879,-153.727" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="70.1451" lowerlimit="-70.21249" stiffness="0.25" />
+  <joint name="Joint Torso - Skirt21" limb1="3" limb2="1" limb1anchor="101.5012,-236.9574" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="70.1451" lowerlimit="-70.21249" stiffness="0.25" />
+  <joint name="Joint Torso - Skirt31" limb1="3" limb2="2" limb1anchor="194.2742,-265.1292" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="70.1451" lowerlimit="-70.21249" stiffness="0.25" />
+  <joint name="Joint Skirt11 - Skirt12" limb1="0" limb2="4" limb1anchor="0,-204.8" limb2anchor="0,118.4" canbesevered="True" limitenabled="True" upperlimit="70.1451" lowerlimit="-70.21249" stiffness="0.25" />
+  <joint name="Joint Skirt21 - Skirt22" limb1="1" limb2="5" limb1anchor="0,-204.8" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="70.1451" lowerlimit="-70.21249" stiffness="0.25" />
+  <joint name="Joint Skirt31 - Skirt32" limb1="2" limb2="6" limb1anchor="0,-204.8" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="70.1451" lowerlimit="-70.21249" stiffness="0.25" />
+  <joint name="Joint Torso - TentacleArm11" limb1="3" limb2="7" limb1anchor="-155.5268,-178.078" limb2anchor="3.873102,104.5076" canbesevered="True" limitenabled="True" upperlimit="70.33233" lowerlimit="-70.25961" stiffness="0.25" />
+  <joint name="Joint Torso - TentacleArm21" limb1="3" limb2="8" limb1anchor="-267.6485,-242.7005" limb2anchor="3.873102,104.5076" canbesevered="True" limitenabled="True" upperlimit="70.33233" lowerlimit="-70.25961" stiffness="0.25" />
+  <joint name="Joint Torso - TentacleArm31" limb1="3" limb2="9" limb1anchor="-388.174,-247.6138" limb2anchor="3.873102,104.5076" canbesevered="True" limitenabled="True" upperlimit="70.33233" lowerlimit="-70.25961" stiffness="0.25" />
+  <joint name="Joint Skirt12 - Skirt13" limb1="4" limb2="10" limb1anchor="0,-118.4" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="70.1451" lowerlimit="-70.21249" stiffness="0.25" />
+  <joint name="Joint Skirt22 - Skirt23" limb1="5" limb2="11" limb1anchor="0,-118.4" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="70.1451" lowerlimit="-70.21249" stiffness="0.25" />
+  <joint name="Joint Skirt32 - Skirt33" limb1="6" limb2="12" limb1anchor="0,-118.4" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="70.1451" lowerlimit="-70.21249" stiffness="0.25" />
+  <joint name="Joint TentacleArm11 - TentacleArm12" limb1="7" limb2="13" limb1anchor="0,-116.8" limb2anchor="0,116.8" canbesevered="True" limitenabled="True" upperlimit="70.33233" lowerlimit="-70.25961" stiffness="0.25" />
+  <joint name="Joint TentacleArm21 - TentacleArm22" limb1="8" limb2="14" limb1anchor="0,-116.8" limb2anchor="0,116.8" canbesevered="True" limitenabled="True" upperlimit="70.33233" lowerlimit="-70.25961" stiffness="0.25" />
+  <joint name="Joint TentacleArm31 - TentacleArm32" limb1="9" limb2="15" limb1anchor="0,-116.8" limb2anchor="0,116.8" canbesevered="True" limitenabled="True" upperlimit="70.33233" lowerlimit="-70.25961" stiffness="0.25" />
+  <joint name="Joint Torso - Blatter" limb1="3" limb2="16" limb1anchor="-9.876232,120.6881" limb2anchor="24.60535,370.442" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" stiffness="0.25" />
+  <joint name="Joint Skirt13 - Skirt14" limb1="10" limb2="17" limb1anchor="0,-96.8" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="70.1451" lowerlimit="-70.21249" stiffness="0.25" />
+  <joint name="Joint Skirt23 - Skirt24" limb1="11" limb2="18" limb1anchor="0,-96.8" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="70.1451" lowerlimit="-70.21249" stiffness="0.25" />
+  <joint name="Joint Skirt33 - Skirt34" limb1="12" limb2="19" limb1anchor="0,-96.8" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="70.1451" lowerlimit="-70.21249" stiffness="0.25" />
+  <joint name="Joint TentacleArm12 - TentacleArm13" limb1="13" limb2="20" limb1anchor="0,-116.8" limb2anchor="0,81.6" canbesevered="True" limitenabled="True" upperlimit="70.33233" lowerlimit="-70.25961" stiffness="0.25" />
+  <joint name="Joint TentacleArm22 - TentacleArm23" limb1="14" limb2="21" limb1anchor="0,-116.8" limb2anchor="0,81.6" canbesevered="True" limitenabled="True" upperlimit="70.33233" lowerlimit="-70.25961" stiffness="0.25" />
+  <joint name="Joint TentacleArm32 - TentacleArm33" limb1="15" limb2="22" limb1anchor="0,-116.8" limb2anchor="0,81.6" canbesevered="True" limitenabled="True" upperlimit="70.33233" lowerlimit="-70.25961" stiffness="0.25" />
+  <joint name="Joint Skirt14 - Skirt15" limb1="17" limb2="23" limb1anchor="0,-91.99999" limb2anchor="0,88.41884" canbesevered="True" limitenabled="True" upperlimit="70.1451" lowerlimit="-70.21249" stiffness="0.25" />
+  <joint name="Joint Skirt24 - Skirt25" limb1="18" limb2="24" limb1anchor="0,-91.99999" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="70.1451" lowerlimit="-70.21249" stiffness="0.25" />
+  <joint name="Joint Skirt34 - Skirt35" limb1="19" limb2="25" limb1anchor="0,-91.99999" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="70.1451" lowerlimit="-70.21249" stiffness="0.25" />
+  <joint name="Joint Skirt15 - Skirt16" limb1="23" limb2="26" limb1anchor="0,-70.4" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="70.1451" lowerlimit="-70.21249" stiffness="0.25" />
+  <joint name="Joint Skirt25 - Skirt26" limb1="24" limb2="27" limb1anchor="0,-70.4" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="70.1451" lowerlimit="-70.21249" stiffness="0.25" />
+  <joint name="Joint Skirt35 - Skirt36" limb1="25" limb2="28" limb1anchor="0,-70.4" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="70.1451" lowerlimit="-70.21249" stiffness="0.25" />
+  <joint name="Joint TentacleArm13 - TentacleArm14" limb1="20" limb2="29" limb1anchor="0,-81.6" limb2anchor="0,72.8" canbesevered="True" limitenabled="True" upperlimit="70.33233" lowerlimit="-70.25961" stiffness="0.25" />
+  <joint name="Joint TentacleArm23 - TentacleArm24" limb1="21" limb2="30" limb1anchor="0,-81.6" limb2anchor="0,72.8" canbesevered="True" limitenabled="True" upperlimit="70.33233" lowerlimit="-70.25961" stiffness="0.25" />
+  <joint name="Joint TentacleArm33 - TentacleArm34" limb1="22" limb2="31" limb1anchor="0,-81.6" limb2anchor="0,72.8" canbesevered="True" limitenabled="True" upperlimit="70.33233" lowerlimit="-70.25961" stiffness="0.25" />
+  <joint name="Joint TentacleArm14 - TentacleArm15" limb1="29" limb2="32" limb1anchor="0,-72.8" limb2anchor="0,62.4" canbesevered="True" limitenabled="True" upperlimit="70.33233" lowerlimit="-70.25961" stiffness="0.25" />
+  <joint name="Joint TentacleArm24 - TentacleArm25" limb1="30" limb2="33" limb1anchor="0,-72.8" limb2anchor="0,62.4" canbesevered="True" limitenabled="True" upperlimit="70.33233" lowerlimit="-70.25961" stiffness="0.25" />
+  <joint name="Joint TentacleArm34 - TentacleArm35" limb1="31" limb2="34" limb1anchor="0,-72.8" limb2anchor="0,62.4" canbesevered="True" limitenabled="True" upperlimit="70.33233" lowerlimit="-70.25961" stiffness="0.25" />
+  <joint name="Joint Skirt16 - Skirt17" limb1="26" limb2="35" limb1anchor="0,-84" limb2anchor="0,151.2" canbesevered="True" limitenabled="True" upperlimit="70.1451" lowerlimit="-70.21249" stiffness="0.25" />
+  <joint name="Joint Skirt26 - Skirt27" limb1="27" limb2="36" limb1anchor="0,-84" limb2anchor="0,151.2" canbesevered="True" limitenabled="True" upperlimit="70.1451" lowerlimit="-70.21249" stiffness="0.25" />
+  <joint name="Joint Skirt36 - Skirt37" limb1="28" limb2="37" limb1anchor="0,-84" limb2anchor="0,151.2" canbesevered="True" limitenabled="True" upperlimit="70.1451" lowerlimit="-70.21249" stiffness="0.25" />
+  <joint name="Joint TentacleArm15 - TentacleArm16" limb1="32" limb2="38" limb1anchor="0,-62.4" limb2anchor="0,88.8" canbesevered="True" limitenabled="True" upperlimit="70.33233" lowerlimit="-70.25961" stiffness="0.25" />
+  <joint name="Joint TentacleArm25 - TentacleArm26" limb1="33" limb2="39" limb1anchor="0,-62.4" limb2anchor="0,88.8" canbesevered="True" limitenabled="True" upperlimit="70.33233" lowerlimit="-70.25961" stiffness="0.25" />
+  <joint name="Joint TentacleArm35 - TentacleArm36" limb1="34" limb2="40" limb1anchor="0,-62.4" limb2anchor="0,88.8" canbesevered="True" limitenabled="True" upperlimit="70.33233" lowerlimit="-70.25961" stiffness="0.25" />
 </Ragdoll>
