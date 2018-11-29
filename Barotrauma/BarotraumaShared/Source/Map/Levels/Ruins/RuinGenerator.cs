@@ -727,49 +727,92 @@ namespace Barotrauma.RuinGeneration
                 size = itemPrefab.Size;
             }
 
-            float leftWallThickness = 32, rightWallThickness = 32;
-            float topWallThickness = 32, bottomWallThickness = 32;
+            int leftWallThickness = 32, rightWallThickness = 32;
+            int topWallThickness = 32, bottomWallThickness = 32;
             foreach (Line wall in room.Walls)
             {
                 if (wall.IsHorizontal)
                 {
                     if (wall.A.Y > room.Rect.Center.Y)
-                        bottomWallThickness = wall.Radius;
+                        bottomWallThickness = (int)wall.Radius;
                     else
-                        topWallThickness = wall.Radius;
+                        topWallThickness = (int)wall.Radius;
                 }
                 else
                 {
                     if (wall.A.X > room.Rect.Center.X)
-                        rightWallThickness = wall.Radius;
+                        rightWallThickness = (int)wall.Radius;
                     else
-                        leftWallThickness = wall.Radius;
+                        leftWallThickness = (int)wall.Radius;
                 }
             }
 
-            List<Vector2> potentialPositions = new List<Vector2>();
+            Rectangle roomBounds = new Rectangle(
+                room.Rect.X + leftWallThickness,
+                room.Rect.Y + bottomWallThickness,
+                room.Rect.Width - leftWallThickness - rightWallThickness,
+                room.Rect.Height - topWallThickness - bottomWallThickness);
+
+            List<Vector2> potentialAnchorPositions = new List<Vector2>();
             if (entityConfig.Alignment.HasFlag(Alignment.Top))
             {
-                potentialPositions.Add(new Vector2(Rand.Range(room.Rect.X + size.X, room.Rect.Right - size.X, Rand.RandSync.Server), room.Rect.Bottom - topWallThickness));
+                potentialAnchorPositions.Add(new Vector2(roomBounds.Center.X, roomBounds.Bottom));
             }
             if (entityConfig.Alignment.HasFlag(Alignment.Bottom))
             {
-                potentialPositions.Add(new Vector2(Rand.Range(room.Rect.X + size.X, room.Rect.Right - size.X, Rand.RandSync.Server), room.Rect.Top + bottomWallThickness));
+                potentialAnchorPositions.Add(new Vector2(roomBounds.Center.X, roomBounds.Top));
             }
             if (entityConfig.Alignment.HasFlag(Alignment.Right))
             {
-                potentialPositions.Add(new Vector2(room.Rect.Right - rightWallThickness, Rand.Range(room.Rect.Y + size.X, room.Rect.Bottom - size.Y, Rand.RandSync.Server)));
+                potentialAnchorPositions.Add(new Vector2(roomBounds.Right, roomBounds.Center.Y));
             }
             if (entityConfig.Alignment.HasFlag(Alignment.Left))
             {
-                potentialPositions.Add(new Vector2(room.Rect.X + leftWallThickness, Rand.Range(room.Rect.Y + size.X, room.Rect.Bottom - size.Y, Rand.RandSync.Server)));
+                potentialAnchorPositions.Add(new Vector2(roomBounds.X, roomBounds.Center.Y));
             }
-            if (entityConfig.Alignment.HasFlag(Alignment.Center) || potentialPositions.Count == 0)
+            if (entityConfig.Alignment.HasFlag(Alignment.Center) || potentialAnchorPositions.Count == 0)
             {
-                potentialPositions.Add(room.Rect.Center.ToVector2());
+                potentialAnchorPositions.Add(roomBounds.Center.ToVector2());
             }
 
-            Vector2 position = potentialPositions[Rand.Int(potentialPositions.Count, Rand.RandSync.Server)];
+            Vector2 position = potentialAnchorPositions[Rand.Int(potentialAnchorPositions.Count, Rand.RandSync.Server)];
+            Vector2 minPosition = new Vector2(
+                position.X + entityConfig.MinOffset.X * roomBounds.Width,
+                position.Y + entityConfig.MinOffset.Y * roomBounds.Height);
+            Vector2 maxPosition = new Vector2(
+                position.X + entityConfig.MaxOffset.X * roomBounds.Width,
+                position.Y + entityConfig.MaxOffset.Y * roomBounds.Height);
+
+            position = new Vector2(
+                Rand.Range(minPosition.X, maxPosition.X, Rand.RandSync.Server),
+                Rand.Range(minPosition.Y, maxPosition.Y, Rand.RandSync.Server));
+            position.X = MathHelper.Clamp(position.X, roomBounds.X, roomBounds.Right);
+            position.Y = MathHelper.Clamp(position.Y, roomBounds.Y, roomBounds.Bottom);
+
+            int iterations = 0;
+            while (iterations < 100)
+            {
+                bool overlapFound = false;
+                foreach (RuinEntity ruinEntity in ruinEntities)
+                {
+                    if (ruinEntity.Config.Type == RuinEntityType.Back) continue;
+                    Vector2 diff = position - ruinEntity.Entity.Position;
+                    if (Math.Abs(diff.X) < (size.X + ruinEntity.Entity.Rect.Width) / 2 &&
+                        Math.Abs(diff.Y) < (size.Y + ruinEntity.Entity.Rect.Height) / 2)
+                    {
+                        float dist = diff.Length();
+                        Vector2 moveDir = dist < 0.01f ? Vector2.UnitY : diff / dist;
+
+                        position += moveDir * 100.0f;
+
+                        position.X = MathHelper.Clamp(position.X, roomBounds.X, roomBounds.Right);
+                        position.Y = MathHelper.Clamp(position.Y, roomBounds.Y, roomBounds.Bottom);
+                        overlapFound = true;
+                    }
+                }
+                iterations++;
+                if (!overlapFound) { break; }
+            }
 
             MapEntity entity = null;
             if (entityConfig.Prefab is ItemPrefab)
