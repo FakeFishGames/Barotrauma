@@ -3541,7 +3541,7 @@ namespace Barotrauma
         }
 
         private enum WidgetType { Rectangle, Circle }
-        private void DrawWidget(SpriteBatch spriteBatch, Vector2 drawPos, WidgetType widgetType, int size, Color color, string name, Action onPressed, bool ? autoFreeze = null, Action onHovered = null)
+        private void DrawWidget(SpriteBatch spriteBatch, Vector2 drawPos, WidgetType widgetType, int size, Color color, string toolTip, Action onPressed, bool ? autoFreeze = null, Action onHovered = null)
         {
             var drawRect = new Rectangle((int)drawPos.X - size / 2, (int)drawPos.Y - size / 2, size, size);
             var inputRect = drawRect;
@@ -3579,7 +3579,7 @@ namespace Barotrauma
                 // Label/tooltip
                 if (onHovered == null)
                 {
-                    GUI.DrawString(spriteBatch, new Vector2(drawRect.Right + 5, drawRect.Y - drawRect.Height / 2), name, color, Color.Black);
+                    GUI.DrawString(spriteBatch, new Vector2(drawRect.Right + 5, drawRect.Y - drawRect.Height / 2), toolTip, color, Color.Black);
                 }
                 else
                 {
