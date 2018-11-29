@@ -35,10 +35,10 @@ namespace Barotrauma
             foreach (VoronoiCell cell in cells)
             {
                 CompareCCW compare = new CompareCCW(cell.Center);
-                foreach (GraphEdge edge in cell.edges)
+                foreach (GraphEdge edge in cell.Edges)
                 {
-                    if (edge.Cell1 != null && edge.Cell1.body == null && edge.Cell1.CellType != CellType.Empty) edge.Cell1 = null;
-                    if (edge.Cell2 != null && edge.Cell2.body == null && edge.Cell2.CellType != CellType.Empty) edge.Cell2 = null;
+                    if (edge.Cell1 != null && edge.Cell1.Body == null && edge.Cell1.CellType != CellType.Empty) edge.Cell1 = null;
+                    if (edge.Cell2 != null && edge.Cell2.Body == null && edge.Cell2.CellType != CellType.Empty) edge.Cell2 = null;
 
                     if (compare.Compare(edge.Point1, edge.Point2) == -1)
                     {
@@ -51,12 +51,12 @@ namespace Barotrauma
             
             foreach (VoronoiCell cell in cells)
             {
-                foreach (GraphEdge edge in cell.edges)
+                foreach (GraphEdge edge in cell.Edges)
                 {
                     if (!edge.IsSolid) continue;
 
-                    GraphEdge leftEdge = cell.edges.Find(e => e != edge && (edge.Point1 == e.Point1 || edge.Point1 == e.Point2));
-                    GraphEdge rightEdge = cell.edges.Find(e => e != edge && (edge.Point2 == e.Point1 || edge.Point2 == e.Point2));
+                    GraphEdge leftEdge = cell.Edges.Find(e => e != edge && (edge.Point1 == e.Point1 || edge.Point1 == e.Point2));
+                    GraphEdge rightEdge = cell.Edges.Find(e => e != edge && (edge.Point2 == e.Point1 || edge.Point2 == e.Point2));
 
                     Vector2 leftNormal = Vector2.Zero, rightNormal = Vector2.Zero;
 
@@ -84,10 +84,10 @@ namespace Barotrauma
                             GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
                             "Invalid left normal (leftedge: " + leftEdge + ", rightedge: " + rightEdge + ", normal: " + leftNormal + ", seed: " + level.Seed + ")");
 
-                        if (cell.body != null)
+                        if (cell.Body != null)
                         {
-                            GameMain.World.RemoveBody(cell.body);
-                            cell.body = null;
+                            GameMain.World.RemoveBody(cell.Body);
+                            cell.Body = null;
                         }
                         leftNormal = Vector2.UnitX;
                         break;
@@ -115,10 +115,10 @@ namespace Barotrauma
                             GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
                             "Invalid right normal (leftedge: " + leftEdge + ", rightedge: " + rightEdge + ", normal: " + rightNormal + ", seed: " + level.Seed + ")");
 
-                        if (cell.body != null)
+                        if (cell.Body != null)
                         {
-                            GameMain.World.RemoveBody(cell.body);
-                            cell.body = null;
+                            GameMain.World.RemoveBody(cell.Body);
+                            cell.Body = null;
                         }
                         rightNormal = Vector2.UnitX;
                         break;

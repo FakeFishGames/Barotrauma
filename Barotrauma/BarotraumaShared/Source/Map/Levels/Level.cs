@@ -413,7 +413,7 @@ namespace Barotrauma
             for (int i = 2; i < mainPath.Count; i += 3)
             {
                 positionsOfInterest.Add(new InterestingPosition(
-                    new Point((int)mainPath[i].site.coord.x, (int)mainPath[i].site.coord.y), 
+                    new Point((int)mainPath[i].Site.Coord.X, (int)mainPath[i].Site.Coord.Y), 
                     PositionType.MainPath));
             }
 
@@ -430,7 +430,7 @@ namespace Barotrauma
                     submarine: null);
             }
 
-            startPosition.X = (int)pathCells[0].site.coord.x;
+            startPosition.X = (int)pathCells[0].Site.Coord.X;
 
             //----------------------------------------------------------------------------------
             // tunnels through the tunnel nodes
@@ -481,8 +481,8 @@ namespace Barotrauma
 
             foreach (VoronoiCell cell in cells)
             {
-                if (cell.site.coord.y < borders.Height / 2) continue;
-                cell.edges.ForEach(e => e.OutsideLevel = true);
+                if (cell.Site.Coord.Y < borders.Height / 2) continue;
+                cell.Edges.ForEach(e => e.OutsideLevel = true);
             }
 
             //----------------------------------------------------------------------------------
@@ -491,7 +491,7 @@ namespace Barotrauma
             
             foreach (VoronoiCell cell in pathCells)
             {
-                cell.edges.ForEach(e => e.OutsideLevel = false);
+                cell.Edges.ForEach(e => e.OutsideLevel = false);
 
                 cell.CellType = CellType.Path;
                 cells.Remove(cell);
@@ -517,7 +517,7 @@ namespace Barotrauma
                 allCells.AddRange(pathCells);
                 foreach (VoronoiCell cell in allCells)
                 {
-                    foreach (GraphEdge edge in cell.edges)
+                    foreach (GraphEdge edge in cell.Edges)
                     {
                         if (mirroredEdges.Contains(edge)) continue;
                         edge.Point1.X = borders.Width - edge.Point1.X;
@@ -525,16 +525,16 @@ namespace Barotrauma
                         if (!mirroredSites.Contains(edge.Site1))
                         {
                             //make sure that sites right at the edge of a grid cell end up in the same cell as in the non-mirrored level
-                            if (edge.Site1.coord.x % GridCellSize < 1.0f &&
-                                edge.Site1.coord.x % GridCellSize >= 0.0f) edge.Site1.coord.x += 1.0f;
-                            edge.Site1.coord.x = borders.Width - edge.Site1.coord.x;
+                            if (edge.Site1.Coord.X % GridCellSize < 1.0f &&
+                                edge.Site1.Coord.X % GridCellSize >= 0.0f) edge.Site1.Coord.X += 1.0f;
+                            edge.Site1.Coord.X = borders.Width - edge.Site1.Coord.X;
                             mirroredSites.Add(edge.Site1);
                         }
                         if (!mirroredSites.Contains(edge.Site2))
                         {
-                            if (edge.Site2.coord.x % GridCellSize < 1.0f &&
-                                edge.Site2.coord.x % GridCellSize >= 0.0f) edge.Site2.coord.x += 1.0f;
-                            edge.Site2.coord.x = borders.Width - edge.Site2.coord.x;
+                            if (edge.Site2.Coord.X % GridCellSize < 1.0f &&
+                                edge.Site2.Coord.X % GridCellSize >= 0.0f) edge.Site2.Coord.X += 1.0f;
+                            edge.Site2.Coord.X = borders.Width - edge.Site2.Coord.X;
                             mirroredSites.Add(edge.Site2);
                         }
                         mirroredEdges.Add(edge);
@@ -569,8 +569,8 @@ namespace Barotrauma
 
             foreach (VoronoiCell cell in cells)
             {
-                int x = (int)Math.Floor(cell.site.coord.x / GridCellSize);
-                int y = (int)Math.Floor(cell.site.coord.y / GridCellSize);
+                int x = (int)Math.Floor(cell.Site.Coord.X / GridCellSize);
+                int y = (int)Math.Floor(cell.Site.Coord.Y / GridCellSize);
 
                 if (x < 0 || y < 0 || x >= cellGrid.GetLength(0) || y >= cellGrid.GetLength(1)) continue;
 
@@ -633,7 +633,7 @@ namespace Barotrauma
 
             foreach (VoronoiCell cell in cells)
             {
-                foreach (GraphEdge ge in cell.edges)
+                foreach (GraphEdge ge in cell.Edges)
                 {
                     VoronoiCell adjacentCell = ge.AdjacentCell(cell);
                     ge.IsSolid = (adjacentCell == null || !cells.Contains(adjacentCell));
@@ -681,7 +681,7 @@ namespace Barotrauma
 
             foreach (VoronoiCell cell in cells)
             {
-                foreach (GraphEdge edge in cell.edges)
+                foreach (GraphEdge edge in cell.Edges)
                 {
                     edge.Cell1 = null;
                     edge.Cell2 = null;
@@ -727,7 +727,7 @@ namespace Barotrauma
             {
                 if (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) > holeProbability) continue;
 
-                if (!limits.Contains(cell.site.coord.x, cell.site.coord.y)) continue;
+                if (!limits.Contains(cell.Site.Coord.X, cell.Site.Coord.Y)) continue;
 
                 float closestDist = 0.0f;
                 WayPoint closestWayPoint = null;
@@ -755,14 +755,14 @@ namespace Barotrauma
         {
             List<WayPoint> wayPoints = new List<WayPoint>();
 
-            var newWaypoint = new WayPoint(new Rectangle((int)pathCells[0].site.coord.x, borders.Height, 10, 10), null);
+            var newWaypoint = new WayPoint(new Rectangle((int)pathCells[0].Site.Coord.X, borders.Height, 10, 10), null);
             wayPoints.Add(newWaypoint);
             
             for (int i = 0; i < pathCells.Count; i++)
             {
                 pathCells[i].CellType = CellType.Path;
 
-                newWaypoint = new WayPoint(new Rectangle((int)pathCells[i].site.coord.x, (int)pathCells[i].Center.Y, 10, 10), null);
+                newWaypoint = new WayPoint(new Rectangle((int)pathCells[i].Site.Coord.X, (int)pathCells[i].Center.Y, 10, 10), null);
                 wayPoints.Add(newWaypoint);
                
                 wayPoints[wayPoints.Count-2].linkedTo.Add(newWaypoint);
@@ -779,7 +779,7 @@ namespace Barotrauma
                 }
             }
 
-            newWaypoint = new WayPoint(new Rectangle((int)pathCells[pathCells.Count - 1].site.coord.x, borders.Height, 10, 10), null);
+            newWaypoint = new WayPoint(new Rectangle((int)pathCells[pathCells.Count - 1].Site.Coord.X, borders.Height, 10, 10), null);
             wayPoints.Add(newWaypoint);
 
             wayPoints[wayPoints.Count - 2].linkedTo.Add(newWaypoint);
@@ -833,7 +833,7 @@ namespace Barotrauma
             foreach (VoronoiCell cell in closeCells)
             {
                 bool tooClose = false;
-                foreach (GraphEdge edge in cell.edges)
+                foreach (GraphEdge edge in cell.Edges)
                 {                    
                     if (Vector2.DistanceSquared(edge.Point1, position) < minDistSqr ||
                         Vector2.DistanceSquared(edge.Point2, position) < minDistSqr)
@@ -859,7 +859,7 @@ namespace Barotrauma
 
             foreach (VoronoiCell cell in emptyCells)
             {
-                foreach (GraphEdge edge in cell.edges)
+                foreach (GraphEdge edge in cell.Edges)
                 {
                     VoronoiCell adjacent = edge.AdjacentCell(cell);
                     if (adjacent != null && !newCells.Contains(adjacent))
@@ -978,11 +978,11 @@ namespace Barotrauma
                 var prevDir = dir;
                 dir = Rand.Vector(1.0, Rand.RandSync.Server);
                                 
-                dir.y += Math.Sign(tunnelNodes[tunnelNodes.Count - 1].Y - Size.Y / 2) * 0.5f;
+                dir.Y += Math.Sign(tunnelNodes[tunnelNodes.Count - 1].Y - Size.Y / 2) * 0.5f;
                 if (prevDir != null)
                 {
-                    dir.x = (dir.x + prevDir.x) / 2.0;
-                    dir.y = (dir.y + prevDir.y) / 2.0;
+                    dir.X = (dir.X + prevDir.X) / 2.0;
+                    dir.Y = (dir.Y + prevDir.Y) / 2.0;
                 }
 
                 double avoidDist = 20000;
@@ -999,31 +999,31 @@ namespace Barotrauma
                     {
                         double dist = Math.Sqrt(distSqr);
 
-                        dir.x += (diffX / dist) * (1.0f - dist / avoidDist);
-                        dir.y += (diffY / dist) * (1.0f - dist / avoidDist);
+                        dir.X += (diffX / dist) * (1.0f - dist / avoidDist);
+                        dir.Y += (diffY / dist) * (1.0f - dist / avoidDist);
                     }
                 }
 
                 dir.Normalize();
 
-                if (tunnelNodes.Last().Y + dir.y > Size.Y)
+                if (tunnelNodes.Last().Y + dir.Y > Size.Y)
                 {
                     //head back down if the tunnel has reached the top of the level
-                    dir.y = -dir.y;
+                    dir.Y = -dir.Y;
                 }
-                else if (tunnelNodes.Last().Y + dir.y * 500 < 500)
+                else if (tunnelNodes.Last().Y + dir.Y * 500 < 500)
                 {
                     //head back up if reached the bottom of the level
-                    dir.y = -dir.y;
+                    dir.Y = -dir.Y;
                 }
-                else if (tunnelNodes.Last().Y + dir.y + dir.y < 0.0f ||
-                    tunnelNodes.Last().Y + dir.y + dir.y < SeaFloorTopPos)
+                else if (tunnelNodes.Last().Y + dir.Y + dir.Y < 0.0f ||
+                    tunnelNodes.Last().Y + dir.Y + dir.Y < SeaFloorTopPos)
                 {
                     //head back up if reached the sea floor
-                    dir.y = -dir.y;
+                    dir.Y = -dir.Y;
                 }
 
-                Point nextNode = tunnelNodes.Last() + new Point((int)(dir.x * sectionLength), (int)(dir.y * sectionLength));
+                Point nextNode = tunnelNodes.Last() + new Point((int)(dir.X * sectionLength), (int)(dir.Y * sectionLength));
                 nextNode.X = MathHelper.Clamp(nextNode.X, 500, Size.X - 500);
                 nextNode.Y = MathHelper.Clamp(nextNode.Y, SeaFloorTopPos, Size.Y - 500);
                 tunnelNodes.Add(nextNode);
@@ -1043,7 +1043,7 @@ namespace Barotrauma
             int ruinRadius = Math.Max(ruinSize.X, ruinSize.Y) / 2;
             
             int cellIndex = Rand.Int(cells.Count, Rand.RandSync.Server);
-            Point ruinPos = new Point((int)cells[cellIndex].site.coord.x, (int)cells[cellIndex].site.coord.x);
+            Point ruinPos = new Point((int)cells[cellIndex].Site.Coord.X, (int)cells[cellIndex].Site.Coord.X);
 
             //50% chance of placing the ruins at a cave
             if (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < 0.5f)
@@ -1058,7 +1058,7 @@ namespace Barotrauma
             double minDistSqr = minDist * minDist;
 
             int iter = 0;
-            while (mainPath.Any(p => MathUtils.DistanceSquared(ruinPos.X, ruinPos.Y, p.site.coord.x, p.site.coord.y) < minDistSqr) ||
+            while (mainPath.Any(p => MathUtils.DistanceSquared(ruinPos.X, ruinPos.Y, p.Site.Coord.X, p.Site.Coord.Y) < minDistSqr) ||
                 ruins.Any(r => r.Area.Intersects(new Rectangle(ruinPos - new Point(ruinSize.X / 2, ruinSize.Y / 2), ruinSize))))
             {
                 double weighedPathPosX = ruinPos.X;
@@ -1067,8 +1067,8 @@ namespace Barotrauma
 
                 foreach (VoronoiCell pathCell in mainPath)
                 {
-                    double diffX = ruinPos.X - pathCell.site.coord.x;
-                    double diffY = ruinPos.Y - pathCell.site.coord.y;
+                    double diffX = ruinPos.X - pathCell.Site.Coord.X;
+                    double diffY = ruinPos.Y - pathCell.Site.Coord.Y;
 
                     double distSqr = diffX * diffX + diffY * diffY;
                     if (distSqr < 1.0)
@@ -1121,7 +1121,7 @@ namespace Barotrauma
             double closestDist = 0.0f;
             foreach (VoronoiCell pathCell in mainPath)
             {
-                double dist = MathUtils.DistanceSquared(pathCell.site.coord.x, pathCell.site.coord.y, ruinPos.X, ruinPos.Y);
+                double dist = MathUtils.DistanceSquared(pathCell.Site.Coord.X, pathCell.Site.Coord.Y, ruinPos.X, ruinPos.Y);
                 if (closestPathCell == null || dist < closestDist)
                 {
                     closestPathCell = pathCell;
@@ -1145,7 +1145,7 @@ namespace Barotrauma
                 foreach (VoronoiCell cell in tooClose)
                 {
                     if (cell.CellType == CellType.Empty) continue;
-                    foreach (GraphEdge e in cell.edges)
+                    foreach (GraphEdge e in cell.Edges)
                     {
                         Rectangle rect = ruinShape.Rect;
                         rect.Y += rect.Height;

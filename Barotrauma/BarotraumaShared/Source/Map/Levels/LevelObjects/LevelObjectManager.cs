@@ -300,7 +300,7 @@ namespace Barotrauma
             List<SpawnPosition> availableSpawnPositions = new List<SpawnPosition>();
             foreach (var cell in cells)
             {
-                foreach (var edge in cell.edges)
+                foreach (var edge in cell.Edges)
                 {
                     if (!edge.IsSolid || edge.OutsideLevel) continue;
                     Vector2 normal = edge.GetNormal(cell);

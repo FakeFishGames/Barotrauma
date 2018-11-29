@@ -438,7 +438,7 @@ namespace Barotrauma
                 {
                     if (cell.CellType == CellType.Empty) continue;
 
-                    foreach (GraphEdge e in cell.edges)
+                    foreach (GraphEdge e in cell.Edges)
                     {
                         List<Vector2> intersections = MathUtils.GetLineRectangleIntersections(e.Point1, e.Point2, worldBorders);
                         foreach (Vector2 intersection in intersections)
