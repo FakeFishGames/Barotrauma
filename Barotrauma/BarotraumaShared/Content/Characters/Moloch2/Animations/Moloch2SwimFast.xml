@@ -1,17 +1,18 @@
 ﻿<Moloch2SwimFast
   animationtype="SwimFast"
   flip="True"
-  mirror="False"
+  mirror="True"
   waveamplitude="1"
   wavelength="10"
   rotatetowardsmovement="True"
-  torsotorque="25"
+  torsotorque="175"
   headtorque="25"
   foottorque="25"
   tailtorque="50"
   footangles=""
-  steertorque="25"
-  movementspeed="1"
+  steertorque="175"
+  movementspeed="8"
   cyclespeed="1"
   headangle="NaN"
-  torsoangle="NaN" />
+  torsoangle="90"
+  tailangle="NaN" />
