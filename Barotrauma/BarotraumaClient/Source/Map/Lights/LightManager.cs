@@ -412,7 +412,7 @@ namespace Barotrauma.Lights
             spriteBatch.End();
 
             //TODO: specular maps for level walls
-            Level.Loaded.Renderer.RenderWalls(graphics, cam, specular: true);
+            Level.Loaded?.Renderer?.RenderWalls(graphics, cam, specular: true);
 
             graphics.SetRenderTarget(null);
             graphics.BlendState = BlendState.AlphaBlend;
