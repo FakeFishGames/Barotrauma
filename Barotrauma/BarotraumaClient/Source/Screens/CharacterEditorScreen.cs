@@ -3540,7 +3540,7 @@ namespace Barotrauma
             });
         }
 
-        public enum WidgetType { Rectangle, Circle }
+        private enum WidgetType { Rectangle, Circle }
         private void DrawWidget(SpriteBatch spriteBatch, Vector2 drawPos, WidgetType widgetType, int size, Color color, string name, Action onPressed, bool ? autoFreeze = null, Action onHovered = null)
         {
             var drawRect = new Rectangle((int)drawPos.X - size / 2, (int)drawPos.Y - size / 2, size, size);
@@ -3551,10 +3551,26 @@ namespace Barotrauma
             switch (widgetType)
             {
                 case WidgetType.Rectangle:
-                    GUI.DrawRectangle(spriteBatch, drawRect, color, thickness: isSelected ? 3 : 1, isFilled: isSelected && PlayerInput.LeftButtonHeld());
+                    if (isSelected)
+                    {
+                        var rect = drawRect;
+                        rect.Inflate(size * 0.3f, size * 0.3f);
+                        GUI.DrawRectangle(spriteBatch, rect, color, thickness: 3, isFilled: PlayerInput.LeftButtonHeld());
+                    }
+                    else
+                    {
+                        GUI.DrawRectangle(spriteBatch, drawRect, color, thickness: 1, isFilled: false);
+                    }
                     break;
                 case WidgetType.Circle:
-                    ShapeExtensions.DrawCircle(spriteBatch, drawPos, size / 2, 40, color, thickness: isSelected ? 3 : 1);
+                    if (isSelected)
+                    {
+                        ShapeExtensions.DrawCircle(spriteBatch, drawPos, size * 0.7f, 40, color, thickness: 3);
+                    }
+                    else
+                    {
+                        ShapeExtensions.DrawCircle(spriteBatch, drawPos, size * 0.5f, 40, color, thickness: 1);
+                    }
                     break;
                 default: throw new NotImplementedException(widgetType.ToString());
             }
