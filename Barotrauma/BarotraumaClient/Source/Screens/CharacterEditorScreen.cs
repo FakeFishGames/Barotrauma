@@ -133,6 +133,7 @@ namespace Barotrauma
             GameMain.Instance.OnResolutionChanged -= OnResolutionChanged;
             GameMain.LightManager.LightingEnabled = true;
             ClearWidgets();
+            ClearSelection();
         }
 
         private void OnResolutionChanged()
@@ -191,9 +192,9 @@ namespace Barotrauma
                             character.AnimController.ResetJoints();
                             character.AnimController.ResetLimbs();
                             ClearWidgets();
-                            ResetParamsEditor();
                             CreateGUI();
                             ragdollResetRequiresForceLoading = true;
+                            ResetParamsEditor();
                         }
                         if (editAnimations)
                         {
@@ -212,9 +213,9 @@ namespace Barotrauma
                             character.AnimController.ResetJoints();
                             character.AnimController.ResetLimbs();
                             ClearWidgets();
-                            ResetParamsEditor();
                             CreateGUI();
                             ragdollResetRequiresForceLoading = true;
+                            ResetParamsEditor();
                         }
                         if (editAnimations)
                         {
@@ -701,6 +702,7 @@ namespace Barotrauma
             character.AnimController.Recreate();
             TeleportTo(spawnPosition);
             ClearWidgets();
+            ClearSelection();
             selectedLimbs.Add(character.AnimController.Limbs.Single(l => l.limbParams == newLimbParams));
             ResetParamsEditor();
             ragdollResetRequiresForceLoading = true;
@@ -735,6 +737,7 @@ namespace Barotrauma
             character.AnimController.Recreate();
             TeleportTo(spawnPosition);
             ClearWidgets();
+            ClearSelection();
             selectedJoints.Add(character.AnimController.LimbJoints.Single(j => j.jointParams == newJointParams));
             jointsToggle.Selected = true;
             ResetParamsEditor();
@@ -1040,6 +1043,7 @@ namespace Barotrauma
             CreateTextures();
             CreateGUI();
             ClearWidgets();
+            ClearSelection();
             ResetParamsEditor();
             CurrentAnimation.CreateSnapshot();
             RagdollParams.CreateSnapshot();
@@ -1050,6 +1054,10 @@ namespace Barotrauma
             Widget.selectedWidgets.Clear();
             animationWidgets.Clear();
             jointSelectionWidgets.Clear();
+        }
+
+        private void ClearSelection()
+        {
             selectedLimbs.Clear();
             selectedJoints.Clear();
         }
@@ -1058,8 +1066,26 @@ namespace Barotrauma
         {
             character.AnimController.Recreate(ragdoll);
             TeleportTo(spawnPosition);
+            // For some reason Enumerable.Contains() method does not find the match, threfore the conversion to a list.
+            var selectedJointParams = selectedJoints.Select(j => j.jointParams).ToList();
+            var selectedLimbParams = selectedLimbs.Select(l => l.limbParams).ToList();
             CreateTextures();
             ClearWidgets();
+            ClearSelection();
+            foreach (var joint in character.AnimController.LimbJoints)
+            {
+                if (selectedJointParams.Contains(joint.jointParams))
+                {
+                    selectedJoints.Add(joint);
+                }
+            }
+            foreach (var limb in character.AnimController.Limbs)
+            {
+                if (selectedLimbParams.Contains(limb.limbParams))
+                {
+                    selectedLimbs.Add(limb);
+                }
+            }
             ResetParamsEditor();
         }
 
@@ -1671,7 +1697,25 @@ namespace Barotrauma
                 else
                 {
                     character.AnimController.ResetRagdoll(forceReload: false);
+                    // For some reason Enumerable.Contains() method does not find the match, threfore the conversion to a list.
+                    var selectedJointParams = selectedJoints.Select(j => j.jointParams).ToList();
+                    var selectedLimbParams = selectedLimbs.Select(l => l.limbParams).ToList();
                     ClearWidgets();
+                    ClearSelection();
+                    foreach (var joint in character.AnimController.LimbJoints)
+                    {
+                        if (selectedJointParams.Contains(joint.jointParams))
+                        {
+                            selectedJoints.Add(joint);
+                        }
+                    }
+                    foreach (var limb in character.AnimController.Limbs)
+                    {
+                        if (selectedLimbParams.Contains(limb.limbParams))
+                        {
+                            selectedLimbs.Add(limb);
+                        }
+                    }
                     ResetParamsEditor();
                 }
                 CreateCenterPanel();
@@ -3943,9 +3987,7 @@ namespace Barotrauma
                                 });
                                 htmlOutput.Text = new XDocument(new XElement("Ragdoll", new object[]
                                 {
-                                        new XAttribute("type", Name),
-                                            LimbXElements.Values,
-                                            JointXElements
+                                    new XAttribute("type", Name), LimbXElements.Values, JointXElements
                                 })).ToString();
                                 htmlOutput.CalculateHeightFromText();
                                 list.UpdateScrollBarSize();
