@@ -227,6 +227,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\Alien Turret Assembly.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\AlienPumpAssembly.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\Automatic Door.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -1146,7 +1149,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Electricity\signalitems.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Electricity\camera.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Electricity\camera.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Legacy\engine.png">
