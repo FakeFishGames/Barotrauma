@@ -1,55 +1,97 @@
-﻿using System;
-using System.Xml.Linq;
+﻿using Barotrauma.Networking;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class CustomInterfaceElement
-    {
-        public string text, connection, signal;
-    }
-
     partial class CustomInterface
     {
-        protected List<CustomInterfaceElement> customInterfaceElementList;
+        private List<GUIComponent> uiElements = new List<GUIComponent>();
 
         partial void InitProjSpecific(XElement element)
         {
-            customInterfaceElementList = new List<CustomInterfaceElement>();
+            uiElements.Clear();
 
             GUILayoutGroup paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.7f), GuiFrame.RectTransform, Anchor.Center))
             { RelativeSpacing = 0.1f, Stretch = true };
 
-            foreach (XElement subElement in element.Elements())
+            foreach (CustomInterfaceElement ciElement in customInterfaceElementList)
             {
-                switch (subElement.Name.ToString().ToLowerInvariant())
+                if (ciElement.ContinuousSignal)
                 {
-                    case "button":
-                        DebugConsole.Log("CustomInterface beginning Button");
-                        CustomInterfaceElement CIElement = new CustomInterfaceElement();
-                        CIElement.text = subElement.GetAttributeString("text", "Default name");
-                        CIElement.connection = subElement.GetAttributeString("connection", "");
-                        CIElement.signal = subElement.GetAttributeString("signal", "1");
-                        customInterfaceElementList.Add(CIElement);
-
-                        DebugConsole.Log("CustomInterface Button, " + CIElement.text + ", " + CIElement.connection);
-
-                        var btn = new GUIButton(new RectTransform(
-                            new Vector2(1.0f, 0.1f), paddedFrame.RectTransform),
-                            CIElement.text);
-                        btn.UserData = CIElement.connection;
-                        btn.OnClicked += ( _, userdata) =>
+                    var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), ciElement.text)
+                    {
+                        UserData = ciElement
+                    };
+                    tickBox.OnSelected += (tBox) =>
+                    {
+                        if (GameMain.Client == null)
                         {
-                            item.SendSignal(0, CIElement.signal, (string)userdata, null);
-                            return true;
-                        };
+                            TickBoxToggled(tBox.UserData as CustomInterfaceElement, tBox.Selected);
+                        }
+                        else
+                        {
+                            item.CreateClientEvent(this);
+                        }
+                        return true;
+                    };
+                    uiElements.Add(tickBox);
+                }
+                else
+                {
+                    var btn = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), ciElement.text)
+                    {
+                        UserData = ciElement
+                    };
+                    btn.OnClicked += (_, userdata) =>
+                    {
+                        if (GameMain.Client == null)
+                        {
+                            ButtonClicked(userdata as CustomInterfaceElement);
+                        }
+                        else
+                        {
+                            GameMain.Client.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.components.IndexOf(this), userdata as CustomInterfaceElement });
+                        }
+                        return true;
+                    };
+                    uiElements.Add(btn);
+                }
+            }
+        }
 
-                        break;
+        public void ClientWrite(NetBuffer msg, object[] extraData = null)
+        {
+            //extradata contains an array of buttons clicked by the player (or nothing if the player didn't click anything)
+            for (int i = 0; i < customInterfaceElementList.Count; i++)
+            {
+                if (customInterfaceElementList[i].ContinuousSignal)
+                {
+                    msg.Write(((GUITickBox)uiElements[i]).Selected);
+                }
+                else
+                {
+                    msg.Write(extraData != null && extraData.Any(d => d as CustomInterfaceElement == customInterfaceElementList[i]));
+                }
+            }
+        }
 
-                    case "tickbox":
-
-                        break;
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        {
+            for (int i = 0; i < customInterfaceElementList.Count; i++)
+            {
+                bool elementState = msg.ReadBoolean();
+                if (customInterfaceElementList[i].ContinuousSignal)
+                {
+                    ((GUITickBox)uiElements[i]).Selected = elementState;
+                    TickBoxToggled(customInterfaceElementList[i], elementState);
+                }
+                else if (elementState)
+                {
+                    ButtonClicked(customInterfaceElementList[i]);
                 }
             }
         }

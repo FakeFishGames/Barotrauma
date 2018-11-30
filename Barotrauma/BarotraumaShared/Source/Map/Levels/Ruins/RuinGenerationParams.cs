@@ -342,6 +342,13 @@ namespace Barotrauma.RuinGeneration
         [Serialize(Alignment.Bottom, false), Editable]
         public Alignment Alignment { get; private set; }
 
+        [Serialize("0,0", false), Editable(ToolTip = "Minimum offset from the anchor position, relative to the size of the room."+
+            " For example, a value of { -0.5,0 } with a Bottom alignment would mean the entity can be placed anywhere between the bottom-left corner of the room and bottom-center.")]
+        public Vector2 MinOffset { get; private set; }
+        [Serialize("0,0", false), Editable(ToolTip = "Maximum offset from the anchor position, relative to the size of the room." +
+            " For example, a value of { 0.5,0 } with a Bottom alignment would mean the entity can be placed anywhere between the bottom-right corner of the room and bottom-center.")]
+        public Vector2 MaxOffset { get; private set; }
+
         [Serialize(RuinEntityType.Prop, false), Editable]
         public RuinEntityType Type { get; private set; }
 

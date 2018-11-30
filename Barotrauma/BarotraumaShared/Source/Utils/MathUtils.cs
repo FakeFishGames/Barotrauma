@@ -22,6 +22,27 @@ namespace Barotrauma
             return (i % n + n) % n;
         }
 
+        public static double Distance(double x1, double y1, double x2, double y2)
+        {
+            double dX = x1 - x2;
+            double dY = y1 - y2;
+            return Math.Sqrt(dX * dX + dY * dY);
+        }
+
+        public static double DistanceSquared(double x1, double y1, double x2, double y2)
+        {
+            double dX = x1 - x2;
+            double dY = y1 - y2;
+            return dX * dX + dY * dY;
+        }
+
+        public static int DistanceSquared(int x1, int y1, int x2, int y2)
+        {
+            int dX = x1 - x2;
+            int dY = y1 - y2;
+            return dX * dX + dY * dY;
+        }
+
         public static Vector2 SmoothStep(Vector2 v1, Vector2 v2, float amount)
         {
             return new Vector2(
@@ -37,6 +58,11 @@ namespace Barotrauma
                 return v / currLength * length;
             }
             return v;
+        }
+
+        public static bool Contains(this Rectangle rect, double x, double y)
+        {
+            return x > rect.X && x < rect.Right && y > rect.Y && y < rect.Bottom;
         }
 
         public static float Round(float value, float div)

@@ -122,7 +122,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,0,64,64" />
     <Sprite texture="Content/Items/InventoryIconAtlas.png" depth="0.55" sourcerect="0,0,64,64" />
     <Body radius="10" height="45" density="5" />
-    <Holdable slots="Any,RightHand+LeftHand" controlpose="false" aimpos="40,-20" handle1="-2,30" />
+    <Holdable slots="RightHand+LeftHand" controlpose="false" aimpos="40,-20" handle1="-2,30" />
     <RepairTool extinguishamount="60.0" range="500" barrelpos="21,25">
       <ParticleEmitter particle="extinguisher" velocitymin="500.0" velocitymax="650.0" particlespersecond="50" />
       <StatusEffect type="OnUse" target="This" Condition="-2.0" />
@@ -241,6 +241,7 @@
       <Item identifier="copperbar" />
       <Item identifier="polycarbonatebar" />
     </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,320,64,64" />
     <Sprite texture="tools.png" sourcerect="0,35,27,12" depth="0.55" />
     <Body width="27" height="10" density="15" />
     <Holdable slots="Any,RightHand,LeftHand,Head" holdpos="30,-15" aimpos="100,0" handle1="-13,0" handle2="-13,0">

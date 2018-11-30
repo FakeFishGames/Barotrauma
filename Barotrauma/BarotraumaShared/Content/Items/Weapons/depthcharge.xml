@@ -34,7 +34,8 @@
 
     <Sprite texture="railgunetc.png" depth="0.8" sourcerect="0,160,61,96"/>
 
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" itempos="30,-55" iteminterval="26,0" itemrotation="-90" canbeselected = "true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" itempos="30,-55" iteminterval="26,0" itemrotation="-90" canbeselected="true"
+                   autointeractwithcontained="true">
       <Containable identifiers="depthchargeammo"/>      
     </ItemContainer>
   </Item>

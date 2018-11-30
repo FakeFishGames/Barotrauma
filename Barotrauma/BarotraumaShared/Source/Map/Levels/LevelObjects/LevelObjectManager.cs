@@ -57,8 +57,8 @@ namespace Barotrauma
         public void PlaceObjects(Level level, int amount)
         {
             objectGrid = new List<LevelObject>[
-                (int)Math.Ceiling(level.Size.X / GridSize),
-                (int)Math.Ceiling((level.Size.Y - level.BottomPos) / GridSize)];
+                level.Size.X / GridSize,
+                (level.Size.Y - level.BottomPos) / GridSize];
             
             List<SpawnPosition> availableSpawnPositions = new List<SpawnPosition>();
             var levelCells = level.GetAllCells();
@@ -85,7 +85,7 @@ namespace Barotrauma
                 if (posOfInterest.PositionType != Level.PositionType.MainPath) continue;
 
                 availableSpawnPositions.Add(new SpawnPosition(
-                    new GraphEdge(posOfInterest.Position, posOfInterest.Position + Vector2.UnitX), 
+                    new GraphEdge(posOfInterest.Position.ToVector2(), posOfInterest.Position.ToVector2() + Vector2.UnitX), 
                     Vector2.UnitY, 
                     LevelObjectPrefab.SpawnPosType.MainPath, 
                     Alignment.Top));
@@ -300,7 +300,7 @@ namespace Barotrauma
             List<SpawnPosition> availableSpawnPositions = new List<SpawnPosition>();
             foreach (var cell in cells)
             {
-                foreach (var edge in cell.edges)
+                foreach (var edge in cell.Edges)
                 {
                     if (!edge.IsSolid || edge.OutsideLevel) continue;
                     Vector2 normal = edge.GetNormal(cell);

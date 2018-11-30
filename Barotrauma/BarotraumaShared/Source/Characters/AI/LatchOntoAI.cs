@@ -130,13 +130,13 @@ namespace Barotrauma
                             {
                                 foreach (Voronoi2.VoronoiCell cell in cells)
                                 {
-                                    foreach (Voronoi2.GraphEdge edge in cell.edges)
+                                    foreach (Voronoi2.GraphEdge edge in cell.Edges)
                                     {
                                         Vector2? intersection = MathUtils.GetLineIntersection(edge.Point1, edge.Point2, character.WorldPosition, cell.Center);
                                         if (intersection.HasValue)
                                         {
                                             attachSurfaceNormal = edge.GetNormal(cell);
-                                            attachTargetBody = cell.body;
+                                            attachTargetBody = cell.Body;
                                             wallAttachPos = ConvertUnits.ToSimUnits(intersection.Value);
                                             break;
                                         }

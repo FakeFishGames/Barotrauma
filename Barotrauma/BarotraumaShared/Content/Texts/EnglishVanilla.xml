@@ -663,6 +663,7 @@
   <SpamFilterBlocked>You have been blocked by the spam filter. Try again after 10 seconds.</SpamFilterBlocked>
 
   <!-- Item HUDs -->
+  <ItemInUse>In use by [character]</ItemInUse>
   <EngineForce>Thrust</EngineForce>
   <EngineBackwards>Backwards</EngineBackwards>
   <EngineForwards>Forwards</EngineForwards>

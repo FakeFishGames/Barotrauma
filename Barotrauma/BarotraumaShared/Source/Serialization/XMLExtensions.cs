@@ -354,23 +354,21 @@ namespace Barotrauma
         {
             return rect.X + "," + rect.Y + "," + rect.Width + "," + rect.Height;
         }
-
+        
         public static Point ParsePoint(string stringPoint, bool errorMessages = true)
         {
             string[] components = stringPoint.Split(',');
-
             Point point = Point.Zero;
 
             if (components.Length != 2)
             {
                 if (!errorMessages) return point;
-                DebugConsole.ThrowError("Failed to parse the string \"" + stringPoint + "\" to Point");
+                DebugConsole.ThrowError("Failed to parse the string \"" + stringPoint + "\" to Vector2");
                 return point;
             }
 
-            int.TryParse(components[0], out point.X);
-            int.TryParse(components[1], out point.Y);
-
+            int.TryParse(components[0], NumberStyles.Any, CultureInfo.InvariantCulture, out point.X);
+            int.TryParse(components[1], NumberStyles.Any, CultureInfo.InvariantCulture, out point.Y);
             return point;
         }
 

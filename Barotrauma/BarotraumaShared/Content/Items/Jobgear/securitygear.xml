@@ -92,7 +92,8 @@
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="100" />
-    <Sprite texture="riotgear.png" sourcerect="31,56,26,145" origin="0.5,0.5" depth="0.55" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,320,64,64" />
+    <Sprite texture="riotgear.png" sourcerect="31,54,27,147" origin="0.5,0.5" depth="0.55" />
     <Body width="40" height="145" density="30" />
     <Holdable slots="RightHand+LeftHand" aimpos="60,-30" holdpos="45,-30" handle1="-10,0" handle2="10,0" controlpose="true" blocksplayers="true">
       <StatusEffect type="OnActive" target="Character" SpeedMultiplier="0.6" setvalue="true" />

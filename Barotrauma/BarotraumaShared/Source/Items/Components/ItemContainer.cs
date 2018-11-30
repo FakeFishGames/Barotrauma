@@ -43,6 +43,14 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+
+        [Serialize(false, false)]
+        public bool AutoInteractWithContained
+        {
+            get;
+            set;
+        }
+
         //the position of the first item in the container
         private Vector2 itemPos;
         [Serialize("0.0,0.0", false)]
@@ -186,8 +194,36 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override bool Select(Character character)
+        {
+            if (AutoInteractWithContained)
+            {
+                foreach (Item contained in Inventory.Items)
+                {
+                    if (contained == null) continue;
+                    if (contained.TryInteract(character))
+                    {
+                        return false;
+                    }
+                }
+            }
+            return base.Select(character);
+        }
+
         public override bool Pick(Character picker)
         {
+            if (AutoInteractWithContained)
+            {
+                foreach (Item contained in Inventory.Items)
+                {
+                    if (contained == null) continue;
+                    if (contained.TryInteract(picker))
+                    {
+                        return true;
+                    }
+                }
+            }
+
             return (picker != null);
         }
 

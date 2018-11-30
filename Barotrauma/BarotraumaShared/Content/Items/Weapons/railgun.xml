@@ -125,7 +125,8 @@
 
     <Sprite texture ="railgunetc2.png" depth="0.8" sourcerect="131,2,46,128"/>
 
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="23,-76" iteminterval="0,0" itemrotation="90" canbeselected = "true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="23,-76" iteminterval="0,0" itemrotation="90" canbeselected="true"
+                   autointeractwithcontained="true">
       <Containable identifiers="railgunshell,nuclearshell,ancientweapon"/>
     </ItemContainer>      
   </Item>
@@ -140,7 +141,8 @@
 
     <Sprite texture ="railgunetc2.png" depth="0.8" sourcerect="1,2,128,46"/>
 
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="49.5,-22.7" iteminterval="0,0" itemrotation="0" canbeselected = "true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="49.5,-22.7" iteminterval="0,0" itemrotation="0" canbeselected="true"
+                   autointeractwithcontained="true">
       <Containable identifiers="railgunshell,nuclearshell,ancientweapon"/>
     </ItemContainer>      
   </Item>
@@ -155,7 +157,8 @@
 
     <Sprite texture ="railgunetc2.png" depth="0.8" sourcerect="1,50,128,46"/>
 
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="76,-22.7" iteminterval="0,0" itemrotation="180" canbeselected = "true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="76,-22.7" iteminterval="0,0" itemrotation="180" canbeselected = "true"
+                   autointeractwithcontained="true">
       <Containable identifiers="railgunshell,nuclearshell,ancientweapon"/>
     </ItemContainer>      
   </Item>

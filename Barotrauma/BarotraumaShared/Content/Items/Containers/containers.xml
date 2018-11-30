@@ -81,8 +81,8 @@
 
     <ItemContainer capacity="30" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,mediumitem"/>
-      <GuiFrame relativesize="0.25,0.45" maxsize="460,600" anchor="BottomCenter" style="ItemUI"/>
-      <AlternativeLayout relativesize="0.141,0.33" absoluteoffset="-300,0"/>
+      <GuiFrame relativesize="0.25,0.45" maxsize="460,600" anchor="Center" style="ItemUI" absoluteoffset="-10,0"/>
+      <AlternativeLayout relativesize="0.141,0.33"/>
     </ItemContainer>
   </Item>
 
@@ -149,7 +149,8 @@
 
     <Sprite texture="containers.png" depth="0.84" sourcerect="48,0,54,169"/>
 
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="27,-90" iteminterval="0,0" itemrotation="0" canbeselected = "true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="27,-90" iteminterval="0,0" itemrotation="0" canbeselected="true"
+                   autointeractwithcontained="true">
       <GuiFrame relativesize="0.2,0.3" anchor="Center" style="ItemUI"/>
       <Containable identifiers="divingsuit"/>
     </ItemContainer>
@@ -272,7 +273,8 @@
 
     <Sprite texture="containers.png" depth="0.84" sourcerect="4,2,40,102" canflipx="false"/>
 
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="20,-60" iteminterval="0,0" itemrotation="0" canbeselected = "true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="20,-60" iteminterval="0,0" itemrotation="0" canbeselected = "true"
+                   autointeractwithcontained="true">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI"/>
       <Containable identifiers="extinguisher"/>
     </ItemContainer>
@@ -286,7 +288,8 @@
 
     <Sprite texture="containers.png" depth="0.54" sourcerect="4,110,38,38" canflipx="false"/>
 
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="25,-13" iteminterval="0,0" itemrotation="-90" canbeselected = "true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="25,-13" iteminterval="0,0" itemrotation="-90" canbeselected = "true"
+                   autointeractwithcontained="true">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI"/>
       <Containable identifiers="extinguisher"/>
     </ItemContainer>

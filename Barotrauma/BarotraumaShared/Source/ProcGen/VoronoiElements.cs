@@ -57,31 +57,48 @@ using System.Collections.Generic;
 
 namespace Voronoi2
 {
-    public class Point
+    public class DoubleVector2
     {
-        public double x, y;
-        
-        public void setPoint ( double x, double y )
+        public double X, Y;
+
+        public DoubleVector2()
         {
-            this.x = x;
-            this.y = y;
+        }
+
+        public DoubleVector2(double x, double y)
+        {
+            this.X = x;
+            this.Y = y;
+        }
+
+        public void SetPoint(double x, double y)
+        {
+            this.X = x;
+            this.Y = y;
+        }
+
+        public void Normalize()
+        {
+            double length = System.Math.Sqrt(X * X + Y * Y);
+            X /= length;
+            Y /= length;
         }
     }
     
     // use for sites and vertecies
     public class Site
     {
-        public Point coord;
-        public int sitenbr;
+        public DoubleVector2 Coord;
+        public int SiteNbr;
 
         public void SetPoint(Vector2 point)
         {
-            coord.setPoint(point.X, point.Y);
+            Coord.SetPoint(point.X, point.Y);
         }
         
         public Site ()
         {
-            coord = new Point();
+            Coord = new DoubleVector2();
         }
     }
     
@@ -123,12 +140,12 @@ namespace Voronoi2
 
     public class VoronoiCell
     {
-        public List<GraphEdge> edges;
-        public Site site;
+        public List<GraphEdge> Edges;
+        public Site Site;
 
-        public List<Vector2> bodyVertices;
+        public List<Vector2> BodyVertices;
 
-        public Body body;
+        public Body Body;
 
         public CellType CellType;
 
@@ -136,13 +153,13 @@ namespace Voronoi2
 
         public Vector2 Center
         {
-            get { return new Vector2((float)site.coord.x, (float)site.coord.y) + Translation; }
+            get { return new Vector2((float)Site.Coord.X, (float)Site.Coord.Y) + Translation; }
         }
-
+        
         public VoronoiCell(Vector2[] vertices)
         {
-            edges = new List<GraphEdge>();
-            bodyVertices = new List<Vector2>();
+            Edges = new List<GraphEdge>();
+            BodyVertices = new List<Vector2>();
 
             Vector2 midPoint = Vector2.Zero;
             foreach (Vector2 vertex in vertices)
@@ -158,28 +175,28 @@ namespace Voronoi2
 
                 System.Diagnostics.Debug.Assert(ge.Point1 != ge.Point2);
 
-                edges.Add(ge);
+                Edges.Add(ge);
             }
 
             GraphEdge lastEdge = new GraphEdge(vertices[0], vertices[vertices.Length-1]);
 
-            edges.Add(lastEdge);
+            Edges.Add(lastEdge);
 
-            site = new Site();
-            site.SetPoint(midPoint);
+            Site = new Site();
+            Site.SetPoint(midPoint);
         }
 
         public VoronoiCell(Site site)
         {
-            edges = new List<GraphEdge>();
-            bodyVertices = new List<Vector2>();
+            Edges = new List<GraphEdge>();
+            BodyVertices = new List<Vector2>();
             //bodies = new List<Body>();
-            this.site = site;
+            this.Site = site;
         }
 
         public bool IsPointInside(Vector2 point)
         {
-            foreach (GraphEdge edge in edges)
+            foreach (GraphEdge edge in Edges)
             {
                 if (MathUtils.LinesIntersect(point, Center, edge.Point1, edge.Point2)) return false;
             }
@@ -248,12 +265,12 @@ namespace Voronoi2
     {
         public int Compare ( Site p1, Site p2 )
         {
-            Point s1 = p1.coord;
-            Point s2 = p2.coord;
-            if ( s1.y < s2.y )    return -1;
-            if ( s1.y > s2.y ) return 1;
-            if ( s1.x < s2.x ) return -1;
-            if ( s1.x > s2.x ) return 1;
+            DoubleVector2 s1 = p1.Coord;
+            DoubleVector2 s2 = p2.Coord;
+            if ( s1.Y < s2.Y )    return -1;
+            if ( s1.Y > s2.Y ) return 1;
+            if ( s1.X < s2.X ) return -1;
+            if ( s1.X > s2.X ) return 1;
             return 0;
         }
     }
