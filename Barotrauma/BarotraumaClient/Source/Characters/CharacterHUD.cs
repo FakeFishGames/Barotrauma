@@ -255,7 +255,7 @@ namespace Barotrauma
             bool drawPortraitToolTip = false;
             if (character.Stun <= 0.1f && !character.IsDead)
             {
-                if (CharacterHealth.OpenHealthWindow == null && character.SelectedCharacter == null)
+                if (CharacterHealth.OpenHealthWindow == null && character.SelectedCharacter == null && character.Info?.Portrait != null)
                 {
                     character.Info.PortraitBackground?.Draw(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(),
                         scale: HUDLayoutSettings.PortraitArea.Width / character.Info.PortraitBackground.size.X);
@@ -303,7 +303,7 @@ namespace Barotrauma
             {
                 GUIComponent.DrawToolTip(
                     spriteBatch,
-                    character.Info.Job == null ? character.Name : character.Name + " (" + character.Info.Job.Name + ")",
+                    character.Info?.Job == null ? character.Name : character.Name + " (" + character.Info.Job.Name + ")",
                     HUDLayoutSettings.PortraitArea);
             }
         }
