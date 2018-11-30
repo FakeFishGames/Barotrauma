@@ -93,6 +93,7 @@ namespace Barotrauma
     
     partial class Limb : ISerializableEntity
     {
+        // Note: not used
         private const float LimbDensity = 15;
         private const float LimbAngularDamping = 7;
 
