@@ -146,6 +146,7 @@ namespace Barotrauma.Items.Components
 
                 foreach (ItemContainer ic in containedItem.GetComponents<ItemContainer>())
                 {
+                    if (ic.hideItems) continue;
                     ic.DrawContainedItems(spriteBatch);
                 }
 
