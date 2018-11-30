@@ -1,7 +1,7 @@
 ﻿<HammerheadSwimSlow
   animationtype="SwimSlow"
   flip="True"
-  mirror="False"
+  mirror="True"
   waveamplitude="3"
   wavelength="16.25109"
   rotatetowardsmovement="True"

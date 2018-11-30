@@ -1,7 +1,7 @@
 ﻿<HammerheadSwimFast
   animationtype="SwimFast"
   flip="True"
-  mirror="False"
+  mirror="True"
   waveamplitude="20"
   wavelength="31.70494"
   rotatetowardsmovement="True"
