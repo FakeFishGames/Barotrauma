@@ -7,14 +7,15 @@
     tags="smallitem"
     fireproof="false"
     cargocontaineridentifier="metalcrate"
-    description="Obey my authority! ">
+    description="Obey my authority!"
+    scale="0.5">
 
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="100" />
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,320,64,64"/>
-    <Sprite texture="engigear.png" sourcerect="0,52,50,25" depth="0.6"/>
+    <Sprite texture="clothes.png" sourcerect="49,133,195,78" depth="0.6"/>
 
     <Body width="52" height="17" density="30" />
 

@@ -29,7 +29,8 @@
     identifier="doctorsuniform"
     category="Equipment"  
     cargocontaineridentifier="metalcrate"  
-    tags="smallitem">
+    tags="smallitem"
+    scale="0.5">
 
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="Military" buyprice="50"/>
@@ -37,7 +38,7 @@
     <Price locationtype="Outpost" buyprice="100"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,320,64,64"/>
-    <Sprite texture ="doctorgear.png" sourcerect="75,0,53,18" depth="0.6"/>
+    <Sprite texture ="clothes.png" sourcerect="270,142,174,67" depth="0.6"/>
 
     <Body width="52" height="17" density="30"/>
 

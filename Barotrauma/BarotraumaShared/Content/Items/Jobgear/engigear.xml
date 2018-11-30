@@ -6,7 +6,8 @@
     tags="smallitem"
     fireproof="true"
     cargocontaineridentifier="metalcrate"
-    description="The fire-resistant fabric offers some protection against fires.">
+    description="The fire-resistant fabric offers some protection against fires."
+    scale="0.5">
 
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="Military" buyprice="50"/>
@@ -14,7 +15,7 @@
     <Price locationtype="Outpost" buyprice="100"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,320,64,64"/>
-    <Sprite texture="engigear.png" sourcerect="0,52,50,25" depth="0.6"/>
+    <Sprite texture="clothes.png" sourcerect="264,36,183,67" depth="0.6"/>
 
     <Body width="50" height="17" density="20"/>
 
@@ -49,7 +50,8 @@
     tags="smallitem"
     fireproof="true"
     cargocontaineridentifier="metalcrate"
-    description="The fire-resistant fabric offers some protection against fires.">
+    description="The fire-resistant fabric offers some protection against fires."
+    scale="0.5">
 
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="Military" buyprice="50"/>
@@ -57,7 +59,7 @@
     <Price locationtype="Outpost" buyprice="100"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,320,64,64"/>
-    <Sprite texture="engigear.png" sourcerect="53,50,51,25" depth="0.6"/>
+    <Sprite texture="clothes.png" sourcerect="270,242,177,67" depth="0.6"/>
 
     <Body width="50" height="17" density="20"/>
 

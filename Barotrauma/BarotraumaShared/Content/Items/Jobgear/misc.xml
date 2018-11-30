@@ -31,8 +31,8 @@
       <StatusEffect type="OnWearing" target="Character" HideFace="true" />
     </Wearable>
   </Item>
-  <Item name="Clown Costume" identifier="clowncostume" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" description="Praise the honkmother.">
-    <Sprite texture="clownpants.png" sourcerect="0,62,53,18" depth="0.6" origin="0.5,0.5" />
+  <Item name="Clown Costume" identifier="clowncostume" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" description="Praise the honkmother." scale="0.5">
+    <Sprite texture="clothes.png" sourcerect="57,242,190,67" depth="0.6" origin="0.5,0.5" />
     <Body width="53" height="18" density="30" />
     <Deconstruct time="40">
       <Item identifier="bikehorn" />

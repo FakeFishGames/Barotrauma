@@ -11,13 +11,13 @@
       <sprite name="Captain's Cap" texture="captainhat.png" limb="Head" origin="0.5,0.9" />
     </Wearable>
   </Item>
-  <Item name="Captain's Uniform" identifier="captainsuniform" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem">
+  <Item name="Captain's Uniform" identifier="captainsuniform" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" scale="0.5">
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,320,64,64" />
-    <Sprite texture="captainLegs.png" sourcerect="0,49,52,17" depth="0.6" />
+    <Sprite texture="clothes.png" sourcerect="49,35,181,71" depth="0.6" />
     <Body width="52" height="17" density="30" />
     <Wearable slots="Any,InnerClothes">
       <sprite name="Captain's Uniform Torso" texture="NewHuman_Captain_torso.png" limb="Torso" sourcerect="18,36,97,169" origin="0.5,0.48" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
