@@ -657,12 +657,12 @@ namespace Barotrauma
                 Vector2 attachTargetNormal;
                 if (wall.IsHorizontal)
                 {
-                    attachTargetNormal = new Vector2(0.0f, Math.Sign(Character.SimPosition.Y - wall.WorldPosition.Y));
+                    attachTargetNormal = new Vector2(0.0f, Math.Sign(Character.WorldPosition.Y - wall.WorldPosition.Y));
                     sectionPos.Y += ConvertUnits.ToSimUnits(wall.Rect.Height / 2) * attachTargetNormal.Y;
                 }
                 else
                 {
-                    attachTargetNormal = new Vector2(Math.Sign(Character.SimPosition.X - wall.WorldPosition.X), 0.0f);
+                    attachTargetNormal = new Vector2(Math.Sign(Character.WorldPosition.X - wall.WorldPosition.X), 0.0f);
                     sectionPos.X += ConvertUnits.ToSimUnits(wall.Rect.Width / 2) * attachTargetNormal.X;
                 }
                 wallTarget = new WallTarget(ConvertUnits.ToDisplayUnits(sectionPos), wall, sectionIndex);
