@@ -557,7 +557,7 @@ namespace Barotrauma.Items.Components
             minRotation = maxRotation;
             maxRotation = temp;
 
-            barrelPos.X = item.Rect.Width - barrelPos.X * item.Scale;
+            barrelPos.X = item.Rect.Width / item.Scale - barrelPos.X;
 
             while (minRotation < 0)
             {
@@ -578,7 +578,7 @@ namespace Barotrauma.Items.Components
             minRotation = maxRotation;
             maxRotation = temp;
 
-            barrelPos.Y = item.Rect.Height - barrelPos.Y * item.Scale;
+            barrelPos.Y = item.Rect.Height / item.Scale - barrelPos.Y;
 
             while (minRotation < 0)
             {
