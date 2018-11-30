@@ -17,7 +17,12 @@
       </Attack>
     </Projectile>
   </Item>
-  <Item name="Harpoon Gun" identifier="harpoongun" category="Equipment" cargocontaineridentifier="metalcrate" tags="mediumitem,weapon">
+  <Item name="Harpoon Gun"
+        identifier="harpoongun"
+        category="Equipment"
+        cargocontaineridentifier="metalcrate"
+        tags="mediumitem,weapon"
+        Scale="0.32">
     <Price locationtype="Military" buyprice="170" />
     <Price locationtype="City" buyprice="200" />
     <Deconstruct time="10">
@@ -25,7 +30,7 @@
       <Item identifier="aluminium" />
       <Item identifier="polycarbonatebar" />
     </Deconstruct>
-    <Sprite texture="weapons.png" sourcerect="0,25,99,24" depth="0.55" />
+    <Sprite texture="weapons_new.png" sourcerect="0,64,282,60" depth="0.55" />
     <Body width="90" height="30" density="50" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7" holdangle="-40" />
     <RangedWeapon barrelpos="49,10" spread="1" unskilledspread="10">
@@ -80,7 +85,12 @@
       </Attack>
     </Projectile>
   </Item>
-  <Item name="Revolver" identifier="revolver" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,weapon">
+  <Item name="Revolver"
+        identifier="revolver"
+        category="Equipment"
+        cargocontaineridentifier="metalcrate"
+        tags="smallitem,weapon"
+        Scale="0.32">
     <Price locationtype="Military" buyprice="300" />
     <Price locationtype="City" buyprice="500" />
     <Deconstruct time="10">
@@ -89,7 +99,7 @@
       <Item identifier="polycarbonatebar" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,64,64,64" />
-    <Sprite texture="weapons.png" sourcerect="25,98,31,24" depth="0.55" />
+    <Sprite texture="weapons_new.png" sourcerect="0,0,117,64" depth="0.55" />
     <Body width="28" height="20" density="50" />
     <Holdable slots="Any,RightHand,LeftHand" controlpose="true" aimpos="90,10" handle1="-11,-7" />
     <RangedWeapon barrelpos="14,6" spread="0" unskilledspread="2">
