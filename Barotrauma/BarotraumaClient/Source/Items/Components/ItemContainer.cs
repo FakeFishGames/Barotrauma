@@ -88,17 +88,21 @@ namespace Barotrauma.Items.Components
 
         public void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
-            if (hideItems || (item.body != null && !item.body.Enabled)) return;
+            if (hideItems || (item.body != null && !item.body.Enabled)) { return; }
+            DrawContainedItems(spriteBatch);
+        }
 
-            Vector2 transformedItemPos = itemPos;
-            Vector2 transformedItemInterval = itemInterval;
+        public void DrawContainedItems(SpriteBatch spriteBatch)
+        {
+            Vector2 transformedItemPos = itemPos * item.Scale;
+            Vector2 transformedItemInterval = itemInterval * item.Scale;
             float currentRotation = itemRotation;
 
             if (item.body == null)
             {
                 transformedItemPos = new Vector2(item.Rect.X, item.Rect.Y);
                 if (item.Submarine != null) transformedItemPos += item.Submarine.DrawPosition;
-                transformedItemPos = transformedItemPos + itemPos;
+                transformedItemPos = transformedItemPos + itemPos * item.Scale;
             }
             else
             {
@@ -127,18 +131,28 @@ namespace Barotrauma.Items.Components
                     item.IsHighlighted = false;
                 }
 
+                if (containedItem.body != null)
+                {
+                    containedItem.body.FarseerBody.Rotation = currentRotation;
+                }
+
                 containedItem.Sprite.Draw(
                     spriteBatch,
                     new Vector2(transformedItemPos.X, -transformedItemPos.Y),
                     containedItem.GetSpriteColor(),
                     -currentRotation,
-                    1.0f,
+                    containedItem.Scale,
                     (item.body != null && item.body.Dir == -1) ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
+
+                foreach (ItemContainer ic in containedItem.GetComponents<ItemContainer>())
+                {
+                    ic.DrawContainedItems(spriteBatch);
+                }
 
                 transformedItemPos += transformedItemInterval;
             }
         }
-        
+
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             //if the item is in the character's inventory, no need to update the item's inventory 

@@ -162,11 +162,22 @@ namespace Barotrauma
                         fadeInBrokenSprite?.Sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color * fadeInBrokenSpriteAlpha,
                             depth: depth - 0.000001f,
                             scaleMultiplier: Scale);
+                        foreach (Sprite decorativeSprite in Prefab.DecorativeSprites)
+                        {
+                            decorativeSprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color,
+                                depth: depth + (decorativeSprite.Depth - activeSprite.Depth),
+                                scaleMultiplier: Scale);
+                        }
                     }
                     else
                     {
                         activeSprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, SpriteRotation, Scale, activeSprite.effects, depth);
                         fadeInBrokenSprite?.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color * fadeInBrokenSpriteAlpha, SpriteRotation, Scale, activeSprite.effects, depth - 0.000001f);
+                        foreach (Sprite decorativeSprite in Prefab.DecorativeSprites)
+                        {
+                            decorativeSprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, SpriteRotation, Scale, activeSprite.effects, 
+                                depth: depth + (decorativeSprite.Depth - activeSprite.Depth));
+                        }
                     }
                 }
                 else if (body.Enabled)
