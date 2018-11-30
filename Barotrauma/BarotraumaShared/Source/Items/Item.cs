@@ -430,6 +430,7 @@ namespace Barotrauma
                     case "sprite":
                     case "deconstruct":
                     case "brokensprite":
+                    case "decorativesprite":
                     case "price":
                         break;
                     case "staticbody":

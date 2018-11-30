@@ -268,7 +268,6 @@
   <Item
     name="Fire Extinguisher Bracket"
     identifier="extinguisherbracket"
-    linkable="true"
     pickdistance="75">
 
     <Sprite texture="containers.png" depth="0.84" sourcerect="4,2,40,102" canflipx="false"/>
@@ -283,7 +282,6 @@
   <Item
     name="Fire Extinguisher Mount"
     identifier="extinguishermount"
-    linkable="true"
     pickdistance="75">
 
     <Sprite texture="containers.png" depth="0.54" sourcerect="4,110,38,38" canflipx="false"/>
@@ -295,5 +293,19 @@
     </ItemContainer>
   </Item>
 
+  <Item
+    name="Weapon Holder"
+    identifier="weaponholder"
+    scale="0.5">
+
+    <Sprite texture="WeaponHolder.png" depth="0.85" sourcerect="107,86,88,88" canflipx="false"/>
+    <DecorativeSprite texture="WeaponHolder.png" depth="0.5" sourcerect="107,2,124,33" canflipx="false" origin="0.5,0.5"/>
+
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="46,-47" iteminterval="0,0" itemrotation="90" canbeselected="true"
+                   autointeractwithcontained="true">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI"/>
+      <Containable identifiers="weapon"/>
+    </ItemContainer>
+  </Item>
 </Items>
 
