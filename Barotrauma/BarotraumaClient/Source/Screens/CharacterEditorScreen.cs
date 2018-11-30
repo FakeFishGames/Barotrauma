@@ -2997,7 +2997,7 @@ namespace Barotrauma
                                     {
                                         foreach (var j in selectedJoints)
                                         {
-                                            j.LocalAnchorA = joint.LocalAnchorA;
+                                            j.LocalAnchorB = joint.LocalAnchorB;
                                             TryUpdateJointParam(j, "limb2anchor", transformedValue);
                                         }
                                     }
