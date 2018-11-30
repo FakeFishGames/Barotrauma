@@ -57,22 +57,22 @@
   <limb id="18" name="ClawBR2" type="None" radius="36" width="262" notes="61cl_ClawBR2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="334,653,334,72" origin="0.5,0.5" depth="0" />
   </limb>
-  <joint name="Joint Torso - Head" limb1="0" limb2="1" limb1anchor="76.70367,-0.005905516" limb2anchor="-97.50661,1.914177" canbesevered="True" limitenabled="True" upperlimit="-45.32582" lowerlimit="-71.30958" />
-  <joint name="Joint Torso - 22CL_FinFront" limb1="0" limb2="2" limb1anchor="5.738081,1.938034" limb2anchor="107.2,0" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Torso - Tail1" limb1="0" limb2="3" limb1anchor="-104.8,0" limb2anchor="-80.17088,40.84029" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Tail1 - Tail2" limb1="3" limb2="4" limb1anchor="71.90779,5.568779" limb2anchor="-56.38144,1.707784" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Tail2 - Tail3" limb1="4" limb2="5" limb1anchor="63.82618,9.385366" limb2anchor="-47.89211,-0.1858205" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Tail3 - Tail4" limb1="5" limb2="6" limb1anchor="46.15791,-14.94034" limb2anchor="-44.55386,-8.5864" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Tail4 - TailFinUpper" limb1="6" limb2="7" limb1anchor="64.75254,-7.475547" limb2anchor="-38.60884,-12.85098" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Torso - ClawTL1" limb1="0" limb2="8" limb1anchor="-80.80498,59.00154" limb2anchor="-89.56878,30.11413" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Torso - ClawTR1" limb1="0" limb2="9" limb1anchor="5.976089,69.99936" limb2anchor="-68.57939,41.23158" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Tail1 - FinBack" limb1="3" limb2="10" limb1anchor="-21.19509,-1.878384" limb2anchor="-64.30891,16.72764" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Tail3 - TailFinLower" limb1="5" limb2="11" limb1anchor="35.73751,8.424459" limb2anchor="-54.60117,5.594362" canbesevered="True" limitenabled="True" upperlimit="-46.74098" lowerlimit="0" />
-  <joint name="Joint Tail2 - FinTail1" limb1="4" limb2="12" limb1anchor="-1.228748,-15.43017" limb2anchor="-60.08483,-7.495843" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint ClawTL1 - ClawTL2" limb1="8" limb2="13" limb1anchor="73.73844,26.31045" limb2anchor="-137.6456,-9.80677" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint ClawTR1 - ClawTR2" limb1="9" limb2="14" limb1anchor="78.3521,37.62533" limb2anchor="-125.9877,-16.00076" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Torso - ClawBL1" limb1="0" limb2="15" limb1anchor="22.78183,-49.63924" limb2anchor="-62.09636,-9.225038" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint Torso - ClawBR1" limb1="0" limb2="16" limb1anchor="78.17334,-47.77582" limb2anchor="-66.98016,-13.16843" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint ClawBL1 - ClawBL2" limb1="15" limb2="17" limb1anchor="90.18488,-13.05153" limb2anchor="-141.6374,-1.58235" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
-  <joint name="Joint ClawBR1 - ClawBR2" limb1="16" limb2="18" limb1anchor="69.85252,-20.46956" limb2anchor="-119.3606,1.565489" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" />
+  <joint name="Joint Torso - Head" limb1="0" limb2="1" limb1anchor="93.55096,-0.005905516" limb2anchor="-119.9188,-1.121672" canbesevered="True" limitenabled="True" upperlimit="357.9161" lowerlimit="338.2947" stiffness="0.25" />
+  <joint name="Joint Torso - 22CL_FinFront" limb1="0" limb2="2" limb1anchor="58.075,-57.08613" limb2anchor="-85.75584,-8.413865" canbesevered="True" limitenabled="True" upperlimit="241.1344" lowerlimit="197.1842" stiffness="0.25" />
+  <joint name="Joint Torso - Tail1" limb1="0" limb2="3" limb1anchor="-87.96368,2.791871" limb2anchor="-49.37392,4.461081" canbesevered="True" limitenabled="True" upperlimit="208.0911" lowerlimit="172.756" stiffness="0.25" />
+  <joint name="Joint Tail1 - Tail2" limb1="3" limb2="4" limb1anchor="-64.43712,10.84424" limb2anchor="54.51237,-8.347339" canbesevered="True" limitenabled="True" upperlimit="13.06979" lowerlimit="-40.72828" stiffness="0.25" />
+  <joint name="Joint Tail2 - Tail3" limb1="4" limb2="5" limb1anchor="-65.74999,13.65738" limb2anchor="-47.89211,-0.1858205" canbesevered="True" limitenabled="True" upperlimit="9.528852" lowerlimit="-62.46804" stiffness="0.25" />
+  <joint name="Joint Tail3 - Tail4" limb1="5" limb2="6" limb1anchor="58.84361,-17.926" limb2anchor="-44.55386,-8.5864" canbesevered="True" limitenabled="True" upperlimit="14.85826" lowerlimit="-27.93105" stiffness="0.25" />
+  <joint name="Joint Tail4 - TailFinUpper" limb1="6" limb2="7" limb1anchor="-64.75254,-7.475547" limb2anchor="-53.15003,-4.385314" canbesevered="True" limitenabled="True" upperlimit="25.22725" lowerlimit="-29.80602" stiffness="0.25" />
+  <joint name="Joint Torso - ClawTL1" limb1="0" limb2="8" limb1anchor="-80.80498,59.00154" limb2anchor="-89.56878,30.11413" canbesevered="True" limitenabled="True" upperlimit="175.8737" lowerlimit="110.417" stiffness="0.25" />
+  <joint name="Joint Torso - ClawTR1" limb1="0" limb2="9" limb1anchor="5.976089,69.99935" limb2anchor="-68.57939,41.23158" canbesevered="True" limitenabled="True" upperlimit="178.4274" lowerlimit="126.3766" stiffness="0.25" />
+  <joint name="Joint Tail1 - FinBack" limb1="3" limb2="10" limb1anchor="23.61253,54.00113" limb2anchor="-64.30891,16.72764" canbesevered="True" limitenabled="True" upperlimit="34.80137" lowerlimit="13.33343" stiffness="0.25" />
+  <joint name="Joint Tail3 - TailFinLower" limb1="5" limb2="11" limb1anchor="-35.73751,8.424459" limb2anchor="-54.60117,5.594362" canbesevered="True" limitenabled="True" upperlimit="338.2287" lowerlimit="303.1502" stiffness="0.25" />
+  <joint name="Joint Tail2 - FinTail1" limb1="4" limb2="12" limb1anchor="-1.228748,-15.43017" limb2anchor="-60.08483,-7.495843" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" stiffness="0.25" />
+  <joint name="Joint ClawTL1 - ClawTL2" limb1="8" limb2="13" limb1anchor="73.73844,26.31045" limb2anchor="-137.6456,-9.80677" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="-45.62613" stiffness="0.25" />
+  <joint name="Joint ClawTR1 - ClawTR2" limb1="9" limb2="14" limb1anchor="78.3521,37.62533" limb2anchor="-125.9877,-16.00076" canbesevered="True" limitenabled="True" upperlimit="31.02779" lowerlimit="-20.51767" stiffness="0.25" />
+  <joint name="Joint Torso - ClawBL1" limb1="0" limb2="15" limb1anchor="-55.18563,-45.59944" limb2anchor="-81.75753,-17.49741" canbesevered="True" limitenabled="True" upperlimit="-86.12582" lowerlimit="-156.4098" stiffness="0.25" />
+  <joint name="Joint Torso - ClawBR1" limb1="0" limb2="16" limb1anchor="91.00163,-63.57648" limb2anchor="-72.59582,-18.77508" canbesevered="True" limitenabled="True" upperlimit="-59.68859" lowerlimit="-122.9421" stiffness="0.25" />
+  <joint name="Joint ClawBL1 - ClawBL2" limb1="15" limb2="17" limb1anchor="78.96822,-15.85147" limb2anchor="-133.2534,6.925649" canbesevered="True" limitenabled="True" upperlimit="58.79419" lowerlimit="13.74707" stiffness="0.25" />
+  <joint name="Joint ClawBR1 - ClawBR2" limb1="16" limb2="18" limb1anchor="69.85252,-20.46956" limb2anchor="-119.3606,1.565489" canbesevered="True" limitenabled="True" upperlimit="84.07119" lowerlimit="-1.227166" stiffness="0.25" />
 </Ragdoll>
