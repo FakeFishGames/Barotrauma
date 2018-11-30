@@ -443,7 +443,10 @@ namespace Barotrauma
             }
 
             GUI.PreventElementOverlap(elementsToMove, disallowedAreas,
-                new Rectangle(20, 20, GameMain.GraphicsWidth - 40, GameMain.GraphicsHeight - 80));
+                new Rectangle(
+                    20, 20, 
+                    GameMain.GraphicsWidth - 40, 
+                    HUDLayoutSettings.InventoryTopY > 0 ? HUDLayoutSettings.InventoryTopY - 20 : GameMain.GraphicsHeight - 80));
 
             foreach (ItemComponent ic in activeHUDs)
             {
