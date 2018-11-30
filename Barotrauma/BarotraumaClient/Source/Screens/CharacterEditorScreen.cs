@@ -65,7 +65,7 @@ namespace Barotrauma
         private float spriteSheetMinZoom = 0.25f;
         private float spriteSheetMaxZoom = 1;
         private int spriteSheetOffsetY = 100;
-        private int spriteSheetOffsetX = (int)(GameMain.GraphicsWidth * 0.6f);
+        private int spriteSheetOffsetX;
         private Color backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1.0f);
 
         private List<LimbJoint> selectedJoints = new List<LimbJoint>();
@@ -86,6 +86,7 @@ namespace Barotrauma
         {
             base.Select();
             GUI.ForceMouseOn(null);
+            CalculateSpritesheetPosition();
             if (Submarine.MainSub == null)
             {
                 Submarine.MainSub = new Submarine("Content/AnimEditor.sub");
@@ -139,6 +140,7 @@ namespace Barotrauma
         private void OnResolutionChanged()
         {
             CreateGUI();
+            CalculateSpritesheetPosition();
         }
 
         #region Main methods
@@ -3139,6 +3141,11 @@ namespace Barotrauma
                 textures.Add(limb.ActiveSprite.Texture);
                 texturePaths.Add(limb.ActiveSprite.FilePath);
             }
+        }
+
+        private void CalculateSpritesheetPosition()
+        {
+            spriteSheetOffsetX = (int)(GameMain.GraphicsWidth * 0.6f);
         }
 
         private void DrawSpritesheetEditor(SpriteBatch spriteBatch, float deltaTime)
