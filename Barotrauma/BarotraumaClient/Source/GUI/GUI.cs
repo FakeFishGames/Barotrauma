@@ -583,7 +583,12 @@ namespace Barotrauma
         public static GUIComponent UpdateMouseOn()
         {
             MouseOn = null;
-            for (int i = updateList.Count - 1; i >= 0; i--)
+            int inventoryIndex = -1;
+            if (Inventory.IsMouseOnInventory())
+            {
+                inventoryIndex = updateList.IndexOf(CharacterHUD.HUDFrame);
+            }
+            for (int i = updateList.Count - 1; i > inventoryIndex; i--)
             {
                 GUIComponent c = updateList[i];
                 if (c.MouseRect.Contains(PlayerInput.MousePosition))

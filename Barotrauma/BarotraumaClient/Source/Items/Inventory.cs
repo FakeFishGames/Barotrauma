@@ -291,14 +291,14 @@ namespace Barotrauma
             interactRect.Location += slot.DrawOffset.ToPoint();
 
             bool mouseOnGUI = false;
-            if (GUI.MouseOn != null)
+            /*if (GUI.MouseOn != null)
             {
                 //block usage if the mouse is on a GUIComponent that's not related to this inventory
                 if (RectTransform == null || (RectTransform != GUI.MouseOn.RectTransform && !GUI.MouseOn.IsParentOf(RectTransform.GUIComponent)))
                 {
                     mouseOnGUI = true;
                 }
-            }
+            }*/
 
             bool mouseOn = interactRect.Contains(PlayerInput.MousePosition) && !Locked && !mouseOnGUI;
 
@@ -446,8 +446,11 @@ namespace Barotrauma
             {
                 if (HideSlot(i)) continue;
 
+                Rectangle interactRect = slots[i].InteractRect;
+                interactRect.Location += slots[i].DrawOffset.ToPoint();
+
                 //don't draw the item if it's being dragged out of the slot
-                bool drawItem = draggingItem == null || draggingItem != Items[i] || slots[i].InteractRect.Contains(PlayerInput.MousePosition);
+                bool drawItem = draggingItem == null || draggingItem != Items[i] || interactRect.Contains(PlayerInput.MousePosition);
 
                 DrawSlot(spriteBatch, this, slots[i], Items[i], drawItem);
             }
