@@ -13,161 +13,6 @@ namespace Barotrauma
 {
     static partial class CaveGenerator
     {
-        /*public static List<VoronoiCell> CarveCave(List<VoronoiCell> cells, Vector2 startPoint, out List<VoronoiCell> newCells)
-        {
-            Voronoi voronoi = new Voronoi(1.0);
-
-            List<Vector2> sites = new List<Vector2>();
-
-            float siteInterval = 400.0f;
-            float siteVariance = siteInterval * 0.4f;
-
-            Vector4 edges = new Vector4(
-                cells.Min(x => x.edges.Min(e => e.Point1.X)),
-                cells.Min(x => x.edges.Min(e => e.Point1.Y)),
-                cells.Max(x => x.edges.Max(e => e.Point1.X)),
-                cells.Max(x => x.edges.Max(e => e.Point1.Y)));
-
-            edges.X -= siteInterval * 2;
-            edges.Y -= siteInterval * 2;
-            edges.Z += siteInterval * 2;
-            edges.W += siteInterval * 2;
-
-            Rectangle borders = new Rectangle((int)edges.X, (int)edges.Y, (int)(edges.Z - edges.X), (int)(edges.W - edges.Y));
-
-            for (float x = edges.X + siteInterval; x < edges.Z - siteInterval; x += siteInterval)
-            {
-                for (float y = edges.Y + siteInterval; y < edges.W - siteInterval; y += siteInterval)
-                {
-                    if (Rand.Int(5, Rand.RandSync.Server) == 0) continue; //skip some positions to make the cells more irregular
-
-                    sites.Add(new Vector2(x, y) + Rand.Vector(siteVariance, Rand.RandSync.Server));
-                }
-            }
-
-            List<GraphEdge> graphEdges = voronoi.MakeVoronoiGraph(sites, edges.X, edges.Y, edges.Z, edges.W);
-
-            List<VoronoiCell>[,] cellGrid;
-            newCells = GraphEdgesToCells(graphEdges, borders, 1000, out cellGrid);
-
-            foreach (VoronoiCell cell in newCells)
-            {
-                //if the cell is at the edge of the graph, remove it
-                if (cell.edges.Any(e => 
-                    e.Point1.X == edges.X || e.Point1.X == edges.Z ||
-                    e.Point1.Y == edges.Z || e.Point1.Y == edges.W))
-                {
-                    cell.CellType = CellType.Removed;
-                    continue;
-                }
-                
-                //remove cells that aren't inside any of the original "base cells"
-                if (cells.Any(c => c.IsPointInside(cell.Center))) continue;
-                foreach (GraphEdge edge in cell.edges)
-                {
-                    //mark all the cells adjacent to the removed cell as edges of the cave
-                    var adjacent = edge.AdjacentCell(cell);
-                    if (adjacent != null && adjacent.CellType != CellType.Removed) adjacent.CellType = CellType.Edge;
-                }
-
-                cell.CellType = CellType.Removed;
-            }
-
-            newCells.RemoveAll(newCell => newCell.CellType == CellType.Removed);
-
-            //start carving from the edge cell closest to the startPoint
-            VoronoiCell startCell = null;
-            float closestDist = 0.0f;
-            foreach (VoronoiCell cell in newCells)
-            {
-                if (cell.CellType != CellType.Edge) continue;
-
-                float dist = Vector2.Distance(startPoint, cell.Center);
-                if (dist < closestDist || startCell == null)
-                {
-                    startCell = cell;
-                    closestDist = dist;
-                }
-            }
-
-            startCell.CellType = CellType.Path;
-
-            List<VoronoiCell> path = new List<VoronoiCell>() {startCell};
-            VoronoiCell pathCell = startCell;
-            for (int i = 0; i < newCells.Count / 2; i++)
-            {
-                var allowedNextCells = new List<VoronoiCell>();
-                foreach (GraphEdge edge in pathCell.edges)
-                {
-                    var adjacent = edge.AdjacentCell(pathCell);
-                    if (adjacent == null ||
-                        adjacent.CellType == CellType.Removed ||
-                        adjacent.CellType == CellType.Edge) continue;
-
-                    allowedNextCells.Add(adjacent);
-                }
-
-                if (allowedNextCells.Count == 0)
-                {
-                    if (i>5) break;
-                    
-                    foreach (GraphEdge edge in pathCell.edges)
-                    {
-                        var adjacent = edge.AdjacentCell(pathCell);
-                        if (adjacent == null ||
-                            adjacent.CellType == CellType.Removed) continue;
-
-                        allowedNextCells.Add(adjacent);
-                    }
-
-                    if (allowedNextCells.Count == 0) break;
-                }
-                
-                //randomly pick one of the adjacent cells as the next cell
-                pathCell = allowedNextCells[Rand.Int(allowedNextCells.Count, Rand.RandSync.Server)];
-
-                //randomly take steps further away from the startpoint to make the cave expand further
-                if (Rand.Int(4, Rand.RandSync.Server) == 0)
-                {
-                    float furthestDist = 0.0f;
-                    foreach (VoronoiCell nextCell in allowedNextCells)
-                    {
-                        float dist = Vector2.Distance(startCell.Center, nextCell.Center);
-                        if (dist > furthestDist || furthestDist == 0.0f)
-                        {
-                            furthestDist = dist;
-                            pathCell = nextCell;
-                        }
-                    }
-                }
-
-                pathCell.CellType = CellType.Path;
-                path.Add(pathCell);
-            }
-
-            //make sure the tunnel is always wider than minPathWidth
-            float minPathWidth = 100.0f;
-            for (int i = 0; i < path.Count; i++)
-            {
-                var cell = path[i];
-                foreach (GraphEdge edge in cell.edges)
-                {
-                    if (edge.Point1 == edge.Point2) continue;
-                    if (Vector2.Distance(edge.Point1, edge.Point2) > minPathWidth) continue;
-                    
-                    GraphEdge adjacentEdge = cell.edges.Find(e => e != edge && (e.Point1 == edge.Point1 || e.Point2 == edge.Point1));
-
-                    var adjacentCell = adjacentEdge.AdjacentCell(cell);
-                    if (i>0 && (adjacentCell.CellType == CellType.Path || adjacentCell.CellType == CellType.Edge)) continue;
-
-                    adjacentCell.CellType = CellType.Path;
-                    path.Add(adjacentCell);
-                }
-            }
-
-            return path;
-        }*/
-
         public static List<VoronoiCell> GraphEdgesToCells(List<GraphEdge> graphEdges, Rectangle borders, float gridCellSize, out List<VoronoiCell>[,] cellGrid)
         {
             List<VoronoiCell> cells = new List<VoronoiCell>();
@@ -189,13 +34,13 @@ namespace Barotrauma
                 {
                     Site site = (i == 0) ? ge.Site1 : ge.Site2;
 
-                    int x = (int)(Math.Floor((site.coord.x-borders.X) / gridCellSize));
-                    int y = (int)(Math.Floor((site.coord.y-borders.Y) / gridCellSize));
+                    int x = (int)(Math.Floor((site.Coord.X-borders.X) / gridCellSize));
+                    int y = (int)(Math.Floor((site.Coord.Y-borders.Y) / gridCellSize));
 
                     x = MathHelper.Clamp(x, 0, cellGrid.GetLength(0)-1);
                     y = MathHelper.Clamp(y, 0, cellGrid.GetLength(1)-1);
                         
-                    VoronoiCell cell = cellGrid[x,y].Find(c => c.site == site);
+                    VoronoiCell cell = cellGrid[x,y].Find(c => c.Site == site);
 
                     if (cell == null)
                     {
@@ -212,7 +57,7 @@ namespace Barotrauma
                     {
                         ge.Cell2 = cell;
                     }
-                    cell.edges.Add(ge);
+                    cell.Edges.Add(ge);
                 }
             }
 
@@ -248,8 +93,8 @@ namespace Barotrauma
         }
 
         public static List<VoronoiCell> GeneratePath(
-            List<Vector2> pathNodes, List<VoronoiCell> cells, List<VoronoiCell>[,] cellGrid,
-            int gridCellSize, Rectangle limits, float wanderAmount = 0.3f, bool mirror = false, Vector2? gridOffset = null)
+            List<Point> pathNodes, List<VoronoiCell> cells, List<VoronoiCell>[,] cellGrid,
+            int gridCellSize, Rectangle limits, float wanderAmount = 0.3f, bool mirror = false)
         {
             var targetCells = new List<VoronoiCell>();
             for (int i = 0; i < pathNodes.Count; i++)
@@ -258,7 +103,7 @@ namespace Barotrauma
                 int searchDepth = 2;
                 while (searchDepth < 5)
                 {
-                    int cellIndex = FindCellIndex(pathNodes[i], cells, cellGrid, gridCellSize, searchDepth, gridOffset);
+                    int cellIndex = FindCellIndex(pathNodes[i], cells, cellGrid, gridCellSize, searchDepth);
                     if (cellIndex > -1)
                     {
                         targetCells.Add(cells[cellIndex]);
@@ -301,22 +146,30 @@ namespace Barotrauma
                 int edgeIndex = 0;
 
                 allowedEdges.Clear();
-                foreach (GraphEdge edge in currentCell.edges)
+                foreach (GraphEdge edge in currentCell.Edges)
                 {
-                    if (!limits.Contains(edge.AdjacentCell(currentCell).Center)) continue;
-
-                    allowedEdges.Add(edge);
+                    var adjacentCell = edge.AdjacentCell(currentCell);
+                    if (limits.Contains(adjacentCell.Site.Coord.X, adjacentCell.Site.Coord.Y))
+                    {
+                        allowedEdges.Add(edge);
+                    }
                 }
 
                 //steer towards target
                 if (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) > wanderAmount || allowedEdges.Count == 0)
                 {
-                    for (int i = 0; i < currentCell.edges.Count; i++)
+                    double smallestDist = double.PositiveInfinity;
+                    for (int i = 0; i < currentCell.Edges.Count; i++)
                     {
-                        if (!MathUtils.LinesIntersect(currentCell.Center, targetCells[currentTargetIndex].Center,
-                            currentCell.edges[i].Point1, currentCell.edges[i].Point2)) continue;
-                        edgeIndex = i;
-                        break;
+                        var adjacentCell = currentCell.Edges[i].AdjacentCell(currentCell);
+                        double dist = MathUtils.Distance(
+                            adjacentCell.Site.Coord.X, adjacentCell.Site.Coord.Y,
+                            targetCells[currentTargetIndex].Site.Coord.X, targetCells[currentTargetIndex].Site.Coord.Y);
+                        if (dist < smallestDist)
+                        {
+                            edgeIndex = i;
+                            smallestDist = dist;
+                        }
                     }
                 }
                 //choose random edge (ignoring ones where the adjacent cell is outside limits)
@@ -324,10 +177,10 @@ namespace Barotrauma
                 {
                     edgeIndex = Rand.Int(allowedEdges.Count, Rand.RandSync.Server);
                     if (mirror && edgeIndex > 0) edgeIndex = allowedEdges.Count - edgeIndex;
-                    edgeIndex = currentCell.edges.IndexOf(allowedEdges[edgeIndex]);
+                    edgeIndex = currentCell.Edges.IndexOf(allowedEdges[edgeIndex]);
                 }
 
-                currentCell = currentCell.edges[edgeIndex].AdjacentCell(currentCell);
+                currentCell = currentCell.Edges[edgeIndex].AdjacentCell(currentCell);
                 currentCell.CellType = CellType.Path;
                 pathCells.Add(currentCell);
 
@@ -355,7 +208,7 @@ namespace Barotrauma
         public static void RoundCell(VoronoiCell cell, float minEdgeLength = 500.0f, float roundingAmount = 0.5f, float irregularity = 0.1f)
         {
             List<GraphEdge> tempEdges = new List<GraphEdge>();
-            foreach (GraphEdge edge in cell.edges)
+            foreach (GraphEdge edge in cell.Edges)
             {
                 if (!edge.IsSolid)
                 {
@@ -403,7 +256,7 @@ namespace Barotrauma
                 }
             }
 
-            cell.edges = tempEdges;
+            cell.Edges = tempEdges;
         }
 
         public static Body GeneratePolygons(List<VoronoiCell> cells, Level level, out List<Vector2[]> renderTriangles)
@@ -426,7 +279,7 @@ namespace Barotrauma
                 
                 bodyPoints.Clear();
                 tempVertices.Clear();
-                foreach (GraphEdge ge in cell.edges)
+                foreach (GraphEdge ge in cell.Edges)
                 {
                     if (Vector2.DistanceSquared(ge.Point1, ge.Point2) < 0.01f) continue;
                     if (!tempVertices.Any(v => Vector2.DistanceSquared(ge.Point1, v) < 1.0f))
@@ -463,7 +316,7 @@ namespace Barotrauma
 
                 for (int i = 0; i < bodyPoints.Count; i++)
                 {
-                    cell.bodyVertices.Add(bodyPoints[i]);
+                    cell.BodyVertices.Add(bodyPoints[i]);
                     bodyPoints[i] = ConvertUnits.ToSimUnits(bodyPoints[i]);
                 }
                 
@@ -496,7 +349,7 @@ namespace Barotrauma
                     }
                 }
                 
-                cell.body = cellBody;
+                cell.Body = cellBody;
             }
 
             return cellBody;
@@ -525,7 +378,7 @@ namespace Barotrauma
         /// </summary>
         public static int FindCellIndex(Vector2 position,List<VoronoiCell> cells, List<VoronoiCell>[,] cellGrid, int gridCellSize, int searchDepth = 1, Vector2? offset = null)
         {
-            float closestDist = 0.0f;
+            float closestDist = float.PositiveInfinity;
             VoronoiCell closestCell = null;
 
             Vector2 gridOffset = offset == null ? Vector2.Zero : (Vector2)offset;
@@ -540,8 +393,8 @@ namespace Barotrauma
                 {
                     for (int i = 0; i < cellGrid[x, y].Count; i++)
                     {
-                        float dist = Vector2.Distance(cellGrid[x, y][i].Center, position);
-                        if (closestDist != 0.0f && dist > closestDist) continue;
+                        float dist = Vector2.DistanceSquared(cellGrid[x, y][i].Center, position);
+                        if (dist > closestDist) continue;
 
                         closestDist = dist;
                         closestCell = cellGrid[x, y][i];
@@ -552,6 +405,32 @@ namespace Barotrauma
             return cells.IndexOf(closestCell);
         }
 
+        public static int FindCellIndex(Point position, List<VoronoiCell> cells, List<VoronoiCell>[,] cellGrid, int gridCellSize, int searchDepth = 1)
+        {
+            int closestDist = int.MaxValue;
+            VoronoiCell closestCell = null;
+            
+            int gridPosX = position.X / gridCellSize;
+            int gridPosY = position.Y / gridCellSize;
 
+            for (int x = Math.Max(gridPosX - searchDepth, 0); x <= Math.Min(gridPosX + searchDepth, cellGrid.GetLength(0) - 1); x++)
+            {
+                for (int y = Math.Max(gridPosY - searchDepth, 0); y <= Math.Min(gridPosY + searchDepth, cellGrid.GetLength(1) - 1); y++)
+                {
+                    for (int i = 0; i < cellGrid[x, y].Count; i++)
+                    {
+                        int dist = MathUtils.DistanceSquared(
+                            (int)cellGrid[x, y][i].Site.Coord.X, (int)cellGrid[x, y][i].Site.Coord.Y, 
+                            position.X, position.Y);
+                        if (dist > closestDist) continue;
+
+                        closestDist = dist;
+                        closestCell = cellGrid[x, y][i];
+                    }
+                }
+            }
+
+            return cells.IndexOf(closestCell);
+        }
     }
 }
