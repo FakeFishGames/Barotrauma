@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ItemAssembly name="AlienPumpAssembly" description="">
+  <Item name="Pump" identifier="pump" ID="4" rect="-208,96,200,178" displaysidebysidewhenlinked="False" description="" spritecolor="1,1,1,1" inventoryiconcolor="1,1,1,1" containercolor="1,1,1,1" tags="" spritedepth="0.8" scale="1">
+    <Pump minvoltage="0.3" powerconsumption="300" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
+    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
+      <requireditem identifiers="screwdriver" type="Equipped" msg="" />
+      <input name="power_in">
+        <link w="9" />
+      </input>
+      <input name="toggle" />
+      <input name="set_active" />
+      <input name="set_speed" />
+      <input name="set_targetlevel" />
+    </ConnectionPanel>
+    <Repairable deteriorationspeed="0" mindeteriorationdelay="0" maxdeteriorationdelay="0" mindeteriorationcondition="50" showrepairuithreshold="80" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Repair [Wrench]">
+      <requireditem identifiers="wrench" type="Equipped" msg="" />
+    </Repairable>
+  </Item>
+  <Item name="Alien Power Cell" identifier="alienpowercell" ID="7" rect="80,112,113,167" displaysidebysidewhenlinked="False" description="" spritecolor="1,1,1,1" inventoryiconcolor="1,1,1,1" containercolor="1,1,1,1" tags="alien" spritedepth="0.8" scale="1">
+    <LightComponent range="800" castshadows="True" ison="True" blinkfrequency="0" lightcolor="0.4392157,0.5686275,0.7450981,1" isactive="True" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
+    <ItemContainer pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="8" />
+    <PowerContainer indicatorposition="0,0" indicatorsize="0,0" maxoutput="10000" capacity="10" charge="10" maxrechargespeed="1000" rechargespeed="0" minvoltage="0.5" powerconsumption="0" isactive="True" vulnerabletoemp="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
+    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="">
+      <requireditem identifiers="screwdriver" type="Equipped" msg="" />
+      <input name="shutdown" />
+      <output name="power_out">
+        <link w="9" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="9" rect="-113,-33,48,20" displaysidebysidewhenlinked="False" description="" spritecolor="0.1921569,0.1921569,0.1921569,1" inventoryiconcolor="0.1960784,0.1960784,0.1960784,1" containercolor="1,1,1,1" tags="smallitem,wire" spritedepth="0.55" scale="1">
+    <Holdable swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="136.5;28.5;-108;7" />
+  </Item>
+  <Item name="Sulphurite Shard" identifier="sulphuriteshard" ID="8" rect="132,44,9,32" displaysidebysidewhenlinked="False" description="" spritecolor="1,0,0,1" inventoryiconcolor="1,1,1,1" containercolor="1,1,1,1" tags="alien,smallitem" spritedepth="0.7" scale="1">
+    <Throwable swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  </Item>
+</ItemAssembly>
