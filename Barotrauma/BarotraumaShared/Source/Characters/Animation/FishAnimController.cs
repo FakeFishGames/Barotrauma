@@ -207,11 +207,22 @@ namespace Barotrauma
                 }
                 else
                 {
-                    Limb head = GetLimb(LimbType.Head);
-                    if (head == null) head = GetLimb(LimbType.Torso);
+                    float refAngle = 0.0f;
+                    Limb refLimb = GetLimb(LimbType.Head);
+                    if (refLimb == null)
+                    {
+                        refAngle = CurrentAnimationParams.TorsoAngleInRadians;
+                        refLimb = GetLimb(LimbType.Torso);
+                    }
+                    else
+                    {
+                        refAngle = CurrentAnimationParams.HeadAngleInRadians;
+                    }
 
-                    float rotation = MathUtils.WrapAngleTwoPi(head.Rotation);
-                    rotation = MathHelper.ToDegrees(rotation);
+                    float rotation = refLimb.Rotation;
+                    if (!float.IsNaN(refAngle)) { rotation -= refAngle * Dir; }
+
+                    rotation = MathHelper.ToDegrees(MathUtils.WrapAngleTwoPi(rotation));
 
                     if (rotation < 0.0f) rotation += 360;
 
