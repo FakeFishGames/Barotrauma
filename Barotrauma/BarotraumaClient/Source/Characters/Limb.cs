@@ -19,7 +19,8 @@ namespace Barotrauma
     {
         public void UpdateDeformations(float deltaTime)
         {
-            float jointAngle = this.JointAngle;
+            float jointMidAngle = (LowerLimit + UpperLimit) / 2.0f;
+            float jointAngle = this.JointAngle - jointMidAngle;
 
             JointBendDeformation limbADeformation = LimbA.Deformations.Find(d => d is JointBendDeformation) as JointBendDeformation;
             JointBendDeformation limbBDeformation = LimbB.Deformations.Find(d => d is JointBendDeformation) as JointBendDeformation;
