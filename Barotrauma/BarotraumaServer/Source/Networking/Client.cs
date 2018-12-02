@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Barotrauma.Networking
 {
-    partial class Client
+    partial class Client : IDisposable
     {
         public ulong SteamID;
 
@@ -82,6 +82,15 @@ namespace Barotrauma.Networking
         partial void InitProjSpecific()
         {
             JobPreferences = new List<JobPrefab>(JobPrefab.List.GetRange(0, Math.Min(JobPrefab.List.Count, 3)));
+
+            VoipQueue = new VoipQueue(ID, true, true);
+            GameMain.Server.VoipServer.RegisterQueue(VoipQueue);
+        }
+
+        partial void DisposeProjSpecific()
+        {
+            GameMain.Server.VoipServer.UnregisterQueue(VoipQueue);
+            VoipQueue.Dispose();
         }
 
         public void InitClientSync()

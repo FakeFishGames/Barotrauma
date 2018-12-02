@@ -65,6 +65,7 @@ namespace Barotrauma.Networking
         END_OF_MESSAGE,
         SYNC_IDS,
         CHAT_MESSAGE,
+        VOICE,
         VOTE,
         CLIENT_LIST,
         ENTITY_POSITION,

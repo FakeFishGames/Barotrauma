@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Barotrauma.Networking
 {
-    partial class Client
+    partial class Client : IDisposable
     {
         public string Name;
         public byte ID;
@@ -57,8 +57,7 @@ namespace Barotrauma.Networking
         }
 
         partial void InitProjSpecific();
-        partial void InitVoipProjSpecific(); //TODO: call
-        partial void DisposeProjSpecific(); //TODO: call
+        partial void DisposeProjSpecific();
         public Client(string name, byte ID)
         {
             this.Name = name;
@@ -119,6 +118,10 @@ namespace Barotrauma.Networking
                 client.kickVoters.RemoveAll(voter => !connectedClients.Contains(voter));
             }
         }
-        
+
+        public void Dispose()
+        {
+            DisposeProjSpecific();
+        }
     }
 }

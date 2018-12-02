@@ -14,7 +14,7 @@ namespace Barotrauma.Networking
         public UInt16 CharacterID;
     }
 
-    partial class Client
+    partial class Client : IDisposable
     {
         public VoipSound VoipSound
         {
@@ -30,18 +30,18 @@ namespace Barotrauma.Networking
             }
         }
 
-        partial void InitVoipProjSpecific()
+        partial void InitProjSpecific()
         {
-            if (GameMain.Client != null)
-            {
-                GameMain.Client.VoipClient.RegisterQueue(VoipQueue);
-            }
+            VoipQueue = null; VoipSound = null;
+            if (ID == GameMain.Client.ID) return;
+            VoipQueue = new VoipQueue(ID, false, true);
+            GameMain.Client.VoipClient.RegisterQueue(VoipQueue);
             VoipSound = new VoipSound(GameMain.SoundManager,VoipQueue);
         }
 
         partial void DisposeProjSpecific()
         {
-            if (GameMain.Client != null)
+            if (VoipQueue != null)
             {
                 GameMain.Client.VoipClient.UnregisterQueue(VoipQueue);
             }

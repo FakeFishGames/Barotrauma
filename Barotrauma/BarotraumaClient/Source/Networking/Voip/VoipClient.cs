@@ -20,7 +20,7 @@ namespace Barotrauma.Networking
             gameClient = gClient;
             netClient = nClient;
 
-            //capture = new VoipCapture(gClient.Self.ID);
+            capture = new VoipCapture(gClient.ID);
 
             queues = new List<VoipQueue>();
             
