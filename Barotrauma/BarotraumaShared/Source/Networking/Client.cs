@@ -18,6 +18,7 @@ namespace Barotrauma.Networking
             get { return character; }
             set
             {
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer) GameMain.NetworkMember.LastClientListUpdateID++;
                 character = value;
                 if (character != null) HasSpawned = true;
             }
@@ -50,11 +51,11 @@ namespace Barotrauma.Networking
             get { return kickVoters.Count; }
         }
         
-        public Client(NetPeer server, string name, byte ID)
+        /*public Client(NetPeer server, string name, byte ID)
             : this(name, ID)
         {
             
-        }
+        }*/
 
         partial void InitProjSpecific();
         partial void DisposeProjSpecific();

@@ -36,8 +36,10 @@ namespace Barotrauma.Sounds
             VoipConfig.SetupEncoding();
         }
 
-        public void SetPosition(Vector3 pos)
+        public void SetPosition(Vector3? pos)
         {
+            soundChannel.Near = 200.0f;
+            soundChannel.Far = 250.0f;
             soundChannel.Position = pos;
         }
 

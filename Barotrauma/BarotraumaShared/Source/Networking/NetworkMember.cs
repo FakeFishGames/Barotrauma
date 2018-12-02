@@ -106,7 +106,11 @@ namespace Barotrauma.Networking
 
     abstract partial class NetworkMember
     {
-        protected UInt16 lastClientListUpdateID = 0;
+        public UInt16 LastClientListUpdateID
+        {
+            get;
+            set;
+        }
 
         public virtual bool IsServer
         {

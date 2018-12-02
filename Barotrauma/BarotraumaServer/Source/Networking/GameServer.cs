@@ -94,6 +94,8 @@ namespace Barotrauma.Networking
             
             this.ownerKey = ownerKey;
 
+            LastClientListUpdateID = 0;
+
             NetPeerConfiguration = new NetPeerConfiguration("barotrauma");
 
             NetPeerConfiguration.Port = port;
@@ -681,7 +683,7 @@ namespace Barotrauma.Networking
                         //TODO: might want to use a clever class for this
                         c.LastRecvLobbyUpdate = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvLobbyUpdate, GameMain.NetLobbyScreen.LastUpdateID);
                         c.LastRecvChatMsgID = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvChatMsgID, c.LastChatMsgQueueID);
-                        c.LastRecvClientListUpdate = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvClientListUpdate, lastClientListUpdateID);
+                        c.LastRecvClientListUpdate = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvClientListUpdate, LastClientListUpdateID);
 
                         c.LastRecvCampaignSave = inc.ReadUInt16();
                         if (c.LastRecvCampaignSave > 0)
@@ -1098,11 +1100,11 @@ namespace Barotrauma.Networking
 
         private void WriteClientList(Client c, NetOutgoingMessage outmsg)
         {
-            bool hasChanged = NetIdUtils.IdMoreRecent(lastClientListUpdateID, c.LastRecvClientListUpdate);
+            bool hasChanged = NetIdUtils.IdMoreRecent(LastClientListUpdateID, c.LastRecvClientListUpdate);
             if (!hasChanged) return;
 
             outmsg.Write((byte)ServerNetObject.CLIENT_LIST);
-            outmsg.Write(lastClientListUpdateID);
+            outmsg.Write(LastClientListUpdateID);
 
             outmsg.Write((byte)connectedClients.Count);
             foreach (Client client in connectedClients)
@@ -1758,6 +1760,7 @@ namespace Barotrauma.Networking
             Log(msg, ServerLog.MessageType.ServerMessage);
 
             client.Connection.Disconnect(targetmsg);
+            client.Dispose();
             connectedClients.Remove(client);
 
             UpdateVoteStatus();

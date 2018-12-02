@@ -421,7 +421,7 @@ namespace Barotrauma.Networking
             unauthenticatedClients.Remove(unauthClient);
             unauthClient = null;
             ConnectedClients.Add(newClient);
-            lastClientListUpdateID++;
+            LastClientListUpdateID++;
 
             if (newClient.Connection == OwnerConnection)
             {

@@ -548,6 +548,12 @@ namespace Barotrauma.Networking
 #if DEBUG
             if (PlayerInput.GetKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.P)) return;
 #endif
+
+            foreach (Client c in ConnectedClients)
+            {
+                c.UpdateSoundPosition();
+            }
+
             if (gameStarted) SetRadioButtonColor();
 
             UpdateHUD(deltaTime);
@@ -1081,9 +1087,9 @@ namespace Barotrauma.Networking
                 });
             }
 
-            if (NetIdUtils.IdMoreRecent(listId,lastClientListUpdateID))
+            if (NetIdUtils.IdMoreRecent(listId,LastClientListUpdateID))
             {
-                lastClientListUpdateID = listId;
+                LastClientListUpdateID = listId;
                 List<Client> currentClients = new List<Client>();
                 foreach (TempClient tc in tempClients)
                 {
@@ -1095,6 +1101,7 @@ namespace Barotrauma.Networking
                         ConnectedClients.Add(existingClient);
                         GameMain.NetLobbyScreen.AddPlayer(existingClient.Name);
                     }
+                    existingClient.Character = null;
                     if (tc.CharacterID > 0)
                     {
                         existingClient.Character = Entity.FindEntityByID(tc.CharacterID) as Character;
@@ -1107,6 +1114,7 @@ namespace Barotrauma.Networking
                     if (!currentClients.Contains(ConnectedClients[i]))
                     {
                         GameMain.NetLobbyScreen.RemovePlayer(ConnectedClients[i].Name);
+                        ConnectedClients[i].Dispose();
                         ConnectedClients.RemoveAt(i);
                     }
                 }
@@ -1325,7 +1333,7 @@ namespace Barotrauma.Networking
                 prevBytePos = inc.PositionInBytes;
             }
         }
-
+        
         private void SendLobbyUpdate()
         {
             NetOutgoingMessage outmsg = client.CreateMessage();
@@ -1334,7 +1342,7 @@ namespace Barotrauma.Networking
             outmsg.Write((byte)ClientNetObject.SYNC_IDS);
             outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
             outmsg.Write(ChatMessage.LastID);
-            outmsg.Write(lastClientListUpdateID);
+            outmsg.Write(LastClientListUpdateID);
 
             var campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
             if (campaign == null || campaign.LastSaveID == 0)
@@ -1378,7 +1386,7 @@ namespace Barotrauma.Networking
             //outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
             outmsg.Write(ChatMessage.LastID);
             outmsg.Write(entityEventManager.LastReceivedID);
-            outmsg.Write(lastClientListUpdateID);
+            outmsg.Write(LastClientListUpdateID);
 
             Character.Controlled?.ClientWrite(outmsg);
 
@@ -1589,6 +1597,7 @@ namespace Barotrauma.Networking
                 GameMain.ServerChildProcess = null;
             }
 
+            VoipClient.Dispose();
             GameMain.Client = null;
         }
         
@@ -1625,7 +1634,7 @@ namespace Barotrauma.Networking
             var votedClient = userdata is Client ? (Client)userdata : otherClients.Find(c => c.Character == userdata);
             if (votedClient == null) return false;
 
-            votedClient.AddKickVote(new Client(name, ID));
+            votedClient.AddKickVote(ConnectedClients.First(c => c.ID == ID));
             Vote(VoteType.Kick, votedClient);
 
             button.Enabled = false;
