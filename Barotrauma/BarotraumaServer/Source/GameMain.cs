@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Xml.Linq;
@@ -101,6 +102,29 @@ namespace Barotrauma
             Screen.SelectNull();
 
             NetLobbyScreen = new NetLobbyScreen();
+
+            CheckContentPackage();
+        }
+
+
+        private void CheckContentPackage()
+        {
+            var exePaths = Config.SelectedContentPackage.GetFilesOfType(ContentType.ServerExecutable);
+            if (exePaths.Count > 0 && AppDomain.CurrentDomain.FriendlyName != exePaths[0])
+            {
+                DebugConsole.ShowQuestionPrompt(TextManager.Get("IncorrectExe")
+                        .Replace("[selectedpackage]", Config.SelectedContentPackage.Name)
+                        .Replace("[exename]", exePaths[0]), 
+                        (option) => 
+                        {
+                            if (option.ToLower() == "y" || option.ToLower() == "yes")
+                            {
+                                string fullPath = Path.GetFullPath(exePaths[0]);
+                                Process.Start(fullPath);
+                                ShouldRun = false;
+                            }                            
+                        });
+            }
         }
 
         public void StartServer()

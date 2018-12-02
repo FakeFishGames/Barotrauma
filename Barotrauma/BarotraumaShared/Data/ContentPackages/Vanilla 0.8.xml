@@ -57,4 +57,5 @@
   <Jobs file="Content/Jobs.xml" />
   <Sounds file="Content/Sounds/sounds.xml" />
   <Executable file="Barotrauma.exe" />
+  <ServerExecutable file="BarotraumaServer.exe" />
 </contentpackage>
