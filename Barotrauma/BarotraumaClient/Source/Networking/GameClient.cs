@@ -1057,6 +1057,57 @@ namespace Barotrauma.Networking
             }
         }
 
+        private void ReadClientList(NetIncomingMessage inc)
+        {
+            UInt16 listId = inc.ReadUInt16();
+
+            List<TempClient> tempClients = new List<TempClient>();
+            int clientCount = inc.ReadByte();
+            for (int i = 0; i < clientCount; i++)
+            {
+                byte id = inc.ReadByte();
+                string name = inc.ReadString();
+                UInt16 characterID = inc.ReadUInt16();
+                tempClients.Add(new TempClient
+                {
+                    ID = id,
+                    Name = name,
+                    CharacterID = characterID
+                });
+            }
+
+            if (NetIdUtils.IdMoreRecent(listId,lastClientListUpdateID))
+            {
+                lastClientListUpdateID = listId;
+                List<Client> currentClients = new List<Client>();
+                foreach (TempClient tc in tempClients)
+                {
+                    //see if the client already exists
+                    var existingClient = ConnectedClients.Find(c => c.ID == tc.ID && c.Name == tc.Name);
+                    if (existingClient == null) //if not, create it
+                    {
+                        existingClient = new Client(tc.Name, tc.ID);
+                        ConnectedClients.Add(existingClient);
+                        GameMain.NetLobbyScreen.AddPlayer(existingClient.Name);
+                    }
+                    if (tc.CharacterID > 0)
+                    {
+                        existingClient.Character = Entity.FindEntityByID(tc.CharacterID) as Character;
+                    }
+                    currentClients.Add(existingClient);
+                }
+                //remove clients that aren't present anymore
+                for (int i = ConnectedClients.Count - 1; i >= 0; i--)
+                {
+                    if (!currentClients.Contains(ConnectedClients[i]))
+                    {
+                        GameMain.NetLobbyScreen.RemovePlayer(ConnectedClients[i].Name);
+                        ConnectedClients.RemoveAt(i);
+                    }
+                }
+            }
+        }
+        
         private void ReadLobbyUpdate(NetIncomingMessage inc)
         {
             ServerNetObject objHeader;
@@ -1108,18 +1159,7 @@ namespace Barotrauma.Networking
                             
                             bool autoRestartEnabled     = inc.ReadBoolean();
                             float autoRestartTimer      = autoRestartEnabled ? inc.ReadFloat() : 0.0f;
-
-                            int clientCount             = inc.ReadByte();
-                            List<string> clientNames    = new List<string>();
-                            List<byte> clientIDs        = new List<byte>();
-                            List<ushort> characterIDs   = new List<ushort>();
-                            for (int i = 0; i < clientCount; i++)
-                            {
-                                clientIDs.Add(inc.ReadByte());
-                                clientNames.Add(inc.ReadString());
-                                characterIDs.Add(inc.ReadUInt16());
-                            }
-
+                            
                             //ignore the message if we already a more up-to-date one
                             if (NetIdUtils.IdMoreRecent(updateID, GameMain.NetLobbyScreen.LastUpdateID))
                             {
@@ -1149,33 +1189,6 @@ namespace Barotrauma.Networking
                                 GameMain.NetLobbyScreen.SetBotCount(botCount);
                                 GameMain.NetLobbyScreen.SetBotSpawnMode(botSpawnMode);                                
                                 GameMain.NetLobbyScreen.SetAutoRestart(autoRestartEnabled, autoRestartTimer);
-
-                                List<Client> currentClients = new List<Client>();
-                                for (int i = 0; i < clientNames.Count; i++)
-                                {
-                                    //see if the client already exists
-                                    var existingClient = ConnectedClients.Find(c => c.ID == clientIDs[i] && c.Name == clientNames[i]);
-                                    if (existingClient == null) //if not, create it
-                                    {
-                                        existingClient = new Client(clientNames[i], clientIDs[i]);
-                                        ConnectedClients.Add(existingClient);
-                                        GameMain.NetLobbyScreen.AddPlayer(existingClient.Name);
-                                    }
-                                    if (characterIDs[i] > 0)
-                                    {
-                                        existingClient.Character = Entity.FindEntityByID(characterIDs[i]) as Character;
-                                    }
-                                    currentClients.Add(existingClient);
-                                }
-                                //remove clients that aren't present anymore
-                                for (int i = ConnectedClients.Count - 1; i >= 0; i--)
-                                {
-                                    if (!currentClients.Contains(ConnectedClients[i]))
-                                    {
-                                        GameMain.NetLobbyScreen.RemovePlayer(ConnectedClients[i].Name);
-                                        ConnectedClients.RemoveAt(i);
-                                    }
-                                }
                                 
                                 serverSettings.Voting.AllowSubVoting = allowSubVoting;
                                 serverSettings.Voting.AllowModeVoting = allowModeVoting;
@@ -1191,6 +1204,9 @@ namespace Barotrauma.Networking
 
                         lastSentChatMsgID = inc.ReadUInt16();
 
+                        break;
+                    case ServerNetObject.CLIENT_LIST:
+                        ReadClientList(inc);
                         break;
                     case ServerNetObject.CHAT_MESSAGE:
                         ChatMessage.ClientRead(inc);
@@ -1240,6 +1256,9 @@ namespace Barotrauma.Networking
                         //or the message wasn't read correctly for whatever reason
                         inc.Position = msgEndPos;
                         inc.ReadPadBits();
+                        break;
+                    case ServerNetObject.CLIENT_LIST:
+                        ReadClientList(inc);
                         break;
                     case ServerNetObject.ENTITY_EVENT:
                     case ServerNetObject.ENTITY_EVENT_INITIAL:
@@ -1310,6 +1329,7 @@ namespace Barotrauma.Networking
             outmsg.Write((byte)ClientNetObject.SYNC_IDS);
             outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
             outmsg.Write(ChatMessage.LastID);
+            outmsg.Write(lastClientListUpdateID);
 
             var campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
             if (campaign == null || campaign.LastSaveID == 0)
@@ -1353,6 +1373,7 @@ namespace Barotrauma.Networking
             //outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
             outmsg.Write(ChatMessage.LastID);
             outmsg.Write(entityEventManager.LastReceivedID);
+            outmsg.Write(lastClientListUpdateID);
 
             Character.Controlled?.ClientWrite(outmsg);
 

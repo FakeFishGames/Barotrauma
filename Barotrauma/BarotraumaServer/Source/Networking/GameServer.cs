@@ -19,7 +19,7 @@ namespace Barotrauma.Networking
         {
             get { return true; }
         }
-        
+
         private List<Client> connectedClients = new List<Client>();
 
         //for keeping track of disconnected clients in case the reconnect shortly after
@@ -659,8 +659,9 @@ namespace Barotrauma.Networking
                 {
                     case ClientNetObject.SYNC_IDS:
                         //TODO: might want to use a clever class for this
-                        c.LastRecvGeneralUpdate = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvGeneralUpdate, GameMain.NetLobbyScreen.LastUpdateID);
+                        c.LastRecvLobbyUpdate = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvLobbyUpdate, GameMain.NetLobbyScreen.LastUpdateID);
                         c.LastRecvChatMsgID = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvChatMsgID, c.LastChatMsgQueueID);
+                        c.LastRecvClientListUpdate = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvClientListUpdate, lastClientListUpdateID);
 
                         c.LastRecvCampaignSave = inc.ReadUInt16();
                         if (c.LastRecvCampaignSave > 0)
@@ -730,7 +731,8 @@ namespace Barotrauma.Networking
 
                         UInt16 lastRecvChatMsgID = inc.ReadUInt16();
                         UInt16 lastRecvEntityEventID = inc.ReadUInt16();
-
+                        UInt16 lastRecvClientListUpdate = inc.ReadUInt16();
+                        
                         //last msgs we've created/sent, the client IDs should never be higher than these
                         UInt16 lastEntityEventID = entityEventManager.Events.Count == 0 ? (UInt16)0 : entityEventManager.Events.Last().ID;
 
@@ -773,6 +775,12 @@ namespace Barotrauma.Networking
                                 "Invalid lastRecvEntityEventID  " + lastRecvEntityEventID +
                                 " (previous: " + c.LastRecvEntityEventID + ", latest: " + lastEntityEventID + ")");
                         }
+
+                        if (NetIdUtils.IdMoreRecent(lastRecvClientListUpdate, c.LastRecvClientListUpdate))
+                        {
+                            c.LastRecvClientListUpdate = lastRecvClientListUpdate;
+                        }
+
                         break;
                     case ClientNetObject.CHAT_MESSAGE:
                         ChatMessage.ServerRead(inc, c);
@@ -1030,10 +1038,12 @@ namespace Barotrauma.Networking
             outmsg.Write(c.LastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server
             outmsg.Write(c.LastSentEntityEventID);
 
+            WriteClientList(c, outmsg);
+
             entityEventManager.Write(c, outmsg);
 
             WriteChatMessages(outmsg, c);
-
+            
             //write as many position updates as the message can fit (only after midround syncing is done)
             while (!c.NeedsMidRoundSync &&
                 outmsg.LengthBytes < NetPeerConfiguration.MaximumTransmissionUnit - 20 &&
@@ -1066,6 +1076,23 @@ namespace Barotrauma.Networking
             server.SendMessage(outmsg, c.Connection, NetDeliveryMethod.Unreliable);
         }
 
+        private void WriteClientList(Client c, NetOutgoingMessage outmsg)
+        {
+            bool hasChanged = NetIdUtils.IdMoreRecent(lastClientListUpdateID, c.LastRecvClientListUpdate);
+            if (!hasChanged) return;
+
+            outmsg.Write((byte)ServerNetObject.CLIENT_LIST);
+            outmsg.Write(lastClientListUpdateID);
+
+            outmsg.Write((byte)connectedClients.Count);
+            foreach (Client client in connectedClients)
+            {
+                outmsg.Write(client.ID);
+                outmsg.Write(client.Name);
+                outmsg.Write(client.Character == null || !gameStarted ? (ushort)0 : client.Character.ID);
+            }
+        }
+
         private void ClientWriteLobby(Client c)
         {
             bool isInitialUpdate = false;
@@ -1075,7 +1102,7 @@ namespace Barotrauma.Networking
 
             outmsg.Write((byte)ServerNetObject.SYNC_IDS);
 
-            if (NetIdUtils.IdMoreRecent(GameMain.NetLobbyScreen.LastUpdateID, c.LastRecvGeneralUpdate))
+            if (NetIdUtils.IdMoreRecent(GameMain.NetLobbyScreen.LastUpdateID, c.LastRecvLobbyUpdate))
             {
                 outmsg.Write(true);
                 outmsg.WritePadBits();
@@ -1088,8 +1115,8 @@ namespace Barotrauma.Networking
                 outmsg.Write((UInt16)settingsBuf.LengthBytes);
                 outmsg.Write(settingsBuf.Data,0,settingsBuf.LengthBytes);
 
-                outmsg.Write(c.LastRecvGeneralUpdate < 1);
-                if (c.LastRecvGeneralUpdate < 1)
+                outmsg.Write(c.LastRecvLobbyUpdate < 1);
+                if (c.LastRecvLobbyUpdate < 1)
                 {
                     isInitialUpdate = true;
                     ClientWriteInitial(c, outmsg);
@@ -1121,14 +1148,6 @@ namespace Barotrauma.Networking
                 {
                     outmsg.Write(serverSettings.AutoRestartTimer);
                 }
-
-                outmsg.Write((byte)connectedClients.Count);
-                foreach (Client client in connectedClients)
-                {
-                    outmsg.Write(client.ID);
-                    outmsg.Write(client.Name);
-                    outmsg.Write(client.Character == null || !gameStarted ? (ushort)0 : client.Character.ID);
-                }
             }
             else
             {
@@ -1151,6 +1170,8 @@ namespace Barotrauma.Networking
 
             outmsg.Write(c.LastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server
 
+            WriteClientList(c, outmsg);
+
             WriteChatMessages(outmsg, c);
 
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
@@ -1167,7 +1188,7 @@ namespace Barotrauma.Networking
 
                 //and assume the message was received, so we don't have to keep resending
                 //these large initial messages until the client acknowledges receiving them
-                c.LastRecvGeneralUpdate++;
+                c.LastRecvLobbyUpdate++;
 
                 SendVoteStatus(new List<Client>() { c });
             }

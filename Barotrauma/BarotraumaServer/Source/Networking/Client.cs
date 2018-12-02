@@ -12,7 +12,9 @@ namespace Barotrauma.Networking
     {
         public ulong SteamID;
 
-        public UInt16 LastRecvGeneralUpdate = 0;
+        public UInt16 LastRecvClientListUpdate = 0;
+
+        public UInt16 LastRecvLobbyUpdate = 0;
 
         public UInt16 LastSentChatMsgID = 0; //last msg this client said
         public UInt16 LastRecvChatMsgID = 0; //last msg this client knows about
@@ -87,7 +89,7 @@ namespace Barotrauma.Networking
             LastSentChatMsgID = 0;
             LastRecvChatMsgID = ChatMessage.LastID;
 
-            LastRecvGeneralUpdate = 0;
+            LastRecvLobbyUpdate = 0;
 
             LastRecvEntityEventID = 0;
 

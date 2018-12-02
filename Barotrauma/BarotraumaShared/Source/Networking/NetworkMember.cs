@@ -66,6 +66,7 @@ namespace Barotrauma.Networking
         SYNC_IDS,
         CHAT_MESSAGE,
         VOTE,
+        CLIENT_LIST,
         ENTITY_POSITION,
         ENTITY_EVENT,
         ENTITY_EVENT_INITIAL,
@@ -104,6 +105,8 @@ namespace Barotrauma.Networking
 
     abstract partial class NetworkMember
     {
+        protected UInt16 lastClientListUpdateID = 0;
+
         public virtual bool IsServer
         {
             get { return false; }
