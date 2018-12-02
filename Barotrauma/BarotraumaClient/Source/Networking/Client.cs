@@ -22,11 +22,18 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        public void UpdateVoicePosition()
+        public void UpdateSoundPosition()
         {
-            if (character != null)
+            if (VoipSound != null)
             {
-                VoipSound.SetPosition(new Microsoft.Xna.Framework.Vector3(character.Position.X, character.Position.Y, 0.0f));
+                if (character != null)
+                {
+                    VoipSound.SetPosition(new Microsoft.Xna.Framework.Vector3(character.Position.X, character.Position.Y, 0.0f));
+                }
+                else
+                {
+                    VoipSound.SetPosition(null);
+                }
             }
         }
 
