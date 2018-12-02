@@ -1,6 +1,6 @@
 ﻿BAROTRAUMA
 
-www.undertowgames.com/barotrauma
+www.barotraumagame.com
 Copyright © Undertow Games 2017-2018
 
 Default controls:

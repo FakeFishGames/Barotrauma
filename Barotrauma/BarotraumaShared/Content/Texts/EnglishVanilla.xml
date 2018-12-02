@@ -138,6 +138,7 @@
   <ContentPackage>Content package</ContentPackage>
   <ContentPackages>Content packages</ContentPackages>
   <CorePackageRequiredWarning>You cannot deselect the content package because it's a core package required for the game to work. You may switch it by selecting another core package.</CorePackageRequiredWarning>
+  <IncorrectExe>The executable you've launched is not present in the content package [selectedpackage]. Do you want to launch [exename]?</IncorrectExe>
   <ApplySettingsButton>Apply</ApplySettingsButton>
   <ApplySettingsLabel>Apply changes?</ApplySettingsLabel>
   <ApplySettingsQuestion>Do you want to apply the settings or discard the changes?</ApplySettingsQuestion>
