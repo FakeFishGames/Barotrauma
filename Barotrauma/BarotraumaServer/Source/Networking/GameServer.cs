@@ -42,6 +42,12 @@ namespace Barotrauma.Networking
         private bool masterServerResponded;
         private IRestResponse masterServerResponse;
 
+        public VoipServer VoipServer
+        {
+            get;
+            private set;
+        }
+
         private bool initiatedStartGame;
         private CoroutineHandle startGameCoroutine;
 
@@ -129,6 +135,8 @@ namespace Barotrauma.Networking
                 fileSender.OnStarted += FileTransferChanged;
 
                 server.Start();
+
+                VoipServer = new VoipServer(server);
             }
             catch (Exception e)
             {
@@ -334,6 +342,8 @@ namespace Barotrauma.Networking
             unauthenticatedClients.RemoveAll(uc => uc.AuthTimer <= 0.0f);
 
             fileSender.Update(deltaTime);
+
+            VoipServer.SendToClients(connectedClients);
 
             if (gameStarted)
             {
@@ -611,6 +621,16 @@ namespace Barotrauma.Networking
                     if (!gameStarted) return;
 
                     ClientReadIngame(inc);
+                    break;
+                case ClientPacketHeader.VOICE:
+                    byte id = inc.ReadByte();
+                    if (connectedClient.ID != id)
+                    {
+                        DebugConsole.ThrowError(
+                            "Client \"" + connectedClient.Name + "\" sent a VOIP update that didn't match its ID (" + id.ToString() + "!=" + connectedClient.ID.ToString() + ")");
+                        return;
+                    }
+                    connectedClient.VoipQueue.Read(inc);
                     break;
                 case ClientPacketHeader.SERVER_SETTINGS:
                     serverSettings.ServerRead(inc, ConnectedClients.First(c=>c.Connection == inc.SenderConnection));

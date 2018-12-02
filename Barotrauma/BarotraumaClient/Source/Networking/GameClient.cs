@@ -594,6 +594,7 @@ namespace Barotrauma.Networking
                 if (updateTimer > DateTime.Now) return;
                 SendLobbyUpdate();
             }
+            VoipClient.SendToServer();
 
             // Update current time
             updateTimer = DateTime.Now + updateInterval;  
@@ -652,6 +653,9 @@ namespace Barotrauma.Networking
                                 break;
                             case ServerPacketHeader.UPDATE_INGAME:
                                 ReadIngameUpdate(inc);
+                                break;
+                            case ServerPacketHeader.VOICE:
+                                VoipClient.Read(inc);
                                 break;
                             case ServerPacketHeader.QUERY_STARTGAME:
                                 string subName = inc.ReadString();
@@ -1023,6 +1027,7 @@ namespace Barotrauma.Networking
         private void ReadInitialUpdate(NetIncomingMessage inc)
         {
             myID = inc.ReadByte();
+            VoipClient = new VoipClient(this, client);
 
             UInt16 subListCount = inc.ReadUInt16();
             List<Submarine> submarines = new List<Submarine>();
