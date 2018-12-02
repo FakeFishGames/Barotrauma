@@ -7,6 +7,13 @@ using System.Threading.Tasks;
 
 namespace Barotrauma.Networking
 {
+    struct TempClient
+    {
+        public string Name;
+        public byte ID;
+        public UInt16 CharacterID;
+    }
+
     partial class Client
     {
         public VoipSound VoipSound
