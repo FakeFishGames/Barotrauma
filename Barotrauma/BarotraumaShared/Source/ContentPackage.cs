@@ -13,7 +13,8 @@ namespace Barotrauma
         Item, 
         Character, 
         Structure, 
-        Executable, 
+        Executable,
+        ServerExecutable,
         LocationTypes, 
         LevelGenerationParameters,
         RandomEvents, 
@@ -144,7 +145,7 @@ namespace Barotrauma
             var md5 = MD5.Create();
             foreach (ContentFile file in files)
             {
-                if (file.type == ContentType.Executable) continue;
+                if (file.type == ContentType.Executable || file.type == ContentType.ServerExecutable) continue;
 
                 try 
                 {

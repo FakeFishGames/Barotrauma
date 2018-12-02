@@ -44,6 +44,7 @@
   <ApplySettingsNo>Discard</ApplySettingsNo>
   <RestartRequiredLabel>Restart required</RestartRequiredLabel>
   <RestartRequiredText>You need to restart the game for the resolution changes to take effect.</RestartRequiredText>
+  <IncorrectExe>The executable you've launched is not present in the content package [selectedpackage]. Do you want to launch [exename]?</IncorrectExe>
 
   <!-- Round summary -->
   <RoundSummaryProgress>[sub] has made its way to [location].</RoundSummaryProgress>
