@@ -17,26 +17,34 @@ namespace Barotrauma
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
-            //the worse the condition of the item, the higher the priority to repair
-            float priority = 100.0f - item.Condition;
+            bool insufficientSkills = true;
+            bool repairablesFound = false;
             foreach (Repairable repairable in item.Repairables)
             {
-                if (item.Condition > repairable.ShowRepairUIThreshold) continue;
-                //preference over items this character is good at fixing
-                priority *= Math.Max(repairable.DegreeOfSuccess(character), 0.1f);
+                if (item.Condition > repairable.ShowRepairUIThreshold) { continue; }
+                if (repairable.DegreeOfSuccess(character) >= 0.5f) { insufficientSkills = false; }
+                repairablesFound = true;
             }
 
-            //prefer nearby items
-            priority /= Math.Max(Vector2.DistanceSquared(character.WorldPosition, item.WorldPosition), 1.0f);
+            if (!repairablesFound) { return 0.0f; }
 
-            return priority;
+            float priority = 100.0f - item.Condition;
+            float dist = Math.Abs(character.WorldPosition.X - item.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - item.WorldPosition.Y);
+            if (insufficientSkills)
+            {
+                return MathHelper.Lerp(0.0f, 50.0f, priority / 100.0f / Math.Max(dist / 1000.0f, 1.0f));
+            }
+            else
+            {
+                return MathHelper.Lerp(50.0f, 100.0f, priority / 100.0f / Math.Max(dist / 1000.0f, 1.0f));
+            }
         }
 
         public override bool IsCompleted()
         {
-            foreach (Repairable repairable in item.GetComponents<Repairable>())
+            foreach (Repairable repairable in item.Repairables)
             {
-                if (item.Condition < repairable.ShowRepairUIThreshold) return false;
+                if (item.Condition < Math.Max(repairable.ShowRepairUIThreshold, item.Prefab.Health * 0.98f)) return false;
             }
             
             character?.Speak(TextManager.Get("DialogItemRepaired").Replace("[itemname]", item.Name), null, 0.0f, "itemrepaired", 10.0f);
@@ -52,8 +60,6 @@ namespace Barotrauma
         {
             foreach (Repairable repairable in item.Repairables)
             {
-                if (item.Condition > repairable.ShowRepairUIThreshold) continue;
-                
                 //make sure we have all the items required to fix the target item
                 foreach (var kvp in repairable.requiredItems)
                 {
@@ -72,8 +78,7 @@ namespace Barotrauma
             {
                 foreach (Repairable repairable in item.Repairables)
                 {
-                    if (item.Condition > repairable.ShowRepairUIThreshold) continue;
-                    if (character.SelectedConstruction != item) item.TryInteract(character, true, true);
+                    if (character.SelectedConstruction != item) { item.TryInteract(character, true, true); }
                     repairable.CurrentFixer = character;
                     break;
                 }
