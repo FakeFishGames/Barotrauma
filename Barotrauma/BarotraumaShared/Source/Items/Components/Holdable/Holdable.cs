@@ -11,6 +11,7 @@ namespace Barotrauma.Items.Components
     {
         //the position(s) in the item that the Character grabs
         protected Vector2[] handlePos;
+        private Vector2[] scaledHandlePos;
 
         private InputType prevPickKey;
         private string prevMsg;
@@ -76,7 +77,7 @@ namespace Barotrauma.Items.Components
             set { attachedByDefault = value; }
         }
 
-        [Serialize("0.0,0.0", false)]
+        [Serialize("0.0,0.0", false),Editable]
         public Vector2 HoldPos
         {
             get { return ConvertUnits.ToDisplayUnits(holdPos); }
@@ -91,7 +92,7 @@ namespace Barotrauma.Items.Components
         }
 
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false), Editable]
         public float HoldAngle
         {
             get { return MathHelper.ToDegrees(holdAngle); }
@@ -115,31 +116,31 @@ namespace Barotrauma.Items.Components
         public bool SwingWhenAiming { get; set; }
         [Serialize(false, false), Editable]
         public bool SwingWhenUsing { get; set; }
-
-
+        
         public Holdable(Item item, XElement element)
             : base(item, element)
         {
             body = item.body;
 
             Pusher = null;
-            if (element.GetAttributeBool("blocksplayers",false))
+            if (element.GetAttributeBool("blocksplayers", false))
             {
-                Pusher = new PhysicsBody(item.body.width, item.body.height, item.body.radius, item.body.Density);
-                Pusher.BodyType = FarseerPhysics.Dynamics.BodyType.Dynamic;
+                Pusher = new PhysicsBody(item.body.width, item.body.height, item.body.radius, item.body.Density)
+                {
+                    BodyType = FarseerPhysics.Dynamics.BodyType.Dynamic,
+                    CollidesWith = Physics.CollisionCharacter,
+                    CollisionCategories = Physics.CollisionItemBlocking,
+                    Enabled = false
+                };
                 Pusher.FarseerBody.FixedRotation = false;
                 Pusher.FarseerBody.GravityScale = 0.0f;
-                Pusher.CollidesWith = Physics.CollisionCharacter;
-                Pusher.CollisionCategories = Physics.CollisionItemBlocking;
-                Pusher.Enabled = false;
             }
 
             handlePos = new Vector2[2];
-
+            scaledHandlePos = new Vector2[2];
             for (int i = 1; i < 3; i++)
             {
                 handlePos[i - 1] = element.GetAttributeVector2("handle" + i, Vector2.Zero);
-
                 handlePos[i - 1] = ConvertUnits.ToSimUnits(handlePos[i - 1]);
             }
 
@@ -458,17 +459,18 @@ namespace Barotrauma.Items.Components
                         PerlinNoise.GetPerlin(swingState * SwingSpeed * 0.1f + 0.5f, swingState * SwingSpeed * 0.1f + 0.5f) - 0.5f);
                 }
             }
-
-
+            
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
 
             if (item.body.Dir != picker.AnimController.Dir) Flip(item);
 
             item.Submarine = picker.Submarine;
-
+            
             if (picker.HasSelectedItem(item))
             {
-                picker.AnimController.HoldItem(deltaTime, item, handlePos, holdPos + swing, aimPos + swing, picker.IsKeyDown(InputType.Aim) && aimPos != Vector2.Zero, holdAngle);
+                scaledHandlePos[0] = handlePos[0] * item.Scale;
+                scaledHandlePos[1] = handlePos[1] * item.Scale;
+                picker.AnimController.HoldItem(deltaTime, item, scaledHandlePos, holdPos + swing, aimPos + swing, picker.IsKeyDown(InputType.Aim) && aimPos != Vector2.Zero, holdAngle);
             }
             else
             {
@@ -488,7 +490,7 @@ namespace Barotrauma.Items.Components
                     float itemAngle = (equipLimb.Rotation + holdAngle * picker.AnimController.Dir);
 
                     Matrix itemTransfrom = Matrix.CreateRotationZ(equipLimb.Rotation);
-                    Vector2 transformedHandlePos = Vector2.Transform(handlePos[0], itemTransfrom);
+                    Vector2 transformedHandlePos = Vector2.Transform(handlePos[0] * item.Scale, itemTransfrom);
 
                     item.body.ResetDynamics();
                     item.SetTransform(equipLimb.SimPosition - transformedHandlePos, itemAngle);

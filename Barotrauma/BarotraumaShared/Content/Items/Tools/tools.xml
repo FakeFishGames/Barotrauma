@@ -22,7 +22,7 @@
     <!-- physics body -->
     <Body width="41" height="17" density="40" />
     <!-- the character will hold the item 50 pixels in front of him, with his hands at the handle1 and handle2 positions -->
-    <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-17,0" handle2="10,0" />
+    <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-50,-40" handle2="21,-27" />
     <RepairTool structurefixamount="5.0" limbfixamount="-0.5" range="100" barrelpos="19,8" particles="weld">
       <!-- the item must contain a welding fuel tank for it to work -->
       <RequiredItems identifier="weldingfueltank" type="Contained" msg="ItemMsgWeldingFuelRequired" />
@@ -72,7 +72,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,0,64,64" />
     <Sprite texture="tools_new.png" sourcerect="0,0,157,116" depth="0.55" />
     <Body width="42" height="31" density="40" />
-    <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-12,4" />
+    <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-60,-28" handle2="-5,-38" />
     <RepairTool structurefixamount="-2.0" limbfixamount="-0.5" range="100" barrelpos="28,8">
       <RequiredItems identifier="oxygentank,oxygenitetank" type="Contained" msg="ItemMsgOxygenTankRequired" />
       <StatusEffect type="OnUse" target="Contained" targetidentifiers="oxygentank" Condition="-1.0" />
@@ -266,7 +266,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,320,64,64" />
     <Sprite texture="tools_new.png" sourcerect="435,0,77,28" depth="0.55" />
     <Body width="27" height="10" density="15" />
-    <Holdable slots="Any,RightHand,LeftHand,Head" holdpos="30,-15" aimpos="100,0" handle1="-13,0" handle2="-13,0">
+    <Holdable slots="Any,RightHand,LeftHand,Head" holdpos="30,-15" aimpos="100,0" handle1="-26,0" handle2="-26,0">
       <StatusEffect type="OnActive" target="Contained" Condition="-0.2" />
       <!-- the child LightComponent is only active when the Holdable is active, i.e. when the item is being held -->
       <LightComponent LightColor="1.0,1.0,1.0,1.0" Flicker="0.1" range="800" powerconsumption="10" IsOn="true">
