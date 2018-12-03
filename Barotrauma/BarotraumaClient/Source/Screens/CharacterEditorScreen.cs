@@ -1669,6 +1669,7 @@ namespace Barotrauma
             quickSaveAnimButton.OnClicked += (button, userData) =>
             {
                 AnimParams.ForEach(p => p.Save());
+                animationResetRequiresForceLoading = true;
                 GUI.AddMessage($"All animations saved", Color.Green, font: GUI.Font);
                 return true;
             };
@@ -1676,6 +1677,7 @@ namespace Barotrauma
             quickSaveRagdollButton.OnClicked += (button, userData) =>
             {
                 character.AnimController.SaveRagdoll();
+                ragdollResetRequiresForceLoading = true;
                 GUI.AddMessage($"Ragdoll saved to {RagdollParams.FullPath}", Color.Green, font: GUI.Font);
                 return true;
             };
@@ -1740,6 +1742,7 @@ namespace Barotrauma
                 box.Buttons[1].OnClicked += (b, d) =>
                 {
                     character.AnimController.SaveRagdoll(inputField.Text);
+                    ragdollResetRequiresForceLoading = true;
                     ResetParamsEditor();
                     GUI.AddMessage($"Ragdoll saved to {RagdollParams.FullPath}", Color.Green, font: GUI.Font);
                     box.Close();
@@ -1866,6 +1869,7 @@ namespace Barotrauma
                 {
                     var animParams = character.AnimController.GetAnimationParamsFromType(selectedType);
                     animParams.Save(inputField.Text);
+                    animationResetRequiresForceLoading = true;
                     GUI.AddMessage($"Animation of type {animParams.AnimationType} saved to {animParams.FullPath}", Color.Green, font: GUI.Font);
                     ResetParamsEditor();
                     box.Close();
@@ -2008,6 +2012,7 @@ namespace Barotrauma
                         }
                     }
                     GUI.AddMessage($"Animation of type {selectedType} loaded from {selectedFile}", Color.WhiteSmoke, font: GUI.Font);
+                    character.AnimController.AllAnimParams.ForEach(a => a.Reset(forceReload: true));
                     ResetParamsEditor();
                     loadBox.Close();
                     return true;
@@ -2237,7 +2242,7 @@ namespace Barotrauma
             {
                 spriteSheetMaxZoom = 1;
             }
-            else if (height > width)
+            else if (height < width)
             {
                 spriteSheetMaxZoom = (rightPanel.Rect.Bottom - spriteSheetOffsetY) / height;
             }
