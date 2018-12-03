@@ -12,7 +12,7 @@
     <Price locationtype="Military" buyprice="50"/>
     <Price locationtype="City" buyprice="50"/>
     <Price locationtype="Outpost" buyprice="100"/>
-    
+
     <Deconstruct time="5">
       <Item identifier="ironpowder"/>
       <Item identifier="ironpowder"/>     

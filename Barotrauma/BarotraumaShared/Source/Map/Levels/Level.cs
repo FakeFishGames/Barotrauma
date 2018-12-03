@@ -1,4 +1,6 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using Barotrauma.RuinGeneration;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
@@ -673,6 +675,8 @@ namespace Barotrauma
 
             levelObjectManager.PlaceObjects(this, generationParams.LevelObjectAmount);
 
+            GenerateItems();
+
             EqualityCheckVal = Rand.Int(int.MaxValue, Rand.RandSync.Server);
 
 #if CLIENT
@@ -1162,6 +1166,52 @@ namespace Barotrauma
                             break;
                         }
                     }
+                }
+            }
+        }
+
+        private void GenerateItems()
+        {
+            string levelName = generationParams.Name.ToLowerInvariant();
+            List<Pair<ItemPrefab, float>> levelItems = new List<Pair<ItemPrefab, float>>();
+            foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
+            {
+                if (!(mapEntityPrefab is ItemPrefab itemPrefab)) { continue; }
+
+                if (itemPrefab.LevelCommonness.TryGetValue(levelName, out float commonness))
+                {
+                    levelItems.Add(new Pair<ItemPrefab, float>(itemPrefab, commonness));
+                }
+            }
+
+            for (int i = 0; i < generationParams.ItemCount; i++)
+            {
+                var selectedPrefab = ToolBox.SelectWeightedRandom(
+                    levelItems.Select(it => it.First).ToList(),
+                    levelItems.Select(it => it.Second).ToList(),
+                    Rand.RandSync.Server);
+                if (selectedPrefab == null) { break; }
+
+                var selectedCell = cells[Rand.Int(cells.Count, Rand.RandSync.Server)];
+                var selectedEdge = selectedCell.Edges.GetRandom(e => e.IsSolid && !e.OutsideLevel, Rand.RandSync.Server);
+                if (selectedEdge == null) continue;
+
+                float edgePos = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server);
+                Vector2 selectedPos = Vector2.Lerp(selectedEdge.Point1, selectedEdge.Point2, edgePos);
+
+                var item = new Item(selectedPrefab, selectedPos, submarine: null);
+                
+                var holdable = item.GetComponent<Holdable>();
+                if (holdable == null)
+                {
+                    DebugConsole.ThrowError("Error while placing items in the level - item \"" + item.Name + "\" is not holdable and cannot be attached to the level walls.");
+                }
+                else
+                {
+                    holdable.AttachToWall();
+#if CLIENT
+                    item.SpriteRotation = -MathUtils.VectorToAngle(selectedEdge.GetNormal(selectedCell)) + MathHelper.PiOver2;
+#endif
                 }
             }
         }

@@ -62,6 +62,13 @@ namespace Barotrauma.Items.Components
             set { attachable = value; }
         }
 
+        [Serialize(true, false)]
+        public bool Reattachable
+        {
+            get;
+            set;
+        }
+
         [Serialize(false, false)]
         public bool AttachedByDefault
         {
@@ -289,7 +296,7 @@ namespace Barotrauma.Items.Components
 
         public bool CanBeAttached()
         {
-            if (!attachable) return false;
+            if (!attachable || !Reattachable) return false;
 
             //can be attached anywhere in sub editor
             if (Screen.Selected == GameMain.SubEditorScreen) return true;
@@ -307,8 +314,8 @@ namespace Barotrauma.Items.Components
             //allow deattaching everywhere in sub editor
             if (Screen.Selected == GameMain.SubEditorScreen) return true;
 
-            //don't allow deattaching if outside hulls
-            return item.CurrentHull != null;
+            //don't allow deattaching if part of a sub and outside hulls
+            return item.Submarine == null || item.CurrentHull != null;
         }
 
         public override bool Pick(Character picker)
@@ -351,7 +358,7 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        private void AttachToWall()
+        public void AttachToWall()
         {
             if (!attachable) return;
 
