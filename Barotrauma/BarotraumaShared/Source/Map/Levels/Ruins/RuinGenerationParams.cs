@@ -307,6 +307,13 @@ namespace Barotrauma.RuinGeneration
                 private set;
             }
 
+            //Identifier of the item to run the wire from. Only needed in item assemblies to determine which item in the assembly to use.
+            public string SourceEntityIdentifier
+            {
+                get;
+                private set;
+            }
+
             //if set, the connection is done by running a wire from 
             //(Pair.First = the name of the connection in this item) to (Pair.Second = the name of the connection in the target item)
             public Pair<string, string> WireConnection
@@ -319,6 +326,7 @@ namespace Barotrauma.RuinGeneration
             {
                 RoomName = element.GetAttributeString("roomname", "");
                 TargetEntityIdentifier = element.GetAttributeString("targetentity", "");
+                SourceEntityIdentifier = element.GetAttributeString("sourceentity", "");
                 foreach (XElement subElement in element.Elements())
                 {
                     if (subElement.Name.ToString().ToLowerInvariant() == "wire")
@@ -333,6 +341,13 @@ namespace Barotrauma.RuinGeneration
 
         [Serialize(Alignment.Bottom, false), Editable]
         public Alignment Alignment { get; private set; }
+
+        [Serialize("0,0", false), Editable(ToolTip = "Minimum offset from the anchor position, relative to the size of the room."+
+            " For example, a value of { -0.5,0 } with a Bottom alignment would mean the entity can be placed anywhere between the bottom-left corner of the room and bottom-center.")]
+        public Vector2 MinOffset { get; private set; }
+        [Serialize("0,0", false), Editable(ToolTip = "Maximum offset from the anchor position, relative to the size of the room." +
+            " For example, a value of { 0.5,0 } with a Bottom alignment would mean the entity can be placed anywhere between the bottom-right corner of the room and bottom-center.")]
+        public Vector2 MaxOffset { get; private set; }
 
         [Serialize(RuinEntityType.Prop, false), Editable]
         public RuinEntityType Type { get; private set; }

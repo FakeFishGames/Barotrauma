@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Welding Tool" identifier="weldingtool" category="Equipment" Tags="smallitem,weldingtool" cargocontaineridentifier="metalcrate" description="One of the most crucial tools on board the submarine. Also works underwater.">
+  <Item name="Welding Tool"
+        identifier="weldingtool"
+        category="Equipment"
+        Tags="smallitem,weldingtool"
+        cargocontaineridentifier="metalcrate"
+        description="One of the most crucial tools on board the submarine. Also works underwater."
+        Scale="0.32">
     <Price locationtype="City" buyprice="140" />
     <Price locationtype="Research" buyprice="140" />
     <Price locationtype="Military" buyprice="140" />
     <Price locationtype="Outpost" buyprice="200" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,64,64,64" />
-    <Sprite texture="tools.png" sourcerect="18,80,46,28" depth="0.55" />
+    <Sprite texture="tools_new.png" sourcerect="0,117,152,118" depth="0.55" />
     <!-- the item takes 10 seconds to break down in a deconstructor and turns into a polycarbonate bar, steel bar and aluminium -->
     <Deconstruct time="10">
       <Item identifier="polycarbonatebar" />
@@ -47,7 +53,13 @@
       <Containable identifiers="weldingfueltank,oxygentank,oxygenitetank" />
     </ItemContainer>
   </Item>
-  <Item name="Plasma Cutter" identifier="plasmacutter" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Cuts through various materials using a jet of ionized oxygen.">
+  <Item name="Plasma Cutter"
+        identifier="plasmacutter"
+        category="Equipment"
+        Tags="smallitem"
+        cargocontaineridentifier="metalcrate"
+        description="Cuts through various materials using a jet of ionized oxygen."
+        Scale="0.32">
     <Price locationtype="City" buyprice="140" />
     <Price locationtype="Research" buyprice="140" />
     <Price locationtype="Military" buyprice="140" />
@@ -58,7 +70,7 @@
       <Item identifier="aluminium" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,0,64,64" />
-    <Sprite texture="tools.png" sourcerect="0,0,42,32" depth="0.55" />
+    <Sprite texture="tools_new.png" sourcerect="0,0,157,116" depth="0.55" />
     <Body width="42" height="31" density="40" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-12,4" />
     <RepairTool structurefixamount="-2.0" limbfixamount="-0.5" range="100" barrelpos="28,8">
@@ -122,7 +134,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,0,64,64" />
     <Sprite texture="Content/Items/InventoryIconAtlas.png" depth="0.55" sourcerect="0,0,64,64" />
     <Body radius="10" height="45" density="5" />
-    <Holdable slots="Any,RightHand+LeftHand" controlpose="false" aimpos="40,-20" handle1="-2,30" />
+    <Holdable slots="RightHand+LeftHand" controlpose="false" aimpos="40,-20" handle1="-2,30" />
     <RepairTool extinguishamount="60.0" range="500" barrelpos="21,25">
       <ParticleEmitter particle="extinguisher" velocitymin="500.0" velocitymax="650.0" particlespersecond="50" />
       <StatusEffect type="OnUse" target="This" Condition="-2.0" />
@@ -208,7 +220,12 @@
       </Containable>
     </ItemContainer>
   </Item>
-  <Item name="Sonar Beacon" identifier="sonarbeacon" category="Equipment" Tags="smallitem,sonar" cargocontaineridentifier="metalcrate">
+  <Item name="Sonar Beacon"
+        identifier="sonarbeacon"
+        category="Equipment"
+        Tags="smallitem,sonar"
+        cargocontaineridentifier="metalcrate"
+        Scale="0.32">
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="100" />
@@ -217,8 +234,8 @@
       <Item identifier="copperbar" />
       <Item identifier="polycarbonatebar" />
     </Deconstruct>
-    <!-- TODO: sonar beacon sprite -->
-    <Sprite texture="tools.png" sourcerect="42,6,22,11" depth="0.55" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,320,64,64" />
+    <Sprite texture="tools_new.png" sourcerect="485,29,27,63" depth="0.55" />
     <Body width="31" height="6" density="12" />
     <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0" />
     <LightComponent LightColor="0.0,1.0,0.0,1.0" range="50" powerconsumption="10" blinkfrequency="2" IsOn="true">
@@ -232,7 +249,12 @@
       </Containable>
     </ItemContainer>
   </Item>
-  <Item name="Flashlight" identifier="flashlight" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate">
+  <Item name="Flashlight"
+        identifier="flashlight"
+        category="Equipment"
+        Tags="smallitem"
+        cargocontaineridentifier="metalcrate"
+        Scale="0.32">
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />
@@ -241,7 +263,8 @@
       <Item identifier="copperbar" />
       <Item identifier="polycarbonatebar" />
     </Deconstruct>
-    <Sprite texture="tools.png" sourcerect="0,35,27,12" depth="0.55" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,320,64,64" />
+    <Sprite texture="tools_new.png" sourcerect="435,0,77,28" depth="0.55" />
     <Body width="27" height="10" density="15" />
     <Holdable slots="Any,RightHand,LeftHand,Head" holdpos="30,-15" aimpos="100,0" handle1="-13,0" handle2="-13,0">
       <StatusEffect type="OnActive" target="Contained" Condition="-0.2" />
@@ -257,7 +280,7 @@
       </Containable>
     </ItemContainer>
   </Item>
-  <Item name="Flare" identifier="flare" category="Equipment" cargocontaineridentifier="metalcrate" spritecolor="1.0,0.0,0.0,1.0" tags="smallitem">
+  <Item name="Flare" identifier="flare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem">
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />

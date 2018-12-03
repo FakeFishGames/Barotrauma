@@ -12,14 +12,14 @@
     <BrokenSprite texture="Content/Items/Command/navigator.png" sourcerect="188,0,188,194" depth="0.8" maxcondition="55" fadein="true" />
     <BrokenSprite texture="Content/Items/Command/navigator.png" sourcerect="376,0,188,194" depth="0.8" maxcondition="0" />
 
-    <!--
-    <CustomInterface>
-      <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" style="OuterGlow" color="0,0,0,0.8" absoluteoffset="30,0"/>
-      <Button text="Activate siren" connection="signal_out"/>
+    <CustomInterface canbeselected="true">
+      <GuiFrame relativesize="0.15,0.15" anchor="BottomLeft" relativeoffset="0.5,0" style="ItemUI"/>
+      <Button text="Signal out #1" connection="signal_out1"/>
+      <TickBox text="Signal out #2" connection="signal_out2"/>
+      <TickBox text="Signal out #3" connection="signal_out3"/>
     </CustomInterface>
-    -->
     
-    <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10" linkuitocomponent="3">
+    <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10" linkuitocomponent="4">
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" style="OuterGlow" color="0,0,0,0.8" absoluteoffset="30,0"/>
       <StatusEffect type="InWater" target="This" condition="-1.0"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false"/>
@@ -54,6 +54,9 @@
       <input name="velocity_in"/>
       <output name="velocity_x_out"/>
       <output name="velocity_y_out"/>
+      <output name="signal_out1"/>
+      <output name="signal_out2"/>
+      <output name="signal_out3"/>
     </ConnectionPanel>
 
     <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="10" fixDurationLowSkill="20" msg="ItemMsgRepairScrewdriver" hudpriority="10">
@@ -72,13 +75,13 @@
     linkable="true"
     allowedlinks="statusmonitor"
     category="Machine"
-    scale ="0.3">
+    scale="0.35">
 
     <Sprite texture="Content/Items/Command/ShuttleNavigator.png" depth="0.8" sourcerect="0,0,406,333"/>
     <BrokenSprite texture="Content/Items/Command/ShuttleNavigator.png" sourcerect="406,0,406,333" depth="0.8" maxcondition="55" fadein="true" />
     <BrokenSprite texture="Content/Items/Command/ShuttleNavigator.png" sourcerect="812,0,406,333" depth="0.8" maxcondition="0" />
 
-    <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10" linkuitocomponent="3">
+    <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10" linkuitocomponent="1">
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" style="OuterGlow" color="0,0,0,0.8" absoluteoffset="30,0"/>
       <StatusEffect type="InWater" target="This" condition="-1.0"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false"/>
@@ -86,12 +89,6 @@
       <sparksound file="Content/Items/Electricity/zap2.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap3.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap4.ogg" range="500" loop="false"/>
-      <LightComponent range="10.0" lightcolor="1.0,1.0,1.0,0.2" powerconsumption="5" IsOn="true" castshadows="false" allowingameediting="false">
-        <sprite texture="Content/Items/Command/navigatorLights.png" depth="0.025" origin="0.5,0.5" alpha="1.0"/>
-      </LightComponent>
-      <LightComponent range="10.0" lightcolor="1.0,1.0,1.0,0.5" powerconsumption="5" IsOn="true" castshadows="false" blinkfrequency="1" allowingameediting="false">
-        <sprite texture="Content/Items/Command/navigatorLightsBlinking.png" depth="0.025" origin="0.5,0.5" alpha="1.0"/>
-      </LightComponent>
     </Steering>
 
     <Sonar canbeselected = "true" powerconsumption="100" displaybordersize="-0.1">
@@ -180,6 +177,7 @@
 
     <MiniMap MinVoltage="0.5" PowerConsumption="100" canbeselected = "true">
       <GuiFrame relativesize="0.5,0.5" anchor="Center" style="ItemUI"/>
+      <AlternativeLayout relativesize="0.4,0.4"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap1.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap2.ogg" range="500" loop="false"/>
@@ -210,10 +208,11 @@
     identifier="sonartransducer"
     tags="command"
     category="Machine"
-    spritecolor="255,255,255,255">
+    spritecolor="255,255,255,255"
+    Scale="0.75">
 
     <!-- TODO: sonar transducer light implementation -->
-    <Sprite texture="Content/Items/Command/sonarTransducer.png" sourcerect="0,0,97,97" depth="0.8"/>
+    <Sprite texture="Content/Items/Command/sonarTransducer.png" sourcerect="0,0,130,130" depth="0.8"/>
 
     <SonarTransducer MinVoltage="0.5" PowerConsumption="100" canbeselected="true"/>
 

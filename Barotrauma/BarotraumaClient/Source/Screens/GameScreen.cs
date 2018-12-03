@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using FarseerPhysics;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -181,12 +182,26 @@ namespace Barotrauma
             //Draw the rest of the structures, characters and front structures
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
             Submarine.DrawBack(spriteBatch, false, s => !(s is Structure) || !(s.ResizeVertical && s.ResizeHorizontal));
-            foreach (Character c in Character.CharacterList) c.Draw(spriteBatch, Cam);
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c.AnimController.Limbs.Any(l => l.DeformSprite != null)) continue;
+                c.Draw(spriteBatch, Cam);
+            }
             Submarine.DrawFront(spriteBatch, false, null);
             spriteBatch.End();
-            
-			//draw the rendertarget and particles that are only supposed to be drawn in water into renderTargetWater
-			graphics.SetRenderTarget(renderTargetWater);
+
+            //draw characters with deformable limbs last, because they can't be batched into SpriteBatch
+            //pretty hacky way of preventing draw order issues between normal and deformable sprites
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c.AnimController.Limbs.All(l => l.DeformSprite == null)) continue;
+                c.Draw(spriteBatch, Cam);
+            }
+            spriteBatch.End();
+
+            //draw the rendertarget and particles that are only supposed to be drawn in water into renderTargetWater
+            graphics.SetRenderTarget(renderTargetWater);
 
 			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque);
             spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);// waterColor);
@@ -237,7 +252,11 @@ namespace Barotrauma
 			//draw additive particles that are inside a sub
 			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, DepthStencilState.Default, null, null, cam.Transform);
 			GameMain.ParticleManager.Draw(spriteBatch, true, true, Particles.ParticleBlendState.Additive);
-			spriteBatch.End();
+            foreach (var discharger in Items.Components.ElectricalDischarger.List)
+            {
+                discharger.DrawElectricity(spriteBatch);
+            }
+            spriteBatch.End();
 			if (GameMain.LightManager.LightingEnabled)
 			{
 				spriteBatch.Begin(SpriteSortMode.Deferred, Lights.CustomBlendStates.Multiplicative, null, DepthStencilState.None, null, null, null);

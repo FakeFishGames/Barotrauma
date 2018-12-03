@@ -578,7 +578,7 @@ namespace Barotrauma.Items.Components
                 List<Voronoi2.VoronoiCell> cells = Level.Loaded.GetCells(pingSource, 7);
                 foreach (Voronoi2.VoronoiCell cell in cells)
                 {
-                    foreach (Voronoi2.GraphEdge edge in cell.edges)
+                    foreach (Voronoi2.GraphEdge edge in cell.Edges)
                     {
                         if (!edge.IsSolid) continue;
                         float cellDot = Vector2.Dot(cell.Center - pingSource, (edge.Center + cell.Translation) - cell.Center);

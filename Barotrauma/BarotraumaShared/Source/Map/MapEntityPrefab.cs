@@ -219,7 +219,7 @@ namespace Barotrauma
         /// </summary>
         /// <param name="name">The name of the item (can be omitted when searching based on identifier)</param>
         /// <param name="identifier">The identifier of the item (if null, the identifier is ignored and the search is done only based on the name)</param>
-        public static MapEntityPrefab Find(string name, string identifier = null)
+        public static MapEntityPrefab Find(string name, string identifier = null, bool showErrorMessages = true)
         {
             if (name != null) name = name.ToLowerInvariant();
             foreach (MapEntityPrefab prefab in List)
@@ -241,7 +241,10 @@ namespace Barotrauma
                 }
             }
 
-            DebugConsole.ThrowError("Failed to find a matching MapEntityPrefab (name: \"" + name + "\", identifier: \"" + identifier + "\").\n" + Environment.StackTrace);
+            if (showErrorMessages)
+            {
+                DebugConsole.ThrowError("Failed to find a matching MapEntityPrefab (name: \"" + name + "\", identifier: \"" + identifier + "\").\n" + Environment.StackTrace);
+            }
             return null;
         }
 

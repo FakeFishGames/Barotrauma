@@ -182,11 +182,11 @@ namespace Barotrauma.Items.Components
         {
             if (hasLight == null)
             {
-                List<LightComponent> lightComponents = item.GetComponents<LightComponent>();
+                var lightComponents = item.GetComponents<LightComponent>();
                 
-                if (lightComponents != null && lightComponents.Count>0)
+                if (lightComponents != null && lightComponents.Count() > 0)
                 {
-                    lightComponent = lightComponents.Find(lc => lc.Parent == this);
+                    lightComponent = lightComponents.FirstOrDefault(lc => lc.Parent == this);
                     hasLight = (lightComponent != null);
                 }
                 else
@@ -563,7 +563,7 @@ namespace Barotrauma.Items.Components
             minRotation = maxRotation;
             maxRotation = temp;
 
-            barrelPos.X = item.Rect.Width - barrelPos.X * item.Scale;
+            barrelPos.X = item.Rect.Width / item.Scale - barrelPos.X;
 
             while (minRotation < 0)
             {
@@ -584,7 +584,7 @@ namespace Barotrauma.Items.Components
             minRotation = maxRotation;
             maxRotation = temp;
 
-            barrelPos.Y = item.Rect.Height - barrelPos.Y * item.Scale;
+            barrelPos.Y = item.Rect.Height / item.Scale - barrelPos.Y;
 
             while (minRotation < 0)
             {

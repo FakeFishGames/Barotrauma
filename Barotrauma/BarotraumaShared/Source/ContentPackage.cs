@@ -13,14 +13,15 @@ namespace Barotrauma
         None, 
         Jobs, 
         Item, 
-        Character, 
-        Structure, 
-        Executable, 
+        Character,
+        Structure,
+        Executable,
+        ServerExecutable,
         LocationTypes,
         MapGenerationParameters,
         LevelGenerationParameters,
         LevelObjectPrefabs,
-        RandomEvents, 
+        RandomEvents,
         Missions, 
         BackgroundCreaturePrefabs,
         Sounds,
@@ -179,32 +180,19 @@ namespace Barotrauma
         {
             List<byte[]> hashes = new List<byte[]>();
             
-            var md5 = MD5.Create();
             foreach (ContentFile file in Files)
             {
                 if (!multiplayerIncompatibleContent.Contains(file.Type)) continue;
 
                 try 
                 {
-                    using (var stream = File.OpenRead(file.Path))
-                    {
-                        byte[] data = new byte[stream.Length];
-                        stream.Read(data, 0, (int)stream.Length);
-                        if (file.Path.EndsWith(".xml", true, System.Globalization.CultureInfo.InvariantCulture))
-                        {
-                            string text = System.Text.Encoding.UTF8.GetString(data);
-                            text = text.Replace("\n", "").Replace("\r", "");
-                            data = System.Text.Encoding.UTF8.GetBytes(text);
-                        }
-                        hashes.Add(md5.ComputeHash(data));
-                    }
+                    hashes.Add(CalculateFileHash(file));
                 }
 
                 catch (Exception e)
                 {
                     DebugConsole.ThrowError("Error while calculating content package hash: ", e);
-                }
-             
+                }             
             }
             
             byte[] bytes = new byte[hashes.Count * 16];
@@ -214,6 +202,45 @@ namespace Barotrauma
             }
 
             md5Hash = new Md5Hash(bytes);
+        }
+
+        private byte[] CalculateFileHash(ContentFile file)
+        {
+            var md5 = MD5.Create();
+
+            List<string> filePaths = new List<string> { file.Path };
+            List<byte> data = new List<byte>();
+
+            switch (file.Type)
+            {
+                case ContentType.Character:
+                    XDocument doc = XMLExtensions.TryLoadXml(file.Path);
+                    string speciesName = doc.Root.GetAttributeString("name", "");
+                    filePaths.Add(RagdollParams.GetDefaultFile(speciesName));
+                    foreach (AnimationType animationType in Enum.GetValues(typeof(AnimationType)))
+                    {
+                        filePaths.Add(AnimationParams.GetDefaultFile(speciesName, animationType));
+                    }
+                    break;
+            }
+
+            foreach (string filePath in filePaths)
+            {
+                if (!File.Exists(filePath)) continue;
+                using (var stream = File.OpenRead(filePath))
+                {
+                    byte[] fileData = new byte[stream.Length];
+                    stream.Read(fileData, 0, (int)stream.Length);
+                    if (filePath.EndsWith(".xml", true, System.Globalization.CultureInfo.InvariantCulture))
+                    {
+                        string text = System.Text.Encoding.UTF8.GetString(fileData);
+                        text = text.Replace("\n", "").Replace("\r", "");
+                        fileData = System.Text.Encoding.UTF8.GetBytes(text);
+                    }
+                    data.AddRange(fileData);
+                }
+            }
+            return md5.ComputeHash(data.ToArray());
         }
 
         /// <summary>

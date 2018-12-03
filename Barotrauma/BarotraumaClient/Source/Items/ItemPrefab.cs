@@ -23,7 +23,7 @@ namespace Barotrauma
     partial class ItemPrefab : MapEntityPrefab
     {
         public List<BrokenItemSprite> BrokenSprites = new List<BrokenItemSprite>();
-
+        public List<Sprite> DecorativeSprites = new List<Sprite>();
         public Sprite InventoryIcon;
 
         //only used to display correct color in the sub editor, item instances have their own property that can be edited on a per-item basis

@@ -82,7 +82,7 @@
       <Item identifier="polycarbonatebar"/>
     </Deconstruct>
 
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,320,64,64"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,320,64,64"/>
     <Sprite texture ="DivingMask.png" depth="0.55" sourcerect="0,0,37,38"/>
   
     <Body width="26" height="18" density="15"/>
@@ -204,7 +204,8 @@
     category="Equipment"
     Tags="smallitem"
     cargocontaineridentifier="metalcrate"
-    description="A battery-powered underwater propulsion device.">
+    description="A battery-powered underwater propulsion device."
+    Scale="0.32">
 
     <Price locationtype="Research" buyprice="150"/>
     <Price locationtype="City" buyprice="150"/>
@@ -219,7 +220,7 @@
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,128,64,64"/>
-    <Sprite texture ="Scooter.png" depth="0.55" sourcerect="0,0,64,64"/>
+    <Sprite texture ="Scooter.png" depth="0.55" sourcerect="0,0,261,142"/>
 
     <Body width="55" height="30" density="15"/>
 

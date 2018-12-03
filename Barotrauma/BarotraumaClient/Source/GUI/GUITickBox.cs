@@ -136,6 +136,7 @@ namespace Barotrauma
         private void ResizeBox()
         {
             box.RectTransform.NonScaledSize = new Point(RectTransform.NonScaledSize.Y);
+            text.RectTransform.AbsoluteOffset = new Point(box.Rect.Width, 0);
         }
         
         protected override void Update(float deltaTime)

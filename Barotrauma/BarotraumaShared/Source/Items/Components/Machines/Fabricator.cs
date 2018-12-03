@@ -230,7 +230,7 @@ namespace Barotrauma.Items.Components
 
             timeUntilReady = fabricatedItem.RequiredTime;
 
-            var containers = item.GetComponents<ItemContainer>();
+            var containers = item.GetComponents<ItemContainer>().ToList();
             containers[0].Inventory.Locked = true;
             containers[1].Inventory.Locked = true;
 
@@ -264,7 +264,7 @@ namespace Barotrauma.Items.Components
 
             timeUntilReady = 0.0f;
 
-            var containers = item.GetComponents<ItemContainer>();
+            var containers = item.GetComponents<ItemContainer>().ToList();
             containers[0].Inventory.Locked = false;
             containers[1].Inventory.Locked = false;
         }
@@ -296,7 +296,7 @@ namespace Barotrauma.Items.Components
 
             if (timeUntilReady > 0.0f) return;
 
-            var containers = item.GetComponents<ItemContainer>();
+            var containers = item.GetComponents<ItemContainer>().ToList();
             if (containers.Count < 2)
             {
                 DebugConsole.ThrowError("Error while fabricating a new item: fabricators must have two ItemContainer components");

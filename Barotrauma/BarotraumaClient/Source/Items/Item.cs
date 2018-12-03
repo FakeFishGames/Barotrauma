@@ -26,6 +26,21 @@ namespace Barotrauma
             get { return activeSprite; }
         }
 
+        private GUITextBlock itemInUseWarning;
+        private GUITextBlock ItemInUseWarning
+        {
+            get
+            {
+                if (itemInUseWarning == null)
+                {
+                    itemInUseWarning = new GUITextBlock(new RectTransform(new Point(10), GUI.Canvas), "", 
+                        textColor: Color.Orange, color: Color.Black, 
+                        textAlignment:Alignment.Center, style: "OuterGlow");
+                }
+                return itemInUseWarning;
+            }
+        }
+
         public override bool SelectableInEditor
         {
             get
@@ -147,11 +162,22 @@ namespace Barotrauma
                         fadeInBrokenSprite?.Sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color * fadeInBrokenSpriteAlpha,
                             depth: depth - 0.000001f,
                             scaleMultiplier: Scale);
+                        foreach (Sprite decorativeSprite in Prefab.DecorativeSprites)
+                        {
+                            decorativeSprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color,
+                                depth: depth + (decorativeSprite.Depth - activeSprite.Depth),
+                                scaleMultiplier: Scale);
+                        }
                     }
                     else
                     {
                         activeSprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, SpriteRotation, Scale, activeSprite.effects, depth);
                         fadeInBrokenSprite?.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color * fadeInBrokenSpriteAlpha, SpriteRotation, Scale, activeSprite.effects, depth - 0.000001f);
+                        foreach (Sprite decorativeSprite in Prefab.DecorativeSprites)
+                        {
+                            decorativeSprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, SpriteRotation, Scale, activeSprite.effects, 
+                                depth: depth + (decorativeSprite.Depth - activeSprite.Depth));
+                        }
                     }
                 }
                 else if (body.Enabled)
@@ -428,7 +454,10 @@ namespace Barotrauma
             }
 
             GUI.PreventElementOverlap(elementsToMove, disallowedAreas,
-                new Rectangle(20, 20, GameMain.GraphicsWidth - 40, GameMain.GraphicsHeight - 80));
+                new Rectangle(
+                    20, 20, 
+                    GameMain.GraphicsWidth - 40, 
+                    HUDLayoutSettings.InventoryTopY > 0 ? HUDLayoutSettings.InventoryTopY - 20 : GameMain.GraphicsHeight - 80));
 
             foreach (ItemComponent ic in activeHUDs)
             {
@@ -493,9 +522,35 @@ namespace Barotrauma
                 SetHUDLayout();
             }
 
+            Rectangle mergedHUDRect = Rectangle.Empty;
             foreach (ItemComponent ic in activeHUDs)
             {
                 ic.UpdateHUD(character, deltaTime, cam);
+                if (ic.GuiFrame != null && ic.GuiFrame.Rect.Height < GameMain.GraphicsHeight)
+                {
+                    mergedHUDRect = mergedHUDRect == Rectangle.Empty ?
+                        ic.GuiFrame.Rect :
+                        Rectangle.Union(mergedHUDRect, ic.GuiFrame.Rect);
+                }
+            }
+
+            if (itemInUseWarning != null) { itemInUseWarning.Visible = false; }
+            foreach (Character otherCharacter in Character.CharacterList)
+            {
+                if (otherCharacter != character &&
+                    otherCharacter.SelectedConstruction == character.SelectedConstruction)
+                {
+                    ItemInUseWarning.Visible = true;
+                    if (mergedHUDRect.Width > GameMain.GraphicsWidth / 2) { mergedHUDRect.Inflate(-GameMain.GraphicsWidth / 4, 0); }
+                    itemInUseWarning.RectTransform.ScreenSpaceOffset = new Point(mergedHUDRect.X, mergedHUDRect.Bottom);
+                    itemInUseWarning.RectTransform.NonScaledSize = new Point(mergedHUDRect.Width, (int)(50 * GUI.Scale));
+                    if (itemInUseWarning.UserData != otherCharacter)
+                    {
+                        itemInUseWarning.Text = TextManager.Get("ItemInUse").Replace("[character]", otherCharacter.Name);
+                        itemInUseWarning.UserData = otherCharacter;
+                    }
+                    break;
+                }
             }
         }
         
@@ -536,12 +591,26 @@ namespace Barotrauma
 
             if (Character.Controlled != null && Character.Controlled?.SelectedConstruction != this) return;
 
+            bool needsLayoutUpdate = false;
             foreach (ItemComponent ic in activeHUDs)
             {
                 if (!ic.CanBeSelected) { continue; }
 
-                ic.UseAlternativeLayout = ic.Item != this;
+                bool useAlternativeLayout = ic.Item != this;
+                bool wasUsingAlternativeLayout = ic.UseAlternativeLayout;
+                ic.UseAlternativeLayout = useAlternativeLayout;
+                needsLayoutUpdate |= ic.UseAlternativeLayout != wasUsingAlternativeLayout;
                 ic.AddToGUIUpdateList();
+            }
+
+            if (itemInUseWarning != null && itemInUseWarning.Visible)
+            {
+                itemInUseWarning.AddToGUIUpdateList();
+            }
+
+            if (needsLayoutUpdate)
+            {
+                SetHUDLayout();
             }
         }
 

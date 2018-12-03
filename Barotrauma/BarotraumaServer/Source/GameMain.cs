@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Xml.Linq;
@@ -103,6 +104,34 @@ namespace Barotrauma
             Screen.SelectNull();
 
             NetLobbyScreen = new NetLobbyScreen();
+
+            CheckContentPackage();
+        }
+
+
+        private void CheckContentPackage()
+        {
+
+            foreach (ContentPackage contentPackage in Config.SelectedContentPackages)
+            {
+                var exePaths = contentPackage.GetFilesOfType(ContentType.Executable);
+                if (exePaths.Count() > 0 && AppDomain.CurrentDomain.FriendlyName != exePaths.First())
+                {
+                    DebugConsole.ShowQuestionPrompt(TextManager.Get("IncorrectExe")
+                            .Replace("[selectedpackage]", contentPackage.Name)
+                            .Replace("[exename]", exePaths.First()),
+                        (option) =>
+                        {
+                            if (option.ToLower() == "y" || option.ToLower() == "yes")
+                            {
+                                string fullPath = Path.GetFullPath(exePaths.First());
+                                Process.Start(fullPath);
+                                ShouldRun = false;
+                            }
+                        });
+                    break;
+                }
+            }
         }
 
         /// <summary>

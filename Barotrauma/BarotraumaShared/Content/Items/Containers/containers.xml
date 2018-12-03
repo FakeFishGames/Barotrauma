@@ -9,7 +9,7 @@
 
     <Sprite texture="suppliesCabinet.png" depth="0.84" sourcerect="0,0,52,78"/>
 
-    <ItemContainer capacity="6" canbeselected="true" hideitems="true">
+    <ItemContainer capacity="6" slotsperrow="3" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,mediumitem"/>
     </ItemContainer>
   </Item>
@@ -81,7 +81,8 @@
 
     <ItemContainer capacity="30" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,mediumitem"/>
-      <GuiFrame relativesize="0.15,0.35" minsize="300,400" maxsize="360,480" style="ItemUI" absoluteoffset="-60,30"/>
+      <GuiFrame relativesize="0.25,0.45" maxsize="460,600" anchor="Center" style="ItemUI" absoluteoffset="-10,0"/>
+      <AlternativeLayout relativesize="0.141,0.33"/>
     </ItemContainer>
   </Item>
 
@@ -148,7 +149,8 @@
 
     <Sprite texture="containers.png" depth="0.84" sourcerect="48,0,54,169"/>
 
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="27,-90" iteminterval="0,0" itemrotation="0" canbeselected = "true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="27,-90" iteminterval="0,0" itemrotation="0" canbeselected="true"
+                   autointeractwithcontained="true">
       <GuiFrame relativesize="0.2,0.3" anchor="Center" style="ItemUI"/>
       <Containable identifiers="divingsuit"/>
     </ItemContainer>
@@ -181,9 +183,9 @@
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,128,64,64"/>
-    <Sprite texture ="crates.png" depth="0.54" sourcerect="0,0,79,35"/>
+    <Sprite texture="crates.png" depth="0.54" sourcerect="1,0,68,39"/>
 
-    <Body width="77" height="34" density="50"/>
+    <Body width="68" height="39" density="50"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false"/>
 
@@ -204,9 +206,10 @@
       <Item identifier="steelbar"/>
     </Deconstruct>
 
-    <Sprite texture ="crates.png" depth="0.54" sourcerect="0,0,79,35"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,128,64,64"/>
+    <Sprite texture="crates.png" depth="0.54" sourcerect="1,0,68,39"/>
 
-    <Body width="77" height="34" density="50"/>
+    <Body width="68" height="39" density="50"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false"/>
 
@@ -228,9 +231,9 @@
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64"/>
-    <Sprite texture ="crates.png" depth="0.54" sourcerect="81,0,47,42"/>
+    <Sprite texture ="crates.png" depth="0.54" sourcerect="78,5,50,40"/>
 
-    <Body width="45" height="41" density="50"/>
+    <Body width="50" height="40" density="50"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false"/>
 
@@ -251,9 +254,9 @@
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,128,64,64"/>
-    <Sprite texture ="crates.png" depth="0.54" sourcerect="1,36,47,42"/>
+    <Sprite texture ="crates.png" depth="0.54" sourcerect="2,39,49,39"/>
 
-    <Body width="45" height="41" density="50"/>
+    <Body width="49" height="39" density="50"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false"/>
 
@@ -265,12 +268,12 @@
   <Item
     name="Fire Extinguisher Bracket"
     identifier="extinguisherbracket"
-    linkable="true"
     pickdistance="75">
 
     <Sprite texture="containers.png" depth="0.84" sourcerect="4,2,40,102" canflipx="false"/>
 
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="20,-60" iteminterval="0,0" itemrotation="0" canbeselected = "true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="20,-60" iteminterval="0,0" itemrotation="0" canbeselected = "true"
+                   autointeractwithcontained="true">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI"/>
       <Containable identifiers="extinguisher"/>
     </ItemContainer>
@@ -279,16 +282,30 @@
   <Item
     name="Fire Extinguisher Mount"
     identifier="extinguishermount"
-    linkable="true"
     pickdistance="75">
 
     <Sprite texture="containers.png" depth="0.54" sourcerect="4,110,38,38" canflipx="false"/>
 
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="25,-13" iteminterval="0,0" itemrotation="-90" canbeselected = "true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="25,-13" iteminterval="0,0" itemrotation="-90" canbeselected = "true"
+                   autointeractwithcontained="true">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI"/>
       <Containable identifiers="extinguisher"/>
     </ItemContainer>
   </Item>
 
+  <Item
+    name="Weapon Holder"
+    identifier="weaponholder"
+    scale="0.5">
+
+    <Sprite texture="WeaponHolder.png" depth="0.85" sourcerect="107,86,88,88" canflipx="false"/>
+    <DecorativeSprite texture="WeaponHolder.png" depth="0.5" sourcerect="107,2,124,33" canflipx="false" origin="0.5,0.5"/>
+
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="46,-47" iteminterval="0,0" itemrotation="90" canbeselected="true"
+                   autointeractwithcontained="true">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI"/>
+      <Containable identifiers="weapon"/>
+    </ItemContainer>
+  </Item>
 </Items>
 

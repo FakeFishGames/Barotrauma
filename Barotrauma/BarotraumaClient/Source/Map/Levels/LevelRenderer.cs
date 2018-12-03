@@ -213,7 +213,7 @@ namespace Barotrauma
 
             spriteBatch.End();
 
-            RenderWalls(GameMain.Instance.GraphicsDevice, cam);
+            RenderWalls(GameMain.Instance.GraphicsDevice, cam, specular: false);
 
             spriteBatch.Begin(SpriteSortMode.Deferred,
                 BlendState.AlphaBlend,
@@ -233,23 +233,23 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, new Vector2(cell.Center.X - 10.0f, -cell.Center.Y - 10.0f), new Vector2(20.0f, 20.0f), Color.Cyan, true);
 
                     GUI.DrawLine(spriteBatch,
-                        new Vector2(cell.edges[0].Point1.X + cell.Translation.X, -(cell.edges[0].Point1.Y + cell.Translation.Y)),
+                        new Vector2(cell.Edges[0].Point1.X + cell.Translation.X, -(cell.Edges[0].Point1.Y + cell.Translation.Y)),
                         new Vector2(cell.Center.X, -(cell.Center.Y)),
                         Color.Blue * 0.5f);
 
-                    foreach (GraphEdge edge in cell.edges)
+                    foreach (GraphEdge edge in cell.Edges)
                     {
                         GUI.DrawLine(spriteBatch, new Vector2(edge.Point1.X + cell.Translation.X, -(edge.Point1.Y + cell.Translation.Y)),
-                            new Vector2(edge.Point2.X + cell.Translation.X, -(edge.Point2.Y + cell.Translation.Y)), cell.body == null ? Color.Cyan * 0.5f : Color.White);
+                            new Vector2(edge.Point2.X + cell.Translation.X, -(edge.Point2.Y + cell.Translation.Y)), cell.Body == null ? Color.Cyan * 0.5f : Color.White);
                     }
 
-                    foreach (Vector2 point in cell.bodyVertices)
+                    foreach (Vector2 point in cell.BodyVertices)
                     {
                         GUI.DrawRectangle(spriteBatch, new Vector2(point.X + cell.Translation.X, -(point.Y + cell.Translation.Y)), new Vector2(10.0f, 10.0f), Color.White, true);
                     }
                 }
 
-                foreach (List<Vector2> nodeList in level.SmallTunnels)
+                foreach (List<Point> nodeList in level.SmallTunnels)
                 {
                     for (int i = 1; i < nodeList.Count; i++)
                     {
@@ -311,7 +311,7 @@ namespace Barotrauma
         }
 
 
-        public void RenderWalls(GraphicsDevice graphicsDevice, Camera cam)
+        public void RenderWalls(GraphicsDevice graphicsDevice, Camera cam, bool specular)
         {
             if (wallVertices == null) return;
 
@@ -322,7 +322,7 @@ namespace Barotrauma
 
             Matrix transformMatrix = cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 100) * 0.5f;
-
+                        
             wallEdgeEffect.World = transformMatrix;
             wallCenterEffect.World = transformMatrix;
             

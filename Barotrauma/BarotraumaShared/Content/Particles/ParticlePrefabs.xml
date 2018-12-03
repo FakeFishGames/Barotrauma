@@ -845,6 +845,37 @@
     loopanim="True">
     <animatedsprite texture="Content/Particles/Smoke.png" sourcerect="0,0,4096,4096" columns="8" rows="8" origin="0.5,0.5"/>
   </fleshsmoke>
+
+  <swirlysmoke
+    lifetime="3"
+    angularvelocitymin="0"
+    angularvelocitymax="0"
+    startrotationmin="0"
+    startrotationmax="360"
+    rotatetodirection="False"
+    drag="0"
+    waterdrag="0"
+    velocitychange="0,0.2"
+    velocitychangewater="0,0.2"
+    collisionradius="1"
+    usecollision="False"
+    deleteoncollision="False"
+    friction="0.5"
+    restitution="0.5"
+    startsizemin="0.1,0.1"
+    startsizemax="0.2,0.2"
+    sizechangemin="0.1,0.1"
+    sizechangemax="0.1,0.1"
+    growtime="0.1"
+    startcolor="0.6,0.6,0.6,1"
+    startalpha="0.4"
+    colorchange="0,0,0,0"
+    drawtarget="Both"
+    blendstate="AlphaBlend"
+    animduration="3"
+    loopanim="True">
+    <animatedsprite texture="Content/Particles/Smoke.png" sourcerect="0,0,4096,4096" columns="8" rows="8" origin="0.5,0.5"/>
+  </swirlysmoke>
   
   <ammotrailwater
     lifetime="1"
