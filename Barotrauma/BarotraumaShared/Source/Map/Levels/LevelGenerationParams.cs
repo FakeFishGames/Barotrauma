@@ -254,7 +254,14 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(0, true)]
+        [Serialize(0, true), Editable(MinValueInt = 0, MaxValueInt = 10000)]
+        public int ItemCount
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0, true), Editable(MinValueInt = 0, MaxValueInt = 20)]
         public int FloatingIceChunkCount
         {
             get;
