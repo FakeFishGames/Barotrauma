@@ -17,12 +17,27 @@ namespace Barotrauma
         private static List<Item> brokenItems = new List<Item>();
         private static float brokenItemsCheckTimer;
 
-        private static SpriteSheet focusIndicator;
+        private static GUIFrame hudFrame;
+        public static GUIFrame HUDFrame
+        {
 
+            get
+            {
+                if (hudFrame == null)
+                {
+                    hudFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
+                    {
+                        CanBeFocused = false
+                    };
+                }
+                return hudFrame;
+            }
+        }
+        
         public static void AddToGUIUpdateList(Character character)
         {
             if (GUI.DisableHUD) return;
-
+            
             if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
                 if (character.Inventory != null)
@@ -44,6 +59,8 @@ namespace Barotrauma
                     character.SelectedCharacter.CharacterHealth.AddToGUIUpdateList();
                 }
             }
+
+            HUDFrame.AddToGUIUpdateList();
         }
 
         public static void Update(float deltaTime, Character character, Camera cam)
@@ -138,10 +155,9 @@ namespace Barotrauma
             {
                 float dist = Vector2.Distance(character.WorldPosition, brokenItem.WorldPosition);
                 Vector2 drawPos = brokenItem.DrawPosition;
-                //TODO: proper icon
                 float alpha = Math.Min((1000.0f - dist) / 1000.0f * 2.0f, 1.0f);
                 if (alpha <= 0.0f) continue;
-                GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, GUI.SubmarineIcon, 
+                GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, GUI.BrokenIcon, 
                     Color.Lerp(Color.DarkRed, Color.Orange * 0.5f, brokenItem.Condition / 100.0f) * alpha);                
             }
 

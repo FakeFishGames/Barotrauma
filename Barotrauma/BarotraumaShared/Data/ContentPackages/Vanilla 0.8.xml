@@ -30,6 +30,7 @@
   <Item file="Content/Items/Tools/tools.xml" />
   <Item file="Content/Items/Weapons/coilgun.xml" />
   <Item file="Content/Items/Weapons/depthcharge.xml" />
+  <Item file="Content/Items/Weapons/dischargecoil.xml" />
   <Item file="Content/Items/Weapons/explosives.xml" />
   <Item file="Content/Items/Weapons/railgun.xml" />
   <Item file="Content/Items/Weapons/weapons.xml" />
@@ -41,6 +42,7 @@
   <Item file="Content/Items/Legacy/legacypoweritems.xml" />
   <Item file="Content/Items/Legacy/legacypump.xml" />
   <Item file="Content/Items/Legacy/legacyrailgun.xml" />
+  <Item file="Content/Items/Legacy/legacysearchlight.xml" />
   <Character file="Content/Characters/Carrier/carrier.xml" />
   <Character file="Content/Characters/Charybdis/charybdis.xml" />
   <Character file="Content/Characters/Coelanth/coelanth.xml" />
@@ -59,6 +61,7 @@
   <Character file="Content/Characters/Molochboss/molochboss.xml" />
   <Character file="Content/Characters/Tigerthresher/tigerthresher.xml" />
   <Character file="Content/Characters/Tigerthresherboss/tigerthresherboss.xml" />
+  <Character file="Content/Characters/Testhuman/Testhuman.xml" />
   <Character file="Content/Characters/Watcher/watcher.xml" />
   <UIStyle file="Content/UI/style.xml"/>  
   <Afflictions file="Content/Afflictions.xml"/>
@@ -78,5 +81,5 @@
   <Sounds file="Content/Sounds/sounds.xml" />
   <Tutorials file="Content/Tutorials/Tutorials.xml" />
   <Executable file="Barotrauma.exe" />
-  <Character file="Content/Characters/Testhuman/Testhuman.xml" />
+  <ServerExecutable file="BarotraumaServer.exe" />
 </contentpackage>

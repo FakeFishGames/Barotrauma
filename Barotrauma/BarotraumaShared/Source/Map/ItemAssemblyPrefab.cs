@@ -23,6 +23,10 @@ namespace Barotrauma
             if (doc == null || doc.Root == null) return;
             
             name = doc.Root.GetAttributeString("name", "");
+            if (doc.Root.GetAttributeString("identifier", null) == null)
+            {
+                DebugConsole.NewMessage(name.ToLowerInvariant().Replace(" ", ""), Color.Yellow);
+            }
             identifier = doc.Root.GetAttributeString("identifier", null) ?? name.ToLowerInvariant().Replace(" ", "");
             configElement = doc.Root;
 

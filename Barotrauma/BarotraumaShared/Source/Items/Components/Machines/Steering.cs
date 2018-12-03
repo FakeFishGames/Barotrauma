@@ -324,7 +324,7 @@ namespace Barotrauma.Items.Components
             var closeCells = Level.Loaded.GetCells(controlledSub.WorldPosition, 4);
             foreach (VoronoiCell cell in closeCells)
             {
-                foreach (GraphEdge edge in cell.edges)
+                foreach (GraphEdge edge in cell.Edges)
                 {
                     var intersection = MathUtils.GetLineIntersection(edge.Point1, edge.Point2, controlledSub.WorldPosition, cell.Center);
                     if (intersection != null)

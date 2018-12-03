@@ -110,7 +110,7 @@ namespace Barotrauma
             List<Vector2> positions = new List<Vector2>();
             foreach (var allowedPosition in availablePositions)
             {
-                positions.Add(allowedPosition.Position);
+                positions.Add(allowedPosition.Position.ToVector2());
             }
 
             if (spawnDeep)

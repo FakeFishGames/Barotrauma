@@ -291,14 +291,14 @@ namespace Barotrauma
             interactRect.Location += slot.DrawOffset.ToPoint();
 
             bool mouseOnGUI = false;
-            if (GUI.MouseOn != null)
+            /*if (GUI.MouseOn != null)
             {
                 //block usage if the mouse is on a GUIComponent that's not related to this inventory
                 if (RectTransform == null || (RectTransform != GUI.MouseOn.RectTransform && !GUI.MouseOn.IsParentOf(RectTransform.GUIComponent)))
                 {
                     mouseOnGUI = true;
                 }
-            }
+            }*/
 
             bool mouseOn = interactRect.Contains(PlayerInput.MousePosition) && !Locked && !mouseOnGUI;
 
@@ -446,8 +446,11 @@ namespace Barotrauma
             {
                 if (HideSlot(i)) continue;
 
+                Rectangle interactRect = slots[i].InteractRect;
+                interactRect.Location += slots[i].DrawOffset.ToPoint();
+
                 //don't draw the item if it's being dragged out of the slot
-                bool drawItem = draggingItem == null || draggingItem != Items[i] || slots[i].InteractRect.Contains(PlayerInput.MousePosition);
+                bool drawItem = draggingItem == null || draggingItem != Items[i] || interactRect.Contains(PlayerInput.MousePosition);
 
                 DrawSlot(spriteBatch, this, slots[i], Items[i], drawItem);
             }
@@ -871,22 +874,6 @@ namespace Barotrauma
                     sprite.Draw(spriteBatch, itemPos + Vector2.One * 2, Color.Black * 0.6f, rotate: rotation, scale: scale);
                 }
                 sprite.Draw(spriteBatch, itemPos, spriteColor, rotation, scale);
-
-                if (CharacterHealth.OpenHealthWindow != null)
-                {
-                    float treatmentSuitability = CharacterHealth.OpenHealthWindow.GetTreatmentSuitability(item);
-                    float skill = Character.Controlled.GetSkillLevel("medical");
-                    if (skill > 50.0f)
-                    {
-                        Rectangle highlightRect = rect;
-                        highlightRect.Inflate(3, 3);
-
-                        Color color = treatmentSuitability < 0.0f ?
-                            Color.Lerp(Color.Transparent, Color.Red, -treatmentSuitability) :
-                            Color.Lerp(Color.Transparent, Color.Green, treatmentSuitability);
-                        GUI.DrawRectangle(spriteBatch, highlightRect, color * (((float)Math.Sin(Timing.TotalTime * 5.0f) + 1.0f) / 2.0f), false, 0, 5);
-                    }
-                }
             }
 
             if (inventory != null && Character.Controlled?.Inventory == inventory && slot.QuickUseKey != Keys.None)

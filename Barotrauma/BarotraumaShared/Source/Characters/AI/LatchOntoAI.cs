@@ -130,13 +130,13 @@ namespace Barotrauma
                             {
                                 foreach (Voronoi2.VoronoiCell cell in cells)
                                 {
-                                    foreach (Voronoi2.GraphEdge edge in cell.edges)
+                                    foreach (Voronoi2.GraphEdge edge in cell.Edges)
                                     {
                                         Vector2? intersection = MathUtils.GetLineIntersection(edge.Point1, edge.Point2, character.WorldPosition, cell.Center);
                                         if (intersection.HasValue)
                                         {
                                             attachSurfaceNormal = edge.GetNormal(cell);
-                                            attachTargetBody = cell.body;
+                                            attachTargetBody = cell.Body;
                                             wallAttachPos = ConvertUnits.ToSimUnits(intersection.Value);
                                             break;
                                         }
@@ -232,13 +232,14 @@ namespace Barotrauma
 
             float angle = MathUtils.VectorToAngle(-attachSurfaceNormal) - MathHelper.PiOver2 + attachLimbRotation * attachLimb.Dir;
             attachLimb.body.SetTransform(attachPos + attachSurfaceNormal * transformedLocalAttachPos.Length(), angle);
-            
+
             var limbJoint = new WeldJoint(attachLimb.body.FarseerBody, targetBody,
                 transformedLocalAttachPos, targetBody.GetLocalPoint(attachPos), false)
             {
+                FrequencyHz = 10.0f,
+                DampingRatio = 0.5f,
                 KinematicBodyB = true,
                 CollideConnected = false,
-                //Length = 0.1f
             };
 
             Vector2 colliderFront = collider.GetFrontLocal() * attachLimb.character.AnimController.RagdollParams.LimbScale;
@@ -249,6 +250,8 @@ namespace Barotrauma
             attachJoints.Add(limbJoint);
             var colliderJoint = new WeldJoint(collider.FarseerBody, targetBody, colliderFront, targetBody.GetLocalPoint(attachPos), false)
             {
+                FrequencyHz = 10.0f,
+                DampingRatio = 0.5f,
                 KinematicBodyB = true,
                 CollideConnected = false,
                 //Length = 0.1f

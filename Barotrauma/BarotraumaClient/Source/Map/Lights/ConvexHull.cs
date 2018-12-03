@@ -41,6 +41,7 @@ namespace Barotrauma.Lights
         public ConvexHull ConvexHull;
 
         public bool IsHorizontal;
+        public bool IsAxisAligned;
 
         public Segment(SegmentPoint start, SegmentPoint end, ConvexHull convexHull)
         {
@@ -52,6 +53,7 @@ namespace Barotrauma.Lights
             end.ConvexHull = convexHull;
 
             IsHorizontal = Math.Abs(start.Pos.X - end.Pos.X) > Math.Abs(start.Pos.Y - end.Pos.Y);
+            IsAxisAligned = Math.Abs(start.Pos.X - end.Pos.X) < 0.1f || Math.Abs(start.Pos.Y - end.Pos.Y) < 0.001f;
         }
     }
 

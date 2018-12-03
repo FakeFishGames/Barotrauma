@@ -302,11 +302,7 @@ namespace Barotrauma.RuinGeneration
             BTRoom.CalculateDistancesFromEntrance(entranceRoom, rooms, corridors);
             GenerateRuinEntities(caveCells, area, mirror);
         }
-
-#if DEBUG
-        public List<List<Rectangle>> hullSplitIter = new List<List<Rectangle>>();
-#endif
-
+        
         class RuinEntity
         {
             public readonly RuinEntityConfig Config;
@@ -392,11 +388,7 @@ namespace Barotrauma.RuinGeneration
 
             List<Rectangle> hullRects = new List<Rectangle>(allShapes.Select(s => s.Rect));
             List<Door> doors = new List<Door>();
-
-#if DEBUG
-            hullSplitIter.Add(new List<Rectangle>());
-            hullSplitIter.Last().AddRange(hullRects);
-#endif
+            
             //split intersecting hulls into multiple parts to prevent overlaps
             for (int i = 0; i < hullRects.Count; i++)
             {
@@ -445,11 +437,6 @@ namespace Barotrauma.RuinGeneration
                     {
                         hullRects[i] = new Rectangle(hullRects[i].X, hullRects[i].Y, hullRects[j].X - hullRects[i].X, hullRects[i].Height);
                     }
-
-#if DEBUG
-                    hullSplitIter.Add(new List<Rectangle>());
-                    hullSplitIter.Last().AddRange(hullRects);
-#endif
                 }
             }
 
@@ -533,12 +520,50 @@ namespace Barotrauma.RuinGeneration
                             {
                                 doorPos.Y = (wall.A.Y + wall.B.Y) / 2.0f;
                             }
-                            var doorItem = new Item(doorConfig.Prefab as ItemPrefab, doorPos, null)
+                            Item doorItem = null;
+                            if (doorConfig.Prefab is ItemPrefab itemPrefab)
                             {
-                                ShouldBeSaved = false
-                            };
+                                doorItem = new Item(doorConfig.Prefab as ItemPrefab, doorPos, null)
+                                {
+                                    ShouldBeSaved = false
+                                };
+                            }
+                            else if (doorConfig.Prefab is ItemAssemblyPrefab itemAssemblyPrefab)
+                            {
+                                var entities = itemAssemblyPrefab.CreateInstance(doorPos, sub: null);
+                                foreach (MapEntity e in entities)
+                                {
+                                    if (e is Structure) e.ShouldBeSaved = false;
+                                    if (doorItem == null && e is Item item && item.GetComponent<Door>() != null)
+                                    {
+                                        doorItem = item;
+                                    }
+                                }
+                                if (doorConfig.Expand) { ExpandEntities(entities); }
+                                //make sure the door gets positioned at the correct place regardless of its position in the item assembly
+                                if (doorItem != null)
+                                {
+                                    Vector2 doorOffset = doorPos - doorItem.WorldPosition;
+                                    foreach (MapEntity e in entities)
+                                    {
+                                        e.Move(doorOffset);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                DebugConsole.ThrowError("Failed to create a ruin door. Ruin entity \"" + doorConfig.Name + "\" is marked as a door but is neither an item or an item assembly.");
+                                continue;
+                            }
+
+                            Door door = doorItem?.GetComponent<Door>();
+                            if (door == null)
+                            {
+                                DebugConsole.ThrowError("Failed to create a ruin door. Door not found in the ruin entity \"" + doorConfig.Name + "\".");
+                                continue;
+                            }
+
                             CreateChildEntities(doorConfig, doorItem, corridor);
-                            Door door = doorItem.GetComponent<Door>();
                             doors.Add(door);
                             door.IsOpen = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < 0.8f;
                             ruinEntities.Add(new RuinEntity(doorConfig, doorItem, room));
@@ -581,13 +606,13 @@ namespace Barotrauma.RuinGeneration
                     }
                 }
 
-                //create connections between all generated entities ---------------------------
-                foreach (RuinEntity ruinEntity in ruinEntities)
-                {
-                    CreateConnections(ruinEntity);
-                }
             }
-
+            
+            //create connections between all generated entities ---------------------------
+            foreach (RuinEntity ruinEntity in ruinEntities)
+            {
+                CreateConnections(ruinEntity);
+            }
             //create hulls ---------------------------
             foreach (Rectangle hullRect in hullRects)
             {
@@ -679,30 +704,109 @@ namespace Barotrauma.RuinGeneration
         {
             if (room == null) return;
 
-            Vector2 size = (entityConfig.Prefab is StructurePrefab) ? ((StructurePrefab)entityConfig.Prefab).Size : Vector2.Zero;
+            Vector2 size = Vector2.Zero;            
+            if (entityConfig.Prefab is StructurePrefab structurePrefab)
+            {
+                size = structurePrefab.Size;
+            }
+            else if (entityConfig.Prefab is ItemPrefab itemPrefab)
+            {
+                size = itemPrefab.Size;
+            }
 
-            Vector2 position = room.Rect.Center.ToVector2();
+            int leftWallThickness = 32, rightWallThickness = 32;
+            int topWallThickness = 32, bottomWallThickness = 32;
+            foreach (Line wall in room.Walls)
+            {
+                if (wall.IsHorizontal)
+                {
+                    if (wall.A.Y > room.Rect.Center.Y)
+                        bottomWallThickness = (int)wall.Radius;
+                    else
+                        topWallThickness = (int)wall.Radius;
+                }
+                else
+                {
+                    if (wall.A.X > room.Rect.Center.X)
+                        rightWallThickness = (int)wall.Radius;
+                    else
+                        leftWallThickness = (int)wall.Radius;
+                }
+            }
+
+            Rectangle roomBounds = new Rectangle(
+                room.Rect.X + leftWallThickness,
+                room.Rect.Y + bottomWallThickness,
+                room.Rect.Width - leftWallThickness - rightWallThickness,
+                room.Rect.Height - topWallThickness - bottomWallThickness);
+
+            List<Vector2> potentialAnchorPositions = new List<Vector2>();
             if (entityConfig.Alignment.HasFlag(Alignment.Top))
             {
-                position = new Vector2(Rand.Range(room.Rect.X + size.X, room.Rect.Right - size.X, Rand.RandSync.Server), room.Rect.Bottom - 64);
+                potentialAnchorPositions.Add(new Vector2(roomBounds.Center.X, roomBounds.Bottom));
             }
-            else if (entityConfig.Alignment.HasFlag(Alignment.Bottom))
+            if (entityConfig.Alignment.HasFlag(Alignment.Bottom))
             {
-                position = new Vector2(Rand.Range(room.Rect.X + size.X, room.Rect.Right - size.X, Rand.RandSync.Server), room.Rect.Top + 64);
+                potentialAnchorPositions.Add(new Vector2(roomBounds.Center.X, roomBounds.Top));
             }
-            else if (entityConfig.Alignment.HasFlag(Alignment.Right))
+            if (entityConfig.Alignment.HasFlag(Alignment.Right))
             {
-                position = new Vector2(room.Rect.Right - 64, Rand.Range(room.Rect.Y + size.X, room.Rect.Bottom - size.Y, Rand.RandSync.Server));
+                potentialAnchorPositions.Add(new Vector2(roomBounds.Right, roomBounds.Center.Y));
             }
-            else if (entityConfig.Alignment.HasFlag(Alignment.Left))
+            if (entityConfig.Alignment.HasFlag(Alignment.Left))
             {
-                position = new Vector2(room.Rect.X + 64, Rand.Range(room.Rect.Y + size.X, room.Rect.Bottom - size.Y, Rand.RandSync.Server));
+                potentialAnchorPositions.Add(new Vector2(roomBounds.X, roomBounds.Center.Y));
+            }
+            if (entityConfig.Alignment.HasFlag(Alignment.Center) || potentialAnchorPositions.Count == 0)
+            {
+                potentialAnchorPositions.Add(roomBounds.Center.ToVector2());
+            }
+
+            Vector2 position = potentialAnchorPositions[Rand.Int(potentialAnchorPositions.Count, Rand.RandSync.Server)];
+            Vector2 minPosition = new Vector2(
+                position.X + entityConfig.MinOffset.X * roomBounds.Width,
+                position.Y + entityConfig.MinOffset.Y * roomBounds.Height);
+            Vector2 maxPosition = new Vector2(
+                position.X + entityConfig.MaxOffset.X * roomBounds.Width,
+                position.Y + entityConfig.MaxOffset.Y * roomBounds.Height);
+
+            position = new Vector2(
+                Rand.Range(minPosition.X, maxPosition.X, Rand.RandSync.Server),
+                Rand.Range(minPosition.Y, maxPosition.Y, Rand.RandSync.Server));
+            position.X = MathHelper.Clamp(position.X, roomBounds.X, roomBounds.Right);
+            position.Y = MathHelper.Clamp(position.Y, roomBounds.Y, roomBounds.Bottom);
+
+            int iterations = 0;
+            while (iterations < 100)
+            {
+                bool overlapFound = false;
+                foreach (RuinEntity ruinEntity in ruinEntities)
+                {
+                    if (ruinEntity.Config.Type == RuinEntityType.Back) continue;
+                    Vector2 diff = position - ruinEntity.Entity.Position;
+                    if (Math.Abs(diff.X) < (size.X + ruinEntity.Entity.Rect.Width) / 2 &&
+                        Math.Abs(diff.Y) < (size.Y + ruinEntity.Entity.Rect.Height) / 2)
+                    {
+                        float dist = diff.Length();
+                        Vector2 moveDir = dist < 0.01f ? Vector2.UnitY : diff / dist;
+
+                        position += moveDir * 100.0f;
+
+                        position.X = MathHelper.Clamp(position.X, roomBounds.X, roomBounds.Right);
+                        position.Y = MathHelper.Clamp(position.Y, roomBounds.Y, roomBounds.Bottom);
+                        overlapFound = true;
+                    }
+                }
+                iterations++;
+                if (!overlapFound) { break; }
             }
 
             MapEntity entity = null;
             if (entityConfig.Prefab is ItemPrefab)
             {
                 entity = new Item((ItemPrefab)entityConfig.Prefab, position, null);
+                CreateChildEntities(entityConfig, entity, room);
+                ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
             }
             else if (entityConfig.Prefab is ItemAssemblyPrefab itemAssemblyPrefab)
             {
@@ -710,6 +814,7 @@ namespace Barotrauma.RuinGeneration
                 foreach (MapEntity e in entities)
                 {
                     if (e is Structure) e.ShouldBeSaved = false;
+                    ruinEntities.Add(new RuinEntity(entityConfig, e, room, parent));
                 }
                 if (entityConfig.Expand)
                 {
@@ -729,10 +834,9 @@ namespace Barotrauma.RuinGeneration
                 {
                     ExpandEntities(new List<MapEntity>() { entity });
                 }
-            }
-
-            CreateChildEntities(entityConfig, entity, room);
-            ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
+                CreateChildEntities(entityConfig, entity, room);
+                ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
+            }            
         }
 
         private void CreateChildEntities(RuinEntityConfig parentEntityConfig, MapEntity parentEntity, RuinShape room)
@@ -751,6 +855,12 @@ namespace Barotrauma.RuinGeneration
         {
             foreach (RuinEntityConfig.EntityConnection connection in entity.Config.EntityConnections)
             {
+                if (!string.IsNullOrEmpty(connection.SourceEntityIdentifier) && 
+                    connection.SourceEntityIdentifier != entity.Entity?.prefab.Identifier)
+                {
+                    continue;
+                }
+
                 MapEntity targetEntity = null;
                 if (connection.TargetEntityIdentifier == "parent")
                 {
@@ -792,24 +902,24 @@ namespace Barotrauma.RuinGeneration
                     if (item == null)
                     {
                         DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + entity.Entity.Name + "\" - the entity is not an item.");
-                        return;
+                        continue;
                     }
                     else if (item.Connections == null)
                     {
                         DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + entity.Entity.Name + "\" - the item does not have a connection panel component.");
-                        return;
+                        continue;
                     }
 
                     Item parentItem = entity.Parent as Item;
                     if (parentItem == null)
                     {
                         DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + parentItem.Name + "\" - the entity is not an item.");
-                        return;
+                        continue;
                     }
                     else if (parentItem.Connections == null)
                     {
                         DebugConsole.ThrowError("Could not connect a wire to the ruin entity \"" + parentItem.Name + "\" - the item does not have a connection panel component.");
-                        return;
+                        continue;
                     }
 
                     //TODO: alien wire prefab w/ custom sprite?

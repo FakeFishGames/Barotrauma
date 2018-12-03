@@ -403,6 +403,15 @@ namespace Barotrauma
                         }
                         BrokenSprites.Insert(spriteIndex, brokenSprite);
                         break;
+                    case "decorativesprite":
+                        string decorativeSpriteFolder = "";
+                        if (!subElement.GetAttributeString("texture", "").Contains("/"))
+                        {
+                            decorativeSpriteFolder = Path.GetDirectoryName(filePath);
+                        }
+
+                        DecorativeSprites.Add(new Sprite(subElement, decorativeSpriteFolder));
+                        break;
 #endif
                     case "deconstruct":
                         DeconstructTime = subElement.GetAttributeFloat("time", 10.0f);
@@ -420,13 +429,13 @@ namespace Barotrauma
 
                         break;
                     case "trigger":
-                        Rectangle trigger = new Rectangle(0, 0, 10,10);
-
-                        trigger.X = subElement.GetAttributeInt("x", 0);
-                        trigger.Y = subElement.GetAttributeInt("y", 0);
-
-                        trigger.Width = subElement.GetAttributeInt("width", 0);
-                        trigger.Height = subElement.GetAttributeInt("height", 0);
+                        Rectangle trigger = new Rectangle(0, 0, 10, 10)
+                        {
+                            X = subElement.GetAttributeInt("x", 0),
+                            Y = subElement.GetAttributeInt("y", 0),
+                            Width = subElement.GetAttributeInt("width", 0),
+                            Height = subElement.GetAttributeInt("height", 0)
+                        };
 
                         Triggers.Add(trigger);
 

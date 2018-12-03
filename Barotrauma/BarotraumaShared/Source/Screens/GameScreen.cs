@@ -125,9 +125,20 @@ namespace Barotrauma
             GameMain.PerformanceCounter.AddElapsedTicks("StatusEffectUpdate", sw.ElapsedTicks);
             sw.Restart(); 
 
-            if (Character.Controlled != null && Lights.LightManager.ViewTarget != null)
+            if (Character.Controlled != null && 
+                Lights.LightManager.ViewTarget != null)
             {
-                cam.TargetPos = Lights.LightManager.ViewTarget.WorldPosition;
+                Vector2 targetPos = Lights.LightManager.ViewTarget.WorldPosition;
+                if (Lights.LightManager.ViewTarget == Character.Controlled && CharacterHealth.OpenHealthWindow != null)
+                {
+                    Vector2 screenTargetPos = CharacterHealth.OpenHealthWindow.Alignment == Alignment.Left ?
+                        new Vector2(GameMain.GraphicsWidth * 0.75f, GameMain.GraphicsHeight * 0.5f) :
+                        new Vector2(GameMain.GraphicsWidth * 0.25f, GameMain.GraphicsHeight * 0.5f);
+                    Vector2 screenOffset = screenTargetPos - new Vector2(GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight / 2);
+                    screenOffset.Y = -screenOffset.Y;
+                    targetPos -= screenOffset / cam.Zoom;
+                }
+                cam.TargetPos = targetPos;
             }
 #endif
 

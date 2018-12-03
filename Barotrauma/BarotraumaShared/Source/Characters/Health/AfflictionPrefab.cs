@@ -153,6 +153,11 @@ namespace Barotrauma
 
         private readonly ConstructorInfo constructor;
 
+        public Dictionary<string, float> TreatmentSuitability
+        {
+            get { return treatmentSuitability; }
+        }
+
         public static void LoadAll(IEnumerable<string> filePaths)
         {
             foreach (string filePath in filePaths)

@@ -207,6 +207,9 @@ namespace Barotrauma
             get { return spriteColor; }
         }
 
+        //the default value should be Prefab.Health, but because we can't use it in the attribute, 
+        //we'll just use NaN (which does nothing) and set the default value in the constructor/load
+        [Serialize(float.NaN, false), Editable]
         public float Condition
         {
             get { return condition; }
@@ -432,6 +435,7 @@ namespace Barotrauma
                     case "sprite":
                     case "deconstruct":
                     case "brokensprite":
+                    case "decorativesprite":
                     case "price":
                         break;
                     case "staticbody":
@@ -590,15 +594,9 @@ namespace Barotrauma
             return default(T);
         }
 
-        public List<T> GetComponents<T>()
+        public IEnumerable<T> GetComponents<T>()
         {
-            List<T> components = new List<T>();
-            foreach (ItemComponent ic in this.components)
-            {
-                if (ic is T) components.Add((T)(object)ic);
-            }
-
-            return components;
+            return components.Where(c => c is T).Cast<T>();
         }
         
         public void RemoveContained(Item contained)
@@ -836,7 +834,17 @@ namespace Barotrauma
                 }
             }
 
-            if (effect.HasTargetType(StatusEffect.TargetType.Character)) targets.Add(character);
+            if (effect.HasTargetType(StatusEffect.TargetType.Character))
+            {
+                if (type == ActionType.OnContained && ParentInventory is CharacterInventory characterInventory)
+                {
+                    targets.Add(characterInventory.Owner as ISerializableEntity);
+                }
+                else
+                {
+                    targets.Add(character);
+                }
+            }
 
             if (effect.HasTargetType(StatusEffect.TargetType.Limb))
             {
