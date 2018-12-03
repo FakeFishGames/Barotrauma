@@ -226,10 +226,10 @@ namespace Barotrauma
             }
         }
 
-        protected abstract float? HeadPosition { get; }
-        protected abstract float? HeadAngle { get; }
-        protected abstract float? TorsoPosition { get; }
-        protected abstract float? TorsoAngle { get; }
+        public abstract float? HeadPosition { get; }
+        public abstract float? HeadAngle { get; }
+        public abstract float? TorsoPosition { get; }
+        public abstract float? TorsoAngle { get; }
 
         public float ImpactTolerance => RagdollParams.ImpactTolerance;
         public bool Draggable => RagdollParams.Draggable;

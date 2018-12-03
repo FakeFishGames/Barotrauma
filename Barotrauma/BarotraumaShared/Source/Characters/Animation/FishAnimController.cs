@@ -90,7 +90,14 @@ namespace Barotrauma
         public new FishGroundedParams CurrentGroundedParams => base.CurrentGroundedParams as FishGroundedParams;
         public new FishSwimParams CurrentSwimParams => base.CurrentSwimParams as FishSwimParams;
 
-        protected float? TailAngle => GetValidOrNull(CurrentAnimationParams, CurrentFishAnimation?.TailAngleInRadians);
+        public float? TailAngle => GetValidOrNull(CurrentAnimationParams, CurrentFishAnimation?.TailAngleInRadians);
+        public float FootTorque => CurrentFishAnimation.FootTorque;
+        public float HeadTorque => CurrentFishAnimation.HeadTorque;
+        public float TorsoTorque => CurrentFishAnimation.TorsoTorque;
+        public float TailTorque => CurrentFishAnimation.TailTorque;
+        public float HeadMoveForce => CurrentGroundedParams.HeadMoveForce;
+        public float TorsoMoveForce => CurrentGroundedParams.TorsoMoveForce;
+        public float FootMoveForce => CurrentGroundedParams.FootMoveForce;
 
         public override GroundedMovementParams WalkParams
         {
@@ -346,17 +353,17 @@ namespace Barotrauma
                 if (TorsoAngle.HasValue)
                 {
                     Limb torso = GetLimb(LimbType.Torso);
-                    torso?.body.SmoothRotate(movementAngle + TorsoAngle.Value * Dir, CurrentSwimParams.TorsoTorque);
+                    torso?.body.SmoothRotate(movementAngle + TorsoAngle.Value * Dir, TorsoTorque);
                 }
                 if (HeadAngle.HasValue)
                 {
                     Limb head = GetLimb(LimbType.Head);
-                    head?.body.SmoothRotate(movementAngle + HeadAngle.Value * Dir, CurrentSwimParams.HeadTorque);
+                    head?.body.SmoothRotate(movementAngle + HeadAngle.Value * Dir, HeadTorque);
                 }
                 if (TailAngle.HasValue)
                 {
                     Limb tail = GetLimb(LimbType.Tail);
-                    tail?.body.SmoothRotate(movementAngle + TailAngle.Value * Dir, CurrentSwimParams.TailTorque);
+                    tail?.body.SmoothRotate(movementAngle + TailAngle.Value * Dir, TailTorque);
                 }
             }
             else
@@ -372,21 +379,21 @@ namespace Barotrauma
                 if (TorsoAngle.HasValue)
                 {
                     Limb torso = GetLimb(LimbType.Torso);
-                    torso?.body.SmoothRotate(TorsoAngle.Value * Dir, CurrentSwimParams.TorsoTorque);
+                    torso?.body.SmoothRotate(TorsoAngle.Value * Dir, TorsoTorque);
                 }
                 if (HeadAngle.HasValue)
                 {
                     Limb head = GetLimb(LimbType.Head);
-                    head?.body.SmoothRotate(HeadAngle.Value * Dir, CurrentSwimParams.HeadTorque);
+                    head?.body.SmoothRotate(HeadAngle.Value * Dir, HeadTorque);
                 }
                 if (TailAngle.HasValue)
                 {
                     Limb tail = GetLimb(LimbType.Tail);
-                    tail?.body.SmoothRotate(TailAngle.Value * Dir, CurrentSwimParams.TailTorque);
+                    tail?.body.SmoothRotate(TailAngle.Value * Dir, TailTorque);
                 }
             }
 
-            var waveLength = Math.Abs(CurrentSwimParams.WaveLength);
+            var waveLength = Math.Abs(CurrentSwimParams.WaveLength * RagdollParams.JointScale);
             var waveAmplitude = Math.Abs(CurrentSwimParams.WaveAmplitude);
             if (waveLength > 0 && waveAmplitude > 0)
             {
@@ -402,7 +409,7 @@ namespace Barotrauma
                     case LimbType.RightFoot:
                         if (CurrentSwimParams.FootAnglesInRadians.ContainsKey(limb.limbParams.ID))
                         {
-                            limb.body.SmoothRotate(CurrentSwimParams.FootAnglesInRadians[limb.limbParams.ID] * Dir, CurrentSwimParams.FootTorque);
+                            limb.body.SmoothRotate(CurrentSwimParams.FootAnglesInRadians[limb.limbParams.ID] * Dir, FootTorque);
                         }
                         break;
                     case LimbType.Tail:
@@ -444,17 +451,17 @@ namespace Barotrauma
             Limb torso = GetLimb(LimbType.Torso);
             if (torso != null)
             {
-                if (TorsoAngle.HasValue) torso.body.SmoothRotate(TorsoAngle.Value * Dir, CurrentGroundedParams.TorsoTorque);
+                if (TorsoAngle.HasValue) torso.body.SmoothRotate(TorsoAngle.Value * Dir, TorsoTorque);
                 if (TorsoPosition.HasValue)
                 {
-                    Vector2 pos = colliderBottom + Vector2.UnitY * TorsoPosition.Value * RagdollParams.JointScale;
+                    Vector2 pos = colliderBottom + Vector2.UnitY * TorsoPosition.Value;
 
                     if (torso != MainLimb)
                         pos.X = torso.SimPosition.X;
                     else
-                        mainLimbHeight = TorsoPosition.Value * RagdollParams.JointScale;
+                        mainLimbHeight = TorsoPosition.Value;
 
-                    torso.MoveToPos(pos, CurrentGroundedParams.TorsoMoveForce);
+                    torso.MoveToPos(pos, TorsoMoveForce);
                     torso.PullJointEnabled = true;
                     torso.PullJointWorldAnchorB = pos;
                 }
@@ -463,17 +470,17 @@ namespace Barotrauma
             Limb head = GetLimb(LimbType.Head);
             if (head != null)
             {
-                if (HeadAngle.HasValue) head.body.SmoothRotate(HeadAngle.Value * Dir, CurrentGroundedParams.HeadTorque);
+                if (HeadAngle.HasValue) head.body.SmoothRotate(HeadAngle.Value * Dir, HeadTorque);
                 if (HeadPosition.HasValue)
                 {
-                    Vector2 pos = colliderBottom + Vector2.UnitY * HeadPosition.Value * RagdollParams.JointScale;
+                    Vector2 pos = colliderBottom + Vector2.UnitY * HeadPosition.Value;
 
                     if (head != MainLimb)
                         pos.X = head.SimPosition.X;
                     else
-                        mainLimbHeight = HeadPosition.Value * RagdollParams.JointScale;
+                        mainLimbHeight = HeadPosition.Value;
 
-                    head.MoveToPos(pos, CurrentGroundedParams.HeadMoveForce);
+                    head.MoveToPos(pos, HeadMoveForce);
                     head.PullJointEnabled = true;
                     head.PullJointWorldAnchorB = pos;
                 }
@@ -481,17 +488,17 @@ namespace Barotrauma
 
             if (TailAngle.HasValue)
             {
-                GetLimb(LimbType.Tail)?.body.SmoothRotate(TailAngle.Value * Dir, CurrentGroundedParams.TailTorque);
+                GetLimb(LimbType.Tail)?.body.SmoothRotate(TailAngle.Value * Dir, TailTorque);
             }
                         
-            WalkPos -= MainLimb.LinearVelocity.X * (CurrentAnimationParams.CycleSpeed / 100.0f);
+            WalkPos -= MainLimb.LinearVelocity.X * (CurrentAnimationParams.CycleSpeed / RagdollParams.JointScale / 100.0f);
 
             Vector2 transformedStepSize = Vector2.Zero;
             if (Math.Abs(TargetMovement.X) > 0.01f)
             {
                 transformedStepSize = new Vector2(
-                    (float)Math.Cos(WalkPos) * CurrentGroundedParams.StepSize.X * RagdollParams.JointScale * 3.0f,
-                    (float)Math.Sin(WalkPos) * CurrentGroundedParams.StepSize.Y * RagdollParams.JointScale * 2.0f);
+                    (float)Math.Cos(WalkPos) * StepSize.Value.X * 3.0f,
+                    (float)Math.Sin(WalkPos) * StepSize.Value.Y * 2.0f);
             }
 
             foreach (Limb limb in Limbs)
@@ -522,7 +529,7 @@ namespace Barotrauma
                             limb.DebugTargetPos = footPos + new Vector2(
                                 transformedStepSize.X + movement.X * 0.1f,
                                 (transformedStepSize.Y > 0.0f) ? transformedStepSize.Y : 0.0f);
-                            limb.MoveToPos(limb.DebugTargetPos, CurrentGroundedParams.FootMoveForce);
+                            limb.MoveToPos(limb.DebugTargetPos, FootMoveForce);
                         }
                         else if (limb.type == LimbType.RightFoot)
                         {
@@ -530,12 +537,12 @@ namespace Barotrauma
                             limb.DebugTargetPos = footPos + new Vector2(
                                 -transformedStepSize.X + movement.X * 0.1f,
                                 (-transformedStepSize.Y > 0.0f) ? -transformedStepSize.Y : 0.0f);
-                            limb.MoveToPos(limb.DebugTargetPos, CurrentGroundedParams.FootMoveForce);
+                            limb.MoveToPos(limb.DebugTargetPos, FootMoveForce);
                         }
                         
                         if (CurrentGroundedParams.FootAnglesInRadians.ContainsKey(limb.limbParams.ID))
                         {
-                            limb.body.SmoothRotate(CurrentGroundedParams.FootAnglesInRadians[limb.limbParams.ID] * Dir, CurrentGroundedParams.FootTorque);
+                            limb.body.SmoothRotate(CurrentGroundedParams.FootAnglesInRadians[limb.limbParams.ID] * Dir, FootTorque);
                         }
      
                         break;

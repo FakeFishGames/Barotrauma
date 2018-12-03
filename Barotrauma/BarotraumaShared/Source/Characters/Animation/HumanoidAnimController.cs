@@ -158,7 +158,7 @@ namespace Barotrauma
 
         private float useItemTimer;
         
-        protected override float? TorsoPosition
+        public override float? TorsoPosition
         {
             get
             {
@@ -166,13 +166,19 @@ namespace Barotrauma
             }
         }
 
-        protected override float? TorsoAngle
+        public override float? TorsoAngle
         {
             get
             {
                 return Crouching ? MathHelper.ToRadians(CurrentGroundedParams.CrouchingTorsoAngle) : base.TorsoAngle;
             }
         }
+
+        public float HeadLeanAmount => CurrentGroundedParams.HeadLeanAmount;
+        public float TorsoLeanAmount => CurrentGroundedParams.TorsoLeanAmount;
+        public Vector2 FootMoveOffset => CurrentGroundedParams.FootMoveOffset * RagdollParams.JointScale;
+        public float LegBendTorque => CurrentGroundedParams.LegBendTorque * RagdollParams.JointScale;
+        public Vector2 HandMoveOffset => CurrentGroundedParams.HandMoveOffset * RagdollParams.JointScale;
 
         public override Vector2 AimSourceSimPos
         {
@@ -367,7 +373,7 @@ namespace Barotrauma
                 for (int i = -1; i < 2; i += 2)
                 {
                     Vector2 footPos = GetColliderBottom();
-                    footPos = new Vector2(waist.SimPosition.X + Math.Sign(CurrentGroundedParams.StepSize.X * i) * Dir * 0.3f * RagdollParams.JointScale, footPos.Y - 0.1f * RagdollParams.JointScale);
+                    footPos = new Vector2(waist.SimPosition.X + Math.Sign(StepSize.Value.X * i) * Dir * 0.3f, footPos.Y - 0.1f * RagdollParams.JointScale);
                     var foot = i == -1 ? rightFoot : leftFoot;
                     MoveLimb(foot, footPos, Math.Abs(foot.SimPosition.X - footPos.X) * 100.0f, true);
                 }
@@ -464,7 +470,7 @@ namespace Barotrauma
             Limb leftLeg = GetLimb(LimbType.LeftLeg);
             Limb rightLeg = GetLimb(LimbType.RightLeg);
             
-            float getUpForce = CurrentGroundedParams.GetUpForce;
+            float getUpForce = CurrentGroundedParams.GetUpForce / RagdollParams.JointScale;
             float walkCycleMultiplier = 1.0f;
             if (Stairs != null)
             {
@@ -501,7 +507,7 @@ namespace Barotrauma
             float walkPosY = (float)Math.Sin(WalkPos);
 
 
-            Vector2 stepSize = CurrentGroundedParams.StepSize * RagdollParams.JointScale;
+            Vector2 stepSize = StepSize.Value;
             stepSize.X *= walkPosX;
             stepSize.Y *= walkPosY;                
 
@@ -536,9 +542,9 @@ namespace Barotrauma
                 }
                 else
                 {
-                    leg.body.ApplyTorque(shortestAngle * CurrentGroundedParams.LegBendTorque);
+                    leg.body.ApplyTorque(shortestAngle * LegBendTorque);
                     leg = GetLimb((i == 0) ? LimbType.LeftLeg : LimbType.RightLeg);
-                    leg.body.ApplyTorque(-shortestAngle * CurrentGroundedParams.LegBendTorque);
+                    leg.body.ApplyTorque(-shortestAngle * LegBendTorque);
                 }
             }
 
@@ -567,11 +573,11 @@ namespace Barotrauma
             if (Stairs != null || onSlope)
             {
                 torso.PullJointWorldAnchorB = new Vector2(
-                    MathHelper.SmoothStep(torso.SimPosition.X, footMid + movement.X * CurrentGroundedParams.TorsoLeanAmount * RagdollParams.JointScale, getUpForce * 0.8f),
-                    MathHelper.SmoothStep(torso.SimPosition.Y, colliderPos.Y + TorsoPosition.Value * RagdollParams.JointScale - Math.Abs(walkPosX * 0.05f), getUpForce * 2.0f));
+                    MathHelper.SmoothStep(torso.SimPosition.X, footMid + movement.X * TorsoLeanAmount, getUpForce * 0.8f),
+                    MathHelper.SmoothStep(torso.SimPosition.Y, colliderPos.Y + TorsoPosition.Value - Math.Abs(walkPosX * 0.05f), getUpForce * 2.0f));
 
                 head.PullJointWorldAnchorB = new Vector2(
-                    MathHelper.SmoothStep(head.SimPosition.X, footMid + movement.X * CurrentGroundedParams.HeadLeanAmount, getUpForce * 0.8f),
+                    MathHelper.SmoothStep(head.SimPosition.X, footMid + movement.X * HeadLeanAmount, getUpForce * 0.8f),
                     MathHelper.SmoothStep(head.SimPosition.Y, colliderPos.Y + HeadPosition.Value - Math.Abs(walkPosX * 0.05f), getUpForce * 2.0f));
 
                 if (waist != null)
@@ -586,20 +592,20 @@ namespace Barotrauma
                 float y = colliderPos.Y;
                 if (TorsoPosition.HasValue)
                 {
-                    y += TorsoPosition.Value * RagdollParams.JointScale;
+                    y += TorsoPosition.Value;
                 }
                 torso.PullJointWorldAnchorB =
                     MathUtils.SmoothStep(torso.SimPosition,
-                    new Vector2(footMid + movement.X * CurrentGroundedParams.TorsoLeanAmount * RagdollParams.JointScale, y), getUpForce);
+                    new Vector2(footMid + movement.X * TorsoLeanAmount, y), getUpForce);
 
                 y = colliderPos.Y;
                 if (HeadPosition.HasValue)
                 {
-                    y += HeadPosition.Value * RagdollParams.JointScale;
+                    y += HeadPosition.Value;
                 }
                 head.PullJointWorldAnchorB =
                     MathUtils.SmoothStep(head.SimPosition,
-                    new Vector2(footMid + movement.X * CurrentGroundedParams.HeadLeanAmount, y), getUpForce * 1.2f);
+                    new Vector2(footMid + movement.X * HeadLeanAmount, y), getUpForce * 1.2f);
 
                 if (waist != null)
                 {
@@ -636,7 +642,7 @@ namespace Barotrauma
                     Limb leg = i == -1 ? leftLeg : rightLeg;
 
                     Vector2 footPos = stepSize * -i;
-                    footPos += new Vector2(Math.Sign(movement.X) * CurrentGroundedParams.FootMoveOffset.X, CurrentGroundedParams.FootMoveOffset.Y);
+                    footPos += new Vector2(Math.Sign(movement.X) * FootMoveOffset.X, FootMoveOffset.Y);
 
                     if (footPos.Y < 0.0f) footPos.Y = -0.15f;
 
@@ -659,15 +665,15 @@ namespace Barotrauma
                     }
                 }
 
-                if (CurrentGroundedParams.LegBendTorque > 0.0f)
+                if (LegBendTorque > 0.0f)
                 {
                     if (Math.Sign(walkPosX) != Math.Sign(movement.X))
                     {
-                        GetLimb(LimbType.LeftLeg).body.ApplyTorque(-walkPosY * Dir * Math.Abs(movement.X) * CurrentGroundedParams.LegBendTorque);
+                        GetLimb(LimbType.LeftLeg).body.ApplyTorque(-walkPosY * Dir * Math.Abs(movement.X) * LegBendTorque);
                     }
                     else
                     {
-                        GetLimb(LimbType.RightLeg).body.ApplyTorque(walkPosY * Dir * Math.Abs(movement.X) * CurrentGroundedParams.LegBendTorque);
+                        GetLimb(LimbType.RightLeg).body.ApplyTorque(walkPosY * Dir * Math.Abs(movement.X) * LegBendTorque);
                     }
                 }
 
@@ -679,7 +685,7 @@ namespace Barotrauma
 
                 handPos.Y = lowerY + (float)(Math.Abs(Math.Sin(WalkPos - Math.PI * 1.5f) * CurrentGroundedParams.HandMoveAmount.Y));
 
-                Vector2 posAddition = new Vector2(Math.Sign(movement.X) * CurrentGroundedParams.HandMoveOffset.X, CurrentGroundedParams.HandMoveOffset.Y);
+                Vector2 posAddition = new Vector2(Math.Sign(movement.X) * HandMoveOffset.X, HandMoveOffset.Y);
 
                 if (!rightHand.Disabled)
                 {
@@ -707,8 +713,8 @@ namespace Barotrauma
                     if (Crouching)
                     {
                         footPos = new Vector2(
-                            waistPos.X + Math.Sign(stepSize.X * i) * Dir * 0.3f * RagdollParams.JointScale,
-                            colliderPos.Y - 0.1f * RagdollParams.JointScale);
+                            waistPos.X + Math.Sign(stepSize.X * i) * Dir * 0.3f,
+                            colliderPos.Y - 0.1f);
                     }
                     else
                     {
@@ -1290,7 +1296,7 @@ namespace Barotrauma
                 float yPos = (float)Math.Sin(cprAnimTimer) * 0.2f;
                 head.PullJointWorldAnchorB = new Vector2(targetHead.SimPosition.X, targetHead.SimPosition.Y + 0.3f + yPos);
                 head.PullJointEnabled = true;
-                torso.PullJointWorldAnchorB = new Vector2(torso.SimPosition.X, colliderPos.Y + (TorsoPosition.Value - 0.2f) * RagdollParams.JointScale);
+                torso.PullJointWorldAnchorB = new Vector2(torso.SimPosition.X, colliderPos.Y + (TorsoPosition.Value - 0.2f));
                 torso.PullJointEnabled = true;
 
                 //Serverside code
@@ -1313,7 +1319,7 @@ namespace Barotrauma
                     head.PullJointEnabled = true;
                 }
 
-                torso.PullJointWorldAnchorB = new Vector2(torso.SimPosition.X, colliderPos.Y + (TorsoPosition.Value - 0.1f) * RagdollParams.JointScale);
+                torso.PullJointWorldAnchorB = new Vector2(torso.SimPosition.X, colliderPos.Y + (TorsoPosition.Value - 0.1f));
                 torso.PullJointEnabled = true;
 
                 if (cprPump >= 1)
