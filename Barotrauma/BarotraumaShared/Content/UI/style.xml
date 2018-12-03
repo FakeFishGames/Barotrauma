@@ -464,7 +464,7 @@
     outlinecolor="0.0,0.0,0.0,0.0">
     <GUIFrame
       padding="5.0,10.0,5.0,10.0"
-      color="1.0,1.0,1.0,0.8"
+      color="1.0,1.0,1.0,0.95"
       hovercolor="1.0,1.0,1.0,1.0"
       selectedcolor="1.0,1.0,1.0,1.0">
       <Sprite texture="Content/UI/inventoryAtlas.png" sourcerect ="688,490,335,445" slice="714,514,1002,920"/>
