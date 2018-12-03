@@ -179,7 +179,7 @@ namespace Barotrauma
                 //ignore hulls that are too low to stand inside
                 if (character.AnimController is HumanoidAnimController animController)
                 {
-                    float minHeight = ConvertUnits.ToDisplayUnits(animController.HumanWalkParams.HeadPosition);
+                    float minHeight = ConvertUnits.ToDisplayUnits(animController.HeadPosition.Value);
                     targetHulls.RemoveAll(h => h.CeilingHeight < minHeight);
                 }
                 if (!targetHulls.Any()) return null;

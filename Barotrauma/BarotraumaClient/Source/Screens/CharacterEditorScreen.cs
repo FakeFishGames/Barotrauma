@@ -2442,18 +2442,18 @@ namespace Barotrauma
                 // Head position and leaning
                 if (animParams.IsGroundedAnimation)
                 {
-                    if (humanGroundedParams != null)
+                    if (humanGroundedParams != null && character.AnimController is HumanoidAnimController humanAnimController)
                     {
                         GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_HeadPosition", Color.Red, initMethod: w =>
                         {
                             w.tooltip = "Head";
-                            w.refresh = () => w.DrawPos = SimToScreen(head.SimPosition.X + humanGroundedParams.HeadLeanAmount * character.AnimController.Dir * RagdollParams.JointScale, head.PullJointWorldAnchorB.Y);
+                            w.refresh = () => w.DrawPos = SimToScreen(head.SimPosition.X + humanAnimController.HeadLeanAmount * character.AnimController.Dir, head.PullJointWorldAnchorB.Y);
                             w.MouseHeld += dTime =>
                             {
                                 w.DrawPos = PlayerInput.MousePosition;
-                                var scaledInput = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed) / Cam.Zoom / RagdollParams.JointScale;
+                                var scaledInput = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed) / Cam.Zoom;
                                 TryUpdateAnimParam("headleanamount", humanGroundedParams.HeadLeanAmount + scaledInput.X * character.AnimController.Dir);
-                                TryUpdateAnimParam("headposition", humanGroundedParams.HeadPosition - scaledInput.Y);
+                                TryUpdateAnimParam("headposition", humanGroundedParams.HeadPosition - scaledInput.Y / RagdollParams.JointScale);
                             };
                             w.PostDraw += (sB, dTime) =>
                             {
@@ -2501,18 +2501,18 @@ namespace Barotrauma
                 if (animParams.IsGroundedAnimation)
                 {
                     // Torso position and leaning
-                    if (humanGroundedParams != null)
+                    if (humanGroundedParams != null && character.AnimController is HumanoidAnimController humanAnimController)
                     {
                         GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_TorsoPosition", Color.DarkRed, initMethod: w =>
                         {
                             w.tooltip = "Torso";
-                            w.refresh = () => w.DrawPos = SimToScreen(torso.SimPosition.X + humanGroundedParams.TorsoLeanAmount * character.AnimController.Dir * RagdollParams.JointScale, torso.PullJointWorldAnchorB.Y);
+                            w.refresh = () => w.DrawPos = SimToScreen(torso.SimPosition.X +  humanAnimController.TorsoLeanAmount * character.AnimController.Dir, torso.PullJointWorldAnchorB.Y);
                             w.MouseHeld += dTime =>
                             {
                                 w.DrawPos = PlayerInput.MousePosition;
-                                var scaledInput = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed) / Cam.Zoom / RagdollParams.JointScale;
+                                var scaledInput = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed) / Cam.Zoom;
                                 TryUpdateAnimParam("torsoleanamount", humanGroundedParams.TorsoLeanAmount + scaledInput.X * character.AnimController.Dir);
-                                TryUpdateAnimParam("torsoposition", humanGroundedParams.TorsoPosition - scaledInput.Y);
+                                TryUpdateAnimParam("torsoposition", humanGroundedParams.TorsoPosition - scaledInput.Y / RagdollParams.JointScale);
                             };
                             w.PostDraw += (sB, dTime) =>
                             {
@@ -2592,13 +2592,13 @@ namespace Barotrauma
                         w.refresh = () =>
                         {
                             var refPoint = SimToScreen(character.AnimController.GetColliderBottom());
-                            var stepSize = ConvertUnits.ToDisplayUnits(groundedParams.StepSize);
+                            var stepSize = ConvertUnits.ToDisplayUnits(character.AnimController.StepSize.Value);
                             w.DrawPos = refPoint + new Vector2(stepSize.X * character.AnimController.Dir, -stepSize.Y) * Cam.Zoom;
                         };
                         w.MouseHeld += dTime =>
                         {
                             w.DrawPos = PlayerInput.MousePosition;
-                            var transformedInput = ConvertUnits.ToSimUnits(new Vector2(PlayerInput.MouseSpeed.X * character.AnimController.Dir, -PlayerInput.MouseSpeed.Y)) / Cam.Zoom;
+                            var transformedInput = ConvertUnits.ToSimUnits(new Vector2(PlayerInput.MouseSpeed.X * character.AnimController.Dir, -PlayerInput.MouseSpeed.Y)) / Cam.Zoom / RagdollParams.JointScale;
                             TryUpdateAnimParam("stepsize", groundedParams.StepSize + transformedInput);
                             w.tooltip = $"Step Size: {groundedParams.StepSize.FormatDoubleDecimal()}";
                         };
