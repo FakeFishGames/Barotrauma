@@ -1882,7 +1882,7 @@ namespace Barotrauma.Networking
                     //msg sent by the server
                     if (senderCharacter == null)
                     {
-                        throw new InvalidOperationException();
+                        senderName = name;
                     }
                     else //msg sent by an AI character
                     {
