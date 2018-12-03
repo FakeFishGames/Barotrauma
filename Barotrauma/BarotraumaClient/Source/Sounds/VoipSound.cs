@@ -38,8 +38,8 @@ namespace Barotrauma.Sounds
 
         public void SetPosition(Vector3? pos)
         {
-            soundChannel.Near = 200.0f;
-            soundChannel.Far = 250.0f;
+            soundChannel.Near = 400.0f;
+            soundChannel.Far = 450.0f;
             soundChannel.Position = pos;
         }
 
@@ -67,7 +67,6 @@ namespace Barotrauma.Sounds
         {
             byte[] compressedBuffer;
             int compressedSize;
-            DebugConsole.NewMessage(bufferID.ToString(), Color.Yellow);
             queue.RetrieveBuffer(bufferID, out compressedSize, out compressedBuffer);
             if (compressedSize>0)
             {

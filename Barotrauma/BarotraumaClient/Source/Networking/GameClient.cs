@@ -1071,7 +1071,7 @@ namespace Barotrauma.Networking
         private void ReadClientList(NetIncomingMessage inc)
         {
             UInt16 listId = inc.ReadUInt16();
-
+            
             List<TempClient> tempClients = new List<TempClient>();
             int clientCount = inc.ReadByte();
             for (int i = 0; i < clientCount; i++)
@@ -1089,7 +1089,7 @@ namespace Barotrauma.Networking
 
             if (NetIdUtils.IdMoreRecent(listId,LastClientListUpdateID))
             {
-                LastClientListUpdateID = listId;
+                bool updateClientListId = true;
                 List<Client> currentClients = new List<Client>();
                 foreach (TempClient tc in tempClients)
                 {
@@ -1105,6 +1105,10 @@ namespace Barotrauma.Networking
                     if (tc.CharacterID > 0)
                     {
                         existingClient.Character = Entity.FindEntityByID(tc.CharacterID) as Character;
+                        if (existingClient.Character == null)
+                        {
+                            updateClientListId = false;
+                        }
                     }
                     currentClients.Add(existingClient);
                 }
@@ -1118,6 +1122,7 @@ namespace Barotrauma.Networking
                         ConnectedClients.RemoveAt(i);
                     }
                 }
+                if (updateClientListId) LastClientListUpdateID = listId;
             }
         }
         

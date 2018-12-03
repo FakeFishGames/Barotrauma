@@ -18,7 +18,17 @@ namespace Barotrauma.Networking
             get { return character; }
             set
             {
-                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer) GameMain.NetworkMember.LastClientListUpdateID++;
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                {
+                    GameMain.NetworkMember.LastClientListUpdateID++;
+                }
+                else
+                {
+                    if (value!=null)
+                    {
+                        DebugConsole.NewMessage(value.Name, Microsoft.Xna.Framework.Color.Yellow);
+                    }
+                }
                 character = value;
                 if (character != null) HasSpawned = true;
             }

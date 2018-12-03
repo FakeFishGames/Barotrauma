@@ -28,7 +28,7 @@ namespace Barotrauma.Networking
             {
                 if (character != null)
                 {
-                    VoipSound.SetPosition(new Microsoft.Xna.Framework.Vector3(character.Position.X, character.Position.Y, 0.0f));
+                    VoipSound.SetPosition(new Microsoft.Xna.Framework.Vector3(character.WorldPosition.X, character.WorldPosition.Y, 0.0f));
                 }
                 else
                 {
