@@ -273,10 +273,13 @@ namespace Barotrauma
                                 GameMain.Client.Character = this;
                                 GameMain.LightManager.LosEnabled = true;
                             }
-                            else if (controlled == this)
+                            else
                             {
-                                Controlled = null;
-                                IsRemotePlayer = ownerID > 0;
+                                if (controlled == this)
+                                {
+                                    Controlled = null;
+                                    IsRemotePlayer = ownerID > 0;
+                                }
                             }
                             break;
                         case 2:

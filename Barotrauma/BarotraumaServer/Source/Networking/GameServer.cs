@@ -1102,7 +1102,7 @@ namespace Barotrauma.Networking
         {
             bool hasChanged = NetIdUtils.IdMoreRecent(LastClientListUpdateID, c.LastRecvClientListUpdate);
             if (!hasChanged) return;
-
+            
             outmsg.Write((byte)ServerNetObject.CLIENT_LIST);
             outmsg.Write(LastClientListUpdateID);
 
@@ -1503,6 +1503,8 @@ namespace Barotrauma.Networking
             
             gameStarted = true;
             initiatedStartGame = false;
+
+            LastClientListUpdateID++;
 
             roundStartTime = DateTime.Now;
 

@@ -74,7 +74,6 @@ namespace Barotrauma.Networking
 
                 if (sampleCount < VoipConfig.BUFFER_SIZE)
                 {
-                    DebugConsole.NewMessage(sampleCount.ToString(), Color.Lime);
                     int sleepMs = (VoipConfig.BUFFER_SIZE - sampleCount) * 800 / VoipConfig.FREQUENCY;
                     if (sleepMs < 5) sleepMs = 5;
                     Thread.Sleep(sleepMs);
@@ -124,6 +123,7 @@ namespace Barotrauma.Networking
         public override void Dispose()
         {
             instance = null;
+            capturing = false;
             captureThread.Join();
             captureThread = null;
         }

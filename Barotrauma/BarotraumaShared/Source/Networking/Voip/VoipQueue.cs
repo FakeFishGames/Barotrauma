@@ -109,7 +109,6 @@ namespace Barotrauma.Networking
             if (!CanReceive) throw new Exception("Called Read on a VoipQueue not set up for receiving");
 
             UInt16 incLatestBufferID = msg.ReadUInt16();
-            DebugConsole.NewMessage(incLatestBufferID.ToString(), Color.Red);
             if (firstRead || NetIdUtils.IdMoreRecent(incLatestBufferID,LatestBufferID))
             {
                 firstRead = false;
