@@ -72,19 +72,19 @@ namespace Barotrauma
         [Serialize(true, true), Editable(ToolTip = "Should the character be flipped depending on which direction it faces. Should usually be enabled on all characters that have distinctive upper and lower sides.")]
         public bool Flip { get; set; }
 
-        [Serialize(10.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 50, ToolTip = "How much force is used to move the head to the correct position.")]
+        [Serialize(10.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 100, ToolTip = "How much force is used to move the head to the correct position.")]
         public float HeadMoveForce { get; set; }
 
-        [Serialize(10.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 50, ToolTip = "How much force is used to move the torso to the correct position.")]
+        [Serialize(10.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 100, ToolTip = "How much force is used to move the torso to the correct position.")]
         public float TorsoMoveForce { get; set; }
 
-        [Serialize(8.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 50, ToolTip = "How much force is used to move the feet to the correct position.")]
+        [Serialize(8.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 100, ToolTip = "How much force is used to move the feet to the correct position.")]
         public float FootMoveForce { get; set; }
 
-        [Serialize(50.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 200, ToolTip = "How much torque is used to rotate the head to the correct orientation.")]
+        [Serialize(50.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500, ToolTip = "How much torque is used to rotate the head to the correct orientation.")]
         public float HeadTorque { get; set; }
 
-        [Serialize(50.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 200, ToolTip = "How much torque is used to rotate the torso to the correct orientation.")]
+        [Serialize(50.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500, ToolTip = "How much torque is used to rotate the torso to the correct orientation.")]
         public float TorsoTorque { get; set; }
 
         [Serialize(50.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500, ToolTip = "How much torque is used to rotate the tail to the correct orientation.")]
@@ -93,7 +93,7 @@ namespace Barotrauma
         [Serialize(25.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500, ToolTip = "How much torque is used to rotate the feet to the correct orientation.")]
         public float FootTorque { get; set; }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 200, ToolTip = "Optional torque that's constantly applied to legs.")]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500, ToolTip = "Optional torque that's constantly applied to legs.")]
         public float LegTorque { get; set; }
 
         /// <summary>
