@@ -1377,6 +1377,7 @@ namespace Barotrauma
             {
                 RecreateRagdoll();
                 RagdollParams.CreateSnapshot();
+                ragdollResetRequiresForceLoading = true;
                 return true;
             };
             jointScaleBar.Bar.OnClicked += (button, data) =>
@@ -1386,6 +1387,7 @@ namespace Barotrauma
                     RecreateRagdoll();
                 }
                 RagdollParams.CreateSnapshot();
+                ragdollResetRequiresForceLoading = true;
                 return true;
             };
             var uniformScalingToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), ragdollControls.RectTransform)
