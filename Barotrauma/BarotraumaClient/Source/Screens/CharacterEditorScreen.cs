@@ -45,9 +45,9 @@ namespace Barotrauma
         private bool autoFreeze = true;
         private bool limbPairEditing = true;
         private bool uniformScaling = true;
-        private bool lockSpriteOrigin;
-        private bool lockSpritePosition;
-        private bool lockSpriteSize;
+        private bool lockSpriteOrigin = true;
+        private bool lockSpritePosition = true;
+        private bool lockSpriteSize = true;
         private bool copyJointSettings;
         private bool displayColliders;
         private bool displayBackgroundColor;
