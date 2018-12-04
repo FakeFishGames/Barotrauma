@@ -702,6 +702,7 @@ namespace Barotrauma
             var newLimbParams = new LimbParams(newLimbElement, RagdollParams);
             RagdollParams.Limbs.Add(newLimbParams);
             character.AnimController.Recreate();
+            CreateTextures();
             TeleportTo(spawnPosition);
             ClearWidgets();
             ClearSelection();
@@ -737,6 +738,7 @@ namespace Barotrauma
             var newJointParams = new JointParams(newJointElement, RagdollParams);
             RagdollParams.Joints.Add(newJointParams);
             character.AnimController.Recreate();
+            CreateTextures();
             TeleportTo(spawnPosition);
             ClearWidgets();
             ClearSelection();
@@ -2217,7 +2219,7 @@ namespace Barotrauma
             // Spritesheet
             GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 200, GameMain.GraphicsHeight - 150), "Left click to select the target limb for the other end of the joint.", Color.White, Color.Black * 0.5f, 10, GUI.Font);
             GUI.DrawLine(spriteBatch, startPos, PlayerInput.MousePosition, Color.LightGreen, width: 3);
-            if (targetLimb != null)
+            if (targetLimb != null && targetLimb.ActiveSprite != null)
             {
                 GUI.DrawRectangle(spriteBatch, GetLimbSpritesheetRect(targetLimb), Color.LightGreen, thickness: 3);
             }
@@ -2228,7 +2230,7 @@ namespace Barotrauma
             // Ragdoll
             GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 200, GameMain.GraphicsHeight - 150), "Left click to select the target limb for the other end of the joint.", Color.White, Color.Black * 0.5f, 10, GUI.Font);
             GUI.DrawLine(spriteBatch, startPos, PlayerInput.MousePosition, Color.LightGreen, width: 3);
-            if (targetLimb != null)
+            if (targetLimb != null && targetLimb.ActiveSprite != null)
             {
                 var sourceRect = targetLimb.ActiveSprite.SourceRect;
                 Vector2 size = sourceRect.Size.ToVector2() * Cam.Zoom * targetLimb.Scale * targetLimb.TextureScale;
