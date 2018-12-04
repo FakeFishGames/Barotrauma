@@ -39,8 +39,8 @@
     Ragdoll="Space"
     Health="H"
     Grab="G"
-    SelectPreviousCharacter="E"
-    SelectNextCharacter="R" />  
+    SelectPreviousCharacter="Z"
+    SelectNextCharacter="X" />  
   <gameplay>
     <jobpreferences>
       <job identifier="captain" />
