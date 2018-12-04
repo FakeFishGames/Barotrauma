@@ -999,6 +999,7 @@
   <ItemMsgSpearRequired>Out of spears</ItemMsgSpearRequired>
   <ItemMsgAmmoRequired>Out of ammo</ItemMsgAmmoRequired>
   <ItemMsgSyringeRequired>Out of syringes</ItemMsgSyringeRequired>
+  <ItemMsgUsePlasmaCutter>Cut [Plasma Cutter]</ItemMsgUsePlasmaCutter>
 
   <IDCardName>This belongs to [name].</IDCardName>
   <IDCardNameJob>This belongs to [name], the [job].</IDCardNameJob>
