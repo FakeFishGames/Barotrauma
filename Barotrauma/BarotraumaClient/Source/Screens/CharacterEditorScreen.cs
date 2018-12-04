@@ -1431,7 +1431,14 @@ namespace Barotrauma
             }
             animSelection.AddItem(AnimationType.SwimSlow.ToString(), AnimationType.SwimSlow);
             animSelection.AddItem(AnimationType.SwimFast.ToString(), AnimationType.SwimFast);
-            animSelection.SelectItem(character.AnimController.CanWalk ? AnimationType.Walk : AnimationType.SwimSlow);
+            if (character.AnimController.ForceSelectAnimationType == AnimationType.NotDefined)
+            {
+                animSelection.SelectItem(character.AnimController.CanWalk ? AnimationType.Walk : AnimationType.SwimSlow);
+            }
+            else
+            {
+                animSelection.SelectItem(character.AnimController.ForceSelectAnimationType);
+            }
             animSelection.OnSelected += (element, data) =>
             {
                 AnimationType previousAnim = character.AnimController.ForceSelectAnimationType;
