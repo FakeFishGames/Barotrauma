@@ -1602,7 +1602,8 @@ namespace Barotrauma.Networking
                 GameMain.ServerChildProcess = null;
             }
 
-            VoipClient.Dispose();
+            VoipClient?.Dispose();
+            VoipClient = null;
             GameMain.Client = null;
         }
         
