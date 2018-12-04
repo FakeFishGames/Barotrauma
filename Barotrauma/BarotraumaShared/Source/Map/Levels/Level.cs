@@ -1100,7 +1100,12 @@ namespace Barotrauma
                     double diffY = ruinArea.Center.Y - otherRuin.Area.Center.Y;
 
                     double distSqr = diffX * diffX + diffY * diffY;
-                    if (distSqr < 0.01f) { diffX = 0; diffY = -1; }
+                    if (distSqr < 0.01f)
+                    {
+                        diffX = 0;
+                        diffY = -1;
+                        distSqr = 1;
+                    }
 
                     double dist = Math.Sqrt(distSqr);
                     double moveAmountX = diffX / dist;
@@ -1119,6 +1124,12 @@ namespace Barotrauma
                     ruinPos.Y -= ((ruinPos.Y + ruinSize.Y / 2) - level.Size.Y);
                 }
                 if (iter > 10000) break;
+            }
+
+            if (Math.Abs(ruinPos.X) > int.MaxValue / 2 || Math.Abs(ruinPos.Y) > int.MaxValue / 2)
+            {
+                DebugConsole.ThrowError("Something went wrong during ruin generation. Ruin position: " + ruinPos);
+                return;
             }
 
             VoronoiCell closestPathCell = null;
