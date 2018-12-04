@@ -201,7 +201,7 @@ namespace Barotrauma
             
             if (!character.IsRemotePlayer && (character.AIController == null || character.AIController.CanFlip))
             {
-                if (!inWater || CurrentSwimParams.Mirror)
+                if (!inWater || (CurrentSwimParams != null && CurrentSwimParams.Mirror))
                 {
                     if (targetMovement.X > 0.1f && targetMovement.X > Math.Abs(targetMovement.Y) * 0.5f)
                     {
@@ -256,7 +256,7 @@ namespace Barotrauma
                 if (flipTimer > 1.0f || character.IsRemotePlayer)
                 {
                     Flip();
-                    if (!inWater || CurrentSwimParams.Mirror)
+                    if (!inWater || (CurrentSwimParams != null && CurrentSwimParams.Mirror))
                     {
                         Mirror();
                     }
@@ -331,6 +331,7 @@ namespace Barotrauma
 
         void UpdateSineAnim(float deltaTime)
         {
+            if (CurrentSwimParams == null) { return; }
             movement = TargetMovement;
 
             if (movement.LengthSquared() > 0.00001f)
@@ -435,6 +436,7 @@ namespace Barotrauma
             
         void UpdateWalkAnim(float deltaTime)
         {
+            if (CurrentGroundedParams == null) { return; }
             movement = MathUtils.SmoothStep(movement, TargetMovement, 0.2f);
             
             Collider.LinearVelocity = new Vector2(

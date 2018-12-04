@@ -31,6 +31,10 @@ namespace Barotrauma
         {
             get
             {
+                if (ForceSelectAnimationType != AnimationType.NotDefined)
+                {
+                    return GetAnimationParamsFromType(ForceSelectAnimationType) as GroundedMovementParams;
+                }
                 if (!CanWalk)
                 {
                     DebugConsole.ThrowError($"{character.SpeciesName} cannot walk!");
@@ -42,7 +46,20 @@ namespace Barotrauma
                 }
             }
         }
-        public SwimParams CurrentSwimParams => IsMovingFast ? SwimFastParams : SwimSlowParams;
+        public SwimParams CurrentSwimParams
+        {
+            get
+            {
+                if (ForceSelectAnimationType != AnimationType.NotDefined)
+                {
+                    return GetAnimationParamsFromType(ForceSelectAnimationType) as SwimParams;
+                }
+                else
+                {
+                    return IsMovingFast? SwimFastParams : SwimSlowParams;
+                }
+            }
+        }
 
         public bool CanWalk => CanEnterSubmarine;
         public bool IsMovingBackwards => !InWater && Math.Sign(targetMovement.X) == -Math.Sign(Dir);
