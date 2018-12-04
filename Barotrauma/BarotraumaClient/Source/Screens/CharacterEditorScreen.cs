@@ -2353,7 +2353,7 @@ namespace Barotrauma
             Vector2 drawPos = referencePoint;
             if (ShowCycleWidget())
             {
-                GetAnimationWidget($"{character.SpeciesName}_{CurrentAnimation.AnimationType.ToString()}_CycleSpeed", Color.MediumPurple, size: 20, sizeMultiplier: 1.5f, shape: Widget.Shape.Circle, initMethod: w =>
+                GetAnimationWidget("CycleSpeed", Color.MediumPurple, size: 20, sizeMultiplier: 1.5f, shape: Widget.Shape.Circle, initMethod: w =>
                 {
                     float multiplier = 0.5f;
                     w.tooltip = "Cycle Speed";
@@ -2400,7 +2400,7 @@ namespace Barotrauma
             }
             else
             {
-                GetAnimationWidget($"{character.SpeciesName}_{CurrentAnimation.AnimationType.ToString()}_MovementSpeed", Color.Turquoise, size: 20, sizeMultiplier: 1.5f, shape: Widget.Shape.Circle, initMethod: w =>
+                GetAnimationWidget("MovementSpeed", Color.Turquoise, size: 20, sizeMultiplier: 1.5f, shape: Widget.Shape.Circle, initMethod: w =>
                 {
                     float multiplier = 0.5f;
                     w.tooltip = "Movement Speed";
@@ -2459,7 +2459,7 @@ namespace Barotrauma
                 {
                     if (humanGroundedParams != null && character.AnimController is HumanoidAnimController humanAnimController)
                     {
-                        GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_HeadPosition", Color.Red, initMethod: w =>
+                        GetAnimationWidget("HeadPosition", Color.Red, initMethod: w =>
                         {
                             w.tooltip = "Head";
                             w.refresh = () => w.DrawPos = SimToScreen(head.SimPosition.X + humanAnimController.HeadLeanAmount * character.AnimController.Dir, head.PullJointWorldAnchorB.Y);
@@ -2481,7 +2481,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_HeadPosition", Color.Red, initMethod: w =>
+                        GetAnimationWidget("HeadPosition", Color.Red, initMethod: w =>
                         {
                             w.tooltip = "Head Position";
                             w.refresh = () => w.DrawPos = SimToScreen(head.SimPosition.X, head.PullJointWorldAnchorB.Y);
@@ -2518,7 +2518,7 @@ namespace Barotrauma
                     // Torso position and leaning
                     if (humanGroundedParams != null && character.AnimController is HumanoidAnimController humanAnimController)
                     {
-                        GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_TorsoPosition", Color.DarkRed, initMethod: w =>
+                        GetAnimationWidget("TorsoPosition", Color.DarkRed, initMethod: w =>
                         {
                             w.tooltip = "Torso";
                             w.refresh = () => w.DrawPos = SimToScreen(torso.SimPosition.X +  humanAnimController.TorsoLeanAmount * character.AnimController.Dir, torso.PullJointWorldAnchorB.Y);
@@ -2540,7 +2540,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_TorsoPosition", Color.DarkRed, initMethod: w =>
+                        GetAnimationWidget("TorsoPosition", Color.DarkRed, initMethod: w =>
                         {
                             w.tooltip = "Torso Position";
                             w.refresh = () => w.DrawPos = SimToScreen(torso.SimPosition.X, torso.PullJointWorldAnchorB.Y);
@@ -2601,7 +2601,7 @@ namespace Barotrauma
                 // Grounded only
                 if (groundedParams != null)
                 {
-                    GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_StepSize", Color.LimeGreen, initMethod: w =>
+                    GetAnimationWidget("StepSize", Color.LimeGreen, initMethod: w =>
                     {
                         w.tooltip = "Step Size";
                         w.refresh = () =>
@@ -2632,7 +2632,7 @@ namespace Barotrauma
             {
                 if (hand != null || arm != null)
                 {
-                    GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_HandMoveAmount", Color.LightGreen, initMethod: w =>
+                    GetAnimationWidget("HandMoveAmount", Color.LightGreen, initMethod: w =>
                     {
                         w.tooltip = "Hand Move Amount";
                         float offset = 0.1f;
@@ -2672,7 +2672,7 @@ namespace Barotrauma
                 Vector2 GetDir() => GetRefPoint() - GetDrawPos();
                 Vector2 GetStartPoint() => GetDrawPos() + GetDir() / 2;
                 Vector2 GetControlPoint() => GetStartPoint() + GetScreenSpaceForward().Right() * character.AnimController.Dir * GetAmplitude();
-                var lengthWidget = GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_WaveLength", Color.NavajoWhite, size: 15, shape: Widget.Shape.Circle, initMethod: w =>
+                var lengthWidget = GetAnimationWidget("WaveLength", Color.NavajoWhite, size: 15, shape: Widget.Shape.Circle, initMethod: w =>
                 {
                     w.tooltip = "Tail Movement Speed";
                     w.refresh = () => w.DrawPos = GetDrawPos();
@@ -2690,7 +2690,7 @@ namespace Barotrauma
                         }
                     };
                 });
-                var amplitudeWidget = GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_WaveAmplitude", Color.NavajoWhite, size: 15, shape: Widget.Shape.Circle, initMethod: w =>
+                var amplitudeWidget = GetAnimationWidget("WaveAmplitude", Color.NavajoWhite, size: 15, shape: Widget.Shape.Circle, initMethod: w =>
                 {
                     w.tooltip = "Tail Movement Amount";
                     w.refresh = () => w.DrawPos = GetControlPoint();
@@ -2729,7 +2729,7 @@ namespace Barotrauma
                 Vector2 GetDir() => GetRefPoint() - GetDrawPos();
                 Vector2 GetStartPoint() => GetDrawPos() + GetDir() / 2;
                 Vector2 GetControlPoint() => GetStartPoint() + GetScreenSpaceForward().Right() * character.AnimController.Dir * GetAmplitude();
-                var lengthWidget = GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_LegMovementSpeed", Color.NavajoWhite, size: 15, shape: Widget.Shape.Circle, initMethod: w =>
+                var lengthWidget = GetAnimationWidget("LegMovementSpeed", Color.NavajoWhite, size: 15, shape: Widget.Shape.Circle, initMethod: w =>
                 {
                     w.tooltip = "Leg Movement Speed";
                     w.refresh = () => w.DrawPos = GetDrawPos();
@@ -2747,7 +2747,7 @@ namespace Barotrauma
                         }
                     };
                 });
-                var amplitudeWidget = GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_LegMovementAmount", Color.NavajoWhite, size: 15, shape: Widget.Shape.Circle, initMethod: w =>
+                var amplitudeWidget = GetAnimationWidget("LegMovementAmount", Color.NavajoWhite, size: 15, shape: Widget.Shape.Circle, initMethod: w =>
                 {
                     w.tooltip = "Leg Movement Amount";
                     w.refresh = () => w.DrawPos = GetControlPoint();
@@ -2772,7 +2772,7 @@ namespace Barotrauma
                 lengthWidget.Draw(spriteBatch, deltaTime);
                 amplitudeWidget.Draw(spriteBatch, deltaTime);
                 // Arms
-                GetAnimationWidget($"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_HandMoveAmount", Color.LightGreen, initMethod: w =>
+                GetAnimationWidget("HandMoveAmount", Color.LightGreen, initMethod: w =>
                 {
                     w.tooltip = "Hand Move Amount";
                     float offset = 0.4f;
@@ -3633,18 +3633,28 @@ namespace Barotrauma
         #region Widgets as classes
         private Dictionary<string, Widget> animationWidgets = new Dictionary<string, Widget>();
 
-        private Widget GetAnimationWidget(string id, Color color, int size = 10, float sizeMultiplier = 2, Widget.Shape shape = Widget.Shape.Rectangle, Action<Widget> initMethod = null)
+        private Widget GetAnimationWidget(string name, Color color, int size = 10, float sizeMultiplier = 2, Widget.Shape shape = Widget.Shape.Rectangle, Action<Widget> initMethod = null)
         {
+            string id = $"{character.SpeciesName}_{character.AnimController.CurrentAnimationParams.AnimationType.ToString()}_{name}";
             if (!animationWidgets.TryGetValue(id, out Widget widget))
             {
                 int selectedSize = (int)Math.Round(size * sizeMultiplier);
                 widget = new Widget(id, size, shape)
                 {
-                    tooltipOffset = new Vector2(selectedSize / 2 + 5, -10)
+                    tooltipOffset = new Vector2(selectedSize / 2 + 5, -10),
+                    data = character.AnimController.CurrentAnimationParams
                 };
                 widget.MouseUp += () => CurrentAnimation.CreateSnapshot();
                 widget.color = color;
-                widget.PreUpdate += dTime => widget.Enabled = editAnimations;
+                widget.PreUpdate += dTime =>
+                {
+                    widget.Enabled = editAnimations;
+                    if (widget.Enabled)
+                    {
+                        AnimationParams data = widget.data as AnimationParams;
+                        widget.Enabled = data.AnimationType == character.AnimController.CurrentAnimationParams.AnimationType;
+                    }
+                };
                 widget.PostUpdate += dTime =>
                 {
                     if (widget.IsSelected)
