@@ -51,6 +51,8 @@ namespace Barotrauma.Networking
                     msg.Write((byte)queue.QueueID);
                     queue.Write(msg);
 
+                    GameMain.Server.CompressOutgoingMessage(msg);
+
                     netServer.SendMessage(msg, client.Connection, NetDeliveryMethod.Unreliable);
                 }
             }
