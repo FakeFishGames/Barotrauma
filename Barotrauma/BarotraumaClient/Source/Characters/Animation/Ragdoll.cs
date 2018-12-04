@@ -119,7 +119,21 @@ namespace Barotrauma
         partial void UpdateProjSpecific(float deltaTime)
         {
             LimbJoints.ForEach(j => j.UpdateDeformations(deltaTime));
-            SpriteDeformations.ForEach(sd => sd.Update(deltaTime));
+            foreach (var deformation in SpriteDeformations)
+            {
+                if (deformation.DeformationParams.UseMovementSine)
+                {
+                    if (this is AnimController animator)
+                    {
+                        // TODO: allow to use different smoothing. This is custom test smoothing for moloch.
+                        deformation.Phase = MathHelper.SmoothStep(deformation.Phase, animator.WalkPos, deltaTime * 7);
+                    }
+                }
+                else
+                {
+                    deformation.Update(deltaTime);
+                }
+            }
         }
 
         partial void FlipProjSpecific()

@@ -28,6 +28,15 @@ namespace Barotrauma.SpriteDeformations
 
         private CustomDeformationParams CustomDeformationParams => deformationParams as CustomDeformationParams;
 
+        public override float Phase
+        {
+            get { return phase; }
+            set
+            {
+                phase = value;
+                phase %= MathHelper.TwoPi;
+            }
+        }
         private float phase;
 
         public CustomDeformation(XElement element) : base(element, new CustomDeformationParams(element))
@@ -111,8 +120,11 @@ namespace Barotrauma.SpriteDeformations
 
         public override void Update(float deltaTime)
         {
-            phase += deltaTime * CustomDeformationParams.Frequency;
-            phase %= MathHelper.TwoPi;
+            if (!deformationParams.UseMovementSine)
+            {
+                phase += deltaTime * CustomDeformationParams.Frequency;
+                phase %= MathHelper.TwoPi;
+            }
         }
 
         public override void Save(XElement element)
