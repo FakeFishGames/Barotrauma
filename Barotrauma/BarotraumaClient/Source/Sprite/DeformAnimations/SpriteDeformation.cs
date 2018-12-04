@@ -37,6 +37,9 @@ namespace Barotrauma.SpriteDeformations
 
         public string Name => GetType().Name;
 
+        [Serialize(false, true)]
+        public bool UseMovementSine { get; set; }
+
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
             get;
@@ -78,6 +81,8 @@ namespace Barotrauma.SpriteDeformations
             Multiply,
             Override
         }
+
+        public virtual float Phase { get; set; }
 
         protected Vector2[,] Deformation { get; private set; }
 

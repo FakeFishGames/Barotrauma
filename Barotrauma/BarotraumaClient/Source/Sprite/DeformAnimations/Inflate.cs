@@ -18,6 +18,15 @@ namespace Barotrauma.SpriteDeformations
 
     class Inflate : SpriteDeformation
     {
+        public override float Phase
+        {
+            get { return phase; }
+            set
+            {
+                phase = value;
+                phase %= MathHelper.TwoPi;
+            }
+        }
         private float phase;
 
         private Vector2[,] deformation;
@@ -53,8 +62,11 @@ namespace Barotrauma.SpriteDeformations
 
         public override void Update(float deltaTime)
         {
-            phase += deltaTime * InflateParams.Frequency;
-            phase %= MathHelper.TwoPi;
+            if (!deformationParams.UseMovementSine)
+            {
+                phase += deltaTime * InflateParams.Frequency;
+                phase %= MathHelper.TwoPi;
+            }
         }
     }
 }
