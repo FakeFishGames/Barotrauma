@@ -9,9 +9,10 @@
             var missionMsg = new GUIMessageBox(mission.Name, mission.Description, 400, 400);
             missionMsg.UserData = "missionstartmessage";
 
-            //TODO: fix
-            //Networking.GameServer.Log(TextManager.Get("Mission") + ": " + mission.Name, Networking.ServerLog.MessageType.ServerMessage);
-            //Networking.GameServer.Log(mission.Description, Networking.ServerLog.MessageType.ServerMessage);
+#if SERVER
+            Networking.GameServer.Log(TextManager.Get("Mission") + ": " + mission.Name, Networking.ServerLog.MessageType.ServerMessage);
+            Networking.GameServer.Log(mission.Description, Networking.ServerLog.MessageType.ServerMessage);
+#endif
         }
     }
 }

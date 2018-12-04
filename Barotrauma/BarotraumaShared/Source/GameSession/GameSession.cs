@@ -232,11 +232,11 @@ namespace Barotrauma
             if (GameMode != null)
             {
                 GameMode.MsgBox();
-                /*TODO: fix
-                if (GameMode is MultiPlayerCampaign mpCampaign && GameMain.Server != null)
+                
+                if (GameMode is MultiPlayerCampaign mpCampaign && GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
                     mpCampaign.CargoManager.CreateItems();
-                }*/
+                }
             }
             
             GameAnalyticsManager.AddDesignEvent("Submarine:" + submarine.Name);

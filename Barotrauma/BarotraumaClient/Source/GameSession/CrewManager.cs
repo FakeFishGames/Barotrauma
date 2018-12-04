@@ -606,17 +606,14 @@ namespace Barotrauma
             {
                 List<Character> availableSpeakers = GameMain.GameSession.CrewManager.GetCharacters();
                 availableSpeakers.RemoveAll(c => !(c.AIController is HumanAIController) || c.IsDead || c.SpeechImpediment >= 100.0f);
-#if SERVER
-                //TODO: fix?
-                if (GameMain.Server != null)
+
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
-                    foreach (Client client in GameMain.Server.ConnectedClients)
+                    foreach (Client client in GameMain.NetworkMember.ConnectedClients)
                     {
                         if (client.Character != null) availableSpeakers.Remove(client.Character);
                     }
-                    if (GameMain.Server.Character != null) availableSpeakers.Remove(GameMain.Server.Character);
                 }
-#endif
                 
                 pendingConversationLines.AddRange(NPCConversation.CreateRandom(availableSpeakers));
                 conversationTimer = Rand.Range(ConversationIntervalMin, ConversationIntervalMax);
