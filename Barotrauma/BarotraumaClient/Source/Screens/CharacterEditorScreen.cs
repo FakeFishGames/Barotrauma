@@ -2617,7 +2617,6 @@ namespace Barotrauma
                             TryUpdateAnimParam("stepsize", groundedParams.StepSize + transformedInput);
                             w.tooltip = $"Step Size: {groundedParams.StepSize.FormatDoubleDecimal()}";
                         };
-                        w.PreDraw += (sp, dTime) => w.refresh();
                         w.PostDraw += (sp, dTime) =>
                         {
                             if (w.IsSelected)
