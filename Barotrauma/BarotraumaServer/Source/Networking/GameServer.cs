@@ -1391,7 +1391,7 @@ namespace Barotrauma.Networking
 
                 if (!teamClients.Any() && teamID > 1) continue;
 
-                AssignJobs(teamClients, teamID == hostTeam);
+                AssignJobs(teamClients);
 
                 List<CharacterInfo> characterInfos = new List<CharacterInfo>();
                 foreach (Client client in teamClients)
@@ -2262,9 +2262,8 @@ namespace Barotrauma.Networking
                 sender.JobPreferences = jobPreferences;
             }
         }
-
-        //TODO: remove second parameter
-        public void AssignJobs(List<Client> unassigned, bool assignHost)
+        
+        public void AssignJobs(List<Client> unassigned)
         {
             unassigned = new List<Client>(unassigned);
 

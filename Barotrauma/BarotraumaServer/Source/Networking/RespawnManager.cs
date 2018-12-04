@@ -165,7 +165,7 @@ namespace Barotrauma.Networking
             var botsToSpawn = GetBotsToRespawn();
             characterInfos.AddRange(botsToSpawn);
             
-            server.AssignJobs(clients, false);
+            server.AssignJobs(clients);
             foreach (Client c in clients)
             {
                 c.CharacterInfo.Job = new Job(c.AssignedJob);
