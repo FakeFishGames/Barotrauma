@@ -38,8 +38,8 @@ namespace Barotrauma.Sounds
 
         public void SetPosition(Vector3? pos)
         {
-            soundChannel.Near = 400.0f;
-            soundChannel.Far = 450.0f;
+            soundChannel.Near = 300.0f;
+            soundChannel.Far = 750.0f;
             soundChannel.Position = pos;
         }
 

@@ -22,9 +22,9 @@ namespace Barotrauma.Networking
         
         public static Color[] MessageColor = 
         {
-            new Color(125, 140, 153),   //default
+            new Color(190, 198, 205),   //default
             new Color(204, 74, 78),     //error
-            new Color(63, 72, 204),     //dead
+            new Color(136, 177, 255),     //dead
             new Color(157, 225, 160),   //server
             new Color(238, 208, 0),     //radio
             new Color(64, 240, 89),     //private

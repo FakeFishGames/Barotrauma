@@ -1,4 +1,6 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using Barotrauma.RuinGeneration;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
@@ -673,6 +675,8 @@ namespace Barotrauma
 
             levelObjectManager.PlaceObjects(this, generationParams.LevelObjectAmount);
 
+            GenerateItems();
+
             EqualityCheckVal = Rand.Int(int.MaxValue, Rand.RandSync.Server);
 
 #if CLIENT
@@ -1096,7 +1100,12 @@ namespace Barotrauma
                     double diffY = ruinArea.Center.Y - otherRuin.Area.Center.Y;
 
                     double distSqr = diffX * diffX + diffY * diffY;
-                    if (distSqr < 0.01f) { diffX = 0; diffY = -1; }
+                    if (distSqr < 0.01f)
+                    {
+                        diffX = 0;
+                        diffY = -1;
+                        distSqr = 1;
+                    }
 
                     double dist = Math.Sqrt(distSqr);
                     double moveAmountX = diffX / dist;
@@ -1115,6 +1124,12 @@ namespace Barotrauma
                     ruinPos.Y -= ((ruinPos.Y + ruinSize.Y / 2) - level.Size.Y);
                 }
                 if (iter > 10000) break;
+            }
+
+            if (Math.Abs(ruinPos.X) > int.MaxValue / 2 || Math.Abs(ruinPos.Y) > int.MaxValue / 2)
+            {
+                DebugConsole.ThrowError("Something went wrong during ruin generation. Ruin position: " + ruinPos);
+                return;
             }
 
             VoronoiCell closestPathCell = null;
@@ -1162,6 +1177,54 @@ namespace Barotrauma
                             break;
                         }
                     }
+                }
+            }
+        }
+
+        private void GenerateItems()
+        {
+            string levelName = generationParams.Name.ToLowerInvariant();
+            List<Pair<ItemPrefab, float>> levelItems = new List<Pair<ItemPrefab, float>>();
+            foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
+            {
+                if (!(mapEntityPrefab is ItemPrefab itemPrefab)) { continue; }
+
+                if (itemPrefab.LevelCommonness.TryGetValue(levelName, out float commonness))
+                {
+                    levelItems.Add(new Pair<ItemPrefab, float>(itemPrefab, commonness));
+                }
+            }
+
+            for (int i = 0; i < generationParams.ItemCount; i++)
+            {
+                var selectedPrefab = ToolBox.SelectWeightedRandom(
+                    levelItems.Select(it => it.First).ToList(),
+                    levelItems.Select(it => it.Second).ToList(),
+                    Rand.RandSync.Server);
+                if (selectedPrefab == null) { break; }
+
+                var selectedCell = cells[Rand.Int(cells.Count, Rand.RandSync.Server)];
+                var selectedEdge = selectedCell.Edges.GetRandom(e => e.IsSolid && !e.OutsideLevel, Rand.RandSync.Server);
+                if (selectedEdge == null) continue;
+
+                float edgePos = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server);
+                Vector2 selectedPos = Vector2.Lerp(selectedEdge.Point1, selectedEdge.Point2, edgePos);
+                Vector2 edgeNormal = selectedEdge.GetNormal(selectedCell);
+
+                var item = new Item(selectedPrefab, selectedPos, submarine: null);
+                item.Move(edgeNormal * item.Rect.Height / 2);
+                
+                var holdable = item.GetComponent<Holdable>();
+                if (holdable == null)
+                {
+                    DebugConsole.ThrowError("Error while placing items in the level - item \"" + item.Name + "\" is not holdable and cannot be attached to the level walls.");
+                }
+                else
+                {
+                    holdable.AttachToWall();
+#if CLIENT
+                    item.SpriteRotation = -MathUtils.VectorToAngle(edgeNormal) + MathHelper.PiOver2;
+#endif
                 }
             }
         }

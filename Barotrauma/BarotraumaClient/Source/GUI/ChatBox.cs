@@ -35,29 +35,13 @@ namespace Barotrauma
         const float PopupMessageDuration = 5.0f;
         private float popupMessageTimer;
         private Queue<GUIComponent> popupMessages = new Queue<GUIComponent>();
-        
+
         public GUITextBox.OnEnterHandler OnEnterMessage
         {
-            get
-            {
-                if (isSinglePlayer)
-                {
-                    DebugConsole.ThrowError("Cannot access chat input box in single player!\n" + Environment.StackTrace);
-                    return null;
-                }
-                return inputBox.OnEnterPressed;
-            }
-            set
-            {
-                if (isSinglePlayer)
-                {
-                    DebugConsole.ThrowError("Cannot access chat input box in single player!\n" + Environment.StackTrace);
-                    return;
-                }
-                inputBox.OnEnterPressed = value;
-            }
+            get { return inputBox.OnEnterPressed; }
+            set { inputBox.OnEnterPressed = value; }
         }
-        
+
         public GUIFrame GUIFrame
         {
             get { return guiFrame; }
@@ -91,7 +75,7 @@ namespace Barotrauma
 
             int toggleButtonWidth = (int)(30 * GUI.Scale);
             guiFrame = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ChatBoxArea, parent.RectTransform), style: null);
-            chatBox = new GUIListBox(new RectTransform(new Vector2(1.0f, isSinglePlayer ? 1.0f : 0.9f), guiFrame.RectTransform), style: "ChatBox");
+            chatBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.9f), guiFrame.RectTransform), style: "ChatBox");
             toggleButton = new GUIButton(new RectTransform(new Point(toggleButtonWidth, HUDLayoutSettings.ChatBoxArea.Height), parent.RectTransform),
                 style: "UIToggleButton");
             
@@ -106,39 +90,77 @@ namespace Barotrauma
                 return true;
             };
             
-            if (!isSinglePlayer)
+            inputBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), guiFrame.RectTransform, Anchor.BottomCenter),
+                style: "ChatTextBox")
             {
-                inputBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), guiFrame.RectTransform, Anchor.BottomCenter),
-                    style: "ChatTextBox")
-                {
-                    Font = GUI.SmallFont,
-                    MaxTextLength = ChatMessage.MaxLength
-                };
+                Font = GUI.SmallFont,
+                MaxTextLength = ChatMessage.MaxLength
+            };
 
-                radioButton = new GUIButton(new RectTransform(new Vector2(0.1f, 2.0f), inputBox.RectTransform,
-                    HUDLayoutSettings.ChatBoxAlignment == Alignment.Right ? Anchor.CenterLeft : Anchor.CenterRight, 
-                    HUDLayoutSettings.ChatBoxAlignment == Alignment.Right ? Pivot.CenterRight : Pivot.CenterLeft),
-                    style: null);
-                new GUIImage(new RectTransform(Vector2.One, radioButton.RectTransform), radioIcon, scaleToFit: true);
-                radioButton.OnClicked = (GUIButton btn, object userData) =>
+            radioButton = new GUIButton(new RectTransform(new Vector2(0.1f, 2.0f), inputBox.RectTransform,
+                HUDLayoutSettings.ChatBoxAlignment == Alignment.Right ? Anchor.BottomRight : Anchor.BottomLeft,
+                HUDLayoutSettings.ChatBoxAlignment == Alignment.Right ? Pivot.TopRight : Pivot.TopLeft),
+                style: null);
+            new GUIImage(new RectTransform(Vector2.One, radioButton.RectTransform), radioIcon, scaleToFit: true);
+            radioButton.OnClicked = (GUIButton btn, object userData) =>
+            {
+                if (inputBox.Selected)
                 {
-                    if (inputBox.Selected)
+                    inputBox.Text = "";
+                    inputBox.Deselect();
+                }
+                else
+                {
+                    inputBox.Select();
+                    var radioItem = Character.Controlled?.Inventory?.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
+                    if (radioItem != null && Character.Controlled.HasEquippedItem(radioItem) && radioItem.GetComponent<WifiComponent>().CanTransmit())
                     {
-                        inputBox.Text = "";
-                        inputBox.Deselect();
+                        inputBox.Text = "r; ";
+                    }
+                }
+                return true;
+            };
+        }
+
+        public bool TypingChatMessage(GUITextBox textBox, string text)
+        {
+            string command = ChatMessage.GetChatMessageCommand(text, out _);
+            if (IsSinglePlayer)
+            {
+                //radio is the only allowed special message type in single player
+                if (command != "r" && command != "radio")
+                {
+                    command = "";
+                }
+            }            
+
+            switch (command)
+            {
+                case "r":
+                case "radio":
+                    textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Radio];
+                    break;
+                case "d":
+                case "dead":
+                    textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Dead];
+                    break;
+                default:
+                    if (Character.Controlled != null && (Character.Controlled.IsDead || Character.Controlled.SpeechImpediment >= 100.0f))
+                    {
+                        textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Dead];
+                    }
+                    else if (command != "") //PMing
+                    {
+                        textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Private];
                     }
                     else
                     {
-                        inputBox.Select();
-                        var radioItem = Character.Controlled?.Inventory?.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
-                        if (radioItem != null && Character.Controlled.HasEquippedItem(radioItem) && radioItem.GetComponent<WifiComponent>().CanTransmit())
-                        {
-                            inputBox.Text = "r; ";
-                        }
+                        textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
                     }
-                    return true;
-                };
+                    break;
             }
+
+            return true;
         }
 
         public void AddMessage(ChatMessage message)
@@ -184,11 +206,11 @@ namespace Barotrauma
                 Character.Controlled != null && 
                 orderChatMsg.TargetCharacter == Character.Controlled)
             {
-                msgHolder.Flash(Color.OrangeRed, flashDuration: 5.0f);
+                msgHolder.Flash(Color.OrangeRed * 0.6f, flashDuration: 5.0f);
             }
             else
             {
-                msgHolder.Flash(Color.Yellow);
+                msgHolder.Flash(Color.Yellow * 0.6f);
             }
             //resize the holder to match the size of the message and add some spacing
             msgHolder.RectTransform.Resize(new Point(msgHolder.Rect.Width, msgHolder.Children.Sum(c => c.Rect.Height) + (int)(10 * GUI.Scale)), resizeChildren: false);
@@ -264,6 +286,8 @@ namespace Barotrauma
                 screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
                 prevUIScale = GUI.Scale;
             }
+
+
             
             if (toggleOpen || (inputBox != null && inputBox.Selected))
             {

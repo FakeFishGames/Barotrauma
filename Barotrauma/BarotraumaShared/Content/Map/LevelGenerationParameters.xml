@@ -48,6 +48,7 @@
     levelobjectamount="1000"
     MountainCountMin="0"
     MountainCountMax="3"
+    ItemCount="100"
     SeaFloorDepth="-300000"
     MountainHeightMin="10000"
     MountainHeightMax="20000">

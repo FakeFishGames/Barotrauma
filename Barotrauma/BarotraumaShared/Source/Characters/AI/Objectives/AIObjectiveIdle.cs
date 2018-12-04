@@ -1,4 +1,5 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.Items.Components;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -43,6 +44,10 @@ namespace Barotrauma
             if (character.SelectedCharacter != null)
             {
                 character.DeselectCharacter();
+            }
+            if (character.SelectedConstruction != null && character.SelectedConstruction.GetComponent<Ladder>() == null)
+            {
+                character.SelectedConstruction = null;
             }
             
             if (character.AnimController.InWater)

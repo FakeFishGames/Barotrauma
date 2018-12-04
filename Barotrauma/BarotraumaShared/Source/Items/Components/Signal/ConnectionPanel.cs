@@ -32,10 +32,10 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString())
                 {
                     case "input":                        
-                        Connections.Add(new Connection(subElement, item));
+                        Connections.Add(new Connection(subElement, this));
                         break;
                     case "output":
-                        Connections.Add(new Connection(subElement, item));
+                        Connections.Add(new Connection(subElement, this));
                         break;
                 }
             }
@@ -144,7 +144,7 @@ namespace Barotrauma.Items.Components
         public override void Load(XElement element)
         {
             base.Load(element);
-                        
+
             List<Connection> loadedConnections = new List<Connection>();
 
             foreach (XElement subElement in element.Elements())
@@ -152,15 +152,15 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString())
                 {
                     case "input":
-                        loadedConnections.Add(new Connection(subElement, item));
+                        loadedConnections.Add(new Connection(subElement, this));
                         break;
                     case "output":
-                        loadedConnections.Add(new Connection(subElement, item));
+                        loadedConnections.Add(new Connection(subElement, this));
                         break;
                 }
             }
-            
-            for (int i = 0; i<loadedConnections.Count && i<Connections.Count; i++)
+
+            for (int i = 0; i < loadedConnections.Count && i < Connections.Count; i++)
             {
                 loadedConnections[i].wireId.CopyTo(Connections[i].wireId, 0);
             }
