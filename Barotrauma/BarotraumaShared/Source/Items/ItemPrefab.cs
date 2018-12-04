@@ -444,11 +444,14 @@ namespace Barotrauma
                         Triggers.Add(trigger);
 
                         break;
-                    case "levelcommonness":
-                        string levelName = subElement.GetAttributeString("levelname", "").ToLowerInvariant();
-                        if (!LevelCommonness.ContainsKey(levelName))
+                    case "levelresource":
+                        foreach (XElement levelCommonnessElement in subElement.Elements())
                         {
-                            LevelCommonness.Add(levelName, subElement.GetAttributeFloat("commonness", 0.0f));
+                            string levelName = levelCommonnessElement.GetAttributeString("levelname", "").ToLowerInvariant();
+                            if (!LevelCommonness.ContainsKey(levelName))
+                            {
+                                LevelCommonness.Add(levelName, levelCommonnessElement.GetAttributeFloat("commonness", 0.0f));
+                            }
                         }
                         break;
                 }

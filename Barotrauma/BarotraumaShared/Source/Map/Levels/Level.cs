@@ -1209,8 +1209,10 @@ namespace Barotrauma
 
                 float edgePos = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server);
                 Vector2 selectedPos = Vector2.Lerp(selectedEdge.Point1, selectedEdge.Point2, edgePos);
+                Vector2 edgeNormal = selectedEdge.GetNormal(selectedCell);
 
                 var item = new Item(selectedPrefab, selectedPos, submarine: null);
+                item.Move(edgeNormal * item.Rect.Height / 2);
                 
                 var holdable = item.GetComponent<Holdable>();
                 if (holdable == null)
@@ -1221,7 +1223,7 @@ namespace Barotrauma
                 {
                     holdable.AttachToWall();
 #if CLIENT
-                    item.SpriteRotation = -MathUtils.VectorToAngle(selectedEdge.GetNormal(selectedCell)) + MathHelper.PiOver2;
+                    item.SpriteRotation = -MathUtils.VectorToAngle(edgeNormal) + MathHelper.PiOver2;
 #endif
                 }
             }
