@@ -97,7 +97,7 @@ namespace Barotrauma.Networking
                 CanBeFocused = false
             };
 
-            chatBox = new ChatBox(inGameHUD, false);
+            chatBox = new ChatBox(inGameHUD, isSinglePlayer: false);
             chatBox.OnEnterMessage += EnterChatMessage;
             chatBox.InputBox.OnTextChanged += TypingChatMessage;
 
@@ -1879,41 +1879,7 @@ namespace Barotrauma.Networking
 
         public bool TypingChatMessage(GUITextBox textBox, string text)
         {
-            // Do we need this kind of check here? 
-            // Had to remove this from the chatbox.TextBox.OnTextChanged delegate property, because the delegate was refactored as event and it cannot be accessed like that anymore.
-            //if (chatBox.IsSinglePlayer)
-            //{
-            //    DebugConsole.ThrowError("Cannot access chat input box in single player!\n" + Environment.StackTrace);
-            //    return false;
-            //}
-            string command = ChatMessage.GetChatMessageCommand(text, out _);
-            switch (command)
-            {
-                case "r":
-                case "radio":
-                    textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Radio];
-                    break;
-                case "d":
-                case "dead":
-                    textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Dead];
-                    break;
-                default:
-                    if (Character.Controlled != null && (Character.Controlled.IsDead || Character.Controlled.SpeechImpediment >= 100.0f))
-                    {
-                        textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Dead];
-                    }
-                    else if (command != "") //PMing
-                    {
-                        textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Private];
-                    }
-                    else
-                    {
-                        textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
-                    }
-                    break;
-            }
-
-            return true;
+            return chatBox.TypingChatMessage(textBox, text);
         }
 
         public bool EnterChatMessage(GUITextBox textBox, string message)

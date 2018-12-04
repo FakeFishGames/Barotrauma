@@ -396,7 +396,7 @@ namespace Barotrauma.RuinGeneration
 
             if (Prefab == null)
             {
-                DebugConsole.ThrowError("Loading ruin entity config failed - map entity prefab \"" + name + " not found.");
+                DebugConsole.ThrowError("Loading ruin entity config failed - map entity prefab \"" + name + "\" not found.");
                 return;
             }
 
