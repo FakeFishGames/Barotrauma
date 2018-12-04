@@ -46,69 +46,77 @@ namespace Barotrauma
         }
     }
     
-    partial class Attack
+    partial class Attack : ISerializableEntity
     {
         [Serialize(HitDetection.Distance, false)]
         public HitDetection HitDetectionType { get; private set; }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
         public float Range { get; private set; }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
         public float DamageRange { get; set; }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
         public float Duration { get; private set; }
         
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
         public float StructureDamage { get; private set; }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float ItemDamage { get; private set; }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 30.0f)]
         public float Stun { get; private set; }
 
-        [Serialize(false, false)]
+        [Serialize(false, false), Editable]
         public bool OnlyHumans { get; private set; }
 
         //force applied to the attacking limb (or limbs defined using ApplyForceOnLimbs)
         //the direction of the force is towards the target that's being attacked
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
         public float Force { get; private set; }
 
         //torque applied to the attacking limb
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
         public float Torque { get; private set; }
 
         //impulse applied to the target the attack hits
         //the direction of the impulse is from this limb towards the target (use negative values to pull the target closer)
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
         public float TargetImpulse { get; private set; }
 
         //impulse applied to the target, in world space coordinates (i.e. 0,-1 pushes the target downwards)
-        [Serialize("0.0, 0.0", false)]
+        [Serialize("0.0, 0.0", false), Editable]
         public Vector2 TargetImpulseWorld { get; private set; }
 
         //force applied to the target the attack hits 
         //the direction of the force is from this limb towards the target (use negative values to pull the target closer)
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false), Editable(-1000.0f, 1000.0f)]
         public float TargetForce { get; private set; }
 
         //force applied to the target, in world space coordinates (i.e. 0,-1 pushes the target downwards)
-        [Serialize("0.0, 0.0", false)]
+        [Serialize("0.0, 0.0", false), Editable]
         public Vector2 TargetForceWorld { get; private set; }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float SeverLimbsProbability { get; set; }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float Priority { get; private set; }
 
         public IEnumerable<StatusEffect> StatusEffects
         {
             get { return statusEffects; }
         }
+
+        public string Name => "Attack";
+
+        public Dictionary<string, SerializableProperty> SerializableProperties
+        {
+            get;
+            private set;
+        } = new Dictionary<string, SerializableProperty>();
 
         //the indices of the limbs Force is applied on 
         //(if none, force is applied only to the limb the attack is attached to)
@@ -161,7 +169,7 @@ namespace Barotrauma
 
         public Attack(XElement element, string parentDebugName)
         {
-            SerializableProperty.DeserializeProperties(this, element);
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
 
             if (element.Attribute("damage") != null ||
                 element.Attribute("bluntdamage") != null ||

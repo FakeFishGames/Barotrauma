@@ -2090,9 +2090,15 @@ namespace Barotrauma
                 {
                     foreach (var limbParams in RagdollParams.Limbs)
                     {
-                        if (selectedLimbs.Any(l => l.limbParams == limbParams))
+                        if (limbParams == null) { continue; }
+                        var selectedLimb = selectedLimbs.Find(l => l.limbParams == limbParams);
+                        if (selectedLimb != null)
                         {
-                            limbParams?.AddToEditor(ParamsEditor.Instance);
+                            limbParams.AddToEditor(ParamsEditor.Instance);
+                            if (selectedLimb.attack != null)
+                            {
+                                var attackEditor = new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, selectedLimb.attack, false, true);
+                            }
                         }
                     }
                 }
