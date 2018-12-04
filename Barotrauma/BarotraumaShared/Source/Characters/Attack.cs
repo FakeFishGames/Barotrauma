@@ -72,6 +72,27 @@ namespace Barotrauma
         [Serialize(false, false), Editable]
         public bool OnlyHumans { get; private set; }
 
+        [Serialize("", false), Editable]
+        public string ApplyForceOnLimbs
+        {
+            get
+            {
+                return string.Join(", ", ForceOnLimbIndices);
+            }
+            set
+            {
+                ForceOnLimbIndices.Clear();
+                if (string.IsNullOrEmpty(value)) { return; }
+                foreach (string limbIndexStr in value.Split(','))
+                {
+                    if (int.TryParse(limbIndexStr.Trim(), out int limbIndex))
+                    {
+                        ForceOnLimbIndices.Add(limbIndex);
+                    }
+                }
+            }
+        }
+
         //force applied to the attacking limb (or limbs defined using ApplyForceOnLimbs)
         //the direction of the force is towards the target that's being attacked
         [Serialize(0.0f, false), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
@@ -104,7 +125,7 @@ namespace Barotrauma
 
         [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float Priority { get; private set; }
-
+             
         public IEnumerable<StatusEffect> StatusEffects
         {
             get { return statusEffects; }
@@ -120,7 +141,7 @@ namespace Barotrauma
 
         //the indices of the limbs Force is applied on 
         //(if none, force is applied only to the limb the attack is attached to)
-        public readonly List<int> ApplyForceOnLimbs;
+        public readonly List<int> ForceOnLimbIndices = new List<int>();
 
         public readonly List<Affliction> Afflictions = new List<Affliction>();
 
@@ -182,19 +203,6 @@ namespace Barotrauma
             DamageRange = element.GetAttributeFloat("damagerange", Range);
 
             InitProjSpecific(element);
-
-            string limbIndicesStr = element.GetAttributeString("applyforceonlimbs", "");
-            if (!string.IsNullOrWhiteSpace(limbIndicesStr))
-            {
-                ApplyForceOnLimbs = new List<int>();
-                foreach (string limbIndexStr in limbIndicesStr.Split(','))
-                {
-                    if (int.TryParse(limbIndexStr, out int limbIndex))
-                    {
-                        ApplyForceOnLimbs.Add(limbIndex);
-                    }
-                }
-            }
 
             foreach (XElement subElement in element.Elements())
             {
