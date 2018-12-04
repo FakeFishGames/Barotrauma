@@ -453,6 +453,7 @@ namespace Barotrauma
 
         void UpdateStanding()
         {
+            if (CurrentGroundedParams == null) { return; }
             Vector2 handPos;
 
             //if you're allergic to magic numbers, stop reading now
@@ -831,6 +832,7 @@ namespace Barotrauma
         private float legCyclePos;
         void UpdateSwimming()
         {
+            if (CurrentSwimParams == null) { return; }
             IgnorePlatforms = true;
 
             Vector2 footPos, handPos;
