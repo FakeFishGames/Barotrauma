@@ -1731,7 +1731,7 @@ namespace Barotrauma
                     }
                     ResetParamsEditor();
                 }
-                CreateCenterPanel();
+                CreateGUI();
                 GUI.AddMessage($"Ragdoll reset", Color.WhiteSmoke, font: GUI.Font);
                 return true;
             };
