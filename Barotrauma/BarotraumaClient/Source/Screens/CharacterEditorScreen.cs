@@ -1638,6 +1638,7 @@ namespace Barotrauma
             };
             new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Auto Move")
             {
+                Selected = character.OverrideMovement != null,
                 OnSelected = box =>
                 {
                     character.OverrideMovement = box.Selected ? new Vector2(1, 0) as Vector2? : null;
