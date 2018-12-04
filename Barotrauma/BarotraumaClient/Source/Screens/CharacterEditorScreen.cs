@@ -2038,6 +2038,7 @@ namespace Barotrauma
                     limb.WearingItems.ForEach(i => i.Sprite.ReloadTexture());
                     limb.OtherWearables.ForEach(w => w.Sprite.ReloadTexture());
                 }
+                CreateTextures();
                 return true;
             };
             new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Recreate Ragdoll")
