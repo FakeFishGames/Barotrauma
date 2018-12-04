@@ -159,7 +159,15 @@ namespace Barotrauma
             while (queuedMessages.Count > 0)
             {
                 var newMsg = queuedMessages.Dequeue();
-                AddMessage(newMsg);
+                if (listBox == null)
+                {
+                    //don't attempt to add to the listbox if it hasn't been created yet                    
+                    Messages.Add(newMsg);
+                }
+                else
+                {
+                    AddMessage(newMsg);
+                }
 
                 if (GameSettings.SaveDebugConsoleLogs) unsavedMessages.Add(newMsg);
             }
