@@ -45,6 +45,14 @@ namespace Barotrauma.Networking
                 return;
             }
 
+            if (inc.SenderConnection == OwnerConnection)
+            {
+                //the client is the owner of the server, no need for authentication
+                //(it would fail with a "duplicate request" error anyway)
+                HandleClientAuthRequest(inc.SenderConnection, 0);
+                return;
+            }
+
             clientSteamID = inc.ReadUInt64();
             int authTicketLength = inc.ReadInt32();
             inc.ReadBytes(authTicketLength, out byte[] authTicketData);
