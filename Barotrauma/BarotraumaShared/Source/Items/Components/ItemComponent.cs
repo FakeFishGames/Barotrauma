@@ -56,7 +56,7 @@ namespace Barotrauma.Items.Components
         public float PickingTime
         {
             get;
-            private set;
+            set;
         }
 
         public readonly Dictionary<string, SerializableProperty> properties;

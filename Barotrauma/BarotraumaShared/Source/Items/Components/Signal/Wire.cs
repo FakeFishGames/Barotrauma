@@ -40,8 +40,18 @@ namespace Barotrauma.Items.Components
 
         private bool canPlaceNode;
         private Vector2 newNodePos;
-        
-        public bool Hidden, Locked;
+
+        public bool Hidden;
+
+        private bool locked;
+        public bool Locked
+        {
+            get
+            {
+                return locked || connections.Any(c => c != null && c.ConnectionPanel.Locked);
+            }
+            set { locked = value; }
+        }
 
         public Connection[] Connections
         {

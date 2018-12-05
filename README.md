@@ -4,6 +4,10 @@ Copyright © Undertow Games 2017-2018
 
 Before downloading the source code, please read the [EULA](EULA.txt).
 
+If you have a question or an issue to report, please check our [Contribution Guideline](https://github.com/Regalis11/Barotrauma/blob/master/CONTRIBUTING.md).
+
+If you're interested in working on the code, either to develop mods or to contribute something to the repository, you will also find instructions in the [Contribution Guideline](https://github.com/Regalis11/Barotrauma/blob/master/CONTRIBUTING.md).
+
 ## Links:
 
 **Official Website:** www.barotraumagame.com

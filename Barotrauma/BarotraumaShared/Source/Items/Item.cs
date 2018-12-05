@@ -21,7 +21,7 @@ namespace Barotrauma
         Always, OnPicked, OnUse, OnSecondaryUse,
         OnWearing, OnContaining, OnContained, OnNotContained,
         OnActive, OnFailure, OnBroken, 
-        OnFire, InWater,
+        OnFire, InWater, NotInWater,
         OnImpact,
         OnEating,
         OnDeath = OnBroken
@@ -207,6 +207,9 @@ namespace Barotrauma
             get { return spriteColor; }
         }
 
+        //the default value should be Prefab.Health, but because we can't use it in the attribute, 
+        //we'll just use NaN (which does nothing) and set the default value in the constructor/load
+        [Serialize(float.NaN, false), Editable]
         public float Condition
         {
             get { return condition; }
@@ -432,6 +435,7 @@ namespace Barotrauma
                     case "brokensprite":
                     case "decorativesprite":
                     case "price":
+                    case "levelcommonness":
                         break;
                     case "staticbody":
                         StaticBodyConfig = subElement;
@@ -850,6 +854,11 @@ namespace Barotrauma
                 targets.AddRange(character.AnimController.Limbs.ToList());
             }
 
+            if (effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters) || effect.HasTargetType(StatusEffect.TargetType.NearbyItems))
+            {
+                effect.GetNearbyTargets(WorldPosition, targets);
+            }
+
             if (Container != null && effect.HasTargetType(StatusEffect.TargetType.Parent)) targets.Add(Container);
             
             effect.Apply(type, deltaTime, this, targets);            
@@ -951,17 +960,17 @@ namespace Barotrauma
             }
 
             inWater = IsInWater();
+            bool waterProof = WaterProof;
             if (inWater)
             {
-                bool waterProof = WaterProof;
                 Item container = this.Container;
                 while (!waterProof && container != null)
                 {
                     waterProof = container.WaterProof;
                     container = container.Container;
                 }
-                if (!waterProof) ApplyStatusEffects(ActionType.InWater, deltaTime);
             }
+            ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
 
             if (body == null || !body.Enabled || !inWater || ParentInventory != null) return;
 

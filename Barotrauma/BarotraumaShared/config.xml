@@ -20,7 +20,7 @@
     losmode="Transparent"
     hudscale="1"
     inventoryscale="1" />
-  <contentpackage path="Data/ContentPackages/Vanilla 0.8.xml" />
+  <contentpackage path="Data/ContentPackages/Vanilla 0.9.xml" />
   <player name=""/>
   <keymapping
     Select="E"
@@ -30,7 +30,7 @@
     Down="S"
     Left="A"
     Right="D"
-    Attack="R"
+    Attack="F"
     Run="LeftShift"
     Crouch="LeftControl"
     Chat="Tab"
@@ -39,8 +39,8 @@
     Ragdoll="Space"
     Health="H"
     Grab="G"
-    SelectNextCharacter="Tab"
-    SelectPreviousCharacter="Q" />  
+    SelectPreviousCharacter="Z"
+    SelectNextCharacter="X" />  
   <gameplay>
     <jobpreferences>
       <job identifier="captain" />
