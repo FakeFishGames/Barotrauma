@@ -64,7 +64,7 @@ namespace Barotrauma.Items.Components
 
             if (PickingTime > 0.0f)
             {
-                if (picker.PickingItem == null)
+                if (picker.PickingItem == null && PickingTime <= float.MaxValue)
                 {
                     item.CreateServerEvent(this);
                     CoroutineManager.StartCoroutine(WaitForPick(picker, PickingTime));
@@ -162,20 +162,19 @@ namespace Barotrauma.Items.Components
         protected void DropConnectedWires(Character character)
         {
             Vector2 pos = character == null ? item.SimPosition : character.SimPosition;
-
-            var connectionPanel = item.GetComponent<ConnectionPanel>();
-            if (connectionPanel == null) return;
             
-            foreach (Connection c in connectionPanel.Connections)
+            foreach (ConnectionPanel connectionPanel in item.GetComponents<ConnectionPanel>())
             {
-                foreach (Wire w in c.Wires)
+                foreach (Connection c in connectionPanel.Connections)
                 {
-                    if (w == null) continue;
-
-                    w.Item.Drop(character);
-                    w.Item.SetTransform(pos, 0.0f);
+                    foreach (Wire w in c.Wires)
+                    {
+                        if (w == null) continue;
+                        w.Item.Drop(character);
+                        w.Item.SetTransform(pos, 0.0f);
+                    }
                 }
-            }            
+            }                       
         }
         
         public override void Drop(Character dropper)

@@ -124,7 +124,29 @@ namespace Barotrauma
 
             if (isSinglePlayer)
             {
-                chatBox = new ChatBox(guiFrame, true);
+                chatBox = new ChatBox(guiFrame, isSinglePlayer: true)
+                {
+                    OnEnterMessage = (textbox, text) =>
+                    {
+                        if (Character.Controlled == null) { return true; }
+
+                        textbox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
+
+                        if (!string.IsNullOrWhiteSpace(text))
+                        {
+                            string msgCommand = ChatMessage.GetChatMessageCommand(text, out string msg);
+                            AddSinglePlayerChatMessage(
+                                Character.Controlled.Info.DisplayName,
+                                msg,
+                                ((msgCommand == "r" || msgCommand == "radio") && ChatMessage.CanUseRadio(Character.Controlled)) ? ChatMessageType.Radio : ChatMessageType.Default,
+                                Character.Controlled);
+                        }
+                        textbox.Deselect();
+                        textbox.Text = "";
+                        return true;
+                    }                    
+                };
+                chatBox.InputBox.OnTextChanged += chatBox.TypingChatMessage;
             }
 
             var reports = Order.PrefabList.FindAll(o => o.TargetAllCharacters && o.SymbolSprite != null);
@@ -961,7 +983,29 @@ namespace Barotrauma
             }
 
             if (GUI.DisableHUD) return;
-            if (chatBox != null) chatBox.Update(deltaTime);
+            if (chatBox != null)
+            {
+                chatBox.Update(deltaTime);
+                chatBox.InputBox.Visible = Character.Controlled != null;
+
+                if ((PlayerInput.KeyHit(InputType.Chat) || PlayerInput.KeyHit(InputType.RadioChat)) &&
+                    !DebugConsole.IsOpen && chatBox.InputBox.Visible)
+                {
+                    if (chatBox.InputBox.Selected)
+                    {
+                        chatBox.InputBox.Text = "";
+                        chatBox.InputBox.Deselect();
+                    }
+                    else
+                    {
+                        chatBox.InputBox.Select();
+                        if (PlayerInput.KeyHit(InputType.RadioChat))
+                        {
+                            chatBox.InputBox.Text = "r; ";
+                        }
+                    }
+                }
+            }
 
             crewArea.Visible = characters.Count > 0 && CharacterHealth.OpenHealthWindow == null;
             if (orderTargetFrame != null) orderTargetFrame.Visible = characterListBox.Visible;
