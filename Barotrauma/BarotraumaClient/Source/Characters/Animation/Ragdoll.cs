@@ -125,8 +125,8 @@ namespace Barotrauma
                 {
                     if (this is AnimController animator)
                     {
-                        // TODO: allow to use different smoothing. This is custom test smoothing for moloch.
-                        deformation.Phase = MathHelper.SmoothStep(deformation.Phase, animator.WalkPos, deltaTime * 7);
+                        //deformation.Phase = MathUtils.WrapAngleTwoPi(animator.WalkPos + MathHelper.Pi);
+                        deformation.Phase = MathUtils.WrapAngleTwoPi(animator.WalkPos * deformation.DeformationParams.Frequency + MathHelper.Pi * deformation.DeformationParams.SineOffset);
                     }
                 }
                 else
