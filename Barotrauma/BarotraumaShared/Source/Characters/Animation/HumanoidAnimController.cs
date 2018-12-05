@@ -1005,7 +1005,7 @@ namespace Barotrauma
                 var foot = i == -1 ? GetLimb(LimbType.LeftFoot) : GetLimb(LimbType.RightFoot);
                 if (foot != null)
                 {
-                    foot.body.SmoothRotate(leg.body.Rotation + (CurrentSwimParams.FootAngleInRadians + MathHelper.PiOver2) * Dir, CurrentGroundedParams.FootRotateStrength);
+                    foot.body.SmoothRotate(leg.body.Rotation + (CurrentSwimParams.FootAngleInRadians + MathHelper.PiOver2) * Dir, CurrentSwimParams.FootRotateStrength);
                 }
             }
 
