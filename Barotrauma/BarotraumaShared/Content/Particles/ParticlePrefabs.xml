@@ -1046,4 +1046,37 @@
     <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="192,96,32,32"/>
     <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="224,96,32,32"/>
   </brownchunks>
+  
+  <aliengas
+    lifetime="5"
+    startdelaymin="0"
+    startdelaymax="0"
+    angularvelocitymin="10"
+    angularvelocitymax="50"
+    startrotationmin="0"
+    startrotationmax="360"
+    rotatetodirection="False"
+    drag="0"
+    waterdrag="0"
+    velocitychange="0,0.1"
+    velocitychangewater="0,0.2"
+    collisionradius="1"
+    usecollision="False"
+    deleteoncollision="False"
+    friction="0.5"
+    restitution="0.5"
+    startsizemin="0.1,0.1"
+    startsizemax="0.4,0.4"
+    sizechangemin="0.1,0.1"
+    sizechangemax="0.2,0.2"
+    growtime="0.1"
+    startcolor="0.003921569,0.1254902,0.1882353,1"
+    startalpha="1"
+    colorchange="0,-0.001,-0.001,-0.2"
+    drawtarget="Air"
+    blendstate="AlphaBlend"
+    animduration="5"
+    loopanim="True">
+    <animatedsprite texture="Content/Particles/Smoke.png" sourcerect="0,0,4096,4096" columns="8" rows="8" origin="0.5,0.5"/>
+  </aliengas>
 </prefabs>
