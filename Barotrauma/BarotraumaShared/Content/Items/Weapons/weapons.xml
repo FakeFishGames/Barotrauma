@@ -75,6 +75,7 @@
     <Price locationtype="Military" buyprice="15" />
     <Price locationtype="City" buyprice="20" />
     <Price locationtype="Outpost" buyprice="30" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,384,64,64" />
     <Sprite texture="weapons.png" sourcerect="1,1,16,9" depth="0.55" />
     <Body width="8" height="3" density="40" />
     <Pickable slots="Any" />
