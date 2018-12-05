@@ -1576,7 +1576,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Data\clientpermissions.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Data\ContentPackages\Vanilla 0.8.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Data\ContentPackages\Vanilla 0.9.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Data\permissionpresets.xml">

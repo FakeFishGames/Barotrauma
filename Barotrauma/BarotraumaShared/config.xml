@@ -20,7 +20,7 @@
     losmode="Transparent"
     hudscale="1"
     inventoryscale="1" />
-  <contentpackage path="Data/ContentPackages/Vanilla 0.8.xml" />
+  <contentpackage path="Data/ContentPackages/Vanilla 0.9.xml" />
   <player name=""/>
   <keymapping
     Select="E"
