@@ -95,12 +95,24 @@ namespace Barotrauma.Networking
                 {
                     throw new Exception("Failed to capture samples: " + alcError.ToString());
                 }
-                
-                //encode audio and enqueue it
-                lock (buffers)
+
+                double maxAmplitude = 0.0f;
+                for (int i=0;i<VoipConfig.BUFFER_SIZE;i++)
                 {
-                    int compressedCount = VoipConfig.Encoder.Encode(uncompressedBuffer, 0, VoipConfig.BUFFER_SIZE, BufferToQueue, 0, VoipConfig.MAX_COMPRESSED_SIZE);
-                    EnqueueBuffer(compressedCount);
+                    double sampleVal = (double)uncompressedBuffer[i] / (double)short.MaxValue;
+                    maxAmplitude = Math.Max(maxAmplitude, Math.Abs(sampleVal));
+                }
+                double dB = 20*Math.Log10(maxAmplitude); //TODO: optimize?
+                
+                //TODO: make this an option
+                if (dB > -40)
+                {
+                    //encode audio and enqueue it
+                    lock (buffers)
+                    {
+                        int compressedCount = VoipConfig.Encoder.Encode(uncompressedBuffer, 0, VoipConfig.BUFFER_SIZE, BufferToQueue, 0, VoipConfig.MAX_COMPRESSED_SIZE);
+                        EnqueueBuffer(compressedCount);
+                    }
                 }
 
                 Thread.Sleep(VoipConfig.BUFFER_SIZE * 800 / VoipConfig.FREQUENCY);
