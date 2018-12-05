@@ -3,7 +3,7 @@
   flip="True"
   mirror="True"
   waveamplitude="1"
-  wavelength="10"
+  wavelength="300"
   rotatetowardsmovement="False"
   torsotorque="25"
   headtorque="25"
@@ -11,8 +11,9 @@
   tailtorque="50"
   footangles=""
   steertorque="175"
-  movementspeed="3"
+  movementspeed="4.492309"
   cyclespeed="1"
   headangle="NaN"
   torsoangle="0"
-  tailangle="NaN" />
+  tailangle="NaN"
+  usesinemovement="True" />

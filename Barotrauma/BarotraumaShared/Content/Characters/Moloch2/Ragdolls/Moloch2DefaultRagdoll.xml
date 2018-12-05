@@ -7,9 +7,9 @@
     <!--<sprite texture="Content/Characters/Moloch2/Moloch2.png" sourcerect="423,1025,1226,915" origin="0.5,0.5" depth="0" />-->
     <deformablesprite texture="Content/Characters/Moloch2/Moloch2.png" sourcerect="423,1025,1226,915" depth="0.29" origin="0.5,0.5" subdivisions="15,15">
       <Spritedeformation type="noise" resolution="5,5" frequency="0.5" amplitude="1" changespeed="0.1" blendmode="add" />
-      <SpriteDeformation type="inflate" resolution="5,5" frequency="2" scale="0.5" blendmode="add" usemovementsine="true" />
+      <SpriteDeformation type="inflate" resolution="5,5" frequency="2" scale="0.5" blendmode="add" usemovementsine="true" sineoffset="0.75"/>
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="0.5,0 0.5,0 0.5,0 0.5,0 0,0" row2="0.75,0 0.75,0 1,0 0.75,0 0,0" row3="0,0 0.5,0 0.5,0 0.5,0 0.75,0" row4="0.1,0 0.1,0 0.1,0 0.1,0 0.25,0" />
-      <SpriteDeformation type="custom" resolution="5,5" frequency="1" amplitude="0.2" blendmode="add" row0="0,0 0,0 0,0 0,0 0," row1="0,0 0,0.5 0,0.5 0,0 0,0" row2="0,0 0,0.75 0,1 0,0.75 0,0" row3="0,1 0,1 0,1 0,1 0,1" row4="0,0.5 0,0.25 0,0.75 0,0.25 0,0.5" usemovementsine="true" />
+      <SpriteDeformation type="custom" resolution="5,5" frequency="2" amplitude="0.2" blendmode="add" row0="0,0 0,0 0,0 0,0 0," row1="0,0 0,0.5 0,0.5 0,0 0,0" row2="0,0 0,0.75 0,1 0,0.75 0,0" row3="0,1 0,1 0,1 0,1 0,1" row4="0,0.5 0,0.25 0,0.75 0,0.25 0,0.5" usemovementsine="true" sineoffset="0.75"/>
     </deformablesprite>
   </limb>
   <limb id="7" name="TentacleArm11" type="LeftArm" radius="73" height="180" notes="2bl_TentacleArm11" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">

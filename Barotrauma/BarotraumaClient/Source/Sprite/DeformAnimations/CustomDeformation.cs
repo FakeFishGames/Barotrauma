@@ -11,7 +11,7 @@ namespace Barotrauma.SpriteDeformations
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f,
             ToolTip = "How fast the deformation \"oscillates\" back and forth. " +
             "For example, if the sprite is stretched up, setting this value above zero would make it do a wave-like movement up and down.")]
-        public float Frequency { get; set; }
+        public override float Frequency { get; set; } = 1;
 
         [Serialize(1.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f,
             ToolTip = "The \"strength\" of the deformation.")]
@@ -34,7 +34,7 @@ namespace Barotrauma.SpriteDeformations
             set
             {
                 phase = value;
-                phase %= MathHelper.TwoPi;
+                //phase %= MathHelper.TwoPi;
             }
         }
         private float phase;

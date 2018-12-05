@@ -343,9 +343,14 @@ namespace Barotrauma
             if (SimplePhysicsEnabled) { return; }
 
             MainLimb.PullJointEnabled = true;
-            MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
+            //MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
 
-            if (movement.LengthSquared() < 0.00001f) return;
+            if (movement.LengthSquared() < 0.00001f)
+            {
+                WalkPos = MathHelper.SmoothStep(WalkPos, MathHelper.PiOver2, deltaTime * 5);
+                MainLimb.PullJointWorldAnchorB = Vector2.Lerp(MainLimb.PullJointWorldAnchorB, Collider.SimPosition, 0.5f);
+                return;
+            }
 
             float movementAngle = MathUtils.VectorToAngle(movement) - MathHelper.PiOver2;            
             if (CurrentSwimParams.RotateTowardsMovement)
@@ -430,7 +435,17 @@ namespace Barotrauma
                 Vector2 pullPos = Limbs[i].PullJointWorldAnchorA;
                 Limbs[i].body.ApplyForce(movement * Limbs[i].SteerForce * Limbs[i].Mass, pullPos);
             }
-                            
+
+            if (CurrentSwimParams.UseSineMovement)
+            {
+                MainLimb.PullJointWorldAnchorB = Vector2.SmoothStep(MainLimb.PullJointWorldAnchorB, Collider.SimPosition, (float)Math.Abs(Math.Sin(WalkPos)));
+            }
+            else
+            {
+                //MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
+                MainLimb.PullJointWorldAnchorB = Vector2.Lerp(MainLimb.PullJointWorldAnchorB, Collider.SimPosition, 0.5f);
+            }
+
             floorY = Limbs[0].SimPosition.Y;            
         }
             

@@ -140,6 +140,9 @@ namespace Barotrauma
 
     abstract class FishSwimParams : SwimParams, IFishAnimation
     {
+        [Serialize(false, true), Editable(ToolTip = "TODO")]
+        public bool UseSineMovement { get; set; }
+
         [Serialize(true, true), Editable(ToolTip = "Should the character be flipped depending on which direction it faces. Should usually be enabled on all characters that have distinctive upper and lower sides.")]
         public bool Flip { get; set; }
 
