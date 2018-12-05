@@ -190,7 +190,7 @@
       <output name="state_out" />
     </ConnectionPanel>
   </Item>
-  <Item name="Alien Motion Sensor" identifier="alienmotionsensor" category="Alien" Tags="alien">
+  <Item name="Alien Motion Sensor" identifier="alienmotionsensor" category="Alien" Tags="alien" scale="0.5">
     <Sprite texture="Content/Items/Alien/AlienMotionSensor.png" sourcerect="3,4,110,112" depth="0.8" origin="0.5,0.5" />
     <MotionSensor range="300" output="0" />
     <ConnectionPanel canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
@@ -236,9 +236,8 @@
       <output name="power_out" />
     </ConnectionPanel>
   </Item>
-  <Item name="Alien Turret" identifier="alienturret" Tags="turret,alien" category="Alien">
-    <!-- TODO: alien turret sprite -->
-    <Sprite texture="Content/Items/Weapons/coilgunbase.png" depth="0.01" sourcerect="0,0,256,256" canflipy="false" />
+  <Item name="Alien Turret" identifier="alienturret" Tags="turret,alien" category="Alien" scale="0.5">
+    <Sprite texture="Content/Items/Alien/AlienTurret.png" depth="0.5" sourcerect="293,28,141,456" canflipy="false" />
     <ItemContainer hideitems="true" drawinventory="true" capacity="1" canbeselected="false" characterusable="true">
       <Containable identifiers="alienturretammo" />
       <!-- when the turret is fired, it triggers this statuseffect and spawns new ammo -->
@@ -246,10 +245,9 @@
         <SpawnItem identifiers="alienturretammo" spawnposition="ThisInventory" />
       </StatusEffect>
     </ItemContainer>
-    <Turret canbeselected="false" characterusable="false" linkable="true" barrelpos="128,88" rotationlimits="0,360" powerconsumption="10000.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="50" reload="2" springstiffnesslowskill="2" springstiffnesshighskill="2" springdampinglowskill="0.5" springdampinghighskill="0.5" rotationspeedlowskill="1" rotationspeedhighskill="1">
+    <Turret canbeselected="false" characterusable="false" linkable="true" barrelpos="8,230" rotationlimits="0,360" powerconsumption="10000.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="50" reload="3" springstiffnesslowskill="2" springstiffnesshighskill="2" springdampinglowskill="0.5" springdampinghighskill="0.5" rotationspeedlowskill="1" rotationspeedhighskill="1">
       <sound file="Content/Items/Weapons/coilgun.ogg" range="10000" type="OnUse" />
-      <BarrelSprite texture="Content/Items/Weapons/coilgunbarrel.png" origin="0.6, 0.8" />
-      <RailSprite texture="Content/Items/Weapons/coilgunrail.png" origin="0.64, 0.7" />
+      <BarrelSprite texture="Content/Items/Alien/AlienTurret.png" sourcerect="2,20,286,484" origin="0.5,0.73" depth="0.4"/>
       <MoveSound file="Content/Items/Weapons/railgunloop.ogg" />
       <StartMoveSound file="Content/Items/Weapons/railgunstart.ogg" />
       <EndMoveSound file="Content/Items/Weapons/railgunstop.ogg" />
@@ -273,17 +271,17 @@
     <Sprite texture="artifact.png" depth="0.7" sourcerect="1,0,57,56" origin="0.5,0.5" />
     <Body radius="25" density="10" />
     <Projectile characterusable="false" launchimpulse="20.0">
-      <Attack structuredamage="5" severlimbsprobability="0.5">
-        <Affliction identifier="psychosis" strength="1" />
+      <Attack structuredamage="0" severlimbsprobability="0.5">
+        <Affliction identifier="psychosis" strength="5" />
       </Attack>
       <StatusEffect type="OnActive" target="This">
-        <ParticleEmitter particle="blackwaterblood" anglemin="0" anglemax="360" particlespersecond="60" scalemin="1" scalemax="2" />
+        <ParticleEmitter particle="blackwaterblood" anglemin="0" anglemax="360" particlespersecond="30" scalemin="1" scalemax="2" />
       </StatusEffect>
       <!-- reduce condition to give the bolt a 5 second lifetime -->
       <StatusEffect type="OnNotContained" target="This" condition="-20" />
       <StatusEffect type="OnImpact" target="This" condition="-100" />
       <StatusEffect type="OnBroken" target="This">
-        <Explosion range="100.0" structuredamage="100" force="20.0">
+        <Explosion range="300.0" structuredamage="0" force="20.0">
           <Affliction identifier="internaldamage" strength="10" />
         </Explosion>
         <Remove />
