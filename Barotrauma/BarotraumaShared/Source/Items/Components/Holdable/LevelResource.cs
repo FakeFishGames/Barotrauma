@@ -82,7 +82,7 @@ namespace Barotrauma.Items.Components
         {
             if (trigger != null)
             {
-                GameMain.World.RemoveBody(trigger.FarseerBody);
+                trigger.Remove();
                 trigger = null;
             }
         }

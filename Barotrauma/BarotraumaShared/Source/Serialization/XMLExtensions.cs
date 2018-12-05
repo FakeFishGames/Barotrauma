@@ -344,10 +344,7 @@ namespace Barotrauma
 
         public static string ColorToString(Color color)
         {
-            return (color.R / 255.0f).ToString("G", CultureInfo.InvariantCulture) + "," +
-                    (color.G / 255.0f).ToString("G", CultureInfo.InvariantCulture) + "," +
-                    (color.B / 255.0f).ToString("G", CultureInfo.InvariantCulture) + "," +
-                    (color.A / 255.0f).ToString("G", CultureInfo.InvariantCulture);
+            return color.R + "," + color.G + "," + color.B + "," + color.A;
         }
 
         public static string RectToString(Rectangle rect)

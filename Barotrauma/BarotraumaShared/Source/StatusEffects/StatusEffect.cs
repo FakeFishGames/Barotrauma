@@ -24,7 +24,16 @@ namespace Barotrauma
         [Flags]
         public enum TargetType
         {
-            This = 1, Parent = 2, Character = 4, Contained = 8, Nearby = 16, UseTarget = 32, Hull = 64, Limb = 128, AllLimbs = 256
+            This = 1,
+            Parent = 2,
+            Character = 4,
+            Contained = 8,
+            NearbyCharacters = 16,
+            NearbyItems = 32,
+            UseTarget = 64,
+            Hull = 128,
+            Limb = 256,
+            AllLimbs = 512
         }
 
         class ItemSpawnInfo
@@ -138,6 +147,13 @@ namespace Barotrauma
 
         private List<Pair<string, float>> ReduceAffliction;
 
+        //only applicable if targeting NearbyCharacters or NearbyItems
+        public float Range
+        {
+            get;
+            private set;
+        }
+
         public string Tags
         {
             get { return string.Join(",", tags); }
@@ -173,6 +189,8 @@ namespace Barotrauma
             Afflictions = new List<Affliction>();
             ReduceAffliction = new List<Pair<string, float>>();
             tags = new HashSet<string>(element.GetAttributeString("tags", "").Split(','));
+
+            Range = element.GetAttributeFloat("range", 0.0f);
 
 #if CLIENT
             particleEmitters = new List<ParticleEmitter>();
@@ -379,6 +397,37 @@ namespace Barotrauma
                 }
             }
             return true;
+        }
+
+        public void GetNearbyTargets(Vector2 worldPosition, List<ISerializableEntity> targets)
+        {
+            if (Range <= 0.0f) { return; }
+            if (HasTargetType(TargetType.NearbyCharacters))
+            {
+                foreach (Character c in Character.CharacterList)
+                {
+                    if (!c.Enabled) { continue; }
+                    float xDiff = Math.Abs(c.WorldPosition.X - worldPosition.X);
+                    if (xDiff > Range) { continue; }
+                    float yDiff = Math.Abs(c.WorldPosition.Y - worldPosition.Y);
+                    if (yDiff > Range) { continue; }
+
+                    if (xDiff * xDiff + yDiff * yDiff < Range * Range) { targets.Add(c); }
+                }
+            }
+            if (HasTargetType(TargetType.NearbyItems))
+            {
+                foreach (Item item in Item.ItemList)
+                {
+                    float xDiff = Math.Abs(item.WorldPosition.X - worldPosition.X);
+                    if (xDiff > Range) { continue; }
+                    float yDiff = Math.Abs(item.WorldPosition.Y - worldPosition.Y);
+                    if (yDiff > Range) { continue; }
+
+                    if (xDiff * xDiff + yDiff * yDiff < Range * Range) { targets.Add(item); }
+                }
+            }
+            return;
         }
 
         public virtual bool HasRequiredConditions(List<ISerializableEntity> targets)

@@ -215,7 +215,7 @@ namespace Barotrauma
                         {
                             statusEffect.Apply(ActionType.OnUse, 1.0f, damageSource, statusEffectTargets);
                             statusEffect.Apply(ActionType.Always, 1.0f, damageSource, statusEffectTargets);
-                            if (underWater) statusEffect.Apply(ActionType.InWater, 1.0f, damageSource, statusEffectTargets);
+                            statusEffect.Apply(underWater ? ActionType.InWater : ActionType.NotInWater, 1.0f, damageSource, statusEffectTargets);
                         }
                     }
                     
