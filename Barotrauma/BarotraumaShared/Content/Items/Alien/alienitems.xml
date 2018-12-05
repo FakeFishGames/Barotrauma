@@ -240,6 +240,7 @@
     <Sprite texture="Content/Items/Alien/AlienTurret.png" depth="0.5" sourcerect="293,28,141,456" canflipy="false" />
     <ItemContainer hideitems="true" drawinventory="true" capacity="1" canbeselected="false" characterusable="true">
       <Containable identifiers="alienturretammo" />
+      <!-- TODO: fix this - now it doesn't check the reload state of the turret and constantly creates new projectiles when receiving a trigger signal-->
       <!-- when the turret is fired, it triggers this statuseffect and spawns new ammo -->
       <StatusEffect type="OnUse" target="Contained">
         <SpawnItem identifiers="alienturretammo" spawnposition="ThisInventory" />
