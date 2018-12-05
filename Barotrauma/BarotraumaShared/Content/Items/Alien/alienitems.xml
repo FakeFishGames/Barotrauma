@@ -177,10 +177,10 @@
     </ConnectionPanel>
   </Item>
   <Item name="Alien Door" identifier="aliendoor" category="Alien" Tags="alien">
-    <Sprite texture="Content/Map/ruins.png" sourcerect="746,101,93,259" depth="0.8" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Alien/AlienDoor.png" sourcerect="0,0,48,208" depth="0.8" origin="0.5,0.5" />
     <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0">
       <RequiredItem identifier="crowbar" type="Equipped" />
-      <Sprite texture="Content/Map/ruins.png" sourcerect="842,192,54,259" depth="0.6" origin="0.5,0.0" />
+      <Sprite texture="Content/Items/Alien/AlienDoor.png" sourcerect="56,0,19,208" depth="0.6" origin="0.5,0.0" />
       <sound file="Content/Items/Alien/aliendoor.ogg" type="OnUse" range="3000.0" />
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0" />
     </Door>
@@ -191,7 +191,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Alien Motion Sensor" identifier="alienmotionsensor" category="Alien" Tags="alien">
-    <Sprite texture="Content/Map/ruins.png" sourcerect="55,608,81,103" depth="0.8" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Alien/AlienMotionSensor.png" sourcerect="3,4,110,112" depth="0.8" origin="0.5,0.5" />
     <MotionSensor range="300" output="0" />
     <ConnectionPanel canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -199,7 +199,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Artifact Holder" identifier="artifactholder" category="Alien" Tags="alien">
-    <Sprite texture="artifactholder.png" depth="0.8" sourcerect="0,0,256,256" />
+    <Sprite texture="Content/Items/Alien/artifactholder.png" depth="0.8" sourcerect="0,0,256,256" />
     <ItemContainer capacity="1" canbeselected="true" hideitems="false" itempos="128,-128" autointeractwithcontained="true">
       <Containable identifiers="alien" />
       <Containable identifiers="thermalartifact">
@@ -209,7 +209,9 @@
         <StatusEffect type="OnContaining" target="This" Charge="10.0" />
       </Containable>
     </ItemContainer>
-    <LightComponent lightcolor="0.6,0.8,1.0,1.0" canbeselected="false" range="800.0" IsOn="true" />
+    <LightComponent lightcolor="153,204,255,200" canbeselected="false" range="800.0" IsOn="true" castshadows="false">
+      <sprite texture="Content/Items/Alien/artifactholder_glow.png" depth="0.025" origin="0.5,0.5" alpha="1.0"/>
+    </LightComponent>
     <PowerContainer capacity="20000.0" canbeselected="false" maxrechargespeed="10000.0" maxoutput="10000.0" />
     <ConnectionPanel canbeselected="false" hudpriority="10">
       <output name="power_out" />

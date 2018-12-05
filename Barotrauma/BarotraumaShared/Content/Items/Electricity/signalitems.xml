@@ -295,7 +295,7 @@
       <input name="set_color" />
     </ConnectionPanel>
   </Item>
-  <Item name="Oxygen Detector" identifier="oxygendetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a value between 0-100 depending on the quality of the surrounding air.">
+  <Item name="Oxygen Detector" identifier="oxygendetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a value between 0-100 depending on the quality of the surrounding air." scale="0.16">
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -305,7 +305,7 @@
       <Item identifier="fpgacircuit" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,256,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="94,0,25,23" origin="0.5,0.5" />
+    <Sprite texture="detectors.png" depth="0.8" sourcerect="128,0,140,89" origin="0.5,0.5" />
     <OxygenDetector canbeselected="true" />
     <Body width="31" height="24" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
@@ -317,7 +317,7 @@
       <output name="signal_out" />
     </ConnectionPanel>
   </Item>
-  <Item name="Water Detector" identifier="waterdetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when the detector is submerged.">
+  <Item name="Water Detector" identifier="waterdetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when the detector is submerged." scale="0.16">
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -327,7 +327,7 @@
       <Item identifier="fpgacircuit" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,256,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="67,0,26,23" origin="0.5,0.5" />
+    <Sprite texture="detectors.png" depth="0.8" sourcerect="0,0,129,89" origin="0.5,0.5" />
     <WaterDetector canbeselected="true" />
     <Body width="31" height="24" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
@@ -339,7 +339,7 @@
       <output name="signal_out" />
     </ConnectionPanel>
   </Item>
-  <Item name="Smoke Detector" identifier="smokedetector" category="Electrical" Tags="smallitem" spritecolor="1.0,0.1,0.1,1.0" cargocontaineridentifier="metalcrate" description="Sends out a signal when it senses smoke.">
+  <Item name="Smoke Detector" identifier="smokedetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when it senses smoke." scale="0.16">
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -348,7 +348,8 @@
       <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="67,0,26,23" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,320,64,64" />
+    <Sprite texture="detectors.png" depth="0.8" sourcerect="269,0,140,89" origin="0.5,0.5" />
     <SmokeDetector FireSizeThreshold="50" />
     <Body width="31" height="24" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
@@ -360,7 +361,7 @@
       <output name="signal_out" />
     </ConnectionPanel>
   </Item>
-  <Item name="Motion Detector" identifier="motiondetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when it detects movement.">
+  <Item name="Motion Detector" identifier="motiondetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when it detects movement." scale="0.16">
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -370,7 +371,7 @@
       <Item identifier="fpgacircuit" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,256,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="68,24,24,27" origin="0.5,0.5" />
+    <Sprite texture="detectors.png" depth="0.8" sourcerect="0,89,140,133" origin="0.5,0.5" />
     <MotionSensor range="100" canbeselected="true" />
     <Body width="31" height="24" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">

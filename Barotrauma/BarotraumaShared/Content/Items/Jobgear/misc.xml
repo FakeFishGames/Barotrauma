@@ -32,6 +32,7 @@
     </Wearable>
   </Item>
   <Item name="Clown Costume" identifier="clowncostume" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" description="Praise the honkmother.">
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="364,448,64,64" />
     <Sprite texture="clownpants.png" sourcerect="0,62,53,18" depth="0.6" origin="0.5,0.5" />
     <Body width="53" height="18" density="30" />
     <Deconstruct time="40">
