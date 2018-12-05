@@ -1824,7 +1824,7 @@ namespace Barotrauma
                 }
             }
 
-            if (AnimController.InWater) ApplyStatusEffects(ActionType.InWater, deltaTime);            
+            ApplyStatusEffects(AnimController.InWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);            
 
             UpdateControlled(deltaTime, cam);
             

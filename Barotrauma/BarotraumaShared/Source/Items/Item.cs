@@ -21,7 +21,7 @@ namespace Barotrauma
         Always, OnPicked, OnUse, OnSecondaryUse,
         OnWearing, OnContaining, OnContained, OnNotContained,
         OnActive, OnFailure, OnBroken, 
-        OnFire, InWater,
+        OnFire, InWater, NotInWater,
         OnImpact,
         OnEating,
         OnDeath = OnBroken
@@ -856,6 +856,11 @@ namespace Barotrauma
                 targets.AddRange(character.AnimController.Limbs.ToList());
             }
 
+            if (effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters) || effect.HasTargetType(StatusEffect.TargetType.NearbyItems))
+            {
+                effect.GetNearbyTargets(WorldPosition, targets);
+            }
+
             if (Container != null && effect.HasTargetType(StatusEffect.TargetType.Parent)) targets.Add(Container);
             
             effect.Apply(type, deltaTime, this, targets);            
@@ -957,17 +962,17 @@ namespace Barotrauma
             }
 
             inWater = IsInWater();
+            bool waterProof = WaterProof;
             if (inWater)
             {
-                bool waterProof = WaterProof;
                 Item container = this.Container;
                 while (!waterProof && container != null)
                 {
                     waterProof = container.WaterProof;
                     container = container.Container;
                 }
-                if (!waterProof) ApplyStatusEffects(ActionType.InWater, deltaTime);
             }
+            ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
 
             if (body == null || !body.Enabled || !inWater || ParentInventory != null) return;
 

@@ -220,11 +220,11 @@
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,128,64,64"/>
-    <Sprite texture ="Scooter.png" depth="0.55" sourcerect="0,0,261,142"/>
+    <Sprite texture="Scooter.png" depth="0.55" sourcerect="0,0,219,159"/>
 
     <Body width="55" height="30" density="11"/>
 
-    <Holdable slots="Any,RightHand+LeftHand" aimpos="90,0" handle1="-110,-40" handle2="-97,-37"/>
+    <Holdable slots="Any,RightHand+LeftHand" aimpos="90,0" handle1="-50,65" handle2="-54,69"/>
 
     <Propulsion force="80" usablein="water" particles="bubbles">
       <RequiredItems identifier="batterycell,fulguriumbatterycell" type="Contained" msg="ItemMsgBatteryCellRequired"/>

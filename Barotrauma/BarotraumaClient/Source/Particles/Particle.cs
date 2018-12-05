@@ -30,8 +30,7 @@ namespace Barotrauma.Particles
         private Vector2 sizeChange;
 
         private Color color;
-        private Vector4 colorChange;
-        private float alpha;
+        private bool changeColor;
 
         private int spriteIndex;
 
@@ -128,9 +127,8 @@ namespace Barotrauma.Particles
 
             sizeChange = prefab.SizeChangeMin + (prefab.SizeChangeMax - prefab.SizeChangeMin) * Rand.Range(0.0f, 1.0f);
 
-            color = new Color(prefab.StartColor, 1.0f);
-            colorChange = prefab.ColorChange;
-            alpha = prefab.StartAlpha;
+            color = prefab.StartColor;
+            changeColor = prefab.StartColor != prefab.EndColor;
             
             velocityChange = prefab.VelocityChangeDisplay;
             velocityChangeWater = prefab.VelocityChangeWaterDisplay;
@@ -213,13 +211,11 @@ namespace Barotrauma.Particles
             size.X += sizeChange.X * deltaTime;
             size.Y += sizeChange.Y * deltaTime;  
 
-            alpha += prefab.ColorChange.W * deltaTime;
-
-            color = new Color(
-                color.R / 255.0f + prefab.ColorChange.X * deltaTime,
-                color.G / 255.0f + prefab.ColorChange.Y * deltaTime,
-                color.B / 255.0f + prefab.ColorChange.Z * deltaTime);
-
+            if (changeColor)
+            {
+                color = Color.Lerp(prefab.EndColor, prefab.StartColor, lifeTime / prefab.LifeTime);
+            }
+            
             if (prefab.Sprites[spriteIndex] is SpriteSheet)
             {
                 animState += deltaTime;
@@ -228,7 +224,7 @@ namespace Barotrauma.Particles
             }
             
             lifeTime -= deltaTime;
-            if (lifeTime <= 0.0f || alpha <= 0.0f || size.X <= 0.0f || size.Y <= 0.0f) return false;
+            if (lifeTime <= 0.0f || color.A <= 0 || size.X <= 0.0f || size.Y <= 0.0f) return false;
 
             if (hasSubEmitters)
             {
@@ -454,7 +450,7 @@ namespace Barotrauma.Particles
                 ((SpriteSheet)prefab.Sprites[spriteIndex]).Draw(
                     spriteBatch, animFrame,
                     new Vector2(drawPosition.X, -drawPosition.Y),
-                    color * alpha,
+                    color * (color.A / 255.0f),
                     prefab.Sprites[spriteIndex].Origin, drawRotation,
                     drawSize, SpriteEffects.None, prefab.Sprites[spriteIndex].Depth);
             }
@@ -462,7 +458,7 @@ namespace Barotrauma.Particles
             {
                 prefab.Sprites[spriteIndex].Draw(spriteBatch,
                     new Vector2(drawPosition.X, -drawPosition.Y),
-                    color * alpha,
+                    color * (color.A / 255.0f),
                     prefab.Sprites[spriteIndex].Origin, drawRotation,
                     drawSize, SpriteEffects.None, prefab.Sprites[spriteIndex].Depth);
             }

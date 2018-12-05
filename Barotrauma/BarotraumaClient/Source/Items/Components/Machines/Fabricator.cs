@@ -21,22 +21,22 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific()
         {
-            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
             {
                 Stretch = true,
-                RelativeSpacing = 0.03f
+                RelativeSpacing = 0.05f
             };
 
-            inputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.1f, 1.0f), paddedFrame.RectTransform), style: null);
-
-            itemList = new GUIListBox(new RectTransform(new Vector2(0.4f, 1.0f), paddedFrame.RectTransform))
+            itemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.2f), paddedFrame.RectTransform))
             {
                 OnSelected = SelectItem
             };
 
-            selectedItemFrame = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.8f), paddedFrame.RectTransform), style: "InnerFrame");
+            inputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.7f, 1.0f), paddedFrame.RectTransform), style: null);
 
-            outputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.1f, 1.0f), paddedFrame.RectTransform), style: null);
+            selectedItemFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.5f), paddedFrame.RectTransform), style: "InnerFrame");
+
+            outputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.2f, 1.0f), paddedFrame.RectTransform), style: null);
             
             foreach (FabricableItem fi in fabricableItems)
             {

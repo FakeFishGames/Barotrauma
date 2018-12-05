@@ -312,4 +312,22 @@
       <input name="power_in" />
     </ConnectionPanel>
   </Item>
+
+  <Item
+    name="Alien Vent"
+    identifier="alienvent"
+    category="Alien"
+    interactdistance="0"
+    linkable="true">
+
+    <Sprite texture="Content/Items/OxygenGenerator/vent.png" depth="0.91" sourcerect="0,0,64,64"/>
+
+    <Vent>
+      <sound file="Content/Items/OxygenGenerator/ventilation.ogg" type="OnActive" range="400.0" loop="true"/>
+      <StatusEffect type="NotInWater" target="NearbyCharacters" range="300">
+        <Affliction identifier="psychosis" strength="2"/>
+        <ParticleEmitter particle="aliengas" anglemin="0" anglemax="360" particlespersecond="5" velocitymin="0" velocitymax="10" scalemin="1" scalemax="2" />
+      </StatusEffect>
+    </Vent>
+  </Item>
 </Items>

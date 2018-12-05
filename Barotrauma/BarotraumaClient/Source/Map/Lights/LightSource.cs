@@ -826,6 +826,22 @@ namespace Barotrauma.Lights
                     new Color(Color, lightSourceParams.OverrideLightSpriteAlpha ?? Color.A / 255.0f),
                     origin, -Rotation, SpriteScale, LightSpriteEffect);
             }
+
+            if (GameMain.DebugDraw)
+            {
+                //visualize light recalculations
+                float timeSinceRecalculation = (float)Timing.TotalTime - lastRecalculationTime;
+                if (timeSinceRecalculation < 0.1f)
+                {
+                    Vector2 drawPos = position;
+                    if (ParentSub != null) drawPos += ParentSub.DrawPosition;
+                    drawPos.Y = -drawPos.Y;
+                    GUI.DrawRectangle(spriteBatch, drawPos - Vector2.One * 10, Vector2.One * 20, Color.Red * (1.0f - timeSinceRecalculation * 10.0f), isFilled: true);
+                    GUI.DrawLine(spriteBatch, drawPos - Vector2.One * Range, drawPos + Vector2.One * Range, Color);
+                    GUI.DrawLine(spriteBatch, drawPos - new Vector2(1.0f, -1.0f) * Range, drawPos + new Vector2(1.0f, -1.0f) * Range, Color);
+                }
+            }
+            
         }
 
         public void DrawLightVolume(SpriteBatch spriteBatch, BasicEffect lightEffect, Matrix transform)
