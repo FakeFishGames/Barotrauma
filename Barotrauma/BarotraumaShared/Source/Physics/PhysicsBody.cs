@@ -318,7 +318,7 @@ namespace Barotrauma
             body.FixedRotation = true;
             body.Friction = 0.05f;
             body.Restitution = 0.05f;
-            SetTransform(position, 0.0f);
+            SetTransformIgnoreContacts(position, 0.0f);
             LastSentPosition = position;
             list.Add(this);
         }
@@ -336,7 +336,7 @@ namespace Barotrauma
             body.Friction = limbParams.Friction;
             body.Restitution = limbParams.Restitution;
             body.UserData = this;
-            SetTransform(position, 0.0f);
+            SetTransformIgnoreContacts(position, 0.0f);
             LastSentPosition = position;
             list.Add(this);
         }
@@ -355,7 +355,7 @@ namespace Barotrauma
             body.Friction = element.GetAttributeFloat("friction", 0.3f);
             body.Restitution = element.GetAttributeFloat("restitution", 0.05f);                    
             body.UserData = this;
-            SetTransform(position, 0.0f);
+            SetTransformIgnoreContacts(position, 0.0f);
             LastSentPosition = position;      
             list.Add(this);
         }
