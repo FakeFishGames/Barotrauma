@@ -115,7 +115,7 @@ namespace Barotrauma
 
             foreach (ContentPackage contentPackage in Config.SelectedContentPackages)
             {
-                var exePaths = contentPackage.GetFilesOfType(ContentType.Executable);
+                var exePaths = contentPackage.GetFilesOfType(ContentType.ServerExecutable);
                 if (exePaths.Count() > 0 && AppDomain.CurrentDomain.FriendlyName != exePaths.First())
                 {
                     DebugConsole.ShowQuestionPrompt(TextManager.Get("IncorrectExe")
