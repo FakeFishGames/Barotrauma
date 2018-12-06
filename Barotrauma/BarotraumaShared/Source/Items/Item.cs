@@ -508,6 +508,8 @@ namespace Barotrauma
             {
                 ownInventory = itemContainer.Inventory;
             }
+
+            InitProjSpecific();
                         
             InsertToList();
             ItemList.Add(this);
@@ -520,6 +522,8 @@ namespace Barotrauma
                 }
             }
         }
+
+        partial void InitProjSpecific();
 
         public override MapEntity Clone()
         {
@@ -894,6 +898,8 @@ namespace Barotrauma
                 aiTarget.SoundRange -= deltaTime * 1000.0f;
             }
 
+            UpdateSpriteStates(deltaTime);
+
             ApplyStatusEffects(ActionType.Always, deltaTime, null);
 
             foreach (ItemComponent ic in components)
@@ -927,21 +933,6 @@ namespace Barotrauma
                 }
             }
 
-            /*if (condition <= 0.0f && FixRequirements.Count > 0)
-            {
-                bool isFixed = true;
-                foreach (FixRequirement fixRequirement in FixRequirements)
-                {
-                    fixRequirement.Update(deltaTime);
-                    if (!fixRequirement.Fixed) isFixed = false;
-                }
-                if (isFixed)
-                {
-                    GameMain.Server?.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
-                    condition = Prefab.Health;
-                }
-            }*/
-            
             if (body != null && body.Enabled)
             {
                 System.Diagnostics.Debug.Assert(body.FarseerBody.FixtureList != null);
@@ -978,6 +969,8 @@ namespace Barotrauma
             CurrentHull?.ApplyFlowForces(deltaTime, this);
         }
 
+        partial void UpdateSpriteStates(float deltaTime);
+        
         public void UpdateTransform()
         {
             Submarine prevSub = Submarine;

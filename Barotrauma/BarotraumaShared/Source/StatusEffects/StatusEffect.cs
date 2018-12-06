@@ -303,6 +303,7 @@ namespace Barotrauma
                         IEnumerable<XAttribute> conditionalAttributes = subElement.Attributes();
                         foreach (XAttribute attribute in conditionalAttributes)
                         {
+                            if (attribute.Name.ToString().ToLowerInvariant() == "targetitemcomponent") { continue; }
                             propertyConditionals.Add(new PropertyConditional(attribute));
                         }
                         break;
