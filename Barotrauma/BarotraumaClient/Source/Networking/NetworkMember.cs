@@ -89,11 +89,8 @@ namespace Barotrauma.Networking
                 GameMain.Client.SendChatMessage(message);
             }
 
-            if (textBox == chatBox.InputBox)
-            {
-                textBox.Deselect();
-                textBox.Text = "";
-            }
+            textBox.Deselect();
+            textBox.Text = "";            
 
             return true;
         }
