@@ -19,10 +19,10 @@
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Ragdolls\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Mantis\Animations\" />
-    <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\MolochBoss\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Molochboss\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Seamantis\Animations\" />
-    <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\TigerthresherBoss\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresherboss\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresher\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Watcher\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Effects\" />
@@ -135,6 +135,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Ragdolls\HumanhuskDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Ragdolls\HumanDefaultRagdollNewArtScaled.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Ragdolls\HumanRagdollNewArt.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -183,7 +186,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Mantis\Ragdolls\MantisDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\MolochBoss\Ragdolls\MolochBossDefaultRagdoll.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Molochboss\Ragdolls\MolochbossDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch\Ragdolls\MolochDefaultRagdoll.xml">
@@ -213,7 +216,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Testhuman\Testhuman.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\TigerthresherBoss\Ragdolls\TigerthresherBossDefaultRagdoll.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresherboss\Ragdolls\TigerthresherbossDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresher\tigerthresher.xml">
@@ -664,6 +667,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\NpcConversationsFinnish.xml">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\NpcConversations.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -719,13 +723,13 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Mantis\mantis.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\MolochBoss\molochboss.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Molochboss\molochboss.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\MolochBoss\Animations\MolochBossSwimFast.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Molochboss\Animations\MolochbossSwimFast.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\MolochBoss\Animations\MolochBossSwimSlow.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Molochboss\Animations\MolochbossSwimSlow.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch\Animations\MolochSwimFast.xml">
@@ -740,13 +744,13 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch\moloch.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\TigerthresherBoss\tigerthresherboss.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresherboss\tigerthresherboss.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\TigerthresherBoss\Animations\TigerthresherBossSwimFast.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresherboss\Animations\TigerthresherbossSwimFast.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\TigerthresherBoss\Animations\TigerthresherBossSwimSlow.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresherboss\Animations\TigerthresherbossSwimSlow.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresher\damagedtigerthresher.png">
@@ -1149,9 +1153,6 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Door\hatch.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Electricity\battery.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Legacy\junctionbox.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -1168,6 +1169,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Electricity\signalcomp.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Electricity\detectors.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Electricity\signalitems.xml">
@@ -1489,6 +1493,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Texts\FinnishVanilla.xml">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\Tutorials.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -1586,7 +1591,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Data\clientpermissions.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Data\ContentPackages\Vanilla 0.8.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Data\ContentPackages\Vanilla 0.9.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Data\permissionpresets.xml">
@@ -2453,21 +2458,6 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Items\Door\ductBreak.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)x64\libopenal.so.1">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="$(MSBuildThisFileDirectory)x64\libSDL2-2.0.so.0">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="$(MSBuildThisFileDirectory)x64\SDL2.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="$(MSBuildThisFileDirectory)x64\soft_oal.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Effects\postprocess_opengl.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AICharacter.cs" />
@@ -2519,9 +2509,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Character.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\Affliction.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\AfflictionBleeding.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\AfflictionPsychosis.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\AfflictionHusk.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\AfflictionPrefab.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\AfflictionPsychosis.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\CharacterHealth.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterNetworking.cs" />
@@ -2530,10 +2520,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\Missions\MissionPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\ScriptedEventPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\ScriptedEventSet.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\StringFormatter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\IEnumerableExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\PointExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\RectangleExtensions.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\StringFormatter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\VectorExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\CrewManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\CharacterCampaignData.cs" />
@@ -2548,7 +2538,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\SmokeDetector.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\ItemAssemblyPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\LevelObjects\LevelObject.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Ruins\RuinGenerationParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\LocationConnection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\LocationTypeChange.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\MapGenerationParams.cs" />
@@ -2557,12 +2546,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\FileTransfer\FileTransfer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\OrderChatMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\DamageModifier.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\RespawnManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\SteamManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Voip\VoipConfig.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Voip\VoipQueue.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\WhiteList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\ProcGen\PerlinNoise.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\DeformableSprite.cs" />
@@ -2668,6 +2655,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Ruins\BTRoom.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Ruins\Corridor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Ruins\RuinGenerator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Ruins\RuinGenerationParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\ProcGen\Voronoi.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\ProcGen\VoronoiElements.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\LevelWall.cs" />
@@ -2696,8 +2684,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetEntityEvent\NetEntityEventManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetIdUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetworkMember.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\RespawnManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerLog.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Voting.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\WhiteList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Physics\Physics.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Physics\PhysicsBody.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\PlayerInput.cs" />
