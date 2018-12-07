@@ -152,7 +152,7 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(90.0f, true)]
+        [Serialize(100000.0f, true)]
         public float Oxygen
         {
             get { return oxygen; }
@@ -933,6 +933,7 @@ namespace Barotrauma
             };
             
             SerializableProperty.DeserializeProperties(hull, element);
+            if (element.Attribute("oxygen") == null) { hull.Oxygen = hull.Volume; }
 
             return hull;
         }
