@@ -163,10 +163,10 @@
     </ItemContainer>
   </Item>
   <Item name="Alien Hatch" identifier="alienhatch" category="Alien" Tags="alien">
-    <Sprite texture="Content/Map/ruins.png" sourcerect="747,0,260,95" depth="0.8" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Alien/AlienHatch.png" sourcerect="0,0,208,48" depth="0.8" origin="0.5,0.5" />
     <Door canbeselected="true" horizontal="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0">
       <RequiredItem identifier="crowbar" type="Equipped" />
-      <Sprite texture="Content/Map/ruins.png" sourcerect="0,842,260,54" depth="0.6" origin="0.0,0.5" />
+      <Sprite texture="Content/Items/Alien/AlienHatch.png" sourcerect="0,56,208,19" depth="0.6" origin="0.0,0.5" />
       <sound file="Content/Items/Alien/aliendoor.ogg" type="OnUse" range="3000.0" />
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0" />
     </Door>
@@ -177,10 +177,10 @@
     </ConnectionPanel>
   </Item>
   <Item name="Alien Door" identifier="aliendoor" category="Alien" Tags="alien">
-    <Sprite texture="Content/Map/ruins.png" sourcerect="746,101,93,259" depth="0.8" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Alien/AlienDoor.png" sourcerect="0,0,48,208" depth="0.8" origin="0.5,0.5" />
     <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0">
       <RequiredItem identifier="crowbar" type="Equipped" />
-      <Sprite texture="Content/Map/ruins.png" sourcerect="842,192,54,259" depth="0.6" origin="0.5,0.0" />
+      <Sprite texture="Content/Items/Alien/AlienDoor.png" sourcerect="56,0,19,208" depth="0.6" origin="0.5,0.0" />
       <sound file="Content/Items/Alien/aliendoor.ogg" type="OnUse" range="3000.0" />
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0" />
     </Door>
@@ -190,8 +190,15 @@
       <output name="state_out" />
     </ConnectionPanel>
   </Item>
-  <Item name="Alien Motion Sensor" identifier="alienmotionsensor" category="Alien" Tags="alien">
-    <Sprite texture="Content/Map/ruins.png" sourcerect="55,608,81,103" depth="0.8" origin="0.5,0.5" />
+  <Item name="Alien Motion Sensor" identifier="alienmotionsensor" category="Alien" Tags="alien" scale="0.5">
+    <Sprite texture="Content/Items/Alien/AlienMotionSensor.png" sourcerect="3,4,110,112" depth="0.8" origin="0.5,0.5" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienMotionSensor.png" sourcerect="115,7,89,92" depth="0.75" origin="0.5,0.5" rotationspeed="10">
+      <Conditional MotionDetected="false" targetitemcomponent="MotionSensor"/>
+    </DecorativeSprite>
+    <DecorativeSprite texture="Content/Items/Alien/AlienMotionSensor.png" sourcerect="115,7,89,92" depth="0.75" origin="0.5,0.5" rotationspeed="180">
+      <Conditional MotionDetected="true" targetitemcomponent="MotionSensor"/>
+    </DecorativeSprite>
+    <DecorativeSprite texture="Content/Items/Alien/AlienMotionSensor.png" sourcerect="204,2,49,49" depth="0.7" origin="0.5,0.5" offset="40,40" offsetanim="Noise" offsetanimspeed="0.05"/>
     <MotionSensor range="300" output="0" />
     <ConnectionPanel canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -199,7 +206,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Artifact Holder" identifier="artifactholder" category="Alien" Tags="alien">
-    <Sprite texture="artifactholder.png" depth="0.8" sourcerect="0,0,256,256" />
+    <Sprite texture="Content/Items/Alien/artifactholder.png" depth="0.8" sourcerect="0,0,256,256" />
     <ItemContainer capacity="1" canbeselected="true" hideitems="false" itempos="128,-128" autointeractwithcontained="true">
       <Containable identifiers="alien" />
       <Containable identifiers="thermalartifact">
@@ -209,7 +216,9 @@
         <StatusEffect type="OnContaining" target="This" Charge="10.0" />
       </Containable>
     </ItemContainer>
-    <LightComponent lightcolor="0.6,0.8,1.0,1.0" canbeselected="false" range="800.0" IsOn="true" />
+    <LightComponent lightcolor="153,204,255,200" canbeselected="false" range="800.0" IsOn="true" castshadows="false">
+      <sprite texture="Content/Items/Alien/artifactholder_glow.png" depth="0.025" origin="0.5,0.5" alpha="1.0"/>
+    </LightComponent>
     <PowerContainer capacity="20000.0" canbeselected="false" maxrechargespeed="10000.0" maxoutput="10000.0" />
     <ConnectionPanel canbeselected="false" hudpriority="10">
       <output name="power_out" />
@@ -234,9 +243,8 @@
       <output name="power_out" />
     </ConnectionPanel>
   </Item>
-  <Item name="Alien Turret" identifier="alienturret" Tags="turret,alien" category="Alien">
-    <!-- TODO: alien turret sprite -->
-    <Sprite texture="Content/Items/Weapons/coilgunbase.png" depth="0.01" sourcerect="0,0,256,256" canflipy="false" />
+  <Item name="Alien Turret" identifier="alienturret" Tags="turret,alien" category="Alien" scale="0.5">
+    <Sprite texture="Content/Items/Alien/AlienTurret.png" depth="0.5" sourcerect="293,28,141,456" canflipy="false" />
     <ItemContainer hideitems="true" drawinventory="true" capacity="1" canbeselected="false" characterusable="true">
       <Containable identifiers="alienturretammo" />
       <!-- when the turret is fired, it triggers this statuseffect and spawns new ammo -->
@@ -244,10 +252,9 @@
         <SpawnItem identifiers="alienturretammo" spawnposition="ThisInventory" />
       </StatusEffect>
     </ItemContainer>
-    <Turret canbeselected="false" characterusable="false" linkable="true" barrelpos="128,88" rotationlimits="0,360" powerconsumption="10000.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="50" reload="2" springstiffnesslowskill="2" springstiffnesshighskill="2" springdampinglowskill="0.5" springdampinghighskill="0.5" rotationspeedlowskill="1" rotationspeedhighskill="1">
+    <Turret canbeselected="false" characterusable="false" linkable="true" barrelpos="8,230" rotationlimits="0,360" powerconsumption="10000.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="50" reload="3" springstiffnesslowskill="2" springstiffnesshighskill="2" springdampinglowskill="0.5" springdampinghighskill="0.5" rotationspeedlowskill="1" rotationspeedhighskill="1">
       <sound file="Content/Items/Weapons/coilgun.ogg" range="10000" type="OnUse" />
-      <BarrelSprite texture="Content/Items/Weapons/coilgunbarrel.png" origin="0.6, 0.8" />
-      <RailSprite texture="Content/Items/Weapons/coilgunrail.png" origin="0.64, 0.7" />
+      <BarrelSprite texture="Content/Items/Alien/AlienTurret.png" sourcerect="2,20,286,484" origin="0.5,0.73" depth="0.4"/>
       <MoveSound file="Content/Items/Weapons/railgunloop.ogg" />
       <StartMoveSound file="Content/Items/Weapons/railgunstart.ogg" />
       <EndMoveSound file="Content/Items/Weapons/railgunstop.ogg" />
@@ -271,17 +278,17 @@
     <Sprite texture="artifact.png" depth="0.7" sourcerect="1,0,57,56" origin="0.5,0.5" />
     <Body radius="25" density="10" />
     <Projectile characterusable="false" launchimpulse="20.0">
-      <Attack structuredamage="5" severlimbsprobability="0.5">
-        <Affliction identifier="psychosis" strength="1" />
+      <Attack structuredamage="0" severlimbsprobability="0.5">
+        <Affliction identifier="psychosis" strength="5" />
       </Attack>
       <StatusEffect type="OnActive" target="This">
-        <ParticleEmitter particle="blackwaterblood" anglemin="0" anglemax="360" particlespersecond="60" scalemin="1" scalemax="2" />
+        <ParticleEmitter particle="blackwaterblood" anglemin="0" anglemax="360" particlespersecond="30" scalemin="1" scalemax="2" />
       </StatusEffect>
       <!-- reduce condition to give the bolt a 5 second lifetime -->
       <StatusEffect type="OnNotContained" target="This" condition="-20" />
       <StatusEffect type="OnImpact" target="This" condition="-100" />
       <StatusEffect type="OnBroken" target="This">
-        <Explosion range="100.0" structuredamage="100" force="20.0">
+        <Explosion range="300.0" structuredamage="0" force="20.0">
           <Affliction identifier="internaldamage" strength="10" />
         </Explosion>
         <Remove />
@@ -311,5 +318,23 @@
       </input>
       <input name="power_in" />
     </ConnectionPanel>
+  </Item>
+
+  <Item
+    name="Alien Vent"
+    identifier="alienvent"
+    category="Alien"
+    interactdistance="0"
+    linkable="true">
+
+    <Sprite texture="Content/Items/OxygenGenerator/vent.png" depth="0.91" sourcerect="0,0,64,64"/>
+
+    <Vent>
+      <sound file="Content/Items/OxygenGenerator/ventilation.ogg" type="OnActive" range="400.0" loop="true"/>
+      <StatusEffect type="NotInWater" target="NearbyCharacters" range="300">
+        <Affliction identifier="psychosis" strength="2"/>
+        <ParticleEmitter particle="aliengas" anglemin="0" anglemax="360" particlespersecond="5" velocitymin="0" velocitymax="10" scalemin="1" scalemax="2" />
+      </StatusEffect>
+    </Vent>
   </Item>
 </Items>

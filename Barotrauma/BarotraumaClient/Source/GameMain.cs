@@ -14,6 +14,7 @@ using System.Reflection;
 using GameAnalyticsSDK.Net;
 using System.IO;
 using System.Threading;
+using System.IO;
 
 namespace Barotrauma
 {
@@ -440,6 +441,8 @@ namespace Barotrauma
             LocationType.Init();
             MainMenuScreen.Select();
 
+            CheckContentPackage();
+
             TitleScreen.LoadState = 100.0f;
             hasLoaded = true;
             if (GameSettings.VerboseLogging)
@@ -448,6 +451,31 @@ namespace Barotrauma
             }
         yield return CoroutineStatus.Success;
 
+        }
+
+        private void CheckContentPackage()
+        {
+            foreach (ContentPackage contentPackage in Config.SelectedContentPackages)
+            {
+                var exePaths = contentPackage.GetFilesOfType(ContentType.Executable);
+                if (exePaths.Count() > 0 && AppDomain.CurrentDomain.FriendlyName != exePaths.First())
+                {
+                    var msgBox = new GUIMessageBox(TextManager.Get("Error"),
+                        TextManager.Get("IncorrectExe")
+                            .Replace("[selectedpackage]", contentPackage.Name)
+                            .Replace("[exename]", exePaths.First()),
+                        new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                    msgBox.Buttons[0].OnClicked += (_, userdata) =>
+                    {
+                        string fullPath = Path.GetFullPath(exePaths.First());
+                        Process.Start(fullPath);
+                        Exit();
+                        return true;
+                    };
+                    msgBox.Buttons[1].OnClicked = msgBox.Close;
+                    break;
+                }
+            }
         }
 
         /// <summary>

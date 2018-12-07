@@ -1,6 +1,33 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Items>
   <Item
+    name="Iron Ore"
+    identifier="ironore"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    cargocontaineridentifier="metalcrate">
+    
+    <Deconstruct time="5">
+      <Item identifier="ironpowder"/>
+      <Item identifier="ironpowder"/>
+    </Deconstruct>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness levelname="ColdCavernsBasic" commonness="1"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false">
+    </Holdable>
+  </Item>
+  
+  <Item
     name="Steel Bar"
     identifier="steelbar"
     category="Material"
@@ -12,7 +39,7 @@
     <Price locationtype="Military" buyprice="50"/>
     <Price locationtype="City" buyprice="50"/>
     <Price locationtype="Outpost" buyprice="100"/>
-    
+
     <Deconstruct time="5">
       <Item identifier="ironpowder"/>
       <Item identifier="ironpowder"/>     

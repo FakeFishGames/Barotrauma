@@ -277,7 +277,7 @@ namespace Barotrauma
 
             //-------------------------------------------------------
 
-            spriteBatch.Begin(SpriteSortMode.BackToFront,
+            spriteBatch.Begin(SpriteSortMode.Deferred,
                 BlendState.AlphaBlend,
                 null, null, null, null,
                 cam.Transform);
@@ -289,7 +289,7 @@ namespace Barotrauma
 
             spriteBatch.End();
 
-            spriteBatch.Begin(SpriteSortMode.BackToFront,
+            spriteBatch.Begin(SpriteSortMode.Deferred,
                 BlendState.Additive,
                 null, null, null, null,
                 cam.Transform);

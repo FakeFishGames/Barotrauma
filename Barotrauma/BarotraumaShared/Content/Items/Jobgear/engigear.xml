@@ -96,7 +96,7 @@
     description="">
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,256,64,64"/>
-    <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="0,0,79,35"/>
+    <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="1,0,68,39"/>
 
     <Body width="50" height="17" density="20"/>
 

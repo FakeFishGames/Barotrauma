@@ -278,6 +278,10 @@ namespace Barotrauma
                 Font = GUI.SmallFont
             };
 
+
+            textBox.OnEnterPressed = (tb, userdata) => { GameMain.NetworkMember?.EnterChatMessage(tb, userdata); return true; };
+            textBox.OnTextChanged += (tb, userdata) => { GameMain.NetworkMember?.TypingChatMessage(tb, userdata); return true; };
+
             //player info panel ------------------------------------------------------------
 
             myCharacterFrame = new GUIFrame(new RectTransform(new Vector2(0.3f - panelSpacing, 0.6f), menu.RectTransform, Anchor.TopRight));
@@ -572,8 +576,6 @@ namespace Barotrauma
             CampaignCharacterDiscarded = false;
 
             textBox.Select();
-            textBox.OnEnterPressed = GameMain.NetworkMember.EnterChatMessage;
-            textBox.OnTextChanged += GameMain.NetworkMember.TypingChatMessage;
 
             myCharacterFrame.RectTransform.AbsoluteOffset = new Point(0, 0);
             myCharacterFrame.GetChild<GUIButton>().Visible = false;

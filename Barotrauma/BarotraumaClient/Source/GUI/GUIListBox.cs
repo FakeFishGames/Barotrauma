@@ -248,6 +248,11 @@ namespace Barotrauma
                         {
                             y = 0;
                             x += child.Rect.Width + spacing;
+                            if (child.RectTransform.AbsoluteOffset.X != x || child.RectTransform.AbsoluteOffset.Y != y)
+                            {
+                                child.RectTransform.AbsoluteOffset = new Point(x, y);
+                            }
+                            y += child.Rect.Height + spacing;
                         }
                         else
                         {
@@ -261,6 +266,11 @@ namespace Barotrauma
                         {
                             x = 0;
                             y += child.Rect.Height + spacing;
+                            if (child.RectTransform.AbsoluteOffset.X != x || child.RectTransform.AbsoluteOffset.Y != y)
+                            {
+                                child.RectTransform.AbsoluteOffset = new Point(x, y);
+                            }
+                            x += child.Rect.Width + spacing;
                         }
                         else
                         {

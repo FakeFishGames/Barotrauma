@@ -16,11 +16,28 @@ namespace Barotrauma
         
         private static List<Item> brokenItems = new List<Item>();
         private static float brokenItemsCheckTimer;
+
+        private static GUIFrame hudFrame;
+        public static GUIFrame HUDFrame
+        {
+
+            get
+            {
+                if (hudFrame == null)
+                {
+                    hudFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
+                    {
+                        CanBeFocused = false
+                    };
+                }
+                return hudFrame;
+            }
+        }
         
         public static void AddToGUIUpdateList(Character character)
         {
             if (GUI.DisableHUD) return;
-
+            
             if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
                 if (character.Inventory != null)
@@ -42,6 +59,8 @@ namespace Barotrauma
                     character.SelectedCharacter.CharacterHealth.AddToGUIUpdateList();
                 }
             }
+
+            HUDFrame.AddToGUIUpdateList();
         }
 
         public static void Update(float deltaTime, Character character, Camera cam)

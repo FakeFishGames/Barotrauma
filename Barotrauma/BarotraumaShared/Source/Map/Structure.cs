@@ -668,9 +668,14 @@ namespace Barotrauma
             if (GameMain.Client == null) SetDamage(sectionIndex, section.damage + damage, attacker);
         }
 
-        public int FindSectionIndex(Vector2 displayPos)
+        public int FindSectionIndex(Vector2 displayPos, bool world = false, bool clamp = false)
         {
             if (!Sections.Any()) return -1;
+
+            if (world && Submarine != null)
+            {
+                displayPos -= Submarine.Position;
+            }
 
             //if the sub has been flipped horizontally, the first section may be smaller than wallSectionSize
             //and we need to adjust the position accordingly
@@ -683,7 +688,14 @@ namespace Barotrauma
                 (int)Math.Floor((displayPos.X - rect.X) / WallSectionSize) :
                 (int)Math.Floor((rect.Y - displayPos.Y) / WallSectionSize);
 
-            if (index < 0 || index > Sections.Length - 1) return -1;
+            if (clamp)
+            {
+                index = MathHelper.Clamp(index, 0, Sections.Length - 1);
+            }
+            else if (index < 0 || index > Sections.Length - 1)
+            {
+                return -1;
+            }
             return index;
         }
 

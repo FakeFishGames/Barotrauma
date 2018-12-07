@@ -583,7 +583,12 @@ namespace Barotrauma
         public static GUIComponent UpdateMouseOn()
         {
             MouseOn = null;
-            for (int i = updateList.Count - 1; i >= 0; i--)
+            int inventoryIndex = -1;
+            if (Inventory.IsMouseOnInventory())
+            {
+                inventoryIndex = updateList.IndexOf(CharacterHUD.HUDFrame);
+            }
+            for (int i = updateList.Count - 1; i > inventoryIndex; i--)
             {
                 GUIComponent c = updateList[i];
                 if (c.MouseRect.Contains(PlayerInput.MousePosition))
@@ -1292,7 +1297,17 @@ namespace Barotrauma
         public static void PreventElementOverlap(IList<GUIComponent> elements, IList<Rectangle> disallowedAreas = null,  Rectangle? clampArea = null)
         {
             Rectangle area = clampArea ?? new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-            
+            for (int i = 0; i < elements.Count; i++)
+            {
+                Point moveAmount = Point.Zero;
+                Rectangle rect1 = elements[i].Rect;
+                moveAmount.X += Math.Max(area.X - rect1.X, 0);
+                moveAmount.X -= Math.Max(rect1.Right - area.Right, 0);
+                moveAmount.Y += Math.Max(area.Y - rect1.Y, 0);
+                moveAmount.Y -= Math.Max(rect1.Bottom - area.Bottom, 0);
+                elements[i].RectTransform.ScreenSpaceOffset += moveAmount;
+            }
+
             bool intersections = true;
             int iterations = 0;
             while (intersections && iterations < 100)

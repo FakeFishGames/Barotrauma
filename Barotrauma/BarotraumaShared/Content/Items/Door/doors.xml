@@ -28,7 +28,7 @@
   </Item>
   <Item name="Windowed Door" identifier="windoweddoor" tags="door">
     <Sprite texture="door.png" sourcerect="1,0,48,208" depth="0.01" origin="0.5,0.5" />
-    <Door window="0,-32,10,75" canbepicked="true" canbeselected="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="10.0">
+    <Door window="0,0,10,107" canbepicked="true" canbeselected="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="10.0">
       <RequiredItem identifier="crowbar" type="Equipped" />
       <Sprite texture="door.png" sourcerect="56,0,19,208" depth="0.05" origin="0.5,0.0" />
       <WeldedSprite texture="door.png" sourcerect="9,0,32,188" depth="0.0" origin="0.5,0.5" />

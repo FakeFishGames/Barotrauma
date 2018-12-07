@@ -10,16 +10,15 @@ namespace Barotrauma
 {
     partial class DeformableSprite
     {
-        public bool IsFlipped { get; private set; }
-
         private static List<DeformableSprite> list = new List<DeformableSprite>();
 
         private int triangleCount;
 
-        private VertexBuffer vertexBuffer;
+        private VertexBuffer vertexBuffer, flippedVertexBuffer;
         private IndexBuffer indexBuffer;
 
-        Vector2 uvTopLeft, uvBottomRight;
+        private Vector2 uvTopLeft, uvBottomRight;
+        private Vector2 uvTopLeftFlipped, uvBottomRightFlipped;
 
         private Vector2[] deformAmount;
         private int deformArrayWidth, deformArrayHeight;
@@ -63,10 +62,13 @@ namespace Barotrauma
                     existing.Sprite.SourceRect == Sprite.SourceRect)
                 {
                     vertexBuffer = existing.vertexBuffer;
+                    flippedVertexBuffer = existing.flippedVertexBuffer;
                     indexBuffer = existing.indexBuffer;
                     triangleCount = existing.triangleCount;
                     uvTopLeft = existing.uvTopLeft;
                     uvBottomRight = existing.uvBottomRight;
+                    uvTopLeftFlipped = existing.uvTopLeftFlipped;
+                    uvBottomRightFlipped = existing.uvBottomRightFlipped;
                     
                     Deform(new Vector2[,]
                     {
@@ -76,54 +78,73 @@ namespace Barotrauma
                     return;
                 }
             }
-            SetupVertexBuffer();
+            SetupVertexBuffers();
             SetupIndexBuffer();
             list.Add(this);
         }
 
-        private void SetupVertexBuffer(bool flip = false)
+        private void SetupVertexBuffers()
         {
             Vector2 textureSize = new Vector2(sprite.Texture.Width, sprite.Texture.Height);
             var pos = sprite.SourceRect.Location;
             var size = sprite.SourceRect.Size;
-            if (flip)
-            {
-                uvTopLeft = Vector2.Divide(new Vector2(pos.X + size.X, pos.Y), textureSize);
-                uvBottomRight = Vector2.Divide(new Vector2(pos.X, pos.Y + size.Y), textureSize);
-            }
-            else
-            {
-                uvTopLeft = Vector2.Divide(pos.ToVector2(), textureSize);
-                uvBottomRight = Vector2.Divide((pos + size).ToVector2(), textureSize);
-            }
-            
-            var vertices = new VertexPositionColorTexture[(subDivX + 1) * (subDivY + 1)];
-            for (int x = 0; x <= subDivX; x++)
-            {
-                for (int y = 0; y <= subDivY; y++)
-                {
-                    //{0,0} -> {1,1}
-                    Vector2 relativePos = new Vector2(x / (float)subDivX, y / (float)subDivY);
 
-                    vertices[x + y * (subDivX + 1)] = new VertexPositionColorTexture(
-                        position: new Vector3(relativePos.X * sprite.SourceRect.Width, relativePos.Y * sprite.SourceRect.Height, 0.0f),
-                        color: Color.White,
-                        textureCoordinate: uvTopLeft + (uvBottomRight - uvTopLeft) * relativePos);
+            uvTopLeft = Vector2.Divide(pos.ToVector2(), textureSize);
+            uvBottomRight = Vector2.Divide((pos + size).ToVector2(), textureSize);
+            uvTopLeftFlipped = Vector2.Divide(new Vector2(pos.X + size.X, pos.Y), textureSize);
+            uvBottomRightFlipped = Vector2.Divide(new Vector2(pos.X, pos.Y + size.Y), textureSize);
+
+            for (int i = 0; i < 2; i++)
+            {
+                bool flip = i == 1;
+            
+                var vertices = new VertexPositionColorTexture[(subDivX + 1) * (subDivY + 1)];
+                for (int x = 0; x <= subDivX; x++)
+                {
+                    for (int y = 0; y <= subDivY; y++)
+                    {
+                        //{0,0} -> {1,1}
+                        Vector2 relativePos = new Vector2(x / (float)subDivX, y / (float)subDivY);
+
+                        Vector2 uvCoord = flip ?
+                            uvTopLeftFlipped + (uvBottomRightFlipped - uvTopLeftFlipped) * relativePos :
+                            uvTopLeft + (uvBottomRight - uvTopLeft) * relativePos;
+
+                        vertices[x + y * (subDivX + 1)] = new VertexPositionColorTexture(
+                            position: new Vector3(relativePos.X * sprite.SourceRect.Width, relativePos.Y * sprite.SourceRect.Height, 0.0f),
+                            color: Color.White,
+                            textureCoordinate: uvCoord);
+                    }
+                }
+
+                if (flip)
+                {
+                    if (flippedVertexBuffer != null && flippedVertexBuffer.VertexCount != vertices.Length)
+                    {
+                        flippedVertexBuffer.Dispose();
+                        flippedVertexBuffer = null;
+                    }
+                    if (flippedVertexBuffer == null)
+                    {
+                        flippedVertexBuffer = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, vertices.Length, BufferUsage.None);
+                    }
+                    flippedVertexBuffer.SetData(vertices);
+                }
+                else
+                {
+                    if (vertexBuffer != null && vertexBuffer.VertexCount != vertices.Length)
+                    {
+                        vertexBuffer.Dispose();
+                        vertexBuffer = null;
+                    }
+                    if (vertexBuffer == null)
+                    {
+                        vertexBuffer = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, vertices.Length, BufferUsage.None);
+                    }
+                    vertexBuffer.SetData(vertices);
                 }
             }
-
-            if (vertexBuffer != null && vertexBuffer.VertexCount != vertices.Length)
-            {
-                vertexBuffer.Dispose();
-                vertexBuffer = null;
-            }
-
-            if (vertexBuffer == null)
-            {
-                vertexBuffer = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, vertices.Length, BufferUsage.None);
-            }
-            vertexBuffer.SetData(vertices);
-            IsFlipped = flip;
+            
             spritePos = sprite.SourceRect.Location;
             spriteSize = sprite.SourceRect.Size;
         }
@@ -215,9 +236,9 @@ namespace Barotrauma
         public void Draw(Camera cam, Vector3 pos, Vector2 origin, float rotate, Vector2 scale, Color color, bool flip = false)
         {
             // If the source rect is modified, we should recalculate the vertex buffer.
-            if (sprite.SourceRect.Location != spritePos || sprite.SourceRect.Size != spriteSize || flip != IsFlipped)
+            if (sprite.SourceRect.Location != spritePos || sprite.SourceRect.Size != spriteSize)
             {
-                SetupVertexBuffer(flip);
+                SetupVertexBuffers();
             }
             
             Matrix matrix = GetTransform(pos, origin, rotate, scale);
@@ -228,9 +249,9 @@ namespace Barotrauma
             effect.Parameters["deformArray"].SetValue(deformAmount);
             effect.Parameters["deformArrayWidth"].SetValue(deformArrayWidth);
             effect.Parameters["deformArrayHeight"].SetValue(deformArrayHeight);
-            effect.Parameters["uvTopLeft"].SetValue(uvTopLeft);
-            effect.Parameters["uvBottomRight"].SetValue(uvBottomRight);
-            effect.GraphicsDevice.SetVertexBuffer(vertexBuffer);
+            effect.Parameters["uvTopLeft"].SetValue(flip ? uvTopLeftFlipped : uvTopLeft);
+            effect.Parameters["uvBottomRight"].SetValue(flip ? uvBottomRightFlipped : uvBottomRight);
+            effect.GraphicsDevice.SetVertexBuffer(flip ? flippedVertexBuffer : vertexBuffer);
             effect.GraphicsDevice.Indices = indexBuffer;
             effect.CurrentTechnique.Passes[0].Apply();
             effect.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, triangleCount);
@@ -251,6 +272,8 @@ namespace Barotrauma
 
             vertexBuffer?.Dispose();
             vertexBuffer = null;
+            flippedVertexBuffer?.Dispose();
+            flippedVertexBuffer = null;
             indexBuffer?.Dispose();
             indexBuffer = null;
         }
@@ -297,7 +320,7 @@ namespace Barotrauma
                 {
                     deformation.SetResolution(new Point(xField.IntValue, yField.IntValue));
                 }
-                SetupVertexBuffer(IsFlipped);
+                SetupVertexBuffers();
                 SetupIndexBuffer();
             }
 

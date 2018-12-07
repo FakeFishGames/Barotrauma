@@ -22,7 +22,7 @@ namespace Barotrauma.Items.Components
             {
                 if (ciElement.ContinuousSignal)
                 {
-                    var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), ciElement.text)
+                    var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), ciElement.Label)
                     {
                         UserData = ciElement
                     };
@@ -42,7 +42,7 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    var btn = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), ciElement.text)
+                    var btn = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), ciElement.Label)
                     {
                         UserData = ciElement
                     };
@@ -59,6 +59,21 @@ namespace Barotrauma.Items.Components
                         return true;
                     };
                     uiElements.Add(btn);
+                }
+            }
+        }
+
+        partial void UpdateLabelsProjSpecific()
+        {
+            for (int i = 0; i < labels.Length && i < uiElements.Count; i++)
+            {
+                if (uiElements[i] is GUIButton button)
+                {
+                    button.Text = labels[i];
+                }
+                else if (uiElements[i] is GUITickBox tickBox)
+                {
+                    tickBox.Text = labels[i];
                 }
             }
         }
