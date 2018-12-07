@@ -2046,6 +2046,14 @@ namespace Barotrauma
         /// </summary>
         public AttackResult ApplyAttack(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false, Limb targetLimb = null)
         {
+            if (Removed)
+            {
+                string errorMsg = "Tried to apply an attack to a removed character (" + Name + ").\n" + Environment.StackTrace;
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Character.ApplyAttack:RemovedCharacter", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return new AttackResult();
+            }
+
             Limb limbHit = targetLimb;
 
             float attackImpulse = attack.TargetImpulse + attack.TargetForce * deltaTime;
@@ -2056,15 +2064,18 @@ namespace Barotrauma
 
             if (limbHit == null) return new AttackResult();
 
-            limbHit.body.ApplyLinearImpulse(attack.TargetImpulseWorld + attack.TargetForceWorld * deltaTime);
+            limbHit.body?.ApplyLinearImpulse(attack.TargetImpulseWorld + attack.TargetForceWorld * deltaTime);
 
             if (attacker is Character attackingCharacter && attackingCharacter.AIController == null)
             {
                 string logMsg = LogName + " attacked by " + attackingCharacter.LogName + ".";
-                foreach (Affliction affliction in attackResult.Afflictions)
+                if (attackResult.Afflictions != null)
                 {
-                    if (affliction.Strength == 0.0f) continue;
-                    logMsg += affliction.Prefab.Name + ": " + affliction.Strength;
+                    foreach (Affliction affliction in attackResult.Afflictions)
+                    {
+                        if (affliction.Strength == 0.0f) continue;
+                        logMsg += affliction.Prefab.Name + ": " + affliction.Strength;
+                    }
                 }
                 GameServer.Log(logMsg, ServerLog.MessageType.Attack);            
             }
