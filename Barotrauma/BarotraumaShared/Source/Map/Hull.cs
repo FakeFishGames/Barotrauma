@@ -926,11 +926,15 @@ namespace Barotrauma
                     int.Parse(element.Attribute("height").Value));
             }
 
-            return new Hull(MapEntityPrefab.Find(null, "hull"), rect, submarine)
+            var hull = new Hull(MapEntityPrefab.Find(null, "hull"), rect, submarine)
             {
                 waterVolume = element.GetAttributeFloat("pressure", 0.0f),
                 ID = (ushort)int.Parse(element.Attribute("ID").Value)
             };
+            
+            SerializableProperty.DeserializeProperties(hull, element);
+
+            return hull;
         }
 
         public override XElement Save(XElement parentElement)
@@ -953,9 +957,8 @@ namespace Barotrauma
                     rect.Width + "," + rect.Height),
                 new XAttribute("water", waterVolume)
             );
-
+            SerializableProperty.SerializeProperties(this, element);
             parentElement.Add(element);
-
             return element;
         }
 
