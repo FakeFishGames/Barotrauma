@@ -433,14 +433,12 @@ namespace Barotrauma.Lights
             Vector2 drawPos = position;
             if (ParentSub != null) drawPos += ParentSub.DrawPosition;
 
-            var hulls = new List<ConvexHull>();// ConvexHull.GetHullsInRange(position, range, ParentSub);
+            var hulls = new List<ConvexHull>();
             foreach (ConvexHullList chList in hullsInRange)
             {
-                //hulls.AddRange(chList.List);
                 foreach (ConvexHull hull in chList.List)
                 {
                     if (!chList.IsHidden.Contains(hull)) hulls.Add(hull);
-                    //hulls.Add(hull);
                 }
                 foreach (ConvexHull hull in chList.List)
                 {
@@ -455,9 +453,7 @@ namespace Barotrauma.Lights
             foreach (ConvexHull hull in hulls)
             {
                 hull.RefreshWorldPositions();
-
-                var visibleHullSegments = hull.GetVisibleSegments(drawPos);
-                visibleSegments.AddRange(visibleHullSegments);
+                hull.GetVisibleSegments(drawPos, visibleSegments);                
             }
 
             //Generate new points at the intersections between segments
@@ -467,9 +463,15 @@ namespace Barotrauma.Lights
                 Vector2 p1a = visibleSegments[i].Start.WorldPos;
                 Vector2 p1b = visibleSegments[i].End.WorldPos;
 
-                for (int j = 0; j < visibleSegments.Count; j++)
+                for (int j = i + 1; j < visibleSegments.Count; j++)
                 {
-                    if (j == i) continue;
+                    //ignore intersections between parallel axis-aligned segments
+                    if (visibleSegments[i].IsAxisAligned && visibleSegments[j].IsAxisAligned &&
+                        visibleSegments[i].IsHorizontal == visibleSegments[j].IsHorizontal)
+                    {
+                        continue;
+                    }
+
                     Vector2 p2a = visibleSegments[j].Start.WorldPos;
                     Vector2 p2b = visibleSegments[j].End.WorldPos;
 
@@ -481,15 +483,30 @@ namespace Barotrauma.Lights
                         continue;
                     }
 
-                    Vector2? intersection = MathUtils.GetLineIntersection(p1a, p1b, p2a, p2b);
+                    Vector2? intersection = null;
+                    if (visibleSegments[i].IsAxisAligned)
+                    {
+                        intersection = MathUtils.GetAxisAlignedLineIntersection(p2a, p2b, p1a, p1b, visibleSegments[i].IsHorizontal);
+                    }
+                    else if (visibleSegments[j].IsAxisAligned)
+                    {
+                        intersection = MathUtils.GetAxisAlignedLineIntersection(p1a, p1b, p2a, p2b, visibleSegments[j].IsHorizontal);
+                    }
+                    else
+                    {
+                        intersection = MathUtils.GetLineIntersection(p1a, p1b, p2a, p2b);
+                    }
 
                     if (intersection != null)
                     {
                         Vector2 intersectionVal = intersection.Value;
-
                         SegmentPoint start = visibleSegments[i].Start;
                         SegmentPoint end = visibleSegments[i].End;
                         SegmentPoint mid = new SegmentPoint(intersectionVal, null);
+                        if (visibleSegments[i].ConvexHull?.ParentEntity?.Submarine != null)
+                        {
+                            mid.Pos -= visibleSegments[i].ConvexHull.ParentEntity.Submarine.DrawPosition;
+                        }
 
                         if (Vector2.DistanceSquared(start.WorldPos, mid.WorldPos) < 25.0f ||
                             Vector2.DistanceSquared(end.WorldPos, mid.WorldPos) < 25.0f)
@@ -497,10 +514,17 @@ namespace Barotrauma.Lights
                             continue;
                         }
 
-                        Segment seg1 = new Segment(start, mid, visibleSegments[i].ConvexHull); seg1.IsHorizontal = visibleSegments[i].IsHorizontal;
-                        Segment seg2 = new Segment(mid, end, visibleSegments[i].ConvexHull); seg2.IsHorizontal = visibleSegments[i].IsHorizontal;
+                        Segment seg1 = new Segment(start, mid, visibleSegments[i].ConvexHull)
+                        {
+                            IsHorizontal = visibleSegments[i].IsHorizontal,
+                        };
+
+                        Segment seg2 = new Segment(mid, end, visibleSegments[i].ConvexHull)
+                        {
+                            IsHorizontal = visibleSegments[i].IsHorizontal
+                        };
                         visibleSegments[i] = seg1;
-                        visibleSegments.Insert(i+1,seg2);
+                        visibleSegments.Insert(i + 1, seg2);
                         i--;
                         break;
                     }
@@ -542,14 +566,14 @@ namespace Barotrauma.Lights
             }
             catch (Exception e)
             {
-                StringBuilder sb = new StringBuilder("Constructing light volumes failed! Light pos: "+drawPos+", Hull verts:\n");
+                StringBuilder sb = new StringBuilder("Constructing light volumes failed! Light pos: " + drawPos + ", Hull verts:\n");
                 foreach (SegmentPoint sp in points)
                 {
                     sb.AppendLine(sp.Pos.ToString());
                 }
                 DebugConsole.ThrowError(sb.ToString(), e);
             }
-            
+
             List<Vector2> output = new List<Vector2>();
             //List<Pair<int, Vector2>> preOutput = new List<Pair<int, Vector2>>();
 
@@ -628,21 +652,43 @@ namespace Barotrauma.Lights
 
         private Pair<int, Vector2> RayCast(Vector2 rayStart, Vector2 rayEnd, List<Segment> segments)
         {
-            float closestDist = 0.0f;
+            float closestDist = float.PositiveInfinity;
             Vector2? closestIntersection = null;
             int segment = -1;
+
+            float minX = Math.Min(rayStart.X, rayEnd.X);
+            float maxX = Math.Max(rayStart.X, rayEnd.X);
+            float minY = Math.Min(rayStart.Y, rayEnd.Y);
+            float maxY = Math.Max(rayStart.Y, rayEnd.Y);
 
             for (int i = 0; i < segments.Count; i++)
             {
                 Segment s = segments[i];
+
+                //segment's end position always has a higher or equal y coordinate than the start position
+                //so we can do this comparison and skip segments that are at the wrong side of the ray
+                System.Diagnostics.Debug.Assert(s.End.WorldPos.Y >= s.Start.WorldPos.Y, "LightSource raycast failed. Segment's end positions should never be below the start position.");
+                if (s.Start.WorldPos.Y > maxY || s.End.WorldPos.Y < minY) { continue; }
+                //same for the x-axis
+                if (s.Start.WorldPos.X > s.End.WorldPos.X)
+                {
+                    if (s.Start.WorldPos.X < minX) continue;
+                    if (s.End.WorldPos.X > maxX) continue;
+                }
+                else
+                {
+                    if (s.End.WorldPos.X < minX) continue;
+                    if (s.Start.WorldPos.X > maxX) continue;
+                }
+                
                 Vector2? intersection = s.IsAxisAligned ?
                     MathUtils.GetAxisAlignedLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos, s.IsHorizontal) :
                     MathUtils.GetLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos);
 
-                if (intersection != null)
+                if (intersection.HasValue)
                 {
-                    float dist = Vector2.DistanceSquared((Vector2)intersection, rayStart);
-                    if (closestIntersection == null || dist < closestDist)
+                    float dist = Vector2.DistanceSquared(intersection.Value, rayStart);
+                    if (dist < closestDist)
                     {
                         closestDist = dist;
                         closestIntersection = intersection;
