@@ -188,6 +188,17 @@ namespace Barotrauma
             private set;
         }
 
+        /// <summary>
+        /// How likely it is for the item to spawn in a level of a given type.
+        /// Key = name of the LevelGenerationParameters (empty string = default value)
+        /// Value = commonness
+        /// </summary>
+        public Dictionary<string, float> LevelCommonness
+        {
+            get;
+            private set;
+        } = new Dictionary<string, float>();
+
         public bool CanSpriteFlipX
         {
             get { return canSpriteFlipX; }
@@ -325,19 +336,12 @@ namespace Barotrauma
             Triggers            = new List<Rectangle>();
             DeconstructItems    = new List<DeconstructItem>();
             DeconstructTime     = 1.0f;
-
-            //string joinedTags = element.GetAttributeString("tags", "");
-            //if (string.IsNullOrEmpty(joinedTags)) joinedTags = element.GetAttributeString("Tags", "");
+            
             Tags = element.GetAttributeStringArray("tags", new string[0], convertToLowerInvariant: true).ToHashSet();
             if (Tags.None())
             {
                 Tags = element.GetAttributeStringArray("Tags", new string[0], convertToLowerInvariant: true).ToHashSet();
             }
-            //Tags = new HashSet<string>();
-            //foreach (string tag in joinedTags.Split(','))
-            //{
-            //    Tags.Add(tag.Trim().ToLowerInvariant());
-            //}
 
             if (element.Attribute("cargocontainername") != null)
             {
@@ -403,6 +407,15 @@ namespace Barotrauma
                         }
                         BrokenSprites.Insert(spriteIndex, brokenSprite);
                         break;
+                    case "decorativesprite":
+                        string decorativeSpriteFolder = "";
+                        if (!subElement.GetAttributeString("texture", "").Contains("/"))
+                        {
+                            decorativeSpriteFolder = Path.GetDirectoryName(filePath);
+                        }
+
+                        DecorativeSprites.Add(new DecorativeSprite(subElement, decorativeSpriteFolder));
+                        break;
 #endif
                     case "deconstruct":
                         DeconstructTime = subElement.GetAttributeFloat("time", 10.0f);
@@ -420,16 +433,26 @@ namespace Barotrauma
 
                         break;
                     case "trigger":
-                        Rectangle trigger = new Rectangle(0, 0, 10,10);
-
-                        trigger.X = subElement.GetAttributeInt("x", 0);
-                        trigger.Y = subElement.GetAttributeInt("y", 0);
-
-                        trigger.Width = subElement.GetAttributeInt("width", 0);
-                        trigger.Height = subElement.GetAttributeInt("height", 0);
+                        Rectangle trigger = new Rectangle(0, 0, 10, 10)
+                        {
+                            X = subElement.GetAttributeInt("x", 0),
+                            Y = subElement.GetAttributeInt("y", 0),
+                            Width = subElement.GetAttributeInt("width", 0),
+                            Height = subElement.GetAttributeInt("height", 0)
+                        };
 
                         Triggers.Add(trigger);
 
+                        break;
+                    case "levelresource":
+                        foreach (XElement levelCommonnessElement in subElement.Elements())
+                        {
+                            string levelName = levelCommonnessElement.GetAttributeString("levelname", "").ToLowerInvariant();
+                            if (!LevelCommonness.ContainsKey(levelName))
+                            {
+                                LevelCommonness.Add(levelName, levelCommonnessElement.GetAttributeFloat("commonness", 0.0f));
+                            }
+                        }
                         break;
                 }
             }

@@ -302,11 +302,7 @@ namespace Barotrauma.RuinGeneration
             BTRoom.CalculateDistancesFromEntrance(entranceRoom, rooms, corridors);
             GenerateRuinEntities(caveCells, area, mirror);
         }
-
-#if DEBUG
-        public List<List<Rectangle>> hullSplitIter = new List<List<Rectangle>>();
-#endif
-
+        
         class RuinEntity
         {
             public readonly RuinEntityConfig Config;
@@ -392,11 +388,7 @@ namespace Barotrauma.RuinGeneration
 
             List<Rectangle> hullRects = new List<Rectangle>(allShapes.Select(s => s.Rect));
             List<Door> doors = new List<Door>();
-
-#if DEBUG
-            hullSplitIter.Add(new List<Rectangle>());
-            hullSplitIter.Last().AddRange(hullRects);
-#endif
+            
             //split intersecting hulls into multiple parts to prevent overlaps
             for (int i = 0; i < hullRects.Count; i++)
             {
@@ -445,11 +437,6 @@ namespace Barotrauma.RuinGeneration
                     {
                         hullRects[i] = new Rectangle(hullRects[i].X, hullRects[i].Y, hullRects[j].X - hullRects[i].X, hullRects[i].Height);
                     }
-
-#if DEBUG
-                    hullSplitIter.Add(new List<Rectangle>());
-                    hullSplitIter.Last().AddRange(hullRects);
-#endif
                 }
             }
 

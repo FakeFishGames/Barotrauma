@@ -116,8 +116,10 @@
     <Compile Include="Source\GUI\UISprite.cs" />
     <Compile Include="Source\GUI\Widget.cs" />
     <Compile Include="Source\Items\Components\ElectricalDischarger.cs" />
+    <Compile Include="Source\Items\Components\LevelResource.cs" />
     <Compile Include="Source\Items\Components\Machines\Controller.cs" />
     <Compile Include="Source\Items\Components\Repairable.cs" />
+    <Compile Include="Source\Items\Components\RepairTool.cs" />
     <Compile Include="Source\Items\Components\Signal\CustomInterface.cs" />
     <Compile Include="Source\Items\Components\Signal\MotionSensor.cs" />
     <Compile Include="Source\Items\Components\Signal\WifiComponent.cs" />

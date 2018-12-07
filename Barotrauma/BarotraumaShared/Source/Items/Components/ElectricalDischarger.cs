@@ -295,10 +295,13 @@ namespace Barotrauma.Items.Components
                         Math.Sign(targetStructure.WorldPosition.Y - targetStructure.Submarine.WorldPosition.Y) :
                         Math.Sign(currPos.Y - targetStructure.WorldPosition.Y);
 
+                    int sectionIndex = targetStructure.FindSectionIndex(currPos, world: true, clamp: true);
+                    if (sectionIndex == -1) { return; }
+                    Vector2 sectionPos = targetStructure.SectionPosition(sectionIndex, world: true);
                     Vector2 targetPos =
                         new Vector2(
-                            MathHelper.Clamp(currPos.X, targetStructure.WorldRect.X, targetStructure.WorldRect.Right),
-                            targetStructure.WorldPosition.Y + targetStructure.Rect.Height / 2 * yDir);
+                            MathHelper.Clamp(sectionPos.X, targetStructure.WorldRect.X, targetStructure.WorldRect.Right),
+                            sectionPos.Y + targetStructure.BodyHeight / 2 * yDir);
 
                     //create nodes from the current position to the closest point on the structure
                     AddNodesBetweenPoints(currPos, targetPos, 0.25f, ref parentNodeIndex);
@@ -312,14 +315,16 @@ namespace Barotrauma.Items.Components
                     
                     //continue the discharge to the left edge of the structure and extend from there
                     int leftNodeIndex = nodeIndex;
-                    Vector2 leftPos = new Vector2(targetStructure.WorldRect.X, targetPos.Y);
+                    Vector2 leftPos = targetStructure.SectionPosition(0, world: true);
+                    leftPos.Y += targetStructure.BodyHeight / 2 * yDir;
                     AddNodesBetweenPoints(targetPos, leftPos, 0.05f, ref leftNodeIndex);
                     nodes.Add(new Node(leftPos, leftNodeIndex));
                     FindNodes(entitiesInRange, leftPos, nodes.Count - 1, newRange);
 
                     //continue the discharge to the right edge of the structure and extend from there
                     int rightNodeIndex = nodeIndex;
-                    Vector2 rightPos = new Vector2(targetStructure.WorldRect.Right, targetPos.Y);
+                    Vector2 rightPos = targetStructure.SectionPosition(targetStructure.SectionCount - 1, world: true);
+                    leftPos.Y += targetStructure.BodyHeight / 2 * yDir;
                     AddNodesBetweenPoints(targetPos, rightPos, 0.05f, ref rightNodeIndex);
                     nodes.Add(new Node(rightPos, rightNodeIndex));
                     FindNodes(entitiesInRange, rightPos, nodes.Count - 1, newRange);
@@ -330,9 +335,13 @@ namespace Barotrauma.Items.Components
                         Math.Sign(targetStructure.WorldPosition.X - targetStructure.Submarine.WorldPosition.X) :
                         Math.Sign(currPos.X - targetStructure.WorldPosition.X);
 
+                    int sectionIndex = targetStructure.FindSectionIndex(currPos, world: true, clamp: true);
+                    if (sectionIndex == -1) { return; }
+                    Vector2 sectionPos = targetStructure.SectionPosition(sectionIndex, world: true);
+
                     Vector2 targetPos = new Vector2(
-                            targetStructure.WorldPosition.X - targetStructure.Rect.Width / 2 * xDir,
-                            MathHelper.Clamp(currPos.Y, targetStructure.WorldRect.Y - targetStructure.Rect.Height, targetStructure.WorldRect.Y));
+                            sectionPos.X + targetStructure.BodyWidth / 2 * xDir,
+                            MathHelper.Clamp(sectionPos.Y, targetStructure.WorldRect.Y - targetStructure.Rect.Height, targetStructure.WorldRect.Y));
 
                     //create nodes from the current position to the closest point on the structure
                     AddNodesBetweenPoints(currPos, targetPos, 0.25f, ref parentNodeIndex);
@@ -346,14 +355,16 @@ namespace Barotrauma.Items.Components
 
                     //continue the discharge to the top edge of the structure and extend from there
                     int topNodeIndex = nodeIndex;
-                    Vector2 topPos = new Vector2(targetPos.X, targetStructure.WorldRect.Y);
+                    Vector2 topPos = targetStructure.SectionPosition(0, world: true);
+                    topPos.X += targetStructure.BodyWidth / 2 * xDir; 
                     AddNodesBetweenPoints(targetPos, topPos, 0.05f, ref topNodeIndex);
                     nodes.Add(new Node(topPos, topNodeIndex));
                     FindNodes(entitiesInRange, topPos, nodes.Count - 1, newRange);
 
                     //continue the discharge to the bottom edge of the structure and extend from there
                     int bottomNodeIndex = nodeIndex;
-                    Vector2 bottomBos = new Vector2(targetPos.X, targetStructure.WorldRect.Y - targetStructure.Rect.Height);
+                    Vector2 bottomBos = targetStructure.SectionPosition(targetStructure.SectionCount - 1, world: true);
+                    bottomBos.X += targetStructure.BodyWidth / 2 * xDir;
                     AddNodesBetweenPoints(targetPos, bottomBos, 0.05f, ref bottomNodeIndex);
                     nodes.Add(new Node(bottomBos, bottomNodeIndex));
                     FindNodes(entitiesInRange, bottomBos, nodes.Count - 1, newRange);

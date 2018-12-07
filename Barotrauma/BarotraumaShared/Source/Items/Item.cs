@@ -21,7 +21,7 @@ namespace Barotrauma
         Always, OnPicked, OnUse, OnSecondaryUse,
         OnWearing, OnContaining, OnContained, OnNotContained,
         OnActive, OnFailure, OnBroken, 
-        OnFire, InWater,
+        OnFire, InWater, NotInWater,
         OnImpact,
         OnEating,
         OnDeath = OnBroken
@@ -207,6 +207,9 @@ namespace Barotrauma
             get { return spriteColor; }
         }
 
+        //the default value should be Prefab.Health, but because we can't use it in the attribute, 
+        //we'll just use NaN (which does nothing) and set the default value in the constructor/load
+        [Serialize(float.NaN, false), Editable]
         public float Condition
         {
             get { return condition; }
@@ -430,7 +433,9 @@ namespace Barotrauma
                     case "sprite":
                     case "deconstruct":
                     case "brokensprite":
+                    case "decorativesprite":
                     case "price":
+                    case "levelcommonness":
                         break;
                     case "staticbody":
                         StaticBodyConfig = subElement;
@@ -503,6 +508,8 @@ namespace Barotrauma
             {
                 ownInventory = itemContainer.Inventory;
             }
+
+            InitProjSpecific();
                         
             InsertToList();
             ItemList.Add(this);
@@ -515,6 +522,8 @@ namespace Barotrauma
                 }
             }
         }
+
+        partial void InitProjSpecific();
 
         public override MapEntity Clone()
         {
@@ -849,6 +858,11 @@ namespace Barotrauma
                 targets.AddRange(character.AnimController.Limbs.ToList());
             }
 
+            if (effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters) || effect.HasTargetType(StatusEffect.TargetType.NearbyItems))
+            {
+                effect.GetNearbyTargets(WorldPosition, targets);
+            }
+
             if (Container != null && effect.HasTargetType(StatusEffect.TargetType.Parent)) targets.Add(Container);
             
             effect.Apply(type, deltaTime, this, targets);            
@@ -884,6 +898,8 @@ namespace Barotrauma
                 aiTarget.SoundRange -= deltaTime * 1000.0f;
             }
 
+            UpdateSpriteStates(deltaTime);
+
             ApplyStatusEffects(ActionType.Always, deltaTime, null);
 
             foreach (ItemComponent ic in components)
@@ -917,21 +933,6 @@ namespace Barotrauma
                 }
             }
 
-            /*if (condition <= 0.0f && FixRequirements.Count > 0)
-            {
-                bool isFixed = true;
-                foreach (FixRequirement fixRequirement in FixRequirements)
-                {
-                    fixRequirement.Update(deltaTime);
-                    if (!fixRequirement.Fixed) isFixed = false;
-                }
-                if (isFixed)
-                {
-                    GameMain.Server?.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
-                    condition = Prefab.Health;
-                }
-            }*/
-            
             if (body != null && body.Enabled)
             {
                 System.Diagnostics.Debug.Assert(body.FarseerBody.FixtureList != null);
@@ -950,17 +951,17 @@ namespace Barotrauma
             }
 
             inWater = IsInWater();
+            bool waterProof = WaterProof;
             if (inWater)
             {
-                bool waterProof = WaterProof;
                 Item container = this.Container;
                 while (!waterProof && container != null)
                 {
                     waterProof = container.WaterProof;
                     container = container.Container;
                 }
-                if (!waterProof) ApplyStatusEffects(ActionType.InWater, deltaTime);
             }
+            ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
 
             if (body == null || !body.Enabled || !inWater || ParentInventory != null) return;
 
@@ -968,6 +969,8 @@ namespace Barotrauma
             CurrentHull?.ApplyFlowForces(deltaTime, this);
         }
 
+        partial void UpdateSpriteStates(float deltaTime);
+        
         public void UpdateTransform()
         {
             Submarine prevSub = Submarine;

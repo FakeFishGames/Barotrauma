@@ -1863,7 +1863,7 @@ namespace Barotrauma
                 }
             }
 
-            if (AnimController.InWater) ApplyStatusEffects(ActionType.InWater, deltaTime);            
+            ApplyStatusEffects(AnimController.InWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);            
 
             UpdateControlled(deltaTime, cam);
             
@@ -2091,6 +2091,14 @@ namespace Barotrauma
         /// </summary>
         public AttackResult ApplyAttack(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false, Limb targetLimb = null)
         {
+            if (Removed)
+            {
+                string errorMsg = "Tried to apply an attack to a removed character (" + Name + ").\n" + Environment.StackTrace;
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Character.ApplyAttack:RemovedCharacter", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return new AttackResult();
+            }
+
             Limb limbHit = targetLimb;
 
             float attackImpulse = attack.TargetImpulse + attack.TargetForce * deltaTime;
@@ -2101,15 +2109,18 @@ namespace Barotrauma
 
             if (limbHit == null) return new AttackResult();
 
-            limbHit.body.ApplyLinearImpulse(attack.TargetImpulseWorld + attack.TargetForceWorld * deltaTime);
+            limbHit.body?.ApplyLinearImpulse(attack.TargetImpulseWorld + attack.TargetForceWorld * deltaTime);
 
             if (attacker is Character attackingCharacter && attackingCharacter.AIController == null)
             {
                 string logMsg = LogName + " attacked by " + attackingCharacter.LogName + ".";
-                foreach (Affliction affliction in attackResult.Afflictions)
+                if (attackResult.Afflictions != null)
                 {
-                    if (affliction.Strength == 0.0f) continue;
-                    logMsg += affliction.Prefab.Name + ": " + affliction.Strength;
+                    foreach (Affliction affliction in attackResult.Afflictions)
+                    {
+                        if (affliction.Strength == 0.0f) continue;
+                        logMsg += affliction.Prefab.Name + ": " + affliction.Strength;
+                    }
                 }
                 GameServer.Log(logMsg, ServerLog.MessageType.Attack);            
             }
@@ -2236,13 +2247,21 @@ namespace Barotrauma
         public void BreakJoints()
         {
             Vector2 centerOfMass = AnimController.GetCenterOfMass();
-
             foreach (Limb limb in AnimController.Limbs)
             {
                 limb.AddDamage(limb.SimPosition, 500.0f, 0.0f, 0.0f, false);
 
                 Vector2 diff = centerOfMass - limb.SimPosition;
-                if (diff == Vector2.Zero) continue;
+
+                if (!MathUtils.IsValid(diff))
+                {
+                    string errorMsg = "Attempted to apply an invalid impulse to a limb in Character.BreakJoints (" + diff + "). Limb position: " + limb.SimPosition + ", center of mass: " + centerOfMass + ".";
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Ragdoll.GetCenterOfMass", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    return;
+                }
+
+                if (diff == Vector2.Zero) { continue; }
                 limb.body.ApplyLinearImpulse(diff * 50.0f);
             }
 
