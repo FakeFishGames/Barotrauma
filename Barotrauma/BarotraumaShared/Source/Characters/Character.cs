@@ -2202,13 +2202,21 @@ namespace Barotrauma
         public void BreakJoints()
         {
             Vector2 centerOfMass = AnimController.GetCenterOfMass();
-
             foreach (Limb limb in AnimController.Limbs)
             {
                 limb.AddDamage(limb.SimPosition, 500.0f, 0.0f, 0.0f, false);
 
                 Vector2 diff = centerOfMass - limb.SimPosition;
-                if (diff == Vector2.Zero) continue;
+
+                if (!MathUtils.IsValid(diff))
+                {
+                    string errorMsg = "Attempted to apply an invalid impulse to a limb in Character.BreakJoints (" + diff + "). Limb position: " + limb.SimPosition + ", center of mass: " + centerOfMass + ".";
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Ragdoll.GetCenterOfMass", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    return;
+                }
+
+                if (diff == Vector2.Zero) { continue; }
                 limb.body.ApplyLinearImpulse(diff * 50.0f);
             }
 
