@@ -5,7 +5,7 @@
     sizechangemin="0.9,0.9" sizechangemax="1.2,1.2"
     startrotationmin ="0.0" startrotationmax="360"
     startcolor="255,255,255,255" startalpha="255,255,255,0"
-    lifetime="2"
+    lifetime="1.25"
     growtime ="0.2"
     usecollision="true"
     friction="0.01"
