@@ -136,7 +136,7 @@ namespace Barotrauma
                         {
                             string msgCommand = ChatMessage.GetChatMessageCommand(text, out string msg);
                             AddSinglePlayerChatMessage(
-                                Character.Controlled.Info.DisplayName,
+                                Character.Controlled.Info.Name,
                                 msg,
                                 ((msgCommand == "r" || msgCommand == "radio") && ChatMessage.CanUseRadio(Character.Controlled)) ? ChatMessageType.Radio : ChatMessageType.Default,
                                 Character.Controlled);
