@@ -27,6 +27,7 @@ namespace Barotrauma.Lights
         private float currLightMapScale;
 
         public Color AmbientLight;
+        public float AmbientLightIntensity;
 
         public RenderTarget2D LightMap
         {
@@ -73,6 +74,7 @@ namespace Barotrauma.Lights
             lights = new List<LightSource>();
 
             AmbientLight = new Color(20, 20, 20, 255);
+            AmbientLightIntensity = 0.9f;
 
             visionCircle = Sprite.LoadTexture("Content/Lights/visioncircle.png");
 
@@ -312,7 +314,7 @@ namespace Barotrauma.Lights
             //---------------------------------------------------------------------------------------------------
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);
 
-            GUI.DrawRectangle(spriteBatch, new Rectangle(cam.WorldView.X, -cam.WorldView.Y, cam.WorldView.Width, cam.WorldView.Height), AmbientLight, isFilled:true);
+            GUI.DrawRectangle(spriteBatch, new Rectangle(cam.WorldView.X, -cam.WorldView.Y, cam.WorldView.Width, cam.WorldView.Height), AmbientLight * AmbientLightIntensity, isFilled:true);
 
             foreach (ElectricalDischarger discharger in ElectricalDischarger.List)
             {
@@ -340,7 +342,7 @@ namespace Barotrauma.Lights
                     smoothedHullAmbientLights[hull], true);
             }
 
-            if (Character.Controlled != null)
+            /*if (Character.Controlled != null)
             {
                 Vector2 haloDrawPos = Character.Controlled.DrawPosition;
                 haloDrawPos.Y = -haloDrawPos.Y;
@@ -351,7 +353,7 @@ namespace Barotrauma.Lights
                 spriteBatch.Draw(
                     LightSource.LightTexture, haloDrawPos, null, haloColor * 0.4f, 0.0f,
                     new Vector2(LightSource.LightTexture.Width / 2, LightSource.LightTexture.Height / 2), 1.0f, SpriteEffects.None, 0.0f);
-            }
+            }*/
             spriteBatch.End();
 
             if (GameMain.Config.SpecularityEnabled)
@@ -426,10 +428,9 @@ namespace Barotrauma.Lights
             graphics.SetRenderTarget(LosTexture);
 
             spriteBatch.Begin(SpriteSortMode.Deferred, transformMatrix: cam.Transform * Matrix.CreateScale(new Vector3(GameMain.Config.LightMapScale, GameMain.Config.LightMapScale, 1.0f)));
-            
-            if (ObstructVision)
+            /*if (ObstructVision)
             {
-                graphics.Clear(Color.Black);
+                graphics.Clear(Color.White);
                 Vector2 diff = lookAtPosition - ViewTarget.WorldPosition;
                 diff.Y = -diff.Y;
                 float rotation = MathUtils.VectorToAngle(diff);
@@ -443,7 +444,8 @@ namespace Barotrauma.Lights
             else
             {
                 graphics.Clear(Color.White);
-            }
+            }*/
+            graphics.Clear(Color.White);
             spriteBatch.End();
             
 
