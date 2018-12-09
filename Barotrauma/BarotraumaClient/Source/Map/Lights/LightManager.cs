@@ -27,7 +27,6 @@ namespace Barotrauma.Lights
         private float currLightMapScale;
 
         public Color AmbientLight;
-        public float AmbientLightIntensity;
 
         public RenderTarget2D LightMap
         {
@@ -74,7 +73,6 @@ namespace Barotrauma.Lights
             lights = new List<LightSource>();
 
             AmbientLight = new Color(20, 20, 20, 255);
-            AmbientLightIntensity = 0.9f;
 
             visionCircle = Sprite.LoadTexture("Content/Lights/visioncircle.png");
 
@@ -314,7 +312,7 @@ namespace Barotrauma.Lights
             //---------------------------------------------------------------------------------------------------
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);
 
-            GUI.DrawRectangle(spriteBatch, new Rectangle(cam.WorldView.X, -cam.WorldView.Y, cam.WorldView.Width, cam.WorldView.Height), AmbientLight * AmbientLightIntensity, isFilled:true);
+            GUI.DrawRectangle(spriteBatch, new Rectangle(cam.WorldView.X, -cam.WorldView.Y, cam.WorldView.Width, cam.WorldView.Height), AmbientLight, isFilled:true);
 
             foreach (ElectricalDischarger discharger in ElectricalDischarger.List)
             {
