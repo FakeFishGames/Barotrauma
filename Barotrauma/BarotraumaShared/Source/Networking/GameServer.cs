@@ -872,6 +872,12 @@ namespace Barotrauma.Networking
                         }
                     }
                     break;
+                case ClientPermissions.Unban:
+                    string unbannedName = inc.ReadString().ToLowerInvariant();
+                    string unbannedIP = inc.ReadString();
+
+                    UnbanPlayer(unbannedIP, unbannedIP);
+                    break;
                 case ClientPermissions.EndRound:
                     if (gameStarted)
                     {
@@ -1662,7 +1668,20 @@ namespace Barotrauma.Networking
 
             BanClient(client, reason, range, duration);
         }
-        
+
+        public override void UnbanPlayer(string playerName, string playerIP)
+        {
+            playerName = playerName.ToLowerInvariant();
+            if (!string.IsNullOrEmpty(playerIP))
+            {
+                banList.UnbanIP(playerIP);
+            }
+            else if (!string.IsNullOrEmpty(playerName))
+            {
+                banList.UnbanPlayer(playerName);
+            }
+        }
+
         public void BanClient(Client client, string reason, bool range = false, TimeSpan? duration = null)
         {
             if (client == null) return;

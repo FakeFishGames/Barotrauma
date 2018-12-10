@@ -16,16 +16,18 @@ namespace Barotrauma.Networking
         Kick = 2,
         [Description("Ban")]
         Ban = 4,
+        [Description("Revoke Ban")]
+        Unban = 8,
         [Description("Select submarine")]
-        SelectSub = 8,
+        SelectSub = 16,
         [Description("Select game mode")]
-        SelectMode = 16,
+        SelectMode = 32,
         [Description("Manage campaign")]
-        ManageCampaign = 32,
+        ManageCampaign = 64,
         [Description("Console commands")]
-        ConsoleCommands = 64,
+        ConsoleCommands = 128,
         [Description("Access server log")]
-        ServerLog = 128
+        ServerLog = 256
     }
 
     class PermissionPreset

@@ -41,6 +41,16 @@ namespace Barotrauma.Networking
 
         private List<BannedPlayer> bannedPlayers;
 
+        public IEnumerable<string> BannedNames
+        {
+            get { return bannedPlayers.Select(bp => bp.Name); }
+        }
+
+        public IEnumerable<string> BannedIPs
+        {
+            get { return bannedPlayers.Select(bp => bp.IP); }
+        }
+
         public BanList()
         {
             bannedPlayers = new List<BannedPlayer>();
@@ -104,6 +114,36 @@ namespace Barotrauma.Networking
 
             bannedPlayers.Add(new BannedPlayer(name, ip, reason, expirationTime));
             Save();
+        }
+
+        public void UnbanPlayer(string name)
+        {
+            var player = bannedPlayers.Find(bp => bp.Name == name);
+            if (player == null)
+            {
+                DebugConsole.Log("Could not unban player \""+name+"\". Matching player not found.");
+            }
+            else
+            {
+                DebugConsole.Log("Unbanned \"" + name + ".");
+                bannedPlayers.Remove(player);
+                Save();
+            }
+        }
+
+        public void UnbanIP(string ip)
+        {
+            var player = bannedPlayers.Find(bp => bp.IP == ip);
+            if (player == null)
+            {
+                DebugConsole.Log("Could not unban IP \"" + ip + "\". Matching player not found.");
+            }
+            else
+            {
+                DebugConsole.Log("Unbanned \"" + ip + ".");
+                bannedPlayers.Remove(player);
+                Save();
+            }
         }
 
         public bool IsBanned(string IP)

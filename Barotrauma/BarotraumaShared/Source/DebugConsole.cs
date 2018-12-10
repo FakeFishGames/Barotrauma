@@ -1079,6 +1079,37 @@ namespace Barotrauma
                 };
             }));
 
+            commands.Add(new Command("unban", "unban [name]: Unban a specific client.", (string[] args) =>
+            {
+                if (GameMain.NetworkMember == null || args.Length == 0) return;
+
+                string clientName = string.Join(" ", args);
+                GameMain.NetworkMember.UnbanPlayer(clientName, "");                
+            },
+            () =>
+            {
+                if (GameMain.Server == null) return null;
+                return new string[][]
+                {
+                    GameMain.Server.BanList.BannedNames.Where(name => !string.IsNullOrEmpty(name)).ToArray()
+                };
+            }));
+
+            commands.Add(new Command("unbanip", "unbanip [ip]: Unban a specific IP.", (string[] args) =>
+            {
+                if (GameMain.NetworkMember == null || args.Length == 0) return;
+                
+                GameMain.NetworkMember.UnbanPlayer("", args[0]);
+            },
+            () =>
+            {
+                if (GameMain.Server == null) return null;
+                return new string[][]
+                {
+                    GameMain.Server.BanList.BannedIPs.Where(ip => !string.IsNullOrEmpty(ip)).ToArray()
+                };
+            }));
+
             commands.Add(new Command("banid", "banid [id]: Kick and ban the player with the specified client ID from the server.", (string[] args) =>
             {
                 if (GameMain.NetworkMember == null || args.Length == 0) return;
