@@ -267,11 +267,12 @@ namespace Barotrauma
         {
             if (!isHorizontal)
             {
-                if (Math.Sign(a1.X - axisAligned1.X) == Math.Sign(a2.X - axisAligned1.X))                
+                float xDiff = axisAligned1.X - a1.X;
+                if (Math.Sign(xDiff) == Math.Sign(axisAligned1.X - a2.X))                
                     return null;
                 
                 float s = (a2.Y - a1.Y) / (a2.X - a1.X);
-                float y = a1.Y + (axisAligned1.X - a1.X) * s;
+                float y = a1.Y + xDiff * s;
 
                 if (axisAligned1.Y < axisAligned2.Y)
                 {
@@ -288,11 +289,12 @@ namespace Barotrauma
             }
             else //horizontal line
             {
-                if (Math.Sign(a1.Y - axisAligned1.Y) == Math.Sign(a2.Y - axisAligned1.Y))                
+                float yDiff = axisAligned1.Y - a1.Y;
+                if (Math.Sign(yDiff) == Math.Sign(axisAligned1.Y - a2.Y))                
                     return null;
 
                 float s = (a2.X - a1.X) / (a2.Y - a1.Y);
-                float x = a1.X + (axisAligned1.Y - a1.Y) * s;
+                float x = a1.X + yDiff * s;
 
                 if (axisAligned1.X < axisAligned2.X)
                 {
