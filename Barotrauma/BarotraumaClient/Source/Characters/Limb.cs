@@ -369,6 +369,7 @@ namespace Barotrauma
                 LightSource.LightSpriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipVertically;
             }
             float depthStep = 0.000001f;
+            // TODO: optimize, don't use Find so frequently! the list could be created each time items are equipped/unequipped?
             WearableSprite onlyDrawable = wearingItems.Find(w => w.HideOtherWearables);
             SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             foreach (WearableSprite wearable in OtherWearables)
