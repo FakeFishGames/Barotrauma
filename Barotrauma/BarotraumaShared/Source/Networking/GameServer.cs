@@ -895,7 +895,7 @@ namespace Barotrauma.Networking
             ClientPermissions command = ClientPermissions.None;
             try
             {
-                command = (ClientPermissions)inc.ReadByte();
+                command = (ClientPermissions)inc.ReadUInt16();
             }
 
             catch
@@ -940,6 +940,12 @@ namespace Barotrauma.Networking
                             BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? "Banned by " + sender.Name : banReason, range);
                         }
                     }
+                    break;
+                case ClientPermissions.Unban:
+                    string unbannedName = inc.ReadString().ToLowerInvariant();
+                    string unbannedIP = inc.ReadString();
+
+                    UnbanPlayer(unbannedIP, unbannedIP);
                     break;
                 case ClientPermissions.EndRound:
                     if (gameStarted)
@@ -1834,10 +1840,23 @@ namespace Barotrauma.Networking
             BanClient(client, reason, range, duration);
         }
 
+        public override void UnbanPlayer(string playerName, string playerIP)
+        {
+            playerName = playerName.ToLowerInvariant();
+            if (!string.IsNullOrEmpty(playerIP))
+            {
+                banList.UnbanIP(playerIP);
+            }
+            else if (!string.IsNullOrEmpty(playerName))
+            {
+                banList.UnbanPlayer(playerName);
+            }
+        }
+
         public void BanClient(Client client, string reason, bool range = false, TimeSpan? duration = null)
         {
             if (client == null) return;
-            
+
             string msg = DisconnectReason.Banned.ToString();
             if (!string.IsNullOrWhiteSpace(reason)) msg += ";\nReason: " + reason;
             DisconnectClient(client, client.Name + " has been banned from the server.", msg);
@@ -2283,7 +2302,7 @@ namespace Barotrauma.Networking
 
         private void WritePermissions(NetBuffer msg, Client client)
         {
-            msg.Write((byte)client.Permissions);
+            msg.Write((UInt16)client.Permissions);
             if (client.Permissions.HasFlag(ClientPermissions.ConsoleCommands))
             {
                 msg.Write((UInt16)client.PermittedConsoleCommands.Sum(c => c.names.Length));
