@@ -1531,7 +1531,7 @@ namespace Barotrauma.Networking
                     }
                     else
                     {
-                        characterData.SpawnInventoryItems(spawnedCharacter.Inventory);
+                        characterData.SpawnInventoryItems(spawnedCharacter.Info, spawnedCharacter.Inventory);
                     }
 
                     teamClients[i].Character = spawnedCharacter;
@@ -1566,7 +1566,7 @@ namespace Barotrauma.Networking
                     }
                     else
                     {
-                        characterData.SpawnInventoryItems(myCharacter.Inventory);
+                        characterData.SpawnInventoryItems(myCharacter.Info, myCharacter.Inventory);
                     }
 
                     GameMain.GameSession.CrewManager.AddCharacter(myCharacter);

@@ -32,7 +32,7 @@ namespace Barotrauma
             if (client.Character.Inventory != null)
             {
                 itemData = new XElement("inventory");
-                SaveInventory(client.Character.Inventory, itemData);
+                client.Character.SaveInventory(client.Character.Inventory, itemData);
             }
         }
 
@@ -45,25 +45,7 @@ namespace Barotrauma
             if (server.Character.Inventory != null)
             {
                 itemData = new XElement("inventory");
-                SaveInventory(server.Character.Inventory, itemData);
-            }
-        }
-
-        private void SaveInventory(Inventory inventory, XElement parentElement)
-        {
-            var items = Array.FindAll(inventory.Items, i => i != null).Distinct();
-            foreach (Item item in items)
-            {
-                item.Submarine = inventory.Owner.Submarine;
-                var itemElement = item.Save(parentElement);
-                itemElement.Add(new XAttribute("i",  Array.IndexOf(inventory.Items, item)));
-
-                foreach (ItemContainer container in item.GetComponents<ItemContainer>())
-                {
-                    XElement childInvElement = new XElement("inventory");
-                    itemElement.Add(childInvElement);
-                    SaveInventory(container.Inventory, childInvElement);
-                }
+                server.Character.SaveInventory(server.Character.Inventory, itemData);
             }
         }
 
@@ -88,7 +70,6 @@ namespace Barotrauma
                     case "character":
                     case "characterinfo":
                         CharacterInfo = new CharacterInfo(subElement);
-                        CharacterInfo.PickedItemIDs.Clear();
                         break;
                     case "inventory":
                         itemData = subElement;
@@ -135,32 +116,9 @@ namespace Barotrauma
             return element;
         }
 
-        public void SpawnInventoryItems(Inventory inventory)
+        public void SpawnInventoryItems(CharacterInfo characterInfo, Inventory inventory)
         {
-            SpawnInventoryItems(inventory, itemData);
-        }
-
-        private void SpawnInventoryItems(Inventory inventory, XElement element)
-        {
-            foreach (XElement itemElement in element.Elements())
-            {
-                var newItem = Item.Load(itemElement, inventory.Owner.Submarine);
-                int slotIndex = itemElement.GetAttributeInt("i", 0);
-                if (newItem == null) continue;
-
-                Entity.Spawner.CreateNetworkEvent(newItem, false);
-                inventory.TryPutItem(newItem, slotIndex, false, false, null);
-
-                int itemContainerIndex = 0;
-                var itemContainers = newItem.GetComponents<ItemContainer>().ToList();
-                foreach (XElement childInvElement in itemElement.Elements())
-                {
-                    if (itemContainerIndex >= itemContainers.Count) break;
-                    if (childInvElement.Name.ToString().ToLowerInvariant() != "inventory") continue;
-                    SpawnInventoryItems(itemContainers[itemContainerIndex].Inventory, childInvElement);
-                    itemContainerIndex++;
-                }
-            }
-        }        
+            characterInfo.SpawnInventoryItems(inventory, itemData);
+        }       
     }
 }
