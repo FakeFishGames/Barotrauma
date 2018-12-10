@@ -2371,7 +2371,7 @@ namespace Barotrauma
                         var refPoint = SimToScreen(head != null ? head.SimPosition : collider.SimPosition);
                         w.DrawPos = refPoint + GetScreenSpaceForward() * ConvertUnits.ToDisplayUnits(CurrentAnimation.CycleSpeed * multiplier) * Cam.Zoom;
                         // Update tooltip, because the cycle speed might be automatically adjusted by the movement speed widget.
-                        w.tooltip = $"Cycle Speed: {CurrentAnimation.CycleSpeed.FormatSingleDecimal()}";
+                        w.tooltip = $"Cycle Speed: {CurrentAnimation.CycleSpeed.FormatDoubleDecimal()}";
                     };
                     w.MouseHeld += dTime =>
                     {
@@ -2380,7 +2380,7 @@ namespace Barotrauma
                         //w.DrawPos = newPos;
                         float speed = CurrentAnimation.CycleSpeed + ConvertUnits.ToSimUnits(Vector2.Multiply(PlayerInput.MouseSpeed / multiplier, GetScreenSpaceForward()).Combine()) / Cam.Zoom;
                         TryUpdateAnimParam("cyclespeed", speed);
-                        w.tooltip = $"Cycle Speed: {CurrentAnimation.CycleSpeed.FormatSingleDecimal()}";
+                        w.tooltip = $"Cycle Speed: {CurrentAnimation.CycleSpeed.FormatDoubleDecimal()}";
                     };
                     // Additional check, which overrides the previous value (because evaluated last)
                     w.PreUpdate += dTime =>
