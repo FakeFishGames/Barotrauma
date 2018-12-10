@@ -45,6 +45,13 @@ namespace Barotrauma.Lights
 
         public Segment(SegmentPoint start, SegmentPoint end, ConvexHull convexHull)
         {
+            if (start.Pos.Y > end.Pos.Y)
+            {
+                var temp = start;
+                start = end;
+                end = temp;
+            }
+
             Start = start;
             End = end;
             ConvexHull = convexHull;
@@ -347,10 +354,8 @@ namespace Barotrauma.Lights
         /// <summary>
         /// Returns the segments that are facing towards viewPosition
         /// </summary>
-        public List<Segment> GetVisibleSegments(Vector2 viewPosition)
-        {
-            List<Segment> visibleFaces = new List<Segment>();
-            
+        public void GetVisibleSegments(Vector2 viewPosition, List<Segment> visibleSegments)
+        {            
             for (int i = 0; i < 4; i++)
             {
                 if (ignoreEdge[i]) continue;
@@ -368,11 +373,9 @@ namespace Barotrauma.Lights
 
                 if (Vector2.Dot(N, L) > 0)
                 {
-                    visibleFaces.Add(segments[i]);
+                    visibleSegments.Add(segments[i]);
                 }
             }
-
-            return visibleFaces;
         }
 
 
