@@ -826,7 +826,7 @@ namespace Barotrauma.Networking
             ClientPermissions command = ClientPermissions.None;
             try
             {
-                command = (ClientPermissions)inc.ReadByte();
+                command = (ClientPermissions)inc.ReadUInt16();
             }
 
             catch
