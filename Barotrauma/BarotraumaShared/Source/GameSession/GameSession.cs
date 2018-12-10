@@ -198,14 +198,14 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Couldn't start game session, submarine not selected");
                 return;
             }
-            
+
             if (reloadSub || Submarine.MainSub != submarine) submarine.Load(true);
             Submarine.MainSub = submarine;
             if (loadSecondSub)
             {
                 if (Submarine.MainSubs[1] == null)
                 {
-                    Submarine.MainSubs[1] = new Submarine(Submarine.MainSub.FilePath,Submarine.MainSub.MD5Hash.Hash,true);
+                    Submarine.MainSubs[1] = new Submarine(Submarine.MainSub.FilePath, Submarine.MainSub.MD5Hash.Hash, true);
                     Submarine.MainSubs[1].Load(false);
                 }
                 else if (reloadSub)
@@ -213,11 +213,11 @@ namespace Barotrauma
                     Submarine.MainSubs[1].Load(false);
                 }
             }
-                        
+
             if (level != null)
             {
                 level.Generate(mirrorLevel);
-                submarine.SetPosition(submarine.FindSpawnPos(level.StartPosition - new Vector2(0.0f, 2000.0f)));
+                submarine.SetPosition(submarine.FindSpawnPos(level.StartPosition));
             }
 
             Entity.Spawner = new EntitySpawner();
