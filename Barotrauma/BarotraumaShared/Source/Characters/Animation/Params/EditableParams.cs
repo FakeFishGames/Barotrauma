@@ -73,7 +73,7 @@ namespace Barotrauma
             {
                 Directory.CreateDirectory(Folder);
             }
-            Serialize(MainElement);
+            Serialize();
             if (settings == null)
             {
                 settings = new XmlWriterSettings
