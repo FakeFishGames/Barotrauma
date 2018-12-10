@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Health Scanner HUD" identifier="healthscanner" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="A heads-up display that displays information of the vital signs and status of nearby humans.">
+  <Item name="Health Scanner HUD" identifier="healthscanner" scale="0.5" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="A heads-up display that displays information of the vital signs and status of nearby humans.">
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="100" />
     <Price locationtype="City" buyprice="100" />

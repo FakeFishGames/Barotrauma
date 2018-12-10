@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Headset" identifier="headset" category="Equipment" tags="smallitem" description="Allows remote communication between the crew." cargocontaineridentifier="metalcrate">
+  <Item name="Headset" identifier="headset" scale="0.5" category="Equipment" tags="smallitem" description="Allows remote communication between the crew." cargocontaineridentifier="metalcrate">
     <Price locationtype="Research" buyprice="20" />
     <Price locationtype="Military" buyprice="20" />
     <Price locationtype="City" buyprice="20" />

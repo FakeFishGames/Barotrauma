@@ -44,7 +44,7 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="Diving Mask" identifier="divingmask" category="Equipment" Tags="smallitem,diving" cargocontaineridentifier="metalcrate" description="Small enough to carry around in case of need, but won't protect you from the water pressure in the event of a full-blown hull breach.">
+  <Item name="Diving Mask" identifier="divingmask" scale="0.5" category="Equipment" Tags="smallitem,diving" cargocontaineridentifier="metalcrate" description="Small enough to carry around in case of need, but won't protect you from the water pressure in the event of a full-blown hull breach.">
     <Price locationtype="Research" buyprice="55" />
     <Price locationtype="City" buyprice="55" />
     <Price locationtype="Military" buyprice="55" />
@@ -76,7 +76,7 @@
       <Containable identifiers="oxygentank,weldingfueltank,oxygeniteshard,oxygenitetank" />
     </ItemContainer>
   </Item>
-  <Item name="Diving Suit" identifier="divingsuit" category="Equipment" tags="diving,divingsuit" fireproof="true" description="An atmospheric diving suit capable of withstanding the immense pressure under Europa's crust.">
+  <Item name="Diving Suit" identifier="divingsuit" category="Equipment" tags="diving,divingsuit" scale="0.5" fireproof="true" description="An atmospheric diving suit capable of withstanding the immense pressure under Europa's crust.">
     <Price locationtype="Research" buyprice="225" />
     <Price locationtype="City" buyprice="225" />
     <Price locationtype="Military" buyprice="225" />
@@ -89,7 +89,7 @@
       <Item identifier="polycarbonatebar" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,320,64,64" />
-    <Sprite name="Diving Suit" texture="DivingSuit_Item.png" sourcerect="166,0,91,257" depth="0.55" origin="0.5,0.5" />
+    <Sprite name="Diving Suit" texture="DivingSuit_Item.png" sourcerect="166,0,91,257" depth="0.55" origin="0.5,0.6"/>
     <Body width="37" height="113" density="15" />
     <Wearable slots="OuterClothes">
       <sprite texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" sheetindex="0,0" sourcerect="0,0,288,288" origin="0.5,0.5" />
