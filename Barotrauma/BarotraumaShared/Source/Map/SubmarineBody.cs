@@ -145,9 +145,9 @@ namespace Barotrauma
                 {
                     if (item.StaticBodyConfig == null) continue;
 
-                    float radius = ConvertUnits.ToSimUnits(item.StaticBodyConfig.GetAttributeFloat("radius", 0.0f));
-                    float width   = ConvertUnits.ToSimUnits(item.StaticBodyConfig.GetAttributeFloat("width", 0.0f));
-                    float height   = ConvertUnits.ToSimUnits(item.StaticBodyConfig.GetAttributeFloat("height", 0.0f));
+                    float radius = ConvertUnits.ToSimUnits(item.StaticBodyConfig.GetAttributeFloat("radius", 0.0f)) * item.Scale;
+                    float width   = ConvertUnits.ToSimUnits(item.StaticBodyConfig.GetAttributeFloat("width", 0.0f)) * item.Scale;
+                    float height   = ConvertUnits.ToSimUnits(item.StaticBodyConfig.GetAttributeFloat("height", 0.0f)) * item.Scale;
 
                     if (width != 0.0f && height != 0.0f)
                     {
