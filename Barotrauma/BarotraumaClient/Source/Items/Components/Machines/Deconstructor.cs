@@ -10,28 +10,32 @@ namespace Barotrauma.Items.Components
     {
         private GUIProgressBar progressBar;
         private GUIButton activateButton;
-        private GUIComponent inputInventoryHolder, outputInventoryHolder;
+        private GUIComponent inputInventory, outputInventory;
         
         partial void InitProjSpecific(XElement element)
         {
-            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), GuiFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
             {
                 Stretch = true,
                 RelativeSpacing = 0.05f
             };
 
-            inputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.5f), paddedFrame.RectTransform), style: null);
+            var inputInventoryHolder = new GUIListBox(new RectTransform(new Vector2(0.2f, 0.5f), paddedFrame.RectTransform), style: null);
 
-            progressBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform, Anchor.BottomCenter),
+            inputInventory = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), inputInventoryHolder.RectTransform, Anchor.Center));
+
+            progressBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform),
                 barSize: 0.0f, color: Color.Green);
 
-            activateButton = new GUIButton(new RectTransform(new Vector2(0.6f, 0.1f), paddedFrame.RectTransform, Anchor.Center),
+            activateButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform),
                 TextManager.Get("DeconstuctorDeconstruct"))
             {
                 OnClicked = ToggleActive
             };
 
-            outputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.25f), paddedFrame.RectTransform), style: null);
+            var outputInventoryHolder = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), style: null);
+
+            outputInventory = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), outputInventoryHolder.RectTransform));
         }
 
         public override void OnItemLoaded()
@@ -40,7 +44,7 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < 2 && i < itemContainers.Count; i++)
             {
                 itemContainers[i].AllowUIOverlap = true;
-                itemContainers[i].Inventory.RectTransform = i == 0 ? inputInventoryHolder.RectTransform : outputInventoryHolder.RectTransform;
+                itemContainers[i].Inventory.RectTransform = i == 0 ? inputInventory.RectTransform : outputInventory.RectTransform;
             }
         }
 
