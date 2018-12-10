@@ -529,7 +529,9 @@ namespace Barotrauma
                 }
             }
             // Create sprite list
-            foreach (Sprite sprite in loadedSprites.OrderBy(s => GetSpriteName(s)))
+            // TODO: allow the user to choose whether to sort by file name or by texture sheet
+            //foreach (Sprite sprite in loadedSprites.OrderBy(s => GetSpriteName(s)))
+            foreach (Sprite sprite in loadedSprites.OrderBy(s => s.SourceElement.GetAttributeString("texture", string.Empty)))
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), spriteList.Content.RectTransform) { MinSize = new Point(0, 20) }, GetSpriteName(sprite) + " " + sprite.SourceRect)
                 {
