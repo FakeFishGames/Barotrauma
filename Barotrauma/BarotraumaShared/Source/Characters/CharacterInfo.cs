@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
@@ -64,9 +65,7 @@ namespace Barotrauma
         public readonly string File;
         
         public Job Job;
-
-        private List<ushort> pickedItems;
-
+        
         public ushort? HullID = null;
 
         private Gender gender;
@@ -91,11 +90,8 @@ namespace Barotrauma
         //used by clients to identify which infos are the same to prevent duplicate characters in round summary
         public ushort ID;
 
-        public List<ushort> PickedItemIDs
-        {
-            get { return pickedItems; }
-        }
-        
+        public XElement InventoryData;
+                
         public Sprite HeadSprite
         {
             get
@@ -185,7 +181,6 @@ namespace Barotrauma
             this.File = file;
 
             headSpriteRange = new Vector2[2];
-            pickedItems = new List<ushort>();
             SpriteTags = new List<string>();
 
             XDocument doc = null;
@@ -288,19 +283,7 @@ namespace Barotrauma
 
             int hullId = element.GetAttributeInt("hull", -1);
             if (hullId > 0 && hullId <= ushort.MaxValue) this.HullID = (ushort)hullId;
-
-            pickedItems = new List<ushort>();
-
-            string pickedItemString = element.GetAttributeString("items", "");
-            if (!string.IsNullOrEmpty(pickedItemString))
-            {
-                string[] itemIds = pickedItemString.Split(',');
-                foreach (string s in itemIds)
-                {
-                    pickedItems.Add((ushort)int.Parse(s));
-                }
-            }
-
+            
             foreach (XElement subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "job") continue;
@@ -361,15 +344,6 @@ namespace Barotrauma
             else
             {
                 portrait = new Sprite("Content/Characters/Human/defaultportrait.png", Vector2.Zero);
-            }
-        }
-
-        public void UpdateCharacterItems()
-        {
-            pickedItems.Clear();
-            foreach (Item item in Character.Inventory.Items)
-            {
-                pickedItems.Add(item == null ? (ushort)0 : item.ID);
             }
         }
         
@@ -439,11 +413,6 @@ namespace Barotrauma
             
             if (Character != null)
             {
-                if (Character.Inventory != null)
-                {
-                    UpdateCharacterItems();
-                }
-
                 if (Character.AnimController.CurrentHull != null)
                 {
                     HullID = Character.AnimController.CurrentHull.ID;
@@ -451,15 +420,39 @@ namespace Barotrauma
                 }
             }
             
-            if (pickedItems.Count > 0)
-            {
-                charElement.Add(new XAttribute("items", string.Join(",", pickedItems)));
-            }
-
             Job.Save(charElement);
 
             parentElement.Add(charElement);
             return charElement;
+        }
+
+        public void SpawnInventoryItems(Inventory inventory, XElement itemData)
+        {
+            SpawnInventoryItemsRecursive(inventory, itemData);
+        }
+
+        private void SpawnInventoryItemsRecursive(Inventory inventory, XElement element)
+        {
+            foreach (XElement itemElement in element.Elements())
+            {
+                var newItem = Item.Load(itemElement, inventory.Owner.Submarine);
+                int slotIndex = itemElement.GetAttributeInt("i", 0);
+                if (newItem == null) continue;
+
+                Entity.Spawner.CreateNetworkEvent(newItem, false);
+
+                inventory.TryPutItem(newItem, slotIndex, false, false, null);
+
+                int itemContainerIndex = 0;
+                var itemContainers = newItem.GetComponents<ItemContainer>().ToList();
+                foreach (XElement childInvElement in itemElement.Elements())
+                {
+                    if (itemContainerIndex >= itemContainers.Count) break;
+                    if (childInvElement.Name.ToString().ToLowerInvariant() != "inventory") continue;
+                    SpawnInventoryItemsRecursive(itemContainers[itemContainerIndex].Inventory, childInvElement);
+                    itemContainerIndex++;
+                }
+            }
         }
 
         public void ServerWrite(NetBuffer msg)

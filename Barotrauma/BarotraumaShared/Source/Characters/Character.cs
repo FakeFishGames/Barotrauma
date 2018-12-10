@@ -722,28 +722,6 @@ namespace Barotrauma
             }
 
             AnimController.SetPosition(ConvertUnits.ToSimUnits(position));
-                        
-            if (file == humanConfigFile && Info.PickedItemIDs.Any())
-            {
-                for (int j = 0; j < 2; j++)
-                {
-                    for (ushort i = 0; i < Info.PickedItemIDs.Count; i++)
-                    {
-                        //put items in the "Any" slots first, 
-                        //otherwise equipped items may end up taking up "Any" slots they shouldn't be in, 
-                        //and prevent other items from fitting in the inventory
-                        if ((Inventory.SlotTypes[i] == InvSlotType.Any) != (j == 0)) continue;
-                        if (Info.PickedItemIDs[i] == 0) continue;
-
-                        Item item = FindEntityByID(Info.PickedItemIDs[i]) as Item;
-                        System.Diagnostics.Debug.Assert(item != null);
-                        if (item == null) continue;
-
-                        item.TryInteract(this, true, true, true);
-                        Inventory.TryPutItem(item, i, false, false, null, false);
-                    }
-                }
-            }
 
             AnimController.FindHull(null);
             if (AnimController.CurrentHull != null) Submarine = AnimController.CurrentHull.Submarine;
@@ -2386,6 +2364,24 @@ namespace Barotrauma
             Submarine = null;
             AnimController.SetPosition(ConvertUnits.ToSimUnits(worldPos), false);
             AnimController.FindHull(worldPos, true);
+        }
+
+        public void SaveInventory(Inventory inventory, XElement parentElement)
+        {
+            var items = Array.FindAll(inventory.Items, i => i != null).Distinct();
+            foreach (Item item in items)
+            {
+                item.Submarine = inventory.Owner.Submarine;
+                var itemElement = item.Save(parentElement);
+                itemElement.Add(new XAttribute("i", Array.IndexOf(inventory.Items, item)));
+
+                foreach (ItemContainer container in item.GetComponents<ItemContainer>())
+                {
+                    XElement childInvElement = new XElement("inventory");
+                    itemElement.Add(childInvElement);
+                    SaveInventory(container.Inventory, childInvElement);
+                }
+            }
         }
     }
 }
