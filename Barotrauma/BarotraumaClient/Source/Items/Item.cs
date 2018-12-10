@@ -58,9 +58,7 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(false, true), Editable(ToolTip = 
-            "Enable if you want to display the item HUD side by side with another item's HUD, when linked together. " +
-            "Disclaimer: It's possible or even likely that the views block each other, if they were not designed to be viewed together!")]
+        [Serialize(false, true), Editable(ToolTip = "Enable if you want to display the item HUD side by side with another item's HUD, when linked together. ")]
         public bool DisplaySideBySideWhenLinked { get; set; }
 
         public float SpriteRotation;
