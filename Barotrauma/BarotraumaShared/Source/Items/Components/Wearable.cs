@@ -65,7 +65,9 @@ namespace Barotrauma
         {
             Type = WearableType.Item;
             WearableComponent = item;
-            Init(subElement, Path.GetDirectoryName(item.Item.Prefab.ConfigFile) + "/" + subElement.Attribute("texture").Value);
+            string texturePath = subElement.GetAttributeString("texture", string.Empty);
+            string path = texturePath.Contains("/") ? texturePath :  $"{Path.GetDirectoryName(item.Item.Prefab.ConfigFile)}/{texturePath}";
+            Init(subElement, path);
         }
 
         private void Init(XElement subElement, string spritePath)
