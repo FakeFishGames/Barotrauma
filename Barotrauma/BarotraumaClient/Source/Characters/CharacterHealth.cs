@@ -64,6 +64,8 @@ namespace Barotrauma
 
         private GUIComponent deadIndicator;
 
+        private GUIComponent lowSkillIndicator;
+
         private SpriteSheet limbIndicatorOverlay;
         private float limbIndicatorOverlayAnimState;
 
@@ -153,14 +155,20 @@ namespace Barotrauma
             
             afflictionInfoFrame = new GUIFrame(new RectTransform(new Point(HUDLayoutSettings.HealthWindowAreaLeft.Width / 2, 200), GUI.Canvas));
             var paddedInfoFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), afflictionInfoFrame.RectTransform, Anchor.Center), style: null);
-            new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.1f), paddedInfoFrame.RectTransform), "", font: GUI.LargeFont)
+            new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.08f), paddedInfoFrame.RectTransform), "", font: GUI.LargeFont)
             {
                 UserData = "selectedlimbname"
             };
-            afflictionInfoContainer = new GUIListBox(new RectTransform(new Vector2(0.7f, 0.9f), paddedInfoFrame.RectTransform, Anchor.BottomLeft));
+            
+            afflictionInfoContainer = new GUIListBox(new RectTransform(new Vector2(0.7f, 0.85f), paddedInfoFrame.RectTransform, Anchor.BottomLeft));
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedInfoFrame.RectTransform), TextManager.Get("SuitableTreatments"), textAlignment: Alignment.TopRight);
-            recommendedTreatmentContainer = new GUIListBox(new RectTransform(new Vector2(0.28f, 0.55f), paddedInfoFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, 0.1f) })
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.08f), paddedInfoFrame.RectTransform), TextManager.Get("SuitableTreatments"), textAlignment: Alignment.TopRight);
+            lowSkillIndicator = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.07f), paddedInfoFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, 0.08f) },
+              TextManager.Get("LowMedicalSkillWarning"), Color.Orange, textAlignment: Alignment.Center, font: GUI.SmallFont, wrap: true)
+            {
+                Visible = false
+            };
+            recommendedTreatmentContainer = new GUIListBox(new RectTransform(new Vector2(0.28f, 0.5f), paddedInfoFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, 0.15f) })
             {
                 Spacing = 10
             };
@@ -220,7 +228,6 @@ namespace Barotrauma
                 Visible = false,
                 CanBeFocused = false
             };
-            deadIndicator.Color *= 0.5f;
 
             healthWindowHealthBar = new GUIProgressBar(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.HealthBarAreaLeft, GUI.Canvas),
                 barSize: 1.0f, color: Color.Green, style: "GUIProgressBarVertical")
@@ -562,6 +569,8 @@ namespace Barotrauma
                     openHealthWindow = null;
                 }
 
+                lowSkillIndicator.Visible = Timing.TotalTime % 1.0f < 0.8f && Character.Controlled != null && Character.Controlled.GetSkillLevel("medical") < 50.0f;
+
                 float rotationSpeed = 0.25f;
                 int i = 0;
                 foreach (GUIComponent dropItemIndicator in dropItemArea.Children)
@@ -886,6 +895,12 @@ namespace Barotrauma
             afflictionInfoContainer.Content.ClearChildren();
             recommendedTreatmentContainer.Content.ClearChildren();
 
+            float characterSkillLevel = Character.Controlled == null ? 0.0f : Character.Controlled.GetSkillLevel("medical");
+
+            //random variance is 200% when the skill is 0
+            //no random variance if the skill is 50 or more
+            float randomVariance = MathHelper.Lerp(2.0f, 0.0f, characterSkillLevel / 50.0f);
+
             //key = item identifier
             //float = suitability
             Dictionary<string, float> treatmentSuitability = new Dictionary<string, float>();
@@ -910,6 +925,8 @@ namespace Barotrauma
             foreach (string treatment in treatmentSuitability.Keys.ToList())
             {
                 treatmentSuitability[treatment] = (treatmentSuitability[treatment] - minSuitability) / (maxSuitability - minSuitability);
+                //lerp towards a random value if the medical skill is low
+                treatmentSuitability[treatment] = MathHelper.Lerp(treatmentSuitability[treatment], Rand.Range(0.0f, 1.0f), randomVariance);
             }
 
             foreach (Affliction affliction in afflictions)
@@ -1365,8 +1382,6 @@ namespace Barotrauma
             {
                 frame = frameCount - (int)(limbIndicatorOverlayAnimState - (frameCount - 1));
             }
-
-            System.Diagnostics.Debug.WriteLine(frame);
 
             limbIndicatorOverlay.Draw(spriteBatch, frame, drawArea.Center.ToVector2(), Color.Gray, origin: limbIndicatorOverlay.FrameSize.ToVector2() / 2, rotate: 0.0f,
                 scale: Vector2.One * overlayScale);
