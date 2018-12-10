@@ -12,8 +12,6 @@ namespace Barotrauma
 {
     partial class CharacterHealth
     {
-        public static bool HideNormalInventory = false;
-
         private static bool toggledThisFrame;
 
         private static Sprite damageOverlay;
@@ -58,8 +56,6 @@ namespace Barotrauma
 
         private float bloodParticleTimer;
         
-        private GUIListBox healItemContainer;
-
         private GUIFrame healthWindow;
 
         private GUIComponent deadIndicator;
@@ -201,10 +197,6 @@ namespace Barotrauma
             };
             
             healthWindow = new GUIFrame(new RectTransform(new Point(100, 200), GUI.Canvas));
-            if (HideNormalInventory)
-            {
-                healItemContainer = new GUIListBox(new RectTransform(new Point(100, 200), GUI.Canvas), isHorizontal: false);
-            }
             var paddedHealthWindow = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), healthWindow.RectTransform, Anchor.Center))
             {
                 Stretch = true,
@@ -378,16 +370,6 @@ namespace Barotrauma
                 int cprButtonSize = (int)(100 * GUI.Scale);
                 cprButton.RectTransform.AbsoluteOffset = new Point(HUDLayoutSettings.HealthWindowAreaRight.X - cprButtonSize, dropItemArea.Rect.Center.Y - cprButtonSize / 2);
                 cprButton.RectTransform.NonScaledSize = new Point(cprButtonSize);
-            }
-            
-            if (HideNormalInventory)
-            {
-                healItemContainer.RectTransform.AbsoluteOffset = new Point(
-                    HUDLayoutSettings.HealthWindowAreaLeft.X + HUDLayoutSettings.HealthWindowAreaLeft.Width / 3,
-                    afflictionInfoFrame.Rect.Bottom + (int)(10 * GUI.Scale));
-                healItemContainer.RectTransform.NonScaledSize = new Point(
-                    (int)(HUDLayoutSettings.HealthWindowAreaLeft.Width * 0.66f), 
-                    healthWindow.Rect.Bottom - healItemContainer.Rect.Y);
             }
             
             dropItemArea.RectTransform.NonScaledSize = new Point(dropItemArea.Rect.Width);
@@ -683,11 +665,6 @@ namespace Barotrauma
                 healthWindow.AddToGUIUpdateList();
                 healthWindowHealthBarShadow.AddToGUIUpdateList();
                 healthWindowHealthBar.AddToGUIUpdateList();
-                if (HideNormalInventory)
-                {
-                    healItemContainer?.AddToGUIUpdateList();
-                    UpdateItemContainer();
-                }
             }
             else if (Character.Controlled == character)
             {
@@ -1084,17 +1061,18 @@ namespace Barotrauma
             {
                 GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, character.ID, targetLimb });
             }
-
+                        
             bool remove = false;
             foreach (ItemComponent ic in item.components)
             {
                 if (!ic.HasRequiredContainedItems(character == Character.Controlled)) continue;
+                
 #if CLIENT
                 ic.PlaySound(ActionType.OnUse, character.WorldPosition, character);
 #endif
                 ic.WasUsed = true;
                 ic.ApplyStatusEffects(ActionType.OnUse, 1.0f, character, targetLimb);
-                if (ic.DeleteOnUse) remove = true;                
+                if (ic.DeleteOnUse) remove = true;
             }
 
             if (remove)
@@ -1142,174 +1120,7 @@ namespace Barotrauma
 
             return medicalItems.Distinct().ToList();
         }
-
-        private bool ItemContainerNeedsRefresh(List<Item> availableItems)
-        {
-            if (healItemContainer.Content.CountChildren == 0) return true;
-            /*int childrenCount = healItemContainer.Content.Children.Where(c => c.UserData as string != "noavailableitems").Count();
-            if (availableItems.Count != childrenCount) return true;*/
- 
-            foreach (Item item in availableItems)
-            {
-                //no button for this item, need to refresh
-                if (!healItemContainer.Content.Children.Any(c => c.Children.Any(c2 => c2.UserData as Item == item)))
-                {
-                    return true;
-                }
-            }
-
-            foreach (GUIComponent child in healItemContainer.Content.Children)
-            {
-                foreach (GUIComponent child2 in child.Children)
-                {
-                    //there's a button for an item that's not available anymore, need to refresh
-                    if (!availableItems.Contains(child2.UserData as Item)) return true;
-                }
-            }
-
-            return false;
-        }
-
-        private void UpdateItemContainer()
-        {
-            var items = GetAvailableMedicalItems();
-            if (!ItemContainerNeedsRefresh(items)) return;
-
-            healItemContainer.Content.ClearChildren();
-            
-            int itemButtonSize = healItemContainer.Rect.Height - (int)(20 * GUI.Scale);
-            
-            if (items.Count == 0)
-            {
-                var noItemsText = new GUITextBlock(new RectTransform(Vector2.One, healItemContainer.Content.RectTransform),
-                    TextManager.Get("NoAvailableMedicalItems"), textAlignment: Alignment.Center)
-                {
-                    UserData = "noavailableitems",
-                    CanBeFocused = false
-                };
-                return;
-            }
-
-            var myItems = items.FindAll(i => 
-                i.ParentInventory == Character.Controlled.Inventory || 
-                (i.ParentInventory is ItemInventory itemInventory && itemInventory.Container.Item.ParentInventory == Character.Controlled.Inventory));
-            var otherItems = items.Except(myItems).ToList();
-
-
-            var holder = new GUIFrame(new RectTransform(Vector2.One, healItemContainer.Content.RectTransform), style: null);
-
-            var myItemContainer = new GUIFrame(new RectTransform(new Point(10), holder.RectTransform), style: null);
-            var otherItemContainer = new GUIFrame(new RectTransform(new Point(10), holder.RectTransform, Anchor.TopRight), style: null);
-
-            FillItemContainer(myItemContainer, myItems);
-            FillItemContainer(otherItemContainer, otherItems);
-            otherItemContainer.RectTransform.SetPosition(Anchor.TopRight);
-            /*foreach (Item item in items)
-            {
-                if (item == null) continue;
-                if (!item.HasTag("medical") && !item.HasTag("chem")) continue;
-
-                var child = new GUIButton(new RectTransform(new Point(itemButtonSize, itemButtonSize), healItemContainer.Content.RectTransform),
-                    text: "", style: "InventorySlotSmall")
-                {
-                    UserData = item
-                };
-                child.OnClicked += OnTreatmentButtonClicked;
-                child.OnPressed += () =>
-                {
-                    if (draggingMed == null) draggingMed = child;
-                    return true;
-                };
-
-                Sprite itemSprite = item.Prefab.InventoryIcon ?? item.Sprite;
-                var itemIcon = new GUIImage(new RectTransform(new Vector2(0.8f, 0.8f), child.RectTransform, Anchor.Center),
-                    itemSprite, scaleToFit: true)
-                {
-                    CanBeFocused = false,
-                    Color = itemSprite == item.Sprite ? item.SpriteColor : Color.White,
-                    HoverColor = item.SpriteColor,
-                    SelectedColor = item.SpriteColor
-                };
-                
-                string itemName = item.Name;
-                if (item.ContainedItems != null && item.ContainedItems.Length > 0)
-                {
-                    itemName += " (" + item.ContainedItems[0].Name + ")";
-                }
-                child.ToolTip = itemName + "\n" + item.Description;
-            }*/
-        }
-
-        private void FillItemContainer(GUIComponent itemContainer, List<Item> items)
-        {
-            int spacing = (int)(GUI.Scale * 5);
-
-            int columns = 4;
-            int itemSlotSize = healItemContainer.Content.Rect.Width / (columns * 2);
-
-            int rows = (int)Math.Ceiling(items.Count / (float)columns);
-            itemContainer.RectTransform.NonScaledSize = new Point(healItemContainer.Content.Rect.Width / 2, rows * (itemSlotSize + spacing));
-
-            for (int i = 0; i < items.Count; i++)
-            {
-                var item = items[i];
-                if (item == null) continue;
-                if (!item.HasTag("medical") && !item.HasTag("chem")) continue;
-
-                Point slotPos = new Point((i % columns) * itemSlotSize, (int)Math.Floor(i / (float)columns) * itemSlotSize);
-                var child = new GUIButton(new RectTransform(new Point(itemSlotSize, itemSlotSize), itemContainer.RectTransform) { AbsoluteOffset = slotPos },
-                    text: "", style: "InventorySlotSmall")
-                {
-                    UserData = item
-                };
-                child.OnClicked += OnTreatmentButtonClicked;
-                child.OnPressed += () =>
-                {
-                    if (draggingMed == null) draggingMed = child;
-                    return true;
-                };
-
-                Sprite itemSprite = item.Prefab.InventoryIcon ?? item.Sprite;
-                var itemIcon = new GUIImage(new RectTransform(new Vector2(0.8f, 0.8f), child.RectTransform, Anchor.Center),
-                    itemSprite, scaleToFit: true)
-                {
-                    CanBeFocused = false,
-                    Color = itemSprite == item.Sprite ? item.SpriteColor : Color.White,
-                    HoverColor = item.SpriteColor,
-                    SelectedColor = item.SpriteColor
-                };
-
-                string itemName = item.Name;
-                if (item.ContainedItems != null && item.ContainedItems.Length > 0)
-                {
-                    itemName += " (" + item.ContainedItems[0].Name + ")";
-                }
-                child.ToolTip = itemName + "\n" + item.Description;
-            }
-        }
-        
-        private bool OnTreatmentButtonClicked(GUIButton button, object userdata)
-        {
-            Item item = userdata as Item;
-            if (item == null || selectedLimbIndex < 0) return false;
-
-            Limb targetLimb = character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex);
-#if CLIENT
-            if (GameMain.Client != null)
-            {
-                GameMain.Client.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, character.ID, targetLimb });
-                return true;
-            }
-#endif
-            if (GameMain.Server != null)
-            {
-                GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, character.ID, targetLimb });
-            }
-
-            item.ApplyStatusEffects(ActionType.OnUse, 1.0f, character, targetLimb);
-            return true;
-        }
-
+   
         private void UpdateLimbIndicators(float deltaTime, Rectangle drawArea)
         {
             limbIndicatorOverlayAnimState += deltaTime * 8.0f;
