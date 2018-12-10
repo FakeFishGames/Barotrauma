@@ -83,12 +83,12 @@
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,320,64,64"/>
-    <Sprite texture ="DivingMask.png" depth="0.55" sourcerect="0,0,37,38"/>
+    <Sprite name="Diving Mask" texture="Content/Items/Jobgear/headgears.png" depth="0.55" sourcerect="0,0,37,38"/>
   
     <Body width="26" height="18" density="15"/>
 
     <Wearable limbtype="Head" slots="Any,Head">
-      <sprite texture="DivingMask.png" limb="Head" sourcerect="1,1,37,38"/>
+      <sprite texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" hidelimb="false" hideotherwearables="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" sheetindex="1,0"/>
       <StatusEffect type="OnWearing" target="Character" HideFace="true" ObstructVision="true" setvalue="true" disabledeltatime="true"/>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" Condition="-0.5">
         <RequiredItem identifier="oxygentank" type="Contained"/>
@@ -132,13 +132,12 @@
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,320,64,64"/>
-    <Sprite texture ="DivingSuit.png" sourcerect="85,0,43,128" depth="0.55"/>
+    <Sprite name="Diving Suit Helmet" texture="DivingSuit.png" sourcerect="85,0,43,128" depth="0.55"/>
 
     <Body width="37" height="113" density="15"/>
 
     <Wearable slots="OuterClothes">
-      <sprite texture="DivingSuit.png" limb="Head" sourcerect="0,0,1,1" origin="0.5,0.5" hidelimb="true" hideotherwearables="true"/>
-
+      <sprite texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" sheetindex="0,0"/>
       <sprite texture="NewHuman_DivingSuite_Torso.png" limb="Torso" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true">
         <LightComponent range="100.0" lightcolor="1.0,1.0,1.0,0.1" powerconsumption="10" IsOn="true">
           <StatusEffect type="OnWearing" target="This,Character" Voltage="1.0" setvalue="true">

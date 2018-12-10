@@ -13,12 +13,12 @@
     <Price locationtype="Outpost" buyprice="100"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,256,64,64"/>
-    <Sprite texture ="doctorgear.png" sourcerect="0,120,20,8" depth="0.6"/>
+    <Sprite name="Health Scanner" texture="Content/Items/Jobgear/headgears.png" sourcerect="0,120,20,8" depth="0.6"/>
 
     <Body width="18" height="6" density="30"/>
 
     <Wearable limbtype="Head" slots="Any,Head">
-      <sprite texture ="doctorgear.png" sourcerect="0,120,20,8" limb="Head" origin="0.45,0.9"/>
+      <sprite texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" hidelimb="false" hideotherwearables="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" sheetindex="2,0"/>
     </Wearable>
 
     <StatusHUD drawhudwhenequipped="true"/>
