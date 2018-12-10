@@ -1522,6 +1522,16 @@ namespace Barotrauma.Networking
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
+        public override void UnbanPlayer(string playerName, string playerIP)
+        {
+            NetOutgoingMessage msg = client.CreateMessage();
+            msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
+            msg.Write((byte)ClientPermissions.Unban);
+            msg.Write(string.IsNullOrEmpty(playerName) ? "" : playerName);
+            msg.Write(string.IsNullOrEmpty(playerIP) ? "" : playerIP);
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+        }
+
         public void SendCampaignState()
         {
             MultiPlayerCampaign campaign = GameMain.GameSession.GameMode as MultiPlayerCampaign;

@@ -38,6 +38,8 @@
     <Command name="ban"/>
     <Command name="banid"/>
     <Command name="banip"/>
+    <Command name="unban"/>
+    <Command name="unbanip"/>
     <Command name="teleportcharacter"/>
     <Command name="godmode"/>
     <Command name="lockx"/>
