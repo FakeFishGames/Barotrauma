@@ -211,7 +211,7 @@ namespace Barotrauma.Lights
             {
                 if (lightTexture == null)
                 {
-                    lightTexture = TextureLoader.FromFile("Content/Lights/light.png");
+                    lightTexture = TextureLoader.FromFile("Content/Lights/pointlight_bright.png");
                 }
 
                 return lightTexture;
