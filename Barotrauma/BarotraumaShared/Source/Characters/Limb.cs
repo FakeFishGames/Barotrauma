@@ -588,7 +588,6 @@ namespace Barotrauma
 
         public void LoadParams()
         {
-            bool isFlipped = dir == Direction.Left;
             pullJoint.LocalAnchorA = ConvertUnits.ToSimUnits(limbParams.PullPos * Scale);
             LoadParamsProjSpecific();
         }
