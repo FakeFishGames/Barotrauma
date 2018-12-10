@@ -19,8 +19,8 @@ namespace Barotrauma.Items.Components
         private float useState;
         
         private UsableIn usableIn;
-                
-        [Serialize(0.0f, false)]
+
+        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float Force
         {
             get { return force; }
