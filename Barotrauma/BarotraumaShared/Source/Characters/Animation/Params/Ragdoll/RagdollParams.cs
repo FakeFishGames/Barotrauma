@@ -214,6 +214,7 @@ namespace Barotrauma
 
         public bool Save(string fileNameWithoutExtension = null)
         {
+            Serialize();
             return base.Save(fileNameWithoutExtension, new XmlWriterSettings
             {
                 Indent = true,
