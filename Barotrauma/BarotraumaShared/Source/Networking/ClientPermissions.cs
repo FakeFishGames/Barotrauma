@@ -12,12 +12,12 @@ namespace Barotrauma.Networking
         EndRound = 1,
         Kick = 2,
         Ban = 4,
-        SelectSub = 8,
-        SelectMode = 16,
-        ManageCampaign = 32,
-        ConsoleCommands = 64,
-        ServerLog = 128
-        //If you add more permissions, change how servers send the permissions to client (atm written as one byte)
+        Unban = 8,
+        SelectSub = 16,
+        SelectMode = 32,
+        ManageCampaign = 64,
+        ConsoleCommands = 128,
+        ServerLog = 256
     }
 
     class PermissionPreset

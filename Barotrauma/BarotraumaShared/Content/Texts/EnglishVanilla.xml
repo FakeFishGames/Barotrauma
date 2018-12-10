@@ -492,6 +492,7 @@
   <ClientPermission.EndRound>End round</ClientPermission.EndRound>
   <ClientPermission.Kick>Kick</ClientPermission.Kick>
   <ClientPermission.Ban>Ban</ClientPermission.Ban>
+  <ClientPermission.Ban>Revoke Ban</ClientPermission.Ban>
   <ClientPermission.SelectSub>Select sub</ClientPermission.SelectSub>
   <ClientPermission.SelectMode>Select mode</ClientPermission.SelectMode>
   <ClientPermission.ManageCampaign>Manage campaign</ClientPermission.ManageCampaign>
