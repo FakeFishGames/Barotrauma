@@ -1502,7 +1502,7 @@ namespace Barotrauma.Networking
         {
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
-            msg.Write((byte)ClientPermissions.Kick);            
+            msg.Write((UInt16)ClientPermissions.Kick);            
             msg.Write(kickedName);
             msg.Write(reason);
 
@@ -1513,7 +1513,7 @@ namespace Barotrauma.Networking
         {
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
-            msg.Write((byte)ClientPermissions.Ban);
+            msg.Write((UInt16)ClientPermissions.Ban);
             msg.Write(kickedName);
             msg.Write(reason);
             msg.Write(range);
@@ -1526,7 +1526,7 @@ namespace Barotrauma.Networking
         {
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
-            msg.Write((byte)ClientPermissions.Unban);
+            msg.Write((UInt16)ClientPermissions.Unban);
             msg.Write(string.IsNullOrEmpty(playerName) ? "" : playerName);
             msg.Write(string.IsNullOrEmpty(playerIP) ? "" : playerIP);
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
@@ -1543,7 +1543,7 @@ namespace Barotrauma.Networking
 
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
-            msg.Write((byte)ClientPermissions.ManageCampaign);
+            msg.Write((UInt16)ClientPermissions.ManageCampaign);
             campaign.ClientWrite(msg);
             msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
@@ -1560,7 +1560,7 @@ namespace Barotrauma.Networking
 
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
-            msg.Write((byte)ClientPermissions.ConsoleCommands);
+            msg.Write((UInt16)ClientPermissions.ConsoleCommands);
             msg.Write(command);
             Vector2 cursorWorldPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
             msg.Write(cursorWorldPos.X);
@@ -1583,7 +1583,7 @@ namespace Barotrauma.Networking
 
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
-            msg.Write((byte)ClientPermissions.SelectSub);
+            msg.Write((UInt16)ClientPermissions.SelectSub);
             msg.Write((UInt16)subIndex);
             msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
@@ -1604,7 +1604,7 @@ namespace Barotrauma.Networking
 
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
-            msg.Write((byte)ClientPermissions.SelectMode);
+            msg.Write((UInt16)ClientPermissions.SelectMode);
             msg.Write((UInt16)modeIndex);
             msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
@@ -1618,7 +1618,7 @@ namespace Barotrauma.Networking
         {
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
-            msg.Write((byte)ClientPermissions.EndRound);
+            msg.Write((UInt16)ClientPermissions.EndRound);
 
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
