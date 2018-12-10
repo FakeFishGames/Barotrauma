@@ -1,70 +1,42 @@
-﻿<Items>
-  <Item
-    name="Health Scanner HUD"
-    identifier="healthscanner"
-    category="Equipment"
-    tags="smallitem"
-    cargocontaineridentifier="metalcrate"
-    description="A heads-up display that displays information of the vital signs and status of nearby humans.">
-
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="100"/>
-    <Price locationtype="City" buyprice="100"/>
-    <Price locationtype="Outpost" buyprice="100"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,256,64,64"/>
-    <Sprite name="Health Scanner" texture="Content/Items/Jobgear/headgears.png" sourcerect="0,120,20,8" depth="0.6"/>
-
-    <Body width="18" height="6" density="30"/>
-
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="Health Scanner HUD" identifier="healthscanner" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="A heads-up display that displays information of the vital signs and status of nearby humans.">
+    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Military" buyprice="100" />
+    <Price locationtype="City" buyprice="100" />
+    <Price locationtype="Outpost" buyprice="100" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,256,64,64" />
+    <Sprite name="Health Scanner" texture="Content/Items/Jobgear/headgears.png" sourcerect="193,0,96,96" depth="0.6" origin="0.5,0.5" />
+    <Body width="18" height="6" density="30" />
     <Wearable limbtype="Head" slots="Any,Head">
-      <sprite texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" hidelimb="false" hideotherwearables="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" sheetindex="2,0"/>
+      <sprite texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" hidelimb="false" hideotherwearables="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" sheetindex="2,0" sourcerect="0,0,288,288" origin="0.5,0.5" />
     </Wearable>
-
-    <StatusHUD drawhudwhenequipped="true"/>
+    <StatusHUD drawhudwhenequipped="true" />
   </Item>
-
-  <Item
-    name="Doctor's Uniform"
-    identifier="doctorsuniform"
-    category="Equipment"  
-    cargocontaineridentifier="metalcrate"  
-    tags="smallitem"
-    scale="0.5">
-
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="50"/>
-    <Price locationtype="City" buyprice="50"/>
-    <Price locationtype="Outpost" buyprice="100"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,320,64,64"/>
-    <Sprite texture ="clothes.png" sourcerect="270,142,174,67" depth="0.6"/>
-
-    <Body width="52" height="17" density="30"/>
-
+  <Item name="Doctor's Uniform" identifier="doctorsuniform" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" scale="0.5">
+    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Military" buyprice="50" />
+    <Price locationtype="City" buyprice="50" />
+    <Price locationtype="Outpost" buyprice="100" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,320,64,64" />
+    <Sprite texture="clothes.png" sourcerect="270,142,174,67" depth="0.6" />
+    <Body width="52" height="17" density="30" />
     <Wearable slots="Any,InnerClothes">
-      <sprite name="Medic Torso" texture="NewHuman_Medic_torso.png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-
-      <sprite name="Medic Right Lower Arm" texture="NewHuman_Medic_torso.png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Medic Left Lower Arm" texture="NewHuman_Medic_torso.png" limb="LeftHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-
-      <sprite name="Medic Right Upper Arm" texture="NewHuman_Medic_torso.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Medic Left Upper Arm" texture="NewHuman_Medic_torso.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-
-      <sprite name="Medic Waist" texture="NewHuman_Medic_legs.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Medic Right Thigh" texture="NewHuman_Medic_legs.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Medic Left Thigh" texture="NewHuman_Medic_legs.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-
-      <sprite name="Medic Right Leg" texture="NewHuman_Medic_legs.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Medic Left Leg" texture="NewHuman_Medic_legs.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-
-      <sprite name="Medic Right Shoe" texture="NewHuman_Medic_legs.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Medic Left Shoe" texture="NewHuman_Medic_legs.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Medic Torso" texture="NewHuman_Medic_torso.png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Medic Right Lower Arm" texture="NewHuman_Medic_torso.png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Medic Left Lower Arm" texture="NewHuman_Medic_torso.png" limb="LeftHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Medic Right Upper Arm" texture="NewHuman_Medic_torso.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Medic Left Upper Arm" texture="NewHuman_Medic_torso.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Medic Waist" texture="NewHuman_Medic_legs.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Medic Right Thigh" texture="NewHuman_Medic_legs.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Medic Left Thigh" texture="NewHuman_Medic_legs.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Medic Right Leg" texture="NewHuman_Medic_legs.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Medic Left Leg" texture="NewHuman_Medic_legs.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Medic Right Shoe" texture="NewHuman_Medic_legs.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Medic Left Shoe" texture="NewHuman_Medic_legs.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
     </Wearable>
-
     <ItemContainer capacity="3">
-      <Containable identifiers="chem,medical"/>
+      <Containable identifiers="chem,medical" />
     </ItemContainer>
   </Item>
 </Items>
-
