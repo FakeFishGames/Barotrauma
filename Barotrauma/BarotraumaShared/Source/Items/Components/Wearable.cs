@@ -39,11 +39,6 @@ namespace Barotrauma
         {
             Type = type;
             Init(subElement, subElement.Attribute("texture").Value);
-            var index = subElement.GetAttributePoint("sheetindex", new Point(-1, -1));
-            if (index.X > -1 && index.Y > -1)
-            {
-                SheetIndex = index;
-            }
             switch (type)
             {
                 case WearableType.Hair:
@@ -66,7 +61,7 @@ namespace Barotrauma
             Type = WearableType.Item;
             WearableComponent = item;
             string texturePath = subElement.GetAttributeString("texture", string.Empty);
-            string path = texturePath.Contains("/") ? texturePath :  $"{Path.GetDirectoryName(item.Item.Prefab.ConfigFile)}/{texturePath}";
+            string path = texturePath.Contains("/") ? texturePath : $"{Path.GetDirectoryName(item.Item.Prefab.ConfigFile)}/{texturePath}";
             Init(subElement, path);
         }
 
@@ -82,6 +77,11 @@ namespace Barotrauma
             InheritSourceRect = subElement.GetAttributeBool("inheritsourcerect", false);
             DepthLimb = (LimbType)Enum.Parse(typeof(LimbType), subElement.GetAttributeString("depthlimb", "None"), true);
             Sound = subElement.GetAttributeString("sound", "");
+            var index = subElement.GetAttributePoint("sheetindex", new Point(-1, -1));
+            if (index.X > -1 && index.Y > -1)
+            {
+                SheetIndex = index;
+            }
         }
     }
 }
