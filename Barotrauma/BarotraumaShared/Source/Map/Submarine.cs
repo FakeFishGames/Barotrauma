@@ -419,15 +419,21 @@ namespace Barotrauma
         {
             Rectangle dockedBorders = GetDockedBorders();
 
+            Vector2 diffFromDockedBorders = 
+                new Vector2(dockedBorders.Center.X, dockedBorders.Y - dockedBorders.Height / 2)
+                - new Vector2(Borders.Center.X, Borders.Y - Borders.Height / 2);
+
             int iterations = 0;
+            int margin = 500;
             bool wallTooClose = false;
             do
             {
                 Rectangle worldBorders = new Rectangle(
-                    dockedBorders.X + (int)spawnPos.X,
+                    dockedBorders.X + (int)spawnPos.X - margin,
                     dockedBorders.Y + (int)spawnPos.Y,
-                    dockedBorders.Width,
+                    dockedBorders.Width + margin * 2,
                     dockedBorders.Height);
+                spawnPos.Y = Math.Min(spawnPos.Y, Level.Loaded.Size.Y - dockedBorders.Height / 2 - 10);
 
                 wallTooClose = false;
 
@@ -436,44 +442,37 @@ namespace Barotrauma
 
                 foreach (VoronoiCell cell in nearbyCells)
                 {
-                    if (cell.CellType == CellType.Empty) continue;
-
+                    if (cell.CellType == CellType.Empty) { continue; }
+                    
                     foreach (GraphEdge e in cell.Edges)
                     {
                         List<Vector2> intersections = MathUtils.GetLineRectangleIntersections(e.Point1, e.Point2, worldBorders);
-                        foreach (Vector2 intersection in intersections)
+                        if (intersections.Count == 0) { continue; }
+
+                        wallTooClose = true;
+                                                        
+                        if (intersections[0].X < spawnPos.X)
                         {
-                            wallTooClose = true;
-
-                            if (intersection.X < spawnPos.X)
-                            {
-                                spawnPos.X += intersection.X - worldBorders.X;
-                            }
-                            else
-                            {
-                                spawnPos.X += intersection.X - worldBorders.Right;
-                            }
-
-                            if (intersection.Y < spawnPos.Y)
-                            {
-                                spawnPos.Y += intersection.Y - (worldBorders.Y - worldBorders.Height);
-                            }
-                            else
-                            {
-                                spawnPos.Y += intersection.Y - worldBorders.Y;
-                            }
-
-                            spawnPos.Y = Math.Min(spawnPos.Y, Level.Loaded.Size.Y - dockedBorders.Height / 2);
+                            spawnPos.X += Math.Max(e.Point1.X, e.Point2.X) - worldBorders.X + margin;
                         }
+                        else
+                        {
+                            spawnPos.X -= worldBorders.Right - Math.Min(e.Point1.X, e.Point2.X) + margin;
+                        }
+
+                        spawnPos.Y = Math.Min(spawnPos.Y, Level.Loaded.Size.Y - dockedBorders.Height / 2 - 10);
+                        worldBorders = new Rectangle(
+                            dockedBorders.X + (int)spawnPos.X - margin,
+                            dockedBorders.Y + (int)spawnPos.Y,
+                            dockedBorders.Width + margin * 2,
+                            dockedBorders.Height);                        
                     }
                 }
 
                 iterations++;
             } while (wallTooClose && iterations < 10);
 
-            return spawnPos;
-
-        
+            return spawnPos - diffFromDockedBorders;        
         }
         
         //drawing ----------------------------------------------------

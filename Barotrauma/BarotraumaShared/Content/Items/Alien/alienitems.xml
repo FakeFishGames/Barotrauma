@@ -163,10 +163,10 @@
     </ItemContainer>
   </Item>
   <Item name="Alien Hatch" identifier="alienhatch" category="Alien" Tags="alien">
-    <Sprite texture="Content/Map/ruins.png" sourcerect="747,0,260,95" depth="0.8" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Alien/AlienHatch.png" sourcerect="0,0,208,48" depth="0.8" origin="0.5,0.5" />
     <Door canbeselected="true" horizontal="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0">
       <RequiredItem identifier="crowbar" type="Equipped" />
-      <Sprite texture="Content/Map/ruins.png" sourcerect="0,842,260,54" depth="0.6" origin="0.0,0.5" />
+      <Sprite texture="Content/Items/Alien/AlienHatch.png" sourcerect="0,56,208,19" depth="0.6" origin="0.0,0.5" />
       <sound file="Content/Items/Alien/aliendoor.ogg" type="OnUse" range="3000.0" />
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0" />
     </Door>
@@ -192,6 +192,13 @@
   </Item>
   <Item name="Alien Motion Sensor" identifier="alienmotionsensor" category="Alien" Tags="alien" scale="0.5">
     <Sprite texture="Content/Items/Alien/AlienMotionSensor.png" sourcerect="3,4,110,112" depth="0.8" origin="0.5,0.5" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienMotionSensor.png" sourcerect="115,7,89,92" depth="0.75" origin="0.5,0.5" rotationspeed="10">
+      <Conditional MotionDetected="false" targetitemcomponent="MotionSensor"/>
+    </DecorativeSprite>
+    <DecorativeSprite texture="Content/Items/Alien/AlienMotionSensor.png" sourcerect="115,7,89,92" depth="0.75" origin="0.5,0.5" rotationspeed="180">
+      <Conditional MotionDetected="true" targetitemcomponent="MotionSensor"/>
+    </DecorativeSprite>
+    <DecorativeSprite texture="Content/Items/Alien/AlienMotionSensor.png" sourcerect="204,2,49,49" depth="0.7" origin="0.5,0.5" offset="40,40" offsetanim="Noise" offsetanimspeed="0.05"/>
     <MotionSensor range="300" output="0" />
     <ConnectionPanel canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -240,7 +247,6 @@
     <Sprite texture="Content/Items/Alien/AlienTurret.png" depth="0.5" sourcerect="293,28,141,456" canflipy="false" />
     <ItemContainer hideitems="true" drawinventory="true" capacity="1" canbeselected="false" characterusable="true">
       <Containable identifiers="alienturretammo" />
-      <!-- TODO: fix this - now it doesn't check the reload state of the turret and constantly creates new projectiles when receiving a trigger signal-->
       <!-- when the turret is fired, it triggers this statuseffect and spawns new ammo -->
       <StatusEffect type="OnUse" target="Contained">
         <SpawnItem identifiers="alienturretammo" spawnposition="ThisInventory" />

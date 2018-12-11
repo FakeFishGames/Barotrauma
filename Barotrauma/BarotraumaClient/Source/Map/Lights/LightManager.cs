@@ -347,10 +347,13 @@ namespace Barotrauma.Lights
 
                 //ambient light decreases the brightness of the halo (no need for a bright halo if the ambient light is bright enough)
                 float ambientBrightness = (AmbientLight.R + AmbientLight.B + AmbientLight.G) / 255.0f / 3.0f;
-                Color haloColor = Color.White * (1.0f - ambientBrightness);                
-                spriteBatch.Draw(
-                    LightSource.LightTexture, haloDrawPos, null, haloColor * 0.4f, 0.0f,
-                    new Vector2(LightSource.LightTexture.Width / 2, LightSource.LightTexture.Height / 2), 1.0f, SpriteEffects.None, 0.0f);
+                Color haloColor = Color.White * (0.4f - ambientBrightness); 
+                if (haloColor.A > 0)
+                {
+                    spriteBatch.Draw(
+                        LightSource.LightTexture, haloDrawPos, null, haloColor, 0.0f,
+                        new Vector2(LightSource.LightTexture.Width / 2, LightSource.LightTexture.Height / 2), 1.0f, SpriteEffects.None, 0.0f);
+                }                
             }
             spriteBatch.End();
 
@@ -426,7 +429,6 @@ namespace Barotrauma.Lights
             graphics.SetRenderTarget(LosTexture);
 
             spriteBatch.Begin(SpriteSortMode.Deferred, transformMatrix: cam.Transform * Matrix.CreateScale(new Vector3(GameMain.Config.LightMapScale, GameMain.Config.LightMapScale, 1.0f)));
-            
             if (ObstructVision)
             {
                 graphics.Clear(Color.Black);
@@ -438,7 +440,7 @@ namespace Barotrauma.Lights
                     MathHelper.Clamp(diff.Length() / 256.0f, 2.0f, 5.0f), 2.0f);
 
                 spriteBatch.Draw(visionCircle, new Vector2(ViewTarget.WorldPosition.X, -ViewTarget.WorldPosition.Y), null, Color.White, rotation,
-                    new Vector2(LightSource.LightTexture.Width * 0.2f, LightSource.LightTexture.Height / 2), scale, SpriteEffects.None, 0.0f);
+                    new Vector2(visionCircle.Width * 0.2f, visionCircle.Height / 2), scale, SpriteEffects.None, 0.0f);
             }
             else
             {

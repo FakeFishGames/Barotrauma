@@ -153,7 +153,7 @@ namespace Barotrauma
             
             subs = new Submarine[] { Submarine.MainSubs[0], Submarine.MainSubs[1] };
             subs[0].TeamID = 1; subs[1].TeamID = 2;
-            subs[1].SetPosition(Level.Loaded.EndPosition - new Vector2(0.0f, 2000.0f));
+            subs[1].SetPosition(subs[1].FindSpawnPos(Level.Loaded.EndPosition));
             subs[1].FlipX();
 
             //prevent wifi components from communicating between subs

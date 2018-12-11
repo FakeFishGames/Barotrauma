@@ -227,8 +227,8 @@
     
     <ItemComponent>
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
-      <StatusEffect type="OnUse" target="Character" delay="10">
-        <Affliction identifier="drunk" amount="10"/>
+      <StatusEffect type="OnUse" target="Character" delay="10" duration="10">
+        <Affliction identifier="drunk" amount="1"/>
       </StatusEffect>
     </ItemComponent>
 
@@ -238,9 +238,9 @@
     <Body width="8" height="7" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="Character" delay="5">
+      <StatusEffect type="OnUse" target="Character" duration="10">
         <RequiredItem identifier="medicalsyringe" type="Container"/>
-        <Affliction identifier="drunk" amount="20"/>
+        <Affliction identifier="drunk" amount="2"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">

@@ -106,6 +106,12 @@
     allowedlinks="oxygenerator">
 
     <Sprite texture="vent.png" depth="0.91" sourcerect="0,0,64,64"/>
+    <DecorativeSprite texture="vent.png" depth="0.92" sourcerect="68,4,56,56">
+      <Conditional OxygenFlow="lte 10" targetitemcomponent="Vent"/>
+    </DecorativeSprite>
+    <DecorativeSprite texture="vent.png" depth="0.92" sourcerect="68,4,56,56" rotationspeed="360">
+      <Conditional OxygenFlow="gt 10" targetitemcomponent="Vent"/>
+    </DecorativeSprite>
 
     <Vent>
       <sound file="Content/Items/OxygenGenerator/ventilation.ogg" type="OnActive" range="400.0" volumeproperty="OxygenFlow" volume="0.0005f" loop="true"/>

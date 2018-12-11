@@ -19,7 +19,14 @@ namespace Barotrauma.Items.Components
         private Vector2 detectOffset;
 
         private float updateTimer;
-        
+
+        [Serialize(false, false)]
+        public bool MotionDetected
+        {
+            get { return motionDetected; }
+            set { motionDetected = value; }
+        }
+
         [InGameEditable, Serialize(0.0f, true)]
         public float RangeX
         {

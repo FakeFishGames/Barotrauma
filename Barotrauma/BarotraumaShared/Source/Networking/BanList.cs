@@ -1,7 +1,5 @@
-﻿using Lidgren.Network;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace Barotrauma.Networking
@@ -22,12 +20,22 @@ namespace Barotrauma.Networking
 
         private List<BannedPlayer> bannedPlayers;
 
+        public IEnumerable<string> BannedNames
+        {
+            get { return bannedPlayers.Select(bp => bp.Name); }
+        }
+
+        public IEnumerable<string> BannedIPs
+        {
+            get { return bannedPlayers.Select(bp => bp.IP); }
+        }
+
         partial void InitProjectSpecific();
+
 
         public BanList()
         {
             bannedPlayers = new List<BannedPlayer>();
-
             InitProjectSpecific();
         }
 

@@ -246,9 +246,23 @@ namespace Barotrauma.RuinGeneration
 
             if (element != null)
             {
-                foreach (XElement subElement in element.Elements())
+                int groupIndex = 0;
+                LoadEntities(element, ref groupIndex);
+            }
+
+            void LoadEntities(XElement element2, ref int groupIndex)
+            {
+                foreach (XElement subElement in element2.Elements())
                 {
-                    entityList.Add(new RuinEntityConfig(subElement));
+                    if (subElement.Name.ToString().ToLowerInvariant() == "chooseone")
+                    {
+                        groupIndex++;
+                        LoadEntities(subElement, ref groupIndex);
+                    }
+                    else
+                    {
+                        entityList.Add(new RuinEntityConfig(subElement) { SingleGroupIndex = groupIndex });
+                    }
                 }
             }
         }
@@ -267,10 +281,32 @@ namespace Barotrauma.RuinGeneration
                 Rand.RandSync.Server);
         }
 
-        public List<RuinEntityConfig> GetPropList()
+        public List<RuinEntityConfig> GetPropList(Rand.RandSync randSync)
         {
-            var matchingEntities = entityList.FindAll(rs => rs.Type == RuinEntityType.Prop);
-            return matchingEntities;
+            Dictionary<int, List<RuinEntityConfig>> propGroups = new Dictionary<int, List<RuinEntityConfig>>();
+            foreach (RuinEntityConfig entityConfig in entityList)
+            {
+                if (entityConfig.Type != RuinEntityType.Prop) { continue; }
+                if (!propGroups.ContainsKey(entityConfig.SingleGroupIndex))
+                {
+                    propGroups[entityConfig.SingleGroupIndex] = new List<RuinEntityConfig>();
+                }
+                propGroups[entityConfig.SingleGroupIndex].Add(entityConfig);
+            }
+
+            List<RuinEntityConfig> props = new List<RuinEntityConfig>();
+            foreach (KeyValuePair<int, List<RuinEntityConfig>> propGroup in propGroups)
+            {
+                if (propGroup.Key == 0)
+                {
+                    props.AddRange(propGroup.Value);
+                }
+                else
+                {
+                    props.Add(propGroup.Value[Rand.Int(propGroup.Value.Count, randSync)]);
+                }
+            }
+            return props;
         }
     }
 
@@ -374,7 +410,9 @@ namespace Barotrauma.RuinGeneration
 
         public List<EntityConnection> EntityConnections { get; private set; } = new List<EntityConnection>();
 
-        private readonly List<RuinEntityConfig> childEntities = new List<RuinEntityConfig>();
+        public int SingleGroupIndex;
+
+        private readonly List<RuinEntityConfig> childEntities = new List<RuinEntityConfig>();        
 
         public IEnumerable<RuinEntityConfig> ChildEntities
         {

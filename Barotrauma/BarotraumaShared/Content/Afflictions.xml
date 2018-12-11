@@ -340,8 +340,7 @@
       <StatusEffect target="Character" SpeedMultiplier="0.5" color="195,136,60,255" setvalue="true"/>
     </Effect>
 
-    <icon texture="Content/UI/IconAtlas.png" sourcerect="512,640,128,128" color="209,121,84,255" origin="0,0"/>
-    <icon texture="Content/UI/IconAtlas.png" sourcerect="512,126,60,128" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="512,768,128,128" color="209,121,84,255" origin="0,0"/>
   </Affliction>
 
   <Affliction
@@ -416,7 +415,7 @@
       </StatusEffect>
     </Effect>
     
-    <icon texture="Content/UI/IconAtlas.png" sourcerect="512,768,128,128" color="195,180,60,255" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="384,768,128,128" color="195,180,60,255" origin="0,0"/>
   </Affliction>
 
   <AfflictionBleeding

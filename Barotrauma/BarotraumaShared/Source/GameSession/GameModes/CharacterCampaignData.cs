@@ -1,10 +1,4 @@
-﻿using Barotrauma.Items.Components;
-using Barotrauma.Networking;
-using Lidgren.Network;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Barotrauma.Networking;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -41,28 +35,10 @@ namespace Barotrauma
             if (client.Character.Inventory != null)
             {
                 itemData = new XElement("inventory");
-                SaveInventory(client.Character.Inventory, itemData);
+                client.Character.SaveInventory(client.Character.Inventory, itemData);
             }
         }
-
-        private void SaveInventory(Inventory inventory, XElement parentElement)
-        {
-            var items = Array.FindAll(inventory.Items, i => i != null).Distinct();
-            foreach (Item item in items)
-            {
-                item.Submarine = inventory.Owner.Submarine;
-                var itemElement = item.Save(parentElement);
-                itemElement.Add(new XAttribute("i",  Array.IndexOf(inventory.Items, item)));
-
-                foreach (ItemContainer container in item.GetComponents<ItemContainer>())
-                {
-                    XElement childInvElement = new XElement("inventory");
-                    itemElement.Add(childInvElement);
-                    SaveInventory(container.Inventory, childInvElement);
-                }
-            }
-        }
-
+        
         public CharacterCampaignData(XElement element)
         {
             Name = element.GetAttributeString("name", "Unnamed");
@@ -70,8 +46,7 @@ namespace Barotrauma
             string steamID = element.GetAttributeString("steamid", "");
             if (!string.IsNullOrEmpty(steamID))
             {
-                ulong parsedID;
-                ulong.TryParse(steamID, out parsedID);
+                ulong.TryParse(steamID, out ulong parsedID);
                 SteamID = parsedID;
             }
 
@@ -82,7 +57,6 @@ namespace Barotrauma
                     case "character":
                     case "characterinfo":
                         CharacterInfo = new CharacterInfo(subElement);
-                        CharacterInfo.PickedItemIDs.Clear();
                         break;
                     case "inventory":
                         itemData = subElement;
@@ -106,6 +80,6 @@ namespace Barotrauma
             }
 
             return element;
-        }
+        }        
     }
 }

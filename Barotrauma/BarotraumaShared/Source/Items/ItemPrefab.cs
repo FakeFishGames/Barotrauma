@@ -414,7 +414,7 @@ namespace Barotrauma
                             decorativeSpriteFolder = Path.GetDirectoryName(filePath);
                         }
 
-                        DecorativeSprites.Add(new Sprite(subElement, decorativeSpriteFolder));
+                        DecorativeSprites.Add(new DecorativeSprite(subElement, decorativeSpriteFolder));
                         break;
 #endif
                     case "deconstruct":

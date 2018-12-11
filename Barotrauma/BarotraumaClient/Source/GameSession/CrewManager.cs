@@ -70,7 +70,14 @@ namespace Barotrauma
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "character") continue;
 
-                characterInfos.Add(new CharacterInfo(subElement));
+                var characterInfo = new CharacterInfo(subElement);
+                characterInfos.Add(characterInfo);
+                foreach (XElement invElement in subElement.Elements())
+                {
+                    if (invElement.Name.ToString().ToLowerInvariant() != "inventory") continue;
+                    characterInfo.InventoryData = invElement;
+                    break;
+                }
             }
         }
 
@@ -136,7 +143,7 @@ namespace Barotrauma
                         {
                             string msgCommand = ChatMessage.GetChatMessageCommand(text, out string msg);
                             AddSinglePlayerChatMessage(
-                                Character.Controlled.Info.DisplayName,
+                                Character.Controlled.Info.Name,
                                 msg,
                                 ((msgCommand == "r" || msgCommand == "radio") && ChatMessage.CanUseRadio(Character.Controlled)) ? ChatMessageType.Radio : ChatMessageType.Default,
                                 Character.Controlled);
@@ -1283,6 +1290,11 @@ namespace Barotrauma
                     }
                 }
 
+                if (character.Info?.InventoryData != null)
+                {
+                    character.Info.SpawnInventoryItems(character.Inventory, character.Info.InventoryData);
+                }
+
                 AddCharacter(character);
                 if (i == 0)
                 {
@@ -1297,11 +1309,6 @@ namespace Barotrauma
 
         public void EndRound()
         {
-            foreach (Character c in characters)
-            {
-                c.Info.UpdateCharacterItems();
-            }
-
             //remove characterinfos whose characters have been removed or killed
             characterInfos.RemoveAll(c => c.Character == null || c.Character.Removed || c.CauseOfDeath != null);
 
@@ -1322,9 +1329,12 @@ namespace Barotrauma
 
             foreach (CharacterInfo ci in characterInfos)
             {
-                ci.Save(element);
+                var infoElement = ci.Save(element);
+                if (ci.InventoryData != null)
+                {
+                    infoElement.Add(ci.InventoryData);
+                }
             }
-
             parentElement.Add(element);
         }
     }

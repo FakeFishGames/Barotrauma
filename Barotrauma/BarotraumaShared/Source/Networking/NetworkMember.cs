@@ -217,8 +217,10 @@ namespace Barotrauma.Networking
         public virtual void KickPlayer(string kickedName, string reason) { }
 
         public virtual void BanPlayer(string kickedName, string reason, bool range = false, TimeSpan? duration = null) { }
-        
-        public virtual void Update(float deltaTime) {}
+
+        public virtual void UnbanPlayer(string playerName, string playerIP) { }
+
+        public virtual void Update(float deltaTime) { }
 
         public virtual void Disconnect() { }
     }

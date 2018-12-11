@@ -885,6 +885,11 @@ namespace Barotrauma.Networking
                         }
                     }
                     break;
+                case ClientPermissions.Unban:
+                    string unbannedName = inc.ReadString().ToLowerInvariant();
+                    string unbannedIP = inc.ReadString();
+                    UnbanPlayer(unbannedIP, unbannedIP);
+                    break;
                 case ClientPermissions.ManageRound:
                     bool end = inc.ReadBoolean();
                     if (gameStarted && end)
@@ -1438,7 +1443,7 @@ namespace Barotrauma.Networking
                     }
                     else
                     {
-                        characterData.SpawnInventoryItems(spawnedCharacter.Inventory);
+                        characterData.SpawnInventoryItems(spawnedCharacter.Info, spawnedCharacter.Inventory);
                     }
 
                     teamClients[i].Character = spawnedCharacter;
@@ -1726,6 +1731,19 @@ namespace Barotrauma.Networking
             if (client.SteamID > 0)
             {
                 serverSettings.BanList.BanPlayer(client.Name, client.SteamID, reason, duration);
+            }
+        }
+
+        public override void UnbanPlayer(string playerName, string playerIP)
+        {
+            playerName = playerName.ToLowerInvariant();
+            if (!string.IsNullOrEmpty(playerIP))
+            {
+                serverSettings.BanList.UnbanIP(playerIP);
+            }
+            else if (!string.IsNullOrEmpty(playerName))
+            {
+                serverSettings.BanList.UnbanPlayer(playerName);
             }
         }
 
