@@ -27,6 +27,9 @@ namespace Barotrauma
 
         public string SpeciesName { get; private set; }
 
+        [Serialize(0f, true), Editable(-360, 360, ToolTip = "Rotation offset (in degrees) used for animations and widgets. If the sprites in the sheet are in different orientations, use the orientation of the torso for the final version of your character (while editing the character in the editor, you can change the orientation freely).")]
+        public float SpritesheetOrientation { get; set; }
+
         [Serialize(1.0f, true), Editable(MIN_SCALE, MAX_SCALE, DecimalCount = 2)]
         public float LimbScale { get; set; }
 
