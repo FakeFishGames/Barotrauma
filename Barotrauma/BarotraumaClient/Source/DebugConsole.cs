@@ -373,6 +373,14 @@ namespace Barotrauma
                 GameMain.CharacterEditorScreen.Select();
             }));
 
+            AssignRelayToServer("kick", false);
+            AssignRelayToServer("kickid", false);
+            AssignRelayToServer("ban", false);
+            AssignRelayToServer("banid", false);
+            AssignRelayToServer("dumpids", false);
+            AssignRelayToServer("findentityids", false);
+            AssignRelayToServer("campaigninfo", false);
+
             AssignOnExecute("control", (string[] args) =>
             {
                 if (args.Length < 1) return;
