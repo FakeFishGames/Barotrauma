@@ -538,7 +538,7 @@ namespace Barotrauma
                 var topLeft = spriteSheetControls.RectTransform.TopLeft;
                 GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 300, 50), "Spritesheet Orientation:", Color.White, Color.Gray * 0.5f, 10, GUI.Font);
                 DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 510, 60), RagdollParams.SpritesheetOrientation, string.Empty, Color.White,
-                    angle => RagdollParams.SpritesheetOrientation = angle, circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false);
+                    angle => TryUpdateRagdollParam("spritesheetorientation", angle), circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false);
             }
 
             // Debug
