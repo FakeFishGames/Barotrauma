@@ -370,17 +370,16 @@ namespace Barotrauma
                 GameMain.CharacterEditorScreen.Select();
             }));
 
-            /*AssignOnExecute("control|controlcharacter", (string[] args) =>
+            AssignOnExecute("control", (string[] args) =>
             {
                 if (args.Length < 1) return;
-
                 var character = FindMatchingCharacter(args, true);
-
                 if (character != null)
                 {
                     Character.Controlled = character;
                 }
-            });*/ //TODO: relay to server
+            });
+            AssignRelayToServer("control", true);
 
             commands.Add(new Command("shake", "", (string[] args) =>
             {
