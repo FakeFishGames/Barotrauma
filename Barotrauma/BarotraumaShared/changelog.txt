@@ -1,4 +1,22 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.2.3
+---------------------------------------------------------------------------------------------------------
+
+- Clients can now join servers that have an IPv6 address.
+- Added "unban" and "unbanip" commands.
+- Fixed a bunch of bugs that were causing "attempted to apply an invalid force/impulse to a physics body"
+errors.
+- Fixed a bunch of bugs that were causing "attempted to move a pulljoint extremely far" errors.
+- Fixed DebugConsole selecting non-command lines if up/down is pressed when there are no commands in the 
+console. 
+- Fixed inventory syncing not working on the controlled character's inventory if the character is 
+unconscious or wearing handcuffs.
+- Verify that the launched exe belongs to the currently selected content package when starting up the game.
+- Fixed console messages that have been created before initializing the debug console not being present
+in crash logs. Made it difficult to diagnose crashes that occur immediately when the game starts.
+- Additional error logging to diagnose SharpDX errors on startup.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.2.2
 ---------------------------------------------------------------------------------------------------------
 
