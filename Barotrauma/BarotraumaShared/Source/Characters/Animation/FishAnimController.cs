@@ -622,13 +622,10 @@ namespace Barotrauma
         public override void Flip()
         {
             base.Flip();
-
             foreach (Limb l in Limbs)
             {
                 if (!l.DoesFlip) continue;
-                
-                l.body.SetTransform(l.SimPosition,
-                    -l.body.Rotation);                
+                l.body.SetTransform(l.SimPosition, -l.body.Rotation - MathHelper.ToRadians(RagdollParams.SpritesheetOrientation));                
             }
         }
 
