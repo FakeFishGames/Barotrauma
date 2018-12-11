@@ -50,79 +50,79 @@
 
   <HeadAttachments>
     
-    <Wearable type="Hair">
+    <Wearable type="Hair" headid="1">
       <sprite name="Head1 Hair1" texture="Content/Characters/Human/head_1.png" sheetindex="0,1"/>
     </Wearable>
-    <Wearable type="Hair">
+    <Wearable type="Hair" headid="1">
       <sprite name="Head1 Hair2" texture="Content/Characters/Human/head_1.png" sheetindex="1,1"/>
     </Wearable>
-    <Wearable type="Hair">
+    <Wearable type="Hair" headid="1">
       <sprite name="Head1 Hair3" texture="Content/Characters/Human/head_1.png" sheetindex="2,1"/>
     </Wearable>
-    <Wearable type="Beard">
+    <Wearable type="Beard" headid="1">
       <sprite name="Head1 Beard1" texture="Content/Characters/Human/head_1.png" sheetindex="0,2"/>
     </Wearable>
-    <Wearable type="Beard">
+    <Wearable type="Beard" headid="1">
       <sprite name="Head1 Beard2" texture="Content/Characters/Human/head_1.png" sheetindex="1,2"/>
     </Wearable>
-    <Wearable type="FaceAttachment" commonness="0.2">
+    <Wearable type="FaceAttachment" headid="1" commonness="0.2">
       <sprite name="Head1 Scars1" texture="Content/Characters/Human/head_1.png" sheetindex="2,2"/>
     </Wearable>
 
-    <Wearable type="Hair" disallow="Beard2, Moustache2">
+    <Wearable type="Hair" headid="2" disallow="Beard2, Moustache2">
       <sprite name="Head2 Hair1" texture="Content/Characters/Human/head_2.png" sheetindex="0,1"/>
     </Wearable>
-    <Wearable type="Hair" disallow="Beard1, Moustache1">
+    <Wearable type="Hair" headid="2" disallow="Beard1, Moustache1">
       <sprite name="Head2 Hair2" texture="Content/Characters/Human/head_2.png" sheetindex="1,1"/>
     </Wearable>
-    <Wearable type="Beard" disallow="Hair2, Moustache2">
+    <Wearable type="Beard" headid="2" disallow="Hair2, Moustache2">
       <sprite name="Head2 Beard1" texture="Content/Characters/Human/head_2.png" sheetindex="2,1"/>
     </Wearable>
-    <Wearable type="Beard" disallow="Hair1, Moustache1">
+    <Wearable type="Beard" headid="2" disallow="Hair1, Moustache1">
       <sprite name="Head2 Beard2" texture="Content/Characters/Human/head_2.png" sheetindex="0,2"/>
     </Wearable>
-    <Wearable type="Moustache" disallow="Hair2, Beard2">
+    <Wearable type="Moustache" headid="2" disallow="Hair2, Beard2">
       <sprite name="Head2 Moustache1" texture="Content/Characters/Human/head_2.png" sheetindex="1,2" />
     </Wearable>
-    <Wearable type="Moustache" disallow="Hair1, Beard1">
+    <Wearable type="Moustache" headid="2" disallow="Hair1, Beard1">
       <sprite name="Head2 Moustache2" texture="Content/Characters/Human/head_2.png" sheetindex="2,2"/>
     </Wearable>
 
-    <Wearable type="Hair">
+    <Wearable type="Hair" headid="3">
       <sprite name="Head3 Hair1" texture="Content/Characters/Human/head_3.png" sheetindex="0,1"/>
     </Wearable>
-    <Wearable type="Hair">
+    <Wearable type="Hair" headid="3">
       <sprite name="Head3 Hair2" texture="Content/Characters/Human/head_3.png" sheetindex="1,1"/>
     </Wearable>
-    <Wearable type="Hair">
+    <Wearable type="Hair" headid="3">
       <sprite name="Head3 Hair3" texture="Content/Characters/Human/head_3.png" sheetindex="2,1"/>
     </Wearable>
-    <Wearable type="Beard">
+    <Wearable type="Beard" headid="3">
       <sprite name="Head3 Beard1" texture="Content/Characters/Human/head_3.png" sheetindex="0,2"/>
     </Wearable>
-    <Wearable type="Moustache">
+    <Wearable type="Moustache" headid="3">
       <sprite name="Head3 Moustache1" texture="Content/Characters/Human/head_3.png" sheetindex="1,2"/>
     </Wearable>
-    <Wearable type="FaceAttachment" commonness="0.2">
+    <Wearable type="FaceAttachment" headid="3" commonness="0.2">
       <sprite name="Head3 Tattoo1" texture="Content/Characters/Human/head_3.png" sheetindex="2,2"/>
     </Wearable>
     
-    <Wearable type="Hair" disallow="Beard2">
+    <Wearable type="Hair" headid="4" disallow="Beard2">
       <sprite name="Head4 Hair1" texture="Content/Characters/Human/head_4.png" sheetindex="0,1"/>
     </Wearable>
-    <Wearable type="Hair" disallow="Beard1">
+    <Wearable type="Hair" headid="4" disallow="Beard1">
       <sprite name="Head4 Hair2" texture="Content/Characters/Human/head_4.png" sheetindex="1,1"/>
     </Wearable>
-    <Wearable type="Hair" disallow="Beard2">
+    <Wearable type="Hair" headid="4" disallow="Beard2">
       <sprite name="Head4 Hair3" texture="Content/Characters/Human/head_4.png" sheetindex="2,1"/>
     </Wearable>
-    <Wearable type="Beard" disallow="Hair2">
+    <Wearable type="Beard" headid="4" disallow="Hair2">
       <sprite name="Head4 Beard1" texture="Content/Characters/Human/head_4.png" sheetindex="0,2"/>
     </Wearable>
-    <Wearable type="Beard" disallow="Hair1, Hair3">
+    <Wearable type="Beard" headid="4" disallow="Hair1, Hair3">
       <sprite name="Head4 Beard2" texture="Content/Characters/Human/head_4.png" sheetindex="1,2"/>
     </Wearable>
-    <Wearable type="FaceAttachment" commonness="0.2">
+    <Wearable type="FaceAttachment" headid="4" commonness="0.2">
       <sprite name="Head4 Jewelry1" texture="Content/Characters/Human/head_4.png" sheetindex="2,2"/>
     </Wearable>
     
