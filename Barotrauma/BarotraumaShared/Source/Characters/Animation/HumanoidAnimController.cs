@@ -29,7 +29,7 @@ namespace Barotrauma
                     }
                     return _ragdollParams;
                 }
-                return character.Info.Ragdoll;                
+                return character.Info.Ragdoll as HumanRagdollParams;                
             }
             protected set
             {
