@@ -71,8 +71,6 @@ namespace Barotrauma
         private List<LimbJoint> selectedJoints = new List<LimbJoint>();
         private List<Limb> selectedLimbs = new List<Limb>();
 
-        private float spriteSheetOrientation;
-
         private bool isEndlessRunner;
 
         private Rectangle GetSpritesheetRectangle => 
@@ -539,8 +537,8 @@ namespace Barotrauma
             {
                 var topLeft = spriteSheetControls.RectTransform.TopLeft;
                 GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 300, 50), "Spritesheet Orientation:", Color.White, Color.Gray * 0.5f, 10, GUI.Font);
-                DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 510, 60), spriteSheetOrientation, string.Empty, Color.White,
-                    angle => spriteSheetOrientation = angle, circleRadius: 40, widgetSize: 20, rotationOffset: MathHelper.Pi, autoFreeze: false);
+                DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 510, 60), RagdollParams.SpritesheetOrientation, string.Empty, Color.White,
+                    angle => RagdollParams.SpritesheetOrientation = angle, circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false);
             }
 
             // Debug
@@ -2976,7 +2974,7 @@ namespace Barotrauma
                             {
                                 DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: true, allowPairEditing: true, rotationOffset: limb.Rotation);
                             }
-                            Vector2 to = tformedJointPos + VectorExtensions.Forward(joint.LimbB.Rotation + MathHelper.ToRadians(-spriteSheetOrientation), 20);
+                            Vector2 to = tformedJointPos + VectorExtensions.Forward(joint.LimbB.Rotation + MathHelper.ToRadians(-RagdollParams.SpritesheetOrientation), 20);
                             GUI.DrawLine(spriteBatch, tformedJointPos, to, Color.Magenta, width: 2);
                             var dotSize = new Vector2(5, 5);
                             var rect = new Rectangle((tformedJointPos - dotSize / 2).ToPoint(), dotSize.ToPoint());
@@ -3446,7 +3444,7 @@ namespace Barotrauma
 
         private void DrawJointLimitWidgets(SpriteBatch spriteBatch, Limb limb, LimbJoint joint, Vector2 drawPos, bool autoFreeze, bool allowPairEditing, float rotationOffset = 0)
         {
-            rotationOffset -= MathHelper.ToRadians(spriteSheetOrientation);
+            rotationOffset -= MathHelper.ToRadians(RagdollParams.SpritesheetOrientation);
             Color angleColor = joint.UpperLimit - joint.LowerLimit > 0 ? Color.LightGreen * 0.5f : Color.Red;
             DrawRadialWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), $"{joint.jointParams.Name} Upper Limit", Color.Cyan, angle =>
             {
