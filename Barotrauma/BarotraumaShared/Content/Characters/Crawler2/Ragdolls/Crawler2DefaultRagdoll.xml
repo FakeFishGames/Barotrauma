@@ -1,4 +1,4 @@
-﻿<Ragdoll type="crawler2" colliderheightfromfloor="35" impacttolerance="6" draggable="True" limbscale="0.7" jointscale="0.7" canentersubmarine="True" texturescale="1">
+﻿<Ragdoll type="crawler2" colliderheightfromfloor="35" impacttolerance="6" draggable="True" limbscale="0.7" jointscale="0.7" canentersubmarine="True" texturescale="1" spritesheetorientation="90">
   <collider height="80" radius="40" name="Main Collider" width="0" />
   <!-- Head -->
   <limb id="0" radius="50" type="Head" flip="True" steerforce="15" mouthpos="50,0" healthindex="0" attackpriority="0" stepoffset="0,0" bodytype="Dynamic" height="0" width="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 0" notes="">
@@ -122,6 +122,6 @@
   <!--FakeFeet-->
   <joint limb1="2" limb2="11" limb1anchor="-1.630605,-27.50153" limb2anchor="5.272902,20.79574" canbesevered="True" limitenabled="True" upperlimit="55.2636" lowerlimit="-71.75" name="Joint 2 - 11" stiffness="0.25" />
   <joint limb1="3" limb2="12" limb1anchor="12.48289,-22.7742" limb2anchor="10.91163,18.78148" canbesevered="True" limitenabled="True" upperlimit="30" lowerlimit="-57.98726" name="Joint 3 - 12" stiffness="0.25" />
-  <joint limb1="4" limb2="13" limb1anchor="-1.576591,-8.262894" limb2anchor="3.830437,6.737896" canbesevered="True" limitenabled="True" upperlimit="56.54782" lowerlimit="-30" name="Joint 4 - 13" stiffness="0.25" />
+  <joint limb1="4" limb2="13" limb1anchor="-1.576591,-8.262894" limb2anchor="3.830437,6.737895" canbesevered="True" limitenabled="True" upperlimit="56.54782" lowerlimit="-30" name="Joint 4 - 13" stiffness="0.25" />
   <joint limb1="1" limb2="14" limb1anchor="37.08093,-27.01655" limb2anchor="0.9172598,0.375894" canbesevered="True" limitenabled="True" upperlimit="7.579085" lowerlimit="3.64738" name="Joint 1 - 14" stiffness="0.25" />
 </Ragdoll>
