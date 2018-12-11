@@ -135,7 +135,10 @@ namespace Lidgren.Network
 		internal bool ActuallySendPacket(byte[] data, int numBytes, NetEndPoint target, out bool connectionReset)
 		{
 			connectionReset = false;
-			IPAddress ba = default(IPAddress);
+
+            target = NetUtility.MapToIPv6(target);
+
+            IPAddress ba = default(IPAddress);
 			try
 			{
 				ba = NetUtility.GetCachedBroadcastAddress();

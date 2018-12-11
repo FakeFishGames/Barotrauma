@@ -93,8 +93,8 @@ namespace Lidgren.Network
 			//
 			m_disabledTypes = NetIncomingMessageType.ConnectionApproval | NetIncomingMessageType.UnconnectedData | NetIncomingMessageType.VerboseDebugMessage | NetIncomingMessageType.ConnectionLatencyUpdated | NetIncomingMessageType.NatIntroductionSuccess;
 			m_networkThreadName = "Lidgren network thread";
-			m_localAddress = IPAddress.Any;
-			m_broadcastAddress = IPAddress.Broadcast;
+            m_localAddress = IPAddress.IPv6Any;
+            m_broadcastAddress = IPAddress.Broadcast;
 			var ip = NetUtility.GetBroadcastAddress();
 			if (ip != null)
 			{
@@ -326,11 +326,10 @@ namespace Lidgren.Network
 				m_suppressUnreliableUnorderedAcks = value;
 			}
 		}
-
-		/// <summary>
-		/// Gets or sets the local ip address to bind to. Defaults to IPAddress.Any. Cannot be changed once NetPeer is initialized.
-		/// </summary>
-		public IPAddress LocalAddress
+        /// <summary>
+        /// Gets or sets the local ip address to bind to. Defaults to <see cref="IPAddress.IPv6Any"/>. Cannot be changed once NetPeer is initialized.
+        /// </summary>
+        public IPAddress LocalAddress
 		{
 			get { return m_localAddress; }
 			set
