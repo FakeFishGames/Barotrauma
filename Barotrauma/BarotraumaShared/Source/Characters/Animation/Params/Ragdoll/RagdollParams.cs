@@ -92,7 +92,7 @@ namespace Barotrauma
         public static T GetDefaultRagdollParams<T>(string speciesName) where T : RagdollParams, new() => GetRagdollParams<T>(speciesName, GetDefaultFileName(speciesName));
 
         /// <summary>
-        /// If the file name is left null, a random file is selected. If fails, will select the default file.  Note: Use the filename without the extensions, don't use the full path!
+        /// If the file name is left null, default file is selected. If fails, will select the default file.  Note: Use the filename without the extensions, don't use the full path!
         /// If a custom folder is used, it's defined in the character info file.
         /// </summary>
         public static T GetRagdollParams<T>(string speciesName, string fileName = null) where T : RagdollParams, new()
@@ -102,7 +102,7 @@ namespace Barotrauma
                 ragdolls = new Dictionary<string, RagdollParams>();
                 allRagdolls.Add(speciesName, ragdolls);
             }
-            if (fileName == null || !ragdolls.TryGetValue(fileName, out RagdollParams ragdoll))
+            if (string.IsNullOrEmpty(fileName) || !ragdolls.TryGetValue(fileName, out RagdollParams ragdoll))
             {
                 string selectedFile = null;
                 string folder = GetFolder(speciesName);
@@ -117,8 +117,7 @@ namespace Barotrauma
                     else if (string.IsNullOrEmpty(fileName))
                     {
                         // Files found, but none specified
-                        DebugConsole.NewMessage($"[RagdollParams] Selecting random ragdoll for {speciesName}", Color.White);
-                        selectedFile = files.GetRandom(Rand.RandSync.Server);
+                        selectedFile = GetDefaultFile(speciesName);
                     }
                     else
                     {

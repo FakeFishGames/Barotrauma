@@ -140,7 +140,7 @@ namespace Barotrauma
         public static T GetDefaultAnimParams<T>(string speciesName, AnimationType animType) where T : AnimationParams, new() => GetAnimParams<T>(speciesName, animType, GetDefaultFileName(speciesName, animType));
 
         /// <summary>
-        /// If the file name is left null, a random file is selected. If fails, will select the default file. Note: Use the filename without the extensions, don't use the full path!
+        /// If the file name is left null, default file is selected. If fails, will select the default file. Note: Use the filename without the extensions, don't use the full path!
         /// If a custom folder is used, it's defined in the character info file.
         /// </summary>
         public static T GetAnimParams<T>(string speciesName, AnimationType animType, string fileName = null) where T : AnimationParams, new()
@@ -171,8 +171,7 @@ namespace Barotrauma
                     else if (string.IsNullOrEmpty(fileName))
                     {
                         // Files found, but none specified.
-                        DebugConsole.Log($"[AnimationParams] Selecting random animation of type {animType} for {speciesName}");
-                        selectedFile = filteredFiles.GetRandom(Rand.RandSync.Server);
+                        selectedFile = GetDefaultFile(speciesName, animType);
                     }
                     else
                     {
