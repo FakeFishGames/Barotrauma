@@ -216,7 +216,7 @@ namespace Barotrauma
             if (autoScale && textScale > 0.1f &&
                 (TextSize.X * textScale > rect.Width - padding.X - padding.Z || TextSize.Y * textScale > rect.Height - padding.Y - padding.W))
             {
-                TextScale -= 0.1f;
+                TextScale -= 0.05f;
             }
 
             textPos = new Vector2(rect.Width / 2.0f, rect.Height / 2.0f);

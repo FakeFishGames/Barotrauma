@@ -757,6 +757,7 @@
   <AfflictionStrengthLow>Light</AfflictionStrengthLow>
   <AfflictionStrengthMedium>Medium</AfflictionStrengthMedium>
   <AfflictionStrengthHigh>Heavy</AfflictionStrengthHigh>
+  <LowMedicalSkillWarning>Low medical skill! The suitable treatment list may be inaccurate.</LowMedicalSkillWarning>
   <HealthLimbName.Head>Head</HealthLimbName.Head>
   <HealthLimbName.Torso>Torso</HealthLimbName.Torso>
   <HealthLimbName.LeftArm>Left arm</HealthLimbName.LeftArm>

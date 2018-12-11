@@ -69,8 +69,7 @@ namespace Barotrauma
             {
                 if (character.Inventory != null)
                 {
-                    if (!character.LockHands && character.Stun < 0.1f &&
-                        (CharacterHealth.OpenHealthWindow == null || !CharacterHealth.HideNormalInventory))
+                    if (!character.LockHands && character.Stun < 0.1f)
                     {
                         character.Inventory.Update(deltaTime, cam);
                     }
@@ -89,8 +88,7 @@ namespace Barotrauma
 
                 if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
-                    if (character.SelectedCharacter.CanInventoryBeAccessed &&
-                        (CharacterHealth.OpenHealthWindow == null || !CharacterHealth.HideNormalInventory))
+                    if (character.SelectedCharacter.CanInventoryBeAccessed)
                     {
                         character.SelectedCharacter.Inventory.Update(deltaTime, cam);
                     }
@@ -295,8 +293,7 @@ namespace Barotrauma
             {
                 if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
-                    if (character.SelectedCharacter.CanInventoryBeAccessed &&
-                        (CharacterHealth.OpenHealthWindow == null || !CharacterHealth.HideNormalInventory))
+                    if (character.SelectedCharacter.CanInventoryBeAccessed)
                     {
                         ///character.Inventory.CurrentLayout = Alignment.Left;
                         character.SelectedCharacter.Inventory.CurrentLayout = CharacterInventory.Layout.Left;

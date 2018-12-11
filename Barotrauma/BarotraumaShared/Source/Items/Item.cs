@@ -424,7 +424,7 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "body":
-                        body = new PhysicsBody(subElement, ConvertUnits.ToSimUnits(Position));
+                        body = new PhysicsBody(subElement, ConvertUnits.ToSimUnits(Position), Scale);
                         body.FarseerBody.AngularDamping = 0.2f;
                         body.FarseerBody.LinearDamping  = 0.1f;
                         break;
