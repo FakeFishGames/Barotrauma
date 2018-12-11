@@ -1165,6 +1165,19 @@ namespace Barotrauma
             );
 
             AssignOnClientRequestExecute(
+                "control",
+                (Client client, Vector2 cursorWorldPos, string[] args) =>
+                {
+                    if (args.Length < 1) return;
+                    var character = FindMatchingCharacter(args, true);
+                    if (character != null)
+                    {
+                        GameMain.Server.SetClientCharacter(client, character);
+                    }
+                }
+            );
+
+            AssignOnClientRequestExecute(
                 "difficulty|leveldifficulty",
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
