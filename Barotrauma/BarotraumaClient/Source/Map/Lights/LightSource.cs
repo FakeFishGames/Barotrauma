@@ -667,7 +667,8 @@ namespace Barotrauma.Lights
 
                 //segment's end position always has a higher or equal y coordinate than the start position
                 //so we can do this comparison and skip segments that are at the wrong side of the ray
-                System.Diagnostics.Debug.Assert(s.End.WorldPos.Y >= s.Start.WorldPos.Y, "LightSource raycast failed. Segment's end positions should never be below the start position.");
+                System.Diagnostics.Debug.Assert(s.End.WorldPos.Y >= s.Start.WorldPos.Y,
+                    "LightSource raycast failed. Segment's end positions should never be below the start position. Parent entity: " + s.ConvexHull?.ParentEntity == null ? "null" : s.ConvexHull.ParentEntity.ToString());
                 if (s.Start.WorldPos.Y > maxY || s.End.WorldPos.Y < minY) { continue; }
                 //same for the x-axis
                 if (s.Start.WorldPos.X > s.End.WorldPos.X)
