@@ -77,9 +77,28 @@ namespace Barotrauma
 
         private int headSpriteId;
         private Sprite headSprite;
-        public Sprite Portrait { get; private set; }
-        public Sprite PortraitBackground { get; private set; }
-
+        private Sprite portrait;
+        public Sprite Portrait
+        {
+            get => portrait ?? headSprite;
+            set => portrait = value;
+        }
+        private Sprite portraitBackground;
+        public Sprite PortraitBackground
+        {
+            get
+            {
+                if (portraitBackground == null)
+                {
+                    var portraitBackgroundElement = SourceElement.Element("portraitbackground");
+                    if (portraitBackgroundElement != null)
+                    {
+                        portraitBackground = new Sprite(portraitBackgroundElement.Element("sprite"));
+                    }
+                }
+                return portraitBackground;
+            }
+        }
 
         public XElement SourceElement { get; private set; }
 
@@ -92,6 +111,8 @@ namespace Barotrauma
         public int BeardIndex { get; set; } = -1;
         public int MoustacheIndex { get; set; } = -1;
         public int FaceAttachmentIndex { get; set; } = -1;
+
+        public readonly string ragdollFileName = string.Empty;
 
         public bool StartItemsGiven;
 
@@ -140,7 +161,11 @@ namespace Barotrauma
                 if (headSpriteId < (int)spriteRange.X) headSpriteId = (int)(spriteRange.Y);
                 if (headSpriteId > (int)spriteRange.Y) headSpriteId = (int)(spriteRange.X);
 
-                if (headSpriteId != oldId) headSprite = null;
+                if (headSpriteId != oldId)
+                {
+                    headSprite = null;
+                    LoadHeadAttachments();
+                }
             }
         }
 
@@ -161,26 +186,29 @@ namespace Barotrauma
                 {
                     HeadSpriteId = 0;
                 }
-
                 LoadHeadSprite();
             }
         }
 
-        private HumanRagdollParams ragdoll;
-        public HumanRagdollParams Ragdoll
+        private RagdollParams ragdoll;
+        public RagdollParams Ragdoll
         {
             get
             {
                 if (ragdoll == null)
                 {
-                    ragdoll = HumanRagdollParams.GetDefaultRagdollParams(Character?.SpeciesName ?? "human");
+                    string speciesName = SourceElement.GetAttributeString("name", string.Empty);
+                    bool isHumanoid = SourceElement.GetAttributeBool("humanoid", false);
+                    ragdoll = isHumanoid 
+                        ? HumanRagdollParams.GetRagdollParams(speciesName, ragdollFileName)
+                        : RagdollParams.GetRagdollParams<FishRagdollParams>(speciesName, ragdollFileName) as RagdollParams;
                 }
                 return ragdoll;
             }
             set { ragdoll = value; }
         }
 
-        public CharacterInfo(string file, string name = "", Gender gender = Gender.None, JobPrefab jobPrefab = null, HumanRagdollParams ragdoll = null)
+        public CharacterInfo(string file, string name = "", Gender gender = Gender.None, JobPrefab jobPrefab = null, string ragdollFileName = null)
         {
             ID = idCounter;
             idCounter++;
@@ -190,16 +218,10 @@ namespace Barotrauma
             headSpriteRange = new Vector2[2];
             SpriteTags = new List<string>();
 
-            XDocument doc = null;
-            if (cachedConfigs.ContainsKey(file))
-            {
-                doc = cachedConfigs[file];
-            }
-            else
+            if (!cachedConfigs.TryGetValue(file, out XDocument doc))
             {
                 doc = XMLExtensions.TryLoadXml(file);
-                if (doc == null) return;
-
+                if (doc == null) { return; }
                 cachedConfigs.Add(file, doc);
             }
 
@@ -263,21 +285,10 @@ namespace Barotrauma
             personalityTrait = NPCPersonalityTrait.GetRandom(name + HeadSpriteId);
             
             Salary = CalculateSalary();
-            if (ragdoll != null)
-            {
-                this.ragdoll = ragdoll;
-            }
-
-            var portraitBackgroundElement = doc.Root.Element("portraitbackground");
-            if (portraitBackgroundElement != null)
-            {
-                PortraitBackground = new Sprite(portraitBackgroundElement.Element("sprite"));
-            }
-
-            LoadHeadAttachments();
+            this.ragdollFileName = ragdollFileName;
         }
 
-        public CharacterInfo(XElement element)
+        public CharacterInfo(XElement element, string ragdollFileName = null)
         {
             ID = idCounter;
             idCounter++;
@@ -291,7 +302,7 @@ namespace Barotrauma
 
             File = element.GetAttributeString("file", "");
             Salary = element.GetAttributeInt("salary", 1000);
-            headSpriteId = element.GetAttributeInt("headspriteid", 1);
+            HeadSpriteId = element.GetAttributeInt("headspriteid", 1);
             StartItemsGiven = element.GetAttributeBool("startitemsgiven", false);
 
             string personalityName = element.GetAttributeString("personality", "");
@@ -310,22 +321,12 @@ namespace Barotrauma
                 Job = new Job(subElement);
                 break;
             }
-
-            string ragdollFile = element.GetAttributeString("ragdoll", string.Empty);
-            ragdoll = HumanRagdollParams.GetRagdollParams("human", ragdollFile);
-
-            var portraitBackgroundElement = element.Element("portraitbackground");
-            if (portraitBackgroundElement != null)
-            {
-                PortraitBackground = new Sprite(portraitBackgroundElement.Element("sprite"));
-            }
-
-            LoadHeadAttachments();
+            this.ragdollFileName = ragdollFileName;
         }
 
         public void LoadHeadSprite()
         {
-            foreach (XElement limbElement in XMLExtensions.TryLoadXml(Ragdoll.FullPath).Root.Elements())
+            foreach (XElement limbElement in Ragdoll.MainElement.Elements())
             {
                 if (limbElement.GetAttributeString("type", "").ToLowerInvariant() != "head") continue;
 
@@ -347,7 +348,7 @@ namespace Barotrauma
                     if (fileWithoutTags != fileName) continue;
 
                     headSprite = new Sprite(spriteElement, "", file);
-                    Portrait = new Sprite(spriteElement, "", file) { RelativeOrigin = Vector2.Zero };
+                    portrait = new Sprite(spriteElement, "", file) { RelativeOrigin = Vector2.Zero };
 
                     //extract the tags out of the filename
                     SpriteTags = file.Split('[', ']').Skip(1).ToList();
@@ -367,6 +368,9 @@ namespace Barotrauma
         private List<XElement> beards;
         private List<XElement> moustaches;
         private List<XElement> faceAttachments;
+        /// <summary>
+        /// Loads only the elements according to the indices, not the sprites.
+        /// </summary>
         public void LoadHeadAttachments()
         {
             var attachments = SourceElement.Element("HeadAttachments");
@@ -454,8 +458,7 @@ namespace Barotrauma
                 bool IsWearableAllowed(XElement element)
                 {
                     var spriteElement = element.Element("sprite");
-                    var p = spriteElement.GetAttributeString("texture", string.Empty);
-                    if (!System.IO.File.Exists(p) || Path.GetFullPath(p) != Path.GetFullPath(HeadSprite.FilePath)) { return false; }
+                    if (element.GetAttributeInt("headid", 0) != headSpriteId) { return false; }
                     string spriteName = spriteElement.GetAttributeString("name", string.Empty);
                     return IsAllowed(HairElement, spriteName) && IsAllowed(BeardElement, spriteName) && IsAllowed(MoustacheElement, spriteName) && IsAllowed(FaceAttachment, spriteName);
                 }
@@ -541,7 +544,7 @@ namespace Barotrauma
                 new XAttribute("moustacheindex", MoustacheIndex),
                 new XAttribute("faceattachmentindex", FaceAttachmentIndex),
                 new XAttribute("startitemsgiven", StartItemsGiven),
-                new XAttribute("ragdoll", Ragdoll.FileName),
+                new XAttribute("ragdoll", ragdollFileName),
                 new XAttribute("personality", personalityTrait == null ? "" : personalityTrait.Name));
             
             // TODO: animations?
@@ -600,7 +603,7 @@ namespace Barotrauma
             msg.Write((byte)BeardIndex);
             msg.Write((byte)MoustacheIndex);
             msg.Write((byte)FaceAttachmentIndex);
-            msg.Write(Ragdoll.FileName);
+            msg.Write(ragdollFileName);
             if (Job != null)
             {
                 msg.Write(Job.Prefab.Identifier);
@@ -628,7 +631,7 @@ namespace Barotrauma
             int beardIndex              = inc.ReadByte();
             int moustacheIndex          = inc.ReadByte();
             int faceAttachmentIndex     = inc.ReadByte();
-            string ragdoll              = inc.ReadString();
+            string ragdollFile          = inc.ReadString();
 
             string jobIdentifier        = inc.ReadString();
             JobPrefab jobPrefab = null;
@@ -647,7 +650,7 @@ namespace Barotrauma
 
             // TODO: animations
 
-            CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab, HumanRagdollParams.GetRagdollParams("human", ragdoll))
+            CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab,  ragdollFile)
             {
                 ID = infoID,
                 HeadSpriteId = headSpriteID,
@@ -684,16 +687,17 @@ namespace Barotrauma
                 headSprite.Remove();
                 headSprite = null;
             }
-            if (Portrait != null)
+            if (portrait != null)
             {
-                Portrait.Remove();
-                Portrait = null;
+                portrait.Remove();
+                portrait = null;
             }
-            if (PortraitBackground != null)
+            if (portraitBackground != null)
             {
-                PortraitBackground.Remove();
-                PortraitBackground = null;
+                portraitBackground.Remove();
+                portraitBackground = null;
             }
+            //TODO: remove head attachment sprites
         }
     }
 }
