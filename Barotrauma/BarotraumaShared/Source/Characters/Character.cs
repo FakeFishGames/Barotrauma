@@ -718,28 +718,6 @@ namespace Barotrauma
             }
 
             AnimController.SetPosition(ConvertUnits.ToSimUnits(position));
-                        
-            if (file == humanConfigFile && Info.PickedItemIDs.Any())
-            {
-                for (int j = 0; j < 2; j++)
-                {
-                    for (ushort i = 0; i < Info.PickedItemIDs.Count; i++)
-                    {
-                        //put items in the "Any" slots first, 
-                        //otherwise equipped items may end up taking up "Any" slots they shouldn't be in, 
-                        //and prevent other items from fitting in the inventory
-                        if ((Inventory.SlotTypes[i] == InvSlotType.Any) != (j == 0)) continue;
-                        if (Info.PickedItemIDs[i] == 0) continue;
-
-                        Item item = FindEntityByID(Info.PickedItemIDs[i]) as Item;
-                        System.Diagnostics.Debug.Assert(item != null);
-                        if (item == null) continue;
-
-                        item.TryInteract(this, true, true, true);
-                        Inventory.TryPutItem(item, i, false, false, null, false);
-                    }
-                }
-            }
 
             AnimController.FindHull(null);
             if (AnimController.CurrentHull != null) Submarine = AnimController.CurrentHull.Submarine;
@@ -1985,7 +1963,7 @@ namespace Barotrauma
                     string modifiedMessage = ChatMessage.ApplyDistanceEffect(message.Message, message.MessageType.Value, this, Controlled);
                     if (!string.IsNullOrEmpty(modifiedMessage))
                     {
-                        GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(info.DisplayName, modifiedMessage, message.MessageType.Value, this);
+                        GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(info.Name, modifiedMessage, message.MessageType.Value, this);
                     }
                 }
 #endif
@@ -2042,6 +2020,14 @@ namespace Barotrauma
         /// </summary>
         public AttackResult ApplyAttack(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false, Limb targetLimb = null)
         {
+            if (Removed)
+            {
+                string errorMsg = "Tried to apply an attack to a removed character (" + Name + ").\n" + Environment.StackTrace;
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Character.ApplyAttack:RemovedCharacter", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return new AttackResult();
+            }
+
             Limb limbHit = targetLimb;
 
             float attackImpulse = attack.TargetImpulse + attack.TargetForce * deltaTime;
@@ -2051,16 +2037,19 @@ namespace Barotrauma
                 DamageLimb(worldPosition, targetLimb, attack.Afflictions, attack.Stun, playSound, attackImpulse, attacker);
 
             if (limbHit == null) return new AttackResult();
-
-            limbHit.body.ApplyLinearImpulse(attack.TargetImpulseWorld + attack.TargetForceWorld * deltaTime);
+            
+            limbHit.body?.ApplyLinearImpulse(attack.TargetImpulseWorld + attack.TargetForceWorld * deltaTime);
 #if SERVER
             if (attacker is Character attackingCharacter && attackingCharacter.AIController == null)
             {
                 string logMsg = LogName + " attacked by " + attackingCharacter.LogName + ".";
-                foreach (Affliction affliction in attackResult.Afflictions)
+                if (attackResult.Afflictions != null)
                 {
-                    if (affliction.Strength == 0.0f) continue;
-                    logMsg += affliction.Prefab.Name + ": " + affliction.Strength;
+                    foreach (Affliction affliction in attackResult.Afflictions)
+                    {
+                        if (affliction.Strength == 0.0f) continue;
+                        logMsg += affliction.Prefab.Name + ": " + affliction.Strength;
+                    }
                 }
                 GameServer.Log(logMsg, ServerLog.MessageType.Attack);            
             }
@@ -2190,13 +2179,21 @@ namespace Barotrauma
         public void BreakJoints()
         {
             Vector2 centerOfMass = AnimController.GetCenterOfMass();
-
             foreach (Limb limb in AnimController.Limbs)
             {
                 limb.AddDamage(limb.SimPosition, 500.0f, 0.0f, 0.0f, false);
 
                 Vector2 diff = centerOfMass - limb.SimPosition;
-                if (diff == Vector2.Zero) continue;
+
+                if (!MathUtils.IsValid(diff))
+                {
+                    string errorMsg = "Attempted to apply an invalid impulse to a limb in Character.BreakJoints (" + diff + "). Limb position: " + limb.SimPosition + ", center of mass: " + centerOfMass + ".";
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Ragdoll.GetCenterOfMass", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    return;
+                }
+
+                if (diff == Vector2.Zero) { continue; }
                 limb.body.ApplyLinearImpulse(diff * 50.0f);
             }
 
@@ -2369,6 +2366,24 @@ namespace Barotrauma
             Submarine = null;
             AnimController.SetPosition(ConvertUnits.ToSimUnits(worldPos), false);
             AnimController.FindHull(worldPos, true);
+        }
+
+        public void SaveInventory(Inventory inventory, XElement parentElement)
+        {
+            var items = Array.FindAll(inventory.Items, i => i != null).Distinct();
+            foreach (Item item in items)
+            {
+                item.Submarine = inventory.Owner.Submarine;
+                var itemElement = item.Save(parentElement);
+                itemElement.Add(new XAttribute("i", Array.IndexOf(inventory.Items, item)));
+
+                foreach (ItemContainer container in item.GetComponents<ItemContainer>())
+                {
+                    XElement childInvElement = new XElement("inventory");
+                    itemElement.Add(childInvElement);
+                    SaveInventory(container.Inventory, childInvElement);
+                }
+            }
         }
     }
 }

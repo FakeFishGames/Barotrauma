@@ -274,6 +274,9 @@ namespace Barotrauma
                 MaxTextLength = ChatMessage.MaxLength,
                 Font = GUI.SmallFont
             };
+            
+            textBox.OnEnterPressed = (tb, userdata) => { GameMain.Client?.EnterChatMessage(tb, userdata); return true; };
+            textBox.OnTextChanged += (tb, userdata) => { GameMain.Client?.TypingChatMessage(tb, userdata); return true; };
 
             //player info panel ------------------------------------------------------------
 
@@ -574,7 +577,6 @@ namespace Barotrauma
             CampaignCharacterDiscarded = false;
 
             textBox.Select();
-
             textBox.OnEnterPressed = GameMain.Client.EnterChatMessage;
             textBox.OnTextChanged += GameMain.Client.TypingChatMessage;
 

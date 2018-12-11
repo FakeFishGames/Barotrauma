@@ -303,6 +303,7 @@ namespace Barotrauma
                         IEnumerable<XAttribute> conditionalAttributes = subElement.Attributes();
                         foreach (XAttribute attribute in conditionalAttributes)
                         {
+                            if (attribute.Name.ToString().ToLowerInvariant() == "targetitemcomponent") { continue; }
                             propertyConditionals.Add(new PropertyConditional(attribute));
                         }
                         break;
@@ -677,15 +678,18 @@ namespace Barotrauma
                             { 
                                 if (entity is Character character)
                                 {
-                                    if (character.Inventory != null)
+                                    if (character.Inventory != null && character.Inventory.Items.Any(it => it == null))
                                     {
                                         Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, character.Inventory);
                                     }
                                 }
                                 else if (entity is Item item)
                                 {
-                                    var inventory = item?.GetComponent<Items.Components.ItemContainer>()?.Inventory;
-                                    Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, inventory);
+                                    var inventory = item?.GetComponent<ItemContainer>()?.Inventory;
+                                    if (inventory != null && inventory.Items.Any(it => it == null))
+                                    {
+                                        Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, inventory);
+                                    }
                                 }
                             }
                             break;
@@ -698,14 +702,14 @@ namespace Barotrauma
                                 }
                                 else if (entity is Item item)
                                 {
-                                    thisInventory = item?.GetComponent<Items.Components.ItemContainer>()?.Inventory;
+                                    thisInventory = item?.GetComponent<ItemContainer>()?.Inventory;
                                 }
                                 if (thisInventory != null)
                                 {
                                     foreach (Item item in thisInventory.Items)
                                     {
                                         if (item == null) continue;
-                                        Inventory containedInventory = item.GetComponent<Items.Components.ItemContainer>()?.Inventory;
+                                        Inventory containedInventory = item.GetComponent<ItemContainer>()?.Inventory;
                                         if (containedInventory == null || !containedInventory.Items.Any(i => i == null)) continue;
                                         Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, containedInventory);
                                         break;

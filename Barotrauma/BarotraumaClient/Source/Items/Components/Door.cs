@@ -15,10 +15,10 @@ namespace Barotrauma.Items.Components
         private Vector2[] GetConvexHullCorners(Rectangle rect)
         {
             Vector2[] corners = new Vector2[4];
-            corners[0] = new Vector2(rect.X, rect.Y - rect.Height);
-            corners[1] = new Vector2(rect.X, rect.Y);
-            corners[2] = new Vector2(rect.Right, rect.Y);
-            corners[3] = new Vector2(rect.Right, rect.Y - rect.Height);
+            corners[0] = new Vector2(rect.X - 1, rect.Y - rect.Height - 1);
+            corners[1] = new Vector2(rect.X - 1, rect.Y + 1);
+            corners[2] = new Vector2(rect.Right + 1, rect.Y + 1);
+            corners[3] = new Vector2(rect.Right + 1, rect.Y - rect.Height - 1);
 
             return corners;
         }

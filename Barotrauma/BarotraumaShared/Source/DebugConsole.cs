@@ -348,7 +348,7 @@ namespace Barotrauma
                     GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray()
                 };
             }));
-
+                       
             commands.Add(new Command("banid", "banid [id]: Kick and ban the player with the specified client ID from the server.", (string[] args) =>
             {
                 if (GameMain.NetworkMember == null || args.Length == 0) return;
@@ -380,10 +380,9 @@ namespace Barotrauma
                     });
                 });
             }));
-
-
+            
             commands.Add(new Command("banip", "banip [ip]: Ban the IP address from the server.", null));
-
+            
             commands.Add(new Command("teleportcharacter|teleport", "teleport [character name]: Teleport the specified character to the position of the cursor. If the name parameter is omitted, the controlled character will be teleported.", (string[] args) =>
             {
                 Character tpCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, false);

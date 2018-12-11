@@ -174,6 +174,9 @@ namespace Barotrauma
                 case "ban":
                 case "banip":
                     return client.HasPermission(ClientPermissions.Ban);
+                case "unban":
+                case "unbanip":
+                    return client.HasPermission(ClientPermissions.Unban);
                 case "netstats":
                 case "help":
                 case "dumpids":
@@ -937,6 +940,19 @@ namespace Barotrauma
                     });
                 }
             );
+
+            commands.Add(new Command("unban", "unban [name]: Unban a specific client.", (string[] args) =>
+            {
+                if (GameMain.Client == null || args.Length == 0) return;
+                string clientName = string.Join(" ", args);
+                GameMain.Client.UnbanPlayer(clientName, "");
+            }));
+
+            commands.Add(new Command("unbanip", "unbanip [ip]: Unban a specific IP.", (string[] args) =>
+            {
+                if (GameMain.Client == null || args.Length == 0) return;
+                GameMain.Client.UnbanPlayer("", args[0]);
+            }));
 
             AssignOnClientExecute(
                 "campaigndestination|setcampaigndestination",

@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
-using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -13,7 +12,6 @@ namespace Barotrauma
                 GameMain.Server.CreateEntityEvent(this, new object[] { new SpawnOrRemove(entity, remove) });
             }
         }
-
 
         public void ServerWrite(Lidgren.Network.NetBuffer message, Client client, object[] extraData = null)
         {

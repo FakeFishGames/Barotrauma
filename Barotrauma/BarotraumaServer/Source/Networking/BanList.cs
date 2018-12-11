@@ -1,11 +1,8 @@
-﻿using Barotrauma.Networking;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Barotrauma.Networking
 {
@@ -155,6 +152,31 @@ namespace Barotrauma.Networking
             Save();
         }
 
+        public void UnbanPlayer(string name)
+        {
+            var player = bannedPlayers.Find(bp => bp.Name == name);
+            if (player == null)
+            {
+                DebugConsole.Log("Could not unban player \"" + name + "\". Matching player not found.");
+            }
+            else
+            {
+                RemoveBan(player);
+            }
+        }
+
+        public void UnbanIP(string ip)
+        {
+            var player = bannedPlayers.Find(bp => bp.IP == ip);
+            if (player == null)
+            {
+                DebugConsole.Log("Could not unban IP \"" + ip + "\". Matching player not found.");
+            }
+            else
+            {
+                RemoveBan(player);
+            }
+        }
 
         private void RemoveBan(BannedPlayer banned)
         {
@@ -221,7 +243,7 @@ namespace Barotrauma.Networking
 
             outMsg.WritePadBits();
             outMsg.WriteVariableInt32(bannedPlayers.Count);
-            for (int i=0;i<bannedPlayers.Count;i++)
+            for (int i = 0; i < bannedPlayers.Count; i++)
             {
                 BannedPlayer bannedPlayer = bannedPlayers[i];
 

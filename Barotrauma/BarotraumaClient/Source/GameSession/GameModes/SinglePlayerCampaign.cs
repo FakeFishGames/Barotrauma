@@ -199,6 +199,15 @@ namespace Barotrauma
                 }
                 Map.ProgressWorld();
 
+                //save and remove all items that are in someone's inventory
+                foreach (Character c in Character.CharacterList)
+                {
+                    if (c.Info == null || c.Inventory == null) { continue; }
+                    var inventoryElement = new XElement("inventory");
+                    c.SaveInventory(c.Inventory, inventoryElement);
+                    c.Info.InventoryData = inventoryElement;
+                    c.Inventory?.DeleteAllItems();
+                }
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
 

@@ -594,7 +594,7 @@ namespace Barotrauma.RuinGeneration
                 }
 
                 //generate props --------------------------------------------------------------
-                var props = room.RoomType.GetPropList();
+                var props = room.RoomType.GetPropList(Rand.RandSync.Server);
                 foreach (RuinEntityConfig prop in props)
                 {
                     if (room.Rect.Width < prop.MinRoomSize.X || room.Rect.Width > prop.MaxRoomSize.X) continue;
@@ -605,7 +605,6 @@ namespace Barotrauma.RuinGeneration
                         CreateEntity(prop, room, parent: null);
                     }
                 }
-
             }
             
             //create connections between all generated entities ---------------------------

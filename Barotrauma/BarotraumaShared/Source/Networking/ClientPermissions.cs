@@ -12,13 +12,14 @@ namespace Barotrauma.Networking
         ManageRound = 0x1,
         Kick = 0x2,
         Ban = 0x4,
-        SelectSub = 0x8,
-        SelectMode = 0x10,
-        ManageCampaign = 0x20,
-        ConsoleCommands = 0x40,
-        ServerLog = 0x80,
-        ManageSettings = 0x100,
-        All = 0x1ff
+        Unban = 0x8,
+        SelectSub = 0x10,
+        SelectMode = 0x20,
+        ManageCampaign = 0x40,
+        ConsoleCommands = 0x80,
+        ServerLog = 0x100,
+        ManageSettings = 0x200,
+        All = 0x3ff
     }
 
     class PermissionPreset
