@@ -53,6 +53,7 @@ namespace Barotrauma
         private bool displayBackgroundColor;
         private bool ragdollResetRequiresForceLoading;
         private bool animationResetRequiresForceLoading;
+        private float cameraFollowSpeed = 20;
 
         private bool isExtrudingJoint;
         private bool isDrawingJoint;
@@ -362,8 +363,22 @@ namespace Barotrauma
                 }
                 GameMain.World.Step((float)deltaTime);
             }
+            // Camera
             Cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
-            Cam.Position = character.WorldPosition;
+            bool movementInput = PlayerInput.KeyDown(InputType.Up) || PlayerInput.KeyDown(InputType.Down) || PlayerInput.KeyDown(InputType.Left) || PlayerInput.KeyDown(InputType.Right);
+            // 0.2f, because we want to allow the user to pan when the character is floating in the water without actively moving
+            if (!isFreezed && (character.AnimController.Collider.LinearVelocity.LengthSquared() > 0.2f || movementInput))
+            {
+                // Follow
+                Cam.Position = Vector2.SmoothStep(Cam.Position, character.WorldPosition, (float)deltaTime * cameraFollowSpeed);
+            }
+            else if (PlayerInput.MidButtonHeld())
+            {
+                // Pan
+                Vector2 moveSpeed = PlayerInput.MouseSpeed * (float)deltaTime * 100.0f / Cam.Zoom;
+                moveSpeed.X = -moveSpeed.X;
+                cam.Position += moveSpeed;
+            }
             MapEntity.mapEntityList.ForEach(e => e.IsHighlighted = false);
             // Update widgets
             jointSelectionWidgets.Values.ForEach(w => w.Update((float)deltaTime));
@@ -1049,6 +1064,7 @@ namespace Barotrauma
             ResetParamsEditor();
             CurrentAnimation.CreateSnapshot();
             RagdollParams.CreateSnapshot();
+            Cam.Position = character.WorldPosition;
         }
 
         private void ClearWidgets()
