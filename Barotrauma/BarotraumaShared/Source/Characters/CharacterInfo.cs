@@ -76,13 +76,33 @@ namespace Barotrauma
         private Vector2[] headSpriteRange;
 
         private int headSpriteId;
+
         private Sprite headSprite;
+        public Sprite HeadSprite
+        {
+            get
+            {
+                if (headSprite == null)
+                {
+                    LoadHeadSprite();
+                }
+                return headSprite;
+            }
+        }
+
         private Sprite portrait;
         public Sprite Portrait
         {
-            get => portrait ?? headSprite;
-            set => portrait = value;
+            get
+            {
+                if (portrait == null)
+                {
+                    LoadHeadSprite();
+                }
+                return portrait;
+            }
         }
+
         private Sprite portraitBackground;
         public Sprite PortraitBackground
         {
@@ -100,6 +120,19 @@ namespace Barotrauma
             }
         }
 
+        private List<WearableSprite> attachmentSprites;
+        public List<WearableSprite> AttachmentsSprites
+        {
+            get
+            {
+                if (attachmentSprites == null)
+                {
+                    LoadAttachmentSprites();
+                }
+                return attachmentSprites;
+            }
+        }
+
         public XElement SourceElement { get; private set; }
 
         public XElement HairElement { get; private set; }
@@ -111,6 +144,8 @@ namespace Barotrauma
         public int BeardIndex { get; set; } = -1;
         public int MoustacheIndex { get; set; } = -1;
         public int FaceAttachmentIndex { get; set; } = -1;
+
+        public bool IsAttachmentsLoaded => HairIndex > -1 && BeardIndex > -1 && MoustacheIndex > -1 && FaceAttachmentIndex > -1;
 
         public readonly string ragdollFileName = string.Empty;
 
@@ -127,15 +162,7 @@ namespace Barotrauma
         public ushort ID;
 
         public XElement InventoryData;
-                
-        public Sprite HeadSprite
-        {
-            get
-            {
-                if (headSprite == null) LoadHeadSprite();
-                return headSprite;
-            }
-        }
+               
 
         public List<string> SpriteTags
         {
@@ -164,6 +191,7 @@ namespace Barotrauma
                 if (headSpriteId != oldId)
                 {
                     headSprite = null;
+                    attachmentSprites = null;
                     LoadHeadAttachments();
                 }
             }
@@ -477,6 +505,8 @@ namespace Barotrauma
                 }
             }
         }
+
+        partial void LoadAttachmentSprites();
         
         private int CalculateSalary()
         {
@@ -697,7 +727,11 @@ namespace Barotrauma
                 portraitBackground.Remove();
                 portraitBackground = null;
             }
-            //TODO: remove head attachment sprites
+            if (attachmentSprites != null)
+            {
+                attachmentSprites.ForEach(a => a.Sprite.Remove());
+                attachmentSprites = null;
+            }
         }
     }
 }
