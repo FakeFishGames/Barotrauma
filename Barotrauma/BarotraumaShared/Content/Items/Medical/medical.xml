@@ -10,8 +10,7 @@
     cargocontaineridentifier="chemicalcrate"
     usecontainedspritecolor="true"
     usecontainedinventoryiconcolor="true"
-    description="In most cases injection is often a much more effective method of administering drugs than taking them orally."
-    canuseonself="true">
+    description="In most cases injection is often a much more effective method of administering drugs than taking them orally.">
     
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="Military" buyprice="70"/>
@@ -56,8 +55,7 @@
     Tags="smallitem,medical"    
     useinhealthinterface="true"
     cargocontaineridentifier="chemicalcrate"
-    description="Basic bandages, useful in the treatment of minor wounds, and burns in particular."
-    canuseonself="true">
+    description="Basic bandages, useful in the treatment of minor wounds, and burns in particular.">
     
     <Price locationtype="Military" buyprice="20"/>
     <Price locationtype="Research" buyprice="20"/>
@@ -84,7 +82,7 @@
       </StatusEffect>
     </MeleeWeapon>
   </Item>
-  <Item name="Plastiseal" identifier="plastiseal" category="Equipment" Tags="smallitem,medical" canuseonself="true" cargocontaineridentifier="chemicalcrate" description="A spray on synthetic skin with hemostatic properties, able to quickly seal most wounds." useinhealthinterface="true">
+  <Item name="Plastiseal" identifier="plastiseal" category="Equipment" Tags="smallitem,medical" cargocontaineridentifier="chemicalcrate" description="A spray on synthetic skin with hemostatic properties, able to quickly seal most wounds." useinhealthinterface="true">
     <Price locationtype="Military" buyprice="20" />
     <Price locationtype="Research" buyprice="20" />
     <Price locationtype="City" buyprice="50" />
@@ -138,7 +136,6 @@
   </Item>
 
   <Item
-    canuseonself="true"
     name="Stabilozine"
     identifier="stabilozine"
     category="Material"
@@ -217,8 +214,7 @@
     containercolor="0.0,0.9,0.1,1.0"
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
-    useinhealthinterface="true"
-    canuseonself="true">
+    useinhealthinterface="true">
     
     <Price locationtype="Research" buyprice="15"/>
     <Price locationtype="Military" buyprice="15"/>
@@ -629,8 +625,7 @@
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
     description="A powerful opiate for treating pain associated with internal injuries, but will cause shortness of breath and eventual dependency with overuse."
-    useinhealthinterface="true"
-    canuseonself="true">
+    useinhealthinterface="true">
 
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="Military" buyprice="80"/>
@@ -678,8 +673,7 @@
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
     description="A powerful opiate for treating pain associated with burns and internal injuries, but will cause significant shortness of breath and eventual dependency with overuse."
-    useinhealthinterface="true"
-    canuseonself="true">
+    useinhealthinterface="true">
 
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="Military" buyprice="80"/>
@@ -730,8 +724,7 @@
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
     useinhealthinterface="true"
-    description="A hemostatic agent that thickens and clots blood rapidly, but will cause internal injuries due to thrombosis."
-    canuseonself="true">
+    description="A hemostatic agent that thickens and clots blood rapidly, but will cause internal injuries due to thrombosis.">
 
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="Military" buyprice="80"/>
@@ -773,8 +766,7 @@
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
     useinhealthinterface="true"
-    description="Plasma for the treatment of bloodloss."
-    canuseonself="true">
+    description="Plasma for the treatment of bloodloss.">
 
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="Military" buyprice="80"/>
@@ -814,8 +806,7 @@
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
     useinhealthinterface="true"
-    description="An opioid antagonist for the treatment of opiate based withdrawal and overdose."
-    canuseonself="true">
+    description="An opioid antagonist for the treatment of opiate based withdrawal and overdose.">
 
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="Military" buyprice="80"/>
