@@ -378,17 +378,14 @@ namespace Barotrauma
                 characterArea.CanBeSelected = false;
             }
 
-            var characterImage = new GUIImage(new RectTransform(new Point(characterArea.Rect.Height, characterArea.Rect.Height), characterArea.RectTransform, Anchor.CenterLeft),
-                character.Info.HeadSprite, scaleToFit: true)
+            var characterImage = new GUICustomComponent(new RectTransform(new Point(characterArea.Rect.Height, characterArea.Rect.Height), characterArea.RectTransform, Anchor.CenterLeft),
+                onDraw: (sb, component) => character.Info.DrawIcon(sb, component.Rect.Center.ToVector2(), targetWidth: component.Rect.Width))
             {
                 CanBeFocused = false,
                 HoverColor = Color.White,
                 SelectedColor = Color.White,
                 ToolTip = characterToolTip
             };
-            // Managed manually in DrawIcon method
-            characterImage.DontDrawImage = true;
-            characterImage.OnPostDraw += sb => character.Info.DrawIcon(sb, characterImage.Rect.Center.ToVector2(), characterImage.Rect.Width);
 
             var characterName = new GUITextBlock(new RectTransform(new Point(characterArea.Rect.Width - characterImage.Rect.Width, characterArea.Rect.Height), characterArea.RectTransform, Anchor.CenterRight),
                 character.Name, textColor: frame.Color, font: GUI.SmallFont, wrap: true)
