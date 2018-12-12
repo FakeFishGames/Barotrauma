@@ -11,7 +11,7 @@ namespace Barotrauma
         public Action<SpriteBatch, GUICustomComponent> OnDraw;
         public Action<float, GUICustomComponent> OnUpdate;
 
-        public GUICustomComponent(RectTransform rectT, Action<SpriteBatch, GUICustomComponent> onDraw, Action<float, GUICustomComponent> onUpdate) : base(null, rectT)
+        public GUICustomComponent(RectTransform rectT, Action<SpriteBatch, GUICustomComponent> onDraw = null, Action<float, GUICustomComponent> onUpdate = null) : base(null, rectT)
         {
             OnDraw = onDraw;
             OnUpdate = onUpdate;
