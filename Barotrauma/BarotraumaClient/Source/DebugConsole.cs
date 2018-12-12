@@ -143,6 +143,9 @@ namespace Barotrauma
                 case "ban":
                 case "banip":
                     return client.HasPermission(ClientPermissions.Ban);
+                case "unban":
+                case "unbanip":
+                    return client.HasPermission(ClientPermissions.Unban);
                 case "netstats":
                 case "help":
                 case "dumpids":
