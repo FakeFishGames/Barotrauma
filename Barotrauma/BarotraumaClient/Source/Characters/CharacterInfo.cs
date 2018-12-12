@@ -13,6 +13,8 @@ namespace Barotrauma
             GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), frame.RectTransform, Anchor.Center), null);
 
             var headImage = new GUIImage(new RectTransform(new Point(30, 30), paddedFrame.RectTransform), HeadSprite);
+            // Managed manually in DrawIcon method
+            headImage.DontDrawImage = true;
             headImage.OnPostDraw += sb => DrawIcon(sb, headImage.Rect.Center.ToVector2(), targetWidth: headImage.Rect.Width);
 
             ScalableFont font = frame.Rect.Width < 280 ? GUI.SmallFont : GUI.Font;
@@ -68,7 +70,9 @@ namespace Barotrauma
             };
 
             GUITextBlock textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(40, 0) }, text, font: GUI.SmallFont);
-            var head = new GUIImage(new RectTransform(new Point(frame.Rect.Height, frame.Rect.Height), frame.RectTransform, Anchor.CenterLeft) { IsFixedSize = false }, HeadSprite);         
+            var head = new GUIImage(new RectTransform(new Point(frame.Rect.Height, frame.Rect.Height), frame.RectTransform, Anchor.CenterLeft) { IsFixedSize = false }, HeadSprite);
+            // Managed manually in DrawIcon method
+            head.DontDrawImage = true;
             head.OnPostDraw += sb => DrawIcon(sb, head.Rect.Center.ToVector2(), head.Rect.Width);
 
             return frame;
