@@ -103,6 +103,14 @@ namespace Barotrauma
         public int UpdateOrder { get; set; }
 
         public Action<GUIComponent> OnAddedToGUIUpdateList;
+        /// <summary>
+        /// Launched at the beginning of the Draw method. Note: if the method is overridden, the event might not be called!
+        /// </summary>
+        public Action<SpriteBatch> OnPreDraw;
+        /// <summary>
+        /// Launched at the end of the Draw method. Note: if the method is overridden, the event might not be called!
+        /// </summary>
+        public Action<SpriteBatch> OnPostDraw;
         
         public enum ComponentState { None, Hover, Pressed, Selected };
 
@@ -414,6 +422,7 @@ namespace Barotrauma
         protected virtual void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
+            OnPreDraw?.Invoke(spriteBatch);
             var rect = Rect;
             
             Color currColor = GetCurrentColor(state);
@@ -439,6 +448,7 @@ namespace Barotrauma
                     rect,
                     flashColor * (float)Math.Sin(flashTimer % flashCycleDuration / flashCycleDuration * MathHelper.Pi * 0.8f));
             }
+            OnPostDraw?.Invoke(spriteBatch);
         }
 
         /// <summary>

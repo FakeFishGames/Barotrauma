@@ -98,7 +98,7 @@ namespace Barotrauma
         protected override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
-
+            OnPreDraw?.Invoke(spriteBatch);
             Color currColor = GetCurrentColor(state);
 
             if (style != null)
@@ -122,6 +122,7 @@ namespace Barotrauma
                 spriteBatch.Draw(sprite.Texture, Rect.Center.ToVector2(), sourceRect, currColor * (currColor.A / 255.0f), Rotation, sprite.size / 2,
                     Scale, SpriteEffects.None, 0.0f);
             }
+            OnPostDraw?.Invoke(spriteBatch);
         }
 
         private void RecalculateScale()
