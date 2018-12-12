@@ -13,8 +13,6 @@ namespace Barotrauma
 
         private AIObjectiveManager objectiveManager;
         
-        private AITarget selectedAiTarget;
-
         private float updateObjectiveTimer;
 
         private bool shouldCrouch;
