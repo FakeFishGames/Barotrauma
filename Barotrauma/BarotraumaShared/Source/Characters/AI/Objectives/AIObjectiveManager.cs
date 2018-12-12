@@ -108,11 +108,15 @@ namespace Barotrauma
                     currentOrder = new AIObjectiveGoTo(orderGiver, character, true)
                     {
                         CloseEnough = 1.5f,
+                        AllowGoingOutside = true,
                         IgnoreIfTargetDead = true
                     };
                     break;
                 case "wait":
-                    currentOrder = new AIObjectiveGoTo(character, character, true);
+                    currentOrder = new AIObjectiveGoTo(character, character, true)
+                    {
+                        AllowGoingOutside = true
+                    };
                     break;
                 case "fixleaks":
                     currentOrder = new AIObjectiveFixLeaks(character);

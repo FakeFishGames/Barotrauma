@@ -822,6 +822,8 @@
   <DialogAffirmative>Yes, sir!</DialogAffirmative>
   <DialogAffirmative>Aye!</DialogAffirmative>
   <DialogAffirmative>Got it!</DialogAffirmative>
+  <DialogAffirmative>Sure thing!</DialogAffirmative>
+  <DialogAffirmative>Copy that.</DialogAffirmative>
   <DialogReactorFuel>Loading more fuel to the reactor!</DialogReactorFuel>
   <DialogReactorTaken>Hey, I'm operating the reactor!</DialogReactorTaken>
   <DialogReactorTaken>Hands off please, I've got this!</DialogReactorTaken>
@@ -831,6 +833,10 @@
   <DialogLoadTurret>Loading ammunition to the [itemname]!</DialogLoadTurret>
   <DialogFireTurret>Firing!</DialogFireTurret>
   <DialogFireTurret>Fire in the hole!</DialogFireTurret>
+  <DialogTurretTargetDead>Enemy down!</DialogTurretTargetDead>
+  <DialogTurretTargetDead>Target down!</DialogTurretTargetDead>
+  <DialogTurretTargetDead>I think I got it!</DialogTurretTargetDead>
+  <DialogTurretTargetDead>Aand it's dead!</DialogTurretTargetDead>
   <DialogChargeBatteries>Charging [itemname] at [rate] %!</DialogChargeBatteries>
   <DialogChargeBatteries>[itemname] now charging at [rate] %!</DialogChargeBatteries>
   <DialogNoBatteries>What batteries?</DialogNoBatteries>
@@ -848,6 +854,8 @@
   <DialogGetDivingGear>I need diving gear!</DialogGetDivingGear>
   <DialogGetOxygenTank>Need to find an oxygen tank!</DialogGetOxygenTank>
   <DialogGetOxygenTank>I need an oxygen tank!</DialogGetOxygenTank>
+  <DialogGetOxygenTank>Where are the oxygen tanks?</DialogGetOxygenTank>
+  <DialogGetOxygenTank>I need oxygen!</DialogGetOxygenTank>
   <DialogLowOxygen>I'm passing out!</DialogLowOxygen>
   <DialogLowOxygen>Can't breathe!</DialogLowOxygen>
   <DialogLowOxygen>*gasping*</DialogLowOxygen>

@@ -87,7 +87,6 @@ namespace Barotrauma
         //flee when the health is below this value
         private float fleeHealthThreshold;
         
-        private AITarget selectedAiTarget;
         private AITargetMemory selectedTargetMemory;
         private float targetValue;
 
@@ -101,11 +100,6 @@ namespace Barotrauma
         private float hearing;
 
         private float colliderSize;
-
-        public AITarget SelectedAiTarget
-        {
-            get { return selectedAiTarget; }
-        }
 
         public bool AttackHumans
         {
