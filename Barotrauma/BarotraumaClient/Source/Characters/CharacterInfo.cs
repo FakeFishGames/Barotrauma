@@ -1,4 +1,8 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -97,6 +101,87 @@ namespace Barotrauma
                         .Replace("[newlevel]", ((int)newLevel).ToString()),
                     Color.Green);
             }
+        }
+
+        partial void LoadAttachmentSprites()
+        {
+            if (attachmentSprites == null)
+            {
+                attachmentSprites = new List<WearableSprite>();
+            }
+            if (!IsAttachmentsLoaded)
+            {
+                LoadHeadAttachments();
+            }
+            HairElement?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.Hair)));
+            BeardElement?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.Beard)));
+            MoustacheElement?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.Moustache)));
+            FaceAttachment?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.FaceAttachment)));
+            // TODO load class specific wearables
+        }
+
+        public void DrawPortrait(SpriteBatch spriteBatch, Vector2 screenPos, float targetWidth)
+        {
+            float backgroundScale = 1;
+            if (PortraitBackground != null)
+            {
+                backgroundScale = targetWidth / PortraitBackground.size.X;
+                PortraitBackground.Draw(spriteBatch, screenPos, scale: backgroundScale);
+            }
+            if (Portrait != null)
+            {
+                // Scale down the head sprite 10%
+                float scale = targetWidth * 0.9f / Portrait.size.X;
+                Vector2 offset = Portrait.size * backgroundScale / 4;
+                Portrait.Draw(spriteBatch, screenPos + offset, scale: scale, spriteEffect: SpriteEffects.FlipHorizontally);
+                if (AttachmentsSprites != null)
+                {
+                    float depthStep = 0.000001f;
+                    foreach (var attachment in AttachmentsSprites)
+                    {
+                        DrawAttachmentSprite(spriteBatch, attachment, Portrait, screenPos + offset, scale, depthStep, SpriteEffects.FlipHorizontally);
+                        depthStep += 0.000001f;
+                    }
+                }
+            }
+        }
+
+        public void DrawIcon(SpriteBatch spritevBatch, Vector2 screenPos, float targetWidth)
+        {
+
+        }
+
+        private void DrawAttachmentSprite(SpriteBatch spriteBatch, WearableSprite attachment, Sprite head, Vector2 drawPos, float scale, float depthStep, SpriteEffects spriteEffects = SpriteEffects.None)
+        {
+            if (attachment.InheritSourceRect)
+            {
+                if (attachment.SheetIndex.HasValue)
+                {
+                    Point location = (head.SourceRect.Location + head.SourceRect.Size) * attachment.SheetIndex.Value;
+                    attachment.Sprite.SourceRect = new Rectangle(location, head.SourceRect.Size);
+                }
+                else
+                {
+                    attachment.Sprite.SourceRect = head.SourceRect;
+                }
+            }
+            Vector2 origin = attachment.Sprite.Origin;
+            if (attachment.InheritOrigin)
+            {
+                origin = head.Origin;
+                attachment.Sprite.Origin = origin;
+            }
+            else
+            {
+                origin = attachment.Sprite.Origin;
+            }
+            float depth = attachment.Sprite.Depth;
+            if (attachment.InheritLimbDepth)
+            {
+                depth = head.Depth - depthStep;
+
+            }
+            attachment.Sprite.Draw(spriteBatch, drawPos, Color.White, origin, rotate: 0, scale: scale, depth: depth, spriteEffect: spriteEffects);
         }
     }
 }

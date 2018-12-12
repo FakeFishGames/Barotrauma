@@ -272,12 +272,12 @@ namespace Barotrauma
             bool drawPortraitToolTip = false;
             if (character.Stun <= 0.1f && !character.IsDead)
             {
-                if (CharacterHealth.OpenHealthWindow == null && character.SelectedCharacter == null && character.Info?.Portrait != null)
+                if (CharacterHealth.OpenHealthWindow == null && character.SelectedCharacter == null)
                 {
-                    character.Info.PortraitBackground?.Draw(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(),
-                        scale: HUDLayoutSettings.PortraitArea.Width / character.Info.PortraitBackground.size.X);
-                    character.Info.Portrait?.Draw(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(),
-                        scale: HUDLayoutSettings.PortraitArea.Width / character.Info.Portrait.size.X);
+                    if (character.Info != null)
+                    {
+                        character.Info.DrawPortrait(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(), targetWidth: HUDLayoutSettings.PortraitArea.Width);
+                    }
                     drawPortraitToolTip = HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition);
                 }
                 if (character.Inventory != null && !character.LockHands)
