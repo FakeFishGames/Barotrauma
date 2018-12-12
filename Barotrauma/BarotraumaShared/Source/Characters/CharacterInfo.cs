@@ -192,6 +192,7 @@ namespace Barotrauma
                 {
                     headSprite = null;
                     attachmentSprites = null;
+                    ResetAttachments();
                     LoadHeadAttachments();
                 }
             }
@@ -713,6 +714,14 @@ namespace Barotrauma
                 }
             }
             return ch;
+        }
+
+        public void ResetAttachments()
+        {
+            HairIndex = -1;
+            BeardIndex = -1;
+            MoustacheIndex = -1;
+            FaceAttachmentIndex = -1;
         }
 
         public void Remove()
