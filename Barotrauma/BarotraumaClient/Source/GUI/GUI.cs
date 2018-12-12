@@ -29,7 +29,6 @@ namespace Barotrauma
         public static readonly string[] rectComponentLabels = { "X", "Y", "W", "H" };
         public static readonly string[] colorComponentLabels = { "R", "G", "B", "A" };
 
-        // TODO: obsolate?
         public static float Scale
         {
             get { return (GameMain.GraphicsWidth / 1920.0f + GameMain.GraphicsHeight / 1080.0f) / 2.0f * GameSettings.HUDScale; }
