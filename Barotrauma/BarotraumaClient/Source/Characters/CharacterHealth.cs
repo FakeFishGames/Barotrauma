@@ -747,22 +747,7 @@ namespace Barotrauma
 
                 bool horizontal = afflictionArea.Width > afflictionArea.Height;
                 int iconSize = horizontal ? afflictionArea.Height : afflictionArea.Width;
-                /*foreach (Pair<Affliction, string> statusIcon in statusIcons)
-                {
-                    Rectangle afflictionIconRect = new Rectangle(pos, new Point(iconSize));
-                    interactArea = Rectangle.Union(interactArea, afflictionIconRect);
-                    if (afflictionIconRect.Contains(PlayerInput.MousePosition))
-                    {
-                        highlightedIcon = statusIcon;
-                        highlightedIconPos = afflictionIconRect.Center.ToVector2();
-                    }
-                    if (horizontal)
-                        pos.X += iconSize + (int)(5 * GUI.Scale);
-                    else
-                        pos.Y += iconSize + (int)(5 * GUI.Scale);
-                }*/
-
-                pos = afflictionArea.Location;
+                
                 foreach (Pair<Affliction, string> statusIcon in statusIcons)
                 {
                     Rectangle afflictionIconRect = new Rectangle(pos, new Point(iconSize));
