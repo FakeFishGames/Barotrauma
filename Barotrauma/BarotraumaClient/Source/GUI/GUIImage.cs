@@ -33,6 +33,12 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Enable if you don't want the sprite to be drawn normally.
+        /// Currently this is a special solution only used for character icons.
+        /// </summary>
+        public bool DontDrawImage { get; set; }
+
         public float Scale
         {
             get;
@@ -100,27 +106,29 @@ namespace Barotrauma
             if (!Visible) return;
             OnPreDraw?.Invoke(spriteBatch);
             Color currColor = GetCurrentColor(state);
-
-            if (style != null)
+            if (!DontDrawImage)
             {
-                foreach (UISprite uiSprite in style.Sprites[state])
+                if (style != null)
                 {
-                    if (Math.Abs(Rotation) > float.Epsilon)
+                    foreach (UISprite uiSprite in style.Sprites[state])
                     {
-                        float scale = Math.Min(Rect.Width / uiSprite.Sprite.size.X, Rect.Height / uiSprite.Sprite.size.Y);
-                        spriteBatch.Draw(uiSprite.Sprite.Texture, Rect.Center.ToVector2(), uiSprite.Sprite.SourceRect, currColor * (currColor.A / 255.0f), Rotation, uiSprite.Sprite.size / 2,
-                            Scale * scale, SpriteEffects.None, 0.0f);
-                    }
-                    else
-                    {
-                        uiSprite.Draw(spriteBatch, Rect, currColor * (currColor.A / 255.0f), SpriteEffects.None);
+                        if (Math.Abs(Rotation) > float.Epsilon)
+                        {
+                            float scale = Math.Min(Rect.Width / uiSprite.Sprite.size.X, Rect.Height / uiSprite.Sprite.size.Y);
+                            spriteBatch.Draw(uiSprite.Sprite.Texture, Rect.Center.ToVector2(), uiSprite.Sprite.SourceRect, currColor * (currColor.A / 255.0f), Rotation, uiSprite.Sprite.size / 2,
+                                Scale * scale, SpriteEffects.None, 0.0f);
+                        }
+                        else
+                        {
+                            uiSprite.Draw(spriteBatch, Rect, currColor * (currColor.A / 255.0f), SpriteEffects.None);
+                        }
                     }
                 }
-            }
-            else if (sprite?.Texture != null)
-            {
-                spriteBatch.Draw(sprite.Texture, Rect.Center.ToVector2(), sourceRect, currColor * (currColor.A / 255.0f), Rotation, sprite.size / 2,
-                    Scale, SpriteEffects.None, 0.0f);
+                else if (sprite?.Texture != null)
+                {
+                    spriteBatch.Draw(sprite.Texture, Rect.Center.ToVector2(), sourceRect, currColor * (currColor.A / 255.0f), Rotation, sprite.size / 2,
+                        Scale, SpriteEffects.None, 0.0f);
+                }
             }
             OnPostDraw?.Invoke(spriteBatch);
         }
