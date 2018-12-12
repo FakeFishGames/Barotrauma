@@ -779,8 +779,7 @@ namespace Barotrauma
         {
             if (statusEffectLists == null) return;
 
-            List<StatusEffect> statusEffects;
-            if (!statusEffectLists.TryGetValue(type, out statusEffects)) return;
+            if (!statusEffectLists.TryGetValue(type, out List<StatusEffect> statusEffects)) return;
 
             bool broken = condition <= 0.0f;
             foreach (StatusEffect effect in statusEffects)
@@ -1387,6 +1386,45 @@ namespace Barotrauma
             }
         }
 
+        public void ApplyTreatment(Character user, Character character, Limb targetLimb)
+        {
+            //can't apply treatment to dead characters
+            if (character.IsDead) return;
+            if (!UseInHealthInterface) return;
+
+#if CLIENT
+            if (GameMain.Client != null)
+            {
+                GameMain.Client.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Treatment, character.ID, targetLimb });
+                return;
+            }
+#endif
+
+            bool remove = false;
+            foreach (ItemComponent ic in components)
+            {
+                if (!ic.HasRequiredContainedItems(user == Character.Controlled)) continue;
+
+                bool success = Rand.Range(0.0f, 1.0f) < ic.DegreeOfSuccess(Character.Controlled);
+                ActionType actionType = success ? ActionType.OnUse : ActionType.OnFailure;
+
+#if CLIENT
+                ic.PlaySound(actionType, user.WorldPosition, user);
+#endif
+                ic.WasUsed = true;
+                ic.ApplyStatusEffects(actionType, 1.0f, character, targetLimb);
+
+                GameMain.Server?.CreateEntityEvent(this, new object[]
+                {
+                    NetEntityEvent.Type.ApplyStatusEffect, actionType, ic, character.ID, targetLimb
+                });
+
+                if (ic.DeleteOnUse) remove = true;
+            }
+
+            if (remove) { Spawner?.AddToRemoveQueue(this); }
+        }
+
         public List<ColoredText> GetHUDTexts(Character character)
         {
             List<ColoredText> texts = new List<ColoredText>();
@@ -1542,17 +1580,37 @@ namespace Barotrauma
                 case NetEntityEvent.Type.Status:
                     msg.Write(condition);
                     break;
+                case NetEntityEvent.Type.Treatment:
+                    {
+                        ItemComponent targetComponent = (ItemComponent)extraData[1];
+                        ActionType actionType = (ActionType)extraData[2];
+                        ushort targetID = (ushort)extraData[3];
+                        Limb targetLimb = (Limb)extraData[4];
+
+                        Character targetCharacter = FindEntityByID(targetID) as Character;
+                        byte targetLimbIndex = targetLimb != null && targetCharacter != null ? (byte)Array.IndexOf(targetCharacter.AnimController.Limbs, targetLimb) : (byte)255;
+
+                        msg.Write((byte)components.IndexOf(targetComponent));
+                        msg.WriteRangedInteger(0, Enum.GetValues(typeof(ActionType)).Length - 1, (int)actionType);
+                        msg.Write(targetID);
+                        msg.Write(targetLimbIndex);
+                    }
+                    break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
-                    ActionType actionType = (ActionType)extraData[1];
-                    ushort targetID = extraData.Length > 2 ? (ushort)extraData[2] : (ushort)0;
-                    Limb targetLimb = extraData.Length > 3 ? (Limb)extraData[3] : null;
+                    {
+                        ActionType actionType = (ActionType)extraData[1];
+                        ItemComponent targetComponent = extraData.Length > 2 ? (ItemComponent)extraData[2] : null;
+                        ushort targetID = extraData.Length > 3 ? (ushort)extraData[3] : (ushort)0;
+                        Limb targetLimb = extraData.Length > 4 ? (Limb)extraData[4] : null;
 
-                    Character targetCharacter = FindEntityByID(targetID) as Character;
-                    byte targetLimbIndex = targetLimb != null && targetCharacter != null ? (byte)Array.IndexOf(targetCharacter.AnimController.Limbs, targetLimb) : (byte)255;
+                        Character targetCharacter = FindEntityByID(targetID) as Character;
+                        byte targetLimbIndex = targetLimb != null && targetCharacter != null ? (byte)Array.IndexOf(targetCharacter.AnimController.Limbs, targetLimb) : (byte)255;
 
-                    msg.WriteRangedInteger(0, Enum.GetValues(typeof(ActionType)).Length - 1, (int)actionType);
-                    msg.Write(targetID);
-                    msg.Write(targetLimbIndex);
+                        msg.WriteRangedInteger(0, Enum.GetValues(typeof(ActionType)).Length - 1, (int)actionType);
+                        msg.Write((byte)(targetComponent == null ? 255 : components.IndexOf(targetComponent)));
+                        msg.Write(targetID);
+                        msg.Write(targetLimbIndex);
+                    }
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
                     try
@@ -1598,7 +1656,7 @@ namespace Barotrauma
                     int containerIndex = msg.ReadRangedInteger(0, components.Count - 1);
                     (components[containerIndex] as ItemContainer).Inventory.ServerRead(type, msg, c);
                     break;
-                case NetEntityEvent.Type.ApplyStatusEffect:
+                case NetEntityEvent.Type.Treatment:
                     if (c.Character == null || !c.Character.CanInteractWith(this)) return;
                     
                     UInt16 characterID = msg.ReadUInt16();
@@ -1609,8 +1667,7 @@ namespace Barotrauma
                     if (targetCharacter != c.Character && c.Character.SelectedCharacter != targetCharacter) break;
 
                     Limb targetLimb = limbIndex < targetCharacter.AnimController.Limbs.Length ? targetCharacter.AnimController.Limbs[limbIndex] : null;
-                    ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter, targetLimb);
-
+                    
                     if (ContainedItems == null || ContainedItems.All(i => i == null))
                     {
                         GameServer.Log(c.Character.LogName + " used item " + Name, ServerLog.MessageType.ItemInteraction);
@@ -1618,11 +1675,11 @@ namespace Barotrauma
                     else
                     {
                         GameServer.Log(
-                            c.Character.LogName + " used item " + Name + " (contained items: " + string.Join(", ", Array.FindAll(ContainedItems, i => i != null).Select(i => i.Name)) + ")", 
+                            c.Character.LogName + " used item " + Name + " (contained items: " + string.Join(", ", Array.FindAll(ContainedItems, i => i != null).Select(i => i.Name)) + ")",
                             ServerLog.MessageType.ItemInteraction);
                     }
 
-                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, c.Character.ID });
+                    ApplyTreatment(c.Character, targetCharacter, targetLimb);
                     
                     break;
                 case NetEntityEvent.Type.ChangeProperty:

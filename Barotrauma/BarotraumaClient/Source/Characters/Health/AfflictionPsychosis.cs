@@ -140,6 +140,11 @@ namespace Barotrauma
 
             foreach (FakeFireSource fakeFireSource in fakeFireSources)
             {
+                if (fakeFireSource.Hull.Surface > fakeFireSource.Hull.Rect.Y - fakeFireSource.Hull.Rect.Height + fakeFireSource.Position.Y)
+                {
+                    fakeFireSource.LifeTime -= deltaTime * 10.0f;
+                }
+
                 fakeFireSource.LifeTime -= deltaTime;
                 float growAmount = deltaTime * 5.0f;
                 fakeFireSource.Size.X += growAmount;

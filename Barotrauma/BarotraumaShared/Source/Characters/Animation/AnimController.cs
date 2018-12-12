@@ -76,11 +76,11 @@ namespace Barotrauma
             {
                 if (InWater || !CanWalk)
                 {
-                    return TargetMovement.LengthSquared() > SwimSlowParams.MovementSpeed * SwimSlowParams.MovementSpeed;
+                    return TargetMovement.Length() > (SwimSlowParams.MovementSpeed + SwimFastParams.MovementSpeed) / 2.0f;
                 }
                 else
                 {
-                    return Math.Abs(TargetMovement.X) > WalkParams.MovementSpeed;
+                    return Math.Abs(TargetMovement.X) > (WalkParams.MovementSpeed + RunParams.MovementSpeed) / 2.0f;
                 }
             }
         }

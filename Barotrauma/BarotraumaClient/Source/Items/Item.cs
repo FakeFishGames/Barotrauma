@@ -670,12 +670,17 @@ namespace Barotrauma
             switch (eventType)
             {
                 case NetEntityEvent.Type.ComponentState:
-                    int componentIndex = msg.ReadRangedInteger(0, components.Count - 1);
-                    (components[componentIndex] as IServerSerializable).ClientRead(type, msg, sendingTime);
+                    {
+                        int componentIndex = msg.ReadRangedInteger(0, components.Count - 1);
+                        (components[componentIndex] as IServerSerializable).ClientRead(type, msg, sendingTime);
+                    }
                     break;
+                    
                 case NetEntityEvent.Type.InventoryState:
-                    int containerIndex = msg.ReadRangedInteger(0, components.Count - 1);
-                    (components[containerIndex] as ItemContainer).Inventory.ClientRead(type, msg, sendingTime);
+                    { 
+                        int containerIndex = msg.ReadRangedInteger(0, components.Count - 1);
+                        (components[containerIndex] as ItemContainer).Inventory.ClientRead(type, msg, sendingTime);
+                    }
                     break;
                 case NetEntityEvent.Type.Status:
                     float prevCondition = condition;
@@ -690,15 +695,25 @@ namespace Barotrauma
                     }
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
-                    ActionType actionType = (ActionType)msg.ReadRangedInteger(0, Enum.GetValues(typeof(ActionType)).Length - 1);
-                    ushort targetID = msg.ReadUInt16();
-                    byte targetLimbID = msg.ReadByte();
+                    {
+                        ActionType actionType = (ActionType)msg.ReadRangedInteger(0, Enum.GetValues(typeof(ActionType)).Length - 1);
+                        byte componentIndex = msg.ReadByte();
+                        ushort targetID = msg.ReadUInt16();
+                        byte targetLimbID = msg.ReadByte();
 
-                    Character target = FindEntityByID(targetID) as Character;
-                    Limb targetLimb = targetLimbID < target.AnimController.Limbs.Length ? target.AnimController.Limbs[targetLimbID] : null;
-                    //ignore deltatime - using an item with the useOnSelf buttons is instantaneous
-                    ApplyStatusEffects(actionType, 1.0f, target, targetLimb, true);
-
+                        ItemComponent targetComponent = componentIndex < components.Count ? components[componentIndex] : null;
+                        Character target = FindEntityByID(targetID) as Character;
+                        Limb targetLimb = target != null && targetLimbID < target.AnimController.Limbs.Length ? target.AnimController.Limbs[targetLimbID] : null;
+                        
+                        if (targetComponent == null)
+                        {
+                            ApplyStatusEffects(actionType, 1.0f, target, targetLimb, true);
+                        }
+                        else
+                        {
+                            targetComponent.ApplyStatusEffects(actionType, 1.0f, target, targetLimb);
+                        }                        
+                    }
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
                     ReadPropertyChange(msg, false);
@@ -729,7 +744,7 @@ namespace Barotrauma
                     msg.WriteRangedInteger(0, components.Count - 1, containerIndex);
                     (components[containerIndex] as ItemContainer).Inventory.ClientWrite(msg, extraData);
                     break;
-                case NetEntityEvent.Type.ApplyStatusEffect:
+                case NetEntityEvent.Type.Treatment:
                     UInt16 characterID = (UInt16)extraData[1];
                     Limb targetLimb = (Limb)extraData[2];
 

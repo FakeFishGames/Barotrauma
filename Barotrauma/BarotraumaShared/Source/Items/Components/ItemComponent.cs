@@ -585,8 +585,7 @@ namespace Barotrauma.Items.Components
         {
             if (statusEffectLists == null) return;
 
-            List<StatusEffect> statusEffects;
-            if (!statusEffectLists.TryGetValue(type, out statusEffects)) return;
+            if (!statusEffectLists.TryGetValue(type, out List<StatusEffect> statusEffects)) return;
 
             bool broken = item.Condition <= 0.0f;
             foreach (StatusEffect effect in statusEffects)
