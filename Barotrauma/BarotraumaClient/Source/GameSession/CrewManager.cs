@@ -386,6 +386,7 @@ namespace Barotrauma
                 SelectedColor = Color.White,
                 ToolTip = characterToolTip
             };
+            characterImage.OnPostDraw += sb => character.Info.DrawIcon(sb, characterImage.Rect.Center.ToVector2(), characterImage.Rect.Width);
 
             var characterName = new GUITextBlock(new RectTransform(new Point(characterArea.Rect.Width - characterImage.Rect.Width, characterArea.Rect.Height), characterArea.RectTransform, Anchor.CenterRight),
                 character.Name, textColor: frame.Color, font: GUI.SmallFont, wrap: true)
