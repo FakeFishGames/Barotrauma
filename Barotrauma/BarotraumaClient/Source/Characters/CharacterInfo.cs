@@ -146,9 +146,22 @@ namespace Barotrauma
             }
         }
 
-        public void DrawIcon(SpriteBatch spritevBatch, Vector2 screenPos, float targetWidth)
+        public void DrawIcon(SpriteBatch spriteBatch, Vector2 screenPos, float targetWidth)
         {
-
+            if (HeadSprite != null)
+            {
+                float scale = targetWidth / HeadSprite.size.X;
+                HeadSprite.Draw(spriteBatch, screenPos, scale: scale);
+                if (AttachmentsSprites != null)
+                {
+                    float depthStep = 0.000001f;
+                    foreach (var attachment in AttachmentsSprites)
+                    {
+                        DrawAttachmentSprite(spriteBatch, attachment, HeadSprite, screenPos, scale, depthStep);
+                        depthStep += 0.000001f;
+                    }
+                }
+            }
         }
 
         private void DrawAttachmentSprite(SpriteBatch spriteBatch, WearableSprite attachment, Sprite head, Vector2 drawPos, float scale, float depthStep, SpriteEffects spriteEffects = SpriteEffects.None)
