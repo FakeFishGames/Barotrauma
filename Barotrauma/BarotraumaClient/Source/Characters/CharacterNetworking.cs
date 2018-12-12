@@ -20,7 +20,7 @@ namespace Barotrauma
                         msg.WriteRangedInteger(0, 3, 0);
                         Inventory.ClientWrite(msg, extraData);
                         break;
-                    case NetEntityEvent.Type.CPR:
+                    case NetEntityEvent.Type.Treatment:
                         msg.WriteRangedInteger(0, 3, 1);
                         msg.Write(AnimController.Anim == AnimController.Animation.CPR);
                         break;
