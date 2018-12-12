@@ -411,16 +411,36 @@
   </flame>
 
   <steam
-    startsizemin="0.4,0.4" startsizemax="0.5,0.5"
-    sizechangemin="0.25,0.25" sizechangemax="0.3,0.3"
-    startrotationmin ="0.0" startrotationmax="360"
-    startcolor="255,255,255,127" endcolor="255,255,255,0"
-    growtime ="0.2"
-    lifetime="3"
-    usecollision="true"
-    collisionradius="30.0"
-    velocitychange="0.0, 2.5">
-    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="384,254,128,128"/>
+    lifetime="2.5"
+    startdelaymin="0"
+    startdelaymax="0"
+    angularvelocitymin="-10"
+    angularvelocitymax="90"
+    startrotationmin="0"
+    startrotationmax="360"
+    rotatetodirection="False"
+    drag="0"
+    waterdrag="0"
+    velocitychange="0,1"
+    velocitychangewater="0,1"
+    collisionradius="100"
+    usecollision="True"
+    deleteoncollision="False"
+    friction="0.0"
+    restitution="0.2"
+    startsizemin="0.5,0.5"
+    startsizemax="0.6,0.6"
+    sizechangemin="0.0,0.0"
+    sizechangemax="0.1,0.1"
+    growtime="0"
+    startcolor="255,255,255,100"
+    endcolor="255,255,255,80"
+    drawtarget="Air"
+    blendstate="AlphaBlend"
+    animduration="2.5"
+    loopanim="False">
+    <animatedsprite texture="Content/Particles/SmokeParticleSheet.png" sourcerect="0,0,1024,1024" columns="5" rows="5"/>
+    <animatedsprite texture="Content/Particles/SmokeParticleSheet.png" sourcerect="0,0,1024,1024" columns="5" rows="5"/>
   </steam>
 
   <smoke
@@ -892,19 +912,36 @@
     loopanim="True">
     <animatedsprite texture="Content/Particles/Smoke.png" sourcerect="0,0,4096,4096" columns="8" rows="8" origin="0.5,0.5"/>
   </ammotrailwater>
-  
+
   <extinguisher
-    startsizemin="1.2,1.2" startsizemax="1.5,1.5"
-    sizechangemin="1.5,1.5" sizechangemax="2.0,2.0"
-    startrotationmin ="0.0" startrotationmax="360"    
-    startcolor="255,255,153,120" endcolor="255,255,255,0"
-    usecollision="true"
-    growtime ="0.3"
     lifetime="1.2"
-    collisionradius="30.0"
+    startdelaymin="0"
+    startdelaymax="0"
+    angularvelocitymin="0"
+    angularvelocitymax="0"
+    startrotationmin="0"
+    startrotationmax="360"
+    rotatetodirection="False"
+    drag="0"
+    waterdrag="0"
+    velocitychange="0,-0.5"
+    velocitychangewater="0,-0.5"
+    collisionradius="30"
+    usecollision="True"
+    deleteoncollision="False"
     friction="0.01"
     restitution="0.1"
-    velocitychange="0.0, -0.5">
+    startsizemin="0.6,0.6"
+    startsizemax="1,1"
+    sizechangemin="1.1,1.1"
+    sizechangemax="1.5,1.5"
+    growtime="0.3"
+    startcolor="255,255,153,120"
+    endcolor="255,255,255,0"
+    drawtarget="Air"
+    blendstate="AlphaBlend"
+    animduration="1"
+    loopanim="True">
     <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="384,254,128,128"/>
   </extinguisher>
 
