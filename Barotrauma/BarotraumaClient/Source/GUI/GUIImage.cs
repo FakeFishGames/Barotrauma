@@ -33,12 +33,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Enable if you don't want the sprite to be drawn normally.
-        /// Currently this is a special solution only used for character icons.
-        /// </summary>
-        public bool DontDrawImage { get; set; }
-
         public float Scale
         {
             get;
@@ -104,33 +98,28 @@ namespace Barotrauma
         protected override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
-            OnPreDraw?.Invoke(spriteBatch);
             Color currColor = GetCurrentColor(state);
-            if (!DontDrawImage)
+            if (style != null)
             {
-                if (style != null)
+                foreach (UISprite uiSprite in style.Sprites[state])
                 {
-                    foreach (UISprite uiSprite in style.Sprites[state])
+                    if (Math.Abs(Rotation) > float.Epsilon)
                     {
-                        if (Math.Abs(Rotation) > float.Epsilon)
-                        {
-                            float scale = Math.Min(Rect.Width / uiSprite.Sprite.size.X, Rect.Height / uiSprite.Sprite.size.Y);
-                            spriteBatch.Draw(uiSprite.Sprite.Texture, Rect.Center.ToVector2(), uiSprite.Sprite.SourceRect, currColor * (currColor.A / 255.0f), Rotation, uiSprite.Sprite.size / 2,
-                                Scale * scale, SpriteEffects.None, 0.0f);
-                        }
-                        else
-                        {
-                            uiSprite.Draw(spriteBatch, Rect, currColor * (currColor.A / 255.0f), SpriteEffects.None);
-                        }
+                        float scale = Math.Min(Rect.Width / uiSprite.Sprite.size.X, Rect.Height / uiSprite.Sprite.size.Y);
+                        spriteBatch.Draw(uiSprite.Sprite.Texture, Rect.Center.ToVector2(), uiSprite.Sprite.SourceRect, currColor * (currColor.A / 255.0f), Rotation, uiSprite.Sprite.size / 2,
+                            Scale * scale, SpriteEffects.None, 0.0f);
+                    }
+                    else
+                    {
+                        uiSprite.Draw(spriteBatch, Rect, currColor * (currColor.A / 255.0f), SpriteEffects.None);
                     }
                 }
-                else if (sprite?.Texture != null)
-                {
-                    spriteBatch.Draw(sprite.Texture, Rect.Center.ToVector2(), sourceRect, currColor * (currColor.A / 255.0f), Rotation, sprite.size / 2,
-                        Scale, SpriteEffects.None, 0.0f);
-                }
             }
-            OnPostDraw?.Invoke(spriteBatch);
+            else if (sprite?.Texture != null)
+            {
+                spriteBatch.Draw(sprite.Texture, Rect.Center.ToVector2(), sourceRect, currColor * (currColor.A / 255.0f), Rotation, sprite.size / 2,
+                    Scale, SpriteEffects.None, 0.0f);
+            }
         }
 
         private void RecalculateScale()
