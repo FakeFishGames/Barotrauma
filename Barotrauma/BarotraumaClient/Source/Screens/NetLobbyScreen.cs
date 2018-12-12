@@ -55,7 +55,6 @@ namespace Barotrauma
         private GUITickBox playYourself;
         
         private GUIFrame playerInfoContainer;
-        private GUIImage playerHeadSprite;
         private GUIButton jobInfoFrame;
         private GUIButton playerFrame;
 
@@ -747,10 +746,8 @@ namespace Barotrauma
                 }.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipHorizontally);
             }
 
-            playerHeadSprite = new GUIImage(new RectTransform(new Vector2(0.3f, 1.0f), headContainer.RectTransform), sprite: null, scaleToFit: true)
-            {
-                UserData = "playerhead"
-            };
+            new GUICustomComponent(new RectTransform(new Vector2(0.3f, 1.0f), headContainer.RectTransform), 
+                onDraw: (sb, component) => characterInfo.DrawIcon(sb, component.Rect.Center.ToVector2(), component.Rect.Width));
 
             if (allowEditing)
             {
@@ -870,9 +867,7 @@ namespace Barotrauma
                         return true;
                     }
                 };
-            }
-
-            UpdatePlayerHead(characterInfo);            
+            }          
         }
         
         public void SetPlayYourself(bool playYourself)
@@ -1503,12 +1498,6 @@ namespace Barotrauma
             if ((prevSize == 1.0f && chatBox.BarScroll == 0.0f) || (prevSize < 1.0f && chatBox.BarScroll == 1.0f)) chatBox.BarScroll = 1.0f;
         }
 
-        private void UpdatePlayerHead(CharacterInfo characterInfo)
-        {
-            playerHeadSprite.Sprite = characterInfo.HeadSprite;
-            // TODO: update wearables
-        }
-
         private bool ToggleHead(GUIButton button, object userData)
         {
             if (GameMain.NetworkMember.CharacterInfo == null) return true;
@@ -1520,7 +1509,7 @@ namespace Barotrauma
             GameMain.Config.CharacterBeardIndex = GameMain.NetworkMember.CharacterInfo.BeardIndex;
             GameMain.Config.CharacterMoustacheIndex = GameMain.NetworkMember.CharacterInfo.MoustacheIndex;
             GameMain.Config.CharacterFaceAttachmentIndex = GameMain.NetworkMember.CharacterInfo.FaceAttachmentIndex;
-            UpdatePlayerHead(GameMain.NetworkMember.CharacterInfo);
+            GameMain.NetworkMember.CharacterInfo.LoadHeadSprite();
             GameMain.Config.Save();
             return true;
         }
@@ -1530,7 +1519,6 @@ namespace Barotrauma
             Gender gender = (Gender)obj;
             GameMain.NetworkMember.CharacterInfo.Gender = gender;
             GameMain.Config.CharacterGender = GameMain.NetworkMember.CharacterInfo.Gender;
-            UpdatePlayerHead(GameMain.NetworkMember.CharacterInfo);
             GameMain.Config.Save();
             return true;
         }
