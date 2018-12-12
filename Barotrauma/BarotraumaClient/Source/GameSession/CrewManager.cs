@@ -1042,16 +1042,20 @@ namespace Barotrauma
                             hoverRect.Inflate((int)(30 * GUI.Scale), (int)(0 * GUI.Scale));
                         }
 
-                        bool toggleOpen = hoverRect.Contains(PlayerInput.MousePosition);
+                        bool toggleOpen = 
+                            characterListBox.Content.Rect.Contains(PlayerInput.MousePosition) && 
+                            hoverRect.Contains(PlayerInput.MousePosition);
+
                         //order target frame open on this character, check if we're giving any of the orders in wrongOrderList
                         if (!toggleOpen && orderTargetFrame != null && orderTargetFrame.UserData == child.UserData)
                         {
-                            toggleOpen = wrongOrderList.Content.Children.Any(c => 
-                                c.UserData is Order order && 
+                            toggleOpen = wrongOrderList.Content.Children.Any(c =>
+                                c.UserData is Order order &&
                                 orderTargetFrame.Children.Any(c2 => c2.UserData == c.UserData));
                         }
 
-                        wrongOrderList.BarScroll += toggleOpen ? -deltaTime * 5.0f : deltaTime * 5.0f;
+                        float scroll = MathHelper.Clamp(wrongOrderList.BarScroll + (toggleOpen ? -deltaTime * 5.0f : deltaTime * 5.0f), 0.0f, 1.0f);
+                        if (Math.Abs(wrongOrderList.BarScroll - scroll) > 0.01f) { wrongOrderList.BarScroll = scroll; }
                     }
                 }
             }
