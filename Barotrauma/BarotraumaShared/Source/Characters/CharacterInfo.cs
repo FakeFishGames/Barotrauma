@@ -313,7 +313,10 @@ namespace Barotrauma
             personalityTrait = NPCPersonalityTrait.GetRandom(name + HeadSpriteId);
             
             Salary = CalculateSalary();
-            this.ragdollFileName = ragdollFileName;
+            if (ragdollFileName != null)
+            {
+                this.ragdollFileName = ragdollFileName;
+            }
         }
 
         public CharacterInfo(XElement element, string ragdollFileName = null)
@@ -349,7 +352,10 @@ namespace Barotrauma
                 Job = new Job(subElement);
                 break;
             }
-            this.ragdollFileName = ragdollFileName;
+            if (ragdollFileName != null)
+            {
+                this.ragdollFileName = ragdollFileName;
+            }
         }
 
         public void LoadHeadSprite()
