@@ -381,13 +381,18 @@ namespace Barotrauma.Lights
 
         public void RefreshWorldPositions()
         {
-            if (parentEntity == null || parentEntity.Submarine == null) return;
             for (int i = 0; i < 4; i++)
             {
-                vertices[i].WorldPos = vertices[i].Pos + parentEntity.Submarine.DrawPosition;
-                segments[i].Start.WorldPos = segments[i].Start.Pos + parentEntity.Submarine.DrawPosition;
-                segments[i].End.WorldPos = segments[i].End.Pos + parentEntity.Submarine.DrawPosition;
-
+                vertices[i].WorldPos = vertices[i].Pos;
+                segments[i].Start.WorldPos = segments[i].Start.Pos;
+                segments[i].End.WorldPos = segments[i].End.Pos;
+            }
+            if (parentEntity == null || parentEntity.Submarine == null) { return; }
+            for (int i = 0; i < 4; i++)
+            {
+                vertices[i].WorldPos += parentEntity.Submarine.DrawPosition;
+                segments[i].Start.WorldPos += parentEntity.Submarine.DrawPosition;
+                segments[i].End.WorldPos += parentEntity.Submarine.DrawPosition;
             }
         }
 
