@@ -72,17 +72,7 @@ namespace Barotrauma
             CurrentLayout = Layout.Default;
             SetSlotPositions(layout);
         }
-
-        private bool UseItemOnSelf(GUIButton button, object obj)
-        {
-            if (!(obj is int)) return false;
-
-            int slotIndex = (int)obj;
-
-            return UseItemOnSelf(slotIndex);
-        }
-
-
+        
         protected override void PutItem(Item item, int i, Character user, bool removeItem = true, bool createNetworkEvent = true)
         {
             base.PutItem(item, i, user, removeItem, createNetworkEvent);

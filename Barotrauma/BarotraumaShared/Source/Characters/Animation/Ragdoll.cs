@@ -1496,9 +1496,8 @@ namespace Barotrauma
                     {
                         character.SelectCharacter((Character)character.MemState[0].Interact);
                     }
-                    else if (character.MemState[0].Interact is Item)
+                    else if (character.MemState[0].Interact is Item newSelectedConstruction)
                     {
-                        var newSelectedConstruction = (Item)character.MemState[0].Interact;
                         if (newSelectedConstruction != null && character.SelectedConstruction != newSelectedConstruction)
                         {
                             foreach (var ic in newSelectedConstruction.components)

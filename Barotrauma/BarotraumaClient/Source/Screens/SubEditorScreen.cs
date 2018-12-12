@@ -92,7 +92,7 @@ namespace Barotrauma
         {
             float buoyancyVol = 0.0f;
             float selectedVol = 0.0f;
-            float neutralPercentage = 0.07f;
+            float neutralPercentage = SubmarineBody.NeutralBallastPercentage;
             Hull.hullList.ForEach(h =>
             {
                 buoyancyVol += h.Volume;
@@ -107,7 +107,7 @@ namespace Barotrauma
             {
                 if (buoyancyVol / selectedVol < 1.0f)
                 {
-                    retVal += " (" + TextManager.Get("OptimalBallastLevel").Replace("[value]", (buoyancyVol / selectedVol).ToString("0.00")) + ")";
+                    retVal += " (" + TextManager.Get("OptimalBallastLevel").Replace("[value]", (buoyancyVol / selectedVol).ToString("0.000")) + ")";
                 }
                 else
                 {

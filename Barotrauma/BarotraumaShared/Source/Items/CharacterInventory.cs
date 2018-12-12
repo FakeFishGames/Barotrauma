@@ -86,40 +86,7 @@ namespace Barotrauma
         }
 
         partial void InitProjSpecific(XElement element);
-
-        private bool UseItemOnSelf(int slotIndex)
-        {
-            if (Items[slotIndex] == null) return false;
-
-#if CLIENT
-            if (GameMain.Client != null)
-            {
-                GameMain.Client.CreateEntityEvent(Items[slotIndex], new object[] { NetEntityEvent.Type.ApplyStatusEffect });
-                return true;
-            }
-#endif
-
-            if (GameMain.Server != null)
-            {
-                GameMain.Server.CreateEntityEvent(Items[slotIndex], new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, character.ID });
-            }
-
-            Items[slotIndex].ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
-
-            //item may have been removed by a status effect
-            if (Items[slotIndex] == null) return true;
-
-            foreach (ItemComponent ic in Items[slotIndex].components)
-            {
-                if (ic.DeleteOnUse)
-                {
-                    Entity.Spawner.AddToRemoveQueue(Items[slotIndex]);
-                }
-            }
-            
-            return true;
-        }
-        
+                
         public int FindLimbSlot(InvSlotType limbSlot)
         {
             for (int i = 0; i < Items.Length; i++)

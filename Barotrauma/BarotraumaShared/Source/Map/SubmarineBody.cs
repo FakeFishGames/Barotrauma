@@ -16,6 +16,8 @@ namespace Barotrauma
 {
     class SubmarineBody
     {
+        public const float NeutralBallastPercentage = 0.07f;
+
         const float HorizontalDrag = 0.01f;
         const float VerticalDrag = 0.05f;
         const float MaxDrag = 0.1f;
@@ -376,10 +378,8 @@ namespace Barotrauma
             }
 
             float waterPercentage = volume <= 0.0f ? 0.0f : waterVolume / volume;
-
-            float neutralPercentage = 0.07f;
-
-            float buoyancy = neutralPercentage - waterPercentage;
+            
+            float buoyancy = NeutralBallastPercentage - waterPercentage;
 
             if (buoyancy > 0.0f)
                 buoyancy *= 2.0f;
