@@ -245,7 +245,7 @@ namespace Barotrauma
 
                     if (GameMain.Client != null)
                     {
-                        GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.CPR });
+                        GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Treatment });
                     }
 
                     return true;
@@ -1048,37 +1048,10 @@ namespace Barotrauma
                     return true;
                 }
             }
-            
-            Limb targetLimb = character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex);
-#if CLIENT
-            if (GameMain.Client != null)
-            {
-                GameMain.Client.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, character.ID, targetLimb });
-                return true;
-            }
-#endif
-            if (GameMain.Server != null)
-            {
-                GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, character.ID, targetLimb });
-            }
-                        
-            bool remove = false;
-            foreach (ItemComponent ic in item.components)
-            {
-                if (!ic.HasRequiredContainedItems(character == Character.Controlled)) continue;
-                
-#if CLIENT
-                ic.PlaySound(ActionType.OnUse, character.WorldPosition, character);
-#endif
-                ic.WasUsed = true;
-                ic.ApplyStatusEffects(ActionType.OnUse, 1.0f, character, targetLimb);
-                if (ic.DeleteOnUse) remove = true;
-            }
 
-            if (remove)
-            {
-                Entity.Spawner?.AddToRemoveQueue(item);
-            }
+            Limb targetLimb = character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex);
+
+            item.ApplyTreatment(Character.Controlled, character, targetLimb);
 
             dropItemAnimTimer = dropItemAnimDuration;
             droppedItem = item;

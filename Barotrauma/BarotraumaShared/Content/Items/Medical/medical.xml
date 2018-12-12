@@ -24,10 +24,17 @@
 
     <MeleeWeapon slots="Any,RightHand,LeftHand"
               aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <RequiredSkill identifier="medical" level="40"/>
       <StatusEffect type="OnUse" target="Contained, Limb, Character" Condition="-33.4" disabledeltatime="true" >
         <sound file="Content/Items/Medical/syringe.ogg" range="500"/>
         <RequiredItem identifier="chem" type="Contained"/>
         <Use/>
+      </StatusEffect>
+      <!-- If usage fails due to a low medical skill, reduce the condition of the contained med and make the target bleed slightly-->
+      <StatusEffect type="OnFailure" target="Limb, Contained" Condition="-50" disabledeltatime="true" >
+        <sound file="Content/Items/Medical/syringe.ogg" range="500"/>
+        <Affliction identifier="bleeding" amount="5"/>
+        <RequiredItem identifier="chem" type="Contained"/>
       </StatusEffect>
     </MeleeWeapon>
 
@@ -638,12 +645,21 @@
     <Body width="8" height="16" density="20"/>
 
     <ItemComponent>
+      <RequiredSkill identifier="medical" level="40"/>
       <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true"/>
+      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true"/>
       <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="10">
         <ReduceAffliction identifier="damage" amount="1"/>
         <Affliction identifier="oxygenlow" amount="3"/>
         <Affliction identifier="opiateaddiction" amount="0.15"/>
         <Affliction identifier="opiateoverdose" amount="0.15"/>
+        <ReduceAffliction identifier="opiatewithdrawal" amount="3.0"/>
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnFailure" target="Limb, This" duration="10">
+        <ReduceAffliction identifier="damage" amount="0.5"/>
+        <Affliction identifier="oxygenlow" amount="3"/>
+        <Affliction identifier="opiateaddiction" amount="0.3"/>
+        <Affliction identifier="opiateoverdose" amount="0.3"/>
         <ReduceAffliction identifier="opiatewithdrawal" amount="3.0"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
