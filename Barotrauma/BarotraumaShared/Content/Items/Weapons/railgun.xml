@@ -94,6 +94,22 @@
     tags="railgunequipment,railgunammosource"
     category="Machine"
     linkable="true"
+    allowedlinks="railgun"
+    scale="0.26">
+
+    <Sprite texture ="railgunsingleloader.png" depth="0.8" sourcerect="0,0,225,636"/>
+
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="110,-270" iteminterval="0,0" itemrotation="90" canbeselected="true"
+                   autointeractwithcontained="true">
+      <Containable identifiers="railgunshell,nuclearshell,ancientweapon"/>
+    </ItemContainer>
+  </Item>
+  
+  <Item
+    name="Railgun Single Loader"
+    tags="railgunequipment,railgunammosource"
+    category="Legacy"
+    linkable="true"
     allowedlinks="railgun">
 
     <Sprite texture ="railgunetc2.png" depth="0.8" sourcerect="131,2,46,128"/>
@@ -141,6 +157,49 @@
     identifier="railgunshell"
     tags="railgunequipment"
     category="Misc"
+    sonarsize="5"
+    scale="0.26">
+
+    <Price locationtype="Military" buyprice="150"/>
+    <Price locationtype="City" buyprice="180"/>
+    <Price locationtype="Outpost" buyprice="250"/>
+
+    <Deconstruct time="10">
+      <Item identifier="steelbar"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="polycarbonatebar"/>
+    </Deconstruct>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,128,64,64"/>
+    <Sprite texture="railgunshell.png" sourcerect="0,0,428,80" depth ="0.55"/>
+
+    <Body width="87" height="18" density="30"/>
+
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
+
+    <Projectile characterusable="false" launchimpulse="80.0">
+      <Attack structuredamage="200" severlimbsprobability="1.0">
+        <Affliction identifier="internaldamage" strength="100"/>
+        <Affliction identifier="bleeding" strength="10"/>
+      </Attack>
+      <StatusEffect type="OnActive" target="This">
+        <ParticleEmitter particle="bubbles" anglemin="0" anglemax="360" particleamount="10" velocitymin="0" velocitymax="50" scalemin="2" scalemax="5"/>
+      </StatusEffect>
+
+      <StatusEffect type="OnImpact" target="Contained">
+        <Use/>
+      </StatusEffect>
+    </Projectile>
+
+    <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
+      <Containable identifiers="smallitem"/>
+    </ItemContainer>    
+  </Item>
+
+  <Item
+    name="Railgun Shell"
+    tags="railgunequipment"
+    category="Legacy"
     sonarsize="5">
 
     <Price locationtype="Military" buyprice="150"/>
@@ -176,7 +235,7 @@
 
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
       <Containable identifiers="smallitem"/>
-    </ItemContainer>    
+    </ItemContainer>
   </Item>
 
   <Item
