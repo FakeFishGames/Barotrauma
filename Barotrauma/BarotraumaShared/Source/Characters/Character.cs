@@ -1079,7 +1079,10 @@ namespace Barotrauma
             else if (IsKeyDown(InputType.Attack))
             {
                 AttackContext currentContext = GetAttackContext();
-                var attackLimb = AnimController.Limbs.FirstOrDefault(l => l.attack != null && l.attack.IsValidContext(currentContext));
+                var attackLimb = AnimController.Limbs
+                    .Where(l => l.attack != null && l.attack.IsValidContext(currentContext))
+                    .OrderBy(l => Vector2.DistanceSquared(ConvertUnits.ToDisplayUnits(l.SimPosition), cursorPosition))
+                    .FirstOrDefault();
 
                 if (attackLimb != null)
                 {
