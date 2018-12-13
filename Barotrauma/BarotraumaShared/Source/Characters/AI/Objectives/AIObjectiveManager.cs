@@ -128,7 +128,7 @@ namespace Barotrauma
                     currentOrder = new AIObjectiveRescueAll(character);
                     break;
                 case "repairsystems":
-                    currentOrder = new AIObjectiveRepairItems(character);
+                    currentOrder = new AIObjectiveRepairItems(character) { RequireAdequateSkills = option != "all" };
                     break;
                 case "pumpwater":
                     currentOrder = new AIObjectivePumpWater(character, option);
