@@ -92,6 +92,13 @@ namespace Barotrauma
             }
             else
             {
+                List<Vector2> convexHull = GenerateConvexHull();
+                HullVertices = convexHull;
+                for (int i = 0; i < convexHull.Count; i++)
+                {
+                    convexHull[i] = ConvertUnits.ToSimUnits(convexHull[i]);
+                }
+
                 Vector2 minExtents = Vector2.Zero, maxExtents = Vector2.Zero;
 
                 farseerBody = BodyFactory.CreateBody(GameMain.World, this);
