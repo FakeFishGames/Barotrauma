@@ -594,11 +594,9 @@ namespace Barotrauma.RuinGeneration
                 }
 
                 //generate props --------------------------------------------------------------
-                var props = room.RoomType.GetPropList(Rand.RandSync.Server);
+                var props = room.RoomType.GetPropList(room, Rand.RandSync.Server);
                 foreach (RuinEntityConfig prop in props)
                 {
-                    if (room.Rect.Width < prop.MinRoomSize.X || room.Rect.Width > prop.MaxRoomSize.X) continue;
-                    if (room.Rect.Height < prop.MinRoomSize.Y || room.Rect.Height > prop.MaxRoomSize.Y) continue;
                     int amount = Rand.Range(prop.MinAmount, prop.MaxAmount + 1, Rand.RandSync.Server);
                     for (int i = 0; i < amount; i++)
                     {
