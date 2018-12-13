@@ -436,6 +436,7 @@ namespace Barotrauma
                     case "decorativesprite":
                     case "price":
                     case "levelcommonness":
+                    case "suitabletreatment":
                         break;
                     case "staticbody":
                         StaticBodyConfig = subElement;
