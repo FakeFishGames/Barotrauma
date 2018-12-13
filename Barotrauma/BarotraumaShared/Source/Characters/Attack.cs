@@ -13,6 +13,13 @@ namespace Barotrauma
         Contact
     }
 
+    public enum AttackContext
+    {
+        NotDefined,
+        Water,
+        Ground
+    }
+
     struct AttackResult
     {
         public readonly float Damage;
@@ -50,7 +57,10 @@ namespace Barotrauma
     {
         public readonly XElement SourceElement;
 
-        [Serialize(HitDetection.Distance, false)]
+        [Serialize(AttackContext.NotDefined, true), Editable]
+        public AttackContext Context { get; private set; }
+
+        [Serialize(HitDetection.Distance, true), Editable]
         public HitDetection HitDetectionType { get; private set; }
 
         [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
@@ -345,5 +355,7 @@ namespace Barotrauma
         }
 
         partial void DamageParticles(float deltaTime, Vector2 worldPosition);
+
+        public bool IsValidContext(AttackContext context) => Context == context || Context == AttackContext.NotDefined;
     }
 }

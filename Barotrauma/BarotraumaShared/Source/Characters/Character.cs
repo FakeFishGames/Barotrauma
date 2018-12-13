@@ -1078,7 +1078,8 @@ namespace Barotrauma
             }
             else if (IsKeyDown(InputType.Attack))
             {
-                var attackLimb = AnimController.Limbs.FirstOrDefault(l => l.attack != null);
+                AttackContext currentContext = GetAttackContext();
+                var attackLimb = AnimController.Limbs.FirstOrDefault(l => l.attack != null && l.attack.IsValidContext(currentContext));
 
                 if (attackLimb != null)
                 {
@@ -2428,5 +2429,7 @@ namespace Barotrauma
                 }
             }
         }
+
+        public AttackContext GetAttackContext() => AnimController.CurrentAnimationParams.IsGroundedAnimation ? AttackContext.Ground : AttackContext.Water;
     }
 }
