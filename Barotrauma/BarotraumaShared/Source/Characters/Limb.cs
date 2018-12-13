@@ -588,6 +588,7 @@ namespace Barotrauma
 
         public void LoadParams()
         {
+            attack?.Deserialize();
             pullJoint.LocalAnchorA = ConvertUnits.ToSimUnits(limbParams.PullPos * Scale);
             LoadParamsProjSpecific();
         }

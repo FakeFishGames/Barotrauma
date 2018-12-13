@@ -48,6 +48,8 @@ namespace Barotrauma
     
     partial class Attack : ISerializableEntity
     {
+        public readonly XElement SourceElement;
+
         [Serialize(HitDetection.Distance, false)]
         public HitDetection HitDetectionType { get; private set; }
 
@@ -190,7 +192,8 @@ namespace Barotrauma
 
         public Attack(XElement element, string parentDebugName)
         {
-            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            SourceElement = element;
+            Deserialize();
 
             if (element.Attribute("damage") != null ||
                 element.Attribute("bluntdamage") != null ||
@@ -245,6 +248,18 @@ namespace Barotrauma
             }
         }
         partial void InitProjSpecific(XElement element);
+
+        public void Serialize()
+        {
+            if (SourceElement == null) { return; }
+            SerializableProperty.SerializeProperties(this, SourceElement, true);
+        }
+
+        public void Deserialize()
+        {
+            if (SourceElement == null) { return; }
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, SourceElement);
+        }
         
         public AttackResult DoDamage(Character attacker, IDamageable target, Vector2 worldPosition, float deltaTime, bool playSound = true)
         {

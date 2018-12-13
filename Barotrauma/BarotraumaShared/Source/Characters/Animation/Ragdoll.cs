@@ -420,6 +420,7 @@ namespace Barotrauma
         public void SaveRagdoll(string fileNameWithoutExtension = null)
         {
             SaveJoints();
+            SaveLimbs();
             RagdollParams.Save(fileNameWithoutExtension);
         }
 
@@ -440,6 +441,14 @@ namespace Barotrauma
         public void SaveJoints()
         {
             LimbJoints.ForEach(j => j.SaveParams());
+        }
+
+        /// <summary>
+        /// Handles custom serialization per limb. Currently only the attacks need to be serialized, since they cannot be stored as SubRagdollParams (because they shouldn't be decoupled with ragdolls).
+        /// </summary>
+        public void SaveLimbs()
+        {
+            Limbs.ForEach(l => l.attack?.Serialize());
         }
 
         /// <summary>
