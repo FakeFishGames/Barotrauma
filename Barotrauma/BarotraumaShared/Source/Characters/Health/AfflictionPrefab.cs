@@ -245,8 +245,7 @@ namespace Barotrauma
             SelfCauseOfDeathDescription = TextManager.Get("AfflictionCauseOfDeathSelf." + Identifier, true) ?? element.GetAttributeString("selfcauseofdeathdescription", "");
 
             AchievementOnRemoved = element.GetAttributeString("achievementonremoved", "");
-
-
+            
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -257,20 +256,6 @@ namespace Barotrauma
                         break;
                     case "effect":
                         effects.Add(new Effect(subElement, Name));
-                        break;
-                    case "suitabletreatment":
-                        if (subElement.Attribute("name") != null)
-                        {
-                            DebugConsole.ThrowError("Error in Affliction prefab \"" + Name + "\" - suitable treatments should be defined using item identifiers, not item names.");
-                        }
-
-                        string treatmentIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
-                        if (treatmentSuitability.ContainsKey(treatmentIdentifier))
-                        {
-                            DebugConsole.ThrowError("Error in affliction \"" + Name + "\" - treatment \"" + treatmentIdentifier + "\" defined multiple times");
-                            continue;
-                        }
-                        treatmentSuitability.Add(treatmentIdentifier, subElement.GetAttributeFloat("suitability", 0.0f));
                         break;
                 }
             }
