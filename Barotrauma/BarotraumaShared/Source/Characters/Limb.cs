@@ -556,7 +556,7 @@ namespace Barotrauma
             Vector2 diff = attackPosition - SimPosition;
             if (diff.LengthSquared() < 0.00001f) return wasHit;
             
-            if (attack.ForceOnLimbIndices != null)
+            if (attack.ForceOnLimbIndices != null && attack.ForceOnLimbIndices.Count > 0)
             {
                 foreach (int limbIndex in attack.ForceOnLimbIndices)
                 {
