@@ -710,6 +710,15 @@ namespace Barotrauma.RuinGeneration
             {
                 size = itemPrefab.Size;
             }
+            else if (entityConfig.Prefab is ItemAssemblyPrefab assemblyPrefab)
+            {
+                int minX = assemblyPrefab.Entities.Min(e => e.Second.X);
+                int minY = assemblyPrefab.Entities.Min(e => e.Second.Y - e.Second.Height);
+                int maxX = assemblyPrefab.Entities.Max(e => e.Second.Right);
+                int maxY = assemblyPrefab.Entities.Max(e => e.Second.Y);
+
+                size = new Vector2(maxX - minX, maxY - minY);
+            }
 
             int leftWallThickness = 32, rightWallThickness = 32;
             int topWallThickness = 32, bottomWallThickness = 32;
