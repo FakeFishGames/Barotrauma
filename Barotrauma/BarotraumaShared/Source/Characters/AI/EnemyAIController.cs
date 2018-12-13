@@ -209,9 +209,10 @@ namespace Barotrauma
             bool canBreakDoors = false;
             if (GetTargetingPriority("room")?.Priority > 0.0f)
             {
+                AttackContext currentContext = Character.GetAttackContext();
                 foreach (Limb limb in Character.AnimController.Limbs)
                 {
-                    if (limb.attack != null && limb.attack.StructureDamage > 0.0f)
+                    if (limb.attack != null && limb.attack.IsValidContext(currentContext) && limb.attack.StructureDamage > 0.0f)
                     {
                         canBreakDoors = true;
                         break;
@@ -536,9 +537,11 @@ namespace Barotrauma
             //check if any of the limbs is close enough to attack the target
             if (attackingLimb == null)
             {
+                AttackContext currentContext = Character.GetAttackContext();
                 foreach (Limb limb in Character.AnimController.Limbs)
                 {
                     if (limb.attack == null) continue;
+                    if (!limb.attack.IsValidContext(currentContext)) { continue; }
                     attackLimb = limb;
 
                     if (ConvertUnits.ToDisplayUnits(Vector2.Distance(limb.SimPosition, attackSimPosition)) > limb.attack.Range) continue;

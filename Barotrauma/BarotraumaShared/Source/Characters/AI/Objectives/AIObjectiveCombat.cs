@@ -22,19 +22,9 @@ namespace Barotrauma
 
         private float coolDownTimer;
 
-        private readonly float enemyStrength;
-
-        public AIObjectiveCombat(Character character, Character enemy)
-            : base(character, "")
+        public AIObjectiveCombat(Character character, Character enemy) : base(character, "")
         {
             this.enemy = enemy;
-
-            foreach (Limb limb in enemy.AnimController.Limbs)
-            {
-                if (limb.attack == null) continue;
-                enemyStrength += limb.attack.GetTotalDamage(false);
-            }
-
             coolDownTimer = CoolDown;
         }
 
@@ -156,7 +146,7 @@ namespace Barotrauma
             //clamp the strength to the health of this character
             //(it doesn't make a difference whether the enemy does 200 or 600 damage, it's one hit kill anyway)
 
-            float enemyDanger = Math.Min(Math.Max(enemyStrength, MaxEnemyDamage), character.Health) + enemy.Health / 10.0f;
+            float enemyDanger = Math.Min(Math.Max(CalculateEnemyStrength(), MaxEnemyDamage), character.Health) + enemy.Health / 10.0f;
 
             EnemyAIController enemyAI = enemy.AIController as EnemyAIController;
             if (enemyAI != null)
@@ -173,6 +163,19 @@ namespace Barotrauma
             if (objective == null) return false;
 
             return objective.enemy == enemy;
+        }
+
+        private float CalculateEnemyStrength()
+        {
+            float enemyStrength = 0;
+            AttackContext currentContext = character.GetAttackContext();
+            foreach (Limb limb in enemy.AnimController.Limbs)
+            {
+                if (limb.attack == null) continue;
+                if (!limb.attack.IsValidContext(currentContext)) { continue; }
+                enemyStrength += limb.attack.GetTotalDamage(false);
+            }
+            return enemyStrength;
         }
     }
 }
