@@ -125,7 +125,10 @@ namespace Barotrauma
                 {
                     RagdollParams.ClearHistory();
                     CurrentAnimation.ClearHistory();
-                    character.Remove();
+                    if (!character.Removed)
+                    {
+                        character.Remove();
+                    }
                     character = null;
                 }
                 GameMain.World.ProcessChanges();
@@ -1012,7 +1015,10 @@ namespace Barotrauma
                 dontFollowCursor = character.dontFollowCursor;
                 RagdollParams.ClearHistory();
                 CurrentAnimation.ClearHistory();
-                character.Remove();
+                if (!character.Removed)
+                {
+                    character.Remove();
+                }
                 character = null;
             }
             if (configFile == Character.HumanConfigFile && selectedJob != null)
