@@ -1351,7 +1351,13 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\periscope.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\railgunsingleloader.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\railgunsingleloader_vertical.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\railgunsingleloader_horizontal.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\railgunshellrack.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\railgunshell.png">
