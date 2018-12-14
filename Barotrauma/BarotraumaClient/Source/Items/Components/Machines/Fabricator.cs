@@ -24,19 +24,21 @@ namespace Barotrauma.Items.Components
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
             {
                 Stretch = true,
-                RelativeSpacing = 0.05f
+                RelativeSpacing = 0.02f
             };
 
-            itemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.2f), paddedFrame.RectTransform))
+            itemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), paddedFrame.RectTransform))
             {
                 OnSelected = SelectItem
             };
 
-            inputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.7f, 1.0f), paddedFrame.RectTransform), style: null);
+            inputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.2f), paddedFrame.RectTransform), style: null);
 
-            selectedItemFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.5f), paddedFrame.RectTransform), style: "InnerFrame");
+            var outputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.3f), paddedFrame.RectTransform), isHorizontal: true);
 
-            outputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.2f, 1.0f), paddedFrame.RectTransform), style: null);
+            selectedItemFrame = new GUIFrame(new RectTransform(new Vector2(0.75f, 1.0f), outputArea.RectTransform), style: "InnerFrame");
+
+            outputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), outputArea.RectTransform), style: null);
             
             foreach (FabricableItem fi in fabricableItems)
             {
@@ -54,12 +56,13 @@ namespace Barotrauma.Items.Components
                     ToolTip = fi.TargetItem.Description
                 };
 
-                if (fi.TargetItem.sprite != null)
+                var itemIcon = fi.TargetItem.InventoryIcon ?? fi.TargetItem.sprite;
+                if (itemIcon != null)
                 {
                     GUIImage img = new GUIImage(new RectTransform(new Point(40, 40), frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(3, 0) },
-                        fi.TargetItem.sprite, scaleToFit: true)
+                        itemIcon, scaleToFit: true)
                     {
-                        Color = fi.TargetItem.SpriteColor,
+                        Color = fi.TargetItem.InventoryIconColor,
                         ToolTip = fi.TargetItem.Description
                     };
                 }
@@ -84,13 +87,14 @@ namespace Barotrauma.Items.Components
             selectedItemFrame.ClearChildren();
             
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), selectedItemFrame.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.05f) }) { RelativeSpacing = 0.03f, Stretch = true };
-
-            if (targetItem.TargetItem.sprite != null)
+            
+            var itemIcon = targetItem.TargetItem.InventoryIcon ?? targetItem.TargetItem.sprite;
+            if (itemIcon != null)
             {
                 GUIImage img = new GUIImage(new RectTransform(new Point(40, 40), paddedFrame.RectTransform),
-                    targetItem.TargetItem.sprite, scaleToFit: true)
+                    itemIcon, scaleToFit: true)
                 {
-                    Color = targetItem.TargetItem.SpriteColor
+                    Color = targetItem.TargetItem.InventoryIconColor
                 };
             }
             new GUITextBlock(new RectTransform(new Point(paddedFrame.Rect.Width - 70, 40), paddedFrame.RectTransform) { AbsoluteOffset = new Point(60, 0) },

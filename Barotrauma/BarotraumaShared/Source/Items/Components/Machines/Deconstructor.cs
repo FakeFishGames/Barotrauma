@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Lidgren.Network;
+using System;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -8,7 +9,9 @@ namespace Barotrauma.Items.Components
     partial class Deconstructor : Powered, IServerSerializable, IClientSerializable
     {
         private float progressTimer;
-        private ItemContainer container;
+        private float progressState;
+
+        private ItemContainer inputContainer, outputContainer;
         
         public Deconstructor(Item item, XElement element) 
             : base(item, element)
@@ -18,15 +21,41 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element);
 
+        public override void OnItemLoaded()
+        {
+            var containers = item.GetComponents<ItemContainer>().ToList();
+            if (containers.Count < 2)
+            {
+                DebugConsole.ThrowError("Error in Deconstructor.Update: Deconstructors must have two ItemContainer components!");
+                return;
+            }
+
+            inputContainer = containers[0];
+            outputContainer = containers[1];
+
+            OnItemLoadedProjSpecific();
+        }
+
+        partial void OnItemLoadedProjSpecific();
+
         public override void Update(float deltaTime, Camera cam)
         {
-            if (container == null || container.Inventory.Items.All(i => i == null))
+            if (inputContainer == null || inputContainer.Inventory.Items.All(i => i == null))
             {
                 SetActive(false);
                 return;
             }
 
             if (voltage < minVoltage) return;
+
+            //move items towards the last slot in the inventory if there's free slots
+            for (int i = inputContainer.Inventory.Capacity - 2; i >= 0; i--)
+            {
+                if (inputContainer.Inventory.Items[i] != null && inputContainer.Inventory.Items[i + 1] == null)
+                {
+                    inputContainer.Inventory.TryPutItem(inputContainer.Inventory.Items[i], i + 1, allowSwapping: false, allowCombine: false, user: null, createNetworkEvent: true);
+                }
+            }
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
@@ -35,19 +64,12 @@ namespace Barotrauma.Items.Components
             progressTimer += deltaTime * voltage;
             Voltage -= deltaTime * 10.0f;
 
-            var targetItem = container.Inventory.Items.FirstOrDefault(i => i != null);
-#if CLIENT
-            progressBar.BarSize = System.Math.Min(progressTimer / targetItem.Prefab.DeconstructTime, 1.0f);
-#endif
+            var targetItem = inputContainer.Inventory.Items.LastOrDefault(i => i != null);
+            if (targetItem == null) { return; }
+
+            progressState = Math.Min(progressTimer / targetItem.Prefab.DeconstructTime, 1.0f);
             if (progressTimer > targetItem.Prefab.DeconstructTime)
             {
-                var containers = item.GetComponents<ItemContainer>().ToList();
-                if (containers.Count < 2)
-                {
-                    DebugConsole.ThrowError("Error in Deconstructor.Update: Deconstructors must have two ItemContainer components!");
-                    return;
-                }
-
                 foreach (DeconstructItem deconstructProduct in targetItem.Prefab.DeconstructItems)
                 {
                     float percentageHealth = targetItem.Condition / targetItem.Prefab.Health;
@@ -65,39 +87,29 @@ namespace Barotrauma.Items.Components
                         itemPrefab.Health * deconstructProduct.OutCondition;
                     
                     //container full, drop the items outside the deconstructor
-                    if (containers[1].Inventory.Items.All(i => i != null))
+                    if (outputContainer.Inventory.Items.All(i => i != null))
                     {
                         Entity.Spawner.AddToSpawnQueue(itemPrefab, item.Position, item.Submarine, condition);
                     }
                     else
                     {
-                        Entity.Spawner.AddToSpawnQueue(itemPrefab, containers[1].Inventory, condition);
+                        Entity.Spawner.AddToSpawnQueue(itemPrefab, outputContainer.Inventory, condition);
                     }
                 }
 
-                container.Inventory.RemoveItem(targetItem);
+                inputContainer.Inventory.RemoveItem(targetItem);
                 Entity.Spawner.AddToRemoveQueue(targetItem);
 
-                if (container.Inventory.Items.Any(i => i != null))
+                if (inputContainer.Inventory.Items.Any(i => i != null))
                 {
                     progressTimer = 0.0f;
-#if CLIENT
-                    progressBar.BarSize = 0.0f;
-#endif
                 }
             }
         }
 
         private void SetActive(bool active, Character user = null)
         {
-            container = item.GetComponent<ItemContainer>();
-            if (container == null)
-            {
-                DebugConsole.ThrowError("Error in Deconstructor.Activate: Deconstructors must have two ItemContainer components");
-                return;
-            }
-
-            if (container.Inventory.Items.All(i => i == null)) active = false;
+            if (inputContainer.Inventory.Items.All(i => i == null)) active = false;
 
             IsActive = active;
 
@@ -106,22 +118,21 @@ namespace Barotrauma.Items.Components
                 GameServer.Log(user.LogName + (IsActive ? " activated " : " deactivated ") + item.Name, ServerLog.MessageType.ItemInteraction);
             }
 
+            if (!IsActive) { progressState = 0.0f; }
+
 #if CLIENT
             if (!IsActive)
             {
-                progressBar.BarSize = 0.0f;
                 progressTimer = 0.0f;
-
-                activateButton.Text = "Deconstruct";
+                activateButton.Text = TextManager.Get("DeconstructorDeconstruct");
             }
             else
             {
-
-                activateButton.Text = "Cancel";
+                activateButton.Text = TextManager.Get("DeconstructorCancel");
             }
 #endif
 
-            container.Inventory.Locked = IsActive;            
+            inputContainer.Inventory.Locked = IsActive;            
         }
         
         public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
