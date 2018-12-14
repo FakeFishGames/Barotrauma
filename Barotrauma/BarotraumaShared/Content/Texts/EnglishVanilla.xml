@@ -676,6 +676,7 @@
   <FabricatorRequiredSkills>Skills required to calibrate</FabricatorRequiredSkills>
   <FabricatorCreate>Create</FabricatorCreate>
   <DeconstuctorDeconstruct>Deconstruct</DeconstuctorDeconstruct>
+  <DeconstuctorCancel>Cancel</DeconstuctorCancel>
   <Lvl>Lvl</Lvl>
   <MiniMapHullBreach>Hull breach</MiniMapHullBreach>
   <MiniMapWaterLevel>Water level</MiniMapWaterLevel>

@@ -37,7 +37,7 @@ namespace Barotrauma
             get { return parent; }
             set
             {
-                if (parent == value) { return; }
+                if (parent == value || value == this) { return; }
                 // Remove the child from the old parent
                 RemoveFromHierarchy(displayErrors: false);
                 parent = value;
