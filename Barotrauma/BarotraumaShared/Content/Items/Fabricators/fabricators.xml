@@ -273,7 +273,7 @@
     <BrokenSprite texture="Content/Items/Fabricators/FF_medicalFabricator.png" sourcerect="278,0,139,199" depth="0.8" maxcondition="0" />
 
     <Fabricator canbeselected = "true" powerconsumption="100.0">
-      <GuiFrame relativesize="0.4,0.5" minsize="600,400" maxsize="900,800" anchor="Center" style="ItemUI" absoluteoffset="10,0"/>
+      <GuiFrame relativesize="0.35,0.5" minsize="400,400" maxsize="800,800" anchor="Center" style="ItemUI" absoluteoffset="10,0"/>
 
       <sound file="Content/Items/Fabricators/fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="600" loop="false"/>
