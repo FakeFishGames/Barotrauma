@@ -261,7 +261,7 @@ namespace Barotrauma
 
             if (GameMain.DebugDraw)
             {
-                if (Bodies != null && prefab.BodyRotation != 0.0f)
+                if (Bodies != null)
                 {
                     for (int i = 0; i < Bodies.Count; i++)
                     {
