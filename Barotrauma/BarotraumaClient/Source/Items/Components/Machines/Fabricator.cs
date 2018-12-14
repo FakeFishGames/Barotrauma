@@ -78,6 +78,14 @@ namespace Barotrauma.Items.Components
                     };
                 }
             }
+
+            activateButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.07f), paddedFrame.RectTransform),
+                TextManager.Get("FabricatorCreate"))
+            {
+                OnClicked = StartButtonClicked,
+                UserData = selectedItem,
+                Enabled = false
+            };
         }
 
         partial void OnItemLoadedProjSpecific()
@@ -181,7 +189,7 @@ namespace Barotrauma.Items.Components
 
             selectedItemFrame.ClearChildren();
             
-            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.85f), selectedItemFrame.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.05f) }) { RelativeSpacing = 0.03f, Stretch = true };
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), selectedItemFrame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.03f, Stretch = true };
 
             /*var itemIcon = selectedItem.TargetItem.InventoryIcon ?? selectedItem.TargetItem.sprite;
             if (itemIcon != null)
@@ -192,7 +200,7 @@ namespace Barotrauma.Items.Components
                     Color = selectedItem.TargetItem.InventoryIconColor
                 };
             }*/
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
+            var nameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
                 selectedItem.TargetItem.Name, textAlignment: Alignment.CenterLeft);
 
             if (!string.IsNullOrWhiteSpace(selectedItem.TargetItem.Description))
@@ -200,6 +208,13 @@ namespace Barotrauma.Items.Components
                 var description = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
                     selectedItem.TargetItem.Description,
                     font: GUI.SmallFont, wrap: true);
+                if (description.Rect.Height > paddedFrame.Rect.Height * 0.4f)
+                {
+                    description.Wrap = false;
+                    description.Text = description.WrappedText.Split('\n').First()+"...";
+                    nameBlock.ToolTip = description.ToolTip = selectedItem.TargetItem.Description;
+                    description.RectTransform.MaxSize = new Point(int.MaxValue, (int)description.Font.MeasureString(description.Text).Y);
+                }
             }
             
             List<Skill> inadequateSkills = new List<Skill>();
@@ -211,32 +226,32 @@ namespace Barotrauma.Items.Components
             if (selectedItem.RequiredSkills.Any())
             {
                 string text = TextManager.Get("FabricatorRequiredSkills") + ":\n";
-                foreach (Skill skill in inadequateSkills)
+                foreach (Skill skill in selectedItem.RequiredSkills)
                 {
                     text += "   - " + TextManager.Get("SkillName." + skill.Identifier) + " " + TextManager.Get("Lvl").ToLower() + " " + skill.Level;
-                    if (skill != inadequateSkills.Last()) { text += "\n"; }
+                    if (skill != selectedItem.RequiredSkills.Last()) { text += "\n"; }
                 }
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform), text,
-                    textColor: inadequateSkills.Any() ? Color.Red : Color.White, font: GUI.SmallFont);
+                    textColor: inadequateSkills.Any() ? Color.Red : Color.LightGreen, font: GUI.SmallFont);
             }
 
-            activateButton = new GUIButton(new RectTransform(new Vector2(0.4f, 0.1f), selectedItemFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.03f) },
-                TextManager.Get("FabricatorCreate"))
-            {
-                OnClicked = StartButtonClicked,
-                IgnoreLayoutGroups = true,
-                UserData = selectedItem,
-                Enabled = false
-            };
+            float degreeOfSuccess = DegreeOfSuccess(Character.Controlled, selectedItem.RequiredSkills);
+            if (degreeOfSuccess > 0.5f) { degreeOfSuccess = 1.0f; }
 
+            float requiredTime = GetRequiredTime(selectedItem, Character.Controlled);
+            string requiredTimeText = TextManager.Get("FabricatorRequiredTime") + ": " + ToolBox.SecondsToReadableTime(requiredTime);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
+                requiredTimeText, textColor: ToolBox.GradientLerp(degreeOfSuccess, Color.Red, Color.Yellow, Color.LightGreen), font: GUI.SmallFont);
+                        
             return true;
         }
 
         private bool StartButtonClicked(GUIButton button, object obj)
         {
+            if (selectedItem == null) { return false; }
             if (fabricatedItem == null)
             {
-                StartFabricating(obj as FabricableItem, Character.Controlled);
+                StartFabricating(selectedItem, Character.Controlled);
             }
             else
             {
@@ -257,14 +272,24 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
-            if (itemList.SelectedData is FabricableItem targetItem)
-            {
-                activateButton.Enabled = CanBeFabricated(targetItem);
-            }
+            activateButton.Enabled = false;
 
             if (character != null)
             {
-                CheckFabricableItems();
+                foreach (GUIComponent child in itemList.Content.Children)
+                {
+                    var itemPrefab = child.UserData as FabricableItem;
+                    if (itemPrefab == null) continue;
+
+                    bool canBeFabricated = CanBeFabricated(itemPrefab);
+                    if (itemPrefab == selectedItem)
+                    {
+                        activateButton.Enabled = canBeFabricated;
+                    }
+
+                    child.GetChild<GUITextBlock>().TextColor = Color.White * (canBeFabricated ? 1.0f : 0.5f);
+                    child.GetChild<GUIImage>().Color = itemPrefab.TargetItem.InventoryIconColor * (canBeFabricated ? 1.0f : 0.5f);
+                }
             }
         }
 
@@ -277,8 +302,10 @@ namespace Barotrauma.Items.Components
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
             int itemIndex = msg.ReadRangedInteger(-1, fabricableItems.Count - 1);
+            UInt16 userID = msg.ReadUInt16();
+            Character user = Entity.FindEntityByID(userID) as Character;
 
-            if (itemIndex == -1)
+            if (itemIndex == -1 || user == null)
             {
                 CancelFabricating();
             }
@@ -289,7 +316,7 @@ namespace Barotrauma.Items.Components
                 if (itemIndex < 0 || itemIndex >= fabricableItems.Count) return;
 
                 SelectItem(null, fabricableItems[itemIndex]);
-                StartFabricating(fabricableItems[itemIndex]);
+                StartFabricating(fabricableItems[itemIndex], user);
             }
         }
     }

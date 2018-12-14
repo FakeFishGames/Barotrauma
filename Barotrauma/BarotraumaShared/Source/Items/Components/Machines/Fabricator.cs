@@ -134,11 +134,8 @@ namespace Barotrauma.Items.Components
 
         private FabricableItem fabricatedItem;
         private float timeUntilReady;
-
-        //used for checking if contained items have changed 
-        //(in which case we need to recheck which items can be fabricated)
-        private Item[] prevContainedItems;
-
+        private float requiredTime;
+        
         private Character user;
 
         private ItemContainer inputContainer, outputContainer;
@@ -190,7 +187,6 @@ namespace Barotrauma.Items.Components
 
         public override bool Select(Character character)
         {
-            CheckFabricableItems();
 #if CLIENT
             if (itemList.SelectedComponent != null)
             {
@@ -204,29 +200,8 @@ namespace Barotrauma.Items.Components
         {
             return (picker != null);
         }
-
-        /// <summary>
-        /// check which of the items can be fabricated and update the text colors of the item list accordingly
-        /// </summary>
-        private void CheckFabricableItems()
-        {
-#if CLIENT
-            foreach (GUIComponent child in itemList.Content.Children)
-            {
-                var itemPrefab = child.UserData as FabricableItem;
-                if (itemPrefab == null) continue;
-
-                bool canBeFabricated = CanBeFabricated(itemPrefab);
-
-                child.GetChild<GUITextBlock>().TextColor = Color.White * (canBeFabricated ? 1.0f : 0.5f);
-                child.GetChild<GUIImage>().Color = itemPrefab.TargetItem.SpriteColor * (canBeFabricated ? 1.0f : 0.5f);
-            }
-#endif            
-            prevContainedItems = new Item[inputContainer.Inventory.Items.Length];
-            inputContainer.Inventory.Items.CopyTo(prevContainedItems, 0);
-        }
-
-        private void StartFabricating(FabricableItem selectedItem, Character user = null)
+        
+        private void StartFabricating(FabricableItem selectedItem, Character user)
         {
             if (selectedItem == null) return;
 
@@ -237,7 +212,7 @@ namespace Barotrauma.Items.Components
 
 #if CLIENT
             itemList.Enabled = false;
-            activateButton.Text = "Cancel";
+            activateButton.Text = TextManager.Get("FabricatorCreate");
 #endif
 
             MoveIngredientsToInputContainer(selectedItem);
@@ -245,8 +220,9 @@ namespace Barotrauma.Items.Components
             fabricatedItem = selectedItem;
             IsActive = true;
             this.user = user;
-
-            timeUntilReady = fabricatedItem.RequiredTime;
+            
+            requiredTime = GetRequiredTime(fabricatedItem, user);
+            timeUntilReady = requiredTime;
             
             inputContainer.Inventory.Locked = true;
             outputContainer.Inventory.Locked = true;
@@ -291,7 +267,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            progressState = fabricatedItem == null ? 0.0f : (fabricatedItem.RequiredTime - timeUntilReady) / fabricatedItem.RequiredTime;
+            progressState = fabricatedItem == null ? 0.0f : (requiredTime - timeUntilReady) / requiredTime;
 
             if (voltage < minVoltage) { return; }
 
@@ -363,6 +339,17 @@ namespace Barotrauma.Items.Components
             }
 
             return true;
+        }
+
+        private float GetRequiredTime(FabricableItem fabricableItem, Character user)
+        {
+            float degreeOfSuccess = DegreeOfSuccess(user, fabricableItem.RequiredSkills);
+
+            float t = degreeOfSuccess < 0.5f ? degreeOfSuccess * degreeOfSuccess : degreeOfSuccess * 2;
+
+            //fabricating takes 100 times longer if degree of success is close to 0
+            //characters with a higher skill than required can fabricate up to 100% faster
+            return fabricableItem.RequiredTime / MathHelper.Clamp(t, 0.01f, 2.0f);
         }
 
         /// <summary>
@@ -464,6 +451,8 @@ namespace Barotrauma.Items.Components
         {
             int itemIndex = fabricatedItem == null ? -1 : fabricableItems.IndexOf(fabricatedItem);
             msg.WriteRangedInteger(-1, fabricableItems.Count - 1, itemIndex);
+            UInt16 userID = fabricatedItem == null || user == null ? (UInt16)0 : user.ID;
+            msg.Write(userID);
         }
 
     }
