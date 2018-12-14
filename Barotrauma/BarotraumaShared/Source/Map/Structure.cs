@@ -311,22 +311,28 @@ namespace Barotrauma
         {
             Bodies = new List<Body>();
 
+            float bodyWidth = ConvertUnits.ToSimUnits(rect.Width * Math.Sqrt(2.0));
+            float bodyHeight = ConvertUnits.ToSimUnits(10);
+
             Body newBody = BodyFactory.CreateRectangle(GameMain.World,
-                ConvertUnits.ToSimUnits(rect.Width * Math.Sqrt(2.0) + Submarine.GridSize.X * 3.0f),
-                ConvertUnits.ToSimUnits(10),
-                1.5f);
+                bodyWidth, bodyHeight, 1.5f);
 
             newBody.BodyType = BodyType.Static;
             Vector2 stairPos = new Vector2(Position.X, rect.Y - rect.Height + rect.Width / 2.0f);
-            stairPos += new Vector2(
+            /*stairPos += new Vector2(
                 (StairDirection == Direction.Right) ? -Submarine.GridSize.X * 1.5f : Submarine.GridSize.X * 1.5f,
-                -Submarine.GridSize.Y * 2.0f);
+                -Submarine.GridSize.Y * 2.0f);*/
             newBody.Rotation = (StairDirection == Direction.Right) ? MathHelper.PiOver4 : -MathHelper.PiOver4;
             newBody.CollisionCategories = Physics.CollisionStairs;
             newBody.Friction = 0.8f;
             newBody.UserData = this;
+            
+            Vector2 bodyOffset = ConvertUnits.ToSimUnits(prefab.BodyOffset);
+            if (FlippedX) { bodyOffset.X = -bodyOffset.X; }
+            if (FlippedY) { bodyOffset.Y = -bodyOffset.Y; }
+            newBody.Position = ConvertUnits.ToSimUnits(stairPos) + bodyOffset;
 
-            //OffsetBody(newBody);
+            bodyDebugDimensions.Add(new Vector2(bodyWidth, bodyHeight));
 
             Bodies.Add(newBody);
         }
