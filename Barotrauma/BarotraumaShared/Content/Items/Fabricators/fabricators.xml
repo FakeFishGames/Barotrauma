@@ -14,8 +14,7 @@
     <BrokenSprite texture="Content/Items/Fabricators/Fabricator.png" sourcerect="702,0,351,488" depth="0.8" maxcondition="0" />
 
     <Fabricator canbeselected = "true" powerconsumption="500.0">
-      <GuiFrame relativesize="0.25,0.45" maxsize="460,600" style="ItemUI" anchor="Center"/>
-      <AlternativeLayout absoluteoffset="10,0"/>
+      <GuiFrame relativesize="0.25,0.5" maxsize="460,800" style="ItemUI" anchor="Center" absoluteoffset="10,0"/>
 
       <sound file="Content/Items/Fabricators/fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="600" loop="false"/>
@@ -253,12 +252,12 @@
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.1,0.27" style="ItemUI"/>
       <RequiredSkill identifier="electrical" level="40"/>
       <RequiredItem identifier="screwdriver" type="Equipped"/>
-	  <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="25.0"/>
+	    <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="25.0"/>
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="3" mincondition="0.0" maxcondition="0.0"/>
     </Repairable>
 
-    <ItemContainer capacity="4" canbeselected="true" hideitems="true" hudpos="0.15, 0.7" slotsperrow="4" uilabel="Input" allowuioverlap="true"/>
-    <ItemContainer capacity="1" canbeselected="true" hideitems="true" hudpos="0.85, 0.7" slotsperrow="1" uilabel="Output" allowuioverlap="true"/>
+    <ItemContainer capacity="4" canbeselected="true" hideitems="true" slotsperrow="4" uilabel="Input" allowuioverlap="true"/>
+    <ItemContainer capacity="1" canbeselected="true" hideitems="true" slotsperrow="1" uilabel="Output" allowuioverlap="true"/>
   </Item>
 
   <Item
@@ -274,8 +273,7 @@
     <BrokenSprite texture="Content/Items/Fabricators/FF_medicalFabricator.png" sourcerect="278,0,139,199" depth="0.8" maxcondition="0" />
 
     <Fabricator canbeselected = "true" powerconsumption="100.0">
-      <GuiFrame relativesize="0.4,0.4" minsize="600,400" maxsize="900,600" anchor="Center" style="ItemUI"/>
-      <AlternativeLayout anchor="CenterLeft"/>
+      <GuiFrame relativesize="0.4,0.5" minsize="600,400" maxsize="900,800" anchor="Center" style="ItemUI" absoluteoffset="10,0"/>
 
       <sound file="Content/Items/Fabricators/fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="600" loop="false"/>
@@ -385,12 +383,12 @@
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.1,0.27" style="ItemUI"/>
       <RequiredSkill identifier="electrical" level="40"/>
       <RequiredItem identifier="screwdriver" type="Equipped"/>
-	  <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="25.0"/>
+	    <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="25.0"/>
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="3" mincondition="0.0" maxcondition="0.0"/>
     </Repairable>
 
-    <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.15, 0.7" slotsperrow="1" uilabel="Input" allowuioverlap="true"/>
-    <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.85, 0.7" slotsperrow="1" uilabel="Output" allowuioverlap="true"/>
+    <ItemContainer capacity="4" canbeselected="true" hideitems="true" slotsperrow="4" uilabel="Input" allowuioverlap="true"/>
+    <ItemContainer capacity="1" canbeselected="true" hideitems="true" slotsperrow="1" uilabel="Output" allowuioverlap="true"/>
   </Item>
 
   <Item

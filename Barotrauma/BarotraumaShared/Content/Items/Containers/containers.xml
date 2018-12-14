@@ -81,7 +81,7 @@
 
     <ItemContainer capacity="30" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,mediumitem"/>
-      <GuiFrame relativesize="0.25,0.45" maxsize="460,600" anchor="Center" style="ItemUI" absoluteoffset="-20,0"/>
+      <GuiFrame relativesize="0.25,0.45" maxsize="460,600" anchor="Center" style="ItemUI"/>
     </ItemContainer>
   </Item>
 

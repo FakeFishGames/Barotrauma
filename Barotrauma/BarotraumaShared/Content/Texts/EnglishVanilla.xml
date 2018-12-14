@@ -675,6 +675,7 @@
   <FabricatorRequiredCondition>Condition</FabricatorRequiredCondition>
   <FabricatorRequiredSkills>Skills required to calibrate</FabricatorRequiredSkills>
   <FabricatorCreate>Create</FabricatorCreate>
+  <FabricatorCancel>Cancel</FabricatorCancel>
   <DeconstructorDeconstruct>Deconstruct</DeconstructorDeconstruct>
   <DeconstructorCancel>Cancel</DeconstructorCancel>
   <Lvl>Lvl</Lvl>
