@@ -69,6 +69,9 @@
     <Price locationtype="City" buyprice="50"/>
     <Price locationtype="Outpost" buyprice="50"/>
 
+    <SuitableTreatment identifier="bloodloss" suitability="50"/>
+    <SuitableTreatment identifier="burn" suitability="50"/>
+
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,448,64,64"/>
     <Sprite texture ="med.png" sourcerect="0,16,11,16" depth="0.6"/>
 
@@ -97,6 +100,8 @@
     <Sprite texture="med.png" sourcerect="0,16,11,16" depth="0.6" />
     <InventoryIcon texture="Bandages_temp_01.png" />
     <Body width="11" height="16" density="20" />
+    <SuitableTreatment identifier="bloodloss" suitability="70"/>
+    <SuitableTreatment identifier="burn" suitability="70"/>
     <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This, Limb" duration="3.0">
@@ -124,6 +129,8 @@
     <Price locationtype="Military" buyprice="20"/>
     <Price locationtype="City" buyprice="30"/>
     <Price locationtype="Outpost" buyprice="30"/>
+    
+    <SuitableTreatment identifier="internaldamage" suitability="-10"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="639,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" color="0.2,0.2,0.2,1.0"/>
@@ -161,6 +168,10 @@
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6" />
 
     <Body width="8" height="17" density="20"/>
+
+    <SuitableTreatment identifier="internaldamage" suitability="20"/>
+    <SuitableTreatment identifier="burn" suitability="20"/>
+    <SuitableTreatment identifier="oxygenlow" suitability="40"/>
     
     <ItemComponent>
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="20">
@@ -414,6 +425,8 @@
 
     <Body width="8" height="16" density="20"/>
 
+    <SuitableTreatment identifier="oxygenlow" suitability="50"/>
+
     <ItemComponent>
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="10.0">
         <ReduceAffliction identifier="oxygenlow" amount="1"/>
@@ -439,6 +452,12 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,192,64,64" />
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6" />
     <Body width="8" height="16" density="20" />
+
+    <SuitableTreatment identifier="oxygenlow" suitability="50"/>
+    <SuitableTreatment identifier="damage" suitability="50"/>
+    <SuitableTreatment identifier="bloodloss" suitability="20"/>
+    <SuitableTreatment identifier="burn" suitability="10"/>
+
     <ItemComponent>
       <StatusEffect tags="medical" type="OnUse" target="This, Limb" duration="15.0">
         <ReduceAffliction identifier="damage" amount="0.25" />
@@ -510,6 +529,8 @@
     <Price locationtype="Military" buyprice="350"/>
     <Price locationtype="City" buyprice="500"/>
 
+    <SuitableTreatment identifier="huskinfection" suitability="100"/>
+
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,256,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
@@ -554,6 +575,8 @@
     description="A morbusine antidote."
     useinhealthinterface="true">
 
+    <SuitableTreatment identifier="morbusinepoisoning" suitability="100"/>
+
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
@@ -582,6 +605,9 @@
     impacttolerance="8"
     description="A mildy toxic solution that slowly releases oxygen into the bloodstream when injected. May also be taken orally but with less beneficial effect. Avoid dropping."
     useinhealthinterface="true">
+
+    <SuitableTreatment identifier="internaldamage" suitability="-20"/>
+    <SuitableTreatment identifier="oxygenloss" suitability="50"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,192,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" />
@@ -633,6 +659,11 @@
     Tags="smallitem,chem,medical"
     description="A powerful opiate for treating pain associated with internal injuries, but will cause shortness of breath and eventual dependency with overuse."
     useinhealthinterface="true">
+
+    <SuitableTreatment identifier="internaldamage" suitability="50"/>
+    <SuitableTreatment identifier="opiatewithdrawal" suitability="50"/>
+    <SuitableTreatment identifier="opiateoverdose" suitability="-50"/>
+    <SuitableTreatment identifier="oxygenloss" suitability="-10"/>
 
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="Military" buyprice="80"/>
@@ -696,6 +727,11 @@
     <Price locationtype="City" buyprice="100"/>
     <Price locationtype="Outpost" buyprice="120"/>
 
+    <SuitableTreatment identifier="internaldamage" suitability="100"/>
+    <SuitableTreatment identifier="opiatewithdrawal" suitability="100"/>
+    <SuitableTreatment identifier="opiateoverdose" suitability="-100"/>
+    <SuitableTreatment identifier="oxygenloss" suitability="-30"/>
+    
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,448,64,64"/>
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
@@ -747,6 +783,8 @@
     <Price locationtype="City" buyprice="100"/>
     <Price locationtype="Outpost" buyprice="120"/>
 
+    <SuitableTreatment identifier="bleeding" suitability="20"/>
+    
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,256,64,64"/>
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
@@ -789,6 +827,8 @@
     <Price locationtype="City" buyprice="100"/>
     <Price locationtype="Outpost" buyprice="120"/>
 
+    <SuitableTreatment identifier="bloodloss" suitability="50"/>
+
     <InventoryIcon texture="Saline_temp_01.png"/>
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
@@ -828,6 +868,9 @@
     <Price locationtype="Military" buyprice="80"/>
     <Price locationtype="City" buyprice="100"/>
     <Price locationtype="Outpost" buyprice="120"/>
+
+    <SuitableTreatment identifier="opiateaddiction" suitability="100"/>
+    <SuitableTreatment identifier="opiatewithdrawal" suitability="100"/>
     
     <InventoryIcon texture="AntiNarc_temp_01.png"/>
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>

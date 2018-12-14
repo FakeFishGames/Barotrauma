@@ -281,12 +281,14 @@ namespace Barotrauma.RuinGeneration
                 Rand.RandSync.Server);
         }
 
-        public List<RuinEntityConfig> GetPropList(Rand.RandSync randSync)
+        public List<RuinEntityConfig> GetPropList(RuinShape room, Rand.RandSync randSync)
         {
             Dictionary<int, List<RuinEntityConfig>> propGroups = new Dictionary<int, List<RuinEntityConfig>>();
             foreach (RuinEntityConfig entityConfig in entityList)
             {
                 if (entityConfig.Type != RuinEntityType.Prop) { continue; }
+                if (room.Rect.Width < entityConfig.MinRoomSize.X || room.Rect.Height < entityConfig.MinRoomSize.Y) { continue; }
+                if (room.Rect.Width > entityConfig.MaxRoomSize.X || room.Rect.Height > entityConfig.MaxRoomSize.Y) { continue; }
                 if (!propGroups.ContainsKey(entityConfig.SingleGroupIndex))
                 {
                     propGroups[entityConfig.SingleGroupIndex] = new List<RuinEntityConfig>();

@@ -27,6 +27,13 @@ namespace Barotrauma.Items.Components
             set { motionDetected = value; }
         }
 
+        [Serialize(false, true), Editable]
+        public bool OnlyHumans
+        {
+            get;
+            set;
+        }
+
         [InGameEditable, Serialize(0.0f, true)]
         public float RangeX
         {
@@ -112,6 +119,8 @@ namespace Barotrauma.Items.Components
 
             foreach (Character c in Character.CharacterList)
             {
+                if (OnlyHumans && c.ConfigPath != Character.HumanConfigFile) { continue; }
+
                 //do a rough check based on the position of the character's collider first
                 //before the more accurate limb-based check
                 if (Math.Abs(c.WorldPosition.X - detectPos.X) > broadRangeX || Math.Abs(c.WorldPosition.Y - detectPos.Y) > broadRangeY)

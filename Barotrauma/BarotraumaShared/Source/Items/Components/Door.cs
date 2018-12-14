@@ -119,6 +119,11 @@ namespace Barotrauma.Items.Components
                 return linkedGap;
             }
         }
+
+        public bool IsHorizontal
+        {
+            get { return isHorizontal; }
+        }
         
         [Serialize("0.0,0.0,0.0,0.0", false)]
         public Rectangle Window

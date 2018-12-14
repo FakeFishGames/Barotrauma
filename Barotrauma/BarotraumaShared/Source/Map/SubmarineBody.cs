@@ -94,27 +94,14 @@ namespace Barotrauma
             {
                 List<Vector2> convexHull = GenerateConvexHull();
                 HullVertices = convexHull;
-
                 for (int i = 0; i < convexHull.Count; i++)
                 {
                     convexHull[i] = ConvertUnits.ToSimUnits(convexHull[i]);
                 }
 
-                convexHull.Reverse();
-
-                //get farseer 'vertices' from vectors
-                Vertices shapevertices = new Vertices(convexHull);
-
-                AABB hullAABB = shapevertices.GetAABB();
-
-                Borders = new Rectangle(
-                    (int)ConvertUnits.ToDisplayUnits(hullAABB.LowerBound.X),
-                    (int)ConvertUnits.ToDisplayUnits(hullAABB.UpperBound.Y),
-                    (int)ConvertUnits.ToDisplayUnits(hullAABB.Extents.X * 2.0f),
-                    (int)ConvertUnits.ToDisplayUnits(hullAABB.Extents.Y * 2.0f));
+                Vector2 minExtents = Vector2.Zero, maxExtents = Vector2.Zero;
 
                 farseerBody = BodyFactory.CreateBody(GameMain.World, this);
-
                 foreach (Structure wall in Structure.WallList)
                 {
                     if (wall.Submarine != submarine) continue;
@@ -128,6 +115,11 @@ namespace Barotrauma
                           -wall.BodyRotation,
                           ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2)),
                           farseerBody, this);
+
+                    minExtents.X = Math.Min(rect.X, minExtents.X);
+                    minExtents.Y = Math.Min(rect.Y - rect.Height, minExtents.Y);
+                    maxExtents.X = Math.Max(rect.Right, maxExtents.X);
+                    maxExtents.Y = Math.Max(rect.Y, maxExtents.Y);
                 }
 
                 foreach (Hull hull in Hull.hullList)
@@ -141,39 +133,68 @@ namespace Barotrauma
                         5.0f,
                         ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2)),
                         farseerBody, this);
+
+                    minExtents.X = Math.Min(rect.X, minExtents.X);
+                    minExtents.Y = Math.Min(rect.Y - rect.Height, minExtents.Y);
+                    maxExtents.X = Math.Max(rect.Right, maxExtents.X);
+                    maxExtents.Y = Math.Max(rect.Y, maxExtents.Y);
                 }
-                
+
                 foreach (Item item in Item.ItemList)
                 {
                     if (item.StaticBodyConfig == null) continue;
 
-                    float radius = ConvertUnits.ToSimUnits(item.StaticBodyConfig.GetAttributeFloat("radius", 0.0f)) * item.Scale;
-                    float width   = ConvertUnits.ToSimUnits(item.StaticBodyConfig.GetAttributeFloat("width", 0.0f)) * item.Scale;
-                    float height   = ConvertUnits.ToSimUnits(item.StaticBodyConfig.GetAttributeFloat("height", 0.0f)) * item.Scale;
+                    float radius    = item.StaticBodyConfig.GetAttributeFloat("radius", 0.0f) * item.Scale;
+                    float width     = item.StaticBodyConfig.GetAttributeFloat("width", 0.0f) * item.Scale;
+                    float height    = item.StaticBodyConfig.GetAttributeFloat("height", 0.0f) * item.Scale;
 
-                    if (width != 0.0f && height != 0.0f)
+                    Vector2 simPos  = ConvertUnits.ToSimUnits(item.Position);
+                    float simRadius = ConvertUnits.ToSimUnits(radius);
+                    float simWidth  = ConvertUnits.ToSimUnits(width);
+                    float simHeight = ConvertUnits.ToSimUnits(height);
+
+                    if (width > 0.0f && height > 0.0f)
                     {
-                        FixtureFactory.AttachRectangle(width, height, 5.0f, ConvertUnits.ToSimUnits(item.Position), farseerBody, this).UserData = item;
+                        FixtureFactory.AttachRectangle(simWidth, simHeight, 5.0f, simPos, farseerBody, this).UserData = item;
+
+                        minExtents.X = Math.Min(item.Position.X - width / 2, minExtents.X);
+                        minExtents.Y = Math.Min(item.Position.Y - height / 2, minExtents.Y);
+                        maxExtents.X = Math.Max(item.Position.X + width / 2, maxExtents.X);
+                        maxExtents.Y = Math.Max(item.Position.Y + height / 2, maxExtents.Y);
                     }
-                    else if (radius != 0.0f && width != 0.0f)
+                    else if (radius > 0.0f && width > 0.0f)
                     {
-                        FixtureFactory.AttachRectangle(width, radius * 2, 5.0f, ConvertUnits.ToSimUnits(item.Position), farseerBody, this).UserData = item;
-                        FixtureFactory.AttachCircle(radius, 5.0f, farseerBody, ConvertUnits.ToSimUnits(item.Position) - Vector2.UnitX * width / 2, this).UserData = item;
-                        FixtureFactory.AttachCircle(radius, 5.0f, farseerBody, ConvertUnits.ToSimUnits(item.Position) + Vector2.UnitX * width / 2, this).UserData = item;
+                        FixtureFactory.AttachRectangle(simWidth, simRadius * 2, 5.0f, simPos, farseerBody, this).UserData = item;
+                        FixtureFactory.AttachCircle(simRadius, 5.0f, farseerBody, simPos - Vector2.UnitX * simWidth / 2, this).UserData = item;
+                        FixtureFactory.AttachCircle(simRadius, 5.0f, farseerBody, simPos + Vector2.UnitX * simWidth / 2, this).UserData = item;
+                        minExtents.X = Math.Min(item.Position.X - width / 2 - radius, minExtents.X);
+                        minExtents.Y = Math.Min(item.Position.Y - radius, minExtents.Y);
+                        maxExtents.X = Math.Max(item.Position.X + width / 2 + radius, maxExtents.X);
+                        maxExtents.Y = Math.Max(item.Position.Y + radius, maxExtents.Y);
                     }
-                    else if (radius != 0.0f && height != 0.0f)
+                    else if (radius > 0.0f && height > 0.0f)
                     {
-                        FixtureFactory.AttachRectangle(radius * 2, height, 5.0f, ConvertUnits.ToSimUnits(item.Position), farseerBody, this).UserData = item;
-                        FixtureFactory.AttachCircle(radius, 5.0f, farseerBody, ConvertUnits.ToSimUnits(item.Position) - Vector2.UnitY * height / 2, this).UserData = item;
-                        FixtureFactory.AttachCircle(radius, 5.0f, farseerBody, ConvertUnits.ToSimUnits(item.Position) + Vector2.UnitX * height / 2, this).UserData = item;
+                        FixtureFactory.AttachRectangle(simRadius * 2, height, 5.0f, simPos, farseerBody, this).UserData = item;
+                        FixtureFactory.AttachCircle(simRadius, 5.0f, farseerBody, simPos - Vector2.UnitY * simHeight / 2, this).UserData = item;
+                        FixtureFactory.AttachCircle(simRadius, 5.0f, farseerBody, simPos + Vector2.UnitX * simHeight / 2, this).UserData = item;
+                        minExtents.X = Math.Min(item.Position.X - radius, minExtents.X);
+                        minExtents.Y = Math.Min(item.Position.Y - height / 2 - radius, minExtents.Y);
+                        maxExtents.X = Math.Max(item.Position.X + radius, maxExtents.X);
+                        maxExtents.Y = Math.Max(item.Position.Y + height / 2 + radius, maxExtents.Y);
                     }
-                    else if (radius != 0.0f)
+                    else if (radius > 0.0f)
                     {
-                        FixtureFactory.AttachCircle(radius, 5.0f, farseerBody, ConvertUnits.ToSimUnits(item.Position), this).UserData = item;
+                        FixtureFactory.AttachCircle(simRadius, 5.0f, farseerBody, simPos, this).UserData = item;
+                        minExtents.X = Math.Min(item.Position.X - radius, minExtents.X);
+                        minExtents.Y = Math.Min(item.Position.Y - radius, minExtents.Y);
+                        maxExtents.X = Math.Max(item.Position.X + radius, maxExtents.X);
+                        maxExtents.Y = Math.Max(item.Position.Y + radius, maxExtents.Y);
                     }
                 }
+
+                Borders = new Rectangle((int)minExtents.X, (int)maxExtents.Y, (int)(maxExtents.X - minExtents.X), (int)(maxExtents.Y - minExtents.Y));
             }
-            
+
             farseerBody.BodyType = BodyType.Dynamic;
             farseerBody.CollisionCategories = Physics.CollisionWall;
             farseerBody.CollidesWith = 
