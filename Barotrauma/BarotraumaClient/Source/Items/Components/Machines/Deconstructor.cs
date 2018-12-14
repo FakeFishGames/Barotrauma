@@ -28,7 +28,7 @@ namespace Barotrauma.Items.Components
             };
 
             activateButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.1f), paddedFrame.RectTransform),
-                TextManager.Get("DeconstuctorDeconstruct"))
+                TextManager.Get("DeconstructorDeconstruct"))
             {
                 OnClicked = ToggleActive
             };

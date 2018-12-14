@@ -12,6 +12,11 @@ namespace Barotrauma.Items.Components
         private float progressState;
 
         private ItemContainer inputContainer, outputContainer;
+
+        public ItemContainer OutputContainer
+        {
+            get { return outputContainer; }
+        }
         
         public Deconstructor(Item item, XElement element) 
             : base(item, element)
@@ -40,6 +45,8 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            MoveInputQueue();
+
             if (inputContainer == null || inputContainer.Inventory.Items.All(i => i == null))
             {
                 SetActive(false);
@@ -47,15 +54,6 @@ namespace Barotrauma.Items.Components
             }
 
             if (voltage < minVoltage) return;
-
-            //move items towards the last slot in the inventory if there's free slots
-            for (int i = inputContainer.Inventory.Capacity - 2; i >= 0; i--)
-            {
-                if (inputContainer.Inventory.Items[i] != null && inputContainer.Inventory.Items[i + 1] == null)
-                {
-                    inputContainer.Inventory.TryPutItem(inputContainer.Inventory.Items[i], i + 1, allowSwapping: false, allowCombine: false, user: null, createNetworkEvent: true);
-                }
-            }
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
@@ -99,6 +97,8 @@ namespace Barotrauma.Items.Components
 
                 inputContainer.Inventory.RemoveItem(targetItem);
                 Entity.Spawner.AddToRemoveQueue(targetItem);
+                MoveInputQueue();
+                PutItemsToLinkedContainer();
 
                 if (inputContainer.Inventory.Items.Any(i => i != null))
                 {
@@ -107,9 +107,49 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private void PutItemsToLinkedContainer()
+        {
+            if (GameMain.Client != null) { return; }
+            if (outputContainer.Inventory.Items.All(it => it == null)) return;
+            
+            foreach (MapEntity linkedTo in item.linkedTo)
+            {
+                if (linkedTo is Item linkedItem)
+                {
+                    var fabricator = linkedItem.GetComponent<Fabricator>();
+                    if (fabricator != null) { continue; }
+                    var itemContainer = linkedItem.GetComponent<ItemContainer>();
+                    if (itemContainer == null) { continue; }
+
+                    foreach (Item containedItem in outputContainer.Inventory.Items)
+                    {
+                        if (containedItem == null) { continue; }
+                        if (itemContainer.Inventory.Items.All(it => it != null)) { break; }
+                        itemContainer.Inventory.TryPutItem(containedItem, user: null, createNetworkEvent: true);
+                    }
+                }
+            }            
+        }
+
+        /// <summary>
+        /// Move items towards the last slot in the inventory if there's free slots
+        /// </summary>
+        private void MoveInputQueue()
+        {
+            for (int i = inputContainer.Inventory.Capacity - 2; i >= 0; i--)
+            {
+                if (inputContainer.Inventory.Items[i] != null && inputContainer.Inventory.Items[i + 1] == null)
+                {
+                    inputContainer.Inventory.TryPutItem(inputContainer.Inventory.Items[i], i + 1, allowSwapping: false, allowCombine: false, user: null, createNetworkEvent: true);
+                }
+            }
+        }
+
         private void SetActive(bool active, Character user = null)
         {
-            if (inputContainer.Inventory.Items.All(i => i == null)) active = false;
+            PutItemsToLinkedContainer();
+
+            if (inputContainer.Inventory.Items.All(i => i == null)) { active = false; }
 
             IsActive = active;
 
