@@ -277,10 +277,6 @@ namespace Barotrauma
 
                 var particle = GameMain.ParticleManager.CreateParticle("steam",
                     spawnPos, speed, 0.0f, hull);
-
-                if (particle == null) continue;
-
-                particle.Size *= MathHelper.Clamp(size.X / 10.0f, 0.5f, 3.0f);
             }
 #endif
 
@@ -311,10 +307,6 @@ namespace Barotrauma
 
                 var particle = GameMain.ParticleManager.CreateParticle("steam",
                     spawnPos, speed, 0.0f, hull);
-
-                if (particle == null) continue;
-
-                particle.Size *= MathHelper.Clamp(size.X / 10.0f, 0.5f, 3.0f);
             }
 #endif
 

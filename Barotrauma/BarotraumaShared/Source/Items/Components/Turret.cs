@@ -369,6 +369,13 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
+            if (character.AIController.SelectedAiTarget?.Entity is Character previousTarget &&
+                previousTarget.IsDead)
+            {
+                character?.Speak(TextManager.Get("DialogTurretTargetDead"), null, 0.0f, "killedtarget" + previousTarget.ID, 30.0f);
+                character.AIController.SelectTarget(null);
+            }
+
             if (GetAvailablePower() < powerConsumption)
             {
                 var batteries = item.GetConnectedComponents<PowerContainer>();
@@ -433,13 +440,13 @@ namespace Barotrauma.Items.Components
 
             //enough shells and power
             Character closestEnemy = null;
-            float closestDist = 3000.0f;
+            float closestDist = 10000.0f * 10000.0f;
             foreach (Character enemy in Character.CharacterList)
             {
                 //ignore humans and characters that are inside the sub
                 if (enemy.IsDead || enemy.SpeciesName == "human" || enemy.AnimController.CurrentHull != null) continue;
 
-                float dist = Vector2.Distance(enemy.WorldPosition, item.WorldPosition);
+                float dist = Vector2.DistanceSquared(enemy.WorldPosition, item.WorldPosition);
                 if (dist < closestDist)
                 {
                     closestEnemy = enemy;
@@ -448,6 +455,8 @@ namespace Barotrauma.Items.Components
             }
 
             if (closestEnemy == null) return false;
+            
+            character.AIController.SelectTarget(closestEnemy.AiTarget);
 
             character.CursorPosition = closestEnemy.WorldPosition;
             if (item.Submarine != null) character.CursorPosition -= item.Submarine.Position;

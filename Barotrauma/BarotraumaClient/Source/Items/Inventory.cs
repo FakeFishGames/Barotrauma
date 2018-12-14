@@ -238,6 +238,15 @@ namespace Barotrauma
                 slots[i].InteractRect = new Rectangle(
                     (int)(slots[i].Rect.X - spacing.X / 2 - 1), (int)(slots[i].Rect.Y - spacing.Y / 2 - 1), 
                     (int)(slots[i].Rect.Width + spacing.X + 2), (int)(slots[i].Rect.Height + spacing.Y + 2));
+
+                if (slots[i].Rect.Width > slots[i].Rect.Height)
+                {
+                    slots[i].Rect.Inflate((slots[i].Rect.Height - slots[i].Rect.Width) / 2, 0);
+                }
+                else
+                {
+                    slots[i].Rect.Inflate(0, (slots[i].Rect.Width - slots[i].Rect.Height) / 2);
+                }
             }
 
             if (selectedSlot != null && selectedSlot.ParentInventory == this)

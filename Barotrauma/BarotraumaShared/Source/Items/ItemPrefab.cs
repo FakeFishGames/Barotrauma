@@ -454,6 +454,20 @@ namespace Barotrauma
                             }
                         }
                         break;
+                    case "suitabletreatment":
+                        if (subElement.Attribute("name") != null)
+                        {
+                            DebugConsole.ThrowError("Error in item prefab \"" + Name + "\" - suitable treatments should be defined using item identifiers, not item names.");
+                        }
+
+                        string treatmentIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
+
+                        var matchingAffliction = AfflictionPrefab.List.Find(a => a.Identifier == treatmentIdentifier);
+                        if (matchingAffliction != null)
+                        {
+                            matchingAffliction.TreatmentSuitability.Add(identifier, subElement.GetAttributeFloat("suitability", 0.0f));
+                        }
+                        break;
                 }
             }
             

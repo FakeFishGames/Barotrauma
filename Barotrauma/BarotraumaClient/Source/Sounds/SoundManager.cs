@@ -419,10 +419,12 @@ namespace Barotrauma.Sounds
 
         public void InitStreamThread()
         {
-            if (streamingThread == null || streamingThread.ThreadState!=ThreadState.Running)
+            if (streamingThread == null || streamingThread.ThreadState.HasFlag(ThreadState.Stopped))
             {
-                streamingThread = new Thread(UpdateStreaming);
-                streamingThread.IsBackground = true; //this should kill the thread if the game crashes
+                streamingThread = new Thread(UpdateStreaming)
+                {
+                    IsBackground = true //this should kill the thread if the game crashes
+                };
                 streamingThread.Start();
             }
         }

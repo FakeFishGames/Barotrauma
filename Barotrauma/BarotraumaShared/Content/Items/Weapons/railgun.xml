@@ -89,26 +89,43 @@
   </Item>
 
   <Item
-    name="Railgun Single Loader"
-    identifier="railgunloadersingle"
+    name="Railgun Loader Single"
+    identifier="railgunloadersinglevertical"
     tags="railgunequipment,railgunammosource"
     category="Machine"
     linkable="true"
-    allowedlinks="railgun">
+    allowedlinks="railgun"
+    scale="0.26">
 
-    <Sprite texture ="railgunetc2.png" depth="0.8" sourcerect="131,2,46,128"/>
+    <Sprite texture ="railgunsingleloader_vertical.png" depth="0.8" sourcerect="0,0,225,636"/>
 
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="23,-76" iteminterval="0,0" itemrotation="90" canbeselected="true"
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="110,-275" iteminterval="0,0" itemrotation="90" canbeselected="true"
                    autointeractwithcontained="true">
       <Containable identifiers="railgunshell,nuclearshell,ancientweapon"/>
-    </ItemContainer>      
+    </ItemContainer>
   </Item>
-  
+
   <Item
-    name="Forward Railgun Loader"
-    identifier="railgunloaderforward"
+    name="Railgun Loader Single"
+    identifier="railgunloadersinglehorizontal"
     tags="railgunequipment,railgunammosource"
     category="Machine"
+    linkable="true"
+    allowedlinks="railgun"
+    scale="0.26">
+
+    <Sprite texture ="railgunsingleloader_horizontal.png" depth="0.8" sourcerect="0,0,636,225"/>
+
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="275,-110" iteminterval="0,0" itemrotation="180" canbeselected="true"
+                   autointeractwithcontained="true">
+      <Containable identifiers="railgunshell,nuclearshell,ancientweapon"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
+    name="Forward Railgun Loader"
+    tags="railgunequipment,railgunammosource"
+    category="Legacy"
     linkable="true"
     allowedlinks="railgun">
 
@@ -122,9 +139,8 @@
   
   <Item
     name="Rear Railgun Loader"
-    identifier="railgunloaderrear"
     tags="railgunequipment,railgunammosource"
-    category="Machine"
+    category="Legacy"
     linkable="true"
     allowedlinks="railgun">
 
@@ -141,7 +157,8 @@
     identifier="railgunshell"
     tags="railgunequipment"
     category="Misc"
-    sonarsize="5">
+    sonarsize="5"
+    scale="0.26">
 
     <Price locationtype="Military" buyprice="150"/>
     <Price locationtype="City" buyprice="180"/>
@@ -154,7 +171,7 @@
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,128,64,64"/>
-    <Sprite texture="weapons.png" sourcerect="0,58,88,20" depth ="0.55"/>
+    <Sprite texture="railgunshell.png" sourcerect="0,0,428,80" depth ="0.55"/>
 
     <Body width="87" height="18" density="30"/>
 

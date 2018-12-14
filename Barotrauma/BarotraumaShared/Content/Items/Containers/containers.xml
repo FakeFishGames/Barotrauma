@@ -81,7 +81,7 @@
 
     <ItemContainer capacity="30" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,mediumitem"/>
-      <GuiFrame relativesize="0.25,0.45" maxsize="460,600" anchor="Center" style="ItemUI" absoluteoffset="-20,0"/>
+      <GuiFrame relativesize="0.25,0.45" maxsize="460,600" anchor="Center" style="ItemUI"/>
     </ItemContainer>
   </Item>
 
@@ -104,11 +104,12 @@
   <Item
     name="Railgun Shell Rack"
     identifier="railgunshellrack"
-    pickdistance="120">
+    pickdistance="120"
+    scale="0.6">
 
-    <Sprite texture="Content/Items/Weapons/railgunetc2.png" depth="0.84" sourcerect="57,97,72,110"/>
+    <Sprite texture="Content/Items/Weapons/railgunshellrack.png" depth="0.84" sourcerect="0,0,182,176"/>
 
-    <ItemContainer hideitems="false" drawinventory="true" capacity="3" slotsperrow="3" itempos="17,-49.5" iteminterval="19,0" itemrotation="90" canbeselected = "true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="3" slotsperrow="3" itempos="40,-65" iteminterval="50,0" itemrotation="90" canbeselected = "true">
       <Containable identifiers="railgunshell,nuclearshell"/>
     </ItemContainer>
   </Item>

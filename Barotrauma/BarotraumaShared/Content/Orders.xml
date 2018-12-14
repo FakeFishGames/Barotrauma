@@ -64,7 +64,7 @@
   </Order>
 
   <Order name="Repair Damaged Systems" aitag="repairsystems" doingtext="Repairing damaged systems" color="0.6,0.1,1.0,1.0"
-         appropriatejobs="mechanic,engineer">
+         appropriatejobs="mechanic,engineer" options="jobspecific,all" optionnames="Repair job-specific, Repair everything">
     <Sprite texture="Content/UI/IconAtlas.png" sourcerect="640,0,128,128"/>
   </Order>
 

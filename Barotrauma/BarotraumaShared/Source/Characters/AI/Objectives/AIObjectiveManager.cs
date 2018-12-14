@@ -108,11 +108,15 @@ namespace Barotrauma
                     currentOrder = new AIObjectiveGoTo(orderGiver, character, true)
                     {
                         CloseEnough = 1.5f,
+                        AllowGoingOutside = true,
                         IgnoreIfTargetDead = true
                     };
                     break;
                 case "wait":
-                    currentOrder = new AIObjectiveGoTo(character, character, true);
+                    currentOrder = new AIObjectiveGoTo(character, character, true)
+                    {
+                        AllowGoingOutside = true
+                    };
                     break;
                 case "fixleaks":
                     currentOrder = new AIObjectiveFixLeaks(character);
@@ -124,7 +128,7 @@ namespace Barotrauma
                     currentOrder = new AIObjectiveRescueAll(character);
                     break;
                 case "repairsystems":
-                    currentOrder = new AIObjectiveRepairItems(character);
+                    currentOrder = new AIObjectiveRepairItems(character) { RequireAdequateSkills = option != "all" };
                     break;
                 case "pumpwater":
                     currentOrder = new AIObjectivePumpWater(character, option);

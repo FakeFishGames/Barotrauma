@@ -672,12 +672,16 @@
   <EngineBackwards>Backwards</EngineBackwards>
   <EngineForwards>Forwards</EngineForwards>
   <EnginePowered>Powered</EnginePowered>
+  <FabricatorNoPower>Insufficient power</FabricatorNoPower>
   <FabricatorRequiredItems>Required items</FabricatorRequiredItems>
   <FabricatorRequiredTime>Required time</FabricatorRequiredTime>
   <FabricatorRequiredCondition>Condition</FabricatorRequiredCondition>
   <FabricatorRequiredSkills>Skills required to calibrate</FabricatorRequiredSkills>
   <FabricatorCreate>Create</FabricatorCreate>
-  <DeconstuctorDeconstruct>Deconstruct</DeconstuctorDeconstruct>
+  <FabricatorCancel>Cancel</FabricatorCancel>
+  <DeconstructorNoPower>Insufficient power</DeconstructorNoPower>
+  <DeconstructorDeconstruct>Deconstruct</DeconstructorDeconstruct>
+  <DeconstructorCancel>Cancel</DeconstructorCancel>
   <Lvl>Lvl</Lvl>
   <MiniMapHullBreach>Hull breach</MiniMapHullBreach>
   <MiniMapWaterLevel>Water level</MiniMapWaterLevel>
@@ -824,6 +828,8 @@
   <DialogAffirmative>Yes, sir!</DialogAffirmative>
   <DialogAffirmative>Aye!</DialogAffirmative>
   <DialogAffirmative>Got it!</DialogAffirmative>
+  <DialogAffirmative>Sure thing!</DialogAffirmative>
+  <DialogAffirmative>Copy that.</DialogAffirmative>
   <DialogReactorFuel>Loading more fuel to the reactor!</DialogReactorFuel>
   <DialogReactorTaken>Hey, I'm operating the reactor!</DialogReactorTaken>
   <DialogReactorTaken>Hands off please, I've got this!</DialogReactorTaken>
@@ -833,6 +839,10 @@
   <DialogLoadTurret>Loading ammunition to the [itemname]!</DialogLoadTurret>
   <DialogFireTurret>Firing!</DialogFireTurret>
   <DialogFireTurret>Fire in the hole!</DialogFireTurret>
+  <DialogTurretTargetDead>Enemy down!</DialogTurretTargetDead>
+  <DialogTurretTargetDead>Target down!</DialogTurretTargetDead>
+  <DialogTurretTargetDead>I think I got it!</DialogTurretTargetDead>
+  <DialogTurretTargetDead>Aand it's dead!</DialogTurretTargetDead>
   <DialogChargeBatteries>Charging [itemname] at [rate] %!</DialogChargeBatteries>
   <DialogChargeBatteries>[itemname] now charging at [rate] %!</DialogChargeBatteries>
   <DialogNoBatteries>What batteries?</DialogNoBatteries>
@@ -850,6 +860,8 @@
   <DialogGetDivingGear>I need diving gear!</DialogGetDivingGear>
   <DialogGetOxygenTank>Need to find an oxygen tank!</DialogGetOxygenTank>
   <DialogGetOxygenTank>I need an oxygen tank!</DialogGetOxygenTank>
+  <DialogGetOxygenTank>Where are the oxygen tanks?</DialogGetOxygenTank>
+  <DialogGetOxygenTank>I need oxygen!</DialogGetOxygenTank>
   <DialogLowOxygen>I'm passing out!</DialogLowOxygen>
   <DialogLowOxygen>Can't breathe!</DialogLowOxygen>
   <DialogLowOxygen>*gasping*</DialogLowOxygen>
@@ -920,8 +932,14 @@
   <OrderDialog.pumpwater.stoppumping>[name], stop the pumps!</OrderDialog.pumpwater.stoppumping>
   <OrderDialog.rescue>[name], rescue anyone in distress!</OrderDialog.rescue>
   <OrderDialog.rescue>[name], give medical aid to anyone in need!</OrderDialog.rescue>
-  <OrderDialog.repairsystems>[name], repair all damaged systems!</OrderDialog.repairsystems>
-  <OrderDialog.repairsystems>[name], take care of any broken devices!</OrderDialog.repairsystems>
+  <OrderDialog.repairsystems>[name], repair damaged systems!</OrderDialog.repairsystems>
+  <OrderDialog.repairsystems>[name], take care of broken devices!</OrderDialog.repairsystems>
+  <OrderDialog.repairsystems.jobspecific>[name], repair damaged systems!</OrderDialog.repairsystems.jobspecific>
+  <OrderDialog.repairsystems.jobspecific>[name], take care of broken devices!</OrderDialog.repairsystems.jobspecific>
+  <OrderDialog.repairsystems.all>[name], repair any damaged systems! I don't care if you don't have the skills, do your best!</OrderDialog.repairsystems.all>
+  <OrderDialog.repairsystems.all>[name], try to fix any broken devices, even if it's something you're not trained for!</OrderDialog.repairsystems.all>
+  <OrderDialog.repairsystems.all>[name], repair any damaged devices! Anything you can, I don't care about your training now!</OrderDialog.repairsystems.all>
+
   <OrderDialog.reportfire>Fire in [roomname]!</OrderDialog.reportfire>
   <OrderDialog.reportfire>[roomname] is on fire!</OrderDialog.reportfire>
   <OrderDialog.reportbreach>Hull breach in [roomname]!</OrderDialog.reportbreach>

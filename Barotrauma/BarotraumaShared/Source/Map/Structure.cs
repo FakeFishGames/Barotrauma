@@ -263,28 +263,10 @@ namespace Barotrauma
             if (prefab.Body)
             {
                 Bodies = new List<Body>();
-
-                float bodyWidth = ConvertUnits.ToSimUnits(prefab.BodyWidth <= 0.0f ? rect.Width : prefab.BodyWidth);
-                float bodyHeight = ConvertUnits.ToSimUnits(prefab.BodyHeight <= 0.0f ? rect.Height : prefab.BodyHeight);
-
-                Body newBody = BodyFactory.CreateRectangle(GameMain.World,
-                    bodyWidth,
-                    bodyHeight,
-                    1.5f);
-                newBody.BodyType = BodyType.Static;
-                newBody.Position = ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2.0f, rect.Y - rect.Height / 2.0f));
-                newBody.Rotation = MathHelper.ToRadians(-prefab.BodyRotation);
-                newBody.Friction = 0.5f;
-                newBody.OnCollision += OnWallCollision;
-                newBody.UserData = this;
-                newBody.CollisionCategories = (prefab.Platform) ? Physics.CollisionPlatform : Physics.CollisionWall;
-
-                Bodies.Add(newBody);
-                bodyDebugDimensions.Add(new Vector2(bodyWidth, bodyHeight));
-
                 WallList.Add(this);
 
                 CreateSections();
+                UpdateSections();
             }
             else
             {
@@ -329,24 +311,29 @@ namespace Barotrauma
         {
             Bodies = new List<Body>();
 
+            float bodyWidth = ConvertUnits.ToSimUnits(rect.Width * Math.Sqrt(2.0));
+            float bodyHeight = ConvertUnits.ToSimUnits(10);
+
             Body newBody = BodyFactory.CreateRectangle(GameMain.World,
-                ConvertUnits.ToSimUnits(rect.Width * Math.Sqrt(2.0) + Submarine.GridSize.X * 3.0f),
-                ConvertUnits.ToSimUnits(10),
-                1.5f);
+                bodyWidth, bodyHeight, 1.5f);
 
             newBody.BodyType = BodyType.Static;
             Vector2 stairPos = new Vector2(Position.X, rect.Y - rect.Height + rect.Width / 2.0f);
-            stairPos += new Vector2(
+            /*stairPos += new Vector2(
                 (StairDirection == Direction.Right) ? -Submarine.GridSize.X * 1.5f : Submarine.GridSize.X * 1.5f,
-                -Submarine.GridSize.Y * 2.0f);
-
-            newBody.Position = ConvertUnits.ToSimUnits(stairPos);
+                -Submarine.GridSize.Y * 2.0f);*/
             newBody.Rotation = (StairDirection == Direction.Right) ? MathHelper.PiOver4 : -MathHelper.PiOver4;
-            newBody.Friction = 0.8f;
-
             newBody.CollisionCategories = Physics.CollisionStairs;
-
+            newBody.Friction = 0.8f;
             newBody.UserData = this;
+            
+            Vector2 bodyOffset = ConvertUnits.ToSimUnits(prefab.BodyOffset);
+            if (FlippedX) { bodyOffset.X = -bodyOffset.X; }
+            if (FlippedY) { bodyOffset.Y = -bodyOffset.Y; }
+            newBody.Position = ConvertUnits.ToSimUnits(stairPos) + bodyOffset;
+
+            bodyDebugDimensions.Add(new Vector2(bodyWidth, bodyHeight));
+
             Bodies.Add(newBody);
         }
 
@@ -1009,33 +996,42 @@ namespace Barotrauma
                 if (BodyHeight > 0.0f) rect.Height = (int)(BodyHeight * (rect.Height / (float)this.rect.Height));
             }
             if (FlippedX) diffFromCenter = -diffFromCenter;
+            
+            Vector2 bodyOffset = ConvertUnits.ToSimUnits(prefab.BodyOffset);
+            if (FlippedX) { bodyOffset.X = -bodyOffset.X; }
+            if (FlippedY) { bodyOffset.Y = -bodyOffset.Y; }
 
             Body newBody = BodyFactory.CreateRectangle(GameMain.World,
                 ConvertUnits.ToSimUnits(rect.Width),
                 ConvertUnits.ToSimUnits(rect.Height),
                 1.5f);
             newBody.BodyType = BodyType.Static;
-            newBody.Position = ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2.0f, rect.Y - rect.Height / 2.0f));
+            //newBody.Position = ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2.0f, rect.Y - rect.Height / 2.0f));
             newBody.Friction = 0.5f;
             newBody.OnCollision += OnWallCollision;
             newBody.CollisionCategories = (prefab.Platform) ? Physics.CollisionPlatform : Physics.CollisionWall;
             newBody.UserData = this;
 
+            Vector2 structureCenter = ConvertUnits.ToSimUnits(Position);
             if (BodyRotation != 0.0f)
             {
-                Vector2 structureCenter = ConvertUnits.ToSimUnits(Position);
-                newBody.Position = structureCenter + new Vector2(
+                newBody.Position = structureCenter + bodyOffset + new Vector2(
                     (float)Math.Cos(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation),
                     (float)Math.Sin(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation)) * ConvertUnits.ToSimUnits(diffFromCenter);
                 newBody.Rotation = -BodyRotation;
             }
-            
+            else
+            {
+                newBody.Position = structureCenter + (IsHorizontal ? Vector2.UnitX : Vector2.UnitY) * ConvertUnits.ToSimUnits(diffFromCenter) + bodyOffset;
+            }
+
+            //OffsetBody(newBody);            
             Bodies.Add(newBody);
             bodyDebugDimensions.Add(new Vector2(ConvertUnits.ToSimUnits(rect.Width), ConvertUnits.ToSimUnits(rect.Height)));
 
             return newBody;
         }
-
+        
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null) 
         {
             for (int i = 0; i < Sections.Length; i++)

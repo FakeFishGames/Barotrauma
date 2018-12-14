@@ -10,6 +10,7 @@ namespace Barotrauma.Items.Components
 {
     partial class Fabricator : Powered, IServerSerializable, IClientSerializable
     {
+
         public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
             int itemIndex = msg.ReadRangedInteger(-1, fabricableItems.Count - 1);
@@ -28,6 +29,9 @@ namespace Barotrauma.Items.Components
                 if (fabricatedItem != null && fabricableItems.IndexOf(fabricatedItem) == itemIndex) return;
                 if (itemIndex < 0 || itemIndex >= fabricableItems.Count) return;
 
+#if CLIENT
+                SelectItem(null, fabricableItems[itemIndex]);
+#endif
                 StartFabricating(fabricableItems[itemIndex], c.Character);
             }
         }
@@ -36,6 +40,8 @@ namespace Barotrauma.Items.Components
         {
             int itemIndex = fabricatedItem == null ? -1 : fabricableItems.IndexOf(fabricatedItem);
             msg.WriteRangedInteger(-1, fabricableItems.Count - 1, itemIndex);
+            UInt16 userID = fabricatedItem == null || user == null ? (UInt16)0 : user.ID;
+            msg.Write(userID);
         }
     }
 }
