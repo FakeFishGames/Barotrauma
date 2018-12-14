@@ -47,6 +47,14 @@ namespace Barotrauma
             private set;
         }
 
+        //in display units
+        [Serialize("0.0,0.0", false)]
+        public Vector2 BodyOffset
+        {
+            get;
+            private set;
+        }
+
         [Serialize(false, false)]
         public bool Platform
         {
