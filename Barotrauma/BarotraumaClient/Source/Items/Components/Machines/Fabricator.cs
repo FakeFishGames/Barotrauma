@@ -130,8 +130,23 @@ namespace Barotrauma.Items.Components
                     missingItems.Remove(missingItems.FirstOrDefault(mi => mi.ItemPrefab == item.prefab));
                 }
 
+                var availableIngredients = GetAvailableIngredients();
+
                 foreach (FabricableItem.RequiredItem requiredItem in missingItems)
                 {
+                    //highlight suitable ingredients in linked inventories
+                    foreach (Item item in availableIngredients)
+                    {
+                        if (item.ParentInventory != inputContainer.Inventory && IsItemValidIngredient(item, requiredItem))
+                        {
+                            int availableSlotIndex = Array.IndexOf(item.ParentInventory.Items, item);
+                            if (item.ParentInventory.slots[availableSlotIndex].HighlightTimer <= 0.0f)
+                            {
+                                item.ParentInventory.slots[availableSlotIndex].ShowBorderHighlight(Color.LightGreen * 0.5f, 0.5f, 0.5f);
+                            }
+                        }
+                    }
+
                     while (slotIndex < inputContainer.Capacity && inputContainer.Inventory.Items[slotIndex] != null)
                     {
                         slotIndex++;
@@ -145,7 +160,7 @@ namespace Barotrauma.Items.Components
                     itemIcon.Draw(
                         spriteBatch,
                         slotRect.Center.ToVector2(),
-                        color: requiredItem.ItemPrefab.InventoryIconColor * 0.4f,
+                        color: requiredItem.ItemPrefab.InventoryIconColor * 0.3f,
                         scale: Math.Min(slotRect.Width / itemIcon.size.X, slotRect.Height / itemIcon.size.Y));
                     
                     if (slotRect.Contains(PlayerInput.MousePosition))
@@ -165,7 +180,7 @@ namespace Barotrauma.Items.Components
         private void DrawOutputOverLay(SpriteBatch spriteBatch, GUICustomComponent overlayComponent)
         {
             overlayComponent.RectTransform.SetAsLastChild();
-
+            
             FabricableItem targetItem = fabricatedItem ?? selectedItem;
             if (targetItem != null)
             {
@@ -183,7 +198,7 @@ namespace Barotrauma.Items.Components
                     spriteBatch,
                     slotRect.Center.ToVector2(),
                     color: targetItem.TargetItem.InventoryIconColor * 0.4f,
-                    scale: Math.Min(slotRect.Width / itemIcon.size.X, slotRect.Height / itemIcon.size.Y));
+                    scale: Math.Min(slotRect.Width / itemIcon.size.X, slotRect.Height / itemIcon.size.Y) * 0.9f);
             }
             
             if (tooltip != null)
@@ -286,6 +301,7 @@ namespace Barotrauma.Items.Components
             activateButton.Enabled = false;
             inSufficientPowerWarning.Visible = powerConsumption > 0 && voltage < minVoltage;
 
+            var availableIngredients = GetAvailableIngredients();
             if (character != null)
             {
                 foreach (GUIComponent child in itemList.Content.Children)
@@ -293,7 +309,7 @@ namespace Barotrauma.Items.Components
                     var itemPrefab = child.UserData as FabricableItem;
                     if (itemPrefab == null) continue;
 
-                    bool canBeFabricated = CanBeFabricated(itemPrefab);
+                    bool canBeFabricated = CanBeFabricated(itemPrefab, availableIngredients);
                     if (itemPrefab == selectedItem)
                     {
                         activateButton.Enabled = canBeFabricated;
