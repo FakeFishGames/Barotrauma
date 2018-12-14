@@ -12,7 +12,9 @@ namespace Barotrauma.Items.Components
         private GUIButton activateButton;
         private GUIComponent inputInventoryHolder, outputInventoryHolder;
         private GUICustomComponent inputInventoryOverlay;
-        
+
+        private GUIComponent inSufficientPowerWarning;
+
         partial void InitProjSpecific(XElement element)
         {
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), GuiFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
@@ -33,7 +35,25 @@ namespace Barotrauma.Items.Components
                 OnClicked = ToggleActive
             };
 
+
+            inSufficientPowerWarning = new GUITextBlock(new RectTransform(Vector2.One, activateButton.RectTransform), TextManager.Get("DeconstructorNoPower"),
+                textColor: Color.Orange, textAlignment: Alignment.Center, color: Color.Black, style: "OuterGlow")
+            {
+                HoverColor = Color.Black,
+                IgnoreLayoutGroups = true,
+                Visible = false,
+                CanBeFocused = false
+            };
+
             outputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.3f), paddedFrame.RectTransform), style: null);
+        }
+
+        partial void OnItemLoadedProjSpecific()
+        {
+            inputContainer.AllowUIOverlap = true;
+            inputContainer.Inventory.RectTransform = inputInventoryHolder.RectTransform;
+            outputContainer.AllowUIOverlap = true;
+            outputContainer.Inventory.RectTransform = outputInventoryHolder.RectTransform;
         }
 
         private void DrawOverLay(SpriteBatch spriteBatch, GUICustomComponent overlayComponent)
@@ -48,12 +68,10 @@ namespace Barotrauma.Items.Components
                 Color.Green * 0.5f, isFilled: true);
         }
 
-        partial void OnItemLoadedProjSpecific()
+        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
-            inputContainer.AllowUIOverlap = true;
-            inputContainer.Inventory.RectTransform = inputInventoryHolder.RectTransform;
-            outputContainer.AllowUIOverlap = true;
-            outputContainer.Inventory.RectTransform = outputInventoryHolder.RectTransform;
+            inSufficientPowerWarning.Visible = powerConsumption > 0 && voltage < minVoltage;
+            activateButton.Enabled = !inSufficientPowerWarning.Visible;
         }
 
         private bool ToggleActive(GUIButton button, object obj)
