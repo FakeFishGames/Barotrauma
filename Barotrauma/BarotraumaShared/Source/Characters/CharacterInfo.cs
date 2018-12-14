@@ -414,19 +414,19 @@ namespace Barotrauma
                 var wearables = attachments.Elements("Wearable");
                 if (hairs == null)
                 {
-                    hairs = AddEmpty(FilterByType(wearables, WearableType.Hair));
+                    hairs = AddEmpty(FilterByType(wearables, WearableType.Hair), WearableType.Hair);
                 }
                 if (beards == null)
                 {
-                    beards = AddEmpty(FilterByType(wearables, WearableType.Beard));
+                    beards = AddEmpty(FilterByType(wearables, WearableType.Beard), WearableType.Beard);
                 }
                 if (moustaches == null)
                 {
-                    moustaches = AddEmpty(FilterByType(wearables, WearableType.Moustache));
+                    moustaches = AddEmpty(FilterByType(wearables, WearableType.Moustache), WearableType.Moustache);
                 }
                 if (faceAttachments == null)
                 {
-                    faceAttachments = AddEmpty(FilterByType(wearables, WearableType.FaceAttachment));
+                    faceAttachments = AddEmpty(FilterByType(wearables, WearableType.FaceAttachment), WearableType.FaceAttachment);
                 }
 
                 if (IsValidIndex(HairIndex, hairs))
@@ -466,14 +466,10 @@ namespace Barotrauma
                     FaceAttachmentIndex = faceAttachments.IndexOf(FaceAttachment);
                 }
 
-                bool IsValidIndex(int index, List<XElement> list) => index >= 0 && index < list.Count - 1;
-
-                IEnumerable<float> GetWeights(IEnumerable<XElement> elements) => elements.Select(h => h.GetAttributeFloat("commonness", 1f));
-
-                List<XElement> AddEmpty(IEnumerable<XElement> elements)
+                List<XElement> AddEmpty(IEnumerable<XElement> elements, WearableType type)
                 {
                     // Let's add an empty element so that there's a chance that we don't get any actual element -> allows bald and beardless guys, for example.
-                    var emptyElement = new XElement("Empty");
+                    var emptyElement = new XElement("Wearable", new XAttribute("type", type.ToString()));
                     var list = new List<XElement>() { emptyElement };
                     list.AddRange(elements);
                     return list;
@@ -481,9 +477,10 @@ namespace Barotrauma
 
                 XElement GetRandomElement(IEnumerable<XElement> elements)
                 {
-                    var filtered = elements.Where(e => IsWearableAllowed(e));
-                    if (filtered.Count() == 0) { return null; }
-                    var element = ToolBox.SelectWeightedRandom(filtered.ToList(), GetWeights(filtered).ToList(), Rand.RandSync.Server);
+                    var filtered = elements.Where(e => IsWearableAllowed(e)).ToList();
+                    if (filtered.Count == 0) { return null; }
+                    var weights = GetWeights(filtered).ToList();
+                    var element = ToolBox.SelectWeightedRandom(filtered, weights, Rand.RandSync.Server);
                     return element == null || element.Name == "Empty" ? null : element;
                 }
 
@@ -493,7 +490,8 @@ namespace Barotrauma
                 bool IsWearableAllowed(XElement element)
                 {
                     var spriteElement = element.Element("sprite");
-                    if (element.GetAttributeInt("headid", 0) != headSpriteId) { return false; }
+                    int headId = element.GetAttributeInt("headid", -1);
+                    if (headId > -1 && headId != headSpriteId ) { return false; }
                     string spriteName = spriteElement.GetAttributeString("name", string.Empty);
                     return IsAllowed(HairElement, spriteName) && IsAllowed(BeardElement, spriteName) && IsAllowed(MoustacheElement, spriteName) && IsAllowed(FaceAttachment, spriteName);
                 }
@@ -510,6 +508,9 @@ namespace Barotrauma
                     }
                     return true;
                 }
+
+                bool IsValidIndex(int index, List<XElement> list) => index >= 0 && index < list.Count - 1;
+                IEnumerable<float> GetWeights(IEnumerable<XElement> elements) => elements.Select(h => h.GetAttributeFloat("commonness", 1f));
             }
         }
 
