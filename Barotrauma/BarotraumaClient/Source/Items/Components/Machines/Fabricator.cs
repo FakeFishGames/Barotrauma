@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -106,7 +107,45 @@ namespace Barotrauma.Items.Components
             outputContainer.AllowUIOverlap = true;
             outputContainer.Inventory.RectTransform = outputInventoryHolder.RectTransform;
         }
-        
+
+        partial void SelectProjSpecific(Character character)
+        {
+            var nonItems = itemList.Content.Children.Where(c => !(c.UserData is FabricableItem));
+            nonItems.ForEach(i => itemList.Content.RemoveChild(i));
+
+            itemList.Content.RectTransform.SortChildren((c1, c2) =>
+            {
+                var item1 = c1.GUIComponent.UserData as FabricableItem;
+                var item2 = c2.GUIComponent.UserData as FabricableItem;
+
+                bool hasSkills1 = DegreeOfSuccess(character, item1.RequiredSkills) >= 0.5f;
+                bool hasSkills2 = DegreeOfSuccess(character, item2.RequiredSkills) >= 0.5f;
+
+                if (hasSkills1 != hasSkills2)
+                {
+                    return hasSkills1 ? -1 : 1;
+                }
+
+                return string.Compare(item1.DisplayName, item2.DisplayName);
+            });
+
+            var sufficientSkillsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), itemList.Content.RectTransform), "Sufficient skills to fabricate:", textColor: Color.LightGreen)
+            {
+                CanBeFocused = false
+            };
+            sufficientSkillsText.RectTransform.SetAsFirstChild();
+
+            var insufficientSkillsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), itemList.Content.RectTransform), "Insufficient skills to fabricate:", textColor: Color.Orange)
+            {
+                CanBeFocused = false
+            };
+            var firstinSufficient = itemList.Content.Children.FirstOrDefault(c => c.UserData is FabricableItem fabricableItem && DegreeOfSuccess(character, fabricableItem.RequiredSkills) < 0.5f);
+            if (firstinSufficient != null)
+            {
+                insufficientSkillsText.RectTransform.RepositionChildInHierarchy(itemList.Content.RectTransform.GetChildIndex(firstinSufficient.RectTransform));
+            }
+        }
+
         private void DrawInputOverLay(SpriteBatch spriteBatch, GUICustomComponent overlayComponent)
         {
             overlayComponent.RectTransform.SetAsLastChild();
