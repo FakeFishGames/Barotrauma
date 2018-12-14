@@ -199,6 +199,8 @@ namespace Barotrauma.Items.Components
 
             foreach (Submarine sub in subs)
             {
+                if (sub.HullVertices == null) { continue; }
+
                 float displayScale = ConvertUnits.ToDisplayUnits(scale);
                 Vector2 offset = Vector2.Zero;
                 Vector2 center = container.Rect.Center.ToVector2();

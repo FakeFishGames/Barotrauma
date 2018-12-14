@@ -7,6 +7,11 @@ namespace Barotrauma
 {
     class AIObjectiveRepairItems : AIObjective
     {
+        /// <summary>
+        /// Should the character only attempt to fix items they have the skills to fix, or any damaged item
+        /// </summary>
+        public bool RequireAdequateSkills;
+
         public AIObjectiveRepairItems(Character character)
             : base(character, "")
         {
@@ -30,7 +35,7 @@ namespace Barotrauma
 
         public override bool IsDuplicate(AIObjective otherObjective)
         {
-            return otherObjective is AIObjectiveRepairItems;
+            return otherObjective is AIObjectiveRepairItems repairItems && repairItems.RequireAdequateSkills == RequireAdequateSkills;
         }
 
         protected override void Act(float deltaTime)
@@ -48,6 +53,11 @@ namespace Barotrauma
                 {
                     //ignore ones that are already fixed
                     if (item.Condition > repairable.ShowRepairUIThreshold) continue;
+
+                    if (RequireAdequateSkills)
+                    {
+                        if (!repairable.HasRequiredSkills(character)) { continue; }
+                    }
 
                     AddSubObjective(new AIObjectiveRepairItem(character, item));
                     break;
