@@ -7,8 +7,6 @@ namespace Barotrauma
 {
     class AIObjectiveGoTo : AIObjective
     {
-        private Entity target;
-
         private Vector2 targetPos;
 
         private bool repeat;
@@ -22,10 +20,12 @@ namespace Barotrauma
 
         public bool IgnoreIfTargetDead;
 
+        public bool AllowGoingOutside = false;
+
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
-            if (target != null && target.Removed) return 0.0f;
-            if (IgnoreIfTargetDead && target is Character character && character.IsDead) return 0.0f;
+            if (Target != null && Target.Removed) return 0.0f;
+            if (IgnoreIfTargetDead && Target is Character character && character.IsDead) return 0.0f;
                         
             if (objectiveManager.CurrentOrder == this)
             {
@@ -39,7 +39,7 @@ namespace Barotrauma
         {
             get
             {
-                if (target != null && target.Removed) return false;
+                if (Target != null && Target.Removed) return false;
 
                 if (repeat || waitUntilPathUnreachable > 0.0f) return true;
                 var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
@@ -47,19 +47,18 @@ namespace Barotrauma
                 //path doesn't exist (= hasn't been searched for yet), assume for now that the target is reachable
                 if (pathSteering?.CurrentPath == null) return true;
 
-                return (!pathSteering.CurrentPath.Unreachable);
+                if (!AllowGoingOutside && pathSteering.CurrentPath.HasOutdoorsNodes) return false;
+
+                return !pathSteering.CurrentPath.Unreachable;
             }
         }
 
-        public Entity Target
-        {
-            get { return target; }
-        }
+        public Entity Target { get; private set; }
 
         public AIObjectiveGoTo(Entity target, Character character, bool repeat = false, bool getDivingGearIfNeeded = true)
             : base (character, "")
         {
-            this.target = target;
+            this.Target = target;
             this.repeat = repeat;
 
             waitUntilPathUnreachable = 5.0f;
@@ -79,7 +78,7 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (target == character)
+            if (Target == character)
             {
                 character.AIController.SteeringManager.Reset();
                 return;
@@ -92,20 +91,20 @@ namespace Barotrauma
                 character.SelectedConstruction = null;
             }
 
-            if (target != null) character.AIController.SelectTarget(target.AiTarget);
+            if (Target != null) character.AIController.SelectTarget(Target.AiTarget);
 
             Vector2 currTargetPos = Vector2.Zero;
 
-            if (target == null)
+            if (Target == null)
             {
                 currTargetPos = targetPos;
             }
             else
             {
-                currTargetPos = target.SimPosition;
+                currTargetPos = Target.SimPosition;
                 
                 //if character is inside the sub and target isn't, transform the position
-                if (character.Submarine != null && target.Submarine == null)
+                if (character.Submarine != null && Target.Submarine == null)
                 {
                     currTargetPos -= character.Submarine.SimPosition;
                 }
@@ -119,7 +118,7 @@ namespace Barotrauma
             else
             {
                 character.AIController.SteeringManager.SteeringSeek(currTargetPos);
-                if (getDivingGearIfNeeded && target?.Submarine == null)
+                if (getDivingGearIfNeeded && Target?.Submarine == null && AllowGoingOutside)
                 {
                     AddSubObjective(new AIObjectiveFindDivingGear(character, true));
                 }
@@ -129,7 +128,10 @@ namespace Barotrauma
                     {
                         indoorsSteering.SteeringWander();
                     }
-                    else if (getDivingGearIfNeeded && indoorsSteering.CurrentPath != null && indoorsSteering.CurrentPath.HasOutdoorsNodes)
+                    else if (AllowGoingOutside && 
+                        getDivingGearIfNeeded && 
+                        indoorsSteering.CurrentPath != null && 
+                        indoorsSteering.CurrentPath.HasOutdoorsNodes)
                     {
                         AddSubObjective(new AIObjectiveFindDivingGear(character, true));
                     }
@@ -145,17 +147,17 @@ namespace Barotrauma
 
             float allowedDistance = 0.5f;
 
-            if (target is Item item)
+            if (Target is Item item)
             {
                 allowedDistance = Math.Max(ConvertUnits.ToSimUnits(item.InteractDistance), allowedDistance);
                 if (item.IsInsideTrigger(character.WorldPosition)) completed = true;
             }
-            else if (target is Character targetCharacter)
+            else if (Target is Character targetCharacter)
             {
                 if (character.CanInteractWith(targetCharacter)) completed = true;
             }
 
-            completed = completed || Vector2.DistanceSquared(target != null ? target.SimPosition : targetPos, character.SimPosition) < allowedDistance * allowedDistance;
+            completed = completed || Vector2.DistanceSquared(Target != null ? Target.SimPosition : targetPos, character.SimPosition) < allowedDistance * allowedDistance;
 
             if (completed) character.AIController.SteeringManager.Reset();
 
@@ -167,7 +169,7 @@ namespace Barotrauma
             AIObjectiveGoTo objective = otherObjective as AIObjectiveGoTo;
             if (objective == null) return false;
 
-            if (objective.target == target) return true;
+            if (objective.Target == Target) return true;
 
             return (objective.targetPos == targetPos);
         }

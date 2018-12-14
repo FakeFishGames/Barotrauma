@@ -245,7 +245,7 @@ namespace Barotrauma
 
                     if (GameMain.Client != null)
                     {
-                        GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.CPR });
+                        GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Treatment });
                     }
 
                     return true;
@@ -747,22 +747,7 @@ namespace Barotrauma
 
                 bool horizontal = afflictionArea.Width > afflictionArea.Height;
                 int iconSize = horizontal ? afflictionArea.Height : afflictionArea.Width;
-                /*foreach (Pair<Affliction, string> statusIcon in statusIcons)
-                {
-                    Rectangle afflictionIconRect = new Rectangle(pos, new Point(iconSize));
-                    interactArea = Rectangle.Union(interactArea, afflictionIconRect);
-                    if (afflictionIconRect.Contains(PlayerInput.MousePosition))
-                    {
-                        highlightedIcon = statusIcon;
-                        highlightedIconPos = afflictionIconRect.Center.ToVector2();
-                    }
-                    if (horizontal)
-                        pos.X += iconSize + (int)(5 * GUI.Scale);
-                    else
-                        pos.Y += iconSize + (int)(5 * GUI.Scale);
-                }*/
-
-                pos = afflictionArea.Location;
+                
                 foreach (Pair<Affliction, string> statusIcon in statusIcons)
                 {
                     Rectangle afflictionIconRect = new Rectangle(pos, new Point(iconSize));
@@ -1048,28 +1033,10 @@ namespace Barotrauma
                     return true;
                 }
             }
-            
+
             Limb targetLimb = character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex);
-            if (GameMain.Client != null)
-            {
-                GameMain.Client.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, character.ID, targetLimb });
-                return true;
-            }
 
-            bool remove = false;
-            foreach (ItemComponent ic in item.components)
-            {
-                if (!ic.HasRequiredContainedItems(character == Character.Controlled)) continue;
-                ic.PlaySound(ActionType.OnUse, character.WorldPosition, character);
-                ic.WasUsed = true;
-                ic.ApplyStatusEffects(ActionType.OnUse, 1.0f, character, targetLimb);
-                if (ic.DeleteOnUse) remove = true;
-            }
-
-            if (remove)
-            {
-                Entity.Spawner?.AddToRemoveQueue(item);
-            }
+            item.ApplyTreatment(Character.Controlled, character, targetLimb);
 
             dropItemAnimTimer = dropItemAnimDuration;
             droppedItem = item;

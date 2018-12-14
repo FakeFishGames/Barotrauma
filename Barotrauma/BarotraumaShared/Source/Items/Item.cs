@@ -314,20 +314,20 @@ namespace Barotrauma
         {
             get { return Prefab.ConfigFile; }
         }
-        
+
         //which type of inventory slots (head, torso, any, etc) the item can be placed in
         public List<InvSlotType> AllowedSlots
         {
             get
             {
                 Pickable p = GetComponent<Pickable>();
-                return (p==null) ? new List<InvSlotType>() { InvSlotType.Any } : p.AllowedSlots;
+                return (p == null) ? new List<InvSlotType>() { InvSlotType.Any } : p.AllowedSlots;
             }
         }
-        
+
         public List<Connection> Connections
         {
-            get 
+            get
             {
                 ConnectionPanel panel = GetComponent<ConnectionPanel>();
                 if (panel == null) return null;
@@ -347,6 +347,11 @@ namespace Barotrauma
         {
             get { return ownInventory; }
         }
+
+        [Serialize(false, true), Editable(ToolTip =
+            "Enable if you want to display the item HUD side by side with another item's HUD, when linked together. " +
+            "Disclaimer: It's possible or even likely that the views block each other, if they were not designed to be viewed together!")]
+        public bool DisplaySideBySideWhenLinked { get; set; }
 
         public IEnumerable<Repairable> Repairables
         {
@@ -438,6 +443,7 @@ namespace Barotrauma
                     case "decorativesprite":
                     case "price":
                     case "levelcommonness":
+                    case "suitabletreatment":
                         break;
                     case "staticbody":
                         StaticBodyConfig = subElement;
@@ -781,8 +787,7 @@ namespace Barotrauma
         {
             if (statusEffectLists == null) return;
 
-            List<StatusEffect> statusEffects;
-            if (!statusEffectLists.TryGetValue(type, out statusEffects)) return;
+            if (!statusEffectLists.TryGetValue(type, out List<StatusEffect> statusEffects)) return;
 
             bool broken = condition <= 0.0f;
             foreach (StatusEffect effect in statusEffects)
@@ -1404,6 +1409,48 @@ namespace Barotrauma
             }
         }
 
+        public void ApplyTreatment(Character user, Character character, Limb targetLimb)
+        {
+            //can't apply treatment to dead characters
+            if (character.IsDead) return;
+            if (!UseInHealthInterface) return;
+
+#if CLIENT
+            if (GameMain.Client != null)
+            {
+                GameMain.Client.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Treatment, character.ID, targetLimb });
+                return;
+            }
+#endif
+
+            bool remove = false;
+            foreach (ItemComponent ic in components)
+            {
+                if (!ic.HasRequiredContainedItems(user == Character.Controlled)) continue;
+
+                bool success = Rand.Range(0.0f, 1.0f) < ic.DegreeOfSuccess(Character.Controlled);
+                ActionType actionType = success ? ActionType.OnUse : ActionType.OnFailure;
+
+#if CLIENT
+                ic.PlaySound(actionType, user.WorldPosition, user);
+#endif
+                ic.WasUsed = true;
+                ic.ApplyStatusEffects(actionType, 1.0f, character, targetLimb);
+
+                if (GameMain.NetworkMember!=null && GameMain.NetworkMember.IsServer)
+                {
+                    GameMain.NetworkMember.CreateEntityEvent(this, new object[]
+                    {
+                        NetEntityEvent.Type.ApplyStatusEffect, actionType, ic, character.ID, targetLimb
+                    });
+                }
+
+                if (ic.DeleteOnUse) remove = true;
+            }
+
+            if (remove) { Spawner?.AddToRemoveQueue(this); }
+        }
+
         public List<ColoredText> GetHUDTexts(Character character)
         {
             List<ColoredText> texts = new List<ColoredText>();
@@ -1486,7 +1533,7 @@ namespace Barotrauma
 
             return editableProperties;
         }
-        
+
         private void WritePropertyChange(NetBuffer msg, object[] extraData, bool inGameEditableOnly)
         {
             var allProperties = inGameEditableOnly ? GetProperties<InGameEditable>() : GetProperties<Editable>();

@@ -1289,10 +1289,10 @@ namespace Barotrauma
         
         public bool CanInteractWith(Item item)
         {
-            return CanInteractWith(item, out float distanceToItem);
+            return CanInteractWith(item, out float distanceToItem, checkLinked: true);
         }
 
-        public bool CanInteractWith(Item item, out float distanceToItem)
+        public bool CanInteractWith(Item item, out float distanceToItem, bool checkLinked)
         {
             distanceToItem = -1.0f;
 
@@ -1313,6 +1313,22 @@ namespace Barotrauma
                 if (wire.Connections[0]?.Item != null && SelectedConstruction == wire.Connections[0].Item) return true;
                 if (wire.Connections[1]?.Item != null && SelectedConstruction == wire.Connections[1].Item) return true;
             }
+
+            if (checkLinked && item.DisplaySideBySideWhenLinked)
+            {
+                foreach (MapEntity linked in item.linkedTo)
+                {
+                    if (linked is Item linkedItem)
+                    {
+                        if (CanInteractWith(linkedItem, out float distToLinked, checkLinked: false))
+                        {
+                            distanceToItem = distToLinked;
+                            return true;
+                        }
+                    }
+                }
+            }
+
 
             if (item.InteractDistance == 0.0f && !item.Prefab.Triggers.Any()) return false;
             
@@ -1597,7 +1613,7 @@ namespace Barotrauma
                     float minDist = float.PositiveInfinity;
                     foreach (Ladder ladder in Ladder.List)
                     {
-                        if (CanInteractWith(ladder.Item, out float dist) && dist < minDist)
+                        if (CanInteractWith(ladder.Item, out float dist, checkLinked: false) && dist < minDist)
                         {
                             minDist = dist;
                             nearbyLadder = ladder;

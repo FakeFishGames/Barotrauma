@@ -1148,7 +1148,19 @@ namespace Barotrauma
             ruins.Add(ruin);
             
             ruin.RuinShapes.Sort((shape1, shape2) => shape2.DistanceFromEntrance.CompareTo(shape1.DistanceFromEntrance));
-            for (int i = 0; i < 4 && i < ruin.RuinShapes.Count; i++)
+            int waypointCount = 0;
+            foreach (WayPoint wp in WayPoint.WayPointList)
+            {
+                if (wp.SpawnType != SpawnType.Enemy || wp.Submarine != null) { continue; }
+                if (ruin.RuinShapes.Any(rs => rs.Rect.Contains(wp.WorldPosition)))
+                {
+                    positionsOfInterest.Add(new InterestingPosition(new Point((int)wp.WorldPosition.X, (int)wp.WorldPosition.Y), PositionType.Ruin));
+                    waypointCount++;
+                }
+            }
+
+            //not enough waypoints inside ruins -> create some spawn positions manually            
+            for (int i = 0; i < 4 - waypointCount && i < ruin.RuinShapes.Count; i++)
             {
                 positionsOfInterest.Add(new InterestingPosition(ruin.RuinShapes[i].Rect.Center, PositionType.Ruin));
             }

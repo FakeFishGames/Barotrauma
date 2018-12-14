@@ -13,8 +13,12 @@ namespace Barotrauma
     {
         private readonly XElement configElement;
         private readonly string configPath;
-
-        private List<Pair<MapEntityPrefab,Rectangle>> entities;
+        
+        public List<Pair<MapEntityPrefab, Rectangle>> Entities
+        {
+            get;
+            private set;
+        }
 
         public ItemAssemblyPrefab(string filePath)
         {
@@ -34,12 +38,12 @@ namespace Barotrauma
 
             SerializableProperty.DeserializeProperties(this, configElement);
 
-            entities = new List<Pair<MapEntityPrefab, Rectangle>>();
+            Entities = new List<Pair<MapEntityPrefab, Rectangle>>();
             foreach (XElement entityElement in doc.Root.Elements())
             {
                 string entityName = entityElement.GetAttributeString("name", "");
                 MapEntityPrefab mapEntity = List.Find(p => p.Name == entityName);
-                if (mapEntity != null) entities.Add(new Pair<MapEntityPrefab,Rectangle>(mapEntity, entityElement.GetAttributeRect("rect", Rectangle.Empty)));
+                if (mapEntity != null) Entities.Add(new Pair<MapEntityPrefab,Rectangle>(mapEntity, entityElement.GetAttributeRect("rect", Rectangle.Empty)));
             }
             
             List.Add(this);
@@ -82,7 +86,7 @@ namespace Barotrauma
         public override void DrawPlacing(SpriteBatch spriteBatch, Camera cam, Rectangle? placeRect = null)
         {
             base.DrawPlacing(spriteBatch, cam);
-            foreach (Pair<MapEntityPrefab, Rectangle> entity in entities)
+            foreach (Pair<MapEntityPrefab, Rectangle> entity in Entities)
             {
                 Rectangle drawRect = entity.Second;
                 drawRect.Location += Submarine.MouseToWorldGrid(cam, Submarine.MainSub).ToPoint();

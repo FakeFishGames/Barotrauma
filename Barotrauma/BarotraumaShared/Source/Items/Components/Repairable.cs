@@ -76,8 +76,8 @@ namespace Barotrauma.Items.Components
                 currentFixer = value;
             }
         }
-        
-        public Repairable(Item item, XElement element) 
+
+        public Repairable(Item item, XElement element)
             : base(item, element)
         {
             IsActive = true;
@@ -87,12 +87,19 @@ namespace Barotrauma.Items.Components
             header = element.GetAttributeString("name", "");
             fixDurationLowSkill = element.GetAttributeFloat("fixdurationlowskill", 100.0f);
             fixDurationHighSkill = element.GetAttributeFloat("fixdurationhighskill", 5.0f);
-            
-            deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
-            
             InitProjSpecific(element);
         }
-        
+
+        public override void OnItemLoaded()
+        {
+            deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
+
+#if SERVER
+            //let the clients know the initial deterioration delay
+            item.CreateServerEvent(this);
+#endif
+        }
+
         partial void InitProjSpecific(XElement element);
         
         public void StartRepairing(Character character)

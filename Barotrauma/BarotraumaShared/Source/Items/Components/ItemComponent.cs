@@ -510,6 +510,15 @@ namespace Barotrauma.Items.Components
         /// <returns>0.5f if all the skills meet the skill requirements exactly, 1.0f if they're way above and 0.0f if way less</returns>
         public float DegreeOfSuccess(Character character)
         {
+            return DegreeOfSuccess(character, requiredSkills);
+        }
+
+        /// <summary>
+        /// Returns 0.0f-1.0f based on how well the Character can use the itemcomponent
+        /// </summary>
+        /// <returns>0.5f if all the skills meet the skill requirements exactly, 1.0f if they're way above and 0.0f if way less</returns>
+        public float DegreeOfSuccess(Character character, List<Skill> requiredSkills)
+        {
             if (requiredSkills.Count == 0) return 1.0f;
 
             float skillSuccessSum = 0.0f;
@@ -585,8 +594,7 @@ namespace Barotrauma.Items.Components
         {
             if (statusEffectLists == null) return;
 
-            List<StatusEffect> statusEffects;
-            if (!statusEffectLists.TryGetValue(type, out statusEffects)) return;
+            if (!statusEffectLists.TryGetValue(type, out List<StatusEffect> statusEffects)) return;
 
             bool broken = item.Condition <= 0.0f;
             foreach (StatusEffect effect in statusEffects)
