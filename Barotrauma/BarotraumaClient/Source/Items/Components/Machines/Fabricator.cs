@@ -21,6 +21,8 @@ namespace Barotrauma.Items.Components
 
         private FabricableItem selectedItem;
 
+        private GUIComponent inSufficientPowerWarning;
+
         private Pair<Rectangle, string> tooltip;
 
         partial void InitProjSpecific()
@@ -50,7 +52,7 @@ namespace Barotrauma.Items.Components
             {
                 CanBeFocused = false
             };
-
+            
             foreach (FabricableItem fi in fabricableItems)
             {
                 GUIFrame frame = new GUIFrame(new RectTransform(new Point(itemList.Rect.Width, 50), itemList.Content.RectTransform), style: null)
@@ -85,6 +87,15 @@ namespace Barotrauma.Items.Components
                 OnClicked = StartButtonClicked,
                 UserData = selectedItem,
                 Enabled = false
+            };
+
+            inSufficientPowerWarning = new GUITextBlock(new RectTransform(Vector2.One, activateButton.RectTransform), TextManager.Get("FabricatorNoPower"),
+                textColor: Color.Orange, textAlignment: Alignment.Center, color: Color.Black, style: "OuterGlow")
+            {
+                HoverColor = Color.Black,
+                IgnoreLayoutGroups = true,
+                Visible = false,
+                CanBeFocused = false
             };
         }
 
@@ -273,6 +284,7 @@ namespace Barotrauma.Items.Components
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             activateButton.Enabled = false;
+            inSufficientPowerWarning.Visible = powerConsumption > 0 && voltage < minVoltage;
 
             if (character != null)
             {

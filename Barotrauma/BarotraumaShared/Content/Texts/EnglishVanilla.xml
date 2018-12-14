@@ -670,12 +670,14 @@
   <EngineBackwards>Backwards</EngineBackwards>
   <EngineForwards>Forwards</EngineForwards>
   <EnginePowered>Powered</EnginePowered>
+  <FabricatorNoPower>Insufficient power</FabricatorNoPower>
   <FabricatorRequiredItems>Required items</FabricatorRequiredItems>
   <FabricatorRequiredTime>Required time</FabricatorRequiredTime>
   <FabricatorRequiredCondition>Condition</FabricatorRequiredCondition>
   <FabricatorRequiredSkills>Skills required to calibrate</FabricatorRequiredSkills>
   <FabricatorCreate>Create</FabricatorCreate>
   <FabricatorCancel>Cancel</FabricatorCancel>
+  <DeconstructorNoPower>Insufficient power</DeconstructorNoPower>
   <DeconstructorDeconstruct>Deconstruct</DeconstructorDeconstruct>
   <DeconstructorCancel>Cancel</DeconstructorCancel>
   <Lvl>Lvl</Lvl>
