@@ -37,7 +37,7 @@ namespace Barotrauma.Items.Components
         public readonly float OutCondition; //Percentage-based from 0 to 1
 
         public readonly List<Skill> RequiredSkills;
-
+        
         public FabricableItem(XElement element)
         {
             if (element.Attribute("name") != null)
@@ -140,7 +140,11 @@ namespace Barotrauma.Items.Components
         private Item[] prevContainedItems;
 
         private Character user;
-        
+
+        private ItemContainer inputContainer, outputContainer;
+
+        private float progressState;
+
         public Fabricator(Item item, XElement element) 
             : base(item, element)
         {
@@ -163,6 +167,24 @@ namespace Barotrauma.Items.Components
 
             InitProjSpecific();
         }
+
+        public override void OnItemLoaded()
+        {
+            var containers = item.GetComponents<ItemContainer>().ToList();
+            if (containers.Count < 2)
+            {
+                DebugConsole.ThrowError("Error in item \"" + item.Name + "\": Fabricators must have two ItemContainer components!");
+                return;
+            }
+
+            inputContainer = containers[0];
+            outputContainer = containers[1];
+
+            OnItemLoadedProjSpecific();
+        }
+
+        partial void OnItemLoadedProjSpecific();
+
 
         partial void InitProjSpecific();
 
@@ -201,11 +223,9 @@ namespace Barotrauma.Items.Components
                 child.GetChild<GUITextBlock>().TextColor = Color.White * (canBeFabricated ? 1.0f : 0.5f);
                 child.GetChild<GUIImage>().Color = itemPrefab.TargetItem.SpriteColor * (canBeFabricated ? 1.0f : 0.5f);
             }
-#endif
-
-            var itemContainer = item.GetComponent<ItemContainer>();
-            prevContainedItems = new Item[itemContainer.Inventory.Items.Length];
-            itemContainer.Inventory.Items.CopyTo(prevContainedItems, 0);
+#endif            
+            prevContainedItems = new Item[inputContainer.Inventory.Items.Length];
+            inputContainer.Inventory.Items.CopyTo(prevContainedItems, 0);
         }
 
         private void StartFabricating(FabricableItem selectedItem, Character user = null)
@@ -227,10 +247,9 @@ namespace Barotrauma.Items.Components
             this.user = user;
 
             timeUntilReady = fabricatedItem.RequiredTime;
-
-            var containers = item.GetComponents<ItemContainer>().ToList();
-            containers[0].Inventory.Locked = true;
-            containers[1].Inventory.Locked = true;
+            
+            inputContainer.Inventory.Locked = true;
+            outputContainer.Inventory.Locked = true;
 
             currPowerConsumption = powerConsumption;
             currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / 100.0f);
@@ -255,14 +274,13 @@ namespace Barotrauma.Items.Components
             {
                 activateButton.Text = "Create";
             }
-            if (progressBar != null) progressBar.BarSize = 0.0f;
 #endif
+            progressState = 0.0f;
 
             timeUntilReady = 0.0f;
 
-            var containers = item.GetComponents<ItemContainer>().ToList();
-            containers[0].Inventory.Locked = false;
-            containers[1].Inventory.Locked = false;
+            inputContainer.Inventory.Locked = false;
+            outputContainer.Inventory.Locked = false;
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -273,12 +291,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-#if CLIENT
-            if (progressBar != null)
-            {
-                progressBar.BarSize = fabricatedItem == null ? 0.0f : (fabricatedItem.RequiredTime - timeUntilReady) / fabricatedItem.RequiredTime;
-            }
-#endif
+            progressState = fabricatedItem == null ? 0.0f : (fabricatedItem.RequiredTime - timeUntilReady) / fabricatedItem.RequiredTime;
 
             if (voltage < minVoltage) return;
 
@@ -291,19 +304,12 @@ namespace Barotrauma.Items.Components
             voltage -= deltaTime * 10.0f;
 
             if (timeUntilReady > 0.0f) return;
-
-            var containers = item.GetComponents<ItemContainer>().ToList();
-            if (containers.Count < 2)
-            {
-                DebugConsole.ThrowError("Error while fabricating a new item: fabricators must have two ItemContainer components");
-                return;
-            }
-
+            
             foreach (FabricableItem.RequiredItem ingredient in fabricatedItem.RequiredItems)
             {
                 for (int i = 0; i < ingredient.Amount; i++)
                 {
-                    var requiredItem = containers[0].Inventory.Items.FirstOrDefault(it => it != null && it.Prefab == ingredient.ItemPrefab && it.Condition >= ingredient.ItemPrefab.Health * ingredient.MinCondition);
+                    var requiredItem = inputContainer.Inventory.Items.FirstOrDefault(it => it != null && it.Prefab == ingredient.ItemPrefab && it.Condition >= ingredient.ItemPrefab.Health * ingredient.MinCondition);
                     if (requiredItem == null) continue;
                     
                     //Item4 = use condition bool
@@ -313,17 +319,17 @@ namespace Barotrauma.Items.Components
                         continue;
                     }
                     Entity.Spawner.AddToRemoveQueue(requiredItem);
-                    containers[0].Inventory.RemoveItem(requiredItem);
+                    inputContainer.Inventory.RemoveItem(requiredItem);
                 }
             }
 
-            if (containers[1].Inventory.Items.All(i => i != null))
+            if (outputContainer.Inventory.Items.All(i => i != null))
             {
                 Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, item.Position, item.Submarine, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition);
             }
             else
             {
-                Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, containers[1].Inventory, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition);
+                Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, outputContainer.Inventory, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition);
             }
 
             if (GameMain.Client == null && user != null)
@@ -346,10 +352,10 @@ namespace Barotrauma.Items.Components
             {
                 return false;
             }
-            ItemContainer container = item.GetComponent<ItemContainer>();
+
             foreach (FabricableItem.RequiredItem ip in fabricableItem.RequiredItems)
             {
-                if (Array.FindAll(container.Inventory.Items, it => it != null && it.Prefab == ip.ItemPrefab && it.Condition >= ip.ItemPrefab.Health * ip.MinCondition).Length < ip.Amount) return false;
+                if (Array.FindAll(inputContainer.Inventory.Items, it => it != null && it.Prefab == ip.ItemPrefab && it.Condition >= ip.ItemPrefab.Health * ip.MinCondition).Length < ip.Amount) return false;
             }
 
             return true;

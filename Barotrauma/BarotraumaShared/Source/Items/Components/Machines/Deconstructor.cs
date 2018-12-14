@@ -26,7 +26,7 @@ namespace Barotrauma.Items.Components
             var containers = item.GetComponents<ItemContainer>().ToList();
             if (containers.Count < 2)
             {
-                DebugConsole.ThrowError("Error in Deconstructor.Update: Deconstructors must have two ItemContainer components!");
+                DebugConsole.ThrowError("Error in item \"" + item.Name + "\": Deconstructors must have two ItemContainer components!");
                 return;
             }
 
