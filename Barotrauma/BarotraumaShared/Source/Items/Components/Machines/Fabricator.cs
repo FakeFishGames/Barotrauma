@@ -177,6 +177,15 @@ namespace Barotrauma.Items.Components
             inputContainer = containers[0];
             outputContainer = containers[1];
 
+            foreach (FabricableItem fabricableItem in fabricableItems)
+            {
+                int ingredientCount = fabricableItem.RequiredItems.Sum(it => it.Amount);
+                if (ingredientCount > inputContainer.Capacity)
+                {
+                    DebugConsole.ThrowError("Error in item \"" + item.Name + "\": There's not enough room in the input inventory for the ingredients of \"" + fabricableItem.TargetItem.Name + "\"!");
+                }
+            }
+
             OnItemLoadedProjSpecific();
         }
 
@@ -322,14 +331,13 @@ namespace Barotrauma.Items.Components
         private bool CanBeFabricated(FabricableItem fabricableItem)
         {
             if (fabricableItem == null) { return false; }
-
-            /*if (user != null && 
-                fabricableItem.RequiredSkills.Any(skill => user.GetSkillLevel(skill.Identifier) < skill.Level))
-            {
-                return false;
-            }*/
-
             List<Item> availableIngredients = GetAvailableIngredients();
+            return CanBeFabricated(fabricableItem, availableIngredients);
+        }
+
+        private bool CanBeFabricated(FabricableItem fabricableItem, IEnumerable<Item> availableIngredients)
+        {
+            if (fabricableItem == null) { return false; }            
             foreach (FabricableItem.RequiredItem requiredItem in fabricableItem.RequiredItems)
             {
                 if (availableIngredients.Count(it => IsItemValidIngredient(it, requiredItem)) < requiredItem.Amount)
@@ -337,7 +345,6 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
             }
-
             return true;
         }
 
