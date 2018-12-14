@@ -196,14 +196,11 @@ namespace Barotrauma.Items.Components
 
         public override bool Select(Character character)
         {
-#if CLIENT
-            if (itemList.SelectedComponent != null)
-            {
-                SelectItem(itemList.SelectedComponent, itemList.SelectedComponent.UserData);                
-            }
-#endif
+            SelectProjSpecific(character);
             return base.Select(character);
         }
+
+        partial void SelectProjSpecific(Character character);
 
         public override bool Pick(Character picker)
         {
