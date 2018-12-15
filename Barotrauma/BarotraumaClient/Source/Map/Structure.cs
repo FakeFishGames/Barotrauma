@@ -140,11 +140,7 @@ namespace Barotrauma
 
             return editingHUD;
         }
-
-        public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
-        {
-        }
-
+        
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (prefab.sprite == null) return;
@@ -175,7 +171,14 @@ namespace Barotrauma
             if (IsSelected && editing)
             {
                 color = Color.Lerp(color, Color.Gold, 0.5f);
-                GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, -rect.Y, rect.Width, rect.Height), color);
+
+                Vector2 rectSize = rect.Size.ToVector2();
+                if (BodyWidth > 0.0f) { rectSize.X = BodyWidth; }
+                if (BodyHeight > 0.0f) { rectSize.Y = BodyHeight; }
+
+                Vector2 bodyPos = WorldPosition + BodyOffset;
+
+                GUI.DrawRectangle(spriteBatch, new Vector2(bodyPos.X, -bodyPos.Y), rectSize.X, rectSize.Y, BodyRotation, color);
             }
 
             Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
