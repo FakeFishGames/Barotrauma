@@ -224,11 +224,11 @@
       <output name="power_out" />
     </ConnectionPanel>
   </Item>
-  <Item name="Alien Power Cell" identifier="alienpowercell" category="Alien" Tags="alien">
-    <Sprite texture="Content/Items/Alien/AlienGenerator.png" depth="0.8" sourcerect="0,83,171,173" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienGenerator.png" sourcerect="9,9,48,48" depth="0.78" origin="0.5,0.5" rotationspeed="500">
+  <Item name="Alien Generator" identifier="aliengenerator" category="Alien" Tags="alien" scale="0.3">
+    <Sprite texture="Content/Items/Alien/AlienGenerator.png" depth="0.8" sourcerect="0,0,512,573" />
+    <!--<DecorativeSprite texture="Content/Items/Alien/AlienGenerator.png" sourcerect="9,9,48,48" depth="0.78" origin="0.5,0.5" rotationspeed="500">
       <Conditional Charge="gt 1" targetitemcomponent="PowerContainer"/>
-    </DecorativeSprite>
+    </DecorativeSprite>-->
     <LightComponent lightcolor="112,146,190,50" canbeselected="false" range="800.0" IsOn="true" />
     <ItemContainer capacity="1" canbeselected="true" hideitems="false" itempos="86,-85" autointeractwithcontained="true">
       <Containable identifiers="sulphuriteshard">
@@ -251,34 +251,32 @@
     category="Alien"
     tags="alien">
 
-    <Sprite texture="Content/Items/Alien/AlienPump.png" depth="0.8" sourcerect="0,83,171,173" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienPump.png" sourcerect="60,13,51,50" depth="0.78" origin="0.5,0.5">
-    </DecorativeSprite>
+    <Sprite texture="Content/Items/Alien/AlienPump.png" depth="0.8" sourcerect="0,0,256,256" />
     
     <Pump canbeselected="false" maxflow="6000" PowerConsumption="300.0" MinVoltage="0.3">
       <!-- <sound file="Content/Items/Pump/pump.ogg" type="OnActive" range="800.0" volumeproperty="CurrFlow" volume="0.01" loop="true"/> -->
       <PumpInEmitter
         particle="watersplash"
         particlespersecond="80"
-        position="85,-86"
+        position="128,-107"
         anglemin="90" anglemax="90"
         velocitymin="400" velocitymax="500"/>
       <PumpInEmitter
         particle="bubbles"
         particlespersecond="10"
-        position="85,-86"
+        position="128,-107"
         anglemin="90" anglemax="90"
         velocitymin="100" velocitymax="200"/>
       <PumpOutEmitter
         particle="bubbles"
         particlespersecond="5"
-        position="85,-86"
+        position="128,-107"
         anglemin="0" anglemax="360"
         velocitymin="0" velocitymax="0"/>
       <PumpOutEmitter
         particle="bubbles"
         particlespersecond="5"
-        position="85,-86"
+        position="128,-107"
         anglemin="0" anglemax="360"
         velocitymin="0" velocitymax="0"/>      
     </Pump>
@@ -362,8 +360,8 @@
   </Item>
   <Item name="Alien Coil" identifier="aliencoil" Tags="alien" category="Alien">
     <!-- TODO: alien coil sprite -->
-    <Sprite texture="alientools.png" depth="0.55" sourcerect="0,0,95,50" origin="0.5,0.4" />
-    <LightComponent lightcolor="112,146,190,255" canbeselected="false" range="800.0" IsOn="true" />
+    <Sprite texture="Content/Items/Alien/AlienElectricCoil.png" depth="0.55" sourcerect="0,31,256,190" origin="0.5,0.4" />
+    <LightComponent lightcolor="112,146,190,100" flicker="0.2" canbeselected="false" range="800.0" IsOn="true" />
     <ElectricalDischarger duration="0.25" range="500" rangemultiplierinwalls="5" powerconsumption="9000" minvoltage="0.9">
       <Attack targetimpulse="50">
         <Affliction identifier="stun" strength="3"/>
