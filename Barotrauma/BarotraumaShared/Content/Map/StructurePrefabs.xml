@@ -60,7 +60,7 @@
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="0,0,96,512" depth="0.1" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="0,0,96,512" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 16 deg" identifier="shella16deg" description="Submarine wall" body="true" castshadow="true" width="256" height="160" bodywidth="266" bodyheight="60" bodyrotation="-16">>
+  <shellA name="Shell A 16 deg" identifier="shella16deg" description="Submarine wall" body="true" castshadow="true" width="256" height="160" bodywidth="266" bodyheight="60" bodyoffset="0,-10" bodyrotation="-16">>
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="96,0,256,160" depth="0.1" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="96,0,256,160" depth="0.85" />
   </shellA>
@@ -116,15 +116,15 @@
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="608,320,160,160" depth="0.1" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="608,320,160,160" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 60 deg" identifier="Shella60deg" description="Submarine wall" body="true" castshadow="true" width="160" height="224" bodywidth="185" bodyheight="60" bodyrotation="-60">
+  <shellA name="Shell A 60 deg" identifier="Shella60deg" description="Submarine wall" body="true" castshadow="true" width="160" height="224" bodywidth="185" bodyheight="60" bodyoffset="16,-16" bodyrotation="-60">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="799,288,160,224" depth="0.1" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="799,288,160,224" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 18 deg" identifier="Shella18deg" description="Submarine wall" body="true" castshadow="true" width="384" height="224" bodywidth="4 14" bodyheight="60" bodyrotation="18">
+  <shellA name="Shell A 18 deg" identifier="Shella18deg" description="Submarine wall" body="true" castshadow="true" width="384" height="224" bodywidth="4 14" bodyheight="60" bodyrotation="25">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1056,384,384,224" depth="0.1" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="1056,384,384,224" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 70 deg" identifier="Shella70deg" description="Submarine wall" body="true" castshadow="true" width="224" height="384" bodywidth="414" bodyheight="60" bodyrotation="-70">
+  <shellA name="Shell A 70 deg" identifier="Shella70deg" description="Submarine wall" body="true" castshadow="true" width="224" height="384" bodywidth="414" bodyheight="60" bodyrotation="-70" bodyoffset="10,0">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="0,512,224,384" depth="0.1" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="0,512,224,384" depth="0.1" />
   </shellA>
@@ -132,7 +132,7 @@
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="256,512,128,480" depth="0.1" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="253,512,131,480" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 45 deg B" identifier="shella45degb" description="Submarine wall" body="true" castshadow="true" width="320" height="256" bodywidth="60" bodyheight="360" bodyrotation="45">
+  <shellA name="Shell A 45 deg B" identifier="shella45degb" description="Submarine wall" body="true" castshadow="true" width="320" height="256" bodywidth="60" bodyheight="360" bodyrotation="55">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="416,544,320,256" depth="0.1" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="416,544,320,256" depth="0.85" />
   </shellA>
@@ -172,7 +172,7 @@
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1200,1536,288,512" depth="0.1" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="1200,1536,288,512" depth="0.85" />
   </shellA>
-  <shellA name="Shell A combo 1 2" identifier="shellacombo12" description="Submarine wall" body="true" castshadow="true" width="560" height="338" bodywidth="600" bodyheight="60" bodyrotation="-21.5">
+  <shellA name="Shell A combo 1 2" identifier="shellacombo12" description="Submarine wall" body="true" castshadow="true" width="560" height="338" bodywidth="600" bodyheight="60" bodyrotation="-21.5" bodyoffset="0,20">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1488,1312,560,338" depth="0.1" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="1488,1312,560,338" depth="0.85" />
   </shellA>
