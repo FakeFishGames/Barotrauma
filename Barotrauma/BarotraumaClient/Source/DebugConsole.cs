@@ -492,6 +492,52 @@ namespace Barotrauma
                 AITarget.ShowAITargets = !AITarget.ShowAITargets;
                 NewMessage(AITarget.ShowAITargets ? "Enabled AI target drawing" : "Disabled AI target drawing", Color.White);
             }, isCheat: true));
+
+            commands.Add(new Command("checkcrafting", "checkcrafting: Checks item deconstruction & crafting recipes for inconsistencies.", (string[] args) =>
+            {
+                List<FabricableItem> fabricableItems = new List<FabricableItem>();
+                foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
+                {
+                    if (mapEntityPrefab is ItemPrefab itemPrefab)
+                    {
+                        var fabricatorElement = itemPrefab.ConfigElement.Element("Fabricator");
+                        if (fabricatorElement == null) { continue; }
+
+                        foreach (XElement element in fabricatorElement.Elements())
+                        {
+                            if (element.Name.ToString().ToLowerInvariant() != "fabricableitem") { continue; }
+                            fabricableItems.Add(new FabricableItem(element));
+                        }
+
+                    }
+                }
+                foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
+                {
+                    if (mapEntityPrefab is ItemPrefab itemPrefab)
+                    {
+                        foreach (var deconstructItem in itemPrefab.DeconstructItems)
+                        {
+                            var targetItem = MapEntityPrefab.Find(null, deconstructItem.ItemIdentifier, showErrorMessages: false) as ItemPrefab;
+                            if (targetItem == null)
+                            {
+                                ThrowError("Error in item \"" + itemPrefab.Name + "\" - could not find deconstruct item \"" + deconstructItem.ItemIdentifier + "\"!");
+                                continue;
+                            }
+
+                            var fabricationRecipe = fabricableItems.Find(f => f.TargetItem == itemPrefab);
+                            if (fabricationRecipe != null)
+                            {
+                                if (!fabricationRecipe.RequiredItems.Any(r => r.ItemPrefab == targetItem))
+                                {
+                                    NewMessage("Deconstructing \"" + itemPrefab.Name + "\" produces \"" + deconstructItem.ItemIdentifier + "\", which isn't required in the fabrication recipe of the item.", Color.Orange);
+                                }
+                            }
+                        }
+                    }
+                }
+            }, isCheat: false));
+
+
 #if DEBUG
             commands.Add(new Command("spamchatmessages", "", (string[] args) =>
             {
