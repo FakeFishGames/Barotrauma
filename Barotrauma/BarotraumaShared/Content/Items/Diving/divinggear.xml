@@ -13,11 +13,11 @@
     <Price locationtype="Outpost" buyprice="100"/>
 
     <Deconstruct time="10">
-      <Item identifier="steelbar"/>
+      <Item identifier="aluminiumsiliconalloy"/>
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,0,64,64"/>
-    <Sprite texture ="Content/Items/Tools/tools.png" sourcerect="38,31,13,33" depth="0.55"/>
+    <Sprite texture="Content/Items/Tools/tools.png" sourcerect="38,31,13,33" depth="0.55"/>
 
     <Body width="12" height="33" density="5"/>
 
@@ -43,13 +43,13 @@
     description="A Tank containing liquid Oxygenite.">
 
     <Deconstruct time="10">
-      <Item identifier="steelbar"/>
+      <Item identifier="aluminiumsiliconalloy"/>
       <Item identifier="liquidoxygenite" mincondition="0.1"/>
       <Item identifier="liquidoxygenite" mincondition="0.5"/>
       <Item identifier="liquidoxygenite" mincondition="0.9"/>
     </Deconstruct>
 
-    <Sprite texture ="Content/Items/Tools/tools.png" sourcerect="1,91,13,33" depth="0.55"/>
+    <Sprite texture="Content/Items/Tools/tools.png" sourcerect="1,91,13,33" depth="0.55"/>
 
     <Body width="12" height="33" density="9.9"/>
 
@@ -79,11 +79,12 @@
     <Price locationtype="Outpost" buyprice="100"/>
     
     <Deconstruct time="10">
-      <Item identifier="polycarbonatebar"/>
+      <Item identifier="plastic"/>
+      <Item identifier="rubber"/>
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,320,64,64"/>
-    <Sprite texture ="DivingMask.png" depth="0.55" sourcerect="0,0,37,38"/>
+    <Sprite texture="DivingMask.png" depth="0.55" sourcerect="0,0,37,38"/>
   
     <Body width="26" height="18" density="15"/>
 
@@ -124,15 +125,14 @@
     <Price locationtype="Outpost" buyprice="300"/>
     
     <Deconstruct time="30">
-      <Item identifier="steelbar"/>
-      <Item identifier="aluminium"/>
-      <Item identifier="aluminium"/>
-      <Item identifier="polycarbonatebar"/>
-      <Item identifier="polycarbonatebar"/>
+      <Item identifier="rubber"/>
+      <Item identifier="rubber"/>
+      <Item identifier="titaniumaluminiumalloy"/>
+      <Item identifier="titaniumaluminiumalloy"/>
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,320,64,64"/>
-    <Sprite texture ="DivingSuit.png" sourcerect="85,0,43,128" depth="0.55"/>
+    <Sprite texture="DivingSuit.png" sourcerect="85,0,43,128" depth="0.55"/>
 
     <Body width="37" height="113" density="15"/>
 
@@ -213,10 +213,8 @@
     <Price locationtype="Outpost" buyprice="200"/>
 
     <Deconstruct time="20">
-      <Item identifier="steelbar"/>
-      <Item identifier="polycarbonatebar"/>
-      <Item identifier="polycarbonatebar"/>
-      <Item identifier="fpgacircuit"/>
+      <Item identifier="aluminiumsiliconalloy"/>
+      <Item identifier="aluminiumsiliconalloy"/>
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,128,64,64"/>

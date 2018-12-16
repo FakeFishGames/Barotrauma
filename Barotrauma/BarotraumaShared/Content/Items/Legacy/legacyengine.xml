@@ -5,7 +5,7 @@
     category="Legacy"
     linkable="true">
 
-    <Sprite texture ="engine.png" depth="0.8" sourcerect="0,0,373,113" canflipx="true"/>
+    <Sprite texture="engine.png" depth="0.8" sourcerect="0,0,373,113" canflipx="true"/>
 
     <trigger x="70" y="0" width="300" height="113"/>
 

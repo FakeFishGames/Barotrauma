@@ -177,9 +177,9 @@
     pickdistance="150">
 
     <Deconstruct time="20">
-      <Item identifier="steelbar"/>
-      <Item identifier="steelbar"/>
-      <Item identifier="steelbar"/>
+      <Item identifier="steel"/>
+      <Item identifier="steel"/>
+      <Item identifier="steel"/>
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,128,64,64"/>
@@ -201,9 +201,9 @@
     pickdistance="150">
 
     <Deconstruct time="20">
-      <Item identifier="steelbar"/>
-      <Item identifier="steelbar"/>
-      <Item identifier="steelbar"/>
+      <Item identifier="steel"/>
+      <Item identifier="steel"/>
+      <Item identifier="steel"/>
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,128,64,64"/>
@@ -226,12 +226,12 @@
    pickdistance="150">
 
     <Deconstruct time="20">
-      <Item identifier="steelbar"/>
-      <Item identifier="steelbar"/>
+      <Item identifier="steel"/>
+      <Item identifier="steel"/>
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64"/>
-    <Sprite texture ="crates.png" depth="0.54" sourcerect="78,5,50,40"/>
+    <Sprite texture="crates.png" depth="0.54" sourcerect="78,5,50,40"/>
 
     <Body width="50" height="40" density="50"/>
 
@@ -249,12 +249,12 @@
    pickdistance ="150">
 
     <Deconstruct time="20">
-      <Item identifier="steelbar"/>
-      <Item identifier="steelbar"/>
+      <Item identifier="steel"/>
+      <Item identifier="steel"/>
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,128,64,64"/>
-    <Sprite texture ="crates.png" depth="0.54" sourcerect="2,39,49,39"/>
+    <Sprite texture="crates.png" depth="0.54" sourcerect="2,39,49,39"/>
 
     <Body width="49" height="39" density="50"/>
 

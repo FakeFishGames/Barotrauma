@@ -1,5 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Items>
+  <Item name="UEX" identifier="uex" category="Equipment" 
+        description="A simple explosive compound made of sodium and phosphorus."
+        Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate">
+    <Price locationtype="Military" buyprice="100" />
+    <Price locationtype="City" buyprice="200" />
+    <Price locationtype="Outpost" buyprice="200" />
+    <Price locationtype="Research" buyprice="200" />
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,64,64,64" />
+    <Sprite texture="weapons.png" depth="0.8" sourcerect="103,58,23,16" />
+    <Body width="23" height="16" density="20"/>
+    <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+      <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" type="OnUse" range="10000" selectionmode="All"/>
+      <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" type="OnUse" range="10000" />
+      <StatusEffect type="OnUse" target="This" Condition="-100.0">
+        <Explosion range="800.0" structuredamage="150" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
+          <Affliction identifier="burn" strength="50"/>
+          <Affliction identifier="internaldamage" strength="25"/>
+        </Explosion>
+        <Remove />
+      </StatusEffect>
+    </Throwable>
+  </Item>
   <Item name="C-4 Block" identifier="c4block" category="Equipment" Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate">
     <Price locationtype="Military" buyprice="100" />
     <Price locationtype="City" buyprice="200" />

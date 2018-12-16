@@ -13,11 +13,10 @@
     <Price locationtype="Outpost" buyprice="200" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,64,64,64" />
     <Sprite texture="tools_new.png" sourcerect="0,117,152,118" depth="0.55" />
-    <!-- the item takes 10 seconds to break down in a deconstructor and turns into a polycarbonate bar, steel bar and aluminium -->
+    <!-- the item takes 10 seconds to break down in a deconstructor and turns into steel and plastic -->
     <Deconstruct time="10">
-      <Item identifier="polycarbonatebar" />
-      <Item identifier="steelbar" />
-      <Item identifier="aluminium" />
+      <Item identifier="steel" />
+      <Item identifier="plastic" />
     </Deconstruct>
     <!-- physics body -->
     <Body width="41" height="17" density="40" />
@@ -65,9 +64,8 @@
     <Price locationtype="Military" buyprice="140" />
     <Price locationtype="Outpost" buyprice="200" />
     <Deconstruct time="10">
-      <Item identifier="polycarbonatebar" />
-      <Item identifier="steelbar" />
-      <Item identifier="aluminium" />
+      <Item identifier="steel" />
+      <Item identifier="plastic" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,0,64,64" />
     <Sprite texture="tools_new.png" sourcerect="0,0,157,116" depth="0.55" />
@@ -105,7 +103,7 @@
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="Outpost" buyprice="100" />
     <Deconstruct time="10">
-      <Item identifier="steelbar" />
+      <Item identifier="aluminiumsiliconalloy" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,0,64,64" />
     <Sprite texture="tools.png" sourcerect="52,31,12,33" depth="0.55" />
@@ -127,10 +125,8 @@
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="Outpost" buyprice="200" />
     <Deconstruct time="10">
-      <Item identifier="polycarbonatebar" />
-      <Item identifier="steelbar" />
-      <Item identifier="potassium" copycondition="true" mincondition="0.1" />
-      <Item identifier="chlorine" copycondition="true" mincondition="0.1" />
+      <Item identifier="aluminiumsiliconalloy" />
+      <Item identifier="sodium" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,0,64,64" />
     <Sprite texture="Content/Items/InventoryIconAtlas.png" depth="0.55" sourcerect="0,0,64,64" />
@@ -149,7 +145,7 @@
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="Outpost" buyprice="100" />
     <Deconstruct time="10">
-      <Item identifier="steelbar" />
+      <Item identifier="iron" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,0,64,64" />
     <Sprite texture="tools.png" sourcerect="0,57,31,6" depth="0.55" />
@@ -162,7 +158,7 @@
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="Outpost" buyprice="100" />
     <Deconstruct time="10">
-      <Item identifier="steelbar" />
+      <Item identifier="iron" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,0,64,64" />
     <Sprite texture="tools.png" sourcerect="0,47,32,10" depth="0.55" />
@@ -180,7 +176,7 @@
     <Price locationtype="Military" buyprice="80" />
     <Price locationtype="Outpost" buyprice="100" />
     <Deconstruct time="10">
-      <Item identifier="steelbar" />
+      <Item identifier="iron" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,0,64,64" />
     <Sprite texture="tools.png" sourcerect="0,65,63,13" depth="0.55" />
@@ -198,8 +194,8 @@
     <Price locationtype="Military" buyprice="100" />
     <Price locationtype="Outpost" buyprice="150" />
     <Deconstruct time="15">
-      <Item identifier="copperbar" />
-      <Item identifier="polycarbonatebar" />
+      <Item identifier="fpgacircuit" />
+      <Item identifier="plastic" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,0,64,64" />
     <Sprite texture="tools.png" sourcerect="42,6,22,11" depth="0.55" />
@@ -232,8 +228,8 @@
     <Price locationtype="Military" buyprice="100" />
     <Price locationtype="Outpost" buyprice="150" />
     <Deconstruct time="15">
-      <Item identifier="copperbar" />
-      <Item identifier="polycarbonatebar" />
+      <Item identifier="fpgacircuit" />
+      <Item identifier="plastic" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,320,64,64" />
     <Sprite texture="tools_new.png" sourcerect="485,29,27,63" depth="0.55" />
@@ -261,8 +257,8 @@
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="Outpost" buyprice="80" />
     <Deconstruct time="15">
-      <Item identifier="copperbar" />
-      <Item identifier="polycarbonatebar" />
+      <Item identifier="aluminium" />
+      <Item identifier="lightcomponent" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,320,64,64" />
     <Sprite texture="tools_new.png" sourcerect="435,0,77,28" depth="0.55" />
@@ -287,10 +283,8 @@
     <Price locationtype="Military" buyprice="10" />
     <Price locationtype="Outpost" buyprice="20" />
     <Deconstruct time="10">
-      <Item identifier="phosphorus" mincondition="0.9" outcondition="0.25" />
-      <Item identifier="aluminium" mincondition="0.9" outcondition="0.25" />
-      <Item identifier="phosphorus" mincondition="0.5" maxcondition="0.9" outcondition="0.1" />
-      <Item identifier="aluminium" mincondition="0.5" maxcondition="0.9" outcondition="0.1" />
+      <Item identifier="flashpowder" mincondition="0.9" outcondition="0.25" />
+      <Item identifier="plastic" mincondition="0.9" outcondition="0.25" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,0,64,64" />
     <Sprite texture="tools.png" sourcerect="20,112,26,8" depth="0.55" />

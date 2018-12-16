@@ -5,7 +5,7 @@
     linkable="true"
     allowedlinks="hull">
 
-    <Sprite texture ="pump.png" depth="0.8" sourcerect="0,0,128,128"/>
+    <Sprite texture="pump.png" depth="0.8" sourcerect="0,0,128,128"/>
 
     <Pump canbeselected="true" maxflow="500" PowerConsumption="300.0" MinVoltage="0.3">
       <GuiFrame relativesize="0.17,0.14" minsize="330,145" maxsize="400,175" anchor="Center" style="ItemUI"/>
@@ -28,7 +28,7 @@
     category="Legacy"
     linkable="true">
 
-    <Sprite texture ="smallpump.png" depth="0.8" sourcerect="0,0,64,48"/>
+    <Sprite texture="smallpump.png" depth="0.8" sourcerect="0,0,64,48"/>
 
     <Pump canbeselected = "true" maxflow="100" PowerConsumption="60.0" MinVoltage="0.3">
       <GuiFrame relativesize="0.17,0.14" minsize="330,145" maxsize="400,175" anchor="Center" style="ItemUI"/>

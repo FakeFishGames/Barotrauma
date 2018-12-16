@@ -3,10 +3,10 @@
   <Item name="Skyholder Artifact" identifier="skyholderartifact" category="Alien" Tags="alien" sonarsize="30">
     <Sprite texture="artifact.png" depth="0.7" sourcerect="58,0,60,60" origin="0.5,0.5" />
     <Deconstruct time="30">
-      <Item identifier="steelbar" />
-      <Item identifier="copperbar" />
-      <Item identifier="uraniumbar" />
-      <Item identifier="uraniumbar" />
+      <Item identifier="steel" />
+      <Item identifier="oxygeniteshard" />
+      <Item identifier="oxygeniteshard" />
+      <Item identifier="oxygeniteshard" />
     </Deconstruct>
     <Body width="60" height="61" density="50" friction="0.95" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10">
@@ -16,10 +16,10 @@
   <Item name="Thermal Artifact" identifier="thermalartifact" category="Alien" Tags="alien" sonarsize="30">
     <Sprite texture="artifact.png" depth="0.7" sourcerect="1,0,57,56" origin="0.5,0.5" />
     <Deconstruct time="30">
-      <Item identifier="steelbar" />
-      <Item identifier="incendiumbar" />
-      <Item identifier="incendiumbar" />
-      <Item identifier="incendiumbar" />
+      <Item identifier="steel" />
+      <Item identifier="incendium" />
+      <Item identifier="incendium" />
+      <Item identifier="incendium" />
     </Deconstruct>
     <Body radius="28" density="50" friction="0.95" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10">
@@ -31,10 +31,10 @@
   <Item name="Faraday Artifact" identifier="faradayartifact" category="Alien" Tags="alien" sonarsize="30">
     <Sprite texture="artifact.png" depth="0.7" sourcerect="0,56,60,49" origin="0.5,0.5" />
     <Deconstruct time="30">
-      <Item identifier="steelbar" />
-      <Item identifier="fulguriumbar" />
-      <Item identifier="fulguriumbar" />
-      <Item identifier="fulguriumbar" />
+      <Item identifier="steel" />
+      <Item identifier="fulgurium" />
+      <Item identifier="fulgurium" />
+      <Item identifier="fulgurium" />
     </Deconstruct>
     <Body radius="25" density="50" friction="0.95" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10">
@@ -49,22 +49,24 @@
   <Item name="Nasonov Artifact" identifier="nasonovartifact" category="Alien" Tags="alien,nasonov" pickdistance="150" indestructible="true" sonarsize="30">
     <Sprite texture="artifact.png" depth="0.7" sourcerect="63,61,63,67" origin="0.5,0.5" />
     <Deconstruct time="30">
-      <Item identifier="steelbar" />
-      <Item identifier="fulguriumbar" />
-      <Item identifier="fulguriumbar" />
-      <Item identifier="fulguriumbar" />
+      <Item identifier="steel" />
+      <Item identifier="physicorium" />
+      <Item identifier="physicorium" />
+      <Item identifier="physicorium" />
     </Deconstruct>
     <AiTarget sightrange="10000.0" soundrange="10000" />
     <Body width="55" height="55" density="50" friction="0.95" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" />
   </Item>
   <!-- TODO: better name -->
-  <Item name="Vercodian Artifact" identifier="psychosisartifact" category="Alien" Tags="alien" sonarsize="30" spritecolor="50,50,50,255">
+  <Item name="Dementium Artifact" identifier="psychosisartifact" category="Alien" Tags="alien" sonarsize="30" spritecolor="50,50,50,255">
     <!-- TODO: sprite -->
     <Sprite texture="artifact.png" depth="0.7" sourcerect="0,56,60,49" origin="0.5,0.5" />
     <Deconstruct time="30">
-      <Item identifier="steelbar" />
-      <!-- TODO: materials from deconstruction -->
+      <Item identifier="steel" />
+      <Item identifier="dementonite" />
+      <Item identifier="dementonite" />
+      <Item identifier="dementonite" />
     </Deconstruct>
     <Body radius="25" density="50" friction="0.95" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10">
@@ -75,7 +77,7 @@
   </Item>
   <Item name="Oxygenite Shard" identifier="oxygeniteshard" category="Alien" tags="alien,smallitem,oxygensource" impacttolerance="8">
     <Deconstruct time="20">
-      <Item identifier="steelbar" />
+      <Item identifier="steel" />
       <Item identifier="liquidoxygenite" mincondition="0.1" />
       <Item identifier="liquidoxygenite" mincondition="0.5" />
       <Item identifier="liquidoxygenite" mincondition="0.9" />
@@ -100,7 +102,7 @@
   </Item>
   <Item name="Sulphurite Shard" identifier="sulphuriteshard" category="Alien" tags="alien,smallitem" impacttolerance="8" spritecolor="1.0,0.0,0.0,1.0">
     <Deconstruct time="20">
-      <Item identifier="steelbar" />
+      <Item identifier="steel" />
       <Item identifier="sulphuricacid" mincondition="0.1" />
       <Item identifier="sulphuricacid" mincondition="0.5" />
       <Item identifier="sulphuricacid" mincondition="0.9" />
@@ -116,9 +118,9 @@
   </Item>
   <Item name="Ancient Weapon" identifier="ancientweapon" category="Alien" Tags="alien,smallitem">
     <Deconstruct time="20">
-      <Item identifier="steelbar" />
-      <Item identifier="steelbar" />
-      <Item identifier="fulguriumbar" />
+      <Item identifier="steel" />
+      <Item identifier="steel" />
+      <Item identifier="fulgurium" />
     </Deconstruct>
     <Sprite texture="alientools.png" depth="0.55" sourcerect="0,0,95,50" origin="0.5,0.4" />
     <Body width="85" height="40" density="15" />

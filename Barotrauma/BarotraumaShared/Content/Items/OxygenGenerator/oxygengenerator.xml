@@ -6,7 +6,7 @@
     linkable="true"
     allowedlinks="vent">
     
-    <Sprite texture ="FF_oxygengenerator.png" depth="0.8" sourcerect="0,0,214,192"/>
+    <Sprite texture="FF_oxygengenerator.png" depth="0.8" sourcerect="0,0,214,192"/>
     <BrokenSprite texture="FF_oxygengenerator.png" sourcerect="214,0,214,192" depth="0.8" maxcondition="55" fadein="true" />
     <BrokenSprite texture="FF_oxygengenerator.png" sourcerect="428,0,214,192" depth="0.8" maxcondition="0" />
   
@@ -55,7 +55,7 @@
     linkable="true"
     allowedlinks="vent">
 
-    <Sprite texture ="ShuttleOxygenerator.png" depth="0.8" sourcerect="0,0,186,125"/>
+    <Sprite texture="ShuttleOxygenerator.png" depth="0.8" sourcerect="0,0,186,125"/>
     <BrokenSprite texture="ShuttleOxygenerator.png" sourcerect="0,125,186,125" depth="0.8" maxcondition="55" fadein="true" />
     <BrokenSprite texture="ShuttleOxygenerator.png" sourcerect="0,250,186,125" depth="0.8" maxcondition="0" />
 

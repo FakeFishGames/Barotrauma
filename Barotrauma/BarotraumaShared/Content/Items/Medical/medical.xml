@@ -18,7 +18,7 @@
     <Price locationtype="Outpost" buyprice="100"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,0,64,64"/>
-    <Sprite texture ="med.png" sourcerect="0,0,25,5" depth="0.6"/>
+    <Sprite texture="med.png" sourcerect="0,0,25,5" depth="0.6"/>
 
     <Body width="25" height="5" density="20"/>
 
@@ -73,7 +73,7 @@
     <SuitableTreatment identifier="burn" suitability="50"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,448,64,64"/>
-    <Sprite texture ="med.png" sourcerect="0,16,11,16" depth="0.6"/>
+    <Sprite texture="med.png" sourcerect="0,16,11,16" depth="0.6"/>
 
     <Body width="11" height="16" density="20"/>
 
@@ -133,7 +133,7 @@
     <SuitableTreatment identifier="internaldamage" suitability="-10"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="639,192,64,64"/>
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" color="0.2,0.2,0.2,1.0"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6" color="0.2,0.2,0.2,1.0"/>
 
     <Body width="8" height="16" density="40"/>
 
@@ -165,7 +165,7 @@
     <Price locationtype="City" buyprice="30"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,256,64,64"/>
-    <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6" />
+    <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6" />
 
     <Body width="8" height="17" density="20"/>
 
@@ -195,36 +195,6 @@
   </Item>
   
   <Item
-    name="Chlorine"
-    identifier="chlorine"
-    category="Material"
-    spritecolor="1.0,1.0,1.0,0.6"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    useinhealthinterface="true">
-    
-    <Price locationtype="Research" buyprice="15"/>
-    <Price locationtype="Military" buyprice="20"/>
-    <Price locationtype="City" buyprice="25"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,192,64,64"/>
-    <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
-
-    <Body width="8" height="17" density="20"/>
-
-    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect tags="poison,chlorine" type="OnUse" target="Character" duration="20.0">
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-        <Affliction identifier="internaldamage" amount="0.5"/>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
-
-  <Item
     name="Ethanol"    
     identifier="ethanol"
     category="Material"
@@ -247,7 +217,7 @@
     </ItemComponent>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,256,64,64"/>
-    <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
+    <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
     <Body width="8" height="7" density="20"/>
 
@@ -255,109 +225,6 @@
       <StatusEffect type="OnUse" target="Character" duration="10">
         <RequiredItem identifier="medicalsyringe" type="Container"/>
         <Affliction identifier="drunk" amount="2"/>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
-
-  <Item
-    name="Aluminium"
-    identifier="aluminium"
-    category="Material"
-    spritecolor="0.7,0.7,0.7,1.0"
-    containercolor="0.7,0.7,0.7,1.0"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    useinhealthinterface="true">
-    
-    <Price locationtype="Research" buyprice="20"/>
-    <Price locationtype="Military" buyprice="30"/>
-    <Price locationtype="City" buyprice="30"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,192,64,64"/>
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
-
-    <Body width="8" height="16" density="20"/>
-
-    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="Limb" disabledeltatime="true">
-        <Affliction identifier="internaldamage" amount="10.0"/>
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
-
-  <Item
-    name="Potassium"
-    identifier="potassium"
-    category="Material"
-    spritecolor="0.8,0.8,0.8,1.0"
-    containercolor="0.8,0.8,0.8,1.0"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    useinhealthinterface="true">
-    
-    <Price locationtype="Research" buyprice="20"/>
-    <Price locationtype="Military" buyprice="30"/>
-    <Price locationtype="City" buyprice="40"/>
-    
-    <!-- TODO: color -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,192,64,64"/>
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
-
-    <Body width="8" height="16" density="20"/>
-
-    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="Limb" disabledeltatime="true">
-        <Affliction identifier="internaldamage" amount="10.0"/>
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-      </StatusEffect>
-      <StatusEffect type="InWater" target="This" Condition="0.0" setvalue="true">
-        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" selectionmode="All" range="5000"/>
-        <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" selectionmode="All" range="5000"/>
-        <Explosion range="250.0" structuredamage="10" force="5.0">
-          <Affliction identifier="burn" amount="20"/>
-          <Affliction identifier="stun" amount="3"/>
-        </Explosion>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
-
-  <Item
-    name="Phosphorus"
-    identifier="phosphorus"
-    category="Material"
-    spritecolor="0.5,0.0,0.0,1.0"
-    containercolor="0.5,0.0,0.0,1.0"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    useinhealthinterface="true">
-    
-    <Price locationtype="Research" buyprice="20"/>
-    <Price locationtype="Military" buyprice="30"/>
-    <Price locationtype="City" buyprice="40"/>
-
-    <!-- TODO: color -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,192,64,64"/>
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
-
-    <Body width="8" height="16" density="20"/>
-
-    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="Limb" disabledeltatime="true">
-        <Affliction identifier="internaldamage" amount="20.0"/>
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -383,7 +250,7 @@
     <Price locationtype="City" buyprice="100"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,256,64,64"/>
-    <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6" />
+    <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6" />
 
     <Body width="8" height="16" density="20"/>
     
@@ -421,7 +288,7 @@
     <Price locationtype="Outpost" buyprice="100"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,192,64,64"/>
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" />
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6" />
 
     <Body width="8" height="16" density="20"/>
 
@@ -532,7 +399,7 @@
     <SuitableTreatment identifier="huskinfection" suitability="100"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,256,64,64"/>
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
 
@@ -578,7 +445,7 @@
     <SuitableTreatment identifier="morbusinepoisoning" suitability="100"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,192,64,64"/>
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
 
@@ -610,7 +477,7 @@
     <SuitableTreatment identifier="oxygenloss" suitability="50"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,192,64,64"/>
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" />
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6" />
 
     <Body width="8" height="16" density="20"/>
 
@@ -671,7 +538,7 @@
     <Price locationtype="Outpost" buyprice="120"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,448,64,64"/>
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
 
@@ -733,7 +600,7 @@
     <SuitableTreatment identifier="oxygenloss" suitability="-30"/>
     
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,448,64,64"/>
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
 
@@ -901,42 +768,7 @@
   </Item>
 
   <!-- Harmful and toxic chems -->
-  <Item
-    name="Flash Powder"
-    identifier="flashpowder"
-    category="Material"
-    spritecolor="0.1,0.1,0.1,1.0"
-    containercolor="0.1,0.1,0.1,1.0"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,explosive"
-    impacttolerance="8"
-    useinhealthinterface="true">
     
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="50"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,192,64,64"/>
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
-
-    <Body width="8" height="16" density="20"/>
-
-    <Throwable characterusable="false" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true"/>
-      <StatusEffect type="OnFire" target="this" condition="-50"/> 
-      <StatusEffect type="OnUse" target="This" Condition="-100.0"/>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <sound file="Content/Items/Weapons/ExplosionSmall2.ogg" selectionmode="All" range="5000"/>
-        <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" selectionmode="All" range="5000"/>
-        <Explosion range="500" force="0.1">
-          <Affliction identifier="burn" amount="5"/>
-          <Affliction identifier="stun" amount="3"/>
-        </Explosion>
-        <Remove/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
-  
   <Item
     name="Chloral Hydrate"
     identifier="chloralhydrate"
@@ -953,7 +785,7 @@
     <Price locationtype="Outpost" buyprice="80"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,192,64,64"/>
-    <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
+    <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
     <Body width="8" height="17" density="20"/>
 
@@ -984,7 +816,7 @@
     <Price locationtype="Military" buyprice="60"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,192,64,64"/>
-    <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
+    <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
     <Body width="8" height="17" density="20"/>
 
@@ -1014,7 +846,7 @@
     <Price locationtype="Military" buyprice="80"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,192,64,64"/>
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="25"/>
 
@@ -1044,7 +876,7 @@
 
     <Price locationtype="Research" buyprice="1200"/>
     
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
 
@@ -1076,7 +908,7 @@
     <Price locationtype="Military" buyprice="1000"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,192,64,64"/>
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
 
@@ -1105,7 +937,7 @@
     useinhealthinterface="true">
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,256,64,64"/>
-    <Sprite texture ="Content/Items/Medical/med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <Sprite texture="Content/Items/Medical/med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="25" height="5" density="20"/>
 
@@ -1144,7 +976,7 @@
         Two injections to choke slightly faster than welding fuel. -->
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,256,64,64"/>
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
 
