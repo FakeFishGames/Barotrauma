@@ -440,77 +440,86 @@
 
       <FabricableItem identifier="antidama1" requiredtime="10">
         <RequiredSkill identifier="medical" level="50"/>
-        <RequiredItem identifier="stabilozine"/>
-        <RequiredItem identifier="chloralhydrate"/>
+        <RequiredItem identifier="opium"/>
+        <RequiredItem identifier="opium"/>
       </FabricableItem>
       <FabricableItem identifier="antidama2" requiredtime="20">
         <RequiredSkill identifier="medical" level="60"/>
-        <RequiredItem identifier="stabilozine"/>
         <RequiredItem identifier="antidama1"/>
+        <RequiredItem identifier="adrenaline"/>
+        <RequiredItem identifier="ethanol"/>
       </FabricableItem>
 
-      <FabricableItem identifier="erythrozine" requiredtime="20">
-        <RequiredSkill identifier="medical" level="50"/>
+      <FabricableItem identifier="antibloodloss1" requiredtime="10">
+        <RequiredSkill identifier="medical" level="30"/>
+        <RequiredItem identifier="sodium"/>
+        <RequiredItem identifier="chlorine"/>
+      </FabricableItem>
+      <FabricableItem identifier="antibloodloss2" requiredtime="10">
+        <RequiredSkill identifier="medical" level="60"/>
+        <RequiredItem identifier="alienblood"/>
+        <RequiredItem identifier="antibloodloss1"/>
         <RequiredItem identifier="stabilozine"/>
-        <RequiredItem identifier="ironpowder"/>
       </FabricableItem>
 
-      <FabricableItem identifier="antibleeding1" requiredtime="20">
+      <FabricableItem identifier="antibleeding1" requiredtime="10">
+        <RequiredSkill identifier="medical" level="30"/>
+        <RequiredItem identifier="organicfiber"/>
+      </FabricableItem>
+      <FabricableItem identifier="antibleeding2" requiredtime="20">
         <RequiredSkill identifier="medical" level="50"/>
+        <RequiredItem identifier="antibleeding1"/>
+        <RequiredItem identifier="elastin"/>
+      </FabricableItem>
+      <FabricableItem identifier="antibleeding3" requiredtime="20">
+        <RequiredSkill identifier="medical" level="70"/>
         <RequiredItem identifier="stabilozine"/>
-        <RequiredItem identifier="phosphorus"/>
+        <RequiredItem identifier="antibiotics"/>
+        <RequiredItem identifier="elastin"/>
       </FabricableItem>
 
-      <FabricableItem identifier="chloromydride" requiredtime="20">
-        <RequiredSkill identifier="medical" level="50"/>
-        <RequiredItem identifier="stabilozine"/>
-        <RequiredItem identifier="erythrozine"/>
-        <RequiredItem identifier="chloralhydrate"/>
-      </FabricableItem>
-
-      <FabricableItem identifier="flashpowder" requiredtime="25">
-        <RequiredSkill identifier="medical" level="40"/>
-        <RequiredItem identifier="aluminium"/>
+      <FabricableItem identifier="flashpowder" requiredtime="5">
+        <RequiredItem identifier="magnesium"/>
         <RequiredItem identifier="potassium"/>
       </FabricableItem>
 
-      <FabricableItem identifier="auxiliorizine" requiredtime="25">
-        <RequiredSkill identifier="medical" level="60"/>
+      <FabricableItem identifier="deusizine" requiredtime="25">
+        <RequiredSkill identifier="medical" level="70"/>
+        <RequiredItem identifier="antibleeding3"/>
         <RequiredItem identifier="antidama2"/>
-        <RequiredItem identifier="erythrozine"/>
-        <RequiredItem identifier="flashpowder"/>
+        <RequiredItem identifier="liquidoxygenite"/>
       </FabricableItem>
 
-      <FabricableItem identifier="hyperzine" requiredtime="25">
+      <FabricableItem identifier="calyxanide" requiredtime="10">
+        <RequiredSkill identifier="medical" level="60"/>
+        <RequiredItem identifier="huskeggs" mincondition="0.25" usecondition="true"/>
+        <RequiredItem identifier="antibiotics"/>
+        <RequiredItem identifier="stabilozine"/>
+      </FabricableItem>
+
+      <FabricableItem identifier="antinarc" requiredtime="10">
+        <RequiredSkill identifier="medical" level="50"/>
+        <RequiredItem identifier="antidama1"/>
+        <RequiredItem identifier="stabilozine"/>
+      </FabricableItem>
+      
+      <!--<FabricableItem identifier="hyperzine" requiredtime="25">
         <RequiredSkill identifier="medical" level="60"/>
         <RequiredItem identifier="phosphorus"/>
         <RequiredItem identifier="uraniumpowder" mincondition="0.5" usecondition="true"/>
-      </FabricableItem>
+      </FabricableItem>-->
 
       <FabricableItem identifier="morbusine" requiredtime="30">
         <RequiredSkill identifier="medical" level="60"/>
         <RequiredItem identifier="sulphuricacid"/>
-        <RequiredItem identifier="auxiliorizine" count="2"/>
+        <RequiredItem identifier="deusizine" count="2"/>
       </FabricableItem>
-
-      <FabricableItem identifier="morbusanide" outcondition="0.25" requiredtime="10">
+      <FabricableItem identifier="morbusineantidote" outcondition="0.25" requiredtime="10">
         <RequiredSkill identifier="medical" level="60"/>
         <RequiredItem identifier="morbusine" mincondition="0.25"/>
         <RequiredItem identifier="stabilozine" mincondition="0.25"/>
       </FabricableItem>
-
-      <FabricableItem identifier="calyxanide" requiredtime="30">
-        <RequiredSkill identifier="medical" level="60"/>
-        <RequiredItem identifier="huskeggs" mincondition="0.25" usecondition="true"/>
-        <RequiredItem identifier="antidama1"/>
-      </FabricableItem>
-
-      <FabricableItem identifier="sufforin" requiredtime="30">
-        <RequiredSkill identifier="medical" level="60"/>
-        <RequiredItem identifier="erythrozine"/>
-        <RequiredItem identifier="flashpowder"/>
-        <RequiredItem identifier="sulphuricacid"/>
-      </FabricableItem>
+      
     </Fabricator>
 
     <ConnectionPanel selectkey="Action" canbeselected="true" hudpriority="10">

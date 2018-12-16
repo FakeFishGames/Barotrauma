@@ -299,7 +299,8 @@
 
   <Item
     name="Bandage"
-    identifier="bandage"
+    identifier="antibleeding1"
+    aliases="Bandage"
     category="Equipment"
     Tags="smallitem,medical"
     useinhealthinterface="true"
@@ -335,7 +336,7 @@
     </MeleeWeapon>
   </Item>
 
-  <Item name="Plastiseal" identifier="plastiseal" category="Equipment" Tags="smallitem,medical" cargocontaineridentifier="chemicalcrate" 
+  <Item name="Plastiseal" identifier="antibleeding2" category="Equipment" Tags="smallitem,medical" cargocontaineridentifier="chemicalcrate" 
         description="A spray on synthetic skin with hemostatic properties, able to quickly seal most wounds." useinhealthinterface="true">
     <!-- TODO: adjust prices -->
     <Price locationtype="Military" buyprice="20" />
@@ -361,7 +362,7 @@
     </MeleeWeapon>
   </Item>
   
-  <Item name="Antibiotic Glue" identifier="antibioticglue" category="Equipment" Tags="smallitem,medical" cargocontaineridentifier="chemicalcrate" 
+  <Item name="Antibiotic Glue" identifier="antibleeding3" category="Equipment" Tags="smallitem,medical" cargocontaineridentifier="chemicalcrate" 
         description="An antibiotic glue with hemostatic properties. Seals bleeding wounds almost immediately and treats burns very effectively." useinhealthinterface="true">
     <!-- TODO: adjust prices -->
     <Price locationtype="Military" buyprice="20" />
