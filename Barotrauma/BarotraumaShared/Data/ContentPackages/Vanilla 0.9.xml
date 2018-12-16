@@ -20,6 +20,7 @@
   <Item file="Content/Items/Fabricators/fabricators.xml" />
   <Item file="Content/Items/Labels/labels.xml" />
   <Item file="Content/Items/Ladder/ladder.xml" />
+  <Item file="Content/Items/Materials/minerals.xml" />
   <Item file="Content/Items/Materials/materials.xml" />
   <Item file="Content/Items/Medical/medical.xml" />
   <Item file="Content/Items/Misc/misc.xml" />

@@ -28,7 +28,6 @@
     <Folder Include="$(MSBuildThisFileDirectory)Content\Effects\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Fonts\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\BackgroundCreatures\" />
-    <Folder Include="$(MSBuildThisFileDirectory)Content\Items\Materials\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Tutorials\" />
     <Folder Include="$(MSBuildThisFileDirectory)Data\Saves\" />
   </ItemGroup>
@@ -384,6 +383,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Legacy\legacysearchlight.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Materials\minerals.xml" />
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Misc\misc.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
