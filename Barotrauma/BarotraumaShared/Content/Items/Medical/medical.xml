@@ -1,5 +1,867 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Items>
+
+  <!-- Ingredients / base chemicals **************************************************************************************** -->
+
+  <Item
+    name="Elastin"
+    identifier="elastin"
+    category="Material"
+    Tags="smallitem,chem"
+    cargocontaineridentifier="chemicalcrate">
+
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="City" buyprice="30"/>
+    <Price locationtype="Outpost" buyprice="30"/>
+
+    <!-- TODO: sprite and inventory icons -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="639,192,64,64"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6" color="0.2,0.2,0.2,1.0"/>
+
+    <Body width="8" height="16" density="40"/>
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+  </Item>
+  
+  <Item
+    name="Opium"
+    identifier="opium"
+    category="Material"
+    Tags="smallitem,chem"
+    description="A relatively mild opioid obtained from Aquatic Poppy. Most commonly used to manufacture morphine and fentanyl."
+    cargocontaineridentifier="chemicalcrate">
+
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="City" buyprice="30"/>
+    <Price locationtype="Outpost" buyprice="30"/>
+
+    <!-- TODO: sprite and inventory icons -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="639,192,64,64"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6" color="0.2,0.2,0.2,1.0"/>
+
+    <Body width="8" height="16" density="40"/>
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect tags="medical" type="OnUse" target="Limb" duration="10.0">
+        <ReduceAffliction identifier="damage" amount="0.5"/>
+        <Affliction identifier="opiateaddiction" amount="0.3"/>
+        <Affliction identifier="opiateoverdose" amount="0.3"/>
+        <ReduceAffliction identifier="opiatewithdrawal" amount="0.5"/>
+      </StatusEffect>    
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+  
+  <Item
+    name="Broad-spectrum Antibiotics"
+    identifier="antibiotics"
+    category="Material"
+    Tags="smallitem,chem"
+    description="A mild antibiotic that acts against a wide range of disease-causing bacteria. Used as an ingredient in many medical compounds."
+    cargocontaineridentifier="chemicalcrate">
+
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="City" buyprice="30"/>
+    <Price locationtype="Outpost" buyprice="30"/>
+
+    <!-- TODO: sprite and inventory icons -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="639,192,64,64"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6" color="0.2,0.2,0.2,1.0"/>
+
+    <Body width="8" height="16" density="40"/>
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">   
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect tags="medical" type="OnUse" target="Limb" duration="5.0">
+        <ReduceAffliction identifier="huskinfection" amount="-1.0"/>
+        <Affliction identifier="opiateaddiction" amount="0.3"/>
+        <Affliction identifier="opiateoverdose" amount="0.3"/>
+        <ReduceAffliction identifier="opiatewithdrawal" amount="0.5"/>      
+        <!-- Remove the item when fully used -->
+        <StatusEffect type="OnBroken" target="This">
+          <Remove/>
+        </StatusEffect>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+  
+  <Item
+    name="Stabilozine"
+    identifier="stabilozine"
+    category="Material"
+    spritecolor="1.0,1.0,0.7,1.0"
+    containercolor="1.0,1.0,0.7,1.0"  
+    Tags="smallitem,chem,medical"  
+    cargocontaineridentifier="chemicalcrate"   
+    description="Used as an ingredient in the manufacture of various medicines. On its own, can be mildly useful in the treatment of internal damage, burns and oxygen deprivation."
+    useinhealthinterface="true">
+    
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="City" buyprice="30"/>
+
+    <!-- TODO: sprite and inventory icons -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,256,64,64"/>
+    <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6" />
+
+    <Body width="8" height="17" density="20"/>
+
+    <SuitableTreatment identifier="internaldamage" suitability="20"/>
+    <SuitableTreatment identifier="burn" suitability="20"/>
+    <SuitableTreatment identifier="oxygenlow" suitability="40"/>
+    
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">   
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect tags="medical" type="OnUse" target="Character" duration="5">
+        <ReduceAffliction identifier="damage" amount="0.5"/>
+        <ReduceAffliction identifier="burn" amount="0.1"/>
+        <ReduceAffliction identifier="oxygenlow" amount="0.1"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+  
+  <Item
+    name="Ethanol"    
+    identifier="ethanol"
+    category="Material"
+    spritecolor="0.0,0.9,0.1,1.0"    
+    containercolor="0.0,0.9,0.1,1.0"
+    cargocontaineridentifier="chemicalcrate"
+    description="Medical alcohol used as an ingredient in the manufacture of various medicines. Drinking while on duty is not adviced."    
+    Tags="smallitem,chem,medical"
+    useinhealthinterface="true">
+    
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="15"/>
+    <Price locationtype="Military" buyprice="15"/>
+    <Price locationtype="City" buyprice="20"/>
+    <Price locationtype="Outpost" buyprice="50"/>
+    
+    <!-- TODO: sprite and inventory icons -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,256,64,64"/>
+    <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6"/>
+
+    <Body width="8" height="7" density="20"/>
+
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect type="OnUse" target="Character" delay="10" duration="10">
+        <Affliction identifier="drunk" amount="1"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+  
+  <Item
+    name="Alien Blood"
+    identifier="alienblood"
+    category="Material"
+    spritecolor="0.5,0.0,0.0,1.0"
+    containercolor="0.5,0.0,0.0,1.0"
+    cargocontaineridentifier="chemicalcrate"
+    description="Blood extracted from an Europan lifeform. Can be further processed into a blood substitute for the treatment of blood loss."
+    Tags="smallitem,chem,medical"
+    useinhealthinterface="true">
+    
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="60"/>
+
+    <!-- TODO: sprite and inventory icons -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,192,64,64"/>
+    <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6"/>
+
+    <Body width="8" height="17" density="20"/>
+
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">     
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect tags="poison" type="OnUse" target="Character" delay="20" duration="20.0">
+        <Affliction identifier="psychosis" amount="1"/>
+        <Affliction identifier="internaldamage" amount="0.2"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+  
+  <Item
+    name="Velonaceps Calyx Eggs"
+    identifier="huskeggs"
+    category="Material"
+    spritecolor="0.0,0.0,0.0,1.0"
+    containercolor="0.1,0.1,0.1,1.0"
+    cargocontaineridentifier="chemicalcrate"
+    Tags="smallitem,chem,medical"
+    description="Dormant eggs of the Europan lifeform colloquially referred to as 'husk parasite'."
+    useinhealthinterface="true">
+
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="1200"/>
+    
+    <!-- TODO: sprite and inventory icons -->
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="8" height="16" density="20"/>
+
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect type="OnUse" target="Character" HuskInfectionState="0.01">
+        <!-- HuskInfectionState must be less than 0.01 so you can't speed up the infection -->
+        <Conditional HuskInfectionState="lt 0.01"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+  
+  <Item
+    name="Adrenaline"
+    identifier="adrenaline"
+    category="Material"
+    spritecolor="0.5,0.0,0.0,1.0"
+    containercolor="0.5,0.0,0.0,1.0"
+    cargocontaineridentifier="chemicalcrate"
+    Tags="smallitem,chem,medical"
+    useinhealthinterface="true">
+    
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="60"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,192,64,64"/>
+    <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6"/>
+
+    <Body width="8" height="17" density="20"/>
+
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <!-- TODO: some effect for adrenaline -->
+      
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+  
+  <Item
+    name="Sulphuric Acid"
+    identifier="sulphuricacid"
+    category="Material"
+    spritecolor="0.5,0.0,0.0,1.0"
+    containercolor="0.5,0.0,0.0,1.0"
+    cargocontaineridentifier="chemicalcrate"
+    description="A strong acid that causes burns when in contact with skin. Used as an ingredient in several poisons."
+    Tags="smallitem,chem,medical"
+    useinhealthinterface="true">
+    
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="60"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,192,64,64"/>
+    <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6"/>
+
+    <Body width="8" height="17" density="20"/>
+
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect tags="poison,acid" type="OnUse" target="Character" duration="5.0">
+        <Affliction identifier="burn" amount="2"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+      
+  <!-- meds **************************************************************************************** -->
+
+  <Item
+    name="Bandage"
+    identifier="bandage"
+    category="Equipment"
+    Tags="smallitem,medical"
+    useinhealthinterface="true"
+    cargocontaineridentifier="chemicalcrate"
+    description="Basic bandages, useful in the treatment of bleeding wounds and burns.">
+
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="50"/>
+
+    <SuitableTreatment identifier="bloodloss" suitability="50"/>
+    <SuitableTreatment identifier="burn" suitability="50"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,448,64,64"/>
+    <Sprite texture="med.png" sourcerect="0,16,11,16" depth="0.6"/>
+
+    <Body width="11" height="16" density="20"/>
+
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect type="OnUse" target="This, Limb" duration="1.0">
+        <Sound file="Content/Items/Medical/bandage1.ogg" type="OnUse" range="500"/>
+        <Sound file="Content/Items/Medical/bandage2.ogg" type="OnUse" range="500"/>
+        <ReduceAffliction identifier="bleeding" amount="25"/>
+        <ReduceAffliction identifier="burn" amount="25"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+
+  <Item name="Plastiseal" identifier="plastiseal" category="Equipment" Tags="smallitem,medical" cargocontaineridentifier="chemicalcrate" 
+        description="A spray on synthetic skin with hemostatic properties, able to quickly seal most wounds." useinhealthinterface="true">
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Military" buyprice="20" />
+    <Price locationtype="Research" buyprice="20" />
+    <Price locationtype="City" buyprice="50" />
+    <Price locationtype="Outpost" buyprice="50" />
+    <Sprite texture="med.png" sourcerect="0,16,11,16" depth="0.6" />
+    <InventoryIcon texture="Bandages_temp_01.png" />
+    <Body width="11" height="16" density="20" />
+    <SuitableTreatment identifier="bloodloss" suitability="70"/>
+    <SuitableTreatment identifier="burn" suitability="70"/>
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true" />
+      <StatusEffect type="OnUse" target="This, Limb" duration="5.0">
+        <Sound file="Content/Items/Medical/bandage1.ogg" range="500" />
+        <ReduceAffliction identifier="bleeding" amount="10" />
+        <ReduceAffliction identifier="burn" amount="10" />
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+  
+  <Item name="Antibiotic Glue" identifier="antibioticglue" category="Equipment" Tags="smallitem,medical" cargocontaineridentifier="chemicalcrate" 
+        description="An antibiotic glue with hemostatic properties. Seals bleeding wounds almost immediately and treats burns very effectively." useinhealthinterface="true">
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Military" buyprice="20" />
+    <Price locationtype="Research" buyprice="20" />
+    <Price locationtype="City" buyprice="50" />
+    <Price locationtype="Outpost" buyprice="50" />
+    <Sprite texture="med.png" sourcerect="0,16,11,16" depth="0.6" />
+    <InventoryIcon texture="Bandages_temp_01.png" />
+    <Body width="11" height="16" density="20" />
+    <SuitableTreatment identifier="bloodloss" suitability="70"/>
+    <SuitableTreatment identifier="burn" suitability="70"/>
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true" />
+      <StatusEffect type="OnUse" target="This, Limb" duration="1.0">
+        <Sound file="Content/Items/Medical/bandage1.ogg" range="500" />
+        <ReduceAffliction identifier="bleeding" amount="80" />
+        <ReduceAffliction identifier="burn" amount="80" />
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>  
+  
+  <Item
+    name="Morphine"
+    identifier="antidama1"
+    aliases="Corrigodone"
+    category="Material"
+    spritecolor="0.191, 0.63, 0.21"
+    containercolor="0.191, 0.63, 0.21"
+    cargocontaineridentifier="chemicalcrate"
+    Tags="smallitem,chem,medical"
+    description="A powerful opiate for treating pain associated with internal injuries, but will cause shortness of breath and eventual dependency with overuse."
+    useinhealthinterface="true">
+
+    <SuitableTreatment identifier="internaldamage" suitability="50"/>
+    <SuitableTreatment identifier="opiatewithdrawal" suitability="50"/>
+    <SuitableTreatment identifier="opiateoverdose" suitability="-50"/>
+    <SuitableTreatment identifier="opiateaddiction" suitability="-50"/>
+    <SuitableTreatment identifier="oxygenloss" suitability="-10"/>
+
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="80"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="120"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,448,64,64"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="8" height="16" density="20"/>
+
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <RequiredSkill identifier="medical" level="40"/>
+      <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="10">
+        <ReduceAffliction identifier="damage" amount="2"/>
+        <Affliction identifier="oxygenlow" amount="3"/>
+        <Affliction identifier="opiateaddiction" amount="0.15"/>
+        <Affliction identifier="opiateoverdose" amount="0.15"/>
+        <ReduceAffliction identifier="opiatewithdrawal" amount="3.0"/>
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnFailure" target="Limb, This" duration="10">
+        <ReduceAffliction identifier="damage" amount="0.5"/>
+        <Affliction identifier="oxygenlow" amount="3"/>
+        <Affliction identifier="opiateaddiction" amount="0.3"/>
+        <Affliction identifier="opiateoverdose" amount="0.3"/>
+        <ReduceAffliction identifier="opiatewithdrawal" amount="3.0"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>      
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+
+  <Item
+    name="Fentanyl"
+    identifier="antidama2"
+    category="Material"
+    spritecolor="0.237, 0.151, 0.75"
+    containercolor="0.237, 0.151, 0.75"
+    cargocontaineridentifier="chemicalcrate"
+    Tags="smallitem,chem,medical"
+    description="A powerful opiate for treating pain associated with burns and internal injuries, but will cause significant shortness of breath and eventual dependency with overuse."
+    useinhealthinterface="true">
+
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="80"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="120"/>
+
+    <SuitableTreatment identifier="internaldamage" suitability="100"/>
+    <SuitableTreatment identifier="burn" suitability="100"/>
+    <SuitableTreatment identifier="opiatewithdrawal" suitability="100"/>
+    <SuitableTreatment identifier="opiateoverdose" suitability="-100"/>
+    <SuitableTreatment identifier="opiateaddiction" suitability="-100"/>
+    <SuitableTreatment identifier="oxygenloss" suitability="-30"/>
+    
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,448,64,64"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="8" height="16" density="20"/>
+
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <RequiredSkill identifier="medical" level="40"/>
+      <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="10">
+        <ReduceAffliction identifier="burn" amount="5"/>
+        <ReduceAffliction identifier="damage" amount="5"/>
+        <Affliction identifier="oxygenlow" amount="5"/>
+        <Affliction identifier="opiateaddiction" amount="0.5"/>
+        <Affliction identifier="opiateoverdose" amount="0.5"/>
+        <ReduceAffliction identifier="opiatewithdrawal" amount="5"/>
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnFailure" target="Limb, This" duration="10">
+        <ReduceAffliction identifier="damage" amount="0.5"/>
+        <ReduceAffliction identifier="burn" amount="0.5"/>
+        <Affliction identifier="oxygenlow" amount="15"/>
+        <Affliction identifier="opiateaddiction" amount="1"/>
+        <Affliction identifier="opiateoverdose" amount="1"/>
+        <ReduceAffliction identifier="opiatewithdrawal" amount="3"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>      
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+  
+  <Item
+    name="Saline"
+    identifier="antibloodloss1"
+    category="Material"
+    spritecolor="0.255, 0.79, 0.158"
+    containercolor="0.255, 0.79, 0.158"
+    cargocontaineridentifier="chemicalcrate"
+    Tags="smallitem,chem,medical"
+    useinhealthinterface="true"
+    description="A sodium chloride infusion mildly useful in the treatment of blood loss.">
+
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="80"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="120"/>
+
+    <SuitableTreatment identifier="bloodloss" suitability="50"/>
+
+    <InventoryIcon texture="Saline_temp_01.png"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="8" height="16" density="20"/>
+
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="5">
+        <ReduceAffliction identifier="bloodloss" amount="1"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  
+  <Item
+    name="Blood Pack"
+    identifier="antibloodloss2"
+    category="Material"
+    spritecolor="0.255, 0.79, 0.158"
+    containercolor="0.255, 0.79, 0.158"
+    cargocontaineridentifier="chemicalcrate"
+    Tags="smallitem,chem,medical"
+    useinhealthinterface="true"
+    description="A pack of blood substitute for the treatment of blood loss.">
+
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="80"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="120"/>
+
+    <SuitableTreatment identifier="bloodloss" suitability="50"/>
+
+    <InventoryIcon texture="Saline_temp_01.png"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="8" height="16" density="20"/>
+
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="5">
+        <ReduceAffliction identifier="bloodloss" amount="10"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  
+  <Item 
+    name="Deusizine" 
+    identifier="deusizine"        
+    aliases="Auxiliriozine"
+    category="Material" 
+    spritecolor="1.0,1.0,0.0,1.0" containercolor="1.0,1.0,0.0,1.0" 
+    cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" 
+    description="A highly potent stimulant effective in the treatment of internal damage, oxygen deprivation and to a lesser extent, blood loss. Produces mild burns as a side effect." 
+    useinhealthinterface="true">
+    
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="150" />
+    <Price locationtype="Military" buyprice="200" />
+    
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,192,64,64" />
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6" />
+    
+    <Body width="8" height="16" density="20" />
+
+    <SuitableTreatment identifier="oxygenlow" suitability="50"/>
+    <SuitableTreatment identifier="damage" suitability="50"/>
+    <SuitableTreatment identifier="bloodloss" suitability="20"/>
+    <SuitableTreatment identifier="burn" suitability="-10"/>
+    
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect tags="medical" type="OnUse" target="Limb" duration="60">
+        <Affliction identifier="burn" amount="0.125" />
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnUse" target="Character" duration="60">
+        <ReduceAffliction identifier="damage" amount="0.5" />
+        <ReduceAffliction identifier="oxygenlow" amount="0.5" />
+        <ReduceAffliction identifier="bloodloss" amount="0.25" />
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+  
+  <Item
+    name="Calyxanide"
+    identifier="calyxanide"
+    category="Material"
+    spritecolor="0.0,0.0,0.0,1.0"
+    containercolor="0.0,0.0,0.0,1.0"
+    cargocontaineridentifier="chemicalcrate"
+    Tags="smallitem,chem,medical"
+    description="An antiparasitic drug used in the treatment of husk parasite infections. Might require higher dosage to cure the infection at later stages."
+    useinhealthinterface="true">
+
+    <Price locationtype="Research" buyprice="375"/>
+    <Price locationtype="Military" buyprice="350"/>
+    <Price locationtype="City" buyprice="500"/>
+
+    <SuitableTreatment identifier="huskinfection" suitability="100"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,256,64,64"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="8" height="16" density="20"/>
+
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect type="OnUse" target="Character">
+        <Conditional HuskInfectionState="lt 100.0"/>
+        <ReduceAffliction identifier="huskinfection" amount="40"/>
+      </StatusEffect>
+      <StatusEffect tags="poison,calyxanide" type="OnUse" target="Character" duration="10.0">
+        <!-- Injecting a still-conscious Husk will only piss it off and kill the "conscious" faster -->
+        <Conditional HuskInfectionState="eq 100.0"/>
+        <Affliction identifier="internaldamage" amount="3"/>
+      </StatusEffect>
+      <StatusEffect tags="poison,calyxanide" type="OnUse" target="Character" duration="10.0">
+        <Conditional SpeciesName="husk"/>
+        <Affliction identifier="internaldamage" amount="4"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+  
+  <Item
+    name="Naloxone"
+    identifier="antinarc"
+    category="Material"
+    spritecolor="0.064, 0.249, 0.019"
+    containercolor="0.064, 0.249, 0.019"
+    cargocontaineridentifier="chemicalcrate"
+    Tags="smallitem,chem,medical"
+    useinhealthinterface="true"
+    description="An opioid antagonist for the treatment of opiate based withdrawal and overdose.">
+
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="80"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="120"/>
+
+    <SuitableTreatment identifier="opiateaddiction" suitability="100"/>
+    <SuitableTreatment identifier="opiatewithdrawal" suitability="100"/>
+    
+    <InventoryIcon texture="AntiNarc_temp_01.png"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="8" height="16" density="20"/>
+
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect tags="medical" type="OnUse" target="Limb" duration="30.0">
+        <ReduceAffliction identifier="opiatewithdrawal" amount="2.0"/>
+        <ReduceAffliction identifier="opiateaddiction" amount="2.0"/>
+        <ReduceAffliction identifier="opiateoverdose" amount="2.0"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+  
+  <Item
+    name="Morbusine Antidote"   
+    identifier="morbusineantidote"
+    aliases="Morbusanide"
+    category="Material"
+    spritecolor="0.0,0.0,0.2,1.0"
+    containercolor="0.0,0.0,0.2,1.0"
+    cargocontaineridentifier="chemicalcrate"
+    Tags="smallitem,chem,medical"
+    description="An antidote for acute morbusine poisoning."
+    useinhealthinterface="true">
+
+    <SuitableTreatment identifier="morbusinepoisoning" suitability="100"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,192,64,64"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="8" height="16" density="20"/>
+
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect tags="medical" type="OnUse" target="Character" duration="1.0">
+        <ReduceAffliction identifier="morbusinepoisoning" amount="50.0"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+  
+  <Item
+    name="Liquid Oxygenite"
+    identifier="liquidoxygenite"
+    category="Material"
+    spritecolor="0.6,0.8,1.0,1.0"
+    containercolor="0.6,0.8,1.0,1.0"
+    cargocontaineridentifier="chemicalcrate"
+    Tags="smallitem,chem,medical"
+    impacttolerance="8"
+    description="A mildy toxic solution that slowly releases oxygen into the bloodstream when injected. Avoid dropping."
+    useinhealthinterface="true">
+
+    <SuitableTreatment identifier="internaldamage" suitability="-20"/>
+    <SuitableTreatment identifier="oxygenloss" suitability="50"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,192,64,64"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6" />
+
+    <Body width="8" height="16" density="20"/>
+
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect tags="medical" type="OnUse" target="Character" duration="60.0">
+        <Affliction identifier="internaldamage" amount="0.0625"/>
+        <ReduceAffliction identifier="oxygenlow" amount="10.0"/>
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true">
+        <sound file="Content/Items/Weapons/ExplosionSmall2.ogg" range="5000" selectionmode="All"/>
+        <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" range="5000"/>
+        <Explosion range="300.0" structuredamage="50" force="10.0">
+          <Affliction identifier="burn" amount="30"/>
+          <Affliction identifier="stun" amount="2"/>
+        </Explosion>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+  
+  <Item
+    name="Hyperzine"
+    identifier="hyperzine"
+    category="Material"
+    spritecolor="0.8,0.3,0.8,1.0"
+    containercolor="0.8,0.3,0.8,1.0"
+    cargocontaineridentifier="chemicalcrate"
+    Tags="smallitem,chem,medical"
+    description="A potent muscle stimulant for those moments when you gotta go fast."
+    useinhealthinterface="true">
+
+    <Price locationtype="Research" buyprice="60"/>
+    <Price locationtype="Military" buyprice="80"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,192,64,64"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="8" height="16" density="15"/>
+
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect tags="medical" type="OnUse" target="Character" SpeedMultiplier="1.4" setvalue="true" duration="60.0">
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+
+  <!-- poisons and harmful chemicals **************************************************************************************** -->
+  
+  <Item
+    name="Morbusine"   
+    identifier="morbusine"
+    category="Material"
+    spritecolor="0.0,0.0,0.0,1.0"
+    containercolor="0.1,0.1,0.1,1.0"
+    cargocontaineridentifier="chemicalcrate"
+    Tags="smallitem,chem,medical"
+    description="A highly potent neurotoxin."
+    useinhealthinterface="true">
+    
+    <Price locationtype="Research" buyprice="450"/>
+    <Price locationtype="Military" buyprice="1000"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,192,64,64"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="8" height="16" density="20"/>
+    
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect type="OnUse" target="Character">
+        <Affliction identifier="morbusinepoisoning" amount="1"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+  
+  <Item
+    name="Chloral Hydrate"
+    identifier="chloralhydrate"
+    category="Material"
+    spritecolor="1.0,1.0,1.0,0.8"
+    containercolor="1.0,1.0,1.0,0.8"
+    cargocontaineridentifier="chemicalcrate"
+    Tags="smallitem,chem,medical"
+    description="A sedative that can be used to knock someone out for a short period of time."
+    useinhealthinterface="true">
+
+    <Price locationtype="Research" buyprice="30"/>
+    <Price locationtype="Military" buyprice="30"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="80"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,192,64,64"/>
+    <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6"/>
+
+    <Body width="8" height="17" density="20"/>
+    
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect type="OnUse" target="Limb">
+        <Affliction identifier="internaldamage" amount="1"/>
+        <Affliction identifier="stun" amount="10.0"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+  
+  
+  <!-- legacy **************************************************************************************** -->
+  
   <!-- Medical items -->
   <Item
     name="Medical Syringe"
@@ -55,222 +917,7 @@
     </Projectile>
   </Item>
 
-  <Item
-    name="Bandage"
-    identifier="bandage"
-    category="Equipment"
-    Tags="smallitem,medical"    
-    useinhealthinterface="true"
-    cargocontaineridentifier="chemicalcrate"
-    description="Basic bandages, useful in the treatment of minor wounds, and burns in particular.">
-    
-    <Price locationtype="Military" buyprice="20"/>
-    <Price locationtype="Research" buyprice="20"/>
-    <Price locationtype="City" buyprice="50"/>
-    <Price locationtype="Outpost" buyprice="50"/>
-
-    <SuitableTreatment identifier="bloodloss" suitability="50"/>
-    <SuitableTreatment identifier="burn" suitability="50"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,448,64,64"/>
-    <Sprite texture="med.png" sourcerect="0,16,11,16" depth="0.6"/>
-
-    <Body width="11" height="16" density="20"/>
-
-    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand"
-              aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
-      <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true"/>
-      <StatusEffect type="OnUse" target="This, Limb" duration="5.0">
-        <Sound file="Content/Items/Medical/bandage1.ogg" type="OnUse" range="500"/>
-        <Sound file="Content/Items/Medical/bandage2.ogg" type="OnUse" range="500"/>
-        <ReduceAffliction identifier="bleeding" amount="3"/>
-        <ReduceAffliction identifier="burn" amount="5"/>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </MeleeWeapon>
-  </Item>
-  <Item name="Plastiseal" identifier="plastiseal" category="Equipment" Tags="smallitem,medical" cargocontaineridentifier="chemicalcrate" description="A spray on synthetic skin with hemostatic properties, able to quickly seal most wounds." useinhealthinterface="true">
-    <Price locationtype="Military" buyprice="20" />
-    <Price locationtype="Research" buyprice="20" />
-    <Price locationtype="City" buyprice="50" />
-    <Price locationtype="Outpost" buyprice="50" />
-    <Sprite texture="med.png" sourcerect="0,16,11,16" depth="0.6" />
-    <InventoryIcon texture="Bandages_temp_01.png" />
-    <Body width="11" height="16" density="20" />
-    <SuitableTreatment identifier="bloodloss" suitability="70"/>
-    <SuitableTreatment identifier="burn" suitability="70"/>
-    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
-      <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
-      <StatusEffect type="OnUse" target="This, Limb" duration="3.0">
-        <Sound file="Content/Items/Medical/bandage1.ogg" range="500" />
-        <ReduceAffliction identifier="bleeding" amount="7" />
-        <ReduceAffliction identifier="burn" amount="7" />
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove />
-      </StatusEffect>
-    </MeleeWeapon>
-  </Item>
-
-  <!-- Ingredients/weak chems -->
-  <Item
-    name="Iron Powder"
-    identifier="ironpowder"
-    category="Material"
-    Tags="smallitem,chem"
-    cargocontaineridentifier="chemicalcrate"
-    useinhealthinterface="true">
-    
-    <Price locationtype="Research" buyprice="10"/>
-    <Price locationtype="Military" buyprice="20"/>
-    <Price locationtype="City" buyprice="30"/>
-    <Price locationtype="Outpost" buyprice="30"/>
-    
-    <SuitableTreatment identifier="internaldamage" suitability="-10"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="639,192,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6" color="0.2,0.2,0.2,1.0"/>
-
-    <Body width="8" height="16" density="40"/>
-
-    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect tags="poison,iron" type="OnUse" target="Character" duration="10">
-        <Affliction identifier="internaldamage" amount="2.0"/>
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
-
-  <Item
-    name="Stabilozine"
-    identifier="stabilozine"
-    category="Material"
-    spritecolor="1.0,1.0,0.7,1.0"    
-    containercolor="1.0,1.0,0.7,1.0"  
-    Tags="smallitem,chem,medical"  
-    cargocontaineridentifier="chemicalcrate"   
-    description="Used as an ingredient in the manufacture of various medicines. On its own, can be mildly useful in the treatment of internal damage, burns and oxygen deprivation."
-    useinhealthinterface="true">
-    
-    <Price locationtype="Research" buyprice="10"/>
-    <Price locationtype="Military" buyprice="20"/>
-    <Price locationtype="City" buyprice="30"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,256,64,64"/>
-    <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6" />
-
-    <Body width="8" height="17" density="20"/>
-
-    <SuitableTreatment identifier="internaldamage" suitability="20"/>
-    <SuitableTreatment identifier="burn" suitability="20"/>
-    <SuitableTreatment identifier="oxygenlow" suitability="40"/>
-    
-    <ItemComponent>
-      <StatusEffect tags="medical" type="OnUse" target="Character" duration="20">
-        <ReduceAffliction identifier="damage" amount="0.1"/>
-      </StatusEffect>
-      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
-    </ItemComponent>
-
-    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect tags="medical" type="OnUse" target="Character" duration="10">
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-        <ReduceAffliction identifier="damage" amount="1"/>
-        <ReduceAffliction identifier="burn" amount="1"/>
-        <ReduceAffliction identifier="oxygenlow" amount="2"/>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
-  
-  <Item
-    name="Ethanol"    
-    identifier="ethanol"
-    category="Material"
-    spritecolor="0.0,0.9,0.1,1.0"    
-    containercolor="0.0,0.9,0.1,1.0"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    useinhealthinterface="true">
-    
-    <Price locationtype="Research" buyprice="15"/>
-    <Price locationtype="Military" buyprice="15"/>
-    <Price locationtype="City" buyprice="20"/>
-    <Price locationtype="Outpost" buyprice="50"/>
-    
-    <ItemComponent>
-      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
-      <StatusEffect type="OnUse" target="Character" delay="10" duration="10">
-        <Affliction identifier="drunk" amount="1"/>
-      </StatusEffect>
-    </ItemComponent>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,256,64,64"/>
-    <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6"/>
-
-    <Body width="8" height="7" density="20"/>
-
-    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="Character" duration="10">
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-        <Affliction identifier="drunk" amount="2"/>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
-  
-  <!-- Helpful chems -->
-  <Item
-    name="Traumazine"
-    identifier="chloromydride"
-    category="Material"
-    spritecolor="0.7,0.9,1.0,1.0"
-    containercolor="0.7,0.9,1.0,1.0"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    description="A strong synaptic stimulant and cardiostimulant which is used as a preventative measure against critical condition. Should only be injected once every 30 seconds."
-    useinhealthinterface="true">
-    
-    <Price locationtype="Research" buyprice="70"/>
-    <Price locationtype="Military" buyprice="80"/>
-    <Price locationtype="City" buyprice="100"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,256,64,64"/>
-    <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6" />
-
-    <Body width="8" height="16" density="20"/>
-    
-    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect tags="medical" type="OnUse" target="Character" duration="30" stackable="false" checkconditionalalways="true">
-        <!-- Rapidly removes bleeding and stabilizes oxygen intake while also counteracting crit damage so they won't die. Doesn't prevent poisons.
-            EXTREMELY useful to follow up with CPR, especially if they were bleeding before. -->
-        <Conditional Vitality="lt 0.1"/>
-        <ReduceAffliction identifier="damage" amount="1.0"/>
-        <ReduceAffliction identifier="bleeding" amount="-0.1"/>
-        <ReduceAffliction identifier="oxygenlow" amount="-0.25"/>
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
-  
+<!--
   <Item
     name="Oxygenic Acid"
     identifier="erythrozine"
@@ -306,697 +953,13 @@
         <ReduceAffliction identifier="oxygenlow" amount="2"/>
         <RequiredItem identifier="medicalsyringe" type="Container"/>
       </StatusEffect>
-      <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove/>
       </StatusEffect>
     </Throwable>
   </Item>
-
-  <Item name="Xenogland Extract" identifier="auxiliorizine" category="Material" spritecolor="1.0,1.0,0.0,1.0" containercolor="1.0,1.0,0.0,1.0" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A highly potent stimulant effective in the treatment of internal damage, oxygen deprivation and to a lesser extent, blood loss. Produces mild burns as a side effect." useinhealthinterface="true">
-    <Price locationtype="Research" buyprice="150" />
-    <Price locationtype="Military" buyprice="200" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,192,64,64" />
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6" />
-    <Body width="8" height="16" density="20" />
-
-    <SuitableTreatment identifier="oxygenlow" suitability="50"/>
-    <SuitableTreatment identifier="damage" suitability="50"/>
-    <SuitableTreatment identifier="bloodloss" suitability="20"/>
-    <SuitableTreatment identifier="burn" suitability="10"/>
-
-    <ItemComponent>
-      <StatusEffect tags="medical" type="OnUse" target="This, Limb" duration="15.0">
-        <ReduceAffliction identifier="damage" amount="0.25" />
-        <ReduceAffliction identifier="oxygenlow" amount="0.5" />
-        <Affliction identifier="burn" amount="0.5" />
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove />
-      </StatusEffect>
-    </ItemComponent>
-    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect tags="medical" type="OnUse" target="This, Limb" duration="60.0">
-        <RequiredItem identifier="medicalsyringe" type="Container" />
-        <ReduceAffliction identifier="damage" amount="0.5" />
-        <ReduceAffliction identifier="oxygenlow" amount="0.5" />
-        <ReduceAffliction identifier="bloodloss" amount="0.25" />
-        <Affliction identifier="burn" amount="0.125" />
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove />
-      </StatusEffect>
-    </Throwable>
-  </Item>
-
-  <Item
-    name="Hyperzine"
-    identifier="hyperzine"
-    category="Material"
-    spritecolor="0.8,0.3,0.8,1.0"
-    containercolor="0.8,0.3,0.8,1.0"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    description="A potent muscle stimulant."
-    useinhealthinterface="true">
-
-    <Price locationtype="Research" buyprice="60"/>
-    <Price locationtype="Military" buyprice="80"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,192,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
-
-    <Body width="8" height="16" density="15"/>
-
-    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect tags="medical" type="OnUse" target="Character" SpeedMultiplier="1.3" setvalue="true" duration="60.0">
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
-
-  <Item
-    name="Calyxanide"
-    identifier="calyxanide"
-    category="Material"
-    spritecolor="0.0,0.0,0.0,1.0"
-    containercolor="0.0,0.0,0.0,1.0"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    description="An antiparasitic drug used in the treatment of husk parasite infections. Might require higher dosage to cure the infection at later stages."
-    useinhealthinterface="true">
-
-    <Price locationtype="Research" buyprice="375"/>
-    <Price locationtype="Military" buyprice="350"/>
-    <Price locationtype="City" buyprice="500"/>
-
-    <SuitableTreatment identifier="huskinfection" suitability="100"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,256,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
-
-    <Body width="8" height="16" density="20"/>
-
-    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">      
-      <StatusEffect type="OnUse" target="Character">
-        <Conditional HuskInfectionState="lt 40.0"/>
-        <ReduceAffliction identifier="huskinfection" amount="10"/>
-      </StatusEffect>
-      <StatusEffect type="OnUse" target="Character">
-        <Conditional HuskInfectionState="lt 100.0"/>
-        <ReduceAffliction identifier="huskinfection" amount="40"/>
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-      </StatusEffect>
-      <StatusEffect tags="poison,calyxanide" type="OnUse" target="Character" duration="10.0">
-        <!-- Injecting a still-conscious Husk will only piss it off and kill the "conscious" faster -->
-        <Conditional HuskInfectionState="eq 100.0"/>
-        <Affliction identifier="internaldamage" amount="3"/>
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-      </StatusEffect>
-      <StatusEffect tags="poison,calyxanide" type="OnUse" target="Character" duration="10.0">
-        <Conditional SpeciesName="husk"/>
-        <Affliction identifier="internaldamage" amount="4"/>
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
-
-  <Item
-    name="Morbusanide"   
-    identifier="morbusanide"
-    category="Material"
-    spritecolor="0.0,0.0,0.2,1.0"
-    containercolor="0.0,0.0,0.2,1.0"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    description="A morbusine antidote."
-    useinhealthinterface="true">
-
-    <SuitableTreatment identifier="morbusinepoisoning" suitability="100"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,192,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
-
-    <Body width="8" height="16" density="20"/>
-
-    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="Character">
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-        <ReduceAffliction identifier="morbusinepoisoning" amount="100.0"/>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
-
-  <Item
-    name="Liquid Oxygenite"
-    identifier="liquidoxygenite"
-    category="Material"
-    spritecolor="0.6,0.8,1.0,1.0"
-    containercolor="0.6,0.8,1.0,1.0"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    impacttolerance="8"
-    description="A mildy toxic solution that slowly releases oxygen into the bloodstream when injected. May also be taken orally but with less beneficial effect. Avoid dropping."
-    useinhealthinterface="true">
-
-    <SuitableTreatment identifier="internaldamage" suitability="-20"/>
-    <SuitableTreatment identifier="oxygenloss" suitability="50"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,192,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6" />
-
-    <Body width="8" height="16" density="20"/>
-
-    <ItemComponent>
-      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true" />
-      <StatusEffect tags="medical" type="OnUse" target="Character" duration="15">
-        <Affliction identifier="internaldamage" amount="0.125" />
-        <ReduceAffliction identifier="oxygenlow" amount="5.0" />
-        <RequiredItem identifier="medicalsyringe" type="Container" />
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove />
-      </StatusEffect>
-    </ItemComponent>
-
-    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect tags="medical" type="OnUse" target="Character" duration="60">
-        <Affliction identifier="internaldamage" amount="0.0625"/>
-        <ReduceAffliction identifier="oxygenlow" amount="10.0"/>
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-      </StatusEffect>
-      <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true">
-        <sound file="Content/Items/Weapons/ExplosionSmall2.ogg" range="5000" selectionmode="All"/>
-        <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" range="5000"/>
-        <Explosion range="300.0" structuredamage="50" force="10.0">
-          <Affliction identifier="burn" amount="30"/>
-          <Affliction identifier="stun" amount="2"/>
-        </Explosion>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
-
-  <Item
-    name="Morphine"
-    identifier="antidama1"
-    aliases="Corrigodone"
-    category="Material"
-    spritecolor="0.191, 0.63, 0.21"
-    containercolor="0.191, 0.63, 0.21"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    description="A powerful opiate for treating pain associated with internal injuries, but will cause shortness of breath and eventual dependency with overuse."
-    useinhealthinterface="true">
-
-    <SuitableTreatment identifier="internaldamage" suitability="50"/>
-    <SuitableTreatment identifier="opiatewithdrawal" suitability="50"/>
-    <SuitableTreatment identifier="opiateoverdose" suitability="-50"/>
-    <SuitableTreatment identifier="oxygenloss" suitability="-10"/>
-
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="80"/>
-    <Price locationtype="City" buyprice="100"/>
-    <Price locationtype="Outpost" buyprice="120"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,448,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
-
-    <Body width="8" height="16" density="20"/>
-
-    <ItemComponent>
-      <RequiredSkill identifier="medical" level="40"/>
-      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true"/>
-      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true"/>
-      <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="10">
-        <ReduceAffliction identifier="damage" amount="1"/>
-        <Affliction identifier="oxygenlow" amount="3"/>
-        <Affliction identifier="opiateaddiction" amount="0.15"/>
-        <Affliction identifier="opiateoverdose" amount="0.15"/>
-        <ReduceAffliction identifier="opiatewithdrawal" amount="3.0"/>
-      </StatusEffect>
-      <StatusEffect tags="medical" type="OnFailure" target="Limb, This" duration="10">
-        <ReduceAffliction identifier="damage" amount="0.5"/>
-        <Affliction identifier="oxygenlow" amount="3"/>
-        <Affliction identifier="opiateaddiction" amount="0.3"/>
-        <Affliction identifier="opiateoverdose" amount="0.3"/>
-        <ReduceAffliction identifier="opiatewithdrawal" amount="3.0"/>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </ItemComponent>
-
-    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect tags="medical" type="OnUse" target="Limb" duration="10.0">
-        <ReduceAffliction identifier="damage" amount="5"/>
-        <Affliction identifier="oxygenlow" amount="3"/>
-        <Affliction identifier="opiateaddiction" amount="0.3"/>
-        <Affliction identifier="opiateoverdose" amount="0.3"/>
-        <ReduceAffliction identifier="opiatewithdrawal" amount="3.0"/>
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
-
-  <Item
-    name="Fentanyl"
-    identifier="antidama2"
-    category="Material"
-    spritecolor="0.237, 0.151, 0.75"
-    containercolor="0.237, 0.151, 0.75"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    description="A powerful opiate for treating pain associated with burns and internal injuries, but will cause significant shortness of breath and eventual dependency with overuse."
-    useinhealthinterface="true">
-
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="80"/>
-    <Price locationtype="City" buyprice="100"/>
-    <Price locationtype="Outpost" buyprice="120"/>
-
-    <SuitableTreatment identifier="internaldamage" suitability="100"/>
-    <SuitableTreatment identifier="opiatewithdrawal" suitability="100"/>
-    <SuitableTreatment identifier="opiateoverdose" suitability="-100"/>
-    <SuitableTreatment identifier="oxygenloss" suitability="-30"/>
-    
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,448,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
-
-    <Body width="8" height="16" density="20"/>
-
-    <ItemComponent>
-      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true"/>
-      <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="10">
-        <ReduceAffliction identifier="damage" amount="1"/>
-        <ReduceAffliction identifier="burn" amount="1"/>
-        <Affliction identifier="oxygenlow" amount="2"/>
-        <Affliction identifier="opiateaddiction" amount="0.2"/>
-        <Affliction identifier="opiateoverdose" amount="0.3"/>
-        <ReduceAffliction identifier="opiatewithdrawal" amount="3.0"/>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </ItemComponent>
-
-    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect tags="medical" type="OnUse" target="Limb" duration="10.0">
-        <ReduceAffliction identifier="damage" amount="5"/>
-        <ReduceAffliction identifier="burn" amount="5"/>
-        <Affliction identifier="oxygenlow" amount="5"/>
-        <Affliction identifier="opiateaddiction" amount="0.5"/>
-        <Affliction identifier="opiateoverdose" amount="0.5"/>
-        <ReduceAffliction identifier="opiatewithdrawal" amount="5.0"/>
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
-
-  <Item
-    name="Hemostop"
-    identifier="antibleeding1"
-    aliases="Fibrinozine"
-    category="Material"
-    spritecolor="0.255, 0.249, 0.79"
-    containercolor="0.255, 0.249, 0.79"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    useinhealthinterface="true"
-    description="A hemostatic agent that thickens and clots blood rapidly, but will cause internal injuries due to thrombosis.">
-
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="80"/>
-    <Price locationtype="City" buyprice="100"/>
-    <Price locationtype="Outpost" buyprice="120"/>
-
-    <SuitableTreatment identifier="bleeding" suitability="20"/>
-    
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,256,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
-
-    <Body width="8" height="16" density="20"/>
-
-    <ItemComponent>
-      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true"/>
-      <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="15">
-        <Affliction identifier="internaldamage" amount="1"/>
-        <ReduceAffliction identifier="bleeding" amount="1.5"/>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </ItemComponent>
-
-    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect tags="medical" type="OnUse" target="Limb" duration="20.0">
-        <Affliction identifier="internaldamage" amount="1"/>
-        <ReduceAffliction identifier="bleeding" amount="4"/>
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
-
-  <Item
-    name="Blood plasma"
-    identifier="antibloodloss1"
-    category="Material"
-    spritecolor="0.255, 0.79, 0.158"
-    containercolor="0.255, 0.79, 0.158"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    useinhealthinterface="true"
-    description="Plasma for the treatment of bloodloss.">
-
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="80"/>
-    <Price locationtype="City" buyprice="100"/>
-    <Price locationtype="Outpost" buyprice="120"/>
-
-    <SuitableTreatment identifier="bloodloss" suitability="50"/>
-
-    <InventoryIcon texture="Saline_temp_01.png"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
-
-    <Body width="8" height="16" density="20"/>
-
-    <ItemComponent>
-      <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true"/>
-      <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="10">
-        <ReduceAffliction identifier="bloodloss" amount="1"/>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </ItemComponent>
-
-    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect tags="medical" type="OnUse" target="Limb" duration="5.0">
-        <ReduceAffliction identifier="bloodloss" amount="6"/>
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
-
-  <Item
-    name="Naloxone"
-    identifier="antinarc"
-    category="Material"
-    spritecolor="0.064, 0.249, 0.019"
-    containercolor="0.064, 0.249, 0.019"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    useinhealthinterface="true"
-    description="An opioid antagonist for the treatment of opiate based withdrawal and overdose.">
-
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="80"/>
-    <Price locationtype="City" buyprice="100"/>
-    <Price locationtype="Outpost" buyprice="120"/>
-
-    <SuitableTreatment identifier="opiateaddiction" suitability="100"/>
-    <SuitableTreatment identifier="opiatewithdrawal" suitability="100"/>
-    
-    <InventoryIcon texture="AntiNarc_temp_01.png"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
-
-    <Body width="8" height="16" density="20"/>
-
-    <ItemComponent>
-      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true"/>
-      <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="10">
-        <ReduceAffliction identifier="opiatewithdrawal" amount="1.0"/>
-        <ReduceAffliction identifier="opiateaddiction" amount="1.0"/>
-        <ReduceAffliction identifier="opiateoverdose" amount="1.0"/>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </ItemComponent>
-
-    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" characterusable="true">
-      <StatusEffect tags="medical" type="OnUse" target="Limb" duration="30.0">
-        <ReduceAffliction identifier="opiatewithdrawal" amount="2.0"/>
-        <ReduceAffliction identifier="opiateaddiction" amount="2.0"/>
-        <ReduceAffliction identifier="opiateoverdose" amount="2.0"/>
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
-
-  <!-- Harmful and toxic chems -->
-    
-  <Item
-    name="Chloral Hydrate"
-    identifier="chloralhydrate"
-    category="Material"
-    spritecolor="1.0,1.0,1.0,0.8"
-    containercolor="1.0,1.0,1.0,0.8"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    useinhealthinterface="true">
-
-    <Price locationtype="Research" buyprice="30"/>
-    <Price locationtype="Military" buyprice="30"/>
-    <Price locationtype="City" buyprice="50"/>
-    <Price locationtype="Outpost" buyprice="80"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,192,64,64"/>
-    <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6"/>
-
-    <Body width="8" height="17" density="20"/>
-
-    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="Character" disabledeltatime="true">
-        <Affliction identifier="internaldamage" amount="0.5"/>
-        <Affliction identifier="stun" amount="10.0"/>
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
-
-  <Item
-    name="Sulphuric Acid"
-    identifier="sulphuricacid"
-    category="Material"
-    spritecolor="0.5,0.0,0.0,1.0"
-    containercolor="0.5,0.0,0.0,1.0"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    useinhealthinterface="true">
-    
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="60"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,192,64,64"/>
-    <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6"/>
-
-    <Body width="8" height="17" density="20"/>
-
-    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect tags="poison,acid" type="OnUse" target="Character" duration="30.0">
-        <Affliction identifier="burn" amount="1.0"/>
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
+-->
   
-  <Item
-    name="Uranium Powder"
-    identifier="uraniumpowder"
-    category="Material"
-    spritecolor="0.2,0.35,0.06,1.0"
-    containercolor="0.2,0.35,0.06,1.0"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    useinhealthinterface="true">
-    
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="80"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,192,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
-
-    <Body width="8" height="16" density="25"/>
-
-    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect tags="poison,uranium" type="OnUse" target="Character" duration="60.0">
-        <Affliction identifier="burn" amount="1.0"/>
-        <Affliction identifier="bloodloss" amount="0.1"/>
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
-
-  <Item
-    name="Velonaceps Calyx Eggs"
-    identifier="huskeggs"
-    category="Material"
-    spritecolor="0.0,0.0,0.0,1.0"
-    containercolor="0.1,0.1,0.1,1.0"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    description="Dormant eggs of the Europan lifeform colloquially referred to as 'husk parasite'."
-    useinhealthinterface="true">
-
-    <Price locationtype="Research" buyprice="1200"/>
-    
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
-
-    <Body width="8" height="16" density="20"/>
-
-    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="Character" HuskInfectionState="0.01">
-        <!-- HuskInfectionState must be less than 0.01 so you can't speed up the infection -->
-        <Conditional HuskInfectionState="lt 0.01"/>
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
-
-  <Item
-    name="Morbusine"   
-    identifier="morbusine"
-    category="Material"
-    spritecolor="0.0,0.0,0.0,1.0"
-    containercolor="0.1,0.1,0.1,1.0"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    description="A highly potent neurotoxin."
-    useinhealthinterface="true">
-    
-    <Price locationtype="Research" buyprice="450"/>
-    <Price locationtype="Military" buyprice="1000"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,192,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
-
-    <Body width="8" height="16" density="20"/>
-
-    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="Character">
-        <Affliction identifier="morbusinepoisoning" amount="1"/>
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
-
-  <Item
-    name="Nitroglycerin"
-    identifier="nitroglycerin"
-    category="Material"
-    description="A highly unstable liquid that may explode when subjected to heat or physical shock."
-    spritecolor="1.0,1.0,1.0,1.0"
-    containercolor="1.0,1.0,1.0,1.0"
-    cargocontaineridentifier="explosivecrate"
-    Tags="smallitem,chem,medical"
-    impacttolerance="4"
-    useinhealthinterface="true">
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,256,64,64"/>
-    <Sprite texture="Content/Items/Medical/med.png" sourcerect="24,16,8,16" depth="0.6"/>
-
-    <Body width="25" height="5" density="20"/>
-
-    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true"/>
-      <StatusEffect type="OnFire" target="This" Condition="-50.0"/>
-      
-      <StatusEffect type="OnBroken" target="This" Condition="-100.0">
-        <sound file="Content/Items/Weapons/ExplosionMedium2.ogg" selectionmode="All" range="8000"/>
-        <sound file="Content/Items/Weapons/ExplosionDebris3.ogg" selectionmode="All" range="8000"/>
-        <Explosion range="600.0" structuredamage="400" force="20.0" severlimbsprobability="0.4" decal="explosion" decalsize="0.5">
-          <Affliction identifier="burn" amount="100"/>
-          <Affliction identifier="internaldamage" amount="200"/>
-          <Affliction identifier="stun" amount="5"/>
-        </Explosion>
-        <Remove/>
-      </StatusEffect>
-
-      <StatusEffect type="OnUse" target="This" Condition="-100.0">
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
-
-  <Item
-    name="Sufforin"
-    identifier="sufforin"
-    category="Material"
-    spritecolor="1.0,0.3,0.3,1.0"
-    containercolor="1.0,0.3,0.3,1.0"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    description="A devious poison with a delayed effect."
-    useinhealthinterface="true">
-    <!-- Can only be crafted. Direct counter to Sufforin is Liquid Oxygenite, though it's not strictly an antidote.
-        Two injections to choke slightly faster than welding fuel. -->
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,256,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
-
-    <Body width="8" height="16" density="20"/>
-
-    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="Character">
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-        <Affliction identifier="internaldamage" amount="0.5"/>
-      </StatusEffect>
-      <!-- Did You Know? If OxygenAvailable is too low, character will take -5 Oxygen loss per tick, otherwise they restore +10 oxygen. -->
-      <StatusEffect tags="poison,sufforin" type="OnUse" target="Character" OxygenAvailable="-10000.0" duration="60.0" delay="20.0">
-        <Affliction identifier="oxygenlow" amount="5.0"/>
-        <Affliction identifier="internaldamage" amount="0.5"/>
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </Throwable>
-  </Item>
 </Items>
 
   
