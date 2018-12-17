@@ -1201,7 +1201,8 @@ namespace Barotrauma
             {
                 if (!(mapEntityPrefab is ItemPrefab itemPrefab)) { continue; }
 
-                if (itemPrefab.LevelCommonness.TryGetValue(levelName, out float commonness))
+                if (itemPrefab.LevelCommonness.TryGetValue(levelName, out float commonness) || 
+                    itemPrefab.LevelCommonness.TryGetValue("", out commonness))
                 {
                     levelItems.Add(new Pair<ItemPrefab, float>(itemPrefab, commonness));
                 }
