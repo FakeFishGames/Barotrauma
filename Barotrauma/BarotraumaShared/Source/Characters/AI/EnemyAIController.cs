@@ -485,7 +485,7 @@ namespace Barotrauma
                             targetPos.X = targetHull.WorldRect.Center.X;
                         }
 
-                        latchOntoAI?.DetachAll();
+                        latchOntoAI?.DeattachFromBody();
                         if (steeringManager is IndoorsSteeringManager)
                         {
                             steeringManager.SteeringManual(deltaTime, targetPos - Character.WorldPosition);
@@ -684,7 +684,7 @@ namespace Barotrauma
                 }
             }
             
-            latchOntoAI?.DetachAll();
+            latchOntoAI?.DeattachFromBody();
 
             if (attacker == null || attacker.AiTarget == null) return;
             AITargetMemory targetMemory = FindTargetMemory(attacker.AiTarget);
@@ -982,7 +982,7 @@ namespace Barotrauma
 
         protected override void OnStateChanged(AIState from, AIState to)
         {
-            latchOntoAI?.DetachAll();
+            latchOntoAI?.DeattachFromBody();
         }
 
         private int GetMinimumPassableHoleCount()
