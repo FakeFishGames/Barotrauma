@@ -9,7 +9,7 @@
     <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="264,0,329,191" origin="0.5,0.5" subdivisions="10,5" depth="0">
       <spritedeformation type="bendjoint" resolution="10,5" multiplier="1.0" />
     </deformablesprite>
-    <attack targettype="Structure" range="300" damagerange="250" duration="0.05" structuredamage="50" force="30" targetforce="50" structuresoundtype="StructureBlunt" applyforceonlimbs="0, 1" context="NotDefined" hitdetectiontype="Distance" itemdamage="0" stun="0" onlyhumans="False" torque="0" targetimpulse="0" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0" priority="0">
+    <attack targettype="Structure" range="300" damagerange="250" duration="0.05" structuredamage="50" force="40" targetforce="50" structuresoundtype="StructureBlunt" applyforceonlimbs="0, 1" context="NotDefined" hitdetectiontype="Contact" itemdamage="0" stun="0" onlyhumans="False" torque="0" targetimpulse="0" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0" priority="0">
       <Affliction identifier="internaldamage" strength="50" />
       <Affliction identifier="stun" strength="5" />
     </attack>
@@ -65,7 +65,7 @@
   <limb id="9" name="ClawTR1" type="RightArm" radius="30" width="78" notes="4tr_ClawTR1" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="263,339,201,123" origin="0.5,0.3165069" subdivisions="2,2" depth="0.05"></deformablesprite>
   </limb>
-  <limb id="15" name="ClawBL1" type="LeftLeg" radius="30" width="108" notes="5bl_ClawBL1" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="15" name="ClawBL1" type="LeftArm" radius="30" width="108" notes="5bl_ClawBL1" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="0,540,221,113" origin="0.5,0.5439222" subdivisions="2,2" depth="0.05" />
   </limb>
   <limb id="16" name="ClawBR1" type="LeftArm" radius="30" width="102" notes="6br_ClawBR1" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
@@ -74,20 +74,20 @@
   <limb id="13" name="ClawTL2" type="RightFoot" radius="0" width="255" notes="31cl_ClawTL2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="30" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="1,462,333,78" origin="0.5,0.5439222" subdivisions="2,2" depth="0.06" />
   </limb>
-  <limb id="14" name="ClawTR2" type="RightHand" radius="0" width="256" notes="41br_ClawTR2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="30" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="334,462,334,78" origin="0.5,0.5439222" subdivisions="2,2" depth="0.06" />
+  <limb id="17" name="ClawBL2" type="LeftFoot" radius="0" width="262" notes="51cl_ClawBL2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="30" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+    <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="0,653,334,72" origin="0.5,0.5439222" subdivisions="2,2" depth="0.06" />
+  </limb>
+  <limb id="18" name="ClawBR2" type="LeftHand" radius="0" width="262" notes="61cl_ClawBR2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="30" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+    <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="334,653,334,72" origin="0.5,0.5439222" subdivisions="2,2" depth="0.06" />
     <attack targettype="Character" range="200" damagerange="40" duration="0.25" structuredamage="10" itemdamage="10" force="20" torque="50" targetimpulse="20" targetforce="0" structuresoundtype="StructureSlash" context="NotDefined" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforceonlimbs="" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0" priority="0">
       <Affliction identifier="bleeding" strength="50" />
       <Affliction identifier="stun" strength="1" />
       <Affliction identifier="internaldamage" strength="20" />
     </attack>
   </limb>
-  <limb id="17" name="ClawBL2" type="LeftFoot" radius="0" width="262" notes="51cl_ClawBL2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="30" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="0,653,334,72" origin="0.5,0.5439222" subdivisions="2,2" depth="0.06" />
-  </limb>
-  <limb id="18" name="ClawBR2" type="LeftHand" radius="0" width="262" notes="61cl_ClawBR2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="30" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="334,653,334,72" origin="0.5,0.5439222" subdivisions="2,2" depth="0.06" />
-    <attack targettype="Character" range="200" damagerange="40" duration="0.25" structuredamage="10" itemdamage="10" force="20" torque="50" targetimpulse="20" targetforce="0" structuresoundtype="StructureSlash" context="NotDefined"  hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforceonlimbs="" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0" priority="0">
+  <limb id="14" name="ClawTR2" type="RightHand" radius="0" width="256" notes="41br_ClawTR2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="30" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+    <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="334,462,334,78" origin="0.5,0.5439222" subdivisions="2,2" depth="0.06" />
+    <attack targettype="Character" range="200" damagerange="40" duration="0.25" structuredamage="10" itemdamage="10" force="20" torque="50" targetimpulse="20" targetforce="0" structuresoundtype="StructureSlash" context="NotDefined" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforceonlimbs="" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0" priority="0">
       <Affliction identifier="bleeding" strength="50" />
       <Affliction identifier="stun" strength="1" />
       <Affliction identifier="internaldamage" strength="20" />
