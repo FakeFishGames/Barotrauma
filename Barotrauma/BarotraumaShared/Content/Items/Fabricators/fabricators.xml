@@ -503,11 +503,45 @@
         <RequiredItem identifier="stabilozine"/>
       </FabricableItem>
       
-      <!--<FabricableItem identifier="hyperzine" requiredtime="25">
+      <FabricableItem identifier="antipsychosis" requiredtime="20">
+        <RequiredSkill identifier="medical" level="40"/>
+        <RequiredItem identifier="lithium"/>
+        <RequiredItem identifier="carbon"/>
+        <RequiredItem identifier="chlorine"/>
+      </FabricableItem>
+      
+      <FabricableItem identifier="tonicliquid" requiredtime="5">
+        <RequiredSkill identifier="medical" level="30"/>
+        <RequiredItem identifier="calcium"/>
+        <RequiredItem identifier="zinc"/>
+        <RequiredItem identifier="potassium"/>
+      </FabricableItem>
+      
+      <FabricableItem identifier="liquidoxygenite" requiredtime="10">
+        <RequiredSkill identifier="medical" level="60"/>
+        <RequiredItem identifier="tonicliquid"/>
+        <RequiredItem identifier="stabilozine"/>
+        <RequiredItem identifier="oxygeniteshard"/>
+      </FabricableItem>
+
+      <FabricableItem identifier="steroids" requiredtime="20">
+        <RequiredSkill identifier="medical" level="60"/>
+        <RequiredItem identifier="tonicliquid"/>
+        <RequiredItem identifier="antidama2"/>
+      </FabricableItem>
+      
+      <FabricableItem identifier="meth" requiredtime="20">
         <RequiredSkill identifier="medical" level="60"/>
         <RequiredItem identifier="phosphorus"/>
-        <RequiredItem identifier="uraniumpowder" mincondition="0.5" usecondition="true"/>
-      </FabricableItem>-->
+        <RequiredItem identifier="chlorine"/>
+        <RequiredItem identifier="carbon"/>
+      </FabricableItem>
+      
+      <FabricableItem identifier="hyperzine" requiredtime="25">
+        <RequiredSkill identifier="medical" level="60"/>
+        <RequiredItem identifier="meth"/>
+        <RequiredItem identifier="steroids"/>
+      </FabricableItem>
 
       <FabricableItem identifier="morbusine" requiredtime="30">
         <RequiredSkill identifier="medical" level="60"/>

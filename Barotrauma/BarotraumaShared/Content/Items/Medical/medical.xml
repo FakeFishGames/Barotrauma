@@ -247,6 +247,7 @@
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="Military" buyprice="60"/>
 
+    <!-- TODO: sprite and inventory icons -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,192,64,64"/>
     <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
@@ -278,6 +279,7 @@
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="Military" buyprice="60"/>
 
+    <!-- TODO: sprite and inventory icons -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,192,64,64"/>
     <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
@@ -313,7 +315,8 @@
     <Price locationtype="City" buyprice="50"/>
     <Price locationtype="Outpost" buyprice="50"/>
 
-    <SuitableTreatment identifier="bloodloss" suitability="50"/>
+    <SuitableTreatment identifier="bleeding" suitability="50"/>
+    <SuitableTreatment identifier="gunshotwound" suitability="50"/>
     <SuitableTreatment identifier="burn" suitability="50"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,448,64,64"/>
@@ -343,10 +346,12 @@
     <Price locationtype="Research" buyprice="20" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="50" />
+    <!-- TODO: sprite and inventory icons -->
     <Sprite texture="med.png" sourcerect="0,16,11,16" depth="0.6" />
     <InventoryIcon texture="Bandages_temp_01.png" />
     <Body width="11" height="16" density="20" />
-    <SuitableTreatment identifier="bloodloss" suitability="70"/>
+    <SuitableTreatment identifier="bleeding" suitability="80"/>
+    <SuitableTreatment identifier="gunshotwound" suitability="80"/>
     <SuitableTreatment identifier="burn" suitability="70"/>
     <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true" />
@@ -369,10 +374,12 @@
     <Price locationtype="Research" buyprice="20" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="50" />
+    <!-- TODO: sprite and inventory icons -->
     <Sprite texture="med.png" sourcerect="0,16,11,16" depth="0.6" />
     <InventoryIcon texture="Bandages_temp_01.png" />
     <Body width="11" height="16" density="20" />
-    <SuitableTreatment identifier="bloodloss" suitability="70"/>
+    <SuitableTreatment identifier="bleeding" suitability="80"/>
+    <SuitableTreatment identifier="gunshotwound" suitability="80"/>
     <SuitableTreatment identifier="burn" suitability="70"/>
     <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true" />
@@ -412,6 +419,7 @@
     <Price locationtype="City" buyprice="100"/>
     <Price locationtype="Outpost" buyprice="120"/>
 
+    <!-- TODO: sprite and inventory icons -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,448,64,64"/>
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
@@ -464,7 +472,8 @@
     <SuitableTreatment identifier="opiateoverdose" suitability="-100"/>
     <SuitableTreatment identifier="opiateaddiction" suitability="-100"/>
     <SuitableTreatment identifier="oxygenloss" suitability="-30"/>
-    
+
+    <!-- TODO: sprite and inventory icons -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,448,64,64"/>
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
@@ -513,8 +522,9 @@
     <Price locationtype="City" buyprice="100"/>
     <Price locationtype="Outpost" buyprice="120"/>
 
-    <SuitableTreatment identifier="bloodloss" suitability="50"/>
+    <SuitableTreatment identifier="bloodloss" suitability="30"/>
 
+    <!-- TODO: sprite and inventory icons -->
     <InventoryIcon texture="Saline_temp_01.png"/>
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
@@ -549,6 +559,7 @@
     <Price locationtype="City" buyprice="100"/>
     <Price locationtype="Outpost" buyprice="120"/>
 
+    <!-- TODO: sprite and inventory icons -->
     <SuitableTreatment identifier="bloodloss" suitability="50"/>
 
     <InventoryIcon texture="Saline_temp_01.png"/>
@@ -581,7 +592,8 @@
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="150" />
     <Price locationtype="Military" buyprice="200" />
-    
+
+    <!-- TODO: sprite and inventory icons -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,192,64,64" />
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6" />
     
@@ -626,6 +638,7 @@
 
     <SuitableTreatment identifier="huskinfection" suitability="100"/>
 
+    <!-- TODO: sprite and inventory icons -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,256,64,64"/>
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
@@ -652,6 +665,43 @@
       </StatusEffect>
     </MeleeWeapon>
   </Item>
+
+  <Item
+    name="Haloperidol"
+    identifier="antipsychosis"
+    category="Material"
+    spritecolor="0.255, 0.79, 0.158"
+    containercolor="0.255, 0.79, 0.158"
+    cargocontaineridentifier="chemicalcrate"
+    Tags="smallitem,chem,medical"
+    useinhealthinterface="true"
+    description="A strong antipsychotic drug.">
+
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="80"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="120"/>
+
+    <SuitableTreatment identifier="psychosis" suitability="100"/>
+
+    <!-- TODO: sprite and inventory icons -->
+    <InventoryIcon texture="Saline_temp_01.png"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="8" height="16" density="20"/>
+
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="5">
+        <ReduceAffliction identifier="psychosis" amount="10"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
   
   <Item
     name="Naloxone"
@@ -671,7 +721,9 @@
 
     <SuitableTreatment identifier="opiateaddiction" suitability="100"/>
     <SuitableTreatment identifier="opiatewithdrawal" suitability="100"/>
-    
+    <SuitableTreatment identifier="opiateoverdose" suitability="100"/>
+
+    <!-- TODO: sprite and inventory icons -->
     <InventoryIcon texture="AntiNarc_temp_01.png"/>
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
@@ -705,6 +757,7 @@
 
     <SuitableTreatment identifier="morbusinepoisoning" suitability="100"/>
 
+    <!-- TODO: sprite and inventory icons -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,192,64,64"/>
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
@@ -737,6 +790,7 @@
     <SuitableTreatment identifier="internaldamage" suitability="-20"/>
     <SuitableTreatment identifier="oxygenloss" suitability="50"/>
 
+    <!-- TODO: sprite and inventory icons -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,192,64,64"/>
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6" />
 
@@ -762,21 +816,49 @@
       </StatusEffect>
     </MeleeWeapon>
   </Item>
-  
+
   <Item
-    name="Hyperzine"
-    identifier="hyperzine"
+    name="Tonic Liquid"
+    identifier="tonicliquid"
     category="Material"
-    spritecolor="0.8,0.3,0.8,1.0"
-    containercolor="0.8,0.3,0.8,1.0"
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
-    description="A potent muscle stimulant for those moments when you gotta go fast."
+    description="A medical solution that's mildy effective as a treatment for internal damage, but most commonly used as an ingredient in more complex medical compounds."
+    useinhealthinterface="true">
+
+    <SuitableTreatment identifier="internaldamage" suitability="10"/>
+
+    <!-- TODO: sprite and inventory icons -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,192,64,64"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="8" height="16" density="20"/>
+
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect tags="medical" type="OnUse" target="Character" duration="10.0">
+        <ReduceAffliction identifier="internaldamage" amount="0.5"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+  
+  <Item
+    name="Methamphetamine"
+    identifier="meth"
+    category="Material"
+    cargocontaineridentifier="chemicalcrate"
+    Tags="smallitem,chem,medical"
+    description="A potent nervous system stimulant."
     useinhealthinterface="true">
 
     <Price locationtype="Research" buyprice="60"/>
     <Price locationtype="Military" buyprice="80"/>
 
+    <!-- TODO: sprite and inventory icons -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,192,64,64"/>
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
@@ -784,7 +866,12 @@
 
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
-      <StatusEffect tags="medical" type="OnUse" target="Character" SpeedMultiplier="1.4" setvalue="true" duration="60.0">
+      <StatusEffect tags="medical" type="OnUse" target="Character" SpeedMultiplier="1.2" setvalue="true" duration="60.0"/>
+      <StatusEffect tags="medical" type="OnUse" target="Character" duration="60.0">
+        <ReduceAffliction identifier="internaldamage" amount="0.1"/>
+        <ReduceAffliction identifier="oxygenlow" amount="0.1"/>
+        <ReduceAffliction identifier="stun" amount="10"/>
+        <Affliction identifier="psychosis" amount="0.2"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -793,6 +880,75 @@
     </MeleeWeapon>
   </Item>
 
+  <Item
+    name="Anabolic Steroids"
+    identifier="steroids"
+    category="Material"
+    cargocontaineridentifier="chemicalcrate"
+    Tags="smallitem,chem,medical"
+    description="Temporarily increases muscular strength and physical performance."
+    useinhealthinterface="true">
+
+    <Price locationtype="Research" buyprice="60"/>
+    <Price locationtype="Military" buyprice="80"/>
+
+    <!-- TODO: sprite and inventory icons -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,192,64,64"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="8" height="16" density="15"/>
+
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect tags="medical" type="OnUse" target="Character" SpeedMultiplier="1.3" setvalue="true" duration="60.0"/>
+      <StatusEffect tags="medical" type="OnUse" target="Character" duration="60.0">
+        <Affliction identifier="internaldamage" amount="0.1"/>
+        <ReduceAffliction identifier="oxygenlow" amount="0.2"/>
+        <Affliction identifier="psychosis" amount="0.2"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+
+  <Item
+    name="Hyperzine"
+    identifier="hyperzine"
+    category="Material"
+    spritecolor="0.8,0.3,0.8,1.0"
+    containercolor="0.8,0.3,0.8,1.0"
+    cargocontaineridentifier="chemicalcrate"
+    Tags="smallitem,chem,medical"
+    description="An extremely potent muscle stimulant for those moments when you gotta go fast."
+    useinhealthinterface="true">
+
+    <Price locationtype="Research" buyprice="60"/>
+    <Price locationtype="Military" buyprice="80"/>
+
+    <!-- TODO: sprite and inventory icons -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,192,64,64"/>
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="8" height="16" density="15"/>
+
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect tags="medical" type="OnUse" target="Character" SpeedMultiplier="1.4" duration="60.0"/>
+      <StatusEffect tags="medical" type="OnUse" target="Character" duration="60.0">
+        <ReduceAffliction identifier="internaldamage" amount="0.1"/>
+        <ReduceAffliction identifier="oxygenlow" amount="0.1"/>
+        <ReduceAffliction identifier="stun" amount="10"/>
+        <Affliction identifier="psychosis" amount="0.1"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+  
   <!-- poisons and harmful chemicals **************************************************************************************** -->
   
   <Item
@@ -809,6 +965,7 @@
     <Price locationtype="Research" buyprice="450"/>
     <Price locationtype="Military" buyprice="1000"/>
 
+    <!-- TODO: sprite and inventory icons -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,192,64,64"/>
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
@@ -825,7 +982,7 @@
       </StatusEffect>
     </MeleeWeapon>
   </Item>
-  
+    
   <Item
     name="Chloral Hydrate"
     identifier="chloralhydrate"
@@ -842,6 +999,7 @@
     <Price locationtype="City" buyprice="50"/>
     <Price locationtype="Outpost" buyprice="80"/>
 
+    <!-- TODO: sprite and inventory icons -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,192,64,64"/>
     <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 

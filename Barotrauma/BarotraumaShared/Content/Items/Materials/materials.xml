@@ -9,6 +9,7 @@
     category="Material"
     Tags="smallitem"
     canbepicked="true"
+    description="Most commonly used in the manufacture of steel and plastic."
     cargocontaineridentifier="metalcrate">
 
     <!-- TODO: adjust prices -->
@@ -31,6 +32,7 @@
     category="Material"
     Tags="smallitem"
     canbepicked="true"
+    description="Can be used in the manufacture of simple tools, or refined into steel by mixing it with carbon."
     cargocontaineridentifier="metalcrate">
 
     <!-- TODO: adjust prices -->
@@ -53,6 +55,7 @@
     category="Material"
     Tags="smallitem"
     canbepicked="true"
+    description="Most commonly used in the manufacture of various electrical components."
     cargocontaineridentifier="metalcrate">
 
     <!-- TODO: adjust prices -->
@@ -75,6 +78,7 @@
     category="Material"
     Tags="smallitem"
     canbepicked="true"
+    description="Most commonly used in the manufacture of various types of ammunition."
     cargocontaineridentifier="metalcrate">
 
     <!-- TODO: adjust prices -->
@@ -97,6 +101,7 @@
     category="Material"
     Tags="smallitem"
     canbepicked="true"
+    description="Used in the manufacture of lamps, explosives and some medical compounds."
     cargocontaineridentifier="metalcrate">
 
     <!-- TODO: adjust prices -->
@@ -118,7 +123,8 @@
     identifier="copper"
     category="Material"
     Tags="smallitem"
-    canbepicked="true"
+    canbepicked="true"    
+    description="Most commonly used in the manufacture of electrical wiring."
     cargocontaineridentifier="metalcrate">
 
     <!-- TODO: adjust prices -->
@@ -141,6 +147,7 @@
     category="Material"
     Tags="smallitem"
     canbepicked="true"
+    description="Most commonly used in the manufacture of batteries and tonic liquid."
     cargocontaineridentifier="metalcrate">
 
     <!-- TODO: adjust prices -->
@@ -163,6 +170,7 @@
     category="Material"
     Tags="smallitem"
     canbepicked="true"
+    description="Medical fabricators can combine sodium and chloride to create a saline solution, which can be used as a treatment for blood loss or as an ingredient for more complex medicine."
     cargocontaineridentifier="metalcrate">
 
     <!-- TODO: adjust prices -->
@@ -184,7 +192,8 @@
     identifier="silicon"
     category="Material"
     Tags="smallitem"
-    canbepicked="true"
+    canbepicked="true"    
+    description="Used as an ingredient in aluminium alloys, plastic and various electrical components."
     cargocontaineridentifier="metalcrate">
 
     <!-- TODO: adjust prices -->
@@ -251,6 +260,7 @@
     category="Material"
     Tags="smallitem"
     canbepicked="true"
+    description="Can be refined in a fabricator to create fuel rods for a nuclear reactor, or used in the manufacture of nuclear weapons."
     cargocontaineridentifier="metalcrate">
 
     <!-- TODO: adjust prices -->
@@ -273,6 +283,7 @@
     category="Material"
     Tags="smallitem"
     canbepicked="true"
+    description="Used in the manufacture of explosives and medical compounds. Reacts violently when in contact with water."
     cargocontaineridentifier="metalcrate">
 
     <!-- TODO: adjust prices -->
@@ -330,6 +341,7 @@
     category="Material"
     Tags="smallitem"
     canbepicked="true"
+    description="Used in the manufacture of explosives and medical compounds. Reacts violently when in contact with water."
     cargocontaineridentifier="metalcrate">
 
     <!-- TODO: adjust prices -->
@@ -344,7 +356,20 @@
 
     <Body width="24" height="12" density="50"/>
 
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0">
+      <StatusEffect type="InWater" target="This" Condition="0.0" setvalue="true">
+        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" selectionmode="All" range="5000"/>
+        <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" selectionmode="All" range="5000"/>
+        <Explosion range="250.0" structuredamage="10" force="5.0">
+          <Affliction identifier="burn" amount="20"/>
+          <Affliction identifier="stun" amount="3"/>
+        </Explosion>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
   </Item>
   <Item
     name="Lithium"
@@ -352,6 +377,7 @@
     category="Material"
     Tags="smallitem"
     canbepicked="true"
+    description="Most commonly used in the manufacture of batteries and antipsychotic drugs."
     cargocontaineridentifier="metalcrate">
 
     <!-- TODO: adjust prices -->
@@ -375,6 +401,7 @@
     spritecolor="1.0,1.0,1.0,0.6"
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
+    description="Most commonly used saline, a common treatment for blood loss, and chloral hydrate, a powerful sedative."
     useinhealthinterface="true">
 
     <!-- TODO: adjust prices -->
