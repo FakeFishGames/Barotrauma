@@ -1123,6 +1123,7 @@ namespace Barotrauma
             {
                 character.TeleportTo(position);
             }
+            Cam.Position = character.WorldPosition;
         }
 
         private void CreateCharacter(string name, bool isHumanoid, params object[] ragdollConfig)
