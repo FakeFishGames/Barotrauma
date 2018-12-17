@@ -4,8 +4,10 @@ using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -30,29 +32,18 @@ namespace Barotrauma
 
         private float attachCooldown;
 
-        private Limb attachLimb;
+        private readonly List<Limb> attachLimbs;
         private Vector2 localAttachPos;
         private float attachLimbRotation;
 
         private float jointDir;
-        
-        private List<WeldJoint> attachJoints = new List<WeldJoint>();
 
-        public List<WeldJoint> AttachJoints
-        {
-            get { return attachJoints; }
-        }
+        private Dictionary<Limb, WeldJoint> attachJoints = new Dictionary<Limb, WeldJoint>();
+        private Dictionary<Limb, WeldJoint> colliderJoints = new Dictionary<Limb, WeldJoint>();
+        public IEnumerable<WeldJoint> AttachJoints => attachJoints.Values;
+        public bool IsAttached => attachJoints.Count > 0;
 
-        public Vector2? WallAttachPos
-        {
-            get;
-            private set;
-        }
-
-        public bool IsAttached
-        {
-            get { return attachJoints.Count > 0; }
-        }
+        public readonly Vector2[] WallAttachPositions;
 
         public LatchOntoAI(XElement element, EnemyAIController enemyAI)
         {
@@ -65,12 +56,30 @@ namespace Barotrauma
             localAttachPos = ConvertUnits.ToSimUnits(element.GetAttributeVector2("localattachpos", Vector2.Zero));
             attachLimbRotation = MathHelper.ToRadians(element.GetAttributeFloat("attachlimbrotation", 0.0f));
 
-            if (Enum.TryParse(element.GetAttributeString("attachlimb", "Head"), out LimbType attachLimbType))
+            if (Enum.TryParse(element.GetAttributeString("attachlimb", "None"), out LimbType attachLimbType))
             {
-                attachLimb = enemyAI.Character.AnimController.GetLimb(attachLimbType);
+                if (attachLimbType == LimbType.None)
+                {
+                    attachLimbs = new List<Limb>();
+                    var limbTypes = element.GetAttributeStringArray("attachlimbs", new string[0]);
+                    foreach (string limbTypeString in limbTypes)
+                    {
+                        if (Enum.TryParse(limbTypeString, out LimbType limbType))
+                        {
+                            Limb attachLimb = enemyAI.Character.AnimController.GetLimb(limbType);
+                            if (attachLimb != null)
+                            {
+                                attachLimbs.Add(attachLimb);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    attachLimbs = new List<Limb>() { enemyAI.Character.AnimController.GetLimb(attachLimbType) ?? enemyAI.Character.AnimController.MainLimb };
+                }
             }
-            if (attachLimb == null) attachLimb = enemyAI.Character.AnimController.MainLimb;
-
+            WallAttachPositions = new Vector2[attachLimbs.Count];
             enemyAI.Character.OnDeath += OnCharacterDeath;
         }
 
@@ -88,31 +97,27 @@ namespace Barotrauma
 
             if (character.Submarine != null)
             {
-                DeattachFromBody();
-                WallAttachPos = null;
+                DetachAll();
+                wallAttachPos = Vector2.Zero;
+                WallAttachPositions.ForEach(p => p = Vector2.Zero);
                 return;
             }
 
-            if (Math.Sign(attachLimb.Dir) != Math.Sign(jointDir) && attachJoints.Count > 0)
+            foreach (var attachLimb in attachLimbs)
             {
-                attachJoints[0].LocalAnchorA =
-                    new Vector2(-attachJoints[0].LocalAnchorA.X, attachJoints[0].LocalAnchorA.Y);
-                attachJoints[0].ReferenceAngle = -attachJoints[0].ReferenceAngle;
-                jointDir = attachLimb.Dir;
+                if (Math.Sign(attachLimb.Dir) != Math.Sign(jointDir) && IsAttached)
+                {
+                    if (attachJoints.TryGetValue(attachLimb, out WeldJoint joint))
+                    {
+                        joint.LocalAnchorA = new Vector2(-joint.LocalAnchorA.X, joint.LocalAnchorA.Y);
+                        joint.ReferenceAngle = -joint.ReferenceAngle;
+                        jointDir = attachLimb.Dir;
+                    }
+                }
             }
 
             attachCooldown -= deltaTime;
             deattachTimer -= deltaTime;
-
-            Vector2 transformedAttachPos = wallAttachPos;
-            if (character.Submarine == null && attachTargetSubmarine != null)
-            {
-                transformedAttachPos += ConvertUnits.ToSimUnits(attachTargetSubmarine.Position);
-            }
-            if (transformedAttachPos != Vector2.Zero)
-            {
-                WallAttachPos = transformedAttachPos;
-            }
 
             switch (enemyAI.State)
             {
@@ -141,7 +146,7 @@ namespace Barotrauma
                                             break;
                                         }
                                     }
-                                    if (WallAttachPos != Vector2.Zero) break;
+                                    if (wallAttachPos != Vector2.Zero) break;
                                 }
                             }
                             raycastTimer = RaycastInterval;
@@ -154,7 +159,7 @@ namespace Barotrauma
 
                     if (wallAttachPos == Vector2.Zero)
                     {
-                        DeattachFromBody();
+                        DetachAll();
                     }
                     else
                     {
@@ -162,65 +167,90 @@ namespace Barotrauma
                         if (dist < Math.Max(Math.Max(character.AnimController.Collider.radius, character.AnimController.Collider.width), character.AnimController.Collider.height) * 1.2f)
                         {
                             //close enough to a wall -> attach
-                            AttachToBody(character.AnimController.Collider, attachLimb, attachTargetBody, wallAttachPos);
+                            attachLimbs.ForEach(l => AttachToBody(character.AnimController.Collider, l, attachTargetBody, wallAttachPos));
                             enemyAI.SteeringManager.Reset();
                         }
                         else
                         {
                             //move closer to the wall
-                            DeattachFromBody();
+                            DetachAll();
                             enemyAI.SteeringManager.SteeringAvoid(deltaTime, 1.0f, 0.1f);
                             enemyAI.SteeringManager.SteeringSeek(wallAttachPos, 2.0f);
                         }
                     }
                     break;
                 case AIController.AIState.Attack:
-                    if (enemyAI.AttackingLimb != null)
+                    if (attachToSub && wallAttachPos != Vector2.Zero && attachTargetBody != null && enemyAI.AttackingLimb != null)
                     {
-                        if (attachToSub && wallAttachPos != Vector2.Zero && attachTargetBody != null &&
-                            Vector2.DistanceSquared(transformedAttachPos, enemyAI.AttackingLimb.SimPosition) < enemyAI.AttackingLimb.attack.Range * enemyAI.AttackingLimb.attack.Range)
+                        foreach (var limb in attachLimbs)
                         {
-                            AttachToBody(character.AnimController.Collider, attachLimb, attachTargetBody, transformedAttachPos);
+                            if (limb != enemyAI.AttackingLimb) { continue; }
+                            Vector2 offset = limb.SimPosition - character.AnimController.MainLimb.SimPosition;
+                            Vector2 transformedAttachPos = wallAttachPos + offset;
+                            if (character.Submarine == null && attachTargetSubmarine != null)
+                            {
+                                transformedAttachPos += ConvertUnits.ToSimUnits(attachTargetSubmarine.Position);
+                            }
+                            if (transformedAttachPos != Vector2.Zero)
+                            {
+                                WallAttachPositions[attachLimbs.IndexOf(limb)] = transformedAttachPos;
+                            }
+                            if (Vector2.DistanceSquared(transformedAttachPos, limb.SimPosition) < limb.attack.Range * limb.attack.Range)
+                            {
+                                AttachToBody(character.AnimController.Collider, limb, attachTargetBody, transformedAttachPos);
+                            }
                         }
                     }
                     break;
                 default:
-                    WallAttachPos = null;
-                    DeattachFromBody();
+                    WallAttachPositions.ForEach(p => p = Vector2.Zero);
+                    wallAttachPos = Vector2.Zero;
+                    DetachAll();
                     break;
             }
 
             if (attachTargetBody != null && deattachTimer < 0.0f)
             {
-                Entity entity = attachTargetBody.UserData as Entity;
-                Submarine attachedSub = entity is Submarine ? (Submarine)entity : entity?.Submarine;
-                if (attachedSub != null)
+                foreach (var attachLimb in attachLimbs)
                 {
-                    float velocity = attachedSub.Velocity == Vector2.Zero ? 0.0f : attachedSub.Velocity.Length();
-                    float velocityFactor = (maxDeattachSpeed - minDeattachSpeed <= 0.0f) ?
-                        Math.Sign(Math.Abs(velocity) - minDeattachSpeed) :
-                        (Math.Abs(velocity) - minDeattachSpeed) / (maxDeattachSpeed - minDeattachSpeed);
-
-                    if (Rand.Range(0.0f, 1.0f) < velocityFactor)
+                    Entity entity = attachTargetBody.UserData as Entity;
+                    Submarine attachedSub = entity is Submarine ? (Submarine)entity : entity?.Submarine;
+                    if (attachedSub != null)
                     {
-                        DeattachFromBody();
-                        character.AddDamage(character.WorldPosition, new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(damageOnDetach) }, detachStun, true);
-                        attachCooldown = 5.0f;
+                        float velocity = attachedSub.Velocity == Vector2.Zero ? 0.0f : attachedSub.Velocity.Length();
+                        float velocityFactor = (maxDeattachSpeed - minDeattachSpeed <= 0.0f) ?
+                            Math.Sign(Math.Abs(velocity) - minDeattachSpeed) :
+                            (Math.Abs(velocity) - minDeattachSpeed) / (maxDeattachSpeed - minDeattachSpeed);
+
+                        if (Rand.Range(0.0f, 1.0f) < velocityFactor)
+                        {
+                            Detach(attachLimb);
+                            character.AddDamage(character.WorldPosition, new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(damageOnDetach) }, detachStun, true);
+                            attachCooldown = 5.0f;
+                        }
                     }
                 }
-
                 deattachTimer = 5.0f;
             }
         }
 
         private void AttachToBody(PhysicsBody collider, Limb attachLimb, Body targetBody, Vector2 attachPos)
         {
-            //already attached to something
-            if (attachJoints.Count > 0)
+            if (IsAttached)
             {
-                //already attached to the target body, no need to do anything
-                if (attachJoints[0].BodyB == targetBody) return;
-                DeattachFromBody();
+                if (attachJoints.TryGetValue(attachLimb, out WeldJoint joint))
+                {
+                    if (joint.BodyB == targetBody)
+                    {
+                        //already attached to the target body, no need to do anything
+                        return;
+                    }
+                    else
+                    {
+                        // attached to something else, detach.
+                        Detach(attachLimb);
+                    }
+                }
             }
 
             jointDir = attachLimb.Dir;
@@ -247,7 +277,7 @@ namespace Barotrauma
             collider.SetTransform(attachPos + attachSurfaceNormal * colliderFront.Length(), angle);
 
             GameMain.World.AddJoint(limbJoint);
-            attachJoints.Add(limbJoint);
+            attachJoints.Add(attachLimb, limbJoint);
             var colliderJoint = new WeldJoint(collider.FarseerBody, targetBody, colliderFront, targetBody.GetLocalPoint(attachPos), false)
             {
                 FrequencyHz = 10.0f,
@@ -257,21 +287,34 @@ namespace Barotrauma
                 //Length = 0.1f
             };
             GameMain.World.AddJoint(colliderJoint);
-            attachJoints.Add(colliderJoint);            
+            colliderJoints.Add(attachLimb, colliderJoint);            
         }
 
-        public void DeattachFromBody()
+        private void Detach(Limb limb)
         {
-            foreach (Joint joint in attachJoints)
+            if (attachJoints.TryGetValue(limb, out WeldJoint attachJoint))
             {
-                GameMain.World.RemoveJoint(joint);
+                attachJoints.Remove(limb);
+                GameMain.World.RemoveJoint(attachJoint);
             }
-            attachJoints.Clear();            
+            if (colliderJoints.TryGetValue(limb, out WeldJoint colliderJoint))
+            {
+                colliderJoints.Remove(limb);
+                GameMain.World.RemoveJoint(colliderJoint);
+            }
+        }
+
+        public void DetachAll()
+        {
+            attachJoints.Values.ForEach(j => GameMain.World.RemoveJoint(j));
+            colliderJoints.Values.ForEach(j => GameMain.World.RemoveJoint(j));
+            attachJoints.Clear();
+            colliderJoints.Clear();
         }
 
         private void OnCharacterDeath(Character character, CauseOfDeath causeOfDeath)
         {
-            DeattachFromBody();
+            DetachAll();
             character.OnDeath -= OnCharacterDeath;
         }
     }
