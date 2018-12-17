@@ -515,6 +515,24 @@ namespace Barotrauma
                 {
                     if (mapEntityPrefab is ItemPrefab itemPrefab)
                     {
+                        int? minCost = itemPrefab.GetPrices()?.Min(p => p.BuyPrice);
+                        int? fabricationCost = null;
+                        int? deconstructProductCost = null;
+
+                        var fabricationRecipe = fabricableItems.Find(f => f.TargetItem == itemPrefab);
+                        if (fabricationRecipe != null)
+                        {
+                            foreach (var ingredient in fabricationRecipe.RequiredItems)
+                            {
+                                int? ingredientPrice = ingredient.ItemPrefab.GetPrices()?.Min(p => p.BuyPrice);
+                                if (ingredientPrice.HasValue)
+                                {
+                                    if (!fabricationCost.HasValue) { fabricationCost = 0; }
+                                    fabricationCost += ingredientPrice.Value * ingredient.Amount;
+                                }
+                            }
+                        }
+
                         foreach (var deconstructItem in itemPrefab.DeconstructItems)
                         {
                             var targetItem = MapEntityPrefab.Find(null, deconstructItem.ItemIdentifier, showErrorMessages: false) as ItemPrefab;
@@ -524,13 +542,42 @@ namespace Barotrauma
                                 continue;
                             }
 
-                            var fabricationRecipe = fabricableItems.Find(f => f.TargetItem == itemPrefab);
+                            int? deconstructProductPrice = targetItem.GetPrices()?.Min(p => p.BuyPrice);
+                            if (deconstructProductPrice.HasValue)
+                            {
+                                if (!deconstructProductCost.HasValue) { deconstructProductCost = 0; }
+                                deconstructProductCost += deconstructProductPrice;
+                            }
+
                             if (fabricationRecipe != null)
                             {
                                 if (!fabricationRecipe.RequiredItems.Any(r => r.ItemPrefab == targetItem))
                                 {
                                     NewMessage("Deconstructing \"" + itemPrefab.Name + "\" produces \"" + deconstructItem.ItemIdentifier + "\", which isn't required in the fabrication recipe of the item.", Color.Orange);
                                 }
+                            }
+                        }
+
+                        if (fabricationCost.HasValue && minCost.HasValue)
+                        {
+                            if (fabricationCost.Value < minCost * 0.9f)
+                            {
+                                NewMessage("The fabrication ingredients of \"" + itemPrefab.Name + "\" only cost " + (int)(((float)fabricationCost.Value / minCost) * 100) + "% of the price of the item.", Color.Orange);
+                            }
+                            else if (fabricationCost.Value > minCost * 1.1f)
+                            {
+                                NewMessage("The fabrication ingredients of \"" + itemPrefab.Name + "\" cost " + (int)(((float)fabricationCost.Value / minCost) * 100 - 100) + "% more than the price of the item.", Color.Orange);
+                            }
+                        }
+                        if (deconstructProductCost.HasValue && minCost.HasValue)
+                        {
+                            if (deconstructProductCost.Value < minCost * 0.8f)
+                            {
+                                NewMessage("The deconstruction output of \"" + itemPrefab.Name + "\" is only worth " + (int)(((float)deconstructProductCost.Value / minCost) * 100) + "% of the price of the item.", Color.Yellow);
+                            }
+                            else if (deconstructProductCost.Value > minCost * 1.1f)
+                            {
+                                NewMessage("The deconstruction output of \"" + itemPrefab.Name + "\" is worth " + (int)(((float)deconstructProductCost.Value / minCost) * 100 - 100) + "% more than the price of the item.", Color.Orange);
                             }
                         }
                     }
