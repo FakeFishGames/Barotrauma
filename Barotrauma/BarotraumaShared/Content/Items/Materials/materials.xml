@@ -477,34 +477,7 @@
     <Body width="24" height="12" density="50"/>
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
-  </Item>
-  <Item
-    name="Aluminium-Silicon Alloy"
-    identifier="aluminiumsiliconalloy"
-    category="Material"
-    Tags="smallitem"
-    canbepicked="true"
-    cargocontaineridentifier="metalcrate">
-
-    <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="50"/>
-    <Price locationtype="City" buyprice="50"/>
-    <Price locationtype="Outpost" buyprice="100"/>
-
-    <Deconstruct time="5">
-      <Item identifier="aluminium"/>
-      <Item identifier="silicon"/>
-    </Deconstruct>
-
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
-
-    <Body width="24" height="12" density="50"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
-  </Item>
+  </Item>  
   <Item
     name="Titanium-Aluminium Alloy"
     identifier="titaniumaluminiumalloy"

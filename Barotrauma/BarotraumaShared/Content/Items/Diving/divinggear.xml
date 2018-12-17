@@ -13,7 +13,7 @@
     <Price locationtype="Outpost" buyprice="100"/>
 
     <Deconstruct time="10">
-      <Item identifier="aluminiumsiliconalloy"/>
+      <Item identifier="aluminium"/>
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,0,64,64"/>
@@ -43,7 +43,7 @@
     description="A Tank containing liquid Oxygenite.">
 
     <Deconstruct time="10">
-      <Item identifier="aluminiumsiliconalloy"/>
+      <Item identifier="aluminium"/>
       <Item identifier="liquidoxygenite" mincondition="0.1"/>
       <Item identifier="liquidoxygenite" mincondition="0.5"/>
       <Item identifier="liquidoxygenite" mincondition="0.9"/>
@@ -213,8 +213,8 @@
     <Price locationtype="Outpost" buyprice="200"/>
 
     <Deconstruct time="20">
-      <Item identifier="aluminiumsiliconalloy"/>
-      <Item identifier="aluminiumsiliconalloy"/>
+      <Item identifier="aluminium"/>
+      <Item identifier="aluminium"/>
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,128,64,64"/>

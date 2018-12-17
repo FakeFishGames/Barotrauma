@@ -53,7 +53,7 @@
     
     <Deconstruct time="10">
       <Item identifier="steel"/>
-      <Item identifier="aluminiumsiliconalloy"/>
+      <Item identifier="aluminium"/>
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,128,64,64"/>

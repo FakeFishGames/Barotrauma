@@ -24,7 +24,7 @@
         <RequiredItem identifier="carbon"/>
         <RequiredItem identifier="iron"/>
       </FabricableItem>
-      <FabricableItem identifier="aluminiumsiliconalloy" requiredtime="5">
+      <FabricableItem identifier="aluminium" requiredtime="5">
         <RequiredItem identifier="aluminium"/>
         <RequiredItem identifier="silicon"/>
       </FabricableItem>
@@ -164,8 +164,8 @@
       <!-- equipment ************************************************************************************* -->
 
       <FabricableItem identifier="underwaterscooter" requiredtime="30">
-        <RequiredItem identifier="aluminiumsiliconalloy"/>
-        <RequiredItem identifier="aluminiumsiliconalloy"/>
+        <RequiredItem identifier="aluminium"/>
+        <RequiredItem identifier="aluminium"/>
       </FabricableItem>
 
       <FabricableItem identifier="divingmask" requiredtime="20">
@@ -241,23 +241,23 @@
       </FabricableItem>
 
       <FabricableItem identifier="oxygentank" displayname="OxygenTankEmpty" outcondition="0.0">
-        <RequiredItem identifier="aluminiumsiliconalloy"/>
+        <RequiredItem identifier="aluminium"/>
       </FabricableItem>
       <FabricableItem identifier="oxygenitetank" outcondition="100.0" requiredtime="5">
-        <RequiredItem identifier="aluminiumsiliconalloy"/>
+        <RequiredItem identifier="aluminium"/>
         <RequiredItem identifier="liquidoxygenite"/>
         <RequiredItem identifier="liquidoxygenite"/>
       </FabricableItem>
       <FabricableItem identifier="weldingfueltank" requiredtime="10">
-        <RequiredItem identifier="aluminiumsiliconalloy"/>
+        <RequiredItem identifier="aluminium"/>
         <RequiredItem identifier="ethanol"/>
       </FabricableItem>
       <FabricableItem identifier="weldingfueltank" displayname="WeldingFuelTankEmpty" outcondition="0.0">
-        <RequiredItem identifier="aluminiumsiliconalloy"/>
+        <RequiredItem identifier="aluminium"/>
       </FabricableItem>
 
       <FabricableItem identifier="extinguisher" requiredtime="10">
-        <RequiredItem identifier="aluminiumsiliconalloy"/>
+        <RequiredItem identifier="aluminium"/>
         <RequiredItem identifier="sodium"/>
       </FabricableItem>
 
@@ -284,12 +284,10 @@
         <RequiredItem identifier="plastic"/>
       </FabricableItem>
       
-      <!-- TODO: implement
       <FabricableItem identifier="divingknife" requiredtime="10">
         <RequiredSkill identifier="weapons" level="30"/>
         <RequiredItem identifier="iron"/>
       </FabricableItem>
-      -->
       
       <FabricableItem identifier="stunbaton" requiredtime="10">
         <RequiredSkill identifier="weapons" level="30"/>
@@ -299,12 +297,16 @@
 
       <FabricableItem identifier="syringegun" requiredtime="10">
         <RequiredSkill identifier="medical" level="50"/>
-        <RequiredItem identifier="aluminiumsiliconalloy"/>
+        <RequiredItem identifier="aluminium"/>
         <RequiredItem identifier="plastic"/>
       </FabricableItem>
       
       <FabricableItem identifier="spear" requiredtime="10">
         <RequiredItem identifier="steel"/>
+      </FabricableItem>
+      <FabricableItem identifier="explosivespear" requiredtime="10">
+        <RequiredItem identifier="spear"/>
+        <RequiredItem identifier="c4block"/>
       </FabricableItem>
       <FabricableItem identifier="revolverround" requiredtime="10">
         <RequiredItem identifier="copper" mincondition="0.2" usecondition="true"/>
@@ -370,7 +372,7 @@
       <FabricableItem identifier="depthchargeshell" requiredtime="20">
         <RequiredSkill identifier="mechanical" level="25"/>
         <RequiredItem identifier="steel"/>
-        <RequiredItem identifier="aluminiumsiliconalloy"/>
+        <RequiredItem identifier="aluminium"/>
       </FabricableItem>
 
       <FabricableItem identifier="nucleardepthcharge" requiredtime="30">

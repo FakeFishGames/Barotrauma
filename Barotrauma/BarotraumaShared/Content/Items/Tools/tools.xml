@@ -103,7 +103,7 @@
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="Outpost" buyprice="100" />
     <Deconstruct time="10">
-      <Item identifier="aluminiumsiliconalloy" />
+      <Item identifier="aluminium" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,0,64,64" />
     <Sprite texture="tools.png" sourcerect="52,31,12,33" depth="0.55" />
@@ -125,7 +125,7 @@
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="Outpost" buyprice="200" />
     <Deconstruct time="10">
-      <Item identifier="aluminiumsiliconalloy" />
+      <Item identifier="aluminium" />
       <Item identifier="sodium" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,0,64,64" />
