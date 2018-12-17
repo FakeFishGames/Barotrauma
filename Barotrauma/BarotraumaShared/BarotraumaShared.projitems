@@ -695,6 +695,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Map\mine.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Map\ShuttleExterior.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\NpcConversationsFinnish.xml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
