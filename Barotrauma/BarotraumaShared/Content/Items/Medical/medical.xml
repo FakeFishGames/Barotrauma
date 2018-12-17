@@ -166,73 +166,7 @@
       </StatusEffect>
     </MeleeWeapon>
   </Item>
-  
-  <Item
-    name="Alien Blood"
-    identifier="alienblood"
-    category="Material"
-    spritecolor="0.5,0.0,0.0,1.0"
-    containercolor="0.5,0.0,0.0,1.0"
-    cargocontaineridentifier="chemicalcrate"
-    description="Blood extracted from an Europan lifeform. Can be further processed into a blood substitute for the treatment of blood loss."
-    Tags="smallitem,chem,medical"
-    useinhealthinterface="true">
     
-    <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="60"/>
-
-    <!-- TODO: sprite and inventory icons -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,192,64,64"/>
-    <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6"/>
-
-    <Body width="8" height="17" density="20"/>
-
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">     
-      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
-      <StatusEffect tags="poison" type="OnUse" target="Character" delay="20" duration="20.0">
-        <Affliction identifier="psychosis" amount="1"/>
-        <Affliction identifier="internaldamage" amount="0.2"/>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </MeleeWeapon>
-  </Item>
-  
-  <Item
-    name="Velonaceps Calyx Eggs"
-    identifier="huskeggs"
-    category="Material"
-    spritecolor="0.0,0.0,0.0,1.0"
-    containercolor="0.1,0.1,0.1,1.0"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    description="Dormant eggs of the Europan lifeform colloquially referred to as 'husk parasite'."
-    useinhealthinterface="true">
-
-    <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="1200"/>
-    
-    <!-- TODO: sprite and inventory icons -->
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
-
-    <Body width="8" height="16" density="20"/>
-
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
-      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
-      <StatusEffect type="OnUse" target="Character" HuskInfectionState="0.01">
-        <!-- HuskInfectionState must be less than 0.01 so you can't speed up the infection -->
-        <Conditional HuskInfectionState="lt 0.01"/>
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove/>
-      </StatusEffect>
-    </MeleeWeapon>
-  </Item>
-  
   <Item
     name="Adrenaline"
     identifier="adrenaline"
