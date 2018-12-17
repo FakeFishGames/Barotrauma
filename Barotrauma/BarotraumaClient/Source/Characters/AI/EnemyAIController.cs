@@ -61,10 +61,10 @@ namespace Barotrauma
                         ConvertUnits.ToDisplayUnits(new Vector2(attachJoint.WorldAnchorB.X, -attachJoint.WorldAnchorB.Y)), Color.Orange * 0.6f, 0, 5);
                 }
 
-                foreach (var wallAttachMentPos in latchOntoAI.WallAttachPositions)
+                if (latchOntoAI.WallAttachPos.HasValue)
                 {
                     GUI.DrawLine(spriteBatch, pos,
-                        ConvertUnits.ToDisplayUnits(new Vector2(wallAttachMentPos.X, -wallAttachMentPos.Y)), Color.Orange * 0.6f, 0, 3);
+                        ConvertUnits.ToDisplayUnits(new Vector2(latchOntoAI.WallAttachPos.Value.X, -latchOntoAI.WallAttachPos.Value.Y)), Color.Orange * 0.6f, 0, 3);
 
                 }
             }
