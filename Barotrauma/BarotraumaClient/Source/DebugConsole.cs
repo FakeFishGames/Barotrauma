@@ -528,7 +528,8 @@ namespace Barotrauma
                                 if (ingredientPrice.HasValue)
                                 {
                                     if (!fabricationCost.HasValue) { fabricationCost = 0; }
-                                    fabricationCost += ingredientPrice.Value * ingredient.Amount;
+                                    float useAmount = ingredient.UseCondition ? ingredient.MinCondition : 1.0f;
+                                    fabricationCost += (int)(ingredientPrice.Value * ingredient.Amount * useAmount);
                                 }
                             }
                         }
@@ -546,7 +547,7 @@ namespace Barotrauma
                             if (deconstructProductPrice.HasValue)
                             {
                                 if (!deconstructProductCost.HasValue) { deconstructProductCost = 0; }
-                                deconstructProductCost += deconstructProductPrice;
+                                deconstructProductCost += (int)(deconstructProductPrice * deconstructItem.OutCondition);
                             }
 
                             if (fabricationRecipe != null)
@@ -562,22 +563,30 @@ namespace Barotrauma
                         {
                             if (fabricationCost.Value < minCost * 0.9f)
                             {
-                                NewMessage("The fabrication ingredients of \"" + itemPrefab.Name + "\" only cost " + (int)(((float)fabricationCost.Value / minCost) * 100) + "% of the price of the item.", Color.Orange);
+                                float ratio = (float)fabricationCost.Value / minCost.Value;
+                                Color color = ToolBox.GradientLerp(ratio, Color.Red, Color.Yellow, Color.Green);
+                                NewMessage("The fabrication ingredients of \"" + itemPrefab.Name + "\" only cost " + (int)(ratio * 100) + "% of the price of the item. Item price: " + minCost.Value + ", ingredient prices: " + fabricationCost.Value, color);
                             }
                             else if (fabricationCost.Value > minCost * 1.1f)
                             {
-                                NewMessage("The fabrication ingredients of \"" + itemPrefab.Name + "\" cost " + (int)(((float)fabricationCost.Value / minCost) * 100 - 100) + "% more than the price of the item.", Color.Orange);
+                                float ratio = (float)fabricationCost.Value / minCost.Value;
+                                Color color = ToolBox.GradientLerp(ratio - 1.0f, Color.Green, Color.Yellow, Color.Red);
+                                NewMessage("The fabrication ingredients of \"" + itemPrefab.Name + "\" cost " + (int)(ratio * 100 - 100) + "% more than the price of the item. Item price: " + minCost.Value + ", ingredient prices: " + fabricationCost.Value, color);
                             }
                         }
                         if (deconstructProductCost.HasValue && minCost.HasValue)
                         {
                             if (deconstructProductCost.Value < minCost * 0.8f)
                             {
-                                NewMessage("The deconstruction output of \"" + itemPrefab.Name + "\" is only worth " + (int)(((float)deconstructProductCost.Value / minCost) * 100) + "% of the price of the item.", Color.Yellow);
+                                float ratio = (float)deconstructProductCost.Value / minCost.Value;
+                                Color color = ToolBox.GradientLerp(ratio, Color.Red, Color.Yellow, Color.Green);
+                                NewMessage("The deconstruction output of \"" + itemPrefab.Name + "\" is only worth " + (int)(ratio * 100) + "% of the price of the item. Item price: " + minCost.Value + ", output value: " + deconstructProductCost.Value, color);
                             }
                             else if (deconstructProductCost.Value > minCost * 1.1f)
                             {
-                                NewMessage("The deconstruction output of \"" + itemPrefab.Name + "\" is worth " + (int)(((float)deconstructProductCost.Value / minCost) * 100 - 100) + "% more than the price of the item.", Color.Orange);
+                                float ratio = (float)deconstructProductCost.Value / minCost.Value;
+                                Color color = ToolBox.GradientLerp(ratio - 1.0f, Color.Green, Color.Yellow, Color.Red);
+                                NewMessage("The deconstruction output of \"" + itemPrefab.Name + "\" is worth " + (int)(ratio * 100 - 100) + "% more than the price of the item. Item price: " + minCost.Value + ", output value: " + deconstructProductCost.Value, color);
                             }
                         }
                     }
