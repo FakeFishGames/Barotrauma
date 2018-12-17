@@ -206,7 +206,9 @@ namespace Barotrauma
                 AttackContext currentContext = Character.GetAttackContext();
                 foreach (Limb limb in Character.AnimController.Limbs)
                 {
-                    if (limb.attack != null && limb.attack.IsValidContext(currentContext) && limb.attack.StructureDamage > 0.0f)
+                    if (limb.attack == null) { continue; }
+                    if (!limb.attack.IsValidTarget(AttackTarget.Structure)) { continue; }
+                    if (limb.attack.IsValidContext(currentContext) && limb.attack.StructureDamage > 0.0f)
                     {
                         canBreakDoors = true;
                         break;
@@ -536,6 +538,7 @@ namespace Barotrauma
                 {
                     if (limb.attack == null) continue;
                     if (!limb.attack.IsValidContext(currentContext)) { continue; }
+                    if (!limb.attack.IsValidTarget(selectedAiTarget.Entity)) { continue; }
                     attackLimb = limb;
 
                     if (ConvertUnits.ToDisplayUnits(Vector2.Distance(limb.SimPosition, attackSimPosition)) > limb.attack.Range) continue;

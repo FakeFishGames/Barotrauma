@@ -20,6 +20,13 @@ namespace Barotrauma
         Ground
     }
 
+    public enum AttackTarget
+    {
+        Any,
+        Character,
+        Structure
+    }
+
     struct AttackResult
     {
         public readonly float Damage;
@@ -59,6 +66,9 @@ namespace Barotrauma
 
         [Serialize(AttackContext.NotDefined, true), Editable]
         public AttackContext Context { get; private set; }
+
+        [Serialize(AttackTarget.Any, true), Editable]
+        public AttackTarget TargetType { get; private set; }
 
         [Serialize(HitDetection.Distance, true), Editable]
         public HitDetection HitDetectionType { get; private set; }
@@ -357,5 +367,21 @@ namespace Barotrauma
         partial void DamageParticles(float deltaTime, Vector2 worldPosition);
 
         public bool IsValidContext(AttackContext context) => Context == context || Context == AttackContext.NotDefined;
+
+        public bool IsValidTarget(AttackTarget targetType) => TargetType == AttackTarget.Any || TargetType == targetType;
+
+        public bool IsValidTarget(Entity target)
+        {
+            switch (TargetType)
+            {
+                case AttackTarget.Character:
+                    return target is Character;
+                case AttackTarget.Structure:
+                    return target is Structure;
+                case AttackTarget.Any:
+                default:
+                    return true;
+            }
+        }
     }
 }
