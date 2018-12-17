@@ -9,10 +9,11 @@
   headtorque="80"
   foottorque="25"
   tailtorque="5"
-  footangles=""
+  footangles="13: 3.149076,17: 3.163174"
   steertorque="25"
   movementspeed="6.725232"
   cyclespeed="1"
   headangle="98"
   torsoangle="90"
-  tailangle="180" />
+  tailangle="180"
+  usesinemovement="False" />
