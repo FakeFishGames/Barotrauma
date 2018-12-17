@@ -173,6 +173,7 @@ namespace Barotrauma
             {
                 if (limb.attack == null) continue;
                 if (!limb.attack.IsValidContext(currentContext)) { continue; }
+                if (!limb.attack.IsValidTarget(AttackTarget.Character)) { continue; }
                 enemyStrength += limb.attack.GetTotalDamage(false);
             }
             return enemyStrength;
