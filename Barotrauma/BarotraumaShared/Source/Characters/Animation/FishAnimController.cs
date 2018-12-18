@@ -246,7 +246,7 @@ namespace Barotrauma
 
             if (character.SelectedCharacter != null) DragCharacter(character.SelectedCharacter, deltaTime);
 
-            if (!CurrentFishAnimation.Flip) return;
+            if (!CurrentFishAnimation.Flip || IsStuck) return;
             if (character.AIController != null && !character.AIController.CanFlip) return;
 
             flipTimer += deltaTime;
