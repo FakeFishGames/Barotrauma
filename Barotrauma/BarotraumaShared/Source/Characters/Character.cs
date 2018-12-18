@@ -1072,6 +1072,15 @@ namespace Barotrauma
                 }
             }
 
+            // TODO: remove, dev test only
+            if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.F))
+            {
+                if (AnimController.IsStuck)
+                {
+                    AnimController.Limbs.Where(l => l.IsStuck).ForEach(l => l.Detach());
+                }
+            }
+
             if (attackCoolDown > 0.0f)
             {
                 attackCoolDown -= deltaTime;

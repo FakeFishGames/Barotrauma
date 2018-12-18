@@ -101,6 +101,8 @@ namespace Barotrauma
 
         private Body outsideCollisionBlocker;
 
+        public bool IsStuck => Limbs.Any(l => l.IsStuck);
+
         public PhysicsBody Collider
         {
             get

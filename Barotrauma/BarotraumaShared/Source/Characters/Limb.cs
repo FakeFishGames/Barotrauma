@@ -1,10 +1,9 @@
-﻿//using Microsoft.Xna.Framework.Graphics;
-using Barotrauma.Items.Components;
-using FarseerPhysics;
+﻿using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
+using Barotrauma.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -472,6 +471,9 @@ namespace Barotrauma
             body.ApplyTorque(Mass * character.AnimController.Dir * attack.Torque);
 
             bool wasHit = false;
+            List<Body> targetBodies = null;
+            // TODO:
+            Vector2 hitPosition = Vector2.Zero;
             if (damageTarget != null)
             {
                 switch (attack.HitDetectionType)
@@ -482,15 +484,19 @@ namespace Barotrauma
                             List<Body> ignoredBodies = character.AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
                             ignoredBodies.Add(character.AnimController.Collider.FarseerBody);
 
-                            var body = Submarine.PickBody(
+                            var targetBody = Submarine.PickBody(
                                 SimPosition, attackPosition,
                                 ignoredBodies, Physics.CollisionWall);
 
-                            wasHit = body == null;
+                            wasHit = targetBody != null;
+                            if (wasHit)
+                            {
+                                targetBodies = new List<Body>() { targetBody };
+                            }
                         }
                         break;
                     case HitDetection.Contact:
-                        List<Body> targetBodies = new List<Body>();
+                        targetBodies = new List<Body>();
                         if (damageTarget is Character targetCharacter)
                         {
                             foreach (Limb limb in targetCharacter.AnimController.Limbs)
@@ -529,6 +535,7 @@ namespace Barotrauma
                                 }
 
                                 contactEdge = contactEdge.Next;
+                                // TODO: how to get the contact positions.
                             }
                         }
                         break;
@@ -549,6 +556,16 @@ namespace Barotrauma
 #else
                     attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, false);
 #endif
+                    if (targetBodies != null && attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.Server))
+                    {
+                        var targetBody = targetBodies.LastOrDefault();
+                        if (targetBody != null)
+                        {
+                            // TODO: use the hit pos?
+                            var localFront = body.GetFrontLocal();
+                            StickTo(targetBody, localFront, body.FarseerBody.GetWorldPoint(localFront));
+                        }
+                    }
                 }
                 else
                 {
@@ -579,11 +596,66 @@ namespace Barotrauma
             }
             return wasHit;
         }
-        
+
+        private WeldJoint attachJoint;
+        private RevoluteJoint colliderJoint;
+        public bool IsStuck => attachJoint != null;
+
+        public void StickTo(Body target, Vector2 localAnchor, Vector2 targetPos)
+        {
+            if (attachJoint != null)
+            {
+                // Already attached to the target body, no need to do anything
+                if (attachJoint.BodyB == target) { return; }
+                Detach();
+            }
+
+            if (!ragdoll.IsStuck)
+            {
+                var collider = ragdoll.Collider;
+                Vector2 colliderFront = collider.GetFrontLocal();
+                // TODO: add limits (90, -90) taking the character rotation into account
+                colliderJoint = new RevoluteJoint(collider.FarseerBody, target, colliderFront, target.GetLocalPoint(targetPos), false)
+                {
+                    Breakpoint = float.MaxValue,
+                    CollideConnected = false
+                };
+                GameMain.World.AddJoint(colliderJoint);
+            }
+
+            localAnchor *= Scale;
+            if (Dir < 0.0f)
+            {
+                localAnchor.X = -localAnchor.X;
+            }
+
+            attachJoint = new WeldJoint(body.FarseerBody, target, localAnchor, target.GetLocalPoint(targetPos), false)
+            {
+                //FrequencyHz = 10,
+                //DampingRatio = 0.5f,
+                KinematicBodyB = true,
+                CollideConnected = false
+            };
+            GameMain.World.AddJoint(attachJoint);
+        }
+
+        public void Detach()
+        {
+            if (!IsStuck) { return; }
+            GameMain.World.RemoveJoint(attachJoint);
+            attachJoint = null;
+            if (colliderJoint != null)
+            {
+                GameMain.World.RemoveJoint(colliderJoint);
+                colliderJoint = null;
+            }
+        }
+
         public void Remove()
         {
             body?.Remove();
             body = null;
+            Detach();
             RemoveProjSpecific();
         }
 

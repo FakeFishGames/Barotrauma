@@ -146,6 +146,8 @@ namespace Barotrauma
         public float SeverLimbsProbability { get; set; }
 
         [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
+        public float StickChance { get; set; }
         public float Priority { get; private set; }
              
         public IEnumerable<StatusEffect> StatusEffects

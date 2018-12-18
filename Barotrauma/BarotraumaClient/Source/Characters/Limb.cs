@@ -1,8 +1,6 @@
-﻿using Barotrauma.Items.Components;
-using Barotrauma.Lights;
+﻿using Barotrauma.Lights;
 using Barotrauma.Particles;
 using Barotrauma.SpriteDeformations;
-using Barotrauma.Extensions;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
@@ -405,6 +403,10 @@ namespace Barotrauma
                 {
                     Vector2 pos = ConvertUnits.ToDisplayUnits(pullJoint.WorldAnchorB);
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.Red, true);
+                }
+                if (attachJoint != null)
+                {
+                    GUI.DrawLine(spriteBatch, ConvertUnits.ToDisplayUnits(attachJoint.WorldAnchorA), ConvertUnits.ToDisplayUnits(attachJoint.WorldAnchorB), Color.Red, width: 3);
                 }
             }
         }
