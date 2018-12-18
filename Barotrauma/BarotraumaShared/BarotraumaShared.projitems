@@ -254,6 +254,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Alien\artifactholder_glow.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Alien\Minerals.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\Alien Turret Assembly.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
