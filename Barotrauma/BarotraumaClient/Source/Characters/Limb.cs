@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Lights;
 using Barotrauma.Particles;
 using Barotrauma.SpriteDeformations;
+using Barotrauma.Extensions;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
@@ -404,9 +405,17 @@ namespace Barotrauma
                     Vector2 pos = ConvertUnits.ToDisplayUnits(pullJoint.WorldAnchorB);
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.Red, true);
                 }
-                if (attachJoint != null)
+                if (IsStuck)
                 {
-                    GUI.DrawLine(spriteBatch, ConvertUnits.ToDisplayUnits(attachJoint.WorldAnchorA), ConvertUnits.ToDisplayUnits(attachJoint.WorldAnchorB), Color.Red, width: 3);
+                    Vector2 from = ConvertUnits.ToDisplayUnits(attachJoint.WorldAnchorA);
+                    from.Y = -from.Y;
+                    Vector2 to = ConvertUnits.ToDisplayUnits(attachJoint.WorldAnchorB);
+                    to.Y = -to.Y;
+                    GUI.DrawLine(spriteBatch, from, to, Color.Red, width: 3);
+                    //GUI.DrawRectangle(spriteBatch, new Rectangle((int)from.X, (int)from.Y, 12, 12), Color.White, true);
+                    //GUI.DrawRectangle(spriteBatch, new Rectangle((int)to.X, (int)to.Y, 12, 12), Color.White, true);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)from.X, (int)from.Y, 10, 10), Color.Blue, true);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)to.X, (int)to.Y, 10, 10), Color.Red, true);
                 }
             }
         }
