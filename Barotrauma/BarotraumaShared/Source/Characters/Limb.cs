@@ -471,9 +471,7 @@ namespace Barotrauma
             body.ApplyTorque(Mass * character.AnimController.Dir * attack.Torque);
 
             bool wasHit = false;
-            List<Body> targetBodies = null;
-            // TODO:
-            Vector2 hitPosition = Vector2.Zero;
+            Body targetBody = null;
             if (damageTarget != null)
             {
                 switch (attack.HitDetectionType)
@@ -481,22 +479,17 @@ namespace Barotrauma
                     case HitDetection.Distance:
                         if (dist < attack.DamageRange)
                         {
+                            wasHit = true;
                             List<Body> ignoredBodies = character.AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
                             ignoredBodies.Add(character.AnimController.Collider.FarseerBody);
 
-                            var targetBody = Submarine.PickBody(
+                            targetBody = Submarine.PickBody(
                                 SimPosition, attackPosition,
                                 ignoredBodies, Physics.CollisionWall);
-
-                            wasHit = targetBody != null;
-                            if (wasHit)
-                            {
-                                targetBodies = new List<Body>() { targetBody };
-                            }
                         }
                         break;
                     case HitDetection.Contact:
-                        targetBodies = new List<Body>();
+                        var targetBodies = new List<Body>();
                         if (damageTarget is Character targetCharacter)
                         {
                             foreach (Limb limb in targetCharacter.AnimController.Limbs)
@@ -530,13 +523,13 @@ namespace Barotrauma
                                     contactEdge.Contact.IsTouching &&
                                     targetBodies.Any(b => b == contactEdge.Contact.FixtureA?.Body || b == contactEdge.Contact.FixtureB?.Body))
                                 {
+                                    targetBody = targetBodies.LastOrDefault();
                                     wasHit = true;
                                     break;
                                 }
-
                                 contactEdge = contactEdge.Next;
-                                // TODO: how to get the contact positions.
                             }
+
                         }
                         break;
                 }
@@ -546,19 +539,21 @@ namespace Barotrauma
             {
                 if (AttackTimer >= attack.Duration && damageTarget != null)
                 {
+                    bool playSound = false;
 #if CLIENT
-                    bool playSound = LastAttackSoundTime < Timing.TotalTime - SoundInterval;
-                    attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound);
+                    playSound = LastAttackSoundTime < Timing.TotalTime - SoundInterval;
                     if (playSound)
                     {
                         LastAttackSoundTime = (float)SoundInterval;
                     }
-#else
-                    attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, false);
 #endif
-                    if (targetBodies != null && attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.Server))
+                    AttackResult result = attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound);
+                    if (attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.Server))
                     {
-                        var targetBody = targetBodies.LastOrDefault();
+                        if (targetBody == null)
+                        {
+                            targetBody = result.HitLimb?.body.FarseerBody;
+                        }
                         if (targetBody != null)
                         {
                             // TODO: use the hit pos?
@@ -584,15 +579,13 @@ namespace Barotrauma
 
                     Limb limb = character.AnimController.Limbs[limbIndex];
                     Vector2 forcePos = limb.pullJoint == null ? limb.body.SimPosition : limb.pullJoint.WorldAnchorA;
-                    limb.body.ApplyLinearImpulse(
-                        limb.Mass * attack.Force * Vector2.Normalize(attackPosition - SimPosition), forcePos);
+                    limb.body.ApplyLinearImpulse(limb.Mass * attack.Force * Vector2.Normalize(attackPosition - SimPosition), forcePos);
                 }
             }
             else
             {
                 Vector2 forcePos = pullJoint == null ? body.SimPosition : pullJoint.WorldAnchorA;
-                body.ApplyLinearImpulse(Mass * attack.Force *
-                    Vector2.Normalize(attackPosition - SimPosition), forcePos);
+                body.ApplyLinearImpulse(Mass * attack.Force * Vector2.Normalize(attackPosition - SimPosition), forcePos);
             }
             return wasHit;
         }
