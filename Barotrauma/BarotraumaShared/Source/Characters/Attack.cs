@@ -225,6 +225,10 @@ namespace Barotrauma
             }
 
             DamageRange = element.GetAttributeFloat("damagerange", Range);
+            if (DamageRange <= 0)
+            {
+                DamageRange = Range;
+            }
 
             InitProjSpecific(element);
 
