@@ -440,7 +440,10 @@ namespace Barotrauma
                     break;
             }
 
-            if (TargetDir != dir) Flip();
+            if (TargetDir != dir && !IsStuck)
+            {
+                Flip();
+            }
 
             foreach (Limb limb in Limbs)
             {
