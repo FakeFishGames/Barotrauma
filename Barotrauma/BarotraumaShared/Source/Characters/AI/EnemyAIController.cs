@@ -539,6 +539,7 @@ namespace Barotrauma
                     if (limb.attack == null) continue;
                     if (!limb.attack.IsValidContext(currentContext)) { continue; }
                     if (!limb.attack.IsValidTarget(selectedAiTarget.Entity)) { continue; }
+                    if (limb.IsSevered || limb.IsStuck) { continue; }
                     attackLimb = limb;
 
                     if (ConvertUnits.ToDisplayUnits(Vector2.Distance(limb.SimPosition, attackSimPosition)) > limb.attack.Range) continue;

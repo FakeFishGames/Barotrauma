@@ -1089,14 +1089,13 @@ namespace Barotrauma
             {
                 AttackContext currentContext = GetAttackContext();
                 var attackLimb = AnimController.Limbs
-                    .Where(l => l.attack != null && l.attack.IsValidContext(currentContext))
+                    .Where(l => !l.IsSevered && !l.IsStuck && l.attack != null && l.attack.IsValidContext(currentContext))
                     .OrderBy(l => Vector2.DistanceSquared(ConvertUnits.ToDisplayUnits(l.SimPosition), cursorPosition))
                     .FirstOrDefault();
 
                 if (attackLimb != null)
                 {
-                    Vector2 attackPos =
-                        attackLimb.SimPosition + Vector2.Normalize(cursorPosition - attackLimb.Position) * ConvertUnits.ToSimUnits(attackLimb.attack.Range);
+                    Vector2 attackPos = attackLimb.SimPosition + Vector2.Normalize(cursorPosition - attackLimb.Position) * ConvertUnits.ToSimUnits(attackLimb.attack.Range);
 
                     List<Body> ignoredBodies = AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
                     ignoredBodies.Add(AnimController.Collider.FarseerBody);
