@@ -45,6 +45,9 @@ namespace Barotrauma
 
         public void SaveParams()
         {
+            // Saving to the params is handled only in the params level.
+            return;
+
             jointParams.Stiffness = MaxMotorTorque;
             if (ragdoll.IsFlipped)
             {

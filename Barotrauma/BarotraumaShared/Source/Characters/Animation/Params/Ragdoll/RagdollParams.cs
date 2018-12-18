@@ -216,6 +216,8 @@ namespace Barotrauma
 
         public bool Save(string fileNameWithoutExtension = null)
         {
+            OriginalElement = MainElement;
+            GetAllSubParams().ForEach(p => p.SetCurrentElementAsOriginalElement());
             Serialize();
             return base.Save(fileNameWithoutExtension, new XmlWriterSettings
             {
@@ -587,7 +589,7 @@ namespace Barotrauma
         public virtual string Name { get; set; }
         public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
         public XElement Element { get; set; }
-        public readonly XElement originalElement;
+        public XElement OriginalElement { get; protected set; }
         public List<RagdollSubParams> SubParams { get; set; } = new List<RagdollSubParams>();
         public RagdollParams Ragdoll { get; private set; }
 
@@ -596,7 +598,7 @@ namespace Barotrauma
         public RagdollSubParams(XElement element, RagdollParams ragdoll)
         {
             Element = element;
-            originalElement = new XElement(element);
+            OriginalElement = new XElement(element);
             Ragdoll = ragdoll;
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
         }
@@ -623,9 +625,15 @@ namespace Barotrauma
             return true;
         }
 
+        public void SetCurrentElementAsOriginalElement()
+        {
+            OriginalElement = Element;
+            SubParams.ForEach(sp => sp.SetCurrentElementAsOriginalElement());
+        }
+
         public void Reset()
         {
-            Deserialize(originalElement, false);
+            Deserialize(OriginalElement, false);
             SubParams.ForEach(sp => sp.Reset());
         }
 

@@ -436,7 +436,8 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Saves the current joint values to the serializable joint params. This method should properly handle character flipping.
+        /// Saves the current joint values to the serializable joint params. This method should properly handle character flipping. 
+        /// NOTE: Currently all the params are handled stored as SubRagdollParams and handled in the RagdollParams Save method. This method does nothing.
         /// </summary>
         public void SaveJoints()
         {
@@ -445,6 +446,7 @@ namespace Barotrauma
 
         /// <summary>
         /// Handles custom serialization per limb. Currently only the attacks need to be serialized, since they cannot be stored as SubRagdollParams (because they shouldn't be decoupled with ragdolls).
+        /// Note: Saving to file is not handled by this method. Calling RagdollParams.Save() after this method should work.
         /// </summary>
         public void SaveLimbs()
         {
