@@ -1064,6 +1064,7 @@ namespace Barotrauma
             Character.Controlled = character;
             SetWallCollisions(character.AnimController.forceStanding);
             CreateTextures();
+            limbPairEditing = character.IsHumanoid;
             CreateGUI();
             ClearWidgets();
             ClearSelection();
