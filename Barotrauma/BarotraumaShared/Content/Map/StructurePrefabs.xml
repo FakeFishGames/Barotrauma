@@ -2,108 +2,108 @@
 <prefabs>
   <!-- SHUTTLE EXTERIOR WALLS -->
   <ShuttleWallTopLeft1 identifier="shuttlewalltopleft1" description=""
-    width="269" height="234" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="16,49,269,234" />
+    width="108" height="95" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="6,19,108,95" />
   </ShuttleWallTopLeft1>
   <ShuttleWallTopLeft2 identifier="shuttlewalltopleft2" description=""
-    width="539" height="234" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="404,49,539,234" />
+    width="216" height="95" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="161,19,216,95" />
   </ShuttleWallTopLeft2>
   <ShuttleWallTopLeft3 identifier="shuttlewalltopleft3" description=""
-    width="266" height="119" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="981,67,266,119" />
+    width="107" height="50" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="391,26,107,50" />
   </ShuttleWallTopLeft3>
   <ShuttleWallTopLeft4 identifier="shuttlewalltopleft4" description=""
-    width="268" height="233" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="1060,916,268,233" />
+    width="108" height="95" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="422,364,108,95" />
   </ShuttleWallTopLeft4>
   <ShuttleWallTopLeft5 identifier="shuttlewalltopleft5" description=""
-    width="266" height="121" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="1390,855,266,121" />
+    width="107" height="50" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="555,340,107,50" />
   </ShuttleWallTopLeft5>
   <ShuttleWallMiddleLeft1 identifier="shuttlewallmiddleleft1" description=""
-    width="250" height="271" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="36,316,250,271" />
+    width="102" height="108" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="13,126,102,108" />
   </ShuttleWallMiddleLeft1>
   <ShuttleWallMiddleLeft2 identifier="shuttlewallmiddleleft2" description=""
-    width="242" height="271" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="40,626,242,271" />
+    width="98" height="109" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="16,249,98,109" />
   </ShuttleWallMiddleLeft2>
   <ShuttleWallMiddleLeft3 identifier="shuttlewallmiddleleft3" description=""
-    width="263" height="306" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="32,936,263,306" />
+    width="106" height="123" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="13,373,106,123" />
   </ShuttleWallMiddleLeft3>
   <ShuttleWallMiddleLeft4 identifier="shuttlewallmiddleleft4" description=""
-    width="263" height="306" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="341,937,263,306" />
+    width="106" height="123" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="136,373,106,123" />
   </ShuttleWallMiddleLeft4>
   <ShuttleWallMiddleLeft5 identifier="shuttlewallmiddleleft5" description=""
-    width="244" height="271" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="758,897,244,271" />
+    width="97" height="110" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="303,357,97,110" />
   </ShuttleWallMiddleLeft5>
   <ShuttleWallMiddleUpper1 identifier="shuttlewallmiddleupper1" description=""
-    width="540" height="83" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="1252,65,540,83" />
+    width="216" height="34" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="499,26,216,34" />
   </ShuttleWallMiddleUpper1>
   <ShuttleWallMiddleUpper2 identifier="shuttlewallmiddleupper2" description=""
-    width="565" height="117" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="1285,185,565,117" />
+    width="227" height="48" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="512,73,227,48" />
   </ShuttleWallMiddleUpper2>
   <ShuttleWallMiddleUpper3 identifier="shuttlewallmiddleupper3" description=""
-    width="890" height="204" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="402,339,890,204" />
+    width="356" height="82" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="160,234,356,82" />
   </ShuttleWallMiddleUpper3>
   <ShuttleWallMiddleUpper4 identifier="shuttlewallmiddleupper4" description=""
-    width="890" height="204" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="402,586,890,204" />
+    width="356" height="82" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="160,234,356,82" />
   </ShuttleWallMiddleUpper4>
   <ShuttleWallTopRight1 identifier="shuttlewalltopright1" description=""
-    width="493" height="623" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="1923,55,493,623" />
+    width="197" height="249" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="767,22,197,249" />
   </ShuttleWallTopRight1>
   <ShuttleWallTopRight2 identifier="shuttlewalltopright2" description=""
-    width="493" height="623" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="1923,728,493,623" />
+    width="197" height="249" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="767,290,197,249" />
   </ShuttleWallTopRight2>
   <ShuttleWallTopRight3 identifier="shuttlewalltopright3" description=""
-    width="366" height="176" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="1312,364,366,176" />
+    width="147" height="71" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="523,145,147,71" />
   </ShuttleWallTopRight3>
   <ShuttleWallTopRight4 identifier="shuttlewalltopright4" description=""
-    width="366" height="176" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="1339,585,366,176" />
+    width="147" height="71" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="534,234,147,71" />
   </ShuttleWallTopRight4>
   <ShuttleWallBottomLeft1 identifier="shuttlewallbottomleft1" description=""
-    width="498" height="289" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="15,1242,498,289" />
+    width="200" height="116" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="6,495,200,116" />
   </ShuttleWallBottomLeft1>
   <ShuttleWallBottomLeft2 identifier="shuttlewallbottomleft2" description=""
-    width="498" height="289" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="15,1598,498,289" />
+    width="200" height="116" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="6,636,200,116" />
   </ShuttleWallBottomLeft2>
   <ShuttleWallBottomLeft3 identifier="shuttlewallbottomleft3" description=""
-    width="498" height="290" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="511,1242,498,290" />
+    width="200" height="115" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="204,495,200,115" />
   </ShuttleWallBottomLeft3>
   <ShuttleWallBottomLeft4 identifier="shuttlewallbottomleft4" description=""
-    width="498" height="290" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="562,1598,498,290" />
+    width="200" height="115" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="224,637,200,115" />
   </ShuttleWallBottomLeft4>
   <ShuttleWallMiddleBottom1 identifier="shuttlewallmiddlebottom1" description=""
-    width="653" height="149" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="1113,1382,653,149" />
+    width="261" height="60" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="444,551,261,60" />
   </ShuttleWallMiddleBottom1>
   <ShuttleWallMiddleBottom2 identifier="shuttlewallmiddlebottom2" description=""
-    width="709" height="151" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="1141,1598,709,151" />
+    width="283" height="61" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="455,637,283,61" />
   </ShuttleWallMiddleBottom2>
   <ShuttleWallBottomRight1 identifier="shuttlewallbottomright1" description=""
-    width="230" height="124" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="1848,1598,230,124" />
+    width="93" height="51" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="737,637,93,51" />
   </ShuttleWallBottomRight1>
   <ShuttleWallBottomRight2 identifier="shuttlewallbottomright2" description=""
-    width="157" height="270" resizehorizontal="false" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="2117,1377,157,270" />
+    width="65" height="109" resizehorizontal="false" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="850,553,65,109" />
   </ShuttleWallBottomRight2>
   <!-- INTERIOR WALLS FF -->
   <ff_x_wall identifier="ff_x_wall" description="A vertical wall with collision detection" width="512" height="48" resizehorizontal="true" body="true" castshadow="true" health="500">
