@@ -1,9 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-
 
 namespace Barotrauma
 {    
@@ -73,28 +71,28 @@ namespace Barotrauma
         [Serialize(HitDetection.Distance, true), Editable]
         public HitDetection HitDetectionType { get; private set; }
 
-        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
         public float Range { get; private set; }
 
-        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
         public float DamageRange { get; set; }
 
-        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
         public float Duration { get; private set; }
         
-        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
         public float StructureDamage { get; private set; }
 
-        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float ItemDamage { get; private set; }
 
-        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 30.0f)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 30.0f)]
         public float Stun { get; private set; }
 
-        [Serialize(false, false), Editable]
+        [Serialize(false, true), Editable]
         public bool OnlyHumans { get; private set; }
 
-        [Serialize("", false), Editable]
+        [Serialize("", true), Editable]
         public string ApplyForceOnLimbs
         {
             get
@@ -117,37 +115,38 @@ namespace Barotrauma
 
         //force applied to the attacking limb (or limbs defined using ApplyForceOnLimbs)
         //the direction of the force is towards the target that's being attacked
-        [Serialize(0.0f, false), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
         public float Force { get; private set; }
 
         //torque applied to the attacking limb
-        [Serialize(0.0f, false), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
         public float Torque { get; private set; }
 
         //impulse applied to the target the attack hits
         //the direction of the impulse is from this limb towards the target (use negative values to pull the target closer)
-        [Serialize(0.0f, false), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
         public float TargetImpulse { get; private set; }
 
         //impulse applied to the target, in world space coordinates (i.e. 0,-1 pushes the target downwards)
-        [Serialize("0.0, 0.0", false), Editable]
+        [Serialize("0.0, 0.0", true), Editable]
         public Vector2 TargetImpulseWorld { get; private set; }
 
         //force applied to the target the attack hits 
         //the direction of the force is from this limb towards the target (use negative values to pull the target closer)
-        [Serialize(0.0f, false), Editable(-1000.0f, 1000.0f)]
+        [Serialize(0.0f, true), Editable(-1000.0f, 1000.0f)]
         public float TargetForce { get; private set; }
 
         //force applied to the target, in world space coordinates (i.e. 0,-1 pushes the target downwards)
-        [Serialize("0.0, 0.0", false), Editable]
+        [Serialize("0.0, 0.0", true), Editable]
         public Vector2 TargetForceWorld { get; private set; }
 
-        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float SeverLimbsProbability { get; set; }
 
-        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float StickChance { get; set; }
+
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float Priority { get; private set; }
              
         public IEnumerable<StatusEffect> StatusEffects
