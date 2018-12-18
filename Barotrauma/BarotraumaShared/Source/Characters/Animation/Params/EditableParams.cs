@@ -33,7 +33,7 @@ namespace Barotrauma
         }
 
         public XElement MainElement => doc.Root;
-        public XElement OriginalElement { get; private set; }
+        public XElement OriginalElement { get; protected set; }
 
         protected virtual bool Deserialize(XElement element = null)
         {
@@ -73,6 +73,7 @@ namespace Barotrauma
             {
                 Directory.CreateDirectory(Folder);
             }
+            OriginalElement = MainElement;
             Serialize();
             if (settings == null)
             {

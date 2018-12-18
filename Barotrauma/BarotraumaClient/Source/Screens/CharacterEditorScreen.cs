@@ -1708,8 +1708,6 @@ namespace Barotrauma
             var quickSaveRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Quick Save Ragdoll");
             quickSaveRagdollButton.OnClicked += (button, userData) =>
             {
-                // TODO: if recreate the ragdoll here, attacks are reset, but if we don't the ragdoll sub params are not saved
-                //RecreateRagdoll();
                 character.AnimController.SaveRagdoll();
                 ragdollResetRequiresForceLoading = true;
                 GUI.AddMessage($"Ragdoll saved to {RagdollParams.FullPath}", Color.Green, font: GUI.Font);
@@ -1775,7 +1773,6 @@ namespace Barotrauma
                 };
                 box.Buttons[1].OnClicked += (b, d) =>
                 {
-                    RecreateRagdoll();
                     character.AnimController.SaveRagdoll(inputField.Text);
                     ragdollResetRequiresForceLoading = true;
                     GUI.AddMessage($"Ragdoll saved to {RagdollParams.FullPath}", Color.Green, font: GUI.Font);
