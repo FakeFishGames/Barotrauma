@@ -471,7 +471,7 @@ namespace Barotrauma
             body.ApplyTorque(Mass * character.AnimController.Dir * attack.Torque);
 
             bool wasHit = false;
-            Body targetBody = null;
+            Body structureBody = null;
             if (damageTarget != null)
             {
                 switch (attack.HitDetectionType)
@@ -483,7 +483,7 @@ namespace Barotrauma
                             List<Body> ignoredBodies = character.AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
                             ignoredBodies.Add(character.AnimController.Collider.FarseerBody);
 
-                            targetBody = Submarine.PickBody(
+                            structureBody = Submarine.PickBody(
                                 SimPosition, attackPosition,
                                 ignoredBodies, Physics.CollisionWall);
                         }
@@ -523,7 +523,7 @@ namespace Barotrauma
                                     contactEdge.Contact.IsTouching &&
                                     targetBodies.Any(b => b == contactEdge.Contact.FixtureA?.Body || b == contactEdge.Contact.FixtureB?.Body))
                                 {
-                                    targetBody = targetBodies.LastOrDefault();
+                                    structureBody = targetBodies.LastOrDefault();
                                     wasHit = true;
                                     break;
                                 }
@@ -544,22 +544,17 @@ namespace Barotrauma
                     playSound = LastAttackSoundTime < Timing.TotalTime - SoundInterval;
                     if (playSound)
                     {
-                        LastAttackSoundTime = (float)SoundInterval;
+                        LastAttackSoundTime = SoundInterval;
                     }
 #endif
-                    AttackResult result = attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound);
-                    if (attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.Server))
+                    attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound);
+                    if (structureBody != null && attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.Server))
                     {
-                        if (targetBody == null)
-                        {
-                            targetBody = result.HitLimb?.body.FarseerBody;
-                        }
-                        if (targetBody != null)
-                        {
-                            // TODO: use the hit pos?
-                            var localFront = body.GetFrontLocal();
-                            StickTo(targetBody, localFront, body.FarseerBody.GetWorldPoint(localFront));
-                        }
+                        // TODO: use the hit pos?
+                        var localFront = body.GetFrontLocal();
+                        var from = body.FarseerBody.GetWorldPoint(localFront);
+                        var to = from;
+                        StickTo(structureBody, from, to);
                     }
                 }
                 else
@@ -591,10 +586,10 @@ namespace Barotrauma
         }
 
         private WeldJoint attachJoint;
-        private RevoluteJoint colliderJoint;
+        private WeldJoint colliderJoint;
         public bool IsStuck => attachJoint != null;
 
-        public void StickTo(Body target, Vector2 localAnchor, Vector2 targetPos)
+        public void StickTo(Body target, Vector2 from, Vector2 to)
         {
             if (attachJoint != null)
             {
@@ -605,27 +600,28 @@ namespace Barotrauma
 
             if (!ragdoll.IsStuck)
             {
-                var collider = ragdoll.Collider;
-                Vector2 colliderFront = collider.GetFrontLocal();
-                // TODO: add limits (90, -90) taking the character rotation into account
-                colliderJoint = new RevoluteJoint(collider.FarseerBody, target, colliderFront, target.GetLocalPoint(targetPos), false)
+                PhysicsBody mainLimbBody = ragdoll.MainLimb.body;
+                Body colliderBody = ragdoll.Collider.FarseerBody;
+                Vector2 mainLimbLocalFront = mainLimbBody.GetFrontLocal();
+                if (Dir < 0)
                 {
-                    Breakpoint = float.MaxValue,
+                    mainLimbLocalFront.X = -mainLimbLocalFront.X;
+                }
+                Vector2 mainLimbFront = mainLimbBody.FarseerBody.GetWorldPoint(mainLimbLocalFront);
+                colliderBody.SetTransform(mainLimbBody.SimPosition, mainLimbBody.Rotation);
+                // Attach the collider from the main limb front to the target
+                colliderJoint = new WeldJoint(colliderBody, target, mainLimbFront, to, true)
+                {
+                    FrequencyHz = 3,
+                    DampingRatio = 1,
+                    KinematicBodyB = true,
                     CollideConnected = false
                 };
                 GameMain.World.AddJoint(colliderJoint);
             }
 
-            localAnchor *= Scale;
-            if (Dir < 0.0f)
+            attachJoint = new WeldJoint(body.FarseerBody, target, from, to, true)
             {
-                localAnchor.X = -localAnchor.X;
-            }
-
-            attachJoint = new WeldJoint(body.FarseerBody, target, localAnchor, target.GetLocalPoint(targetPos), false)
-            {
-                //FrequencyHz = 10,
-                //DampingRatio = 0.5f,
                 KinematicBodyB = true,
                 CollideConnected = false
             };
