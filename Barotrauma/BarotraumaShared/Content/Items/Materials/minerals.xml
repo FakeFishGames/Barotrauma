@@ -7,7 +7,8 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A mineral containing titanium and iron."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="titanium"/>
@@ -17,8 +18,8 @@
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="705,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="390,130,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -36,7 +37,8 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A mineral containing titanium and phosphorus."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="phosphorus"/>
@@ -44,8 +46,8 @@
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="260,580,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="520,260,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -63,7 +65,8 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A rare mineral containing thorium."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="thorium"/>
@@ -71,8 +74,8 @@
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="520,580,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="3,390,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -90,7 +93,8 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A mineral composed of lithium, aluminium and sodium."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="lithium"/>
@@ -99,8 +103,8 @@
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="5,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="10,3,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -118,7 +122,8 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A mineral consisting largely of zinc in crystalline form."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="zinc"/>
@@ -127,8 +132,8 @@
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="8,580,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="3,260,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -146,7 +151,8 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A mineral composed of chlorine."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="chlorine"/>
@@ -154,8 +160,8 @@
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="385,580,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="770,260,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -173,7 +179,8 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A crystalline mineral composed of silicon."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="silicon"/>
@@ -181,8 +188,8 @@
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="130,580,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="260,260,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -200,7 +207,8 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A crystal composed of solid carbon."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="carbon"/>
@@ -209,8 +217,8 @@
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="196,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="385,3,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -228,7 +236,8 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A mineral composed of calcium and phosphorus."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="calcium"/>
@@ -237,8 +246,8 @@
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="580,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="140,130,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -256,7 +265,8 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A mineral containing large concentrations of uranium."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="uranium"/>
@@ -265,8 +275,8 @@
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="455,580,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="900,260,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -284,15 +294,16 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A mineral containing titanium."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="titanium"/>
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="645,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="275,130,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -310,7 +321,8 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A mineral composed of copper, iron and tin."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate"
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="copper"/>
@@ -319,8 +331,8 @@
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="710,580,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="390,390,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -338,15 +350,16 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A mineral containing copper."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="copper"/>
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="900,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="770,130,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -364,7 +377,8 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A mineral composed of zinc and lead."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="zinc"/>
@@ -373,8 +387,8 @@
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="70,580,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="140,260,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -392,7 +406,8 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A mineral mostly consisting of lead."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="lead"/>
@@ -401,8 +416,8 @@
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="575,580,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="130,390,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -420,15 +435,16 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A mineral containing lithium."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="lithium"/>
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="70,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="128,3,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -446,7 +462,8 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A mineral consisting of potassium and magnesium."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="potassium"/>
@@ -455,8 +472,8 @@
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="390,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="785,3,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -474,7 +491,8 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A mineral consisting of iron and aluminium."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="iron"/>
@@ -484,8 +502,8 @@
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="835,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="645,130,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -503,7 +521,8 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A mineral containing large amounts of iron."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="iron"/>
@@ -513,8 +532,8 @@
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="770,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="520,130,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -532,7 +551,8 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A mineral consisting of potassium and calcium."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="potassium"/>
@@ -540,8 +560,8 @@
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="450,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="904,3,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -559,7 +579,8 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="Carbon in crystalline form."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="carbon"/>
@@ -567,8 +588,8 @@
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="132,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="262,3,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -586,7 +607,8 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A mineral containing potassium and sodium."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="sodium"/>
@@ -595,8 +617,8 @@
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="325,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="645,3,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -614,7 +636,8 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A mineral containing phosphorus and iron."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="phosphorus"/>
@@ -622,8 +645,8 @@
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="323,580,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="645,260,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -641,15 +664,16 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A mineral containing copper."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="copper"/>
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="964,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="900,130,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -667,7 +691,8 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A mineral consisting of tin."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="tin"/>
@@ -676,8 +701,8 @@
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,580,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="260,390,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -695,15 +720,16 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A mineral containing sodium."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="sodium"/>
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="260,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="510,3,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -721,15 +747,16 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A mineral containing calcium."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="calcium"/>
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="515,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="10,130,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -747,15 +774,16 @@
     Tags="smallitem,ore"
     canbepicked="true"
     description="A mineral containing silicon."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
 
     <Deconstruct time="5">
       <Item identifier="silicon"/>
     </Deconstruct>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="195,580,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="390,260,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -766,4 +794,6 @@
 
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
   </Item>
+
+ 
 </Items>
