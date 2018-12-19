@@ -224,11 +224,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - Define damage as afflictions instead of using the damage attribute (e.g. <Affliction identifier=\"internaldamage\" strength=\"10\" />).");
             }
 
-            DamageRange = element.GetAttributeFloat("damagerange", Range);
-            if (DamageRange <= 0)
-            {
-                DamageRange = Range;
-            }
+            DamageRange = element.GetAttributeFloat("damagerange", 0f);
 
             InitProjSpecific(element);
 

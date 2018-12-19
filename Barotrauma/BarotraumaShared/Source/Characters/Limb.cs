@@ -132,7 +132,8 @@ namespace Barotrauma
 
         private Direction dir;
         
-        public float AttackTimer;
+        public float AttackTimer { get; private set; }
+        private bool forcesApplied;
 
         public int HealthIndex => limbParams.HealthIndex;
         public float Scale => limbParams.Ragdoll.LimbScale;
@@ -337,6 +338,22 @@ namespace Barotrauma
                 {
                     case "attack":
                         attack = new Attack(subElement, (character == null ? "null" : character.Name) + ", limb " + type);
+                        if (attack.DamageRange <= 0)
+                        {
+                            switch (body.BodyShape)
+                            {
+                                case PhysicsBody.Shape.Circle:
+                                    attack.DamageRange = body.radius;
+                                    break;
+                                case PhysicsBody.Shape.Capsule:
+                                    attack.DamageRange = body.height / 2 + body.radius;
+                                    break;
+                                case PhysicsBody.Shape.Rectangle:
+                                    attack.DamageRange = new Vector2(body.width / 2.0f, body.height / 2.0f).Length();
+                                    break;
+                            }
+                            attack.DamageRange = ConvertUnits.ToDisplayUnits(attack.DamageRange);
+                        }
                         break;
                     case "damagemodifier":
                         damageModifiers.Add(new DamageModifier(subElement, character.Name));
@@ -458,7 +475,13 @@ namespace Barotrauma
         }
 
         partial void UpdateProjSpecific(float deltaTime);
-        
+
+        public void ResetAttack()
+        {
+            AttackTimer = 0.0f;
+            forcesApplied = false;
+        }
+
         /// <summary>
         /// Returns true if the attack successfully hit something
         /// </summary>
@@ -467,8 +490,15 @@ namespace Barotrauma
             float dist = ConvertUnits.ToDisplayUnits(Vector2.Distance(SimPosition, attackPosition));
 
             AttackTimer += deltaTime;
+            if (AttackTimer > attack.Duration)
+            {
+                forcesApplied = false;
+            }
 
-            body.ApplyTorque(Mass * character.AnimController.Dir * attack.Torque);
+            if (!forcesApplied)
+            {
+                body.ApplyTorque(Mass * character.AnimController.Dir * attack.Torque);
+            }
 
             bool wasHit = false;
             Body structureBody = null;
@@ -568,21 +598,28 @@ namespace Barotrauma
             Vector2 diff = attackPosition - SimPosition;
             if (diff.LengthSquared() < 0.00001f) return wasHit;
             
-            if (attack.ForceOnLimbIndices != null && attack.ForceOnLimbIndices.Count > 0)
+            if (!forcesApplied)
             {
-                foreach (int limbIndex in attack.ForceOnLimbIndices)
+                if (attack.ForceOnLimbIndices != null && attack.ForceOnLimbIndices.Count > 0)
                 {
-                    if (limbIndex < 0 || limbIndex >= character.AnimController.Limbs.Length) continue;
+                    foreach (int limbIndex in attack.ForceOnLimbIndices)
+                    {
+                        if (limbIndex < 0 || limbIndex >= character.AnimController.Limbs.Length) continue;
 
-                    Limb limb = character.AnimController.Limbs[limbIndex];
-                    Vector2 forcePos = limb.pullJoint == null ? limb.body.SimPosition : limb.pullJoint.WorldAnchorA;
-                    limb.body.ApplyLinearImpulse(limb.Mass * attack.Force * Vector2.Normalize(attackPosition - SimPosition), forcePos);
+                        Limb limb = character.AnimController.Limbs[limbIndex];
+                        Vector2 forcePos = limb.pullJoint == null ? limb.body.SimPosition : limb.pullJoint.WorldAnchorA;
+                        limb.body.ApplyLinearImpulse(limb.Mass * attack.Force * Vector2.Normalize(attackPosition - SimPosition), forcePos);
+                    }
                 }
-            }
-            else
-            {
-                Vector2 forcePos = pullJoint == null ? body.SimPosition : pullJoint.WorldAnchorA;
-                body.ApplyLinearImpulse(Mass * attack.Force * Vector2.Normalize(attackPosition - SimPosition), forcePos);
+                else
+                {
+                    Vector2 forcePos = pullJoint == null ? body.SimPosition : pullJoint.WorldAnchorA;
+                    body.ApplyLinearImpulse(Mass * attack.Force * Vector2.Normalize(attackPosition - SimPosition), forcePos);
+                }
+                if (attack.ApplyForcesOnlyOnce)
+                {
+                    forcesApplied = true;
+                }
             }
             return wasHit;
         }
@@ -611,11 +648,9 @@ namespace Barotrauma
                 }
                 Vector2 mainLimbFront = mainLimbBody.FarseerBody.GetWorldPoint(mainLimbLocalFront);
                 colliderBody.SetTransform(mainLimbBody.SimPosition, mainLimbBody.Rotation);
-                // Attach the collider from the main limb front to the target
-                colliderJoint = new WeldJoint(colliderBody, target, mainLimbFront, to, true)
+                // Attach the collider to the main body so that they don't go out of sync
+                colliderJoint = new WeldJoint(colliderBody, mainLimbBody.FarseerBody, mainLimbFront, mainLimbFront, true)
                 {
-                    FrequencyHz = 3,
-                    DampingRatio = 1,
                     KinematicBodyB = true,
                     CollideConnected = false
                 };
