@@ -567,7 +567,6 @@ namespace Barotrauma.RuinGeneration
 
                             CreateChildEntities(doorConfig, doorItem, corridor);
                             doors.Add(door);
-                            door.IsOpen = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < 0.2f;
                             ruinEntities.Add(new RuinEntity(doorConfig, doorItem, room));
                         }
                     }
@@ -615,6 +614,12 @@ namespace Barotrauma.RuinGeneration
                     }
                     break;
                 }
+            }
+
+            //randomize door states (20% open on average)
+            foreach (Door door in doors)
+            {
+                door.IsOpen = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < 0.2f;
             }
             
             //create connections between all generated entities ---------------------------
