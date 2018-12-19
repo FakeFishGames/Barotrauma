@@ -1087,6 +1087,7 @@ namespace Barotrauma
                 AttackContext currentContext = GetAttackContext();
                 var attackLimb = AnimController.Limbs
                     .Where(l => !l.IsSevered && !l.IsStuck && l.attack != null && l.attack.IsValidContext(currentContext))
+                    // TODO: remove this and use the distance
                     .OrderByDescending(l => l.attack.Priority)
                     //.OrderBy(l => Vector2.DistanceSquared(ConvertUnits.ToDisplayUnits(l.SimPosition), cursorPosition))
                     .FirstOrDefault();
