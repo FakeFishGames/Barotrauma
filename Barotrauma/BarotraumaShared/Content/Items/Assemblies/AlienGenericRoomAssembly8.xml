@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ItemAssembly name="AlienGenericRoomAssembly8" description="">
+<ItemAssembly name="AlienGenericRoomAssembly8" description="" hideinmenus="true">
   <Item name="Alien Coil" identifier="aliencoil" ID="2" rect="-272,-144,95,50" description="" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1">
     <LightComponent range="800" castshadows="True" ison="True" blinkfrequency="0" lightcolor="112,145,190,255" isactive="True" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <ElectricalDischarger range="800" rangemultiplierinwalls="5" duration="1" outdoorsonly="False" minvoltage="0.9" powerconsumption="1000" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />

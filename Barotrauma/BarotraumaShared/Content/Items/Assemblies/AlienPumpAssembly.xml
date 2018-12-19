@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ItemAssembly name="AlienPumpAssembly" description="">
+<ItemAssembly name="AlienPumpAssembly" description="" hideinmenus="true">
   <Item name="Pump" identifier="pump" ID="4" rect="-208,96,200,178" displaysidebysidewhenlinked="False" description="" spritecolor="1,1,1,1" inventoryiconcolor="1,1,1,1" containercolor="1,1,1,1" tags="" spritedepth="0.8" scale="1">
     <Pump minvoltage="0.3" powerconsumption="300" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">

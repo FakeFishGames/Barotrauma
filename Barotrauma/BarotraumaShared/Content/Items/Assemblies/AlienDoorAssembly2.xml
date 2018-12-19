@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ItemAssembly name="AlienDoorAssembly2" description="">
+<ItemAssembly name="AlienDoorAssembly2" description="" hideinmenus="true">
   <Item name="Alien Door" identifier="aliendoor" ID="27" rect="-32,112,48,208" displaysidebysidewhenlinked="False" description="" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" spritedepth="0.8" scale="1">
     <Door isopen="True" pickingtime="30" canbepicked="True" allowingameediting="True" msg="Force open [Crowbar]">
       <requireditem identifiers="crowbar" type="Equipped" msg="" />
