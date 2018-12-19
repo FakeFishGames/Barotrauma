@@ -172,7 +172,8 @@
       <sound file="Content/Items/Alien/aliendoor.ogg" type="OnUse" range="3000.0" />
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0" />
     </Door>
-    <ConnectionPanel canbeselected="false" hudpriority="10">
+    <ConnectionPanel canbeselected="true" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <input name="toggle" />
       <input name="set_state" />
       <output name="state_out" />
@@ -186,7 +187,8 @@
       <sound file="Content/Items/Alien/aliendoor.ogg" type="OnUse" range="3000.0" />
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0" />
     </Door>
-    <ConnectionPanel canbeselected="false" hudpriority="10">
+    <ConnectionPanel canbeselected="true" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <input name="toggle" />
       <input name="set_state" />
       <output name="state_out" />
@@ -238,8 +240,9 @@
       </Containable>
     </ItemContainer>
     <PowerContainer capacity="10.0" canbeselected="false" maxrechargespeed="1000.0" maxoutput="10000.0"/>
-    <ConnectionPanel canbeselected="false" hudpriority="10">
+    <ConnectionPanel canbeselected="true" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <!-- break the item when a shutdown signal is received -->
       <input name="shutdown">
         <StatusEffect type="OnUse" target="This" condition="-100" setvalue="true" />
@@ -304,7 +307,9 @@
     <Controller direction="None" canbepicked="true">
       <sound file="Content/Items/Button/beep.ogg" type="OnUse" range="500.0" />
     </Controller>
-    <ConnectionPanel canbeselected="false">
+    <ConnectionPanel canbeselected="true">
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <output name="signal_out" />
     </ConnectionPanel>
   </Item>
@@ -327,7 +332,7 @@
         <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="1.0,0.2" />
       </LightComponent>
     </Turret>
-    <ConnectionPanel canbeselected="false" hudpriority="10">
+    <ConnectionPanel canbeselected="true" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <input name="power_in" />
       <input name="position_in" />
@@ -374,7 +379,7 @@
         <Explosion range="500.0" stun="0" force="0.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
       </StatusEffect>
     </ElectricalDischarger>
-    <ConnectionPanel canbeselected="false" hudpriority="10">
+    <ConnectionPanel canbeselected="true" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <!-- break the item when a shutdown signal is received -->
       <input name="activate"/>
