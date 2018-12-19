@@ -528,25 +528,40 @@ namespace Barotrauma
                 UpdateCoolDown(attackSimPosition, deltaTime);
                 return;
             }
-            
-            Limb attackLimb = attackingLimb;
-            //check if any of the limbs is close enough to attack the target
+
+            //Limb attackLimb = attackingLimb;
+            Limb steeringLimb = Character.AnimController.MainLimb;
             if (attackingLimb == null)
             {
                 AttackContext currentContext = Character.GetAttackContext();
-                foreach (Limb limb in Character.AnimController.Limbs)
+
+                if (steeringLimb != null)
                 {
-                    if (limb.attack == null) continue;
-                    if (!limb.attack.IsValidContext(currentContext)) { continue; }
-                    if (!limb.attack.IsValidTarget(selectedAiTarget.Entity)) { continue; }
-                    if (limb.IsSevered || limb.IsStuck) { continue; }
-                    attackLimb = limb;
-
-                    if (ConvertUnits.ToDisplayUnits(Vector2.Distance(limb.SimPosition, attackSimPosition)) > limb.attack.Range) continue;
-
-                    attackingLimb = limb;
-                    break;
+                    attackingLimb = Character.AnimController.Limbs
+                        .Where(l =>
+                            l.attack != null &&
+                            !l.IsSevered &&
+                            !l.IsStuck &&
+                            l.attack.IsValidContext(currentContext) &&
+                            l.attack.IsValidTarget(selectedAiTarget.Entity) &&
+                            ConvertUnits.ToDisplayUnits(Vector2.Distance(l.SimPosition, attackSimPosition)) < l.attack.Range)
+                        .OrderByDescending(l => l.attack.Priority)
+                        .FirstOrDefault();
                 }
+
+                //foreach (Limb limb in Character.AnimController.Limbs)
+                //{
+                //    if (limb.attack == null) continue;
+                //    if (!limb.attack.IsValidContext(currentContext)) { continue; }
+                //    if (!limb.attack.IsValidTarget(selectedAiTarget.Entity)) { continue; }
+                //    if (limb.IsSevered || limb.IsStuck) { continue; }
+                //    attackLimb = limb;
+
+                //    if (ConvertUnits.ToDisplayUnits(Vector2.Distance(limb.SimPosition, attackSimPosition)) > limb.attack.Range) continue;
+
+                //    attackingLimb = limb;
+                //    break;
+                //}
 
                 if (Character.IsRemotePlayer)
                 {
@@ -554,9 +569,9 @@ namespace Barotrauma
                 }
             }
 
-            if (attackLimb != null)
+            if (steeringLimb != null)
             {
-                steeringManager.SteeringSeek(attackSimPosition - (attackLimb.SimPosition - SimPosition), Character.AnimController.GetCurrentSpeed(useMaxSpeed: true));
+                steeringManager.SteeringSeek(attackSimPosition - (steeringLimb.SimPosition - SimPosition), Character.AnimController.GetCurrentSpeed(useMaxSpeed: true));
                 if (Character.CurrentHull == null)
                 {
                     SteeringManager.SteeringAvoid(deltaTime, colliderSize * 1.5f, 1.0f);
@@ -574,7 +589,7 @@ namespace Barotrauma
                         }
                         else if (indoorsSteering.CurrentPath.Finished)
                         {                            
-                            steeringManager.SteeringManual(deltaTime, attackSimPosition - attackLimb.SimPosition);
+                            steeringManager.SteeringManual(deltaTime, attackSimPosition - steeringLimb.SimPosition);
                         }
                         else if (indoorsSteering.CurrentPath.CurrentNode?.ConnectedDoor != null)
                         {
