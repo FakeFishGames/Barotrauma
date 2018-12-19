@@ -411,11 +411,26 @@ namespace Barotrauma
                     from.Y = -from.Y;
                     Vector2 to = ConvertUnits.ToDisplayUnits(attachJoint.WorldAnchorB);
                     to.Y = -to.Y;
-                    GUI.DrawLine(spriteBatch, from, to, Color.Red, width: 3);
-                    //GUI.DrawRectangle(spriteBatch, new Rectangle((int)from.X, (int)from.Y, 12, 12), Color.White, true);
-                    //GUI.DrawRectangle(spriteBatch, new Rectangle((int)to.X, (int)to.Y, 12, 12), Color.White, true);
+                    var localFront = body.GetFrontLocal(MathHelper.ToRadians(limbParams.Ragdoll.SpritesheetOrientation));
+                    var front = ConvertUnits.ToDisplayUnits(body.FarseerBody.GetWorldPoint(localFront));
+                    front.Y = -front.Y;
+                    var drawPos = body.DrawPosition;
+                    drawPos.Y = -drawPos.Y;
+                    GUI.DrawLine(spriteBatch, drawPos, front, Color.Yellow, width: 2);
+                    GUI.DrawLine(spriteBatch, from, to, Color.Red, width: 1);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)from.X, (int)from.Y, 12, 12), Color.White, true);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)to.X, (int)to.Y, 12, 12), Color.White, true);
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)from.X, (int)from.Y, 10, 10), Color.Blue, true);
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)to.X, (int)to.Y, 10, 10), Color.Red, true);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)front.X, (int)front.Y, 10, 10), Color.Yellow, true);
+
+                    //Vector2 mainLimbFront = ConvertUnits.ToDisplayUnits(ragdoll.MainLimb.body.FarseerBody.GetWorldPoint(ragdoll.MainLimb.body.GetFrontLocal(MathHelper.ToRadians(ragdoll.RagdollParams.SpritesheetOrientation))));
+                    //mainLimbFront.Y = -mainLimbFront.Y;
+                    //var mainLimbDrawPos = ragdoll.MainLimb.body.DrawPosition;
+                    //mainLimbDrawPos.Y = -mainLimbDrawPos.Y;
+                    //GUI.DrawLine(spriteBatch, mainLimbDrawPos, mainLimbFront, Color.White, width: 5);
+                    //GUI.DrawRectangle(spriteBatch, new Rectangle((int)mainLimbFront.X, (int)mainLimbFront.Y, 10, 10), Color.Yellow, true);
+
                 }
             }
         }
