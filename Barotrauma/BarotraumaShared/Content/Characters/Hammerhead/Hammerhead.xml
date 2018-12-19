@@ -18,7 +18,6 @@
     hearing="1.0">
     <targetpriority tag="stronger" state="Escape" priority="100"/>
     <targetpriority tag="human" state="Attack" priority="90"/>
-    <targetpriority tag="dead" state="Eat" priority="60"/>
     <targetpriority tag="weaker" state="Attack" priority="50"/>
     <targetpriority tag="nasonov" state="Attack" priority="50"/>
     <targetpriority tag="sonar" state="Attack" priority="45"/>
