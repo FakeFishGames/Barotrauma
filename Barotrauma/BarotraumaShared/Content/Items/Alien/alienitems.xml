@@ -169,7 +169,7 @@
     <Door canbeselected="true" horizontal="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0">
       <RequiredItem identifier="crowbar" type="Equipped" />
       <Sprite texture="Content/Items/Alien/AlienHatch.png" sourcerect="0,56,208,19" depth="0.6" origin="0.0,0.5" />
-      <sound file="Content/Items/Alien/aliendoor.ogg" type="OnUse" range="3000.0" />
+      <sound file="Content/Items/Alien/aliendoor.ogg" type="OnUse" range="1000.0" />
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0" />
     </Door>
     <ConnectionPanel canbeselected="true" hudpriority="10">
@@ -184,7 +184,7 @@
     <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0">
       <RequiredItem identifier="crowbar" type="Equipped" />
       <Sprite texture="Content/Items/Alien/AlienDoor.png" sourcerect="56,0,19,208" depth="0.6" origin="0.5,0.0" />
-      <sound file="Content/Items/Alien/aliendoor.ogg" type="OnUse" range="3000.0" />
+      <sound file="Content/Items/Alien/aliendoor.ogg" type="OnUse" range="1000.0" />
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0" />
     </Door>
     <ConnectionPanel canbeselected="true" hudpriority="10">
@@ -259,7 +259,7 @@
     <Sprite texture="Content/Items/Alien/AlienPump.png" depth="0.8" sourcerect="0,0,256,256" />
     
     <Pump canbeselected="false" maxflow="6000" PowerConsumption="300.0" MinVoltage="0.3">
-      <!-- <sound file="Content/Items/Pump/pump.ogg" type="OnActive" range="800.0" volumeproperty="CurrFlow" volume="0.01" loop="true"/> -->
+      <sound file="Content/Items/Alien/alienpump.ogg" type="OnUse" range="1500.0" volumeproperty="CurrFlow" volume="0.01" loop="true"/>
       <PumpInEmitter
         particle="watersplash"
         particlespersecond="80"
@@ -305,7 +305,7 @@
   <Item name="Alien Button" identifier="alienbutton" category="Alien" tags="smallitem,alien">    
     <Sprite texture="Content/Items/Alien/AlienButton.png" sourcerect="0,0,64,64" depth="0.8" origin="0.5,0.5" />    
     <Controller direction="None" canbepicked="true">
-      <sound file="Content/Items/Button/beep.ogg" type="OnUse" range="500.0" />
+      <sound file="Content/Items/Alien/alienbutton.ogg" type="OnUse" range="500.0" />
     </Controller>
     <ConnectionPanel canbeselected="true">
       <RequiredItem identifier="screwdriver" type="Equipped"/>
@@ -323,11 +323,8 @@
       </StatusEffect>
     </ItemContainer>
     <Turret canbeselected="false" characterusable="false" linkable="true" barrelpos="8,230" rotationlimits="0,360" powerconsumption="10000.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="50" reload="3" springstiffnesslowskill="2" springstiffnesshighskill="2" springdampinglowskill="0.5" springdampinghighskill="0.5" rotationspeedlowskill="1" rotationspeedhighskill="1">
-      <sound file="Content/Items/Weapons/coilgun.ogg" range="10000" type="OnUse" />
+      <sound file="Content/Items/Alien/alienturret.ogg" range="10000" type="OnUse" />
       <BarrelSprite texture="Content/Items/Alien/AlienTurret.png" sourcerect="2,20,286,484" origin="0.5,0.73" depth="0.4"/>
-      <MoveSound file="Content/Items/Weapons/railgunloop.ogg" />
-      <StartMoveSound file="Content/Items/Weapons/railgunstart.ogg" />
-      <EndMoveSound file="Content/Items/Weapons/railgunstop.ogg" />
       <LightComponent lightcolor="112,146,190,255" powerconsumption="10" Flicker="0.0" range="2500" IsOn="true">
         <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="1.0,0.2" />
       </LightComponent>
@@ -375,6 +372,7 @@
         <Affliction identifier="burn" strength="10"/>
       </Attack>
       <StatusEffect type="OnUse">
+        <sound file="Content/Items/Alien/aliencoil.ogg" range="8000" />
         <ParticleEmitter particle="risingbubbles" anglemin="0" anglemax="360" particleamount="50" velocitymin="50" velocitymax="100" scalemin="1" scalemax="2" />
         <Explosion range="500.0" stun="0" force="0.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
       </StatusEffect>
