@@ -275,9 +275,6 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\AlienDoorAssembly2.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\AlienDoorAssembly4.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\AlienDoorAssembly5.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
