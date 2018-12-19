@@ -479,13 +479,15 @@ namespace Barotrauma
                     case HitDetection.Distance:
                         if (dist < attack.DamageRange)
                         {
-                            wasHit = true;
                             List<Body> ignoredBodies = character.AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
                             ignoredBodies.Add(character.AnimController.Collider.FarseerBody);
 
                             structureBody = Submarine.PickBody(
                                 SimPosition, attackPosition,
                                 ignoredBodies, Physics.CollisionWall);
+                            
+                            // If the attack is aimed to a character but hits a structure, the hit is blocked. If the attack is aimed to a structure and hits a structure, it should be successful (?)
+                            wasHit = damageTarget is Structure || structureBody == null;
                         }
                         break;
                     case HitDetection.Contact:
