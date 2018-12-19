@@ -1771,6 +1771,11 @@ namespace Barotrauma
             return lowestLimb;
         }
 
+        public void ReleaseStuckLimbs()
+        {
+            Limbs.ForEach(l => l.Release());
+        }
+
         public void Remove()
         {
             if (Limbs != null)

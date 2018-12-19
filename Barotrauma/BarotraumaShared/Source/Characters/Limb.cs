@@ -638,7 +638,7 @@ namespace Barotrauma
             {
                 // Already attached to the target body, no need to do anything
                 if (attachJoint.BodyB == target) { return; }
-                Detach();
+                Release();
             }
 
             if (!ragdoll.IsStuck)
@@ -671,7 +671,7 @@ namespace Barotrauma
             GameMain.World.AddJoint(attachJoint);
         }
 
-        public void Detach()
+        public void Release()
         {
             if (!IsStuck) { return; }
             GameMain.World.RemoveJoint(attachJoint);
@@ -687,7 +687,7 @@ namespace Barotrauma
         {
             body?.Remove();
             body = null;
-            Detach();
+            Release();
             RemoveProjSpecific();
         }
 

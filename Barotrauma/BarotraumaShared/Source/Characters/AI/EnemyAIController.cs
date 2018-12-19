@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
@@ -486,6 +487,7 @@ namespace Barotrauma
                         }
 
                         latchOntoAI?.DeattachFromBody();
+                        Character.AnimController.ReleaseStuckLimbs();
                         if (steeringManager is IndoorsSteeringManager)
                         {
                             steeringManager.SteeringManual(deltaTime, targetPos - Character.WorldPosition);
@@ -701,6 +703,7 @@ namespace Barotrauma
             }
             
             latchOntoAI?.DeattachFromBody();
+            Character.AnimController.ReleaseStuckLimbs();
 
             if (attacker == null || attacker.AiTarget == null) return;
             AITargetMemory targetMemory = FindTargetMemory(attacker.AiTarget);
@@ -999,6 +1002,7 @@ namespace Barotrauma
         protected override void OnStateChanged(AIState from, AIState to)
         {
             latchOntoAI?.DeattachFromBody();
+            Character.AnimController.ReleaseStuckLimbs();
         }
 
         private int GetMinimumPassableHoleCount()
