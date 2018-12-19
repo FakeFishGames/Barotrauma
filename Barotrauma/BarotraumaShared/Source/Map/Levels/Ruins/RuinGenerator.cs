@@ -325,7 +325,7 @@ namespace Barotrauma.RuinGeneration
         {
             var entityGrid = Hull.GenerateEntityGrid(new Rectangle(ruinArea.X, ruinArea.Y + ruinArea.Height, ruinArea.Width, ruinArea.Height));
             doors.Clear();
-
+            
             allShapes = new List<RuinShape>(rooms);
             allShapes.AddRange(corridors);
 
@@ -713,29 +713,10 @@ namespace Barotrauma.RuinGeneration
                     (rect2.Y >= rect1.Y && rect2.Y <= rect1.Bottom);
             }
         }
-
+        
         private void CreateEntity(RuinEntityConfig entityConfig, RuinShape room, MapEntity parent)
         {
             if (room == null) return;
-
-            Vector2 size = Vector2.Zero;            
-            if (entityConfig.Prefab is StructurePrefab structurePrefab)
-            {
-                size = structurePrefab.Size;
-            }
-            else if (entityConfig.Prefab is ItemPrefab itemPrefab)
-            {
-                size = itemPrefab.Size;
-            }
-            else if (entityConfig.Prefab is ItemAssemblyPrefab assemblyPrefab)
-            {
-                int minX = assemblyPrefab.Entities.Min(e => e.Second.X);
-                int minY = assemblyPrefab.Entities.Min(e => e.Second.Y - e.Second.Height);
-                int maxX = assemblyPrefab.Entities.Max(e => e.Second.Right);
-                int maxY = assemblyPrefab.Entities.Max(e => e.Second.Y);
-
-                size = new Vector2(maxX - minX, maxY - minY);
-            }
 
             int leftWallThickness = 32, rightWallThickness = 32;
             int topWallThickness = 32, bottomWallThickness = 32;
@@ -756,12 +737,35 @@ namespace Barotrauma.RuinGeneration
                         leftWallThickness = (int)wall.Radius;
                 }
             }
-
+            
             Rectangle roomBounds = new Rectangle(
                 room.Rect.X + leftWallThickness,
                 room.Rect.Y + bottomWallThickness,
                 room.Rect.Width - leftWallThickness - rightWallThickness,
                 room.Rect.Height - topWallThickness - bottomWallThickness);
+            
+            Vector2 size = Vector2.Zero;
+            if (entityConfig.Prefab is StructurePrefab structurePrefab)
+            {
+                size = structurePrefab.Size;
+            }
+            else if (entityConfig.Prefab is ItemPrefab itemPrefab)
+            {
+                size = itemPrefab.Size;
+            }
+            else if (entityConfig.Prefab is ItemAssemblyPrefab assemblyPrefab)
+            {
+                size = new Vector2(assemblyPrefab.Bounds.Width, assemblyPrefab.Bounds.Height);
+
+                Vector2 boundsMin = new Vector2(-assemblyPrefab.Bounds.X, -assemblyPrefab.Bounds.Y);
+                Vector2 boundsMax = new Vector2(assemblyPrefab.Bounds.Right, assemblyPrefab.Bounds.Bottom);
+
+                roomBounds = new Rectangle(
+                    (int)(roomBounds.X + boundsMin.X),
+                    (int)(roomBounds.Y + boundsMin.Y),
+                    (int)(roomBounds.Width - boundsMin.X - boundsMax.X),
+                    (int)(roomBounds.Height - boundsMin.Y - boundsMax.Y));
+            }
 
             List<Vector2> potentialAnchorPositions = new List<Vector2>();
             if (entityConfig.Alignment.HasFlag(Alignment.Top))
@@ -805,7 +809,7 @@ namespace Barotrauma.RuinGeneration
                 bool overlapFound = false;
                 foreach (RuinEntity ruinEntity in ruinEntities)
                 {
-                    if (ruinEntity.Config.Type == RuinEntityType.Back) continue;
+                    if (ruinEntity.Config.Type == RuinEntityType.Back || ruinEntity.Config.Type == RuinEntityType.Wall) continue;
                     Vector2 diff = position - ruinEntity.Entity.Position;
                     if (Math.Abs(diff.X) < (size.X + ruinEntity.Entity.Rect.Width) / 2 &&
                         Math.Abs(diff.Y) < (size.Y + ruinEntity.Entity.Rect.Height) / 2)
