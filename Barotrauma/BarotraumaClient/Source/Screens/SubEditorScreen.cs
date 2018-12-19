@@ -405,11 +405,9 @@ namespace Barotrauma
 
             foreach (MapEntityPrefab ep in MapEntityPrefab.List)
             {
+                var itemAssemblyPrefab = ep as ItemAssemblyPrefab;
 #if !DEBUG
-                if (ep is ItemAssemblyPrefab itemAssemblyPrefab)
-                {
-                    if (itemAssemblyPrefab.HideInMenus) { continue; }
-                }
+                if (itemAssemblyPrefab != null && itemAssemblyPrefab.HideInMenus) { continue; }                
 #endif
 
                 bool legacy = ep.Category == MapEntityCategory.Legacy;
@@ -467,8 +465,6 @@ namespace Barotrauma
 
                 if (ep.Category == MapEntityCategory.ItemAssembly)
                 {
-                    var itemAssemblyPrefab = ep as ItemAssemblyPrefab;
-
                     textBlock.RectTransform.AbsoluteOffset = new Point(0, textBlock.Rect.Height);
 
                     new GUICustomComponent(new RectTransform(new Point(paddedFrame.Rect.Height, paddedFrame.Rect.Height - textBlock.Rect.Height * 2),
