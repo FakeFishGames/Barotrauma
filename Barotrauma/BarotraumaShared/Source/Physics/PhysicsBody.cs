@@ -391,22 +391,59 @@ namespace Barotrauma
             this.height = height;
             this.radius = radius;
         }
-        
-        public Vector2 GetFrontLocal()
+
+        /// <summary>
+        /// Returns the uppermost point of the body.
+        /// The rotation is in radians.
+        /// </summary>
+        public Vector2 GetUpLocal(float spritesheetRotation = 0)
         {
+            Vector2 pos;
             switch (bodyShape)
             {
                 case Shape.Capsule:
-                    return new Vector2(0.0f, height / 2 + radius);
+                    pos = new Vector2(0.0f, height / 2 + radius);
+                    break;
                 case Shape.HorizontalCapsule:
-                    return new Vector2(width / 2 + radius, 0.0f);
+                    pos = new Vector2(width / 2 + radius, 0.0f);
+                    break;
                 case Shape.Circle:
-                    return new Vector2(0.0f, radius);
+                    pos = new Vector2(0.0f, radius);
+                    break;
                 case Shape.Rectangle:
-                    return new Vector2(0.0f, height / 2.0f);
+                    pos = new Vector2(0.0f, height / 2.0f);
+                    break;
                 default:
                     throw new NotImplementedException();
             }
+            return spritesheetRotation == 0 ? pos : Vector2.Transform(pos, Matrix.CreateRotationZ(spritesheetRotation));
+        }
+
+        /// <summary>
+        /// Returns the farthest point towards the forward of the body (expects that the object is taller than it is wide): Use GetUpLocal, if you don't like the premise.
+        /// The rotation is in radians.
+        /// </summary>
+        public Vector2 GetFrontLocal(float spritesheetRotation = 0)
+        {
+            Vector2 pos;
+            switch (bodyShape)
+            {
+                case Shape.Capsule:
+                    pos = new Vector2(0.0f, Math.Max(height, width) / 2 + radius);
+                    break;
+                case Shape.HorizontalCapsule:
+                    pos = new Vector2(Math.Max(height, width) / 2 + radius, 0.0f);
+                    break;
+                case Shape.Circle:
+                    pos = new Vector2(0.0f, radius);
+                    break;
+                case Shape.Rectangle:
+                    pos = new Vector2(0.0f, Math.Max(height, width) / 2.0f);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+            return spritesheetRotation == 0 ? pos : Vector2.Transform(pos, Matrix.CreateRotationZ(spritesheetRotation));
         }
 
         public float GetMaxExtent()
