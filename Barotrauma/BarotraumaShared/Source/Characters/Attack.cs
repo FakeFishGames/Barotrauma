@@ -77,9 +77,9 @@ namespace Barotrauma
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
         public float DamageRange { get; set; }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, DecimalCount = 3)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, DecimalCount = 2)]
         public float Duration { get; private set; }
-        
+
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
         public float StructureDamage { get; private set; }
 
@@ -121,6 +121,9 @@ namespace Barotrauma
         //torque applied to the attacking limb
         [Serialize(0.0f, true), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
         public float Torque { get; private set; }
+
+        [Serialize(false, true), Editable]
+        public bool ApplyForcesOnlyOnce { get; private set; }
 
         //impulse applied to the target the attack hits
         //the direction of the impulse is from this limb towards the target (use negative values to pull the target closer)

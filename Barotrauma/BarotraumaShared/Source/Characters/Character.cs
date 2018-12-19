@@ -1142,7 +1142,7 @@ namespace Barotrauma
 
                     if (attackLimb.AttackTimer > attackLimb.attack.Duration)
                     {
-                        attackLimb.AttackTimer = 0.0f;
+                        attackLimb.ResetAttack();
                         attackCoolDown = 1.0f;
                     }
                 }

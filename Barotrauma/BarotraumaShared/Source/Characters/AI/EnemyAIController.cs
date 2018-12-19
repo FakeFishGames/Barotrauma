@@ -709,7 +709,7 @@ namespace Barotrauma
             if (limb.AttackTimer >= limb.attack.Duration)
             {
                 wallTarget = null;
-                limb.AttackTimer = 0.0f;
+                limb.ResetAttack();
                 coolDownTimer = attackCoolDown;                
             }
         }
