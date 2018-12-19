@@ -1090,7 +1090,8 @@ namespace Barotrauma
                 AttackContext currentContext = GetAttackContext();
                 var attackLimb = AnimController.Limbs
                     .Where(l => !l.IsSevered && !l.IsStuck && l.attack != null && l.attack.IsValidContext(currentContext))
-                    .OrderBy(l => Vector2.DistanceSquared(ConvertUnits.ToDisplayUnits(l.SimPosition), cursorPosition))
+                    .OrderByDescending(l => l.attack.Priority)
+                    //.OrderBy(l => Vector2.DistanceSquared(ConvertUnits.ToDisplayUnits(l.SimPosition), cursorPosition))
                     .FirstOrDefault();
 
                 if (attackLimb != null)

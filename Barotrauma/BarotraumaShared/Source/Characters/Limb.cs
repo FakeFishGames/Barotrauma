@@ -561,7 +561,6 @@ namespace Barotrauma
                                 }
                                 contactEdge = contactEdge.Next;
                             }
-
                         }
                         break;
                 }
@@ -583,9 +582,10 @@ namespace Barotrauma
                     if (structureBody != null && attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.Server))
                     {
                         // TODO: use the hit pos?
-                        var localFront = body.GetFrontLocal();
+                        var localFront = body.GetFrontLocal(MathHelper.ToRadians(ragdoll.RagdollParams.SpritesheetOrientation));
                         var from = body.FarseerBody.GetWorldPoint(localFront);
                         var to = from;
+                        var drawPos = body.DrawPosition;
                         StickTo(structureBody, from, to);
                     }
                 }
@@ -628,7 +628,11 @@ namespace Barotrauma
         private WeldJoint colliderJoint;
         public bool IsStuck => attachJoint != null;
 
-        public void StickTo(Body target, Vector2 from, Vector2 to)
+        /// <summary>
+        /// Attach the limb to a target with WeldJoints.
+        /// Uses sim units.
+        /// </summary>
+        private void StickTo(Body target, Vector2 from, Vector2 to)
         {
             if (attachJoint != null)
             {
@@ -641,14 +645,14 @@ namespace Barotrauma
             {
                 PhysicsBody mainLimbBody = ragdoll.MainLimb.body;
                 Body colliderBody = ragdoll.Collider.FarseerBody;
-                Vector2 mainLimbLocalFront = mainLimbBody.GetFrontLocal();
+                Vector2 mainLimbLocalFront = mainLimbBody.GetFrontLocal(MathHelper.ToRadians(ragdoll.RagdollParams.SpritesheetOrientation));
                 if (Dir < 0)
                 {
                     mainLimbLocalFront.X = -mainLimbLocalFront.X;
                 }
                 Vector2 mainLimbFront = mainLimbBody.FarseerBody.GetWorldPoint(mainLimbLocalFront);
                 colliderBody.SetTransform(mainLimbBody.SimPosition, mainLimbBody.Rotation);
-                // Attach the collider to the main body so that they don't go out of sync
+                // Attach the collider to the main body so that they don't go out of sync (TODO: why is the collider still rotated 90d off?)
                 colliderJoint = new WeldJoint(colliderBody, mainLimbBody.FarseerBody, mainLimbFront, mainLimbFront, true)
                 {
                     KinematicBodyB = true,
@@ -659,6 +663,8 @@ namespace Barotrauma
 
             attachJoint = new WeldJoint(body.FarseerBody, target, from, to, true)
             {
+                FrequencyHz = 1,
+                DampingRatio = 0.5f,
                 KinematicBodyB = true,
                 CollideConnected = false
             };
