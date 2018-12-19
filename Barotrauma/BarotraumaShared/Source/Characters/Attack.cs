@@ -77,7 +77,7 @@ namespace Barotrauma
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
         public float DamageRange { get; set; }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, DecimalCount = 3)]
         public float Duration { get; private set; }
         
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
