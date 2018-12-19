@@ -73,7 +73,7 @@
   </limb>
   <limb id="13" name="ClawTL2" type="LeftFoot" radius="0" width="255" notes="31cl_ClawTL2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="30" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="1,462,333,78" origin="0.5,0.5439222" subdivisions="2,2" depth="0.06" />
-    <attack targettype="Any" range="150" duration="0.1" structuredamage="10" itemdamage="10" force="125" torque="0" targetimpulse="20" targetforce="0" structuresoundtype="StructureSlash" context="NotDefined" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforceonlimbs="" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0.5" stickchance="0" priority="0" applyforcesonlyonce="True" damagerange="128.3793">
+    <attack targettype="Character" range="150" duration="0.1" structuredamage="10" itemdamage="10" force="125" torque="0" targetimpulse="20" targetforce="0" structuresoundtype="StructureSlash" context="NotDefined" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforceonlimbs="" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0.5" stickchance="0" priority="0" applyforcesonlyonce="True" damagerange="128.3793">
       <Affliction identifier="bleeding" strength="50" />
       <Affliction identifier="stun" strength="1" />
       <Affliction identifier="internaldamage" strength="20" />
@@ -81,7 +81,7 @@
   </limb>
   <limb id="17" name="ClawBL2" type="RightFoot" radius="0" width="262" notes="51cl_ClawBL2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="30" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="0,653,334,72" origin="0.5,0.5439222" subdivisions="2,2" depth="0.06" />
-    <attack targettype="Any" range="150" duration="0.1" structuredamage="10" itemdamage="10" force="125" torque="0" targetimpulse="20" targetforce="0" structuresoundtype="StructureSlash" context="NotDefined" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforceonlimbs="" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0.5" stickchance="0" priority="0" applyforcesonlyonce="True" damagerange="131.856">
+    <attack targettype="Character" range="150" duration="0.1" structuredamage="10" itemdamage="10" force="125" torque="0" targetimpulse="20" targetforce="0" structuresoundtype="StructureSlash" context="NotDefined" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforceonlimbs="" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0.5" stickchance="0" priority="0" applyforcesonlyonce="True" damagerange="131.856">
       <Affliction identifier="bleeding" strength="50" />
       <Affliction identifier="stun" strength="1" />
       <Affliction identifier="internaldamage" strength="20" />
