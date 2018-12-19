@@ -79,11 +79,12 @@
     tags="railgunequipment,railgunammosource"
     category="Machine"
     linkable="true"
-    allowedlinks="railgun">
+    allowedlinks="railgun"
+    scale="0.3">
 
-    <Sprite texture="railgunetc.png" depth="0.8" sourcerect="0,0,192,128"/>
+    <Sprite texture="RailgunLoader.png" depth="0.8" sourcerect="0,0,500,460"/>
 
-    <ItemContainer hideitems="false" drawinventory="true" capacity="6" slotsperrow="6" itempos="24,-75" iteminterval="26,0" itemrotation="90" canbeselected = "true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="6" slotsperrow="6" itempos="90,-270" iteminterval="80,0" itemrotation="90" canbeselected = "true">
       <Containable identifiers="railgunshell,nuclearshell,ancientweapon"/>
     </ItemContainer>
   </Item>
