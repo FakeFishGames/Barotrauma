@@ -135,7 +135,11 @@ namespace Barotrauma
 
         public void UpdateSubList()
         {
+#if DEBUG
             var subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus));
+#else
+            var subsToShow = Submarine.SavedSubmarines;
+#endif
 
             subList.ClearChildren();
 

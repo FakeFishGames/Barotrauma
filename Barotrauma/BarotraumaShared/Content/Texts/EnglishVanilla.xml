@@ -562,6 +562,7 @@
   <SaveSubDialogDescription>Description</SaveSubDialogDescription>
   <SaveSubDialogSettings>Settings</SaveSubDialogSettings>
   <SaveItemAssemblyDialogHeader>Save assembly</SaveItemAssemblyDialogHeader>
+  <SaveItemAssemblyHideInMenus>Hide in menus</SaveItemAssemblyHideInMenus>
   <SaveItemAssemblyDialogName>Name</SaveItemAssemblyDialogName>
   <SaveItemAssemblyDialogDescription>Description</SaveItemAssemblyDialogDescription>
   <ItemAssemblyNameMissingWarning>Name your item assembly before saving it.</ItemAssemblyNameMissingWarning>

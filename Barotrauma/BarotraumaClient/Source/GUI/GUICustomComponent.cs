@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
@@ -11,6 +12,8 @@ namespace Barotrauma
         public Action<SpriteBatch, GUICustomComponent> OnDraw;
         public Action<float, GUICustomComponent> OnUpdate;
 
+        public bool HideElementsOutsideFrame;
+
         public GUICustomComponent(RectTransform rectT, Action<SpriteBatch, GUICustomComponent> onDraw, Action<float, GUICustomComponent> onUpdate) : base(null, rectT)
         {
             OnDraw = onDraw;
@@ -19,7 +22,25 @@ namespace Barotrauma
 
         protected override void Draw(SpriteBatch spriteBatch)
         {
-            if (Visible) OnDraw?.Invoke(spriteBatch, this);
+            if (!Visible) return;
+
+            Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
+            RasterizerState prevRasterizerState = spriteBatch.GraphicsDevice.RasterizerState;
+            if (HideElementsOutsideFrame)
+            {
+                spriteBatch.End();
+                spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, Rect);
+                spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+            }
+
+            OnDraw?.Invoke(spriteBatch, this);
+
+            if (HideElementsOutsideFrame)
+            {
+                spriteBatch.End();
+                spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
+                spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: prevRasterizerState);
+            }
         }
 
         protected override void Update(float deltaTime)
