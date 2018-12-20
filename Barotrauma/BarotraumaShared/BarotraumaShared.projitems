@@ -323,7 +323,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\Automatic Windowed Door.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\Charged Alien Power Cell.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\ChargedAlienGenerator.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\Diving suit locker.xml">

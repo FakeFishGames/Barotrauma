@@ -230,12 +230,12 @@
   </Item>
   <Item name="Alien Generator" identifier="aliengenerator" category="Alien" Tags="alien" scale="0.3">
     <Sprite texture="Content/Items/Alien/AlienGenerator.png" depth="0.8" sourcerect="0,0,512,573" />
-    <!--<DecorativeSprite texture="Content/Items/Alien/AlienGenerator.png" sourcerect="9,9,48,48" depth="0.78" origin="0.5,0.5" rotationspeed="500">
+    <DecorativeSprite texture="Content/Items/Alien/AlienGenerator.png" sourcerect="167,583,178,178" depth="0.78" offset="2,-12" origin="0.5,0.5">
       <Conditional Charge="gt 1" targetitemcomponent="PowerContainer"/>
-    </DecorativeSprite>-->
+    </DecorativeSprite>
     <LightComponent lightcolor="112,146,190,50" canbeselected="false" range="800.0" IsOn="true" />
-    <ItemContainer capacity="1" canbeselected="true" hideitems="false" itempos="86,-85" autointeractwithcontained="true">
-      <Containable identifiers="sulphuriteshard">
+    <ItemContainer capacity="1" canbeselected="true" hideitems="false" itempos="264,-321" autointeractwithcontained="true">
+      <Containable identifiers="alienpowercell">
         <StatusEffect type="OnContaining" target="This" Charge="100.0" />
       </Containable>
     </ItemContainer>
@@ -249,6 +249,16 @@
       </input>
       <output name="power_out" />
     </ConnectionPanel>
+  </Item>
+  <Item name="Alien Power Cell" identifier="alienpowercell" category="Alien" Tags="alien" scale="0.3">
+    <Sprite texture="Content/Items/Alien/AlienGenerator.png" sourcerect="234,647,43,51" depth="0.7" origin="0.5,0.5" />
+    <LightComponent lightcolor="112,146,190,30" canbeselected="false" range="100.0" IsOn="true" castshadows="false" />
+    <Body width="40" height="40" density="20"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-15" handle1="0,10" handle2="0,-10">
+      <StatusEffect type="OnContained" target="Character">
+        <Affliction identifier="burn" strength="0.3" />
+      </StatusEffect>
+    </Holdable>
   </Item>
   <Item
     name="Alien Pump"

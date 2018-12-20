@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ItemAssembly name="ChargedAlienGenerator" description="" hideinmenus="true">
+  <Item name="Alien Power Cell" identifier="alienpowercell" ID="5" rect="-134,-121,12,15" description="" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.7" scale="0.3" hideinassemblypreview="true">
+    <LightComponent range="100" castshadows="False" ison="True" blinkfrequency="0" lightcolor="112,146,190,30" isactive="True" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
+    <Holdable holdpos="0,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  </Item>
+  <Item name="Alien Generator" identifier="aliengenerator" ID="4" rect="-64,96,153,171" description="" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.3">
+    <LightComponent range="800" castshadows="True" ison="True" blinkfrequency="0" lightcolor="112,146,190,50" isactive="True" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
+    <ItemContainer pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="5" />
+    <PowerContainer indicatorposition="0,0" indicatorsize="0,0" maxoutput="10000" capacity="10" charge="0" maxrechargespeed="1000" rechargespeed="0" minvoltage="0.5" powerconsumption="0" isactive="True" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
+    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="">
+      <requireditem identifiers="screwdriver" type="Equipped" msg="" />
+      <input name="shutdown" />
+      <output name="power_out" />
+    </ConnectionPanel>
+  </Item>
+</ItemAssembly>
