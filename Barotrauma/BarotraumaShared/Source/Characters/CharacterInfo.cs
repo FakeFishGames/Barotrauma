@@ -273,7 +273,7 @@ namespace Barotrauma
                 SetRandomRace();
             }
             CalculateHeadSpriteRange();
-            SetRandomHead();
+            SetRandomHeadID();
             Job = (jobPrefab == null) ? Job.Random(Rand.RandSync.Server) : new Job(jobPrefab);
             if (!string.IsNullOrEmpty(name))
             {
@@ -385,18 +385,19 @@ namespace Barotrauma
 
         public Gender SetRandomGender() => gender = (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < SourceElement.GetAttributeFloat("femaleratio", 0.5f)) ? Gender.Female : Gender.Male;
         public Race SetRandomRace() => race = new Race[] { Race.White, Race.Black, Race.Asian }.GetRandom(Rand.RandSync.Server);
+        public int SetRandomHead() => HeadSpriteId = SetRandomHeadID();
 
-        public int SetRandomHead()
+        private int SetRandomHeadID()
         {
             if (headSpriteRange != Vector2.Zero)
             {
-                HeadSpriteId = Rand.Range((int)headSpriteRange.X, (int)headSpriteRange.Y + 1);
+                headSpriteId = Rand.Range((int)headSpriteRange.X, (int)headSpriteRange.Y + 1);
             }
             else
             {
-                HeadSpriteId = 0;
+                headSpriteId = 0;
             }
-            return HeadSpriteId;
+            return headSpriteId;
         }
 
         private List<XElement> hairs;
