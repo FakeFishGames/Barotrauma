@@ -12,7 +12,7 @@
     <damagedsprite texture="Content/Characters/Human/damagedtorso.png" sourcerect="0,0,29,58" origin="0.5,0.6" depth="0" />
   </limb>
   <limb id="12" radius="13" mass="20" type="Waist" healthindex="1" name="Limb 12" flip="True" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Human/torso_[GENDER]_[RACE].png" sourcerect="24,0,116,130" depth="0.11" origin="0.3942117,0.3940344" />
+    <sprite texture="Content/Characters/Human/legs_[GENDER].png" sourcerect="24,0,116,130" depth="0.11" origin="0.3942117,0.3940344" />
     <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="0,0,32,29" origin="0.5,0.5" depth="0" />
   </limb>
   <!-- left arm -->
