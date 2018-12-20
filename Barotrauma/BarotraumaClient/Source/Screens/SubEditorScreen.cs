@@ -424,18 +424,12 @@ namespace Barotrauma
                 string name = legacy ? ep.Name + " (legacy)" : ep.Name;
                 frame.ToolTip = string.IsNullOrEmpty(ep.Description) ? name : name + '\n' + ep.Description;
 
-                GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.8f), frame.RectTransform, Anchor.Center), style: null)
-                {
+                GUILayoutGroup paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.8f), frame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
+                {              
+                    Stretch = true,
+                    RelativeSpacing = 0.03f,
                     CanBeFocused = false
                 };
-
-                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform, Anchor.BottomCenter),
-                    text: ep.Name, textAlignment: Alignment.Center, font: GUI.SmallFont)
-                {
-                    CanBeFocused = false
-                };
-                if (legacy) textBlock.TextColor *= 0.6f;
-                textBlock.Text = ToolBox.LimitString(textBlock.Text, textBlock.Font, textBlock.Rect.Width);
 
                 Sprite icon = ep.sprite;
                 Color iconColor = Color.White;
@@ -451,32 +445,40 @@ namespace Barotrauma
                         iconColor = itemPrefab.SpriteColor;
                     }
                 }
+                GUIImage img = null;
                 if (ep.sprite != null)
                 {
-                    GUIImage img = new GUIImage(new RectTransform(new Point(paddedFrame.Rect.Height, paddedFrame.Rect.Height - textBlock.Rect.Height),
+                    img = new GUIImage(new RectTransform(new Vector2(1.0f, 0.8f),
                         paddedFrame.RectTransform, Anchor.TopCenter), icon)
                     {
-                        CanBeFocused = false,
+                        CanBeFocused = false,                        
                         Color = legacy ? iconColor * 0.6f : iconColor
                     };
-                    img.Scale = Math.Min(img.Rect.Width / img.Sprite.size.X, img.Rect.Height / img.Sprite.size.Y);
-                    img.RectTransform.NonScaledSize = new Point((int)(img.Sprite.size.X * img.Scale), img.Rect.Height);
                 }
 
                 if (ep.Category == MapEntityCategory.ItemAssembly)
                 {
-                    textBlock.RectTransform.AbsoluteOffset = new Point(0, textBlock.Rect.Height);
-
-                    new GUICustomComponent(new RectTransform(new Point(paddedFrame.Rect.Height, paddedFrame.Rect.Height - textBlock.Rect.Height * 2),
+                    new GUICustomComponent(new RectTransform(new Vector2(1.0f, 0.75f),
                         paddedFrame.RectTransform, Anchor.TopCenter), onDraw: itemAssemblyPrefab.DrawIcon, onUpdate: null)
                     {
-                        HideElementsOutsideFrame = true
+                        HideElementsOutsideFrame = true,
+                        ToolTip = frame.ToolTip
                     };
+                }
 
-                    var deleteButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.2f), paddedFrame.RectTransform, Anchor.BottomCenter, Pivot.Center) { MinSize = new Point(0, 20) },
+                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform, Anchor.BottomCenter),
+                    text: ep.Name, textAlignment: Alignment.Center, font: GUI.SmallFont)
+                {
+                    CanBeFocused = false
+                };
+                if (legacy) textBlock.TextColor *= 0.6f;
+                textBlock.Text = ToolBox.LimitString(textBlock.Text, textBlock.Font, textBlock.Rect.Width);
+
+                if (ep.Category == MapEntityCategory.ItemAssembly)
+                {
+                    var deleteButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform, Anchor.BottomCenter) { MinSize = new Point(0, 20) },
                         TextManager.Get("Delete"))
                     {
-                        ClampMouseRectToParent = false,
                         UserData = ep,
                         OnClicked = (btn, userData) =>
                         {
@@ -505,7 +507,14 @@ namespace Barotrauma
                         }
                     };
                 }
+                paddedFrame.Recalculate();
+                if (img != null)
+                {
+                    img.Scale = Math.Min(Math.Min(img.Rect.Width / img.Sprite.size.X, img.Rect.Height / img.Sprite.size.Y), 1.5f);
+                    img.RectTransform.NonScaledSize = new Point((int)(img.Sprite.size.X * img.Scale), img.Rect.Height);
+                }
             }
+
 
             entityList.Content.RectTransform.SortChildren((i1, i2) => 
                 (i1.GUIComponent.UserData as MapEntityPrefab).Name.CompareTo((i2.GUIComponent.UserData as MapEntityPrefab).Name));
