@@ -18,8 +18,8 @@
     <Price locationtype="City" buyprice="19"/>
     <Price locationtype="Outpost" buyprice="19"/>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,192,64,64"/>
     <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>
@@ -42,7 +42,7 @@
     <Price locationtype="Outpost" buyprice="23"/>
 
     <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,192,64,64"/>
     <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>
@@ -64,8 +64,8 @@
     <Price locationtype="City" buyprice="23"/>
     <Price locationtype="Outpost" buyprice="23"/>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,192,64,64"/>
     <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>
@@ -87,8 +87,8 @@
     <Price locationtype="City" buyprice="26"/>
     <Price locationtype="Outpost" buyprice="26"/>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,192,64,64"/>
     <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>
@@ -110,8 +110,8 @@
     <Price locationtype="City" buyprice="30"/>
     <Price locationtype="Outpost" buyprice="30"/>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,192,64,64"/>
     <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>
@@ -133,8 +133,8 @@
     <Price locationtype="City" buyprice="36"/>
     <Price locationtype="Outpost" buyprice="36"/>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,192,64,64"/>
     <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>
@@ -156,8 +156,8 @@
     <Price locationtype="City" buyprice="41"/>
     <Price locationtype="Outpost" buyprice="41"/>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,192,64,64"/>
     <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>
@@ -179,8 +179,8 @@
     <Price locationtype="City" buyprice="47"/>
     <Price locationtype="Outpost" buyprice="47"/>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,192,64,64"/>
     <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>
@@ -202,8 +202,8 @@
     <Price locationtype="City" buyprice="47"/>
     <Price locationtype="Outpost" buyprice="47"/>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,128,64,64"/>
     <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>
@@ -224,8 +224,8 @@
     <Price locationtype="City" buyprice="47"/>
     <Price locationtype="Outpost" buyprice="47"/>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,192,64,64"/>
     <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>
@@ -246,8 +246,8 @@
     <Price locationtype="City" buyprice="62"/>
     <Price locationtype="Outpost" buyprice="62"/>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,192,64,64"/>
     <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>
@@ -269,8 +269,8 @@
     <Price locationtype="City" buyprice="71"/>
     <Price locationtype="Outpost" buyprice="71"/>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,128,64,64"/>
     <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>
@@ -292,8 +292,8 @@
     <Price locationtype="City" buyprice="71"/>
     <Price locationtype="Outpost" buyprice="71"/>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,192,64,64"/>
     <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>
@@ -327,8 +327,8 @@
     <Price locationtype="City" buyprice="90"/>
     <Price locationtype="Outpost" buyprice="90"/>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,192,64,64"/>
     <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>
@@ -350,8 +350,8 @@
     <Price locationtype="City" buyprice="90"/>
     <Price locationtype="Outpost" buyprice="90"/>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,192,64,64"/>
     <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>
@@ -386,8 +386,8 @@
     <Price locationtype="City" buyprice="119"/>
     <Price locationtype="Outpost" buyprice="119"/>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,192,64,64"/>
     <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>
@@ -409,8 +409,8 @@
     <Price locationtype="Military" buyprice="20"/>
     <Price locationtype="City" buyprice="25"/>
 
-    <!-- TODO: sprite and inventory icon-->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,192,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,256,64,64"/>
     <Sprite texture="Content/Items/Medical/med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
     <Body width="8" height="17" density="20"/>
@@ -440,8 +440,8 @@
     <Price locationtype="City" buyprice="167"/>
     <Price locationtype="Outpost" buyprice="167"/>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,192,64,64"/>
     <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>
@@ -470,7 +470,7 @@
       <Item identifier="iron"/>
     </Deconstruct>
 
-    <!-- TODO: sprite and inventory icon -->
+    <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
     <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
@@ -497,8 +497,8 @@
       <Item identifier="titanium"/>
     </Deconstruct>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,768,64,64"/>
     <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>
@@ -520,8 +520,8 @@
     <Price locationtype="City" buyprice="40"/>
     <Price locationtype="Outpost" buyprice="60"/>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="895,128,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,128,64,64"/>
     <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="20"/>
@@ -543,8 +543,8 @@
     <Price locationtype="City" buyprice="40"/>
     <Price locationtype="Outpost" buyprice="60"/>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="895,128,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,768,64,64"/>
     <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="20"/>
@@ -566,8 +566,8 @@
     <Price locationtype="City" buyprice="40"/>
     <Price locationtype="Outpost" buyprice="60"/>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="895,128,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,768,64,64"/>
     <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="20"/>
@@ -589,8 +589,8 @@
     <Price locationtype="City" buyprice="40"/>
     <Price locationtype="Outpost" buyprice="60"/>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="895,128,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,128,64,64"/>
     <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="20"/>
@@ -635,7 +635,6 @@
       </StatusEffect>
     </Throwable>
   </Item>
-
 
   <Item
     name="Incendium Bar"
