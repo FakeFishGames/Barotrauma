@@ -12,7 +12,13 @@ using System.Xml.Linq;
 namespace Barotrauma
 {
     public enum Gender { None, Male, Female };
-    public enum Race { None, White, Black, Asian };
+    public enum Race
+    {
+        None = 0,
+        White = 1,
+        Black = 2,
+        Asian = 3
+    };
     
     partial class CharacterInfo
     {
@@ -426,7 +432,7 @@ namespace Barotrauma
         {
             return elements.Where(w =>
                 Enum.TryParse(w.GetAttributeString("gender", "male"), true, out Gender g) && g == gender &&
-                Enum.TryParse(w.GetAttributeString("race", "white"), true, out Race r) && r == race);
+                Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == race);
         }
 
         private void CalculateHeadSpriteRange()
@@ -625,11 +631,11 @@ namespace Barotrauma
         {
             XElement charElement = new XElement("Character");
 
-            // TODO: race
             charElement.Add(
                 new XAttribute("name", Name),
                 new XAttribute("file", File),
                 new XAttribute("gender", gender == Gender.Male ? "m" : "f"),
+                new XAttribute("race", race.ToString()),
                 new XAttribute("salary", Salary),
                 new XAttribute("headspriteid", HeadSpriteId),
                 new XAttribute("hairindex", HairIndex),
@@ -688,15 +694,34 @@ namespace Barotrauma
 
         public void ServerWrite(NetBuffer msg)
         {
+            int raceInt;
+            switch (Race)
+            {
+                default:
+                case Race.None:
+                    raceInt = 0;
+                    break;
+                case Race.White:
+                    raceInt = 1;
+                    break;
+                case Race.Black:
+                    raceInt = 2;
+                    break;
+                case Race.Asian:
+                    raceInt = 3;
+                    break;
+            }
             msg.Write(ID);
             msg.Write(Name);
             msg.Write(Gender == Gender.Female);
+            msg.Write((byte)raceInt);
             msg.Write((byte)HeadSpriteId);
             msg.Write((byte)HairIndex);
             msg.Write((byte)BeardIndex);
             msg.Write((byte)MoustacheIndex);
             msg.Write((byte)FaceAttachmentIndex);
             msg.Write(ragdollFileName);
+
             if (Job != null)
             {
                 msg.Write(Job.Prefab.Identifier);
@@ -720,6 +745,7 @@ namespace Barotrauma
             string newName              = inc.ReadString();
             bool isFemale               = inc.ReadBoolean();
             int headSpriteID            = inc.ReadByte();
+            int race                    = inc.ReadUInt16();
             int hairIndex               = inc.ReadByte();
             int beardIndex              = inc.ReadByte();
             int moustacheIndex          = inc.ReadByte();
@@ -743,16 +769,17 @@ namespace Barotrauma
 
             // TODO: animations
 
-            CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab,  ragdollFile)
+            CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab, ragdollFile)
             {
                 ID = infoID,
+                race = (Race)race,
                 headSpriteId = headSpriteID,
                 HairIndex = hairIndex,
                 BeardIndex = beardIndex,
                 MoustacheIndex = moustacheIndex,
                 FaceAttachmentIndex = faceAttachmentIndex
             };
-            // Need to reload the attachments, because the indices were changed.
+            ch.CalculateHeadSpriteRange();
             ch.LoadHeadAttachments();
 
             System.Diagnostics.Debug.Assert(skillLevels.Count == ch.Job.Skills.Count);
