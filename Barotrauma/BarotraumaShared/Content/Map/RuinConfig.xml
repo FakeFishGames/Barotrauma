@@ -40,7 +40,7 @@
             <Wire from="state_out" to="activate" />
           </Connection>
         </item>        
-        <item prefab="chargedalienpowercell" alignment="Bottom" type="Prop">
+        <item prefab="chargedaliengenerator" alignment="Bottom" type="Prop">
           <Connection targetentity="parent">
             <Wire from="power_out" to="power_in" />
           </Connection>

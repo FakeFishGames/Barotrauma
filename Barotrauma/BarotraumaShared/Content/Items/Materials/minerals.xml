@@ -19,7 +19,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="705,515,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="390,130,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="390,130,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -47,7 +47,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="260,580,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="520,260,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="520,260,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -75,7 +75,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="520,580,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="3,390,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="3,390,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -104,7 +104,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="5,515,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="10,3,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="10,3,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -133,7 +133,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="8,580,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="3,260,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="3,260,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -161,7 +161,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="385,580,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="770,260,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="770,260,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -189,7 +189,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="130,580,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="260,260,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="260,260,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -218,7 +218,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="196,515,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="385,3,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="385,3,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -247,7 +247,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="580,515,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="140,130,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="140,130,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -276,7 +276,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="455,580,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="900,260,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="900,260,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -303,7 +303,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="645,515,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="275,130,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="275,130,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -332,7 +332,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="710,580,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="390,390,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="390,390,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -359,7 +359,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="900,515,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="770,130,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="770,130,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -388,7 +388,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="70,580,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="140,260,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="140,260,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -417,7 +417,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="575,580,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="130,390,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="130,390,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -444,7 +444,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="70,515,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="128,3,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="128,3,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -473,7 +473,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="390,515,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="785,3,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="785,3,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -503,7 +503,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="835,515,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="645,130,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="645,130,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -533,7 +533,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="770,515,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="520,130,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="520,130,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -561,7 +561,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="450,515,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="904,3,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="904,3,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -589,7 +589,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="132,515,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="262,3,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="262,3,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -618,7 +618,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="325,515,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="645,3,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="645,3,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -646,7 +646,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="323,580,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="645,260,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="645,260,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -673,7 +673,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="964,515,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="900,130,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="900,130,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -702,7 +702,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,580,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="260,390,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="260,390,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -729,7 +729,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="260,515,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="510,3,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="510,3,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -756,7 +756,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="515,515,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="10,130,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="10,130,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 
@@ -783,7 +783,7 @@
 
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="195,580,60,60"/>
-    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="390,260,120,120" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="390,260,120,120" origin="0.5,0.5" />
 
     <Body width="24" height="12" density="50"/>
 

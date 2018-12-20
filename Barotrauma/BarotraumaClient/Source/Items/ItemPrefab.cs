@@ -64,6 +64,12 @@ namespace Barotrauma
             public AnimationType RotationAnim { get; private set; }
 
             /// <summary>
+            /// If > 0, only one sprite of the same group is used (chosen randomly)
+            /// </summary>
+            [Serialize(0, false)]
+            public int RandomGroupID { get; private set; }
+
+            /// <summary>
             /// The sprite is only drawn if these conditions are fulfilled
             /// </summary>
             public List<PropertyConditional> Conditionals { get; private set; } = new List<PropertyConditional>();
@@ -137,6 +143,7 @@ namespace Barotrauma
 
         public List<BrokenItemSprite> BrokenSprites = new List<BrokenItemSprite>();
         public List<DecorativeSprite> DecorativeSprites = new List<DecorativeSprite>();
+        public Dictionary<int, List<DecorativeSprite>> DecorativeSpriteGroups = new Dictionary<int, List<DecorativeSprite>>();
         public Sprite InventoryIcon;
 
         //only used to display correct color in the sub editor, item instances have their own property that can be edited on a per-item basis
