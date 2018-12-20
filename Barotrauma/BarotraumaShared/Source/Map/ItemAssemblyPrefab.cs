@@ -15,7 +15,7 @@ namespace Barotrauma
         [Serialize(false, false)]
         public bool HideInMenus { get; set; }
         
-        public List<Pair<MapEntityPrefab, Rectangle>> Entities
+        public List<Pair<MapEntityPrefab, Rectangle>> DisplayEntities
         {
             get;
             private set;
@@ -39,15 +39,15 @@ namespace Barotrauma
 
             int minX = int.MaxValue, minY = int.MaxValue;
             int maxX = int.MinValue, maxY = int.MinValue;
-            Entities = new List<Pair<MapEntityPrefab, Rectangle>>();
+            DisplayEntities = new List<Pair<MapEntityPrefab, Rectangle>>();
             foreach (XElement entityElement in doc.Root.Elements())
             {
                 string entityName = entityElement.GetAttributeString("name", "");
                 MapEntityPrefab mapEntity = List.Find(p => p.Name == entityName);
                 Rectangle rect = entityElement.GetAttributeRect("rect", Rectangle.Empty);
-                if (mapEntity != null)
+                if (mapEntity != null && !entityElement.GetAttributeBool("hideinassemblypreview", false))
                 {
-                    Entities.Add(new Pair<MapEntityPrefab, Rectangle>(mapEntity, rect));
+                    DisplayEntities.Add(new Pair<MapEntityPrefab, Rectangle>(mapEntity, rect));
                     minX = Math.Min(minX, rect.X);
                     minY = Math.Min(minY, rect.Y - rect.Height);
                     maxX = Math.Max(maxX, rect.Right);
