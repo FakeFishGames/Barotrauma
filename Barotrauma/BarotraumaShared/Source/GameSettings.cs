@@ -109,6 +109,7 @@ namespace Barotrauma
         public int CharacterFaceAttachmentIndex { get; set; }
 
         public Gender CharacterGender { get; set; }
+        public Race CharacterRace { get; set; }
 
         private float aimAssistAmount;
         public float AimAssistAmount
@@ -379,6 +380,10 @@ namespace Barotrauma
                         CharacterHeadIndex = subElement.GetAttributeInt("headindex", Rand.Int(10));
                         CharacterGender = subElement.GetAttributeString("gender", Rand.Range(0.0f, 1.0f) < 0.5f ? "male" : "female")
                             .ToLowerInvariant() == "male" ? Gender.Male : Gender.Female;
+                        if (Enum.TryParse(subElement.GetAttributeString("race", "white"), true, out Race r))
+                        {
+                            CharacterRace = r;
+                        }
                         CharacterHairIndex = subElement.GetAttributeInt("hairindex", -1);
                         CharacterBeardIndex = subElement.GetAttributeInt("beardindex", -1);
                         CharacterMoustacheIndex = subElement.GetAttributeInt("moustacheindex", -1);
@@ -528,6 +533,7 @@ namespace Barotrauma
                 new XAttribute("name", defaultPlayerName ?? ""),
                 new XAttribute("headindex", CharacterHeadIndex),
                 new XAttribute("gender", CharacterGender),
+                new XAttribute("race", CharacterRace),
                 new XAttribute("hairindex", CharacterHairIndex),
                 new XAttribute("beardindex", CharacterBeardIndex),
                 new XAttribute("moustacheindex", CharacterMoustacheIndex),
