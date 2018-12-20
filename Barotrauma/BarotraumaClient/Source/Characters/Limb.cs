@@ -411,7 +411,7 @@ namespace Barotrauma
                     from.Y = -from.Y;
                     Vector2 to = ConvertUnits.ToDisplayUnits(attachJoint.WorldAnchorB);
                     to.Y = -to.Y;
-                    var localFront = body.GetFrontLocal(MathHelper.ToRadians(limbParams.Ragdoll.SpritesheetOrientation));
+                    var localFront = body.GetLocalFront(MathHelper.ToRadians(limbParams.Ragdoll.SpritesheetOrientation));
                     var front = ConvertUnits.ToDisplayUnits(body.FarseerBody.GetWorldPoint(localFront));
                     front.Y = -front.Y;
                     var drawPos = body.DrawPosition;

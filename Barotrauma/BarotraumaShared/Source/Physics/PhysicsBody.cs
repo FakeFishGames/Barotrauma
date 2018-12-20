@@ -393,10 +393,13 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Returns the uppermost point of the body.
+        /// Returns the farthest point towards the forward of the body.
+        /// For capsules and circles, the front is at the top.
+        /// For horizontal capsules, the front is at the right-most point.
+        /// For rectangles, the front is either at the top or at the right, depending on which one of the two is greater: width or height.
         /// The rotation is in radians.
         /// </summary>
-        public Vector2 GetUpLocal(float spritesheetRotation = 0)
+        public Vector2 GetLocalFront(float spritesheetRotation = 0)
         {
             Vector2 pos;
             switch (bodyShape)
@@ -406,33 +409,6 @@ namespace Barotrauma
                     break;
                 case Shape.HorizontalCapsule:
                     pos = new Vector2(width / 2 + radius, 0.0f);
-                    break;
-                case Shape.Circle:
-                    pos = new Vector2(0.0f, radius);
-                    break;
-                case Shape.Rectangle:
-                    pos = new Vector2(0.0f, height / 2.0f);
-                    break;
-                default:
-                    throw new NotImplementedException();
-            }
-            return spritesheetRotation == 0 ? pos : Vector2.Transform(pos, Matrix.CreateRotationZ(spritesheetRotation));
-        }
-
-        /// <summary>
-        /// Returns the farthest point towards the forward of the body (expects that the object is taller than it is wide): Use GetUpLocal, if you don't like the premise.
-        /// The rotation is in radians.
-        /// </summary>
-        public Vector2 GetFrontLocal(float spritesheetRotation = 0)
-        {
-            Vector2 pos;
-            switch (bodyShape)
-            {
-                case Shape.Capsule:
-                    pos = new Vector2(0.0f, Math.Max(height, width) / 2 + radius);
-                    break;
-                case Shape.HorizontalCapsule:
-                    pos = new Vector2(Math.Max(height, width) / 2 + radius, 0.0f);
                     break;
                 case Shape.Circle:
                     pos = new Vector2(0.0f, radius);

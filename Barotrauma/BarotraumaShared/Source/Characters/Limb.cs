@@ -582,7 +582,7 @@ namespace Barotrauma
                     if (structureBody != null && attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.Server))
                     {
                         // TODO: use the hit pos?
-                        var localFront = body.GetFrontLocal(MathHelper.ToRadians(ragdoll.RagdollParams.SpritesheetOrientation));
+                        var localFront = body.GetLocalFront(MathHelper.ToRadians(ragdoll.RagdollParams.SpritesheetOrientation));
                         var from = body.FarseerBody.GetWorldPoint(localFront);
                         var to = from;
                         var drawPos = body.DrawPosition;
@@ -645,7 +645,7 @@ namespace Barotrauma
             {
                 PhysicsBody mainLimbBody = ragdoll.MainLimb.body;
                 Body colliderBody = ragdoll.Collider.FarseerBody;
-                Vector2 mainLimbLocalFront = mainLimbBody.GetFrontLocal(MathHelper.ToRadians(ragdoll.RagdollParams.SpritesheetOrientation));
+                Vector2 mainLimbLocalFront = mainLimbBody.GetLocalFront(MathHelper.ToRadians(ragdoll.RagdollParams.SpritesheetOrientation));
                 if (Dir < 0)
                 {
                     mainLimbLocalFront.X = -mainLimbLocalFront.X;
