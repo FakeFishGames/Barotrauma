@@ -419,12 +419,20 @@ namespace Barotrauma
                 var wearables = FilterElementsByGenderAndRace(Wearables);
                 if (wearables.None())
                 {
-                    DebugConsole.ThrowError($"[CharacterInfo] No headidrange defined and no wearables mathing the gender {gender} and the race {race} could be found. Total wearables found: {Wearables.Count()}.");
+                    DebugConsole.ThrowError($"[CharacterInfo] No headidrange defined and no wearables matching the gender {gender} and the race {race} could be found. Total wearables found: {Wearables.Count()}.");
                     return;
                 }
                 else
                 {
-                    headSpriteRange = new Vector2(1, wearables.Count());
+                    // Ignore head ids that are less than 1, because they are not supported.
+                    var ids = wearables.Select(w => w.GetAttributeInt("headid", -1)).Where(id => id > 0);
+                    if (ids.None())
+                    {
+                        DebugConsole.ThrowError($"[CharacterInfo] Wearables with matching gender and race were found but none with a valid headid! Total wearables found: {Wearables.Count()}.");
+                        return;
+                    }
+                    ids = ids.OrderBy(id => id);
+                    headSpriteRange = new Vector2(ids.First(), ids.Last());
                 }
             }
             HeadSpriteId = Rand.Range((int)headSpriteRange.X, (int)headSpriteRange.Y + 1, Rand.RandSync.Server);
@@ -608,6 +616,7 @@ namespace Barotrauma
         {
             XElement charElement = new XElement("Character");
 
+            // TODO: race
             charElement.Add(
                 new XAttribute("name", Name),
                 new XAttribute("file", File),
