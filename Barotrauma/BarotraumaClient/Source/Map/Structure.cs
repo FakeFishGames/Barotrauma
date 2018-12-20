@@ -28,7 +28,7 @@ namespace Barotrauma
         }
 
         protected Vector2 textureScale = Vector2.One;
-        [Editable, Serialize("1.0, 1.0", true)]
+        [Editable(DecimalCount = 3), Serialize("1.0, 1.0", true)]
         public Vector2 TextureScale
         {
             get { return textureScale; }
