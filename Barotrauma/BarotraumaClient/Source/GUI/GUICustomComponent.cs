@@ -25,7 +25,6 @@ namespace Barotrauma
             if (!Visible) return;
 
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
-            RasterizerState prevRasterizerState = spriteBatch.GraphicsDevice.RasterizerState;
             if (HideElementsOutsideFrame)
             {
                 spriteBatch.End();
@@ -39,7 +38,7 @@ namespace Barotrauma
             {
                 spriteBatch.End();
                 spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
-                spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: prevRasterizerState);
+                spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
             }
         }
 
