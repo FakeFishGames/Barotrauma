@@ -278,12 +278,12 @@
     </ConnectionPanel>
   </Item>
   <Item name="Alien Power Cell" identifier="alienpowercell" category="Alien" Tags="alien" scale="0.3">
-    <Sprite texture="Content/Items/Alien/AlienGenerator.png" sourcerect="234,647,43,51" depth="0.7" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Alien/AlienPowerCell.png" sourcerect="47,25,34,77" depth="0.7" origin="0.5,0.5" />
     <LightComponent lightcolor="112,146,190,30" canbeselected="false" range="100.0" IsOn="true" castshadows="false" />
-    <Body width="40" height="40" density="20"/>
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-15" handle1="0,10" handle2="0,-10">
+    <Body radius="15" height="40" density="20"/>
+    <Holdable slots="RightHand,LeftHand,Any">
       <StatusEffect type="OnContained" target="Character">
-        <Affliction identifier="burn" strength="0.3" />
+        <Affliction identifier="burn" strength="0.15" />
       </StatusEffect>
     </Holdable>
   </Item>
