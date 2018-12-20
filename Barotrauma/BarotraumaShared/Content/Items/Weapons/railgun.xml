@@ -56,7 +56,7 @@
     disableitemusagewhenselected="true"
     scale="0.2">
 
-    <Sprite texture ="periscope.png" depth="0.8" sourcerect="0,0,344,506"/>
+    <Sprite texture="periscope.png" depth="0.8" sourcerect="0,0,344,506"/>
 
     <Controller UserPos="-35.0, -50.0" direction ="Right" canbeselected="true" requireaimtouse="true">
       <limbposition limb="Head" position="-5,-62"/>
@@ -79,11 +79,12 @@
     tags="railgunequipment,railgunammosource"
     category="Machine"
     linkable="true"
-    allowedlinks="railgun">
+    allowedlinks="railgun"
+    scale="0.3">
 
-    <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="0,0,192,128"/>
+    <Sprite texture="RailgunLoader.png" depth="0.8" sourcerect="0,0,500,460"/>
 
-    <ItemContainer hideitems="false" drawinventory="true" capacity="6" slotsperrow="6" itempos="24,-75" iteminterval="26,0" itemrotation="90" canbeselected = "true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="6" slotsperrow="6" itempos="90,-270" iteminterval="80,0" itemrotation="90" canbeselected = "true">
       <Containable identifiers="railgunshell,nuclearshell,ancientweapon"/>
     </ItemContainer>
   </Item>
@@ -97,7 +98,7 @@
     allowedlinks="railgun"
     scale="0.26">
 
-    <Sprite texture ="railgunsingleloader_vertical.png" depth="0.8" sourcerect="0,0,225,636"/>
+    <Sprite texture="railgunsingleloader_vertical.png" depth="0.8" sourcerect="0,0,225,636"/>
 
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="110,-275" iteminterval="0,0" itemrotation="90" canbeselected="true"
                    autointeractwithcontained="true">
@@ -114,7 +115,7 @@
     allowedlinks="railgun"
     scale="0.26">
 
-    <Sprite texture ="railgunsingleloader_horizontal.png" depth="0.8" sourcerect="0,0,636,225"/>
+    <Sprite texture="railgunsingleloader_horizontal.png" depth="0.8" sourcerect="0,0,636,225"/>
 
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="275,-110" iteminterval="0,0" itemrotation="180" canbeselected="true"
                    autointeractwithcontained="true">
@@ -129,7 +130,7 @@
     linkable="true"
     allowedlinks="railgun">
 
-    <Sprite texture ="railgunetc2.png" depth="0.8" sourcerect="1,2,128,46"/>
+    <Sprite texture="railgunetc2.png" depth="0.8" sourcerect="1,2,128,46"/>
 
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="49.5,-22.7" iteminterval="0,0" itemrotation="0" canbeselected="true"
                    autointeractwithcontained="true">
@@ -144,7 +145,7 @@
     linkable="true"
     allowedlinks="railgun">
 
-    <Sprite texture ="railgunetc2.png" depth="0.8" sourcerect="1,50,128,46"/>
+    <Sprite texture="railgunetc2.png" depth="0.8" sourcerect="1,50,128,46"/>
 
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="76,-22.7" iteminterval="0,0" itemrotation="180" canbeselected = "true"
                    autointeractwithcontained="true">
@@ -165,9 +166,7 @@
     <Price locationtype="Outpost" buyprice="250"/>
 
     <Deconstruct time="10">
-      <Item identifier="steelbar"/>
-      <Item identifier="steelbar"/>
-      <Item identifier="polycarbonatebar"/>
+      <Item identifier="steel"/>
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,128,64,64"/>
@@ -205,10 +204,9 @@
     <Price locationtype="Military" buyprice="400"/>
     
     <Deconstruct time="10">
-      <Item identifier="steelbar"/>
-      <Item identifier="steelbar"/>
-      <Item identifier="uraniumbar"/>
-      <Item identifier="polycarbonatebar"/>
+      <Item identifier="steel"/>
+      <Item identifier="uranium"/>
+      <Item identifier="uex"/>
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,128,64,64"/>

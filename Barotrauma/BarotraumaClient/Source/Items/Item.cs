@@ -57,10 +57,7 @@ namespace Barotrauma
                 return parentInventory == null && (body == null || body.Enabled) && ShowItems;
             }
         }
-
-        [Serialize(false, true), Editable(ToolTip = "Enable if you want to display the item HUD side by side with another item's HUD, when linked together. ")]
-        public bool DisplaySideBySideWhenLinked { get; set; }
-
+              
         public float SpriteRotation;
 
         public Color GetSpriteColor()

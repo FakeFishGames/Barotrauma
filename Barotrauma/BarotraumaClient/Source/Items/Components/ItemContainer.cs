@@ -37,7 +37,7 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
-
+        
         partial void InitProjSpecific(XElement element)
         {
             foreach (XElement subElement in element.Elements())
@@ -156,6 +156,11 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
+            if (Inventory.RectTransform != null)
+            {
+                guiCustomComponent.RectTransform.Parent = Inventory.RectTransform;
+            }
+
             //if the item is in the character's inventory, no need to update the item's inventory 
             //because the player can see it by hovering the cursor over the item
             guiCustomComponent.Visible = item.ParentInventory?.Owner != character && DrawInventory;

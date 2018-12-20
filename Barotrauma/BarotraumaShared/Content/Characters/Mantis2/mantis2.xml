@@ -12,7 +12,6 @@
   <gibemitter particle="heavygib" particleamount="10" velocitymin="50" velocitymax="500" anglemin="0" anglemax="360"/>
   
   <Inventory slots="Any, Any" accessiblewhenalive="false">
-    <Item identifier="mantisshell"/>
     <Item identifier="swimbladder"/>
   </Inventory>
   

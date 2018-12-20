@@ -492,7 +492,14 @@ namespace Barotrauma
                     rootInventory.Owner != Character.Controlled.SelectedConstruction &&
                     rootInventory.Owner != Character.Controlled.SelectedCharacter)
                 {
-                    draggingItem = null;
+                    //allow interacting if the container is linked to the item the character is interacting with
+                    if (!(rootContainer != null && 
+                        rootContainer.DisplaySideBySideWhenLinked && 
+                        Character.Controlled.SelectedConstruction != null &&
+                        rootContainer.linkedTo.Contains(Character.Controlled.SelectedConstruction)))
+                    {
+                        draggingItem = null;
+                    }
                 }
             }
 

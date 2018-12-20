@@ -7,8 +7,8 @@
     <Price locationtype="Outpost" buyprice="20" />
     <Sprite texture="button.png" sourcerect="0,0,24,27" depth="0.8" origin="0.5,0.5" />
     <Deconstruct time="10">
-      <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
+      <Item identifier="plastic" />
     </Deconstruct>
     <Body width="32" height="32" density="40" />
     <Controller direction="None" canbepicked="true" msg="ItemMsgPressSelect">
@@ -32,8 +32,8 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,448,64,64" />
     <Sprite texture="button.png" sourcerect="24,0,11,17" depth="0.79" origin="0.5,0.5" />
     <Deconstruct time="10">
-      <Item identifier="steelbar" />
       <Item identifier="fpgacircuit" />
+      <Item identifier="plastic" />
     </Deconstruct>
     <Body width="12" height="16" density="20" />
     <Controller direction="None" canbepicked="true" msg="ItemMsgPressSelect">

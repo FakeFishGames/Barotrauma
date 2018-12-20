@@ -562,6 +562,7 @@
   <SaveSubDialogDescription>Description</SaveSubDialogDescription>
   <SaveSubDialogSettings>Settings</SaveSubDialogSettings>
   <SaveItemAssemblyDialogHeader>Save assembly</SaveItemAssemblyDialogHeader>
+  <SaveItemAssemblyHideInMenus>Hide in menus</SaveItemAssemblyHideInMenus>
   <SaveItemAssemblyDialogName>Name</SaveItemAssemblyDialogName>
   <SaveItemAssemblyDialogDescription>Description</SaveItemAssemblyDialogDescription>
   <ItemAssemblyNameMissingWarning>Name your item assembly before saving it.</ItemAssemblyNameMissingWarning>
@@ -670,12 +671,16 @@
   <EngineBackwards>Backwards</EngineBackwards>
   <EngineForwards>Forwards</EngineForwards>
   <EnginePowered>Powered</EnginePowered>
+  <FabricatorNoPower>Insufficient power</FabricatorNoPower>
   <FabricatorRequiredItems>Required items</FabricatorRequiredItems>
   <FabricatorRequiredTime>Required time</FabricatorRequiredTime>
   <FabricatorRequiredCondition>Condition</FabricatorRequiredCondition>
   <FabricatorRequiredSkills>Skills required to calibrate</FabricatorRequiredSkills>
   <FabricatorCreate>Create</FabricatorCreate>
-  <DeconstuctorDeconstruct>Deconstruct</DeconstuctorDeconstruct>
+  <FabricatorCancel>Cancel</FabricatorCancel>
+  <DeconstructorNoPower>Insufficient power</DeconstructorNoPower>
+  <DeconstructorDeconstruct>Deconstruct</DeconstructorDeconstruct>
+  <DeconstructorCancel>Cancel</DeconstructorCancel>
   <Lvl>Lvl</Lvl>
   <MiniMapHullBreach>Hull breach</MiniMapHullBreach>
   <MiniMapWaterLevel>Water level</MiniMapWaterLevel>

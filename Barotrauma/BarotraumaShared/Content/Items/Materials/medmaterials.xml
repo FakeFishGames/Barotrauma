@@ -1,0 +1,134 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Items>
+  <Item
+    name="Fiber Plant"
+    identifier="fiberplant"
+    category="Material"
+    Tags="smallitem,plant"
+    canbepicked="true"
+    cargocontaineridentifier="metalcrate">
+
+    <Deconstruct time="5">
+      <Item identifier="organicfiber"/>
+      <Item identifier="organicfiber"/>
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="1">
+      <Commonness commonness="2"/>
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Elastin Plant"
+    identifier="elastinplant"
+    category="Material"
+    Tags="smallitem,plant"
+    canbepicked="true"
+    cargocontaineridentifier="metalcrate">
+
+    <Deconstruct time="5">
+      <Item identifier="elastin"/>
+      <Item identifier="elastin"/>
+      <Item identifier="elastin"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="1">
+      <Commonness commonness="2"/>
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Aquatic Poppy"
+    identifier="aquaticpoppy"
+    category="Material"
+    Tags="smallitem,plant"
+    canbepicked="true"
+    cargocontaineridentifier="metalcrate">
+
+    <Deconstruct time="5">
+      <Item identifier="opium"/>
+      <Item identifier="opium"/>
+      <Item identifier="opium"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="1">
+      <Commonness commonness="2"/>
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Sea Yeast Shroom"
+    identifier="yeastshroom"
+    category="Material"
+    Tags="smallitem,plant"
+    canbepicked="true"
+    cargocontaineridentifier="metalcrate">
+
+    <Deconstruct time="5">
+      <Item identifier="ethanol"/>
+      <Item identifier="ethanol"/>
+      <Item identifier="ethanol"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="1">
+      <Commonness commonness="2"/>
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Slime Bacteria"
+    identifier="slimebacteria"
+    category="Material"
+    Tags="smallitem,plant"
+    canbepicked="true"
+    description="A colony of myxobacteria. Can be processed into antibiotics."
+    cargocontaineridentifier="metalcrate">
+
+    <Deconstruct time="5">
+      <Item identifier="antibiotics"/>
+      <Item identifier="antibiotics"/>
+      <Item identifier="antibiotics"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="1">
+      <Commonness commonness="2"/>
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+</Items>

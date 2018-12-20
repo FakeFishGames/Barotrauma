@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ItemAssembly name="Alien Turret Assembly" description="">
+<ItemAssembly name="Alien Turret Assembly" description="" hideinmenus="true">
   <Item name="Alien Turret" identifier="alienturret" ID="9" rect="-71,121,143,242" displaysidebysidewhenlinked="False" description="" spritecolor="1,1,1,1" inventoryiconcolor="1,1,1,1" containercolor="1,1,1,1" tags="turret,alien" spritedepth="0.1" scale="1">
     <ItemContainer pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="0" />
     <LightComponent range="2048" castshadows="True" ison="True" blinkfrequency="0" lightcolor="0.4392157,0.5686275,0.7450981,1" isactive="True" minvoltage="0.5" powerconsumption="50" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
@@ -59,7 +59,7 @@
       </output>
     </ConnectionPanel>
   </Item>
-  <Item name="Alien Power Cell" identifier="alienpowercell" ID="23" rect="-64,-32,113,167" displaysidebysidewhenlinked="False" description="" spritecolor="1,1,1,1" inventoryiconcolor="1,1,1,1" containercolor="1,1,1,1" tags="alien" spritedepth="0.8" scale="1">
+  <Item name="Alien Generator" identifier="aliengenerator" ID="23" rect="-64,-32,113,167" displaysidebysidewhenlinked="False" description="" spritecolor="1,1,1,1" inventoryiconcolor="1,1,1,1" containercolor="1,1,1,1" tags="alien" spritedepth="0.8" scale="1">
     <LightComponent range="800" castshadows="True" ison="True" blinkfrequency="0" lightcolor="0.4392157,0.5686275,0.7450981,1" isactive="True" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <ItemContainer pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="24" />
     <PowerContainer indicatorposition="0,0" indicatorsize="0,0" maxoutput="10000" capacity="10" charge="0" maxrechargespeed="1000" rechargespeed="0" minvoltage="0.5" powerconsumption="0" isactive="True" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />

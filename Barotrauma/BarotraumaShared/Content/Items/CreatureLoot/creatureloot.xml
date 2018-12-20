@@ -1,61 +1,112 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Items>
+  
   <Item
-    name="Crawler Shell"
-    identifier="crawlershell"
-    description="Contains high concentrations of phosphorus."
-    category="Misc">
+    name="Alien Blood"
+    identifier="alienblood"
+    category="Material"
+    spritecolor="0.5,0.0,0.0,1.0"
+    containercolor="0.5,0.0,0.0,1.0"
+    cargocontaineridentifier="chemicalcrate"
+    description="Blood extracted from an Europan lifeform. Can be further processed into a blood substitute for the treatment of blood loss."
+    Tags="smallitem,chem,medical"
+    useinhealthinterface="true">
+    
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="60"/>
 
-    <Sprite texture="CreatureLoot.png" depth="0.7" sourcerect="1,44,50,30"/>
+    <!-- TODO: sprite and inventory icons -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,192,64,64"/>
+    <Sprite texture="Content/Items/Medical/med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
-    <Deconstruct time="30">
-      <Item identifier="phosphorus"/>
-      <Item identifier="phosphorus"/>
-      <Item identifier="phosphorus"/>
-    </Deconstruct>
+    <Body width="8" height="17" density="20"/>
 
-    <Body width="15" radius="15"/>
-
-    <Holdable slots="RightHand+LeftHand,Any" holdpos="0,-70" handle1="0,10" handle2="0,-10"/>
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">     
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect tags="poison" type="OnUse" target="Character" delay="20" duration="20.0">
+        <Affliction identifier="psychosis" amount="1"/>
+        <Affliction identifier="internaldamage" amount="0.2"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
   </Item>
   
   <Item
-    name="Mantis Shell"
-    identifier="mantisshell"
-    description="Contains high concentrations of potassium."
-    category="Misc">
+    name="Velonaceps Calyx Eggs"
+    identifier="huskeggs"
+    category="Material"
+    spritecolor="0.0,0.0,0.0,1.0"
+    containercolor="0.1,0.1,0.1,1.0"
+    cargocontaineridentifier="chemicalcrate"
+    Tags="smallitem,chem,medical"
+    description="Dormant eggs of the Europan lifeform colloquially referred to as 'husk parasite'."
+    useinhealthinterface="true">
 
-    <Sprite texture="CreatureLoot.png" depth="0.7" sourcerect="0,76,53,46"/>
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="1200"/>
+    
+    <!-- TODO: sprite and inventory icons -->
+    <Sprite texture="Content/Items/Medical/med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
-    <Deconstruct time="30">
-      <Item identifier="potassium"/>
-      <Item identifier="potassium"/>
-      <Item identifier="potassium"/>
-    </Deconstruct>
+    <Body width="8" height="16" density="20"/>
 
-    <Body width="10" radius="20"/>
-
-    <Holdable slots="RightHand+LeftHand,Any" holdpos="0,-70" handle1="0,10" handle2="0,-10"/>
-  </Item>  
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect type="OnUse" target="Character" HuskInfectionState="0.01">
+        <!-- HuskInfectionState must be less than 0.01 so you can't speed up the infection -->
+        <Conditional HuskInfectionState="lt 0.01"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
   
   <Item
     name="Swim Bladder"
     identifier="swimbladder"
-    description="Many Europan lifeforms have a swim bladder containing tissue fluids that can be easily processed into ethanol and stabilozine."
+    description="Many Europan lifeforms have a swim bladder containing tissue fluids that can be easily processed into stabilozine and saline."
     category="Misc">
 
+    <!-- TODO: sprite and inventory icons -->
     <Sprite texture="CreatureLoot.png" depth="0.7" sourcerect="0,3,39,34"/>
 
     <Deconstruct time="10">
-      <Item identifier="ethanol"/>
-      <Item identifier="ethanol"/>
-      <Item identifier="ethanol"/>
       <Item identifier="stabilozine"/>
       <Item identifier="stabilozine"/>
+      <Item identifier="antibloodloss1"/>
+      <Item identifier="antibloodloss1"/>
+      <Item identifier="antibloodloss1"/>
     </Deconstruct>
 
     <Body radius="16"/>
 
-    <Holdable slots="RightHand+LeftHand,Any" holdpos="0,-70" handle1="0,10" handle2="0,-10"/>
+    <Holdable slots="RightHand,LeftHand,Any" holdpos="0,-70" handle1="0,10" handle2="0,-10"/>
+  </Item>
+
+  <Item
+    name="Adrenaline Gland"
+    identifier="adrenalinegland"
+    description="Contains large amounts of adrenaline, which can be extracted using a deconstructor."
+    category="Misc">
+
+    <!-- TODO: sprite and inventory icons -->
+    <Sprite texture="CreatureLoot.png" depth="0.7" sourcerect="0,3,39,34"/>
+
+    <Deconstruct time="10">
+      <Item identifier="adrenaline"/>
+      <Item identifier="adrenaline"/>
+      <Item identifier="adrenaline"/>
+      <Item identifier="adrenaline"/>
+    </Deconstruct>
+
+    <Body radius="16"/>
+
+    <Holdable slots="RightHand,LeftHand,Any" holdpos="0,-70" handle1="0,10" handle2="0,-10"/>
   </Item>
 </Items>

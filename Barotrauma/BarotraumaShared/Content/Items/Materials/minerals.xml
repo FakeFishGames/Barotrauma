@@ -1,0 +1,799 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Items>
+  <Item
+    name="Titanite"
+    identifier="titanite"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A mineral containing titanium and iron."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="titanium"/>
+      <Item identifier="titanium"/>
+      <Item identifier="titanium"/>
+      <Item identifier="iron"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="705,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="390,130,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="2"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Brockite"
+    identifier="brockite"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A mineral containing titanium and phosphorus."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="phosphorus"/>
+      <Item identifier="thorium"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="260,580,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="520,260,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="2"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Thorianite"
+    identifier="thorianite"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A rare mineral containing thorium."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="thorium"/>
+      <Item identifier="thorium"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="520,580,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="3,390,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="2"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Amblygonite"
+    identifier="amblygonite"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A mineral composed of lithium, aluminium and sodium."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="lithium"/>
+      <Item identifier="aluminium"/>
+      <Item identifier="sodium"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="5,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="10,3,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="3"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Sphalerite"
+    identifier="sphalerite"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A mineral consisting largely of zinc in crystalline form."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="zinc"/>
+      <Item identifier="zinc"/>
+      <Item identifier="zinc"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="8,580,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="3,260,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="3"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Pyromorphite"
+    identifier="pyromorphite"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A mineral composed of chlorine."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="chlorine"/>
+      <Item identifier="chlorine"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="385,580,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="770,260,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="3"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Quartz"
+    identifier="quartz"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A crystalline mineral composed of silicon."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="silicon"/>
+      <Item identifier="silicon"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="130,580,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="260,260,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="3"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Diamond"
+    identifier="diamond"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A crystal composed of solid carbon."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="carbon"/>
+      <Item identifier="carbon"/>
+      <Item identifier="carbon"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="196,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="385,3,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="4"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Hydroxyapatite"
+    identifier="hydroxyapatite"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A mineral composed of calcium and phosphorus."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="calcium"/>
+      <Item identifier="phosphorus"/>
+      <Item identifier="phosphorus"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="580,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="140,130,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="4"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Uranium Ore"
+    identifier="uraniumore"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A mineral containing large concentrations of uranium."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="uranium"/>
+      <Item identifier="uranium"/>
+      <Item identifier="uranium"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="455,580,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="900,260,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="4"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Ilmenite"
+    identifier="ilmenite"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A mineral containing titanium."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="titanium"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="645,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="275,130,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="4"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Stannite"
+    identifier="stannite"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A mineral composed of copper, iron and tin."
+    cargocontaineridentifier="metalcrate"
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="copper"/>
+      <Item identifier="iron"/>
+      <Item identifier="tin"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="710,580,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="390,390,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="4"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Chalcopyrite"
+    identifier="chalcopyrite"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A mineral containing copper."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="copper"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="900,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="770,130,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="4"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Esperite"
+    identifier="esperite"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A mineral composed of zinc and lead."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="zinc"/>
+      <Item identifier="zinc"/>
+      <Item identifier="lead"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="70,580,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="140,260,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="4"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Galena"
+    identifier="galena"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A mineral mostly consisting of lead."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="lead"/>
+      <Item identifier="lead"/>
+      <Item identifier="lead"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="575,580,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="130,390,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="5"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Triphylite"
+    identifier="triphylite"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A mineral containing lithium."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="lithium"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="70,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="128,3,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="5"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Langbeinite"
+    identifier="langbeinite"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A mineral consisting of potassium and magnesium."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="potassium"/>
+      <Item identifier="magnesium"/>
+      <Item identifier="magnesium"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="390,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="785,3,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="5"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Chamosite"
+    identifier="chamosite"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A mineral consisting of iron and aluminium."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="iron"/>
+      <Item identifier="iron"/>
+      <Item identifier="aluminium"/>
+      <Item identifier="aluminium"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="835,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="645,130,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="5"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Iron Ore"
+    identifier="ironore"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A mineral containing large amounts of iron."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="iron"/>
+      <Item identifier="iron"/>
+      <Item identifier="iron"/>
+      <Item identifier="iron"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="770,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="520,130,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="5"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Polyhalite"
+    identifier="polyhalite"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A mineral consisting of potassium and calcium."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="potassium"/>
+      <Item identifier="calcium"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="450,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="904,3,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="5"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Graphite"
+    identifier="graphite"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="Carbon in crystalline form."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="carbon"/>
+      <Item identifier="carbon"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="132,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="262,3,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="6"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Sylvite"
+    identifier="sylvite"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A mineral containing potassium and sodium."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="sodium"/>
+      <Item identifier="potassium"/>
+      <Item identifier="potassium"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="325,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="645,3,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="6"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Lazulite"
+    identifier="lazulite"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A mineral containing phosphorus and iron."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="phosphorus"/>
+      <Item identifier="iron"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="323,580,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="645,260,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="6"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Bornite"
+    identifier="bornite"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A mineral containing copper."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="copper"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="964,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="900,130,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="6"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Cassiterite"
+    identifier="cassiterite"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A mineral consisting of tin."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="tin"/>
+      <Item identifier="tin"/>
+      <Item identifier="tin"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,580,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="260,390,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="6"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Cryolite"
+    identifier="cryolite"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A mineral containing sodium."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="sodium"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="260,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="510,3,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="7"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Aragonite"
+    identifier="aragonite"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A mineral containing calcium."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="calcium"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="515,515,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="10,130,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="7"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item
+    name="Chrysoprase"
+    identifier="chrysoprase"
+    category="Material"
+    Tags="smallitem,ore"
+    canbepicked="true"
+    description="A mineral containing silicon."
+    cargocontaineridentifier="metalcrate" 
+    scale="0.5">
+
+    <Deconstruct time="5">
+      <Item identifier="silicon"/>
+    </Deconstruct>
+
+    <!-- TODO: sprite and inventory icon -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="195,580,60,60"/>
+    <Sprite texture="Content/Items/Alien/Minerals.png" depth="0.2" sourcerect="390,260,120,120" origin="0.5,0.5" />
+
+    <Body width="24" height="12" density="50"/>
+
+    <LevelResource deattachduration="10">
+      <Commonness commonness="7"/>
+      <RequiredItem identifier="plasmacutter" type="Equipped" />
+    </LevelResource>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+
+ 
+</Items>

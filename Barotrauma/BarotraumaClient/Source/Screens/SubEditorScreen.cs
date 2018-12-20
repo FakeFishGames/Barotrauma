@@ -405,6 +405,11 @@ namespace Barotrauma
 
             foreach (MapEntityPrefab ep in MapEntityPrefab.List)
             {
+                var itemAssemblyPrefab = ep as ItemAssemblyPrefab;
+#if !DEBUG
+                if (itemAssemblyPrefab != null && itemAssemblyPrefab.HideInMenus) { continue; }                
+#endif
+
                 bool legacy = ep.Category == MapEntityCategory.Legacy;
 
                 float relWidth = 1.0f / entitiesPerRow;
@@ -460,16 +465,42 @@ namespace Barotrauma
 
                 if (ep.Category == MapEntityCategory.ItemAssembly)
                 {
-                    var deleteButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.2f), paddedFrame.RectTransform, Anchor.Center) { MinSize = new Point(0, 20) },
+                    textBlock.RectTransform.AbsoluteOffset = new Point(0, textBlock.Rect.Height);
+
+                    new GUICustomComponent(new RectTransform(new Point(paddedFrame.Rect.Height, paddedFrame.Rect.Height - textBlock.Rect.Height * 2),
+                        paddedFrame.RectTransform, Anchor.TopCenter), onDraw: itemAssemblyPrefab.DrawIcon, onUpdate: null)
+                    {
+                        HideElementsOutsideFrame = true
+                    };
+
+                    var deleteButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.2f), paddedFrame.RectTransform, Anchor.BottomCenter, Pivot.Center) { MinSize = new Point(0, 20) },
                         TextManager.Get("Delete"))
                     {
+                        ClampMouseRectToParent = false,
                         UserData = ep,
                         OnClicked = (btn, userData) =>
                         {
                             ItemAssemblyPrefab assemblyPrefab = userData as ItemAssemblyPrefab;
-                            assemblyPrefab.Delete();
-                            UpdateEntityList();
-                            OpenEntityMenu(MapEntityCategory.ItemAssembly);
+                            var msgBox = new GUIMessageBox(
+                                TextManager.Get("DeleteDialogLabel"),
+                                TextManager.Get("DeleteDialogQuestion").Replace("[file]", assemblyPrefab.Name),
+                                new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") });
+                            msgBox.Buttons[0].OnClicked += (deleteBtn, userData2) =>
+                            {
+                                try
+                                {
+                                    assemblyPrefab.Delete();
+                                    UpdateEntityList();
+                                    OpenEntityMenu(MapEntityCategory.ItemAssembly);
+                                }
+                                catch (Exception e)
+                                {
+                                    DebugConsole.ThrowError(TextManager.Get("DeleteFileError").Replace("[file]", assemblyPrefab.Name), e);
+                                }
+                                return true;
+                            };
+                            msgBox.Buttons[0].OnClicked += msgBox.Close;
+                            msgBox.Buttons[1].OnClicked += msgBox.Close;
                             return true;
                         }
                     };
@@ -827,14 +858,25 @@ namespace Barotrauma
                 OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) saveFrame = null; return true; }
             };
 
-            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.2f), saveFrame.RectTransform, Anchor.Center) { MinSize = new Point(400, 200) });
-            GUILayoutGroup paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
+            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.3f), saveFrame.RectTransform, Anchor.Center) { MinSize = new Point(400, 300) });
+            GUILayoutGroup paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center))
+            {
+                AbsoluteSpacing = 5,
+                Stretch = true
+            };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform),                 
                 TextManager.Get("SaveItemAssemblyDialogHeader"), font: GUI.LargeFont);
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform), 
                 TextManager.Get("SaveItemAssemblyDialogName"));
             nameBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 0.1f), paddedSaveFrame.RectTransform));
+
+#if DEBUG
+            new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), paddedSaveFrame.RectTransform), TextManager.Get("SaveItemAssemblyHideInMenus"))
+            {
+                UserData = "hideinmenus"
+            };
+#endif
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform), 
                 TextManager.Get("SaveItemAssemblyDialogDescription"));
@@ -846,7 +888,7 @@ namespace Barotrauma
             };
             
             var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedSaveFrame.RectTransform, Anchor.BottomCenter),
-                isHorizontal: true, childAnchor: Anchor.BottomRight) { AbsoluteSpacing = 5 };
+                isHorizontal: true, childAnchor: Anchor.BottomRight);
             new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonArea.RectTransform),
                 TextManager.Get("Cancel"))
             {
@@ -882,9 +924,12 @@ namespace Barotrauma
                     return false;
                 }
             }
+
+            var hideInMenusTickBox = nameBox.Parent.GetChildByUserData("hideinmenus") as GUITickBox;
+            bool hideInMenus = hideInMenusTickBox == null ? false : hideInMenusTickBox.Selected;
             
             string saveFolder = Path.Combine("Content", "Items", "Assemblies");
-            XDocument doc = new XDocument(ItemAssemblyPrefab.Save(MapEntity.SelectedList, nameBox.Text, descriptionBox.Text));
+            XDocument doc = new XDocument(ItemAssemblyPrefab.Save(MapEntity.SelectedList, nameBox.Text, descriptionBox.Text, hideInMenus));
             string filePath = Path.Combine(saveFolder, nameBox.Text + ".xml");
             doc.Save(filePath);
 

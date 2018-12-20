@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Structures
-  RoomDivisionIterationsMin="3"
+  RoomDivisionIterationsMin="4"
   RoomDivisionIterationsMax="4"
-  VerticalSplitProbability="0.1"
-  RoomWidthRange="0.75,0.9"
-  RoomHeightRange="0.5,0.9"
-  CorridorWidthRange="200,256">
+  VerticalSplitProbability="0.3"
+  RoomWidthRange="0.5,0.7"
+  RoomHeightRange="0.5,0.7"
+  CorridorWidthRange="256,256">
   
   <RoomType name="vault" placement="last" minwateramount="0.0" maxwateramount="0.0">
     <structure prefab="RuinWallHeavyHorizontal" alignment="Top, Bottom" type="Wall"/>
@@ -14,68 +14,113 @@
     <item prefab="RuinFractalBall"  minoffset="-0.25,-0.25" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
     <item prefab="RuinClaw" alignment="Bottom" minoffset="-0.5,0.0" maxoffset="0.5,0.0" type="Prop" commonness="5"/>
     <item prefab="artifactholder" alignment="Center" type="Prop" minoffset="-0.25,-0.25" maxoffset="0.25,0.25" commonness="5"/>
-    <itemassembly prefab="alienturretassembly" alignment="Center" minoffset="-0.25,-0.25" maxoffset="0.25,0.25" type="Prop" expand="true" commonness="1"/>
   </RoomType>
   
   <!-- "last" and a placement offset of -1 means that this is used as the second-to-last room-->
-  <RoomType name="armory" placement="last" placementoffset="-1" minwateramount="0.0" maxwateramount="0.5">
+  <RoomType name="armory" placement="last" placementoffset="-1" minwateramount="0.0" maxwateramount="0.0">
     <structure prefab="RuinWallHeavyHorizontal" alignment="Top, Bottom" type="Wall"/>
     <structure prefab="RuinWallHeavyVertical" alignment="Left,Right" type="Wall"/>
     <structure prefab="RuinBackCarvings" alignment="Center" type="Back" commonness="1"/>
     <item prefab="RuinFractalBall" alignment="Center,Right,Top,Bottom,Left" minoffset="-0.25,-0.25" maxoffset="0.25,0.25" type="Prop" commonness="5"/>
-    <item prefab="ancientweapon" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="1"/>
+    <ChooseOne>
+      <itemassembly prefab="alienarmoryassembly1" alignment="Right" type="Prop" minroomsize="800,500" maxroomsize="10000,800"/>
+      <item prefab="aliencoil" alignment="bottom" type="Prop" minroomsize="600,0" maxroomsize="800, 800">
+        <item prefab="alienmotionsensor" alignment="Top, Bottom, Left, Right, Center" type="Prop">
+          <Connection targetentity="parent">
+            <Wire from="state_out" to="activate" />
+          </Connection>
+        </item>
+        <item prefab="alienmotionsensor" alignment="Top, Bottom, Left, Right, Center" type="Prop">
+          <Connection targetentity="parent">
+            <Wire from="state_out" to="activate" />
+          </Connection>
+        </item>
+        <item prefab="alienmotionsensor" alignment="Top, Bottom, Left, Right, Center" type="Prop">
+          <Connection targetentity="parent">
+            <Wire from="state_out" to="activate" />
+          </Connection>
+        </item>        
+        <item prefab="chargedalienpowercell" alignment="Bottom" type="Prop">
+          <Connection targetentity="parent">
+            <Wire from="power_out" to="power_in" />
+          </Connection>
+        </item>
+      </item>
+    </ChooseOne>
+
   </RoomType>
   
-  <RoomType name="genericroom1" placement="any" minwateramount="0.0" maxwateramount="1.0">
+  <RoomType name="genericroom1" placement="any" minwateramount="0.0" maxwateramount="0.0">
     <structure prefab="RuinWallHorizontal" alignment="Top, Bottom" type="Wall"/>
     <structure prefab="RuinWallVertical" alignment="Left,Right" type="Wall"/>
-    <structure prefab="RuinBackFractal" alignment="Center" type="Back" commonness="2"/> 
-    <item prefab="RuinBlock" alignment="Right,Top,Bottom,Left" minoffset="-0.25,-0.25" maxoffset="0.25,0.25" type="Prop" commonness="5"/>    
-    <item prefab="oxygeniteshard" alignment="Bottom" minoffset="-0.5,0" maxoffset="0.5,0.0" type="Prop" commonness="5"/>
-    <item prefab="sulphuriteshard" alignment="Center,Right,Top,Bottom,Left" minoffset="-0.5,0" maxoffset="0.5,0.0" type="Prop" commonness="5"/>
+    <structure prefab="RuinBackFractal" alignment="Center" type="Back" commonness="2"/>
+    <ChooseOne>
+      <itemassembly prefab="aliengenericroomassembly1" alignment="Center" type="Prop" minroomsize="800,800" minoffset="0, 0.1" maxoffset="0, 0.5"/>
+      <itemassembly prefab="aliengenericroomassembly2" alignment="Center" type="Prop" minroomsize="700,700" minoffset="0, 0.1" maxoffset="0, 0.5"/>
+      <itemassembly prefab="aliengenericroomassembly3" alignment="Center" type="Prop" minroomsize="1000,1000" minoffset="0, 0.1" maxoffset="0, 0.5"/>
+      <itemassembly prefab="aliengenericroomassembly4" alignment="Center" type="Prop" minroomsize="800,800" />
+      <itemassembly prefab="aliengenericroomassembly5" alignment="Bottom" type="Prop" minroomsize="800,900" maxroomsize="10000, 1000"/>
+      <itemassembly prefab="aliengenericroomassembly6" alignment="Center" type="Prop" minroomsize="800,800" minoffset="0, 0.1" maxoffset="0, 0.5"/>
+      <itemassembly prefab="aliengenericroomassembly7" alignment="Center" type="Prop" minroomsize="1000,800" minoffset="0, 0.1" maxoffset="0, 0.3"/>
+      <itemassembly prefab="aliengenericroomassembly8" alignment="Center" type="Prop" minroomsize="800,800" minoffset="0, 0.1" maxoffset="0, 0.5"/>
+      <itemassembly prefab="alienverticalassembly1" alignment="Center" type="Prop" minroomsize="800,1200" maxroomsize="1000,10000"/>
+      <itemassembly prefab="aliencelltop" alignment="Top" type="Prop" minroomsize="800, 800"/>
+      <itemassembly prefab="aliencellbottom" alignment="Bottom" type="Prop" minroomsize="800, 800"/>
+    </ChooseOne>
+    <ChooseOne>
+      <itemassembly prefab="alienpumpassembly" alignment="Bottom" type="Prop" minamount="-2" maxamount="1" minroomsize="0,500"/>
+    </ChooseOne>
   </RoomType>
-
+  
+  <RoomType name="genericroom2" placement="any" minwateramount="0.0" maxwateramount="0.0">
+    <structure prefab="RuinWallHorizontal" alignment="Top, Bottom" type="Wall"/>
+    <structure prefab="RuinWallVertical" alignment="Left,Right" type="Wall"/>
+    <structure prefab="RuinBackFractal" alignment="Center" type="Back" commonness="2"/>
+    <ChooseOne>
+      <itemassembly prefab="aliengenericroomassembly1" alignment="Center" type="Prop" minroomsize="800,800" minoffset="0, 0.1" maxoffset="0, 0.5"/>
+      <itemassembly prefab="aliengenericroomassembly2" alignment="Center" type="Prop" minroomsize="700,700" minoffset="0, 0.1" maxoffset="0, 0.5"/>
+      <itemassembly prefab="aliengenericroomassembly3" alignment="Center" type="Prop" minroomsize="1000,1000" minoffset="0, 0.1" maxoffset="0, 0.5"/>
+      <itemassembly prefab="aliengenericroomassembly4" alignment="Center" type="Prop" minroomsize="800,800" />
+      <itemassembly prefab="aliengenericroomassembly5" alignment="Bottom" type="Prop" minroomsize="800,900" maxroomsize="10000, 1000"/>
+      <itemassembly prefab="aliengenericroomassembly6" alignment="Center" type="Prop" minroomsize="800,800" minoffset="0, 0.1" maxoffset="0, 0.5"/>
+      <itemassembly prefab="aliengenericroomassembly7" alignment="Center" type="Prop" minroomsize="1000,800" minoffset="0, 0.1" maxoffset="0, 0.3"/>
+      <itemassembly prefab="aliengenericroomassembly8" alignment="Center" type="Prop" minroomsize="800,800" minoffset="0, 0.1" maxoffset="0, 0.5"/>
+      <itemassembly prefab="alienverticalassembly1" alignment="Center" type="Prop" minroomsize="800,1200" maxroomsize="1000,10000"/>
+      <itemassembly prefab="aliencelltop" alignment="Top" type="Prop" minroomsize="800, 900"/>
+      <itemassembly prefab="aliencellbottom" alignment="Bottom" type="Prop" minroomsize="800, 900"/>
+    </ChooseOne>
+    <ChooseOne>
+      <itemassembly prefab="alienpumpassembly" alignment="Bottom" type="Prop" minamount="-3" maxamount="1" minroomsize="0,500"/>
+    </ChooseOne>
+  </RoomType>
+  
   <RoomType name="entrancecorridor" placement="first" iscorridor="true">
     <structure prefab="RuinWallHorizontal" alignment="Top,Bottom" type="Wall"/>
     <structure prefab="RuinWallVertical" alignment="Left,Right" type="Wall"/>
     <structure prefab="RuinBackFractal" alignment="Center" type="Back" commonness="3"/>
+    <item prefab="aliendoor" alignment="Center" type="Door" />
+    <item prefab="alienhatch" alignment="Center" type="Hatch" />
   </RoomType>
   
   <RoomType name="genericcorridor1" placement="any" iscorridor="true">
     <structure prefab="RuinWallHorizontalSmall" alignment="Top,Bottom" type="Wall"/>
     <structure prefab="RuinWallVerticalSmall" alignment="Left,Right" type="Wall"/>
     <structure prefab="RuinBack" alignment="Center" type="Back" commonness="3"/>
-    <item prefab="aliendoor" alignment="Center" type="Door">
-      <item prefab="alienmotionsensor" alignment="Center" type="Prop" placementrelativetoparent="nextroom">
-        <Connection targetentity="parent">
-          <Wire from="state_out" to="set_state"/>
-        </Connection>
-      </item>
-    </item>
-    <item prefab="alienhatch" alignment="Center" type="Hatch">
-      <item prefab="alienmotionsensor" alignment="Center" type="Prop" placementrelativetoparent="nextroom">
-        <Connection targetentity="parent">
-          <Wire from="state_out" to="set_state"/>
-        </Connection>
-      </item>
-    </item>
+    <itemassembly prefab="aliendoorassembly1" alignment="Center" type="Door" minroomsize="400,0"/>
+    <itemassembly prefab="aliendoorassembly2" alignment="Center" type="Door" minroomsize="400,0"/>
+    <itemassembly prefab="aliendoorassembly5" alignment="Center" type="Door" minroomsize="400,0"/>
+    <itemassembly prefab="alienhatchassembly" alignment="Center" type="Hatch" minroomsize="0,400"/>
+    <itemassembly prefab="alienhatchassembly2" alignment="Center" type="Hatch" minroomsize="0,400"/>
   </RoomType>
 
   <RoomType name="genericcorridor2" placement="any" iscorridor="true">
     <structure prefab="RuinWallHorizontalSmall" alignment="Top,Bottom" type="Wall"/>
     <structure prefab="RuinWallVerticalSmall" alignment="Left,Right" type="Wall"/>
     <structure prefab="RuinBack" alignment="Center" type="Back" commonness="3"/>
-    <item prefab="aliencoil" minoffset="-0.5,-0.5" maxoffset="0.5,0.5" alignment="Center">
-      <item prefab="alienmotionsensor" alignment="Center" type="Prop" placementrelativetoparent="sameroom">
-        <Connection targetentity="parent">
-          <Wire from="state_out" to="activate"/>
-        </Connection>
-      </item>
-      <itemassembly prefab="chargedalienpowercell" alignment="Center" type="Prop" placementrelativetoparent="previousroom">
-        <Connection sourceentity="alienpowercell" targetentity="parent" >
-          <Wire from="power_out" to="power_in"/>
-        </Connection>
-      </itemassembly>
-    </item>
+    <itemassembly prefab="aliendoorassembly1" alignment="Center" type="Door" minroomsize="400,0"/>
+    <itemassembly prefab="aliendoorassembly2" alignment="Center" type="Door" minroomsize="400,0"/>
+    <itemassembly prefab="aliendoorassembly5" alignment="Center" type="Door" minroomsize="400,0"/>
+    <itemassembly prefab="alienhatchassembly" alignment="Center" type="Hatch" minroomsize="0,400"/>
+    <itemassembly prefab="alienhatchassembly2" alignment="Center" type="Hatch" minroomsize="0,400"/>
   </RoomType>
 </Structures>

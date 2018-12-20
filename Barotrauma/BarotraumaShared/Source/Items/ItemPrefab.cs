@@ -496,5 +496,11 @@ namespace Barotrauma
             if (prices == null || !prices.ContainsKey(location.Type.Name.ToLowerInvariant())) return null;
             return prices[location.Type.Name.ToLowerInvariant()];
         }
+
+
+        public IEnumerable<PriceInfo> GetPrices()
+        {
+            return prices?.Values;
+        }
     }
 }

@@ -122,9 +122,8 @@
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="Research" buyprice="50" />
     <Deconstruct time="10">
-      <Item identifier="steelbar" />
-      <Item identifier="copperbar" mincondition="0.5" />
-      <Item identifier="sulphuricacid" mincondition="0.9" outcondition="0.25" />
+      <Item identifier="zinc" mincondition="0.5"/>
+      <Item identifier="lithium" mincondition="0.5"/>
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,0,64,64" />
     <Sprite texture="Content/Items/Weapons/weapons.png" sourcerect="103,28,25,17" depth="0.8" />
@@ -133,9 +132,8 @@
   </Item>
   <Item name="Fulgurium Battery Cell" identifier="fulguriumbatterycell" category="Equipment,Electrical" tags="smallitem,loadable" cargocontaineridentifier="metalcrate" description="A battery cell contructed of the rare and poorly understood compound Fulgurium.">
     <Deconstruct time="10">
-      <Item identifier="steelbar" />
-      <Item identifier="fulguriumbar" mincondition="0.8" />
-      <Item identifier="sulphuricacid" mincondition="0.9" outcondition="0.25" />
+      <Item identifier="zinc" mincondition="0.5"/>
+      <Item identifier="fulgurium" mincondition="0.5"/>
     </Deconstruct>
     <Sprite texture="Content/Items/Weapons/weapons.png" sourcerect="103,28,25,17" depth="0.8" />
     <Body width="23" height="17" density="30" />

@@ -254,7 +254,7 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(0, true), Editable(MinValueInt = 0, MaxValueInt = 10000)]
+        [Serialize(100, true), Editable(MinValueInt = 0, MaxValueInt = 10000)]
         public int ItemCount
         {
             get;
