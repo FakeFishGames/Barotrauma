@@ -312,20 +312,20 @@ namespace Barotrauma
         {
             get { return Prefab.ConfigFile; }
         }
-        
+
         //which type of inventory slots (head, torso, any, etc) the item can be placed in
         public List<InvSlotType> AllowedSlots
         {
             get
             {
                 Pickable p = GetComponent<Pickable>();
-                return (p==null) ? new List<InvSlotType>() { InvSlotType.Any } : p.AllowedSlots;
+                return (p == null) ? new List<InvSlotType>() { InvSlotType.Any } : p.AllowedSlots;
             }
         }
-        
+
         public List<Connection> Connections
         {
-            get 
+            get
             {
                 ConnectionPanel panel = GetComponent<ConnectionPanel>();
                 if (panel == null) return null;
@@ -345,6 +345,11 @@ namespace Barotrauma
         {
             get { return ownInventory; }
         }
+
+        [Serialize(false, true), Editable(ToolTip =
+            "Enable if you want to display the item HUD side by side with another item's HUD, when linked together. " +
+            "Disclaimer: It's possible or even likely that the views block each other, if they were not designed to be viewed together!")]
+        public bool DisplaySideBySideWhenLinked { get; set; }
 
         public IEnumerable<Repairable> Repairables
         {

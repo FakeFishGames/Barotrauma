@@ -147,7 +147,7 @@ namespace Barotrauma
             protected set;
         }
 
-        public override void DrawPlacing(SpriteBatch spriteBatch, Camera cam, Rectangle? placeRect = null)
+        public override void DrawPlacing(SpriteBatch spriteBatch, Camera cam)
         {
             Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
 
@@ -159,18 +159,8 @@ namespace Barotrauma
 
             if (!ResizeHorizontal && !ResizeVertical)
             {
-                if (placeRect.HasValue)
-                {
-                    sprite.Draw(spriteBatch, new Vector2(placeRect.Value.Center.X, -(placeRect.Value.Y - placeRect.Value.Height / 2)), SpriteColor);
-                }
-                else
-                {
-                    sprite.Draw(spriteBatch, new Vector2(position.X, -position.Y) + sprite.size / 2.0f * Scale, SpriteColor, scale: Scale);
-                }
-            }
-            else if (placeRect.HasValue)
-            {
-                if (sprite != null) sprite.DrawTiled(spriteBatch, new Vector2(placeRect.Value.X, -placeRect.Value.Y), placeRect.Value.Size.ToVector2(), null, SpriteColor);
+                sprite.Draw(spriteBatch, new Vector2(position.X, -position.Y) + sprite.size / 2.0f * Scale, SpriteColor, scale: Scale);
+
             }
             else
             {
@@ -190,6 +180,18 @@ namespace Barotrauma
                 }
 
                 if (sprite != null) sprite.DrawTiled(spriteBatch, new Vector2(position.X, -position.Y), placeSize, color: SpriteColor);
+            }
+        }
+
+        public override void DrawPlacing(SpriteBatch spriteBatch, Rectangle placeRect, float scale = 1.0f)
+        {
+            if (!ResizeHorizontal && !ResizeVertical)
+            {
+                sprite.Draw(spriteBatch, new Vector2(placeRect.Center.X, -(placeRect.Y - placeRect.Height / 2)), SpriteColor, scale: Scale * scale);
+            }
+            else
+            {
+                if (sprite != null) sprite.DrawTiled(spriteBatch, new Vector2(placeRect.X, -placeRect.Y), placeRect.Size.ToVector2(), null, SpriteColor);
             }
         }
     }

@@ -56,7 +56,12 @@ namespace Barotrauma
                 CalculateBackgroundFrame();
                 if (container.InventoryBackSprite == null)
                 {
-                    GUI.DrawRectangle(spriteBatch, BackgroundFrame, Color.Black * 0.8f, true);
+                    //draw a black baground for item inventories that don't have a RectTransform
+                    //(= ItemContainers that have no GUIFrame or aren't a part of another component's UI)
+                    if (RectTransform == null)
+                    {
+                        GUI.DrawRectangle(spriteBatch, BackgroundFrame, Color.Black * 0.8f, true);
+                    }
                 }
                 else
                 {

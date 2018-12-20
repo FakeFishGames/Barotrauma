@@ -36,6 +36,8 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            if (GuiFrame == null) { return; }
+
             GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.8f), GuiFrame.RectTransform, Anchor.Center), style: null);
 
             isActiveSlider = new GUIScrollBar(new RectTransform(new Point(50, 100), paddedFrame.RectTransform, Anchor.CenterLeft),
@@ -120,7 +122,11 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
-            pumpSpeedSlider.BarScroll = (flowPercentage + 100.0f) / 200.0f;
+            if (pumpSpeedSlider != null)
+            {
+                pumpSpeedSlider.BarScroll = (flowPercentage + 100.0f) / 200.0f;
+
+            }
         }
         
         partial void UpdateProjSpecific(float deltaTime)

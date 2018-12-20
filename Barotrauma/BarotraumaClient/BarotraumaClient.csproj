@@ -124,6 +124,7 @@
     <Compile Include="Source\Items\Components\Signal\MotionSensor.cs" />
     <Compile Include="Source\Items\Components\Signal\WifiComponent.cs" />
     <Compile Include="Source\Items\ItemInventory.cs" />
+    <Compile Include="Source\Map\ItemAssemblyPrefab.cs" />
     <Compile Include="Source\Map\Levels\BackgroundCreatures\BackgroundCreature.cs" />
     <Compile Include="Source\Map\Levels\BackgroundCreatures\BackgroundCreatureManager.cs" />
     <Compile Include="Source\Map\Levels\BackgroundCreatures\BackgroundCreaturePrefab.cs" />
