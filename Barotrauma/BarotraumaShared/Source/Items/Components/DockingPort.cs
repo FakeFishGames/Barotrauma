@@ -14,10 +14,14 @@ namespace Barotrauma.Items.Components
 {
     partial class DockingPort : ItemComponent, IDrawableComponent, IServerSerializable
     {
-        public static List<DockingPort> list = new List<DockingPort>();
-        
+        private static List<DockingPort> list = new List<DockingPort>();
+        public static IEnumerable<DockingPort> List
+        {
+            get { return list; }
+        }
+
         private Sprite overlaySprite;
-        
+
         private Vector2 distanceTolerance;
 
         private DockingPort dockingTarget;
