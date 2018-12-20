@@ -50,11 +50,11 @@
   <!-- right leg -->
   <limb id="9" radius="10" height="30" mass="8" type="RightThigh" healthindex="5" name="Limb 9" flip="True" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Human/legs_[GENDER].png" sourcerect="39,123,72,130" depth="0.11" origin="0.5,0.5" />
-    <damagedsprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="0,32,26,48" origin="0.5,0.5" depth="0" />
+    <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="0,32,26,48" origin="0.5,0.5" depth="0" />
   </limb>
   <limb id="10" radius="6" height="39" mass="5" type="RightLeg" healthindex="5" name="Limb 10" flip="True" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Human/legs_[GENDER].png" sourcerect="143,123,64,121" depth="0.12" origin="0.5,0.5" />
-    <damagedsprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="32,0,22,50" origin="0.5,0.5" depth="0" />
+    <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="32,0,22,50" origin="0.5,0.5" depth="0" />
   </limb>
   <limb id="11" radius="5" height="13" mass="2" type="RightFoot" flip="True" pullpos="-5,0" healthindex="5" name="Limb 11" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Human/legs_[GENDER].png" sourcerect="155,17,60,90" origin="0.5,0.5" depth="0.14" />
