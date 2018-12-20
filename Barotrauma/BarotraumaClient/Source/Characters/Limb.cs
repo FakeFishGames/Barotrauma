@@ -215,7 +215,8 @@ namespace Barotrauma
             string spritePathWithTags = spritePath;
             if (character.Info != null)
             {
-                spritePath = spritePath.Replace("[GENDER]", (character.Info.Gender == Gender.Female) ? "female" : "");
+                spritePath = spritePath.Replace("[GENDER]", (character.Info.Gender == Gender.Female) ? "female" : "male");
+                spritePath = spritePath.Replace("[RACE]", character.Info.Race.ToString().ToLowerInvariant());
                 spritePath = spritePath.Replace("[HEADID]", character.Info.HeadSpriteId.ToString());
 
                 if (character.Info.HeadSprite != null && character.Info.SpriteTags.Any())

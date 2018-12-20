@@ -349,6 +349,7 @@ namespace Barotrauma
                 string spritePath = spriteElement.Attribute("texture").Value;
 
                 spritePath = spritePath.Replace("[GENDER]", (gender == Gender.Female) ? "female" : "male");
+                spritePath = spritePath.Replace("[RACE]", race.ToString().ToLowerInvariant());
                 spritePath = spritePath.Replace("[HEADID]", HeadSpriteId.ToString());
                 
                 string fileName = Path.GetFileNameWithoutExtension(spritePath);
