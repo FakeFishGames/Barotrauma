@@ -745,7 +745,7 @@ namespace Barotrauma
             CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab,  ragdollFile)
             {
                 ID = infoID,
-                HeadSpriteId = headSpriteID,
+                headSpriteId = headSpriteID,
                 HairIndex = hairIndex,
                 BeardIndex = beardIndex,
                 MoustacheIndex = moustacheIndex,
