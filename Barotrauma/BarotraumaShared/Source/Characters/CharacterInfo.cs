@@ -297,14 +297,14 @@ namespace Barotrauma
                     string firstNamePath = doc.Root.Element("name").GetAttributeString("firstname", "");
                     if (firstNamePath != "")
                     {
-                        firstNamePath = firstNamePath.Replace("[GENDER]", (this.gender == Gender.Female) ? "f" : "");
+                        firstNamePath = firstNamePath.Replace("[GENDER]", (this.gender == Gender.Female) ? "female" : "");
                         this.Name = ToolBox.GetRandomLine(firstNamePath);
                     }
 
                     string lastNamePath = doc.Root.Element("name").GetAttributeString("lastname", "");
                     if (lastNamePath != "")
                     {
-                        lastNamePath = lastNamePath.Replace("[GENDER]", (this.gender == Gender.Female) ? "f" : "");
+                        lastNamePath = lastNamePath.Replace("[GENDER]", (this.gender == Gender.Female) ? "female" : "");
                         if (this.Name != "") this.Name += " ";
                         this.Name += ToolBox.GetRandomLine(lastNamePath);
                     }
@@ -369,7 +369,7 @@ namespace Barotrauma
 
                 string spritePath = spriteElement.Attribute("texture").Value;
 
-                spritePath = spritePath.Replace("[GENDER]", (this.gender == Gender.Female) ? "f" : "");
+                spritePath = spritePath.Replace("[GENDER]", (this.gender == Gender.Female) ? "female" : "");
                 spritePath = spritePath.Replace("[HEADID]", HeadSpriteId.ToString());
                 
                 string fileName = Path.GetFileNameWithoutExtension(spritePath);
