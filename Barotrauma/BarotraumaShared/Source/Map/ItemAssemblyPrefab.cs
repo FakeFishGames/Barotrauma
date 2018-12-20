@@ -59,6 +59,17 @@ namespace Barotrauma
             
             List.Add(this);
         }
+
+        public static void Remove(string filePath)
+        {
+            var matchingAssembly = List.Find(prefab => 
+                prefab is ItemAssemblyPrefab assemblyPrefab && 
+                assemblyPrefab.configPath == filePath);
+            if (matchingAssembly != null)
+            {
+                List.Remove(matchingAssembly);
+            }
+        }
         
         protected override void CreateInstance(Rectangle rect)
         {
