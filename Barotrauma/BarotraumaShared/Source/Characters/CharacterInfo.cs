@@ -12,7 +12,7 @@ using System.Xml.Linq;
 namespace Barotrauma
 {
     public enum Gender { None, Male, Female };
-    public enum Race { White, Black, Asian };
+    public enum Race { None, White, Black, Asian };
     
     partial class CharacterInfo
     {
@@ -204,8 +204,12 @@ namespace Barotrauma
             {
                 if (gender == value) return;
                 gender = value;
+                if (gender == Gender.None)
+                {
+                    SetRandomGender();
+                }
                 CalculateHeadSpriteRange();
-                RandomizeHeadSpriteId();
+                SetRandomHead();
                 LoadHeadSprite();
             }
         }
@@ -218,8 +222,12 @@ namespace Barotrauma
             {
                 if (race == value) { return; }
                 race = value;
+                if (race == Race.None)
+                {
+                    SetRandomRace();
+                }
                 CalculateHeadSpriteRange();
-                RandomizeHeadSpriteId();
+                SetRandomHead();
                 LoadHeadSprite();
             }
         }
@@ -257,19 +265,15 @@ namespace Barotrauma
             SourceElement = doc.Root;
             if (doc.Root.GetAttributeBool("genders", false))
             {
-                if (gender == Gender.None)
-                {
-                    float femaleRatio = doc.Root.GetAttributeFloat("femaleratio", 0.5f);
-                    this.gender = (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < femaleRatio) ? Gender.Female : Gender.Male;
-                }
-                else
-                {
-                    this.gender = gender;
-                }
+                this.gender = gender == Gender.None ? SetRandomGender() : gender;
             }
-            Enum.TryParse(doc.Root.GetAttributeString("race", "white"), true, out race);
+            Enum.TryParse(doc.Root.GetAttributeString("race", "None"), true, out race);
+            if (race == Race.None)
+            {
+                SetRandomRace();
+            }
             CalculateHeadSpriteRange();
-            RandomizeHeadSpriteId();
+            SetRandomHead();
             Job = (jobPrefab == null) ? Job.Random(Rand.RandSync.Server) : new Job(jobPrefab);
             if (!string.IsNullOrEmpty(name))
             {
@@ -379,6 +383,22 @@ namespace Barotrauma
             }
         }
 
+        public Gender SetRandomGender() => gender = (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < SourceElement.GetAttributeFloat("femaleratio", 0.5f)) ? Gender.Female : Gender.Male;
+        public Race SetRandomRace() => race = new Race[] { Race.White, Race.Black, Race.Asian }.GetRandom(Rand.RandSync.Server);
+
+        public int SetRandomHead()
+        {
+            if (headSpriteRange != Vector2.Zero)
+            {
+                HeadSpriteId = Rand.Range((int)headSpriteRange.X, (int)headSpriteRange.Y + 1);
+            }
+            else
+            {
+                HeadSpriteId = 0;
+            }
+            return HeadSpriteId;
+        }
+
         private List<XElement> hairs;
         private List<XElement> beards;
         private List<XElement> moustaches;
@@ -436,18 +456,6 @@ namespace Barotrauma
                 }
             }
             HeadSpriteId = Rand.Range((int)headSpriteRange.X, (int)headSpriteRange.Y + 1, Rand.RandSync.Server);
-        }
-
-        private void RandomizeHeadSpriteId()
-        {
-            if (headSpriteRange != Vector2.Zero)
-            {
-                HeadSpriteId = Rand.Range((int)headSpriteRange.X, (int)headSpriteRange.Y + 1);
-            }
-            else
-            {
-                HeadSpriteId = 0;
-            }
         }
 
         /// <summary>
