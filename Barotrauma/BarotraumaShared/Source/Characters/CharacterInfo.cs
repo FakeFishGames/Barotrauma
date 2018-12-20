@@ -694,27 +694,10 @@ namespace Barotrauma
 
         public void ServerWrite(NetBuffer msg)
         {
-            int raceInt;
-            switch (Race)
-            {
-                default:
-                case Race.None:
-                    raceInt = 0;
-                    break;
-                case Race.White:
-                    raceInt = 1;
-                    break;
-                case Race.Black:
-                    raceInt = 2;
-                    break;
-                case Race.Asian:
-                    raceInt = 3;
-                    break;
-            }
             msg.Write(ID);
             msg.Write(Name);
             msg.Write(Gender == Gender.Female);
-            msg.Write((byte)raceInt);
+            msg.Write((byte)Race);
             msg.Write((byte)HeadSpriteId);
             msg.Write((byte)HairIndex);
             msg.Write((byte)BeardIndex);
@@ -744,8 +727,8 @@ namespace Barotrauma
             ushort infoID               = inc.ReadUInt16();
             string newName              = inc.ReadString();
             bool isFemale               = inc.ReadBoolean();
+            int race                    = inc.ReadByte();
             int headSpriteID            = inc.ReadByte();
-            int race                    = inc.ReadUInt16();
             int hairIndex               = inc.ReadByte();
             int beardIndex              = inc.ReadByte();
             int moustacheIndex          = inc.ReadByte();
@@ -779,6 +762,8 @@ namespace Barotrauma
                 MoustacheIndex = moustacheIndex,
                 FaceAttachmentIndex = faceAttachmentIndex
             };
+            //TODO: this causes attachment IDs to be reset and faces not to match between the server and clients. 
+            //The method is also called in the hair/beard/etc index setters, which might cause similar problems
             ch.CalculateHeadSpriteRange();
             ch.LoadHeadAttachments();
 
