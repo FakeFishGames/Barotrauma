@@ -108,8 +108,8 @@
     <Price locationtype="Military" buyprice="20"/>
     <Price locationtype="City" buyprice="30"/>
 
-    <!-- TODO: sprite and inventory icons -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,256,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,640,64,64"/>
     <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6" />
 
     <Body width="8" height="17" density="20"/>
@@ -149,8 +149,8 @@
     <Price locationtype="City" buyprice="20"/>
     <Price locationtype="Outpost" buyprice="50"/>
     
-    <!-- TODO: sprite and inventory icons -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,256,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,768,64,64"/>
     <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
     <Body width="8" height="7" density="20"/>
@@ -182,7 +182,7 @@
     <Price locationtype="Military" buyprice="60"/>
 
     <!-- TODO: sprite and inventory icons -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,192,64,64"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="388,768,64,64"/>
     <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
     <Body width="8" height="17" density="20"/>
@@ -214,7 +214,7 @@
     <Price locationtype="Military" buyprice="60"/>
 
     <!-- TODO: sprite and inventory icons -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,192,64,64"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,768,64,64"/>
     <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
     <Body width="8" height="17" density="20"/>
@@ -281,8 +281,8 @@
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="50" />
     <!-- TODO: sprite and inventory icons -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,448,64,64"/>
     <Sprite texture="med.png" sourcerect="0,16,11,16" depth="0.6" />
-    <InventoryIcon texture="Bandages_temp_01.png" />
     <Body width="11" height="16" density="20" />
     <SuitableTreatment identifier="bleeding" suitability="80"/>
     <SuitableTreatment identifier="gunshotwound" suitability="80"/>
@@ -308,8 +308,7 @@
     <Price locationtype="Research" buyprice="20" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="50" />
-    <!-- TODO: sprite and inventory icons -->
-    <Sprite texture="med.png" sourcerect="0,16,11,16" depth="0.6" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,448,64,64"/>
     <InventoryIcon texture="Bandages_temp_01.png" />
     <Body width="11" height="16" density="20" />
     <SuitableTreatment identifier="bleeding" suitability="80"/>
@@ -353,7 +352,7 @@
     <Price locationtype="City" buyprice="100"/>
     <Price locationtype="Outpost" buyprice="120"/>
 
-    <!-- TODO: sprite and inventory icons -->
+    <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,448,64,64"/>
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
@@ -407,7 +406,7 @@
     <SuitableTreatment identifier="opiateaddiction" suitability="-100"/>
     <SuitableTreatment identifier="oxygenloss" suitability="-30"/>
 
-    <!-- TODO: sprite and inventory icons -->
+    <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,448,64,64"/>
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
@@ -458,8 +457,8 @@
 
     <SuitableTreatment identifier="bloodloss" suitability="30"/>
 
-    <!-- TODO: sprite and inventory icons -->
-    <InventoryIcon texture="Saline_temp_01.png"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,640,64,64"/>
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
@@ -493,10 +492,10 @@
     <Price locationtype="City" buyprice="100"/>
     <Price locationtype="Outpost" buyprice="120"/>
 
-    <!-- TODO: sprite and inventory icons -->
     <SuitableTreatment identifier="bloodloss" suitability="50"/>
 
-    <InventoryIcon texture="Saline_temp_01.png"/>
+    <!-- TODO: sprite  -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,640,64,64"/>
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
@@ -572,8 +571,8 @@
 
     <SuitableTreatment identifier="huskinfection" suitability="100"/>
 
-    <!-- TODO: sprite and inventory icons -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,256,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,448,64,64"/>
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
@@ -619,8 +618,8 @@
 
     <SuitableTreatment identifier="psychosis" suitability="100"/>
 
-    <!-- TODO: sprite and inventory icons -->
-    <InventoryIcon texture="Saline_temp_01.png"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,640,64,64"/>
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
@@ -657,8 +656,8 @@
     <SuitableTreatment identifier="opiatewithdrawal" suitability="100"/>
     <SuitableTreatment identifier="opiateoverdose" suitability="100"/>
 
-    <!-- TODO: sprite and inventory icons -->
-    <InventoryIcon texture="AntiNarc_temp_01.png"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,384,64,64"/>
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
@@ -762,8 +761,8 @@
 
     <SuitableTreatment identifier="internaldamage" suitability="10"/>
 
-    <!-- TODO: sprite and inventory icons -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,192,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,448,64,64"/>
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
@@ -792,8 +791,8 @@
     <Price locationtype="Research" buyprice="60"/>
     <Price locationtype="Military" buyprice="80"/>
 
-    <!-- TODO: sprite and inventory icons -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,192,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,448,64,64"/>
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="15"/>
@@ -826,8 +825,8 @@
     <Price locationtype="Research" buyprice="60"/>
     <Price locationtype="Military" buyprice="80"/>
 
-    <!-- TODO: sprite and inventory icons -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,192,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,448,64,64"/>
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="15"/>
