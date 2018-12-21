@@ -719,12 +719,12 @@ namespace Barotrauma
                 characterInfo =
                     new CharacterInfo(Character.HumanConfigFile, GameMain.NetworkMember.Name, GameMain.Config.CharacterGender, null)
                     {
+                        Race = GameMain.Config.CharacterRace,
+                        HeadSpriteId = GameMain.Config.CharacterHeadIndex,
                         HairIndex = GameMain.Config.CharacterHairIndex,
                         BeardIndex = GameMain.Config.CharacterBeardIndex,
                         MoustacheIndex = GameMain.Config.CharacterMoustacheIndex,
                         FaceAttachmentIndex = GameMain.Config.CharacterFaceAttachmentIndex,
-                        Race = GameMain.Config.CharacterRace,
-                        HeadSpriteId = GameMain.Config.CharacterHeadIndex,
                     };
                 GameMain.NetworkMember.CharacterInfo = characterInfo;
             }
@@ -1509,7 +1509,7 @@ namespace Barotrauma
             int dir = (int)userData;
             GameMain.NetworkMember.CharacterInfo.HeadSpriteId += dir;
             GameMain.NetworkMember.CharacterInfo.LoadHeadSprite();
-            SyncHead();
+            StoreHead();
             GameMain.Config.Save();
             return true;
         }
@@ -1518,18 +1518,17 @@ namespace Barotrauma
         {
             Gender gender = (Gender)obj;
             GameMain.NetworkMember.CharacterInfo.Gender = gender;
-            GameMain.NetworkMember.CharacterInfo.ResetHeadAttachments();
             GameMain.NetworkMember.CharacterInfo.SetRandomHead();
             GameMain.NetworkMember.CharacterInfo.LoadHeadAttachments();
             GameMain.NetworkMember.CharacterInfo.LoadHeadSprite();
-            SyncHead();
+            StoreHead();
             GameMain.Config.Save();
             return true;
         }
 
         // TODO: switch race
 
-        private void SyncHead()
+        private void StoreHead()
         {
             GameMain.Config.CharacterRace = GameMain.NetworkMember.CharacterInfo.Race;
             GameMain.Config.CharacterGender = GameMain.NetworkMember.CharacterInfo.Gender;
