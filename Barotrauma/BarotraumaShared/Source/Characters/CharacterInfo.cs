@@ -432,6 +432,7 @@ namespace Barotrauma
 
         private IEnumerable<XElement> FilterElementsByGenderAndRace(IEnumerable<XElement> elements)
         {
+            if (elements == null) { return elements; }
             return elements.Where(w =>
                 Enum.TryParse(w.GetAttributeString("gender", "male"), true, out Gender g) && g == gender &&
                 Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == race);
@@ -446,6 +447,11 @@ namespace Barotrauma
                 // If range is defined, we use it as it is
                 // Else we calculate the range from the wearables.
                 var wearables = FilterElementsByGenderAndRace(Wearables);
+                if (wearables == null)
+                {
+                    headSpriteRange = Vector2.Zero;
+                    return;
+                }
                 if (wearables.None())
                 {
                     DebugConsole.ThrowError($"[CharacterInfo] No headidrange defined and no wearables matching the gender {gender} and the race {race} could be found. Total wearables found: {Wearables.Count()}.");
