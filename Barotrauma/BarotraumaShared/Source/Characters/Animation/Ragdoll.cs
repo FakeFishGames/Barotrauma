@@ -313,6 +313,7 @@ namespace Barotrauma
                 }
             }
             CreateColliders();
+            var items = limbs?.ToDictionary(l => l.limbParams.ID, l => l.WearingItems);
             CreateLimbs();
             CreateJoints();
             UpdateCollisionCategories();
@@ -320,7 +321,15 @@ namespace Barotrauma
             Limb head = GetLimb(LimbType.Head);
             MainLimb = torso ?? head;
             character.LoadHeadAttachments();
-            // TODO: reload items
+            if (items != null)
+            {
+                foreach (var kvp in items)
+                {
+                    var limb = limbs[kvp.Key];
+                    var itemList = kvp.Value;
+                    limb.WearingItems.AddRange(itemList);
+                }
+            }
         }
 
         public Ragdoll(Character character, string seed, RagdollParams ragdollParams = null)
