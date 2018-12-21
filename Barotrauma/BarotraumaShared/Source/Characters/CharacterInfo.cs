@@ -462,7 +462,6 @@ namespace Barotrauma
                     headSpriteRange = new Vector2(ids.First(), ids.Last());
                 }
             }
-            HeadSpriteId = Rand.Range((int)headSpriteRange.X, (int)headSpriteRange.Y + 1, Rand.RandSync.Server);
         }
 
         /// <summary>
