@@ -313,6 +313,7 @@ namespace Barotrauma
             {
                 this.ragdollFileName = ragdollFileName;
             }
+            LoadHeadAttachments();
         }
 
         public CharacterInfo(XElement element, string ragdollFileName = null)
