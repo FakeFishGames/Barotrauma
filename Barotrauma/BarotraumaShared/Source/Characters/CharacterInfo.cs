@@ -12,13 +12,7 @@ using System.Xml.Linq;
 namespace Barotrauma
 {
     public enum Gender { None, Male, Female };
-    public enum Race
-    {
-        None = 0,
-        White = 1,
-        Black = 2,
-        Asian = 3
-    };
+    public enum Race { None, White, Black, Asian };
     
     partial class CharacterInfo
     {
