@@ -763,8 +763,9 @@ namespace Barotrauma
             LoadHeadAttachments();
         }
 
-        private void LoadHeadAttachments()
+        public void LoadHeadAttachments()
         {
+            if (AnimController == null) { return; }
             var head = AnimController.GetLimb(LimbType.Head);
             if (head == null) { return; }
             // Note that if there are any other wearables on the head, they are removed here.
