@@ -1508,13 +1508,8 @@ namespace Barotrauma
 
             int dir = (int)userData;
             GameMain.NetworkMember.CharacterInfo.HeadSpriteId += dir;
-            GameMain.Config.CharacterRace = GameMain.NetworkMember.CharacterInfo.Race;
-            GameMain.Config.CharacterHeadIndex = GameMain.NetworkMember.CharacterInfo.HeadSpriteId;
-            GameMain.Config.CharacterHairIndex = GameMain.NetworkMember.CharacterInfo.HairIndex;
-            GameMain.Config.CharacterBeardIndex = GameMain.NetworkMember.CharacterInfo.BeardIndex;
-            GameMain.Config.CharacterMoustacheIndex = GameMain.NetworkMember.CharacterInfo.MoustacheIndex;
-            GameMain.Config.CharacterFaceAttachmentIndex = GameMain.NetworkMember.CharacterInfo.FaceAttachmentIndex;
             GameMain.NetworkMember.CharacterInfo.LoadHeadSprite();
+            SyncHead();
             GameMain.Config.Save();
             return true;
         }
@@ -1523,9 +1518,26 @@ namespace Barotrauma
         {
             Gender gender = (Gender)obj;
             GameMain.NetworkMember.CharacterInfo.Gender = gender;
-            GameMain.Config.CharacterGender = GameMain.NetworkMember.CharacterInfo.Gender;
+            GameMain.NetworkMember.CharacterInfo.ResetHeadAttachments();
+            GameMain.NetworkMember.CharacterInfo.SetRandomHead();
+            GameMain.NetworkMember.CharacterInfo.LoadHeadAttachments();
+            GameMain.NetworkMember.CharacterInfo.LoadHeadSprite();
+            SyncHead();
             GameMain.Config.Save();
             return true;
+        }
+
+        // TODO: switch race
+
+        private void SyncHead()
+        {
+            GameMain.Config.CharacterRace = GameMain.NetworkMember.CharacterInfo.Race;
+            GameMain.Config.CharacterGender = GameMain.NetworkMember.CharacterInfo.Gender;
+            GameMain.Config.CharacterHeadIndex = GameMain.NetworkMember.CharacterInfo.HeadSpriteId;
+            GameMain.Config.CharacterHairIndex = GameMain.NetworkMember.CharacterInfo.HairIndex;
+            GameMain.Config.CharacterBeardIndex = GameMain.NetworkMember.CharacterInfo.BeardIndex;
+            GameMain.Config.CharacterMoustacheIndex = GameMain.NetworkMember.CharacterInfo.MoustacheIndex;
+            GameMain.Config.CharacterFaceAttachmentIndex = GameMain.NetworkMember.CharacterInfo.FaceAttachmentIndex;
         }
 
         public void SelectMode(int modeIndex)
