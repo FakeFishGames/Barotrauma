@@ -243,104 +243,104 @@
     
     <!-- Female White -->
 
-    <Wearable type="Hair" headid="1" gender="female" race="white" commonness="2">
+    <Wearable type="Hair" headid="1" gender="female" race="white" commonness="5">
       <sprite name="White Female 1 Hair1" texture="Content/Characters/Human/head_female_white1.png" sheetindex="0,1"/>
     </Wearable>
-    <Wearable type="Hair" headid="1" gender="female" race="white" commonness="2">
+    <Wearable type="Hair" headid="1" gender="female" race="white" commonness="5">
       <sprite name="White Female 1 Hair2" texture="Content/Characters/Human/head_female_white1.png" sheetindex="1,1"/>
     </Wearable>
-    <Wearable type="Hair" headid="1" gender="female" race="white" commonness="2">
+    <Wearable type="Hair" headid="1" gender="female" race="white" commonness="5">
       <sprite name="White Female 1 Hair3" texture="Content/Characters/Human/head_female_white1.png" sheetindex="2,1"/>
     </Wearable>
 
-    <Wearable type="Hair" headid="2" gender="female" race="white" commonness="2">
+    <Wearable type="Hair" headid="2" gender="female" race="white" commonness="5">
       <sprite name="White Female 2 Hair1" texture="Content/Characters/Human/head_female_white2.png" sheetindex="0,1"/>
     </Wearable>
-    <Wearable type="Hair" headid="2" gender="female" race="white" commonness="2">
+    <Wearable type="Hair" headid="2" gender="female" race="white" commonness="5">
       <sprite name="White Female 2 Hair2" texture="Content/Characters/Human/head_female_white2.png" sheetindex="1,1"/>
     </Wearable>
-    <Wearable type="Hair" headid="2" gender="female" race="white" commonness="2">
+    <Wearable type="Hair" headid="2" gender="female" race="white" commonness="5">
       <sprite name="White Female 2 Hair3" texture="Content/Characters/Human/head_female_white2.png" sheetindex="2,1"/>
     </Wearable>
 
-    <Wearable type="Hair" headid="3" gender="female" race="white" commonness="2">
+    <Wearable type="Hair" headid="3" gender="female" race="white" commonness="5">
       <sprite name="White Female 3 Hair1" texture="Content/Characters/Human/head_female_white3.png" sheetindex="0,1"/>
     </Wearable>
-    <Wearable type="Hair" headid="3" gender="female" race="white" commonness="2">
+    <Wearable type="Hair" headid="3" gender="female" race="white" commonness="5">
       <sprite name="White Female 3 Hair2" texture="Content/Characters/Human/head_female_white3.png" sheetindex="1,1"/>
     </Wearable>
-    <Wearable type="Hair" headid="3" gender="female" race="white" commonness="2">
+    <Wearable type="Hair" headid="3" gender="female" race="white" commonness="5">
       <sprite name="White Female 3 Hair3" texture="Content/Characters/Human/head_female_white3.png" sheetindex="2,1"/>
     </Wearable>
     <Wearable type="FaceAttachment" headid="3" gender="female" race="white" commonness="0.2">
       <sprite name="White Female 3 Tattoo1" texture="Content/Characters/Human/head_female_white3.png" sheetindex="2,2"/>
     </Wearable>
 
-    <Wearable type="Hair" headid="4" gender="female" race="white" commonness="3">
+    <Wearable type="Hair" headid="4" gender="female" race="white" commonness="5">
       <sprite name="White Female 4 Hair1" texture="Content/Characters/Human/head_female_white4.png" sheetindex="0,1"/>
     </Wearable>
-    <Wearable type="Hair" headid="4" gender="female" race="white" commonness="3">
+    <Wearable type="Hair" headid="4" gender="female" race="white" commonness="5">
       <sprite name="White Female 4 Hair2" texture="Content/Characters/Human/head_female_white4.png" sheetindex="1,1"/>
     </Wearable>
     
     <!-- Female Black -->
 
-    <Wearable type="Hair" headid="1" gender="female" race="black" commonness="2">
+    <Wearable type="Hair" headid="1" gender="female" race="black" commonness="5">
       <sprite name="Black Female 1 Hair1" texture="Content/Characters/Human/head_female_black1.png" sheetindex="0,1"/>
     </Wearable>
-    <Wearable type="Hair" headid="1" gender="female" race="black" commonness="2">
+    <Wearable type="Hair" headid="1" gender="female" race="black" commonness="5">
       <sprite name="Black Female 1 Hair2" texture="Content/Characters/Human/head_female_black1.png" sheetindex="1,1"/>
     </Wearable>
-    <Wearable type="Hair" headid="1" gender="female" race="black" commonness="2">
+    <Wearable type="Hair" headid="1" gender="female" race="black" commonness="5">
       <sprite name="Black Female 1 Hair3" texture="Content/Characters/Human/head_female_black1.png" sheetindex="2,1"/>
     </Wearable>
 
-    <Wearable type="Hair" headid="2" gender="female" race="black" commonness="2">
+    <Wearable type="Hair" headid="2" gender="female" race="black" commonness="5">
       <sprite name="Black Female 2 Hair1" texture="Content/Characters/Human/head_female_black2.png" sheetindex="0,1"/>
     </Wearable>
-    <Wearable type="Hair" headid="2" gender="female" race="black" commonness="2">
+    <Wearable type="Hair" headid="2" gender="female" race="black" commonness="5">
       <sprite name="Black Female 2 Hair2" texture="Content/Characters/Human/head_female_black2.png" sheetindex="1,1"/>
     </Wearable>
-    <Wearable type="Hair" headid="2" gender="female" race="black" commonness="2">
+    <Wearable type="Hair" headid="2" gender="female" race="black" commonness="5">
       <sprite name="Black Female 2 Hair3" texture="Content/Characters/Human/head_female_black2.png" sheetindex="2,1"/>
     </Wearable>
 
-    <Wearable type="Hair" headid="3" gender="female" race="black" commonness="2">
+    <Wearable type="Hair" headid="3" gender="female" race="black" commonness="5">
       <sprite name="Black Female 3 Hair1" texture="Content/Characters/Human/head_female_black3.png" sheetindex="0,1"/>
     </Wearable>
-    <Wearable type="Hair" headid="3" gender="female" race="black" commonness="2">
+    <Wearable type="Hair" headid="3" gender="female" race="black" commonness="5">
       <sprite name="Black Female 3 Hair2" texture="Content/Characters/Human/head_female_black3.png" sheetindex="1,1"/>
     </Wearable>
-    <Wearable type="Hair" headid="3" gender="female" race="black" commonness="2">
+    <Wearable type="Hair" headid="3" gender="female" race="black" commonness="5">
       <sprite name="Black Female 3 Hair3" texture="Content/Characters/Human/head_female_black3.png" sheetindex="2,1"/>
     </Wearable>
     
     <!-- Female Asian -->
 
-    <Wearable type="Hair" headid="1" gender="female" race="asian" commonness="3">
+    <Wearable type="Hair" headid="1" gender="female" race="asian" commonness="5">
       <sprite name="Asian Female 1 Hair1" texture="Content/Characters/Human/head_female_asian1.png" sheetindex="0,1"/>
     </Wearable>
-    <Wearable type="Hair" headid="1" gender="female" race="asian" commonness="3">
+    <Wearable type="Hair" headid="1" gender="female" race="asian" commonness="5">
       <sprite name="Asian Female 1 Hair2" texture="Content/Characters/Human/head_female_asian1.png" sheetindex="1,1"/>
     </Wearable>
     <Wearable type="FaceAttachment" headid="1" gender="female" race="asian" commonness="0.2">
       <sprite name="Asian Female 1 Scarf1" texture="Content/Characters/Human/head_female_asian1.png" sheetindex="2,1"/>
     </Wearable>
 
-    <Wearable type="Hair" headid="2" gender="female" race="asian" commonness="2">
+    <Wearable type="Hair" headid="2" gender="female" race="asian" commonness="5">
       <sprite name="Asian Female 2 Hair1" texture="Content/Characters/Human/head_female_asian2.png" sheetindex="0,1"/>
     </Wearable>
-    <Wearable type="Hair" headid="2" gender="female" race="asian" commonness="2">
+    <Wearable type="Hair" headid="2" gender="female" race="asian" commonness="5">
       <sprite name="Asian Female 2 Hair2" texture="Content/Characters/Human/head_female_asian2.png" sheetindex="1,1"/>
     </Wearable>
-    <Wearable type="Hair" headid="2" gender="female" race="asian" commonness="2">
+    <Wearable type="Hair" headid="2" gender="female" race="asian" commonness="5">
       <sprite name="Asian Female 2 Hair3" texture="Content/Characters/Human/head_female_asian2.png" sheetindex="2,1"/>
     </Wearable>
 
-    <Wearable type="Hair" headid="3" gender="female" race="asian" commonness="3">
+    <Wearable type="Hair" headid="3" gender="female" race="asian" commonness="5">
       <sprite name="Asian Female 3 Hair1" texture="Content/Characters/Human/head_female_asian3.png" sheetindex="0,1"/>
     </Wearable>
-    <Wearable type="Hair" headid="3" gender="female" race="asian" commonness="3">
+    <Wearable type="Hair" headid="3" gender="female" race="asian" commonness="5">
       <sprite name="Asian Female 3 Hair2" texture="Content/Characters/Human/head_female_asian3.png" sheetindex="1,1"/>
     </Wearable>
 
