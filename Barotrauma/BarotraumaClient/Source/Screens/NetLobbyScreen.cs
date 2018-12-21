@@ -726,6 +726,8 @@ namespace Barotrauma
                         MoustacheIndex = GameMain.Config.CharacterMoustacheIndex,
                         FaceAttachmentIndex = GameMain.Config.CharacterFaceAttachmentIndex,
                     };
+                // Need to reload the attachments because the indices may have changed
+                characterInfo.LoadHeadAttachments();
                 GameMain.NetworkMember.CharacterInfo = characterInfo;
             }
 
@@ -1508,6 +1510,7 @@ namespace Barotrauma
 
             int dir = (int)userData;
             GameMain.NetworkMember.CharacterInfo.HeadSpriteId += dir;
+            GameMain.NetworkMember.CharacterInfo.LoadHeadAttachments();
             GameMain.NetworkMember.CharacterInfo.LoadHeadSprite();
             StoreHead();
             GameMain.Config.Save();

@@ -190,8 +190,7 @@ namespace Barotrauma
                 {
                     headSprite = null;
                     attachmentSprites = null;
-                    ResetAttachmentIndices();
-                    LoadHeadAttachments();
+                    ResetHeadAttachments();
                 }
             }
         }
@@ -475,19 +474,19 @@ namespace Barotrauma
             {
                 if (hairs == null)
                 {
-                    hairs = AddEmpty(FilterByType(FilterElementsByGenderAndRace(wearables), WearableType.Hair), WearableType.Hair);
+                    hairs = AddEmpty(FilterByTypeAndHeadID(FilterElementsByGenderAndRace(wearables), WearableType.Hair), WearableType.Hair);
                 }
                 if (beards == null)
                 {
-                    beards = AddEmpty(FilterByType(FilterElementsByGenderAndRace(wearables), WearableType.Beard), WearableType.Beard);
+                    beards = AddEmpty(FilterByTypeAndHeadID(FilterElementsByGenderAndRace(wearables), WearableType.Beard), WearableType.Beard);
                 }
                 if (moustaches == null)
                 {
-                    moustaches = AddEmpty(FilterByType(FilterElementsByGenderAndRace(wearables), WearableType.Moustache), WearableType.Moustache);
+                    moustaches = AddEmpty(FilterByTypeAndHeadID(FilterElementsByGenderAndRace(wearables), WearableType.Moustache), WearableType.Moustache);
                 }
                 if (faceAttachments == null)
                 {
-                    faceAttachments = AddEmpty(FilterByType(FilterElementsByGenderAndRace(wearables), WearableType.FaceAttachment), WearableType.FaceAttachment);
+                    faceAttachments = AddEmpty(FilterByTypeAndHeadID(FilterElementsByGenderAndRace(wearables), WearableType.FaceAttachment), WearableType.FaceAttachment);
                 }
 
                 if (IsValidIndex(HairIndex, hairs))
@@ -545,15 +544,20 @@ namespace Barotrauma
                     return element == null || element.Name == "Empty" ? null : element;
                 }
 
-                IEnumerable<XElement> FilterByType(IEnumerable<XElement> elements, WearableType targetType) 
-                    => elements.Where(e => Enum.TryParse(e.GetAttributeString("type", ""), true, out WearableType type) && type == targetType);
+                IEnumerable<XElement> FilterByTypeAndHeadID(IEnumerable<XElement> elements, WearableType targetType)
+                {
+                    return elements.Where(e =>
+                    {
+                        if (Enum.TryParse(e.GetAttributeString("type", ""), true, out WearableType type) && type != targetType) { return false; }
+                        int headId = e.GetAttributeInt("headid", -1);
+                        // if the head id is less than 1, the id is not valid and the condition is ignored.
+                        return headId < 1 || headId == headSpriteId;
+                    });
+                }
 
                 bool IsWearableAllowed(XElement element)
                 {
-                    var spriteElement = element.Element("sprite");
-                    int headId = element.GetAttributeInt("headid", -1);
-                    if (headId > -1 && headId != headSpriteId ) { return false; }
-                    string spriteName = spriteElement.GetAttributeString("name", string.Empty);
+                    string spriteName = element.Element("sprite").GetAttributeString("name", string.Empty);
                     return IsAllowed(HairElement, spriteName) && IsAllowed(BeardElement, spriteName) && IsAllowed(MoustacheElement, spriteName) && IsAllowed(FaceAttachment, spriteName);
                 }
 
