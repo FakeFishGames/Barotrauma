@@ -764,8 +764,7 @@ namespace Barotrauma
                 FaceAttachmentIndex = faceAttachmentIndex
             };
             ch.CalculateHeadSpriteRange();
-            ch.ResetHeadAttachments();
-            ch.LoadHeadAttachments();
+            ch.ReloadHeadAttachments();
 
             System.Diagnostics.Debug.Assert(skillLevels.Count == ch.Job.Skills.Count);
             if (ch.Job != null)
@@ -782,6 +781,12 @@ namespace Barotrauma
                 }
             }
             return ch;
+        }
+
+        public void ReloadHeadAttachments()
+        {
+            ResetLoadedAttachments();
+            LoadHeadAttachments();
         }
 
         public void ResetHeadAttachments()
