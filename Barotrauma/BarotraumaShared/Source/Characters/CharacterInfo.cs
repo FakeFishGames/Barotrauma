@@ -190,7 +190,7 @@ namespace Barotrauma
                 {
                     headSprite = null;
                     attachmentSprites = null;
-                    ResetAttachments();
+                    ResetAttachmentIndices();
                     LoadHeadAttachments();
                 }
             }
@@ -206,11 +206,15 @@ namespace Barotrauma
                 gender = value;
                 if (gender == Gender.None)
                 {
-                    SetRandomGender();
+                    Gender = Gender.Male;
+                    //SetRandomGender();
                 }
                 CalculateHeadSpriteRange();
-                SetRandomHead();
-                LoadHeadSprite();
+                ResetHeadAttachments();
+                headSprite = null;
+                attachmentSprites = null;
+                //SetRandomHead();
+                //LoadHeadSprite();
             }
         }
 
@@ -224,11 +228,15 @@ namespace Barotrauma
                 race = value;
                 if (race == Race.None)
                 {
-                    SetRandomRace();
+                    race = Race.White;
+                    //SetRandomRace();
                 }
                 CalculateHeadSpriteRange();
-                SetRandomHead();
-                LoadHeadSprite();
+                ResetHeadAttachments();
+                headSprite = null;
+                attachmentSprites = null;
+                //SetRandomHead();
+                //LoadHeadSprite();
             }
         }
 
@@ -755,9 +763,8 @@ namespace Barotrauma
                 MoustacheIndex = moustacheIndex,
                 FaceAttachmentIndex = faceAttachmentIndex
             };
-            //TODO: this causes attachment IDs to be reset and faces not to match between the server and clients. 
-            //The method is also called in the hair/beard/etc index setters, which might cause similar problems
             ch.CalculateHeadSpriteRange();
+            ch.ResetHeadAttachments();
             ch.LoadHeadAttachments();
 
             System.Diagnostics.Debug.Assert(skillLevels.Count == ch.Job.Skills.Count);
@@ -777,12 +784,26 @@ namespace Barotrauma
             return ch;
         }
 
-        public void ResetAttachments()
+        public void ResetHeadAttachments()
+        {
+            ResetAttachmentIndices();
+            ResetLoadedAttachments();
+        }
+
+        private void ResetAttachmentIndices()
         {
             HairIndex = -1;
             BeardIndex = -1;
             MoustacheIndex = -1;
             FaceAttachmentIndex = -1;
+        }
+
+        private void ResetLoadedAttachments()
+        {
+            hairs = null;
+            beards = null;
+            moustaches = null;
+            faceAttachments = null;
         }
 
         public void Remove()
