@@ -2390,17 +2390,19 @@ namespace Barotrauma.Networking
             }
 
             Gender gender = Gender.Male;
+            Race race = Race.White;
             int headSpriteId = 0;
             try
             {
                 gender = message.ReadBoolean() ? Gender.Male : Gender.Female;
+                race = (Race)message.ReadByte();
                 headSpriteId = message.ReadByte();
             }
             catch (Exception e)
             {
-                gender = Gender.Male;
-                headSpriteId = 0;
-
+                //gender = Gender.Male;
+                //race = Race.White;
+                //headSpriteId = 0;
                 DebugConsole.Log("Received invalid characterinfo from \"" + sender.Name + "\"! { " + e.Message + " }");
             }
             int hairIndex = message.ReadByte();
@@ -2420,6 +2422,7 @@ namespace Barotrauma.Networking
 
             sender.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, sender.Name, gender)
             {
+                Race = race,
                 HeadSpriteId = headSpriteId,
                 HairIndex = hairIndex,
                 BeardIndex = beardIndex,

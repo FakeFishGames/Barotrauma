@@ -1599,6 +1599,7 @@ namespace Barotrauma.Networking
             if (characterInfo == null) return;
 
             msg.Write(characterInfo.Gender == Gender.Male);
+            msg.Write((byte)characterInfo.Race);
             msg.Write((byte)characterInfo.HeadSpriteId);
             msg.Write((byte)characterInfo.HairIndex);
             msg.Write((byte)characterInfo.BeardIndex);
