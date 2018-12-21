@@ -1026,6 +1026,9 @@ namespace Barotrauma
                 var characterInfo = new CharacterInfo(configFile, jobPrefab: JobPrefab.List.First(job => job.Identifier == selectedJob));
                 character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), characterInfo, hasAi: false, ragdoll: ragdoll);
                 character.GiveJobItems();
+                // Temp: remove all items from head
+                var removables = character.Inventory.Items.Where(i => i != null && (i.AllowedSlots.Contains(InvSlotType.Head) || i.AllowedSlots.Contains(InvSlotType.Headset))).ToList();
+                removables.ForEach(i => i.Unequip(character));
                 selectedJob = characterInfo.Job.Prefab.Identifier;
             }
             else
