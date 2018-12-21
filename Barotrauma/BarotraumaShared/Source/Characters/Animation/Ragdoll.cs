@@ -319,6 +319,8 @@ namespace Barotrauma
             Limb torso = GetLimb(LimbType.Torso);
             Limb head = GetLimb(LimbType.Head);
             MainLimb = torso ?? head;
+            character.LoadHeadAttachments();
+            // TODO: reload items
         }
 
         public Ragdoll(Character character, string seed, RagdollParams ragdollParams = null)
