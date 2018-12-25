@@ -165,6 +165,12 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
+            if (sonarView.Rect.Contains(PlayerInput.MousePosition))
+            {
+                zoomSlider.BarScroll += PlayerInput.ScrollWheelSpeed / 1000.0f;
+                zoomSlider.OnMoved(zoomSlider, zoomSlider.BarScroll);
+            }
+
             float distort = 1.0f - item.Condition / 100.0f;
             for (int i = sonarBlips.Count - 1; i >= 0; i--)
             {
@@ -313,50 +319,8 @@ namespace Barotrauma.Items.Components
 
             if (item.Submarine != null && !DetectSubmarineWalls)
             {
-                float simScale = displayScale * Physics.DisplayToSimRation * zoom;
-
-                foreach (Submarine submarine in Submarine.Loaded)
-                {
-                    if (UseTransducers ?
-                        !connectedTransducers.Any(t => submarine == t.Transducer.Item.Submarine || submarine.DockedTo.Contains(t.Transducer.Item.Submarine)) :
-                        submarine != item.Submarine && !submarine.DockedTo.Contains(item.Submarine)) continue;
-                    if (submarine.HullVertices == null) continue;
-
-                    Vector2 offset = ConvertUnits.ToSimUnits(submarine.WorldPosition - transducerCenter);
-
-                    for (int i = 0; i < submarine.HullVertices.Count; i++)
-                    {
-                        Vector2 start = (submarine.HullVertices[i] + offset) * simScale;
-                        start.Y = -start.Y;
-                        Vector2 end = (submarine.HullVertices[(i + 1) % submarine.HullVertices.Count] + offset) * simScale;
-                        end.Y = -end.Y;
-
-                        bool startOutside = start.LengthSquared() > displayRadius * displayRadius;
-                        bool endOutside = end.LengthSquared() > displayRadius * displayRadius;
-                        if (startOutside && endOutside)
-                        {
-                            continue;
-                        }
-                        else if (startOutside)
-                        {
-                            if (MathUtils.GetLineCircleIntersections(Vector2.Zero, DisplayRadius, end, start, true, out Vector2? intersection1, out Vector2? intersection2)==1)
-                            {
-                                GUI.DrawLine(spriteBatch, center + intersection1.Value, center + end, Color.LightBlue * signalStrength, width: 3);
-                            }
-                        }
-                        else if (endOutside)
-                        {
-                            if (MathUtils.GetLineCircleIntersections(Vector2.Zero, DisplayRadius, start, end, true, out Vector2? intersection1, out Vector2? intersection2) == 1)
-                            {
-                                GUI.DrawLine(spriteBatch, center + start, center + intersection1.Value, Color.LightBlue * signalStrength, width: 3);
-                            }
-                        }
-                        else
-                        {
-                            GUI.DrawLine(spriteBatch, center + start, center + end, Color.LightBlue * signalStrength, width: 3);
-                        }
-                    }
-                }
+                DrawOwnSubmarineBorders(spriteBatch, transducerCenter, signalStrength);
+                DrawDockingPorts(spriteBatch, transducerCenter, signalStrength);
             }
 
             if (sonarBlips.Count > 0)
@@ -442,7 +406,10 @@ namespace Barotrauma.Items.Components
                 if (!sub.OnSonar) continue;
                 if (UseTransducers ?
                     connectedTransducers.Any(t => sub == t.Transducer.Item.Submarine || sub.DockedTo.Contains(t.Transducer.Item.Submarine)) :
-                    sub == item.Submarine && sub.DockedTo.Contains(item.Submarine)) continue;
+                    (sub == item.Submarine || sub.DockedTo.Contains(item.Submarine)))
+                {
+                    continue;
+                }
                 if (sub.WorldPosition.Y > Level.Loaded.Size.Y) continue;
                              
                 DrawMarker(spriteBatch, sub.Name, sub.WorldPosition - transducerCenter, displayScale, center, (rect.Width * 0.45f));
@@ -452,6 +419,68 @@ namespace Barotrauma.Items.Components
             {
                 var steering = item.GetComponent<Steering>();
                 steering?.DebugDrawHUD(spriteBatch, transducerCenter, displayScale, displayRadius, center);
+            }
+        }
+
+        private void DrawOwnSubmarineBorders(SpriteBatch spriteBatch, Vector2 transducerCenter, float signalStrength)
+        {
+            float simScale = displayScale * Physics.DisplayToSimRation * zoom;
+
+            foreach (Submarine submarine in Submarine.Loaded)
+            {
+                if (UseTransducers ?
+                    !connectedTransducers.Any(t => submarine == t.Transducer.Item.Submarine || submarine.DockedTo.Contains(t.Transducer.Item.Submarine)) :
+                    submarine != item.Submarine && !submarine.DockedTo.Contains(item.Submarine)) continue;
+                if (submarine.HullVertices == null) continue;
+
+                Vector2 offset = ConvertUnits.ToSimUnits(submarine.WorldPosition - transducerCenter);
+
+                for (int i = 0; i < submarine.HullVertices.Count; i++)
+                {
+                    Vector2 start = (submarine.HullVertices[i] + offset) * simScale;
+                    start.Y = -start.Y;
+                    Vector2 end = (submarine.HullVertices[(i + 1) % submarine.HullVertices.Count] + offset) * simScale;
+                    end.Y = -end.Y;
+
+                    bool startOutside = start.LengthSquared() > displayRadius * displayRadius;
+                    bool endOutside = end.LengthSquared() > displayRadius * displayRadius;
+                    if (startOutside && endOutside)
+                    {
+                        continue;
+                    }
+                    else if (startOutside)
+                    {
+                        if (MathUtils.GetLineCircleIntersections(Vector2.Zero, DisplayRadius, end, start, true, out Vector2? intersection1, out Vector2? intersection2) == 1)
+                        {
+                            GUI.DrawLine(spriteBatch, center + intersection1.Value, center + end, Color.LightBlue * signalStrength, width: 3);
+                        }
+                    }
+                    else if (endOutside)
+                    {
+                        if (MathUtils.GetLineCircleIntersections(Vector2.Zero, DisplayRadius, start, end, true, out Vector2? intersection1, out Vector2? intersection2) == 1)
+                        {
+                            GUI.DrawLine(spriteBatch, center + start, center + intersection1.Value, Color.LightBlue * signalStrength, width: 3);
+                        }
+                    }
+                    else
+                    {
+                        GUI.DrawLine(spriteBatch, center + start, center + end, Color.LightBlue * signalStrength, width: 3);
+                    }
+                }
+            }
+        }
+
+        private void DrawDockingPorts(SpriteBatch spriteBatch, Vector2 transducerCenter, float signalStrength)
+        {
+            float scale = displayScale * zoom;
+            foreach (DockingPort dockingPort in DockingPort.List)
+            {
+                Vector2 offset = (dockingPort.Item.WorldPosition - transducerCenter) * scale;
+                offset.Y = -offset.Y;
+                if (offset.LengthSquared() > displayRadius * displayRadius) { continue; }
+                Vector2 size = dockingPort.Item.Rect.Size.ToVector2() * scale;
+
+                GUI.DrawRectangle(spriteBatch, center + offset - size / 2, size, Color.LightGreen, thickness: (int)(2 * zoom));
             }
         }
 
@@ -799,13 +828,29 @@ namespace Barotrauma.Items.Components
             markerPos.X = (int)markerPos.X;
             markerPos.Y = (int)markerPos.Y;
 
+            float alpha = 1.0f;
+            if (dist * scale < radius)
+            {
+                float normalizedDist = dist * scale / radius;
+                alpha = Math.Max(normalizedDist - 0.4f, 0.0f);
+
+                float mouseDist = Vector2.Distance(PlayerInput.MousePosition, markerPos);
+                float hoverThreshold = 150.0f;
+                if (mouseDist < hoverThreshold)
+                {
+                    alpha += (hoverThreshold - mouseDist) / hoverThreshold;
+                }
+            }
+
             if (!GuiFrame.Children.First().Rect.Contains(markerPos))
             {
                 Vector2? intersection = MathUtils.GetLineRectangleIntersection(center, markerPos, GuiFrame.Children.First().Rect);
                 if (intersection.HasValue) markerPos = intersection.Value;                
             }
 
-            GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X, (int)markerPos.Y, 5, 5), Color.LightBlue);
+            GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X - 3, (int)markerPos.Y - 3, 6, 6), Color.Red, thickness: 2);
+
+            if (alpha <= 0.0f) { return; }
 
             string wrappedLabel = ToolBox.WrapText(label, 150, GUI.SmallFont);
             wrappedLabel += "\n" + ((int)(dist * Physics.DisplayToRealWorldRatio) + " m");
@@ -819,7 +864,7 @@ namespace Barotrauma.Items.Components
             GUI.DrawString(spriteBatch,
                 new Vector2(labelPos.X + 10, labelPos.Y),
                 wrappedLabel,
-                Color.LightBlue * textAlpha, Color.Black * textAlpha * 0.8f,
+                Color.LightBlue * textAlpha * alpha, Color.Black * textAlpha * 0.8f * alpha,
                 2, GUI.SmallFont);
         }
         

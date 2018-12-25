@@ -226,6 +226,21 @@ namespace Barotrauma
                     }
                     body.Draw(spriteBatch, activeSprite, color, depth, Scale);
                     if (fadeInBrokenSprite != null) body.Draw(spriteBatch, fadeInBrokenSprite.Sprite, color * fadeInBrokenSpriteAlpha, depth - 0.000001f, Scale);
+
+                    foreach (var decorativeSprite in Prefab.DecorativeSprites)
+                    {
+                        if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
+                        float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState);
+                        Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState);
+
+                        var ca = (float)Math.Cos(-body.Rotation);
+                        var sa = (float)Math.Sin(-body.Rotation);
+                        Vector2 transformedOffset = new Vector2(ca * offset.X + sa * offset.Y, -sa * offset.X + ca * offset.Y);
+
+                        decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + transformedOffset.X, -(DrawPosition.Y + transformedOffset.Y)), color,
+                            -body.Rotation + rotation, Scale, activeSprite.effects,
+                            depth: depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth));
+                    }
                 }
 
                 activeSprite.effects = oldEffects;
@@ -302,33 +317,48 @@ namespace Barotrauma
 
         partial void UpdateSpriteStates(float deltaTime)
         {
-            foreach (var decorativeSprite in ((ItemPrefab)prefab).DecorativeSprites)
+            foreach (int spriteGroup in Prefab.DecorativeSpriteGroups.Keys)
             {
-                var spriteState = spriteAnimState[decorativeSprite];
-                spriteState.IsActive = true;
-                foreach (PropertyConditional conditional in decorativeSprite.Conditionals)
+                for (int i = 0; i < Prefab.DecorativeSpriteGroups[spriteGroup].Count; i++)
                 {
-                    if (string.IsNullOrEmpty(conditional.TargetItemComponentName))
+                    var decorativeSprite = Prefab.DecorativeSpriteGroups[spriteGroup][i];
+                    if (decorativeSprite == null) { continue; }
+                    if (spriteGroup > 0)
                     {
-                        if (conditional.Matches(this)) { continue; }                        
-                        spriteState.IsActive = false;
-                        break;                        
-                    }
-                    else
-                    {
-                        foreach (ItemComponent component in components)
+                        int activeSpriteIndex = ID % Prefab.DecorativeSpriteGroups[spriteGroup].Count;
+                        if (i != activeSpriteIndex)
                         {
-                            if (component.Name != conditional.TargetItemComponentName) { continue; }
-                            if (conditional.Matches(component)) { continue; }
-                            spriteState.IsActive = false;
-                            break;
+                            spriteAnimState[decorativeSprite].IsActive = false;
+                            continue;
                         }
                     }
+                    var spriteState = spriteAnimState[decorativeSprite];
+                    spriteState.IsActive = true;
+                    foreach (PropertyConditional conditional in decorativeSprite.Conditionals)
+                    {
+                        if (string.IsNullOrEmpty(conditional.TargetItemComponentName))
+                        {
+                            if (conditional.Matches(this)) { continue; }                        
+                            spriteState.IsActive = false;
+                            break;                        
+                        }
+                        else
+                        {
+                            foreach (ItemComponent component in components)
+                            {
+                                if (component.Name != conditional.TargetItemComponentName) { continue; }
+                                if (conditional.Matches(component)) { continue; }
+                                spriteState.IsActive = false;
+                                break;
+                            }
+                        }
+                    }
+                    if (!spriteState.IsActive) { continue; }
+                    spriteState.OffsetState += deltaTime;
+                    spriteState.RotationState += deltaTime;
                 }
-                if (!spriteState.IsActive) { continue; }
-                spriteState.OffsetState += deltaTime;
-                spriteState.RotationState += deltaTime;
             }
+            
         }
 
         public override void UpdateEditing(Camera cam)

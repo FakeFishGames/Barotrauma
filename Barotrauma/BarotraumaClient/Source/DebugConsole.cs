@@ -554,6 +554,107 @@ namespace Barotrauma
                 NewMessage(AITarget.ShowAITargets ? "Enabled AI target drawing" : "Disabled AI target drawing", Color.White);
             });
             AssignRelayToServer("toggleaitargets|aitargets", false);
+
+            commands.Add(new Command("checkcrafting", "checkcrafting: Checks item deconstruction & crafting recipes for inconsistencies.", (string[] args) =>
+            {
+                List<FabricableItem> fabricableItems = new List<FabricableItem>();
+                foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
+                {
+                    if (mapEntityPrefab is ItemPrefab itemPrefab)
+                    {
+                        var fabricatorElement = itemPrefab.ConfigElement.Element("Fabricator");
+                        if (fabricatorElement == null) { continue; }
+
+                        foreach (XElement element in fabricatorElement.Elements())
+                        {
+                            if (element.Name.ToString().ToLowerInvariant() != "fabricableitem") { continue; }
+                            fabricableItems.Add(new FabricableItem(element));
+                        }
+
+                    }
+                }
+                foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
+                {
+                    if (mapEntityPrefab is ItemPrefab itemPrefab)
+                    {
+                        int? minCost = itemPrefab.GetPrices()?.Min(p => p.BuyPrice);
+                        int? fabricationCost = null;
+                        int? deconstructProductCost = null;
+
+                        var fabricationRecipe = fabricableItems.Find(f => f.TargetItem == itemPrefab);
+                        if (fabricationRecipe != null)
+                        {
+                            foreach (var ingredient in fabricationRecipe.RequiredItems)
+                            {
+                                int? ingredientPrice = ingredient.ItemPrefab.GetPrices()?.Min(p => p.BuyPrice);
+                                if (ingredientPrice.HasValue)
+                                {
+                                    if (!fabricationCost.HasValue) { fabricationCost = 0; }
+                                    float useAmount = ingredient.UseCondition ? ingredient.MinCondition : 1.0f;
+                                    fabricationCost += (int)(ingredientPrice.Value * ingredient.Amount * useAmount);
+                                }
+                            }
+                        }
+
+                        foreach (var deconstructItem in itemPrefab.DeconstructItems)
+                        {
+                            var targetItem = MapEntityPrefab.Find(null, deconstructItem.ItemIdentifier, showErrorMessages: false) as ItemPrefab;
+                            if (targetItem == null)
+                            {
+                                ThrowError("Error in item \"" + itemPrefab.Name + "\" - could not find deconstruct item \"" + deconstructItem.ItemIdentifier + "\"!");
+                                continue;
+                            }
+
+                            int? deconstructProductPrice = targetItem.GetPrices()?.Min(p => p.BuyPrice);
+                            if (deconstructProductPrice.HasValue)
+                            {
+                                if (!deconstructProductCost.HasValue) { deconstructProductCost = 0; }
+                                deconstructProductCost += (int)(deconstructProductPrice * deconstructItem.OutCondition);
+                            }
+
+                            if (fabricationRecipe != null)
+                            {
+                                if (!fabricationRecipe.RequiredItems.Any(r => r.ItemPrefab == targetItem))
+                                {
+                                    NewMessage("Deconstructing \"" + itemPrefab.Name + "\" produces \"" + deconstructItem.ItemIdentifier + "\", which isn't required in the fabrication recipe of the item.", Color.Orange);
+                                }
+                            }
+                        }
+
+                        if (fabricationCost.HasValue && minCost.HasValue)
+                        {
+                            if (fabricationCost.Value < minCost * 0.9f)
+                            {
+                                float ratio = (float)fabricationCost.Value / minCost.Value;
+                                Color color = ToolBox.GradientLerp(ratio, Color.Red, Color.Yellow, Color.Green);
+                                NewMessage("The fabrication ingredients of \"" + itemPrefab.Name + "\" only cost " + (int)(ratio * 100) + "% of the price of the item. Item price: " + minCost.Value + ", ingredient prices: " + fabricationCost.Value, color);
+                            }
+                            else if (fabricationCost.Value > minCost * 1.1f)
+                            {
+                                float ratio = (float)fabricationCost.Value / minCost.Value;
+                                Color color = ToolBox.GradientLerp(ratio - 1.0f, Color.Green, Color.Yellow, Color.Red);
+                                NewMessage("The fabrication ingredients of \"" + itemPrefab.Name + "\" cost " + (int)(ratio * 100 - 100) + "% more than the price of the item. Item price: " + minCost.Value + ", ingredient prices: " + fabricationCost.Value, color);
+                            }
+                        }
+                        if (deconstructProductCost.HasValue && minCost.HasValue)
+                        {
+                            if (deconstructProductCost.Value < minCost * 0.8f)
+                            {
+                                float ratio = (float)deconstructProductCost.Value / minCost.Value;
+                                Color color = ToolBox.GradientLerp(ratio, Color.Red, Color.Yellow, Color.Green);
+                                NewMessage("The deconstruction output of \"" + itemPrefab.Name + "\" is only worth " + (int)(ratio * 100) + "% of the price of the item. Item price: " + minCost.Value + ", output value: " + deconstructProductCost.Value, color);
+                            }
+                            else if (deconstructProductCost.Value > minCost * 1.1f)
+                            {
+                                float ratio = (float)deconstructProductCost.Value / minCost.Value;
+                                Color color = ToolBox.GradientLerp(ratio - 1.0f, Color.Green, Color.Yellow, Color.Red);
+                                NewMessage("The deconstruction output of \"" + itemPrefab.Name + "\" is worth " + (int)(ratio * 100 - 100) + "% more than the price of the item. Item price: " + minCost.Value + ", output value: " + deconstructProductCost.Value, color);
+                            }
+                        }
+                    }
+                }
+            }, isCheat: false));
+            
 #if DEBUG
             commands.Add(new Command("spamchatmessages", "", (string[] args) =>
             {

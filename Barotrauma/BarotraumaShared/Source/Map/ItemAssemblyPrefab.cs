@@ -1,24 +1,27 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Xml.Linq;
-using Microsoft.Xna.Framework.Graphics;
-using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
-    class ItemAssemblyPrefab : MapEntityPrefab
+    partial class ItemAssemblyPrefab : MapEntityPrefab
     {
         private readonly XElement configElement;
         private readonly string configPath;
+
+        [Serialize(false, false)]
+        public bool HideInMenus { get; set; }
         
-        public List<Pair<MapEntityPrefab, Rectangle>> Entities
+        public List<Pair<MapEntityPrefab, Rectangle>> DisplayEntities
         {
             get;
             private set;
         }
+
+        public Rectangle Bounds;
 
         public ItemAssemblyPrefab(string filePath)
         {
@@ -38,15 +41,38 @@ namespace Barotrauma
 
             SerializableProperty.DeserializeProperties(this, configElement);
 
-            Entities = new List<Pair<MapEntityPrefab, Rectangle>>();
+            int minX = int.MaxValue, minY = int.MaxValue;
+            int maxX = int.MinValue, maxY = int.MinValue;
+            DisplayEntities = new List<Pair<MapEntityPrefab, Rectangle>>();
             foreach (XElement entityElement in doc.Root.Elements())
             {
                 string entityName = entityElement.GetAttributeString("name", "");
                 MapEntityPrefab mapEntity = List.Find(p => p.Name == entityName);
-                if (mapEntity != null) Entities.Add(new Pair<MapEntityPrefab,Rectangle>(mapEntity, entityElement.GetAttributeRect("rect", Rectangle.Empty)));
+                Rectangle rect = entityElement.GetAttributeRect("rect", Rectangle.Empty);
+                if (mapEntity != null && !entityElement.GetAttributeBool("hideinassemblypreview", false))
+                {
+                    DisplayEntities.Add(new Pair<MapEntityPrefab, Rectangle>(mapEntity, rect));
+                    minX = Math.Min(minX, rect.X);
+                    minY = Math.Min(minY, rect.Y - rect.Height);
+                    maxX = Math.Max(maxX, rect.Right);
+                    maxY = Math.Max(maxY, rect.Y);
+                }
             }
+
+            Bounds = new Rectangle(minX, minY, maxX - minX, maxY - minY);
             
             List.Add(this);
+        }
+
+        public static void Remove(string filePath)
+        {
+            var matchingAssembly = List.Find(prefab => 
+                prefab is ItemAssemblyPrefab assemblyPrefab && 
+                assemblyPrefab.configPath == filePath);
+            if (matchingAssembly != null)
+            {
+                List.Remove(matchingAssembly);
+            }
         }
         
         protected override void CreateInstance(Rectangle rect)
@@ -81,54 +107,7 @@ namespace Barotrauma
             return entities;
 
         }
-
-#if CLIENT
-        public override void DrawPlacing(SpriteBatch spriteBatch, Camera cam, Rectangle? placeRect = null)
-        {
-            base.DrawPlacing(spriteBatch, cam);
-            foreach (Pair<MapEntityPrefab, Rectangle> entity in Entities)
-            {
-                Rectangle drawRect = entity.Second;
-                drawRect.Location += Submarine.MouseToWorldGrid(cam, Submarine.MainSub).ToPoint();
-                entity.First.DrawPlacing(spriteBatch, cam, drawRect);
-            }
-        }
-
-        public static XElement Save(List<MapEntity> entities, string name, string description)
-        {
-            XElement element = new XElement("ItemAssembly",
-                new XAttribute("name", name),
-                new XAttribute("description", description));
-
-            //move the entities so that their "center of mass" is at {0,0}
-            var assemblyEntities = MapEntity.CopyEntities(MapEntity.SelectedList);
-            float minX = assemblyEntities[0].WorldRect.X, maxX = assemblyEntities[0].WorldRect.Right;
-            float minY = assemblyEntities[0].WorldRect.Y - assemblyEntities[0].WorldRect.Height, maxY = assemblyEntities[0].WorldRect.Y;
-            for (int i = 1; i < assemblyEntities.Count; i++)
-            {
-                minX = Math.Min(minX, assemblyEntities[i].WorldRect.X);
-                maxX = Math.Max(maxX, assemblyEntities[i].WorldRect.Right);
-                minY = Math.Min(minY, assemblyEntities[i].WorldRect.Y - assemblyEntities[i].WorldRect.Height);
-                maxY = Math.Max(maxY, assemblyEntities[i].WorldRect.Y);
-            }
-            Vector2 center = new Vector2((minX + maxX) / 2.0f, (minY + maxY) / 2.0f);
-            if (Submarine.MainSub != null) center -= Submarine.MainSub.HiddenSubPosition;
-            center.X -= center.X % Submarine.GridSize.X;
-            center.Y -= center.Y % Submarine.GridSize.Y;
-
-            MapEntity.SelectedList.Clear();
-            MapEntity.SelectedList.AddRange(assemblyEntities);
-
-            foreach (MapEntity mapEntity in assemblyEntities)
-            {
-                mapEntity.Move(-center);
-                mapEntity.Submarine = Submarine.MainSub;
-                mapEntity.Save(element);
-            }
-
-            return element;
-        }
-#endif
+        
         public void Delete()
         {
             List.Remove(this);
