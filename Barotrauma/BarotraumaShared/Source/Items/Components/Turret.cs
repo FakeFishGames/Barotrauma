@@ -219,6 +219,10 @@ namespace Barotrauma.Items.Components
             projectile.FindHull();
             projectile.Submarine = projectile.body.Submarine;
 
+            LaunchProjSpecific();
+
+            ApplyStatusEffects(ActionType.OnUse, 1.0f, user);
+
             Projectile projectileComponent = projectile.GetComponent<Projectile>();
             if (projectileComponent != null)
             {
@@ -233,6 +237,8 @@ namespace Barotrauma.Items.Components
                 GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.components.IndexOf(this), projectile });
             }
         }
+
+        partial void LaunchProjSpecific();
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
