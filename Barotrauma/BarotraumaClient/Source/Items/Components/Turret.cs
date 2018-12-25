@@ -57,6 +57,11 @@ namespace Barotrauma.Items.Components
             powerIndicator = new GUIProgressBar(new Rectangle(GameMain.GraphicsWidth / 2 - barWidth / 2, 20, barWidth, 30), Color.White, 0.0f);
         }
 
+        partial void LaunchProjSpecific()
+        {
+            PlaySound(ActionType.OnUse, item.WorldPosition);
+        }
+
         public void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
             Vector2 drawPos = new Vector2(item.Rect.X, item.Rect.Y);
@@ -159,7 +164,6 @@ namespace Barotrauma.Items.Components
             }
 
             Launch(projectile);
-            PlaySound(ActionType.OnUse, item.WorldPosition);
         }
     }
 }
