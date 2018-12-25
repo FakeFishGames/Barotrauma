@@ -349,22 +349,27 @@ namespace Barotrauma.Networking
 
                 IClientSerializable entity = Entity.FindEntityByID(entityID) as IClientSerializable;
 
-                //skip the event if we've already received it or if the entity isn't found
-                if (thisEventID != (UInt16)(sender.LastSentEntityEventID + 1) || entity == null)
+                //skip the event if we've already received it
+                if (thisEventID != (UInt16)(sender.LastSentEntityEventID + 1))
                 {
                     if (GameSettings.VerboseLogging)
                     {
-                        if (thisEventID != (UInt16) (sender.LastSentEntityEventID + 1))
-                        {
-                            DebugConsole.NewMessage("received msg " + thisEventID, Microsoft.Xna.Framework.Color.Red);
-                        }
-                        else if (entity == null)
-                        {
-                            DebugConsole.NewMessage(
-                                "received msg " + thisEventID + ", entity " + entityID + " not found",
-                                Microsoft.Xna.Framework.Color.Red);
-                        }
+                        DebugConsole.NewMessage("received msg " + thisEventID, Microsoft.Xna.Framework.Color.Red);
                     }
+                    msg.Position += msgLength * 8;
+                }
+                else if (entity == null)
+                {
+                    //entity not found -> consider the even read and skip over it
+                    //(can happen, for example, when a client uses a medical item repeatedly 
+                    //and creates an event for it before receiving the event about it being removed)
+                    if (GameSettings.VerboseLogging)
+                    {
+                        DebugConsole.NewMessage(
+                            "received msg " + thisEventID + ", entity " + entityID + " not found",
+                            Microsoft.Xna.Framework.Color.Orange);
+                    }
+                    sender.LastSentEntityEventID++;
                     msg.Position += msgLength * 8;
                 }
                 else
