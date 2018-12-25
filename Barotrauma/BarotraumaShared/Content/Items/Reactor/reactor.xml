@@ -35,7 +35,7 @@
       <StatusEffect type="OnBroken" target="This" FissionRate="0.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" range="8000" selectionmode="All"/>
         <sound file="Content/Items/Weapons/ExplosionDebris5.ogg" range="8000" />
-        <Explosion range ="800"  structuredamage="400" force="5.0">
+        <Explosion range="800"  structuredamage="400" force="5.0">
           <Affliction identifier="burn" strength="200"/>
           <Affliction identifier="internaldamage" strength="200"/>
           <Affliction identifier="stun" strength="5"/>
@@ -56,7 +56,7 @@
       <Containable identifiers="fuelrod">
         <StatusEffect type="OnContaining" target="This" AvailableFuel="80.0" disabledeltatime="true"/>
       </Containable>
-      <Containable identifiers="incendiumfuelrod">
+      <Containable identifiers="fulguriumfuelrod">
         <StatusEffect type="OnContaining" target="This" AvailableFuel="100.0" disabledeltatime="true"/>
       </Containable>
     </ItemContainer>
@@ -74,10 +74,8 @@
     <Price locationtype="Outpost" buyprice="500"/>
     
     <Deconstruct time="10">
-      <Item identifier="steelbar"/>
-      <Item identifier="uraniumpowder" mincondition="0.1" maxcondition="0.5"/>
-      <Item identifier="uraniumpowder" mincondition="0.1" maxcondition="0.9"/>
-      <Item identifier="uraniumbar" mincondition="0.9"/>
+      <Item identifier="steel"/>
+      <Item identifier="uranium" mincondition="0.5"/>
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,64,64,64"/>
@@ -89,19 +87,19 @@
   </Item>
 
   <Item
-    name="Incendium Fuel Rod"
-    identifier="incendiumfuelrod"
+    name="Fulgurium Fuel Rod"
+    identifier="fulguriumfuelrod"
     Tags="smallitem,reactorfuel"    
     cargocontaineridentifier="metalcrate"
     spritecolor="0.5,0.0,0.0,1.0">
 
     <Deconstruct time="10">
-      <Item identifier="steelbar"/>
-      <Item identifier="incendiumbar" mincondition="0.95"/>
+      <Item identifier="steel"/>
+      <Item identifier="fulgurium" mincondition="0.95"/>
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,64,64,64"/>
-    <Sprite texture ="fuelrod.png" depth="0.55" sourcerect="0,0,8,39"/>
+    <Sprite texture="fuelrod.png" depth="0.55" sourcerect="0,0,8,39"/>
 
     <Body radius="6" height="22" density="5"/>
 

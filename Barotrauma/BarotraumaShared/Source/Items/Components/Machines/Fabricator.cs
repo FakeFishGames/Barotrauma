@@ -220,7 +220,7 @@ namespace Barotrauma.Items.Components
 
 #if CLIENT
             itemList.Enabled = false;
-            activateButton.Text = TextManager.Get("FabricatorCreate");
+            activateButton.Text = TextManager.Get("FabricatorCancel");
 #endif
 
             MoveIngredientsToInputContainer(selectedItem);
@@ -258,7 +258,7 @@ namespace Barotrauma.Items.Components
             itemList.Enabled = true;
             if (activateButton != null)
             {
-                activateButton.Text = "Create";
+                activateButton.Text = TextManager.Get("FabricatorCreate");
             }
 #endif
             progressState = 0.0f;

@@ -414,7 +414,24 @@ namespace Barotrauma
                             decorativeSpriteFolder = Path.GetDirectoryName(filePath);
                         }
 
-                        DecorativeSprites.Add(new DecorativeSprite(subElement, decorativeSpriteFolder));
+                        int groupID = 0;
+                        DecorativeSprite decorativeSprite = null;
+                        if (subElement.Attribute("texture") == null)
+                        {
+                            groupID = subElement.GetAttributeInt("randomgroupid", 0);
+                        }
+                        else
+                        {
+                            decorativeSprite = new DecorativeSprite(subElement, decorativeSpriteFolder);
+                            DecorativeSprites.Add(decorativeSprite);
+                            groupID = decorativeSprite.RandomGroupID;
+                        }
+                        if (!DecorativeSpriteGroups.ContainsKey(groupID))
+                        {
+                            DecorativeSpriteGroups.Add(groupID, new List<DecorativeSprite>());
+                        }
+                        DecorativeSpriteGroups[groupID].Add(decorativeSprite);
+
                         break;
 #endif
                     case "deconstruct":
@@ -495,6 +512,12 @@ namespace Barotrauma
         {
             if (prices == null || !prices.ContainsKey(location.Type.Name.ToLowerInvariant())) return null;
             return prices[location.Type.Name.ToLowerInvariant()];
+        }
+
+
+        public IEnumerable<PriceInfo> GetPrices()
+        {
+            return prices?.Values;
         }
     }
 }

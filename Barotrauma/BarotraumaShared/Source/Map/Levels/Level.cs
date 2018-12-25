@@ -303,14 +303,18 @@ namespace Barotrauma
             SeaFloorTopPos = generationParams.SeaFloorDepth + generationParams.MountainHeightMax + generationParams.SeaFloorVariance;
 
             int minWidth = 6500;
+            int maxWidth = 50000;
             if (Submarine.MainSub != null)
             {
                 Rectangle dockedSubBorders = Submarine.MainSub.GetDockedBorders();
                 minWidth = Math.Max(minWidth, Math.Max(dockedSubBorders.Width, dockedSubBorders.Height));
+                minWidth = Math.Min(minWidth, maxWidth);
             }
 
             Rectangle pathBorders = borders;
             pathBorders.Inflate(-minWidth * 2, -minWidth * 2);
+
+            Debug.Assert(pathBorders.Width > 0 && pathBorders.Height > 0, "The size of the level's path area was negative.");
 
             startPosition = new Point(
                 Rand.Range(minWidth, minWidth * 2, Rand.RandSync.Server),
@@ -1201,7 +1205,8 @@ namespace Barotrauma
             {
                 if (!(mapEntityPrefab is ItemPrefab itemPrefab)) { continue; }
 
-                if (itemPrefab.LevelCommonness.TryGetValue(levelName, out float commonness))
+                if (itemPrefab.LevelCommonness.TryGetValue(levelName, out float commonness) || 
+                    itemPrefab.LevelCommonness.TryGetValue("", out commonness))
                 {
                     levelItems.Add(new Pair<ItemPrefab, float>(itemPrefab, commonness));
                 }

@@ -19,7 +19,6 @@
   <sound file="Content/Characters/Mantis/idle3.ogg" state="None" range="500"/>
 
   <Inventory slots="Any, Any" accessiblewhenalive="false">
-    <Item identifier="mantisshell"/>
     <Item identifier="swimbladder"/>
   </Inventory>
   

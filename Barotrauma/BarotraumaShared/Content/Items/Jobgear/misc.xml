@@ -8,6 +8,10 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,0,64,64" />
     <Sprite texture="headset.png" depth="0.6" sourcerect="0,0,15,15" origin="0.5,0.5" />
     <Body width="12" height="8" density="13" />
+    <Deconstruct time="10">
+      <Item identifier="plastic" />
+      <Item identifier="fpgacircuit" />
+    </Deconstruct>
     <WifiComponent range="35000.0" LinkToChat="true" MinChatMessageInterval="0.0">
       <RequiredItems identifier="batterycell,fulguriumbatterycell" type="Contained" />
     </WifiComponent>

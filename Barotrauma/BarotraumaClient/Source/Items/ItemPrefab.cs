@@ -64,6 +64,12 @@ namespace Barotrauma
             public AnimationType RotationAnim { get; private set; }
 
             /// <summary>
+            /// If > 0, only one sprite of the same group is used (chosen randomly)
+            /// </summary>
+            [Serialize(0, false)]
+            public int RandomGroupID { get; private set; }
+
+            /// <summary>
             /// The sprite is only drawn if these conditions are fulfilled
             /// </summary>
             public List<PropertyConditional> Conditionals { get; private set; } = new List<PropertyConditional>();
@@ -137,6 +143,7 @@ namespace Barotrauma
 
         public List<BrokenItemSprite> BrokenSprites = new List<BrokenItemSprite>();
         public List<DecorativeSprite> DecorativeSprites = new List<DecorativeSprite>();
+        public Dictionary<int, List<DecorativeSprite>> DecorativeSpriteGroups = new Dictionary<int, List<DecorativeSprite>>();
         public Sprite InventoryIcon;
 
         //only used to display correct color in the sub editor, item instances have their own property that can be edited on a per-item basis
@@ -147,7 +154,7 @@ namespace Barotrauma
             protected set;
         }
 
-        public override void DrawPlacing(SpriteBatch spriteBatch, Camera cam, Rectangle? placeRect = null)
+        public override void DrawPlacing(SpriteBatch spriteBatch, Camera cam)
         {
             Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
 
@@ -159,18 +166,8 @@ namespace Barotrauma
 
             if (!ResizeHorizontal && !ResizeVertical)
             {
-                if (placeRect.HasValue)
-                {
-                    sprite.Draw(spriteBatch, new Vector2(placeRect.Value.Center.X, -(placeRect.Value.Y - placeRect.Value.Height / 2)), SpriteColor);
-                }
-                else
-                {
-                    sprite.Draw(spriteBatch, new Vector2(position.X, -position.Y) + sprite.size / 2.0f * Scale, SpriteColor, scale: Scale);
-                }
-            }
-            else if (placeRect.HasValue)
-            {
-                if (sprite != null) sprite.DrawTiled(spriteBatch, new Vector2(placeRect.Value.X, -placeRect.Value.Y), placeRect.Value.Size.ToVector2(), null, SpriteColor);
+                sprite.Draw(spriteBatch, new Vector2(position.X, -position.Y) + sprite.size / 2.0f * Scale, SpriteColor, scale: Scale);
+
             }
             else
             {
@@ -190,6 +187,18 @@ namespace Barotrauma
                 }
 
                 if (sprite != null) sprite.DrawTiled(spriteBatch, new Vector2(position.X, -position.Y), placeSize, color: SpriteColor);
+            }
+        }
+
+        public override void DrawPlacing(SpriteBatch spriteBatch, Rectangle placeRect, float scale = 1.0f)
+        {
+            if (!ResizeHorizontal && !ResizeVertical)
+            {
+                sprite.Draw(spriteBatch, new Vector2(placeRect.Center.X, -(placeRect.Y - placeRect.Height / 2)), SpriteColor, scale: Scale * scale);
+            }
+            else
+            {
+                if (sprite != null) sprite.DrawTiled(spriteBatch, new Vector2(placeRect.X, -placeRect.Y), placeRect.Size.ToVector2(), null, SpriteColor);
             }
         }
     }

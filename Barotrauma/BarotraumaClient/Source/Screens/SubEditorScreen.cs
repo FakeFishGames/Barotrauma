@@ -405,6 +405,11 @@ namespace Barotrauma
 
             foreach (MapEntityPrefab ep in MapEntityPrefab.List)
             {
+                var itemAssemblyPrefab = ep as ItemAssemblyPrefab;
+#if !DEBUG
+                if (itemAssemblyPrefab != null && itemAssemblyPrefab.HideInMenus) { continue; }                
+#endif
+
                 bool legacy = ep.Category == MapEntityCategory.Legacy;
 
                 float relWidth = 1.0f / entitiesPerRow;
@@ -419,18 +424,12 @@ namespace Barotrauma
                 string name = legacy ? ep.Name + " (legacy)" : ep.Name;
                 frame.ToolTip = string.IsNullOrEmpty(ep.Description) ? name : name + '\n' + ep.Description;
 
-                GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.8f), frame.RectTransform, Anchor.Center), style: null)
-                {
+                GUILayoutGroup paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.8f), frame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
+                {              
+                    Stretch = true,
+                    RelativeSpacing = 0.03f,
                     CanBeFocused = false
                 };
-
-                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform, Anchor.BottomCenter),
-                    text: ep.Name, textAlignment: Alignment.Center, font: GUI.SmallFont)
-                {
-                    CanBeFocused = false
-                };
-                if (legacy) textBlock.TextColor *= 0.6f;
-                textBlock.Text = ToolBox.LimitString(textBlock.Text, textBlock.Font, textBlock.Rect.Width);
 
                 Sprite icon = ep.sprite;
                 Color iconColor = Color.White;
@@ -446,35 +445,76 @@ namespace Barotrauma
                         iconColor = itemPrefab.SpriteColor;
                     }
                 }
+                GUIImage img = null;
                 if (ep.sprite != null)
                 {
-                    GUIImage img = new GUIImage(new RectTransform(new Point(paddedFrame.Rect.Height, paddedFrame.Rect.Height - textBlock.Rect.Height),
+                    img = new GUIImage(new RectTransform(new Vector2(1.0f, 0.8f),
                         paddedFrame.RectTransform, Anchor.TopCenter), icon)
                     {
-                        CanBeFocused = false,
+                        CanBeFocused = false,                        
                         Color = legacy ? iconColor * 0.6f : iconColor
                     };
-                    img.Scale = Math.Min(img.Rect.Width / img.Sprite.size.X, img.Rect.Height / img.Sprite.size.Y);
-                    img.RectTransform.NonScaledSize = new Point((int)(img.Sprite.size.X * img.Scale), img.Rect.Height);
                 }
 
                 if (ep.Category == MapEntityCategory.ItemAssembly)
                 {
-                    var deleteButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.2f), paddedFrame.RectTransform, Anchor.Center) { MinSize = new Point(0, 20) },
+                    new GUICustomComponent(new RectTransform(new Vector2(1.0f, 0.75f),
+                        paddedFrame.RectTransform, Anchor.TopCenter), onDraw: itemAssemblyPrefab.DrawIcon, onUpdate: null)
+                    {
+                        HideElementsOutsideFrame = true,
+                        ToolTip = frame.ToolTip
+                    };
+                }
+
+                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform, Anchor.BottomCenter),
+                    text: ep.Name, textAlignment: Alignment.Center, font: GUI.SmallFont)
+                {
+                    CanBeFocused = false
+                };
+                if (legacy) textBlock.TextColor *= 0.6f;
+                textBlock.Text = ToolBox.LimitString(textBlock.Text, textBlock.Font, textBlock.Rect.Width);
+
+                if (ep.Category == MapEntityCategory.ItemAssembly)
+                {
+                    var deleteButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform, Anchor.BottomCenter) { MinSize = new Point(0, 20) },
                         TextManager.Get("Delete"))
                     {
                         UserData = ep,
                         OnClicked = (btn, userData) =>
                         {
                             ItemAssemblyPrefab assemblyPrefab = userData as ItemAssemblyPrefab;
-                            assemblyPrefab.Delete();
-                            UpdateEntityList();
-                            OpenEntityMenu(MapEntityCategory.ItemAssembly);
+                            var msgBox = new GUIMessageBox(
+                                TextManager.Get("DeleteDialogLabel"),
+                                TextManager.Get("DeleteDialogQuestion").Replace("[file]", assemblyPrefab.Name),
+                                new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") });
+                            msgBox.Buttons[0].OnClicked += (deleteBtn, userData2) =>
+                            {
+                                try
+                                {
+                                    assemblyPrefab.Delete();
+                                    UpdateEntityList();
+                                    OpenEntityMenu(MapEntityCategory.ItemAssembly);
+                                }
+                                catch (Exception e)
+                                {
+                                    DebugConsole.ThrowError(TextManager.Get("DeleteFileError").Replace("[file]", assemblyPrefab.Name), e);
+                                }
+                                return true;
+                            };
+                            msgBox.Buttons[0].OnClicked += msgBox.Close;
+                            msgBox.Buttons[1].OnClicked += msgBox.Close;
                             return true;
                         }
                     };
                 }
+                paddedFrame.Recalculate();
+                if (img != null)
+                {
+                    img.Scale = Math.Min(Math.Min(img.Rect.Width / img.Sprite.size.X, img.Rect.Height / img.Sprite.size.Y), 1.5f);
+                    img.RectTransform.NonScaledSize = new Point((int)(img.Sprite.size.X * img.Scale), img.Rect.Height);
+                }
             }
+
 
             entityList.Content.RectTransform.SortChildren((i1, i2) => 
                 (i1.GUIComponent.UserData as MapEntityPrefab).Name.CompareTo((i2.GUIComponent.UserData as MapEntityPrefab).Name));
@@ -827,14 +867,25 @@ namespace Barotrauma
                 OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) saveFrame = null; return true; }
             };
 
-            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.2f), saveFrame.RectTransform, Anchor.Center) { MinSize = new Point(400, 200) });
-            GUILayoutGroup paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
+            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.3f), saveFrame.RectTransform, Anchor.Center) { MinSize = new Point(400, 300) });
+            GUILayoutGroup paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center))
+            {
+                AbsoluteSpacing = 5,
+                Stretch = true
+            };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform),                 
                 TextManager.Get("SaveItemAssemblyDialogHeader"), font: GUI.LargeFont);
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform), 
                 TextManager.Get("SaveItemAssemblyDialogName"));
             nameBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 0.1f), paddedSaveFrame.RectTransform));
+
+#if DEBUG
+            new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), paddedSaveFrame.RectTransform), TextManager.Get("SaveItemAssemblyHideInMenus"))
+            {
+                UserData = "hideinmenus"
+            };
+#endif
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform), 
                 TextManager.Get("SaveItemAssemblyDialogDescription"));
@@ -846,7 +897,7 @@ namespace Barotrauma
             };
             
             var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedSaveFrame.RectTransform, Anchor.BottomCenter),
-                isHorizontal: true, childAnchor: Anchor.BottomRight) { AbsoluteSpacing = 5 };
+                isHorizontal: true, childAnchor: Anchor.BottomRight);
             new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonArea.RectTransform),
                 TextManager.Get("Cancel"))
             {
@@ -882,14 +933,39 @@ namespace Barotrauma
                     return false;
                 }
             }
+
+            var hideInMenusTickBox = nameBox.Parent.GetChildByUserData("hideinmenus") as GUITickBox;
+            bool hideInMenus = hideInMenusTickBox == null ? false : hideInMenusTickBox.Selected;
             
             string saveFolder = Path.Combine("Content", "Items", "Assemblies");
-            XDocument doc = new XDocument(ItemAssemblyPrefab.Save(MapEntity.SelectedList, nameBox.Text, descriptionBox.Text));
             string filePath = Path.Combine(saveFolder, nameBox.Text + ".xml");
-            doc.Save(filePath);
 
-            new ItemAssemblyPrefab(filePath);
-            UpdateEntityList();
+            if (File.Exists(filePath))
+            {
+                var msgBox = new GUIMessageBox(TextManager.Get("Warning"), TextManager.Get("ItemAssemblyFileExistsWarning"), new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+                {
+                    msgBox.Close();
+                    ItemAssemblyPrefab.Remove(filePath);
+                    Save();
+                    return true;
+                };
+                msgBox.Buttons[1].OnClicked = msgBox.Close;
+            }
+            else
+            {
+                Save();
+            }
+
+            void Save()
+            {
+                XDocument doc = new XDocument(ItemAssemblyPrefab.Save(MapEntity.SelectedList, nameBox.Text, descriptionBox.Text, hideInMenus));
+                doc.Save(filePath);
+
+                new ItemAssemblyPrefab(filePath);
+                UpdateEntityList();
+            }
+
             saveFrame = null;
             return false;
         }
@@ -1119,7 +1195,6 @@ namespace Barotrauma
             characterMode = enabled;
             if (characterMode)
             {
-                entityMenuOpen = false;
                 wiringModeTickBox.Selected = false;
                 wiringMode = false;
             }
@@ -1149,7 +1224,6 @@ namespace Barotrauma
             wiringMode = enabled;
             if (wiringMode)
             {
-                entityMenuOpen = false;
                 characterModeTickBox.Selected = false;
                 characterMode = false;
             }
@@ -1768,7 +1842,7 @@ namespace Barotrauma
                 MapEntity.UpdateEditor(cam);
             }
 
-            entityMenuOpenState = entityMenuOpen ? 
+            entityMenuOpenState = entityMenuOpen && !characterMode & !wiringMode ? 
                 (float)Math.Min(entityMenuOpenState + deltaTime * 5.0f, 1.0f) :
                 (float)Math.Max(entityMenuOpenState - deltaTime * 5.0f, 0.0f);
 
@@ -1780,7 +1854,6 @@ namespace Barotrauma
                 {
                     wiringToolPanel.GetChild<GUIListBox>().Deselect();
                 }
-                //wiringToolPanel.Update((float)deltaTime);
             }
 
             if (PlayerInput.LeftButtonClicked() && !GUI.IsMouseOn(entityFilterBox))

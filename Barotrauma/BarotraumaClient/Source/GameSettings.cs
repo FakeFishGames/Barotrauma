@@ -38,42 +38,26 @@ namespace Barotrauma
             return keyMapping[(int)inputType];
         }
 
-        private bool ChangeHUDScale(GUIScrollBar scrollBar, float barScroll)
+        private bool ChangeSliderText(GUIScrollBar scrollBar, float barScroll)
         {
             UnsavedSettings = true;
-            HUDScale = MathHelper.Lerp(MinHUDScale, MaxHUDScale, barScroll);
-            OnHUDScaleChanged?.Invoke();
-            return true;
-        }
-
-        private bool ChangeInventoryScale(GUIScrollBar scrollBar, float barScroll)
-        {
-            UnsavedSettings = true;
-            InventoryScale = MathHelper.Lerp(MinInventoryScale, MaxInventoryScale, barScroll);
-            return true;
-        }
-
-        private bool ChangeParticleLimit(GUIScrollBar scrollBar, float barScroll)
-        {
-            UnsavedSettings = true;
-            ParticleLimit = 200 + (int)(barScroll * 1300.0f);
-
-            return true;
-        }
-
-        private bool ChangeSoundVolume(GUIScrollBar scrollBar, float barScroll)
-        {
-            UnsavedSettings = true;
-            SoundVolume = barScroll;
-
-            return true;
-        }
-
-        private bool ChangeMusicVolume(GUIScrollBar scrollBar, float barScroll)
-        {
-            UnsavedSettings = true;
-            MusicVolume = barScroll;
-
+            GUITextBlock text = scrollBar.UserData as GUITextBlock;
+            //search for percentage value
+            int index = text.Text.IndexOf("%");
+            string label = text.Text;
+            //if "%" is found
+            if(index > 0)
+            {
+                while(true)
+                {
+                    //search for end of label
+                    index -= 1;
+                    if (text.Text[index] == ' ')
+                        break;
+                }
+                label = text.Text.Substring(0, index);
+            }
+            text.Text = label + " " + barScroll * 100 + "%";
             return true;
         }
 
@@ -175,14 +159,21 @@ namespace Barotrauma
                       
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), leftColumn.RectTransform), style: null);
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("ParticleLimit"));
+            GUITextBlock particleLimitText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("ParticleLimit"));
             GUIScrollBar particleScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
                 barSize: 0.1f)
             {
+                UserData = particleLimitText,
                 BarScroll = (ParticleLimit - 200) / 1300.0f,
-                OnMoved = ChangeParticleLimit,
+                OnMoved = (scrollBar, scroll) =>
+                {
+                    ChangeSliderText(scrollBar, scroll);
+                    ParticleLimit = 200 + (int)(scroll * 1300.0f);
+                    return true;
+                },
                 Step = 0.1f
             };
+            particleScrollBar.OnMoved(particleScrollBar, particleScrollBar.BarScroll);
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), rightColumn.RectTransform), style: null);
@@ -206,18 +197,25 @@ namespace Barotrauma
             
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), style: null);
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("LightMapScale"))
+            GUITextBlock LightText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("LightMapScale"))
             {
                 ToolTip = TextManager.Get("LightMapScaleToolTip")
             };
-            new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
+            GUIScrollBar lightScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
                 barSize: 0.1f)
             {
+                UserData = LightText,
                 ToolTip = TextManager.Get("LightMapScaleToolTip"),
                 BarScroll = MathUtils.InverseLerp(0.2f, 1.0f, LightMapScale),
-                OnMoved = (scrollBar, barScroll) => { LightMapScale = MathHelper.Lerp(0.2f, 1.0f, barScroll); UnsavedSettings = true; return true; },
+                OnMoved = (scrollBar, barScroll) => 
+                {
+                    ChangeSliderText(scrollBar, barScroll);
+                    LightMapScale = MathHelper.Lerp(0.2f, 1.0f, barScroll);
+                    UnsavedSettings = true; return true;
+                },
                 Step = 0.25f
             };
+            lightScrollBar.OnMoved(lightScrollBar, lightScrollBar.BarScroll);
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), style: null);
@@ -250,26 +248,40 @@ namespace Barotrauma
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), style: null);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("HUDScale"));
-            new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
+            GUITextBlock HUDScaleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("HUDScale"));
+            GUIScrollBar HUDScaleScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
                 barSize: 0.1f)
             {
+                UserData = HUDScaleText,
                 BarScroll = (HUDScale - MinHUDScale) / (MaxHUDScale - MinHUDScale),
-                OnMoved = ChangeHUDScale,
+                OnMoved = (scrollBar, scroll) =>
+                {
+                    ChangeSliderText(scrollBar, scroll);
+                    HUDScale = MathHelper.Lerp(MinHUDScale, MaxHUDScale, scroll);
+                    OnHUDScaleChanged?.Invoke();
+                    return true;
+                },
                 Step = 0.05f
             };
+            HUDScaleScrollBar.OnMoved(HUDScaleScrollBar, HUDScaleScrollBar.BarScroll);
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), rightColumn.RectTransform), style: null);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("InventoryScale"));
-            new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
-                barSize: 0.1f)
+            GUITextBlock inventoryScaleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("InventoryScale"));
+            GUIScrollBar inventoryScaleScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), barSize: 0.1f)
             {
+                UserData = inventoryScaleText,
                 BarScroll = (InventoryScale - MinInventoryScale) / (MaxInventoryScale - MinInventoryScale),
-                OnMoved = ChangeInventoryScale,
+                OnMoved = (scrollBar, scroll) =>
+                {
+                    ChangeSliderText(scrollBar, scroll);
+                    InventoryScale = MathHelper.Lerp(MinInventoryScale, MaxInventoryScale, scroll);
+                    return true;
+                },
                 Step = 0.05f
             };
+            inventoryScaleScrollBar.OnMoved(inventoryScaleScrollBar, inventoryScaleScrollBar.BarScroll);
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), rightColumn.RectTransform), style: null);
@@ -322,24 +334,38 @@ namespace Barotrauma
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform), style: null);
-            
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("SoundVolume"));
+
+            GUITextBlock soundVolumeText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("SoundVolume"));
             GUIScrollBar soundScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform),
                 barSize: 0.1f)
             {
+                UserData = soundVolumeText,
                 BarScroll = SoundVolume,
-                OnMoved = ChangeSoundVolume,
+                OnMoved = (scrollBar, scroll) =>
+                {
+                    ChangeSliderText(scrollBar, scroll);
+                    SoundVolume = scroll;
+                    return true;
+                },
                 Step = 0.05f
             };
+            soundScrollBar.OnMoved(soundScrollBar, soundScrollBar.BarScroll);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("MusicVolume"));
+            GUITextBlock musicVolumeText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("MusicVolume"));
             GUIScrollBar musicScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform),
                 barSize: 0.1f)
             {
+                UserData = musicVolumeText,
                 BarScroll = MusicVolume,
-                OnMoved = ChangeMusicVolume,
+                OnMoved = (scrollBar, scroll) =>
+                {
+                    ChangeSliderText(scrollBar, scroll);
+                    MusicVolume = scroll;
+                    return true;
+                },
                 Step = 0.05f
             };
+            musicScrollBar.OnMoved(musicScrollBar, musicScrollBar.BarScroll);
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("Controls"));
 
@@ -360,20 +386,21 @@ namespace Barotrauma
                 keyBox.OnSelected += KeyBoxSelected;
                 keyBox.SelectedColor = Color.Gold * 0.3f;
             }
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("AimAssist"));
-            new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
+            GUITextBlock aimAssistText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("AimAssist"));
+            GUIScrollBar aimAssistSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
                 barSize: 0.1f)
             {
+                UserData = aimAssistText,
                 BarScroll = MathUtils.InverseLerp(0.0f, 5.0f, AimAssistAmount),
                 OnMoved = (scrollBar, scroll) =>
                 {
+                    ChangeSliderText(scrollBar, scroll);
                     AimAssistAmount = MathHelper.Lerp(0.0f, 5.0f, scroll);
-                    UnsavedSettings = true;
                     return true;
                 },
                 Step = 0.1f
             };
+            aimAssistSlider.OnMoved(aimAssistSlider, aimAssistSlider.BarScroll);
 
             new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
                 TextManager.Get("Cancel"))

@@ -197,6 +197,20 @@ namespace Barotrauma
                 return rotation;
             }
         }
+        /// <summary>
+        /// Offset of the physics body from the center of the structure. Takes flipping into account.
+        /// </summary>
+        public Vector2 BodyOffset
+        {
+            get
+            {
+
+                Vector2 bodyOffset = prefab.BodyOffset;
+                if (FlippedX) { bodyOffset.X = -bodyOffset.X; }
+                if (FlippedY) { bodyOffset.Y = -bodyOffset.Y; }
+                return bodyOffset;
+            }
+        }
 
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
@@ -326,11 +340,8 @@ namespace Barotrauma
             newBody.CollisionCategories = Physics.CollisionStairs;
             newBody.Friction = 0.8f;
             newBody.UserData = this;
-            
-            Vector2 bodyOffset = ConvertUnits.ToSimUnits(prefab.BodyOffset);
-            if (FlippedX) { bodyOffset.X = -bodyOffset.X; }
-            if (FlippedY) { bodyOffset.Y = -bodyOffset.Y; }
-            newBody.Position = ConvertUnits.ToSimUnits(stairPos) + bodyOffset;
+
+            newBody.Position = ConvertUnits.ToSimUnits(stairPos) + BodyOffset;
 
             bodyDebugDimensions.Add(new Vector2(bodyWidth, bodyHeight));
 
@@ -469,13 +480,24 @@ namespace Barotrauma
 
         public override bool IsMouseOn(Vector2 position)
         {
+            if (!base.IsMouseOn(position)) { return false; }
+
             if (StairDirection == Direction.None)
             {
-                return base.IsMouseOn(position);
+                Vector2 rectSize = rect.Size.ToVector2();
+                if (BodyWidth > 0.0f) { rectSize.X = BodyWidth; }
+                if (BodyHeight > 0.0f) { rectSize.Y = BodyHeight; }
+
+                Vector2 bodyPos = WorldPosition + BodyOffset;
+
+                Vector2 transformedMousePos = MathUtils.RotatePointAroundTarget(position, bodyPos, MathHelper.ToDegrees(BodyRotation));
+
+                return 
+                    Math.Abs(transformedMousePos.X - bodyPos.X) < rectSize.X / 2.0f && 
+                    Math.Abs(transformedMousePos.Y - bodyPos.Y) < rectSize.Y / 2.0f;
             }
             else
             {
-                if (!base.IsMouseOn(position)) return false;
 
                 if (StairDirection == Direction.Left)
                 {

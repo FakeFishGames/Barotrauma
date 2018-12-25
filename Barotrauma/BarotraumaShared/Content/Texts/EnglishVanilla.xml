@@ -564,9 +564,11 @@
   <SaveSubDialogDescription>Description</SaveSubDialogDescription>
   <SaveSubDialogSettings>Settings</SaveSubDialogSettings>
   <SaveItemAssemblyDialogHeader>Save assembly</SaveItemAssemblyDialogHeader>
+  <SaveItemAssemblyHideInMenus>Hide in menus</SaveItemAssemblyHideInMenus>
   <SaveItemAssemblyDialogName>Name</SaveItemAssemblyDialogName>
   <SaveItemAssemblyDialogDescription>Description</SaveItemAssemblyDialogDescription>
   <ItemAssemblyNameMissingWarning>Name your item assembly before saving it.</ItemAssemblyNameMissingWarning>
+  <ItemAssemblyFileExistsWarning>There's already an item assembly with the same name. Do you want to replace the existing assembly?</ItemAssemblyFileExistsWarning>
   <ItemAssemblyNameIllegalCharsWarning>Illegal symbols in filename ([illegalchar])</ItemAssemblyNameIllegalCharsWarning>
   <NoHullsWarning>No hulls found in the submarine. Hulls determine the "borders" of an individual room and are required for water and air distribution to work correctly.</NoHullsWarning>
   <DisconnectedVentsWarning>The submarine contains vents which haven't been linked to an oxygen generator. Select a vent and click an oxygen generator while holding space to link them.</DisconnectedVentsWarning>

@@ -142,7 +142,7 @@ namespace Barotrauma
 
                 foreach (Item item in Item.ItemList)
                 {
-                    if (item.StaticBodyConfig == null) continue;
+                    if (item.StaticBodyConfig == null || item.Submarine != submarine) continue;
 
                     float radius    = item.StaticBodyConfig.GetAttributeFloat("radius", 0.0f) * item.Scale;
                     float width     = item.StaticBodyConfig.GetAttributeFloat("width", 0.0f) * item.Scale;

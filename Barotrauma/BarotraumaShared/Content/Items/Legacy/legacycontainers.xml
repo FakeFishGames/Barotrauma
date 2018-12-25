@@ -20,7 +20,7 @@
     pickdistance="150"
     waterproof="true">
 
-    <Sprite texture ="cabinets.png" depth="0.84" sourcerect="0,0,48,64" canflipx="false"/>
+    <Sprite texture="cabinets.png" depth="0.84" sourcerect="0,0,48,64" canflipx="false"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,chem,medical"/>

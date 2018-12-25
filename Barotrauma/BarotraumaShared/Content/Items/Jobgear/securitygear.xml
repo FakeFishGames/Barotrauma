@@ -5,9 +5,8 @@
     <Price locationtype="City" buyprice="200" />
     <Price locationtype="Outpost" buyprice="300" />
     <Deconstruct time="40">
-      <Item identifier="polycarbonatebar" />
-      <Item identifier="polycarbonatebar" />
-      <Item identifier="polycarbonatebar" />
+      <Item identifier="ballisticfiber" />
+      <Item identifier="ballisticfiber" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,256,64,64" />
     <Sprite texture="securitygear.png" sourcerect="68,0,60,31" depth="0.6" origin="0.5,0.5" />
@@ -25,8 +24,7 @@
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="150" />
     <Deconstruct time="10">
-      <Item identifier="polycarbonatebar" />
-      <Item identifier="polycarbonatebar" />
+      <Item identifier="ballisticfiber" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,0,64,64" />
     <Sprite texture="securitygear.png" sourcerect="40,26,30,27" depth="0.6" origin="0.5,0.5" />
@@ -41,6 +39,9 @@
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="100" />
+    <Deconstruct time="10">
+      <Item identifier="steel" />
+    </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,0,64,64" />
     <Sprite texture="securitygear.png" sourcerect="0,59,30,23" depth="0.6" origin="0.5,0.5" />
     <Body width="30" height="12" density="30" />
@@ -54,6 +55,9 @@
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="100" />
+    <Deconstruct time="10">
+      <Item identifier="titaniumaluminiumalloy" />
+    </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,320,64,64" />
     <Sprite texture="riotgear.png" sourcerect="31,54,27,147" origin="0.5,0.5" depth="0.55" />
     <Body width="40" height="145" density="30" />

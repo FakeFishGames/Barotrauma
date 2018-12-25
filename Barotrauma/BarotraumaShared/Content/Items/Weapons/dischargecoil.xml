@@ -9,6 +9,7 @@
         <Affliction identifier="burn" strength="10"/>
       </Attack>
       <StatusEffect type="OnUse">
+        <sound file="Content/Items/Weapons/electricaldischarge.ogg" range="10000" />
         <ParticleEmitter particle="risingbubbles" anglemin="0" anglemax="360" particleamount="50" velocitymin="50" velocitymax="100" scalemin="1" scalemax="2" />
         <Explosion range="500.0" stun="0" force="0.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
       </StatusEffect>

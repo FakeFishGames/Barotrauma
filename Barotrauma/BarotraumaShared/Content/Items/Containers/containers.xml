@@ -5,9 +5,10 @@
     identifier="suppliescabinet"
     tags="cabinet"
     linkable="true"
-    pickdistance="150">
+    pickdistance="150"
+    scale="0.5">
 
-    <Sprite texture="suppliesCabinet.png" depth="0.84" sourcerect="0,0,52,78"/>
+    <Sprite texture="suppliesCabinet.png" depth="0.84" sourcerect="0,0,104,156"/>
 
     <ItemContainer capacity="6" slotsperrow="3" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,mediumitem"/>
@@ -21,7 +22,7 @@
     linkable="true"
     pickdistance="150">
 
-    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,48,80"/>
+    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,99,160"/>
 
     <ItemContainer capacity="5" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,mediumitem"/>
@@ -33,9 +34,10 @@
     identifier="smallsteelcabinet"
     tags="cabinet"
     linkable="true"
-    pickdistance="150">
+    pickdistance="150"
+    scale="0.5">
 
-    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,80,48,80"/>
+    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,160,99,160"/>
 
     <ItemContainer capacity="5" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,mediumitem"/>
@@ -47,9 +49,10 @@
     identifier="mediumsteelcabinet"
     tags="cabinet"
     linkable="true"
-    pickdistance="150">
+    pickdistance="150"
+    scale="0.5">
 
-    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="48,0,48,160"/>
+    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="99,0,99,320"/>
 
     <ItemContainer capacity="10" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,mediumitem"/>
@@ -61,9 +64,10 @@
     identifier="mediumwindowedsteelcabinet"
     tags="cabinet"
     linkable="true"
-    pickdistance="150">
+    pickdistance="150"
+    scale="0.5">
 
-    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="96,0,48,160"/>
+    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="197,0,99,320"/>
 
     <ItemContainer capacity="10" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,mediumitem"/>
@@ -75,9 +79,10 @@
     identifier="steelcabinet"
     tags="cabinet"
     linkable="true"
-    pickdistance="150">
+    pickdistance="150"
+    scale="0.5">
 
-    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,148,160"/>
+    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,296,320"/>
 
     <ItemContainer capacity="30" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,mediumitem"/>
@@ -91,9 +96,10 @@
     tags="cabinet"
     linkable="true"
     spritecolor="255,255,255,255"
-    pickdistance="150">
+    pickdistance="150"
+    scale="0.5">
 
-    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,148,160"/>
+    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,296,320"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
       <RequiredItem identifiers="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess"/>
@@ -177,9 +183,9 @@
     pickdistance="150">
 
     <Deconstruct time="20">
-      <Item identifier="steelbar"/>
-      <Item identifier="steelbar"/>
-      <Item identifier="steelbar"/>
+      <Item identifier="steel"/>
+      <Item identifier="steel"/>
+      <Item identifier="steel"/>
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,128,64,64"/>
@@ -201,9 +207,9 @@
     pickdistance="150">
 
     <Deconstruct time="20">
-      <Item identifier="steelbar"/>
-      <Item identifier="steelbar"/>
-      <Item identifier="steelbar"/>
+      <Item identifier="steel"/>
+      <Item identifier="steel"/>
+      <Item identifier="steel"/>
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,128,64,64"/>
@@ -226,12 +232,12 @@
    pickdistance="150">
 
     <Deconstruct time="20">
-      <Item identifier="steelbar"/>
-      <Item identifier="steelbar"/>
+      <Item identifier="steel"/>
+      <Item identifier="steel"/>
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64"/>
-    <Sprite texture ="crates.png" depth="0.54" sourcerect="78,5,50,40"/>
+    <Sprite texture="crates.png" depth="0.54" sourcerect="78,5,50,40"/>
 
     <Body width="50" height="40" density="50"/>
 
@@ -249,12 +255,12 @@
    pickdistance ="150">
 
     <Deconstruct time="20">
-      <Item identifier="steelbar"/>
-      <Item identifier="steelbar"/>
+      <Item identifier="steel"/>
+      <Item identifier="steel"/>
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,128,64,64"/>
-    <Sprite texture ="crates.png" depth="0.54" sourcerect="2,39,49,39"/>
+    <Sprite texture="crates.png" depth="0.54" sourcerect="2,39,49,39"/>
 
     <Body width="49" height="39" density="50"/>
 

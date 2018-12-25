@@ -10,7 +10,7 @@
     linkable="true"
     allowedlinks="depthchargeammosource">
     
-    <Sprite texture ="railgunetc.png" depth="0.01" sourcerect="64,180,47,76"/>
+    <Sprite texture="railgunetc.png" depth="0.01" sourcerect="64,180,47,76"/>
 
     <Turret canbeselected="false" linkable="true" characterusable="false" 
             barrelpos="23, 76"
@@ -45,21 +45,22 @@
     identifier="depthchargeshell"
     tags="depthchargeammo"
     category="Misc"
-    sonarsize="5">
+    sonarsize="5"
+    scale="0.25">
 
     <Price locationtype="Military" buyprice="140"/>
     <Price locationtype="City" buyprice="150"/>
     <Price locationtype="Outpost" buyprice="200"/>
     
     <Deconstruct time="10">
-      <Item identifier="steelbar"/>
-      <Item identifier="steelbar"/>
+      <Item identifier="steel"/>
+      <Item identifier="aluminium"/>
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,128,64,64"/>
-    <Sprite texture="railgunetc.png" sourcerect="114,210,68,47" depth ="0.55"/>
+    <Sprite texture="DepthChargeShell.png" sourcerect="0,0,253,172" depth="0.55"/>
 
-    <Body width="68" height="47" density="30"/>
+    <Body width="253" height="172" density="30"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false"/>
 
@@ -82,22 +83,23 @@
     identifier="nucleardepthcharge"
     tags="depthchargeammo"
     category="Misc"
-    sonarsize="5">
+    sonarsize="5"
+    scale="0.25">
 
     <Price locationtype="Military" buyprice="300"/>
     <Price locationtype="City" buyprice="400"/>
     <Price locationtype="Outpost" buyprice="500"/>
 
     <Deconstruct time="20">
-      <Item identifier="steelbar"/>
-      <Item identifier="steelbar"/>
-      <Item identifier="uraniumbar"/>
+      <Item identifier="steel"/>
+      <Item identifier="uranium"/>
+      <Item identifier="uex"/>
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,128,64,64"/>
-    <Sprite texture="railgunetc.png" sourcerect="187,210,68,47" depth="0.55"/>
+    <Sprite texture="NuclearDepthCharge.png" sourcerect="0,0,253,172" depth="0.55"/>
 
-    <Body width="68" height="47" density="30"/>
+    <Body width="253" height="172" density="30"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false"/>
 

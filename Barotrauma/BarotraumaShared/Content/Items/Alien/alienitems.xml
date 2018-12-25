@@ -1,14 +1,41 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Skyholder Artifact" identifier="skyholderartifact" category="Alien" Tags="alien" sonarsize="30">
-    <Sprite texture="artifact.png" depth="0.7" sourcerect="58,0,60,60" origin="0.5,0.5" />
+  <Item name="Skyholder Artifact" identifier="skyholderartifact" category="Alien" Tags="alien" sonarsize="30" scale="0.2">
+    <Sprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.6" sourcerect="0,0,167,168" origin="0.5,0.5" />
+    <!-- central piece -->
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,0,167,168" origin="0.5,0.5" randomgroupid="1"/>    
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="0,173,170,248" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="174,8,164,238" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.5" sourcerect="174,260,247,248" origin="0.5,0.0" randomgroupid="1"/>
+    
+    <!-- right piece-->
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.51" sourcerect="339,0,175,258" offset="30,0" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.51" sourcerect="0,0,167,168" offset="30,0" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite randomgroupid="2"/>
+
+    <!-- left piece-->
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="339,0,175,258" offset="-30,0" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="0,0,167,168" offset="-30,0" origin="0.5,0.5" randomgroupid="3" rotationspeed="10"/>
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="0,173,170,248" offset="-30,0" origin="0.5,0.5" randomgroupid="3"/>
+
+    <!-- bottom piece-->
+    <DecorativeSprite randomgroupid="4"/>
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.51" sourcerect="339,0,175,258" offset="0,-30" origin="0.5,0.5" randomgroupid="4"/>
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.51" sourcerect="0,0,167,168" offset="0,-30" origin="0.5,0.5" randomgroupid="4" rotationspeed="10"/>
+    
+    <!-- top piece-->
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="339,0,175,258" offset="0,30" origin="0.5,0.5" randomgroupid="5"/>
+    <DecorativeSprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.52" sourcerect="0,0,167,168" offset="0,30" origin="0.5,0.5" randomgroupid="5"/>
+    <DecorativeSprite randomgroupid="5"/>
+
     <Deconstruct time="30">
-      <Item identifier="steelbar" />
-      <Item identifier="copperbar" />
-      <Item identifier="uraniumbar" />
-      <Item identifier="uraniumbar" />
+      <Item identifier="steel" />
+      <Item identifier="oxygeniteshard" />
+      <Item identifier="oxygeniteshard" />
+      <Item identifier="oxygeniteshard" />
     </Deconstruct>
-    <Body width="60" height="61" density="50" friction="0.95" />
+    <Body width="500" height="500" density="50" friction="0.95" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10">
       <StatusEffect type="Always" target="Hull" oxygen="-50000.0" />
     </Holdable>
@@ -16,10 +43,10 @@
   <Item name="Thermal Artifact" identifier="thermalartifact" category="Alien" Tags="alien" sonarsize="30">
     <Sprite texture="artifact.png" depth="0.7" sourcerect="1,0,57,56" origin="0.5,0.5" />
     <Deconstruct time="30">
-      <Item identifier="steelbar" />
-      <Item identifier="incendiumbar" />
-      <Item identifier="incendiumbar" />
-      <Item identifier="incendiumbar" />
+      <Item identifier="steel" />
+      <Item identifier="incendium" />
+      <Item identifier="incendium" />
+      <Item identifier="incendium" />
     </Deconstruct>
     <Body radius="28" density="50" friction="0.95" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10">
@@ -31,10 +58,10 @@
   <Item name="Faraday Artifact" identifier="faradayartifact" category="Alien" Tags="alien" sonarsize="30">
     <Sprite texture="artifact.png" depth="0.7" sourcerect="0,56,60,49" origin="0.5,0.5" />
     <Deconstruct time="30">
-      <Item identifier="steelbar" />
-      <Item identifier="fulguriumbar" />
-      <Item identifier="fulguriumbar" />
-      <Item identifier="fulguriumbar" />
+      <Item identifier="steel" />
+      <Item identifier="fulgurium" />
+      <Item identifier="fulgurium" />
+      <Item identifier="fulgurium" />
     </Deconstruct>
     <Body radius="25" density="50" friction="0.95" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10">
@@ -49,22 +76,24 @@
   <Item name="Nasonov Artifact" identifier="nasonovartifact" category="Alien" Tags="alien,nasonov" pickdistance="150" indestructible="true" sonarsize="30">
     <Sprite texture="artifact.png" depth="0.7" sourcerect="63,61,63,67" origin="0.5,0.5" />
     <Deconstruct time="30">
-      <Item identifier="steelbar" />
-      <Item identifier="fulguriumbar" />
-      <Item identifier="fulguriumbar" />
-      <Item identifier="fulguriumbar" />
+      <Item identifier="steel" />
+      <Item identifier="physicorium" />
+      <Item identifier="physicorium" />
+      <Item identifier="physicorium" />
     </Deconstruct>
     <AiTarget sightrange="10000.0" soundrange="10000" />
     <Body width="55" height="55" density="50" friction="0.95" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" />
   </Item>
   <!-- TODO: better name -->
-  <Item name="Vercodian Artifact" identifier="psychosisartifact" category="Alien" Tags="alien" sonarsize="30" spritecolor="50,50,50,255">
+  <Item name="Dementium Artifact" identifier="psychosisartifact" category="Alien" Tags="alien" sonarsize="30" spritecolor="50,50,50,255">
     <!-- TODO: sprite -->
     <Sprite texture="artifact.png" depth="0.7" sourcerect="0,56,60,49" origin="0.5,0.5" />
     <Deconstruct time="30">
-      <Item identifier="steelbar" />
-      <!-- TODO: materials from deconstruction -->
+      <Item identifier="steel" />
+      <Item identifier="dementonite" />
+      <Item identifier="dementonite" />
+      <Item identifier="dementonite" />
     </Deconstruct>
     <Body radius="25" density="50" friction="0.95" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10">
@@ -75,7 +104,7 @@
   </Item>
   <Item name="Oxygenite Shard" identifier="oxygeniteshard" category="Alien" tags="alien,smallitem,oxygensource" impacttolerance="8">
     <Deconstruct time="20">
-      <Item identifier="steelbar" />
+      <Item identifier="steel" />
       <Item identifier="liquidoxygenite" mincondition="0.1" />
       <Item identifier="liquidoxygenite" mincondition="0.5" />
       <Item identifier="liquidoxygenite" mincondition="0.9" />
@@ -100,7 +129,7 @@
   </Item>
   <Item name="Sulphurite Shard" identifier="sulphuriteshard" category="Alien" tags="alien,smallitem" impacttolerance="8" spritecolor="1.0,0.0,0.0,1.0">
     <Deconstruct time="20">
-      <Item identifier="steelbar" />
+      <Item identifier="steel" />
       <Item identifier="sulphuricacid" mincondition="0.1" />
       <Item identifier="sulphuricacid" mincondition="0.5" />
       <Item identifier="sulphuricacid" mincondition="0.9" />
@@ -116,9 +145,9 @@
   </Item>
   <Item name="Ancient Weapon" identifier="ancientweapon" category="Alien" Tags="alien,smallitem">
     <Deconstruct time="20">
-      <Item identifier="steelbar" />
-      <Item identifier="steelbar" />
-      <Item identifier="fulguriumbar" />
+      <Item identifier="steel" />
+      <Item identifier="steel" />
+      <Item identifier="fulgurium" />
     </Deconstruct>
     <Sprite texture="alientools.png" depth="0.55" sourcerect="0,0,95,50" origin="0.5,0.4" />
     <Body width="85" height="40" density="15" />
@@ -167,10 +196,11 @@
     <Door canbeselected="true" horizontal="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0">
       <RequiredItem identifier="crowbar" type="Equipped" />
       <Sprite texture="Content/Items/Alien/AlienHatch.png" sourcerect="0,56,208,19" depth="0.6" origin="0.0,0.5" />
-      <sound file="Content/Items/Alien/aliendoor.ogg" type="OnUse" range="3000.0" />
+      <sound file="Content/Items/Alien/aliendoor.ogg" type="OnUse" range="1000.0" />
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0" />
     </Door>
-    <ConnectionPanel canbeselected="false" hudpriority="10">
+    <ConnectionPanel canbeselected="true" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <input name="toggle" />
       <input name="set_state" />
       <output name="state_out" />
@@ -181,10 +211,11 @@
     <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0">
       <RequiredItem identifier="crowbar" type="Equipped" />
       <Sprite texture="Content/Items/Alien/AlienDoor.png" sourcerect="56,0,19,208" depth="0.6" origin="0.5,0.0" />
-      <sound file="Content/Items/Alien/aliendoor.ogg" type="OnUse" range="3000.0" />
+      <sound file="Content/Items/Alien/aliendoor.ogg" type="OnUse" range="1000.0" />
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0" />
     </Door>
-    <ConnectionPanel canbeselected="false" hudpriority="10">
+    <ConnectionPanel canbeselected="true" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <input name="toggle" />
       <input name="set_state" />
       <output name="state_out" />
@@ -224,20 +255,21 @@
       <output name="power_out" />
     </ConnectionPanel>
   </Item>
-  <Item name="Alien Power Cell" identifier="alienpowercell" category="Alien" Tags="alien">
-    <Sprite texture="Content/Items/Alien/AlienGenerator.png" depth="0.8" sourcerect="0,83,171,173" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienGenerator.png" sourcerect="9,9,48,48" depth="0.78" origin="0.5,0.5" rotationspeed="500">
+  <Item name="Alien Generator" identifier="aliengenerator" category="Alien" Tags="alien" scale="0.3">
+    <Sprite texture="Content/Items/Alien/AlienGenerator.png" depth="0.8" sourcerect="0,0,512,573" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienGenerator.png" sourcerect="167,583,178,178" depth="0.78" offset="2,-12" origin="0.5,0.5">
       <Conditional Charge="gt 1" targetitemcomponent="PowerContainer"/>
     </DecorativeSprite>
     <LightComponent lightcolor="112,146,190,50" canbeselected="false" range="800.0" IsOn="true" />
-    <ItemContainer capacity="1" canbeselected="true" hideitems="false" itempos="86,-85" autointeractwithcontained="true">
-      <Containable identifiers="sulphuriteshard">
+    <ItemContainer capacity="1" canbeselected="true" hideitems="false" itempos="264,-321" autointeractwithcontained="true">
+      <Containable identifiers="alienpowercell">
         <StatusEffect type="OnContaining" target="This" Charge="100.0" />
       </Containable>
     </ItemContainer>
     <PowerContainer capacity="10.0" canbeselected="false" maxrechargespeed="1000.0" maxoutput="10000.0"/>
-    <ConnectionPanel canbeselected="false" hudpriority="10">
+    <ConnectionPanel canbeselected="true" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <!-- break the item when a shutdown signal is received -->
       <input name="shutdown">
         <StatusEffect type="OnUse" target="This" condition="-100" setvalue="true" />
@@ -245,40 +277,48 @@
       <output name="power_out" />
     </ConnectionPanel>
   </Item>
+  <Item name="Alien Power Cell" identifier="alienpowercell" category="Alien" Tags="alien" scale="0.3">
+    <Sprite texture="Content/Items/Alien/AlienPowerCell.png" sourcerect="47,25,34,77" depth="0.7" origin="0.5,0.5" />
+    <LightComponent lightcolor="112,146,190,30" canbeselected="false" range="100.0" IsOn="true" castshadows="false" />
+    <Body radius="15" height="40" density="20"/>
+    <Holdable slots="RightHand,LeftHand,Any">
+      <StatusEffect type="OnContained" target="Character">
+        <Affliction identifier="burn" strength="0.15" />
+      </StatusEffect>
+    </Holdable>
+  </Item>
   <Item
     name="Alien Pump"
     identifier="alienpump"
     category="Alien"
     tags="alien">
 
-    <Sprite texture="Content/Items/Alien/AlienPump.png" depth="0.8" sourcerect="0,83,171,173" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienPump.png" sourcerect="60,13,51,50" depth="0.78" origin="0.5,0.5">
-    </DecorativeSprite>
+    <Sprite texture="Content/Items/Alien/AlienPump.png" depth="0.8" sourcerect="0,0,256,256" />
     
     <Pump canbeselected="false" maxflow="6000" PowerConsumption="300.0" MinVoltage="0.3">
-      <!-- <sound file="Content/Items/Pump/pump.ogg" type="OnActive" range="800.0" volumeproperty="CurrFlow" volume="0.01" loop="true"/> -->
+      <sound file="Content/Items/Alien/alienpump.ogg" type="OnUse" range="1500.0" volumeproperty="CurrFlow" volume="0.01" loop="true"/>
       <PumpInEmitter
         particle="watersplash"
         particlespersecond="80"
-        position="85,-86"
+        position="128,-107"
         anglemin="90" anglemax="90"
         velocitymin="400" velocitymax="500"/>
       <PumpInEmitter
         particle="bubbles"
         particlespersecond="10"
-        position="85,-86"
+        position="128,-107"
         anglemin="90" anglemax="90"
         velocitymin="100" velocitymax="200"/>
       <PumpOutEmitter
         particle="bubbles"
         particlespersecond="5"
-        position="85,-86"
+        position="128,-107"
         anglemin="0" anglemax="360"
         velocitymin="0" velocitymax="0"/>
       <PumpOutEmitter
         particle="bubbles"
         particlespersecond="5"
-        position="85,-86"
+        position="128,-107"
         anglemin="0" anglemax="360"
         velocitymin="0" velocitymax="0"/>      
     </Pump>
@@ -302,9 +342,11 @@
   <Item name="Alien Button" identifier="alienbutton" category="Alien" tags="smallitem,alien">    
     <Sprite texture="Content/Items/Alien/AlienButton.png" sourcerect="0,0,64,64" depth="0.8" origin="0.5,0.5" />    
     <Controller direction="None" canbepicked="true">
-      <sound file="Content/Items/Button/beep.ogg" type="OnUse" range="500.0" />
+      <sound file="Content/Items/Alien/alienbutton.ogg" type="OnUse" range="500.0" />
     </Controller>
-    <ConnectionPanel canbeselected="false">
+    <ConnectionPanel canbeselected="true">
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <output name="signal_out" />
     </ConnectionPanel>
   </Item>
@@ -318,16 +360,13 @@
       </StatusEffect>
     </ItemContainer>
     <Turret canbeselected="false" characterusable="false" linkable="true" barrelpos="8,230" rotationlimits="0,360" powerconsumption="10000.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="50" reload="3" springstiffnesslowskill="2" springstiffnesshighskill="2" springdampinglowskill="0.5" springdampinghighskill="0.5" rotationspeedlowskill="1" rotationspeedhighskill="1">
-      <sound file="Content/Items/Weapons/coilgun.ogg" range="10000" type="OnUse" />
+      <sound file="Content/Items/Alien/alienturret.ogg" range="10000" type="OnUse" />
       <BarrelSprite texture="Content/Items/Alien/AlienTurret.png" sourcerect="2,20,286,484" origin="0.5,0.73" depth="0.4"/>
-      <MoveSound file="Content/Items/Weapons/railgunloop.ogg" />
-      <StartMoveSound file="Content/Items/Weapons/railgunstart.ogg" />
-      <EndMoveSound file="Content/Items/Weapons/railgunstop.ogg" />
       <LightComponent lightcolor="112,146,190,255" powerconsumption="10" Flicker="0.0" range="2500" IsOn="true">
         <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="1.0,0.2" />
       </LightComponent>
     </Turret>
-    <ConnectionPanel canbeselected="false" hudpriority="10">
+    <ConnectionPanel canbeselected="true" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <input name="power_in" />
       <input name="position_in" />
@@ -362,19 +401,20 @@
   </Item>
   <Item name="Alien Coil" identifier="aliencoil" Tags="alien" category="Alien">
     <!-- TODO: alien coil sprite -->
-    <Sprite texture="alientools.png" depth="0.55" sourcerect="0,0,95,50" origin="0.5,0.4" />
-    <LightComponent lightcolor="112,146,190,255" canbeselected="false" range="800.0" IsOn="true" />
+    <Sprite texture="Content/Items/Alien/AlienElectricCoil.png" depth="0.55" sourcerect="0,31,256,190" origin="0.5,0.4" />
+    <LightComponent lightcolor="112,146,190,100" flicker="0.2" canbeselected="false" range="800.0" IsOn="true" />
     <ElectricalDischarger duration="0.25" range="500" rangemultiplierinwalls="5" powerconsumption="9000" minvoltage="0.9">
       <Attack targetimpulse="50">
         <Affliction identifier="stun" strength="3"/>
         <Affliction identifier="burn" strength="10"/>
       </Attack>
       <StatusEffect type="OnUse">
+        <sound file="Content/Items/Alien/aliencoil.ogg" range="8000" />
         <ParticleEmitter particle="risingbubbles" anglemin="0" anglemax="360" particleamount="50" velocitymin="50" velocitymax="100" scalemin="1" scalemax="2" />
         <Explosion range="500.0" stun="0" force="0.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
       </StatusEffect>
     </ElectricalDischarger>
-    <ConnectionPanel canbeselected="false" hudpriority="10">
+    <ConnectionPanel canbeselected="true" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <!-- break the item when a shutdown signal is received -->
       <input name="activate"/>
