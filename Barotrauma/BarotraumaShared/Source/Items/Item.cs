@@ -2106,13 +2106,20 @@ namespace Barotrauma
             {
                 //legacy support: 
                 //1. attempt to find a prefab with an empty identifier and a matching name
-                prefab = MapEntityPrefab.Find(name, "") as ItemPrefab;
+                prefab = MapEntityPrefab.Find(name, "", showErrorMessages: false) as ItemPrefab;
                 //2. not found, attempt to find a prefab with a matching name
                 if (prefab == null) prefab = MapEntityPrefab.Find(name) as ItemPrefab;
             }
             else
             {
-                prefab = MapEntityPrefab.Find(null, identifier) as ItemPrefab;
+                prefab = MapEntityPrefab.Find(null, identifier, showErrorMessages: false) as ItemPrefab;
+
+                //not found, see if we can find a prefab with a matching alias
+                if (prefab == null)
+                {
+                    string lowerCaseName = name.ToLowerInvariant();
+                    prefab = MapEntityPrefab.List.Find(me => me.Aliases != null && me.Aliases.Contains(lowerCaseName)) as ItemPrefab;
+                }
             }
 
             if (prefab == null)
