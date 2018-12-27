@@ -41,6 +41,8 @@ namespace Barotrauma
         public bool SpecularityEnabled { get; set; }
         public bool ChromaticAberrationEnabled { get; set; }
 
+        public float NoiseGateThreshold { get; set; }
+
         private KeyOrMouse[] keyMapping;
 
         private WindowMode windowMode;
