@@ -34,6 +34,8 @@ namespace Barotrauma.Items.Components
         private Vector2 center;
         private float displayRadius;
         private float displayScale;
+
+        private float zoomSqrt;
         
         //Vector2 = vector from the ping source to the position of the disruption
         //float = strength of the disruption, between 0-1
@@ -340,6 +342,7 @@ namespace Barotrauma.Items.Components
 
             if (sonarBlips.Count > 0)
             {
+                zoomSqrt = (float)Math.Sqrt(zoom);
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive);
 
@@ -496,6 +499,54 @@ namespace Barotrauma.Items.Components
                 Vector2 size = dockingPort.Item.Rect.Size.ToVector2() * scale;
 
                 GUI.DrawRectangle(spriteBatch, center + offset - size / 2, size, Color.LightGreen, thickness: (int)(2 * zoom));
+            }
+
+            Steering steering = item.GetComponent<Steering>();
+            if (steering != null && steering.DockingModeEnabled)
+            {
+                Vector2 sourcePortDiff = (steering.DockingSource.Item.WorldPosition - transducerCenter) * scale;
+                Vector2 sourcePortPos = center + new Vector2(sourcePortDiff.X, -sourcePortDiff.Y);
+                Vector2 targetPortDiff = (steering.DockingTarget.Item.WorldPosition - transducerCenter) * scale;
+                Vector2 targetPortPos = center + new Vector2(targetPortDiff.X, -targetPortDiff.Y);
+
+                Vector2 midPos = (sourcePortPos + targetPortPos) / 2.0f;
+
+                System.Diagnostics.Debug.Assert(steering.DockingSource.IsHorizontal == steering.DockingTarget.IsHorizontal);
+
+                float xDist = Math.Abs(steering.DockingSource.Item.WorldPosition.X - steering.DockingTarget.Item.WorldPosition.X);
+                float normalizedXDist = xDist / steering.DockingSource.DistanceTolerance.X;
+                float yDist = Math.Abs(steering.DockingSource.Item.WorldPosition.Y - steering.DockingTarget.Item.WorldPosition.Y);
+                float normalizedYDist = yDist / steering.DockingSource.DistanceTolerance.Y;
+
+                Color xColor = normalizedXDist <= 1.0f ? Color.Lime : Color.Lerp(Color.Orange, Color.Red, normalizedXDist - 1.0f);
+                Color yColor = normalizedYDist <= 1.0f ? Color.Lime : Color.Lerp(Color.Orange, Color.Red, normalizedYDist - 1.0f);
+
+                if (steering.DockingSource.IsHorizontal)
+                {
+                    if (yDist < steering.DockingSource.DistanceTolerance.Y)
+                    {
+                        GUI.DrawLine(spriteBatch, sourcePortPos, new Vector2(targetPortPos.X, sourcePortPos.Y), xColor, width: 3);
+                    }
+                    else
+                    {
+                        GUI.DrawLine(spriteBatch, sourcePortPos, new Vector2(midPos.X, sourcePortPos.Y), xColor, width: 3);
+                        GUI.DrawLine(spriteBatch, targetPortPos, new Vector2(midPos.X, targetPortPos.Y), xColor, width: 3);
+                        GUI.DrawLine(spriteBatch, new Vector2(midPos.X, sourcePortPos.Y), new Vector2(midPos.X, targetPortPos.Y), yColor, width: 3);
+                    }                        
+                }
+                else
+                {
+                    if (xDist < steering.DockingSource.DistanceTolerance.X)
+                    {
+                        GUI.DrawLine(spriteBatch, sourcePortPos, new Vector2(sourcePortPos.X, targetPortPos.Y), yColor, width: 3);
+                    }
+                    else
+                    {
+                        GUI.DrawLine(spriteBatch, sourcePortPos, new Vector2(sourcePortPos.X, midPos.Y), yColor, width: 3);
+                        GUI.DrawLine(spriteBatch, targetPortPos, new Vector2(targetPortPos.X, midPos.Y), yColor, width: 3);
+                        GUI.DrawLine(spriteBatch, new Vector2(sourcePortPos.X, midPos.Y), new Vector2(targetPortPos.X, midPos.Y), xColor, width: 3);
+                    }
+                }
             }
         }
 
@@ -709,6 +760,8 @@ namespace Barotrauma.Items.Components
         private void CreateBlipsForLine(Vector2 point1, Vector2 point2, Vector2 transducerPos, float pingRadius, float prevPingRadius,
             float lineStep, float zStep, float range, float pingStrength, bool passive)
         {
+            lineStep /= zoom;
+            zStep /= zoom;
             range *= displayScale;
             float length = (point1 - point2).Length();
             Vector2 lineDir = (point2 - point1) / length;
@@ -739,17 +792,17 @@ namespace Barotrauma.Items.Components
                 float alpha = pingStrength * Rand.Range(1.5f, 2.0f);
                 for (float z = 0; z < displayRadius - displayPointDist; z += zStep)
                 {
-                    Vector2 pos = point + Rand.Vector(150.0f) + Vector2.Normalize(point - item.WorldPosition) * z / displayScale;
+                    Vector2 pos = point + Rand.Vector(150.0f / zoom) + Vector2.Normalize(point - item.WorldPosition) * z / displayScale;
                     float fadeTimer = alpha * (1.0f - displayPointDist / range);
 
-                    int minDist = 200;
+                    int minDist = (int)(200 / zoom);
                     sonarBlips.RemoveAll(b => b.FadeTimer < fadeTimer && Math.Abs(pos.X - b.Position.X) < minDist && Math.Abs(pos.Y - b.Position.Y) < minDist);
 
                     var blip = new SonarBlip(pos, fadeTimer, 1.0f + ((displayPointDist + z) / displayRadius));
                     if (!passive && !CheckBlipVisibility(blip, transducerPos)) continue;
 
                     sonarBlips.Add(blip);
-                    zStep += 0.5f;
+                    zStep += 0.5f / zoom;
 
                     if (z == 0)
                     {
@@ -816,7 +869,7 @@ namespace Barotrauma.Items.Components
 
             Vector2 dir = pos / (float)Math.Sqrt(posDistSqr);
             Vector2 normal = new Vector2(dir.Y, -dir.X);
-            float scale = (strength + 3.0f) * blip.Scale * zoom;
+            float scale = (strength + 3.0f) * blip.Scale * zoomSqrt;
             Color color = ToolBox.GradientLerp(strength, blipColorGradient);
 
             sonarBlip.Draw(spriteBatch, center + pos, color, sonarBlip.Origin, blip.Rotation ?? MathUtils.VectorToAngle(pos),
