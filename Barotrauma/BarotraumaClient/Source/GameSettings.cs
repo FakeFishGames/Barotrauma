@@ -13,6 +13,8 @@ namespace Barotrauma
         {
             General,
             Graphics,
+            Audio,
+            Controls,
         }
         
         private GUIFrame settingsFrame;
@@ -286,15 +288,90 @@ namespace Barotrauma
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), rightColumn.RectTransform), style: null);
 
+            /// Audio tab ----------------------------------------------------------------
+
+            var audioSliders = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.25f), tabs[(int)Tab.Audio].RectTransform, Anchor.TopCenter)
+                { RelativeOffset = new Vector2(0.0f, 0.02f) })
+                { RelativeSpacing = 0.01f, Stretch = true };
+
+            GUITextBlock soundVolumeText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), TextManager.Get("SoundVolume"));
+            GUIScrollBar soundScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform),
+                barSize: 0.1f)
+            {
+                UserData = soundVolumeText,
+                BarScroll = SoundVolume,
+                OnMoved = (scrollBar, scroll) =>
+                {
+                    ChangeSliderText(scrollBar, scroll);
+                    SoundVolume = scroll;
+                    return true;
+                },
+                Step = 0.05f
+            };
+            soundScrollBar.OnMoved(soundScrollBar, soundScrollBar.BarScroll);
+
+            GUITextBlock musicVolumeText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), TextManager.Get("MusicVolume"));
+            GUIScrollBar musicScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform),
+                barSize: 0.1f)
+            {
+                UserData = musicVolumeText,
+                BarScroll = MusicVolume,
+                OnMoved = (scrollBar, scroll) =>
+                {
+                    ChangeSliderText(scrollBar, scroll);
+                    MusicVolume = scroll;
+                    return true;
+                },
+                Step = 0.05f
+            };
+            musicScrollBar.OnMoved(musicScrollBar, musicScrollBar.BarScroll);
+
+            /// Controls tab -------------------------------------------------------------
+            var controlsLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), tabs[(int)Tab.Controls].RectTransform, Anchor.Center)
+                { RelativeOffset = new Vector2(0.0f, 0.0f) })
+                { RelativeSpacing = 0.01f, Stretch = true };
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), controlsLayoutGroup.RectTransform), TextManager.Get("Controls"));
+
+            var inputFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.8f), controlsLayoutGroup.RectTransform))
+            {
+                Stretch = true
+            };
+            var inputNames = Enum.GetValues(typeof(InputType));
+            for (int i = 0; i < inputNames.Length; i++)
+            {
+                var inputContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.06f), inputFrame.RectTransform), style: null);
+                new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), inputContainer.RectTransform), TextManager.Get("InputType." + ((InputType)i)) + ": ", font: GUI.SmallFont);
+                var keyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 1.0f), inputContainer.RectTransform, Anchor.TopRight),
+                    text: keyMapping[i].ToString(), font: GUI.SmallFont)
+                {
+                    UserData = i
+                };
+                keyBox.OnSelected += KeyBoxSelected;
+                keyBox.SelectedColor = Color.Gold * 0.3f;
+            }
+            GUITextBlock aimAssistText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), controlsLayoutGroup.RectTransform), TextManager.Get("AimAssist"));
+            GUIScrollBar aimAssistSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), controlsLayoutGroup.RectTransform),
+                barSize: 0.1f)
+            {
+                UserData = aimAssistText,
+                BarScroll = MathUtils.InverseLerp(0.0f, 5.0f, AimAssistAmount),
+                OnMoved = (scrollBar, scroll) =>
+                {
+                    ChangeSliderText(scrollBar, scroll);
+                    AimAssistAmount = MathHelper.Lerp(0.0f, 5.0f, scroll);
+                    return true;
+                },
+                Step = 0.1f
+            };
+            aimAssistSlider.OnMoved(aimAssistSlider, aimAssistSlider.BarScroll);
+            
             /// General tab --------------------------------------------------------------
 
-            leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.46f, 0.95f), tabs[(int)Tab.General].RectTransform, Anchor.CenterLeft)
-                { RelativeOffset = new Vector2(0.02f, 0.0f) }) { RelativeSpacing = 0.01f, Stretch = true };
-            rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.46f, 0.95f), tabs[(int)Tab.General].RectTransform, Anchor.CenterRight)
-                { RelativeOffset = new Vector2(0.02f, 0.0f) }) { RelativeSpacing = 0.01f, Stretch = true };
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("ContentPackages"));
-            var contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), leftColumn.RectTransform))
+            var generalLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), tabs[(int)Tab.General].RectTransform, Anchor.Center)
+                { RelativeOffset = new Vector2(0.0f, 0.0f) }) { RelativeSpacing = 0.01f, Stretch = true };
+            
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), generalLayoutGroup.RectTransform), TextManager.Get("ContentPackages"));
+            var contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), generalLayoutGroup.RectTransform))
             {
                 CanBeFocused = false
             };
@@ -310,10 +387,10 @@ namespace Barotrauma
             }
 
             //spacing
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform), style: null);
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("Language"));
-            var languageDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), generalLayoutGroup.RectTransform), TextManager.Get("Language"));
+            var languageDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), generalLayoutGroup.RectTransform));
             foreach (string language in TextManager.AvailableLanguages)
             {
                 languageDD.AddItem(language, language);
@@ -333,75 +410,8 @@ namespace Barotrauma
             };
 
             //spacing
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform), style: null);
-
-            GUITextBlock soundVolumeText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("SoundVolume"));
-            GUIScrollBar soundScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform),
-                barSize: 0.1f)
-            {
-                UserData = soundVolumeText,
-                BarScroll = SoundVolume,
-                OnMoved = (scrollBar, scroll) =>
-                {
-                    ChangeSliderText(scrollBar, scroll);
-                    SoundVolume = scroll;
-                    return true;
-                },
-                Step = 0.05f
-            };
-            soundScrollBar.OnMoved(soundScrollBar, soundScrollBar.BarScroll);
-
-            GUITextBlock musicVolumeText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("MusicVolume"));
-            GUIScrollBar musicScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform),
-                barSize: 0.1f)
-            {
-                UserData = musicVolumeText,
-                BarScroll = MusicVolume,
-                OnMoved = (scrollBar, scroll) =>
-                {
-                    ChangeSliderText(scrollBar, scroll);
-                    MusicVolume = scroll;
-                    return true;
-                },
-                Step = 0.05f
-            };
-            musicScrollBar.OnMoved(musicScrollBar, musicScrollBar.BarScroll);
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("Controls"));
-
-            var inputFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.8f), rightColumn.RectTransform))
-            {
-                Stretch = true
-            };
-            var inputNames = Enum.GetValues(typeof(InputType));
-            for (int i = 0; i < inputNames.Length; i++)
-            {
-                var inputContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.06f), inputFrame.RectTransform), style: null);
-                new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), inputContainer.RectTransform), TextManager.Get("InputType." + ((InputType)i)) + ": ", font: GUI.SmallFont);
-                var keyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 1.0f), inputContainer.RectTransform, Anchor.TopRight),
-                    text: keyMapping[i].ToString(), font: GUI.SmallFont)
-                {
-                    UserData = i
-                };
-                keyBox.OnSelected += KeyBoxSelected;
-                keyBox.SelectedColor = Color.Gold * 0.3f;
-            }
-            GUITextBlock aimAssistText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("AimAssist"));
-            GUIScrollBar aimAssistSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
-                barSize: 0.1f)
-            {
-                UserData = aimAssistText,
-                BarScroll = MathUtils.InverseLerp(0.0f, 5.0f, AimAssistAmount),
-                OnMoved = (scrollBar, scroll) =>
-                {
-                    ChangeSliderText(scrollBar, scroll);
-                    AimAssistAmount = MathHelper.Lerp(0.0f, 5.0f, scroll);
-                    return true;
-                },
-                Step = 0.1f
-            };
-            aimAssistSlider.OnMoved(aimAssistSlider, aimAssistSlider.BarScroll);
-
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);
+            
             new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
                 TextManager.Get("Cancel"))
             {

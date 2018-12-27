@@ -21,6 +21,12 @@ namespace Barotrauma.Networking
 
         private bool capturing;
 
+        public double LastdB
+        {
+            get;
+            private set;
+        }
+
         public VoipCapture(byte id) : base(id,true,false) { //TODO: receive GameClient as parameter?
             if (instance!=null)
             {
@@ -103,9 +109,9 @@ namespace Barotrauma.Networking
                     maxAmplitude = Math.Max(maxAmplitude, Math.Abs(sampleVal));
                 }
                 double dB = 20*Math.Log10(maxAmplitude); //TODO: optimize?
-                
-                //TODO: make this an option
-                if (dB > -40)
+
+                LastdB = dB;
+                if (dB > GameMain.Config.NoiseGateThreshold)
                 {
                     //encode audio and enqueue it
                     lock (buffers)
