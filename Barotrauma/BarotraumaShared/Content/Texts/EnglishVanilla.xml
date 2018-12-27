@@ -132,6 +132,7 @@
   <InventoryScale>Inventory scale</InventoryScale>
   <SoundVolume>Sound volume</SoundVolume>
   <MusicVolume>Music volume</MusicVolume>
+  <NoiseGateThreshold>Noise gate threshold</NoiseGateThreshold>
   <Controls>Controls</Controls>
   <AimAssist>Aim assist</AimAssist>
   <Language>Language</Language>  
@@ -166,6 +167,7 @@
   <InputType.Grab>Grab</InputType.Grab>
   <InputType.SelectNextCharacter>Next character</InputType.SelectNextCharacter>
   <InputType.SelectPreviousCharacter>Previous character</InputType.SelectPreviousCharacter>
+  <InputType.Voice>Push-to-talk</InputType.Voice>
   
   <!-- Server settings menu -->
   <ServerSettingsRoundsTab>Rounds</ServerSettingsRoundsTab>

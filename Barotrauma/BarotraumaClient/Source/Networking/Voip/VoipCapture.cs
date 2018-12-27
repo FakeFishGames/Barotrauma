@@ -13,7 +13,11 @@ namespace Barotrauma.Networking
 {
     class VoipCapture : VoipQueue, IDisposable
     {
-        private static VoipCapture instance = null;
+        public static VoipCapture Instance
+        {
+            get;
+            private set;
+        }
 
         private IntPtr captureDevice;
 
@@ -28,12 +32,12 @@ namespace Barotrauma.Networking
         }
 
         public VoipCapture(byte id) : base(id,true,false) { //TODO: receive GameClient as parameter?
-            if (instance!=null)
+            if (Instance!=null)
             {
-                throw new Exception("Tried to instance more than one VoipCapture object");
+                throw new Exception("Tried to Instance more than one VoipCapture object");
             }
 
-            instance = this;
+            Instance = this;
 
             //set up capture device
             captureDevice = Alc.CaptureOpenDevice(null, VoipConfig.FREQUENCY, ALFormat.Mono16, VoipConfig.BUFFER_SIZE * 5);
@@ -140,7 +144,7 @@ namespace Barotrauma.Networking
 
         public override void Dispose()
         {
-            instance = null;
+            Instance = null;
             capturing = false;
             captureThread.Join();
             captureThread = null;

@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
@@ -19,6 +20,8 @@ namespace Barotrauma
         
         private GUIFrame settingsFrame;
         private GUIButton applyButton;
+
+        private bool ownsVoipCapture = false;
 
         private GUIFrame[] tabs;
         private GUIButton[] tabButtons;
@@ -65,11 +68,23 @@ namespace Barotrauma
 
         public void ResetSettingsFrame()
         {
+            if (ownsVoipCapture)
+            {
+                VoipCapture.Instance.Dispose();
+            }
+            ownsVoipCapture = false;
             settingsFrame = null;
         }
 
         private void CreateSettingsFrame()
         {
+            ownsVoipCapture = false;
+            if (VoipCapture.Instance == null)
+            {
+                new VoipCapture(0);
+                ownsVoipCapture = true;
+            }
+            
             settingsFrame = new GUIFrame(new RectTransform(new Point(500, 500), GUI.Canvas, Anchor.Center));
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), settingsFrame.RectTransform),
@@ -326,6 +341,32 @@ namespace Barotrauma
             };
             musicScrollBar.OnMoved(musicScrollBar, musicScrollBar.BarScroll);
 
+            var voiceSettings = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.1f), tabs[(int)Tab.Audio].RectTransform, Anchor.BottomCenter)
+                { RelativeOffset = new Vector2(0.0f, 0.04f) })
+                { RelativeSpacing = 0.01f, Stretch = true };
+
+            GUITextBlock noiseGateText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), voiceSettings.RectTransform), TextManager.Get("NoiseGateThreshold"));
+            noiseGateText.TextGetter = () =>
+            {
+                return TextManager.Get("NoiseGateThreshold") + " " + NoiseGateThreshold.ToString() + " dB";
+            };
+            var dbMeter = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.5f), voiceSettings.RectTransform, Anchor.TopLeft), 0.0f, Color.Lime);
+            dbMeter.ProgressGetter = () =>
+            {
+                dbMeter.Color = VoipCapture.Instance.LastdB > NoiseGateThreshold ? Color.Lime : Color.Orange; //TODO: i'm a filthy hack
+                return ((float)VoipCapture.Instance.LastdB+100.0f)/100.0f;
+            };
+            var noiseGateSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 1.0f), dbMeter.RectTransform, Anchor.Center), color: Color.White, barSize: 0.03f);
+            noiseGateSlider.Frame.Visible = false;
+            noiseGateSlider.Step = 0.01f;
+            noiseGateSlider.Range = new Vector2(-100.0f, 0.0f);
+            noiseGateSlider.BarScrollValue = NoiseGateThreshold;
+            noiseGateSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+            {
+                NoiseGateThreshold = scrollBar.BarScrollValue;
+                return true;
+            };
+            
             /// Controls tab -------------------------------------------------------------
             var controlsLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), tabs[(int)Tab.Controls].RectTransform, Anchor.Center)
                 { RelativeOffset = new Vector2(0.0f, 0.0f) })
