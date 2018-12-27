@@ -351,13 +351,8 @@ namespace Barotrauma
         /// <param name="relativeToSub">Should the entity be flipped across the y-axis of the sub it's inside</param>
         public virtual void FlipX(bool relativeToSub)
         {
-            if (Submarine == null && relativeToSub)
-            {
-                DebugConsole.ThrowError("Couldn't flip MapEntity \"" + Name + "\", submarine == null");
-                return;
-            }
             flippedX = !flippedX;
-            if (!relativeToSub) return;
+            if (!relativeToSub || Submarine == null) return;
 
             Vector2 relative = WorldPosition - Submarine.WorldPosition;
             relative.Y = 0.0f;
@@ -370,13 +365,8 @@ namespace Barotrauma
         /// <param name="relativeToSub">Should the entity be flipped across the x-axis of the sub it's inside</param>
         public virtual void FlipY(bool relativeToSub)
         {
-            if (Submarine == null)
-            {
-                DebugConsole.ThrowError("Couldn't flip MapEntity \"" + Name + "\", submarine == null");
-                return;
-            }
             flippedY = !flippedY;
-            if (!relativeToSub) return;
+            if (!relativeToSub || Submarine == null) return;
 
             Vector2 relative = WorldPosition - Submarine.WorldPosition;
             relative.X = 0.0f;
