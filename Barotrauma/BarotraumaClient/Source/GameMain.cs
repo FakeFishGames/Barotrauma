@@ -509,11 +509,10 @@ namespace Barotrauma
             PlayerInput.UpdateVariable();
 
             bool paused = true;
-
-#if !DEBUG
+            
             if (SoundManager != null)
             {
-                if (WindowActive)
+                if (WindowActive || !Config.MuteOnFocusLost)
                 {
                     SoundManager.ListenerGain = 1.0f;
                 }
@@ -522,7 +521,6 @@ namespace Barotrauma
                     SoundManager.ListenerGain = 0.0f;
                 }
             }
-#endif
             
             while (Timing.Accumulator >= Timing.Step)
             {
