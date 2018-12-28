@@ -132,18 +132,21 @@ namespace Barotrauma.Networking
                 LastdB = dB;
 
                 bool allowEnqueue = false;
-                if (GameMain.Config.VoiceSetting == GameSettings.VoiceMode.Activity)
+                if (GameMain.WindowActive)
                 {
-                    if (dB > GameMain.Config.NoiseGateThreshold)
+                    if (GameMain.Config.VoiceSetting == GameSettings.VoiceMode.Activity)
                     {
-                        allowEnqueue = true;
+                        if (dB > GameMain.Config.NoiseGateThreshold)
+                        {
+                            allowEnqueue = true;
+                        }
                     }
-                }
-                else if (GameMain.Config.VoiceSetting == GameSettings.VoiceMode.PushToTalk)
-                {
-                    if (PlayerInput.KeyDown(InputType.Voice))
+                    else if (GameMain.Config.VoiceSetting == GameSettings.VoiceMode.PushToTalk)
                     {
-                        allowEnqueue = true;
+                        if (PlayerInput.KeyDown(InputType.Voice))
+                        {
+                            allowEnqueue = true;
+                        }
                     }
                 }
 
