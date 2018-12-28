@@ -21,7 +21,7 @@ namespace Barotrauma.Networking
             protected set;
         }
 
-        public byte QueueID
+        public virtual byte QueueID
         {
             get;
             protected set;
@@ -68,10 +68,16 @@ namespace Barotrauma.Networking
 
             newestBufferInd = (newestBufferInd + 1) % BUFFER_COUNT;
 
+            int enqueuedTotalLength = 0;
+            for (int i=0;i<BUFFER_COUNT;i++)
+            {
+                enqueuedTotalLength += bufferLengths[i];
+            }
+
             bufferLengths[newestBufferInd] = length;
             BufferToQueue.CopyTo(buffers[newestBufferInd], 0);
-
-            LatestBufferID++;
+            
+            if ((enqueuedTotalLength+length)>0) LatestBufferID++;
         }
 
         public void RetrieveBuffer(int id,out int outSize,out byte[] outBuf)

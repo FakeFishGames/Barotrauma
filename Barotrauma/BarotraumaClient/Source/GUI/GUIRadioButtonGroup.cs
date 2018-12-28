@@ -29,6 +29,9 @@ namespace Barotrauma
             };
         }
 
+        public delegate void RadioButtonGroupDelegate(GUIRadioButtonGroup rbg, Enum val);
+        public RadioButtonGroupDelegate OnSelect = null;
+
         private Enum selected;
         public Enum Selected
         {
@@ -38,6 +41,7 @@ namespace Barotrauma
             }
             set
             {
+                OnSelect?.Invoke(this, value);
                 if (selected != null && selected.Equals((Enum)value)) return;
                 selected = value;
                 foreach (KeyValuePair<Enum, GUITickBox> radioButton in radioButtons)

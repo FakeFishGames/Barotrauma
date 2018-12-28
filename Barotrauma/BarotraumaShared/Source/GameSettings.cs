@@ -41,6 +41,15 @@ namespace Barotrauma
         public bool SpecularityEnabled { get; set; }
         public bool ChromaticAberrationEnabled { get; set; }
 
+        public enum VoiceMode
+        {
+            Disabled,
+            PushToTalk,
+            Activity
+        };
+
+        public VoiceMode VoiceSetting { get; set; }
+
         public float NoiseGateThreshold { get; set; }
 
         private KeyOrMouse[] keyMapping;
@@ -374,6 +383,8 @@ namespace Barotrauma
 
             keyMapping[(int)InputType.SelectNextCharacter] = new KeyOrMouse(Keys.Tab);
             keyMapping[(int)InputType.SelectPreviousCharacter] = new KeyOrMouse(Keys.Q);
+
+            keyMapping[(int)InputType.Voice] = new KeyOrMouse(Keys.V);
 
             keyMapping[(int)InputType.Use] = new KeyOrMouse(0);
             keyMapping[(int)InputType.Aim] = new KeyOrMouse(1);

@@ -155,11 +155,12 @@ namespace Barotrauma.Networking
 
         private bool IsServerOwner(NetIncomingMessage msg)
         {
+            string address = msg.SenderConnection.RemoteEndPoint.Address.MapToIPv4().ToString();
             if (ownerKey == 0)
             {
                 return false; //ownership key has been destroyed or has never existed
             }
-            if (msg.SenderConnection.RemoteEndPoint.Address.ToString() != "127.0.0.1")
+            if (address.ToString() != "127.0.0.1")
             {
                 return false; //not localhost
             }
