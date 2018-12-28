@@ -311,7 +311,8 @@ namespace Barotrauma.Items.Components
                 Sonar sonar = item.GetComponent<Sonar>();
                 if (sonar != null && controlledSub != null)
                 {
-                    Vector2 displayPosToMaintain = (posToMaintain.Value - controlledSub.WorldPosition) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
+                    Vector2 displayPosToMaintain = ((posToMaintain.Value - sonar.DisplayOffset * sonar.Zoom - controlledSub.WorldPosition)) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
+
                     displayPosToMaintain.Y = -displayPosToMaintain.Y;
                     displayPosToMaintain = displayPosToMaintain.ClampLength(velRect.Width / 2);
 
@@ -438,7 +439,9 @@ namespace Barotrauma.Items.Components
                     inputPos.Y = -inputPos.Y;
                     if (AutoPilot && !LevelStartSelected && !LevelEndSelected)
                     {
-                        posToMaintain = controlledSub == null ? item.WorldPosition : controlledSub.WorldPosition + inputPos / sonar.DisplayRadius * sonar.Range / sonar.Zoom;                        
+                        posToMaintain = controlledSub == null ? 
+                            item.WorldPosition : 
+                            controlledSub.WorldPosition + (sonar.DisplayOffset * sonar.Zoom) + inputPos / sonar.DisplayRadius * sonar.Range / sonar.Zoom;                        
                     }
                     else
                     {
