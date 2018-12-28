@@ -43,7 +43,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public static void Create()
+        public static void Create(UInt16? storedBufferID=null)
         {
             if (Instance != null)
             {
@@ -51,12 +51,13 @@ namespace Barotrauma.Networking
             }
 
             Instance = new VoipCapture();
+            Instance.LatestBufferID = storedBufferID??BUFFER_COUNT-1;
         }
 
         private VoipCapture() : base(GameMain.Client?.ID ?? 0,true,false) {
             //set up capture device
             captureDevice = Alc.CaptureOpenDevice(null, VoipConfig.FREQUENCY, ALFormat.Mono16, VoipConfig.BUFFER_SIZE * 5);
-
+            
             ALError alError = AL.GetError();
             AlcError alcError = Alc.GetError(captureDevice);
             if (alcError != AlcError.NoError)

@@ -510,6 +510,7 @@ namespace Barotrauma
 
             bool paused = true;
 
+#if !DEBUG
             if (SoundManager != null)
             {
                 if (WindowActive)
@@ -521,6 +522,7 @@ namespace Barotrauma
                     SoundManager.ListenerGain = 0.0f;
                 }
             }
+#endif
             
             while (Timing.Accumulator >= Timing.Step)
             {

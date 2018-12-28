@@ -12,6 +12,8 @@ namespace Barotrauma.Networking
     {
         public ulong SteamID;
 
+        public bool VoiceEnabled = true;
+
         public UInt16 LastRecvClientListUpdate = 0;
 
         public UInt16 LastRecvLobbyUpdate = 0;
