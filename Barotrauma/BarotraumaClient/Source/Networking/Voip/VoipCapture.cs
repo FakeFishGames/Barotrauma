@@ -31,14 +31,29 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        public VoipCapture(byte id) : base(id,true,false) { //TODO: receive GameClient as parameter?
-            if (Instance!=null)
+        public override byte QueueID
+        {
+            get
             {
-                throw new Exception("Tried to Instance more than one VoipCapture object");
+                return GameMain.Client?.ID ?? 0;
+            }
+            protected set
+            {
+                //do nothing
+            }
+        }
+
+        public static void Create()
+        {
+            if (Instance != null)
+            {
+                throw new Exception("Tried to instance more than one VoipCapture object");
             }
 
-            Instance = this;
+            Instance = new VoipCapture();
+        }
 
+        private VoipCapture() : base(GameMain.Client?.ID ?? 0,true,false) {
             //set up capture device
             captureDevice = Alc.CaptureOpenDevice(null, VoipConfig.FREQUENCY, ALFormat.Mono16, VoipConfig.BUFFER_SIZE * 5);
 
@@ -112,16 +127,41 @@ namespace Barotrauma.Networking
                     double sampleVal = (double)uncompressedBuffer[i] / (double)short.MaxValue;
                     maxAmplitude = Math.Max(maxAmplitude, Math.Abs(sampleVal));
                 }
-                double dB = 20*Math.Log10(maxAmplitude); //TODO: optimize?
+                double dB = Math.Min(20*Math.Log10(maxAmplitude),0.0);
 
                 LastdB = dB;
-                if (dB > GameMain.Config.NoiseGateThreshold)
+
+                bool allowEnqueue = false;
+                if (GameMain.Config.VoiceSetting == GameSettings.VoiceMode.Activity)
+                {
+                    if (dB > GameMain.Config.NoiseGateThreshold)
+                    {
+                        allowEnqueue = true;
+                    }
+                }
+                else if (GameMain.Config.VoiceSetting == GameSettings.VoiceMode.PushToTalk)
+                {
+                    if (PlayerInput.KeyDown(InputType.Voice))
+                    {
+                        allowEnqueue = true;
+                    }
+                }
+
+                if (allowEnqueue)
                 {
                     //encode audio and enqueue it
                     lock (buffers)
                     {
                         int compressedCount = VoipConfig.Encoder.Encode(uncompressedBuffer, 0, VoipConfig.BUFFER_SIZE, BufferToQueue, 0, VoipConfig.MAX_COMPRESSED_SIZE);
                         EnqueueBuffer(compressedCount);
+                    }
+                }
+                else
+                {
+                    //enqueue silence
+                    lock (buffers)
+                    {
+                        EnqueueBuffer(0);
                     }
                 }
 

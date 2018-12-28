@@ -20,9 +20,7 @@ namespace Barotrauma
         
         private GUIFrame settingsFrame;
         private GUIButton applyButton;
-
-        private bool ownsVoipCapture = false;
-
+        
         private GUIFrame[] tabs;
         private GUIButton[] tabButtons;
 
@@ -68,23 +66,15 @@ namespace Barotrauma
 
         public void ResetSettingsFrame()
         {
-            if (ownsVoipCapture)
+            if (GameMain.Client == null || VoiceSetting == VoiceMode.Disabled)
             {
-                VoipCapture.Instance.Dispose();
+                VoipCapture.Instance?.Dispose();
             }
-            ownsVoipCapture = false;
             settingsFrame = null;
         }
 
         private void CreateSettingsFrame()
         {
-            ownsVoipCapture = false;
-            if (VoipCapture.Instance == null)
-            {
-                new VoipCapture(0);
-                ownsVoipCapture = true;
-            }
-            
             settingsFrame = new GUIFrame(new RectTransform(new Point(500, 500), GUI.Canvas, Anchor.Center));
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), settingsFrame.RectTransform),
@@ -341,18 +331,46 @@ namespace Barotrauma
             };
             musicScrollBar.OnMoved(musicScrollBar, musicScrollBar.BarScroll);
 
-            var voiceSettings = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.1f), tabs[(int)Tab.Audio].RectTransform, Anchor.BottomCenter)
+            var voiceSettings = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.4f), tabs[(int)Tab.Audio].RectTransform, Anchor.BottomCenter)
                 { RelativeOffset = new Vector2(0.0f, 0.04f) })
                 { RelativeSpacing = 0.01f, Stretch = true };
 
-            GUITextBlock noiseGateText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), voiceSettings.RectTransform), TextManager.Get("NoiseGateThreshold"));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), voiceSettings.RectTransform), TextManager.Get("VoiceChat"));
+
+            var radioButtonFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.6f), voiceSettings.RectTransform))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
+
+            GUIRadioButtonGroup voiceMode = new GUIRadioButtonGroup();
+            for (int i = 0; i < 3; i++)
+            {
+                var tick = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.33f), radioButtonFrame.RectTransform), ((VoiceMode)i).ToString());
+                voiceMode.AddRadioButton((VoiceMode)i, tick);
+            }
+            
+            var voiceInputContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.2f), voiceSettings.RectTransform, Anchor.BottomCenter));
+            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), voiceInputContainer.RectTransform), TextManager.Get("InputType.Voice") + ": ");
+            var voiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 1.0f), voiceInputContainer.RectTransform, Anchor.TopRight),
+                text: keyMapping[(int)InputType.Voice].ToString())
+            {
+                UserData = InputType.Voice
+            };
+            voiceKeyBox.OnSelected += KeyBoxSelected;
+            voiceKeyBox.SelectedColor = Color.Gold * 0.3f;
+
+            var voiceActivityGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), voiceSettings.RectTransform));
+
+            GUITextBlock noiseGateText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), voiceActivityGroup.RectTransform), TextManager.Get("NoiseGateThreshold"));
             noiseGateText.TextGetter = () =>
             {
                 return TextManager.Get("NoiseGateThreshold") + " " + NoiseGateThreshold.ToString() + " dB";
             };
-            var dbMeter = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.5f), voiceSettings.RectTransform, Anchor.TopLeft), 0.0f, Color.Lime);
+            var dbMeter = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.5f), voiceActivityGroup.RectTransform), 0.0f, Color.Lime);
             dbMeter.ProgressGetter = () =>
             {
+                if (VoipCapture.Instance == null) return 0.0f;
                 dbMeter.Color = VoipCapture.Instance.LastdB > NoiseGateThreshold ? Color.Lime : Color.Orange; //TODO: i'm a filthy hack
                 return ((float)VoipCapture.Instance.LastdB+100.0f)/100.0f;
             };
@@ -366,7 +384,34 @@ namespace Barotrauma
                 NoiseGateThreshold = scrollBar.BarScrollValue;
                 return true;
             };
-            
+
+            voiceMode.OnSelect = (GUIRadioButtonGroup rbg, Enum value) =>
+            {
+                if (rbg.Selected != null && rbg.Selected.Equals(value)) return;
+                VoiceMode vMode = (VoiceMode)value;
+                VoiceSetting = vMode;
+
+                if (vMode == VoiceMode.Activity)
+                {
+                    voiceActivityGroup.Visible = true;
+                    if (VoipCapture.Instance == null)
+                    {
+                        VoipCapture.Create();
+                    }
+                }
+                else
+                {
+                    voiceActivityGroup.Visible = false;
+                    if (GameMain.Client == null || vMode == VoiceMode.Disabled)
+                    {
+                        VoipCapture.Instance?.Dispose();
+                    }
+                }
+
+                voiceInputContainer.Visible = (vMode == VoiceMode.PushToTalk);
+            };
+            voiceMode.Selected = VoiceSetting;
+
             /// Controls tab -------------------------------------------------------------
             var controlsLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), tabs[(int)Tab.Controls].RectTransform, Anchor.Center)
                 { RelativeOffset = new Vector2(0.0f, 0.0f) })
@@ -479,6 +524,24 @@ namespace Barotrauma
 
         private void SelectTab(Tab tab)
         {
+            switch (tab)
+            {
+                case Tab.Audio:
+                    if (VoiceSetting == VoiceMode.Activity)
+                    {
+                        if (VoipCapture.Instance == null)
+                        {
+                            VoipCapture.Create();
+                        }
+                    }
+                    break;
+                default:
+                    if (GameMain.Client == null || VoiceSetting == VoiceMode.Disabled)
+                    {
+                        VoipCapture.Instance?.Dispose();
+                    }
+                    break;
+            }
             for (int i = 0; i < tabs.Length; i++)
             {
                 tabs[i].Visible = (Tab)tabs[i].UserData == tab;
