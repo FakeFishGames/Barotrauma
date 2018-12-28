@@ -41,6 +41,8 @@ namespace Barotrauma
         public bool SpecularityEnabled { get; set; }
         public bool ChromaticAberrationEnabled { get; set; }
 
+        public bool MuteOnFocusLost { get; set; }
+
         public enum VoiceMode
         {
             Disabled,

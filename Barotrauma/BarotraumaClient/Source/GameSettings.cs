@@ -331,6 +331,15 @@ namespace Barotrauma
             };
             musicScrollBar.OnMoved(musicScrollBar, musicScrollBar.BarScroll);
 
+            GUITickBox muteOnFocusLostBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), TextManager.Get("MuteOnFocusLost"));
+            muteOnFocusLostBox.Selected = MuteOnFocusLost;
+            muteOnFocusLostBox.OnSelected = (tickBox) =>
+            {
+                MuteOnFocusLost = tickBox.Selected;
+
+                return true;
+            };
+
             var voiceSettings = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.4f), tabs[(int)Tab.Audio].RectTransform, Anchor.BottomCenter)
                 { RelativeOffset = new Vector2(0.0f, 0.04f) })
                 { RelativeSpacing = 0.01f, Stretch = true };
