@@ -15,6 +15,19 @@ namespace Barotrauma.Networking
         protected int newestBufferInd;
         protected bool firstRead;
 
+        public int EnqueuedTotalLength
+        {
+            get
+            {
+                int enqueuedTotalLength = 0;
+                for (int i = 0; i < BUFFER_COUNT; i++)
+                {
+                    enqueuedTotalLength += bufferLengths[i];
+                }
+                return enqueuedTotalLength;
+            }
+        }
+
         public byte[] BufferToQueue
         {
             get;
@@ -68,11 +81,7 @@ namespace Barotrauma.Networking
 
             newestBufferInd = (newestBufferInd + 1) % BUFFER_COUNT;
 
-            int enqueuedTotalLength = 0;
-            for (int i=0;i<BUFFER_COUNT;i++)
-            {
-                enqueuedTotalLength += bufferLengths[i];
-            }
+            int enqueuedTotalLength = EnqueuedTotalLength;
 
             bufferLengths[newestBufferInd] = length;
             BufferToQueue.CopyTo(buffers[newestBufferInd], 0);

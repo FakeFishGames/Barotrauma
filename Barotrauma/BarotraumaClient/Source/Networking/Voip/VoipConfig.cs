@@ -14,7 +14,6 @@ namespace Barotrauma.Networking
 
         public const int FREQUENCY = 48000; //not amazing, but not bad audio quality
         public const int BUFFER_SIZE = 2880; //60ms window, the max Opus seems to support
-        public const int REPEAT_MARGIN = 1440; //30ms window of audio to repeat in case not enough audio is available
         
         public static OpusEncoder Encoder
         {

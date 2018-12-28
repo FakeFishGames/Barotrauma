@@ -66,7 +66,7 @@ namespace Barotrauma
 
         public void ResetSettingsFrame()
         {
-            if (GameMain.Client == null || VoiceSetting == VoiceMode.Disabled)
+            if (GameMain.Client == null)
             {
                 VoipCapture.Instance?.Dispose();
             }
@@ -394,7 +394,7 @@ namespace Barotrauma
                 if (vMode == VoiceMode.Activity)
                 {
                     voiceActivityGroup.Visible = true;
-                    if (VoipCapture.Instance == null)
+                    if (GameMain.Client == null && VoipCapture.Instance == null)
                     {
                         VoipCapture.Create();
                     }
@@ -402,7 +402,7 @@ namespace Barotrauma
                 else
                 {
                     voiceActivityGroup.Visible = false;
-                    if (GameMain.Client == null || vMode == VoiceMode.Disabled)
+                    if (GameMain.Client == null)
                     {
                         VoipCapture.Instance?.Dispose();
                     }
@@ -529,14 +529,14 @@ namespace Barotrauma
                 case Tab.Audio:
                     if (VoiceSetting == VoiceMode.Activity)
                     {
-                        if (VoipCapture.Instance == null)
+                        if (GameMain.Client == null && VoipCapture.Instance == null)
                         {
                             VoipCapture.Create();
                         }
                     }
                     break;
                 default:
-                    if (GameMain.Client == null || VoiceSetting == VoiceMode.Disabled)
+                    if (GameMain.Client == null)
                     {
                         VoipCapture.Instance?.Dispose();
                     }

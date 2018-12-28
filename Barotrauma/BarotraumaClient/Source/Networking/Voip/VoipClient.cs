@@ -14,6 +14,8 @@ namespace Barotrauma.Networking
         private DateTime lastSendTime;
         private List<VoipQueue> queues;
 
+        private UInt16 storedBufferID = 0;
+
         public VoipClient(GameClient gClient,NetClient nClient)
         {
             gameClient = gClient;
@@ -39,12 +41,17 @@ namespace Barotrauma.Networking
         {
             if (GameMain.Config.VoiceSetting == GameSettings.VoiceMode.Disabled)
             {
-                VoipCapture.Instance?.Dispose();
+                if (VoipCapture.Instance != null)
+                {
+                    storedBufferID = VoipCapture.Instance.LatestBufferID;
+                    VoipCapture.Instance.Dispose();
+                }
                 return;
             }
             else
             {
-                if (VoipCapture.Instance == null) VoipCapture.Create();
+                if (VoipCapture.Instance == null) VoipCapture.Create(storedBufferID);
+                if (VoipCapture.Instance.EnqueuedTotalLength == 0) return;
             }
 
             if (DateTime.Now >= lastSendTime + VoipConfig.SEND_INTERVAL)
