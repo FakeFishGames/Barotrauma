@@ -510,6 +510,18 @@ namespace Barotrauma
 
             bool paused = true;
 
+            if (SoundManager != null)
+            {
+                if (WindowActive)
+                {
+                    SoundManager.ListenerGain = 1.0f;
+                }
+                else
+                {
+                    SoundManager.ListenerGain = 0.0f;
+                }
+            }
+            
             while (Timing.Accumulator >= Timing.Step)
             {
                 Stopwatch sw = new Stopwatch();
