@@ -380,7 +380,7 @@ namespace Barotrauma
             }
             else
             {
-                if (PlayerInput.LeftButtonClicked()) Deselect();
+                if (PlayerInput.LeftButtonClicked() && selected) Deselect();
                 isSelecting = false;
                 state = ComponentState.None;
             }
