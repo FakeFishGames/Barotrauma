@@ -11,6 +11,12 @@ namespace Barotrauma.Items.Components
 {
     partial class Sonar : Powered, IServerSerializable, IClientSerializable
     {
+        enum Mode
+        {
+            Active,
+            Passive
+        };
+
         private GUITickBox activeTickBox, passiveTickBox;
         private GUITextBlock signalWarningText;
 
@@ -150,9 +156,12 @@ namespace Barotrauma.Items.Components
             };
             
             signalWarningText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedControlContainer.RectTransform), "", Color.Orange, textAlignment: Alignment.Center);
-            
-            GUITickBox.CreateRadioButtonGroup(new List<GUITickBox>() { activeTickBox, passiveTickBox });
 
+            GUIRadioButtonGroup sonarMode = new GUIRadioButtonGroup();
+            sonarMode.AddRadioButton(Mode.Active, activeTickBox);
+            sonarMode.AddRadioButton(Mode.Passive, passiveTickBox);
+            sonarMode.Selected = Mode.Passive;
+            
             GuiFrame.CanBeFocused = false;
         }
 
