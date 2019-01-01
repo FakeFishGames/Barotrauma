@@ -1798,9 +1798,13 @@ namespace Barotrauma
                 limbs = null;
             }
 
-            foreach (PhysicsBody b in collider)
+            if (collider != null)
             {
-                b.Remove();
+                foreach (PhysicsBody b in collider)
+                {
+                    b.Remove();
+                }
+                collider = null;
             }
 
             if (outsideCollisionBlocker != null)

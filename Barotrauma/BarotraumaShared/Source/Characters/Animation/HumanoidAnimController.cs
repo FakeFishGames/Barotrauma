@@ -1117,8 +1117,10 @@ namespace Barotrauma
                 ladderSimPos += character.SelectedConstruction.Submarine.SimPosition - currentHull.Submarine.SimPosition;
             }
 
-            MoveLimb(head, new Vector2(ladderSimPos.X - 0.27f * Dir, Collider.SimPosition.Y + WalkParams.HeadPosition - ColliderHeightFromFloor), 10.5f);
-            MoveLimb(torso, new Vector2(ladderSimPos.X - 0.27f * Dir, Collider.SimPosition.Y + WalkParams.TorsoPosition - ColliderHeightFromFloor), 10.5f);
+            float bottomPos = Collider.SimPosition.Y - ColliderHeightFromFloor - Collider.radius - Collider.height / 2.0f;
+
+            MoveLimb(head, new Vector2(ladderSimPos.X - 0.27f * Dir, bottomPos + WalkParams.HeadPosition), 10.5f);
+            MoveLimb(torso, new Vector2(ladderSimPos.X - 0.27f * Dir, bottomPos + WalkParams.TorsoPosition), 10.5f);
             if (waist != null)
             {
                 //MoveLimb(waist, new Vector2(ladderSimPos.X - 0.35f * Dir, Collider.SimPosition.Y + 0.6f - ColliderHeightFromFloor), 10.5f);
@@ -1128,9 +1130,10 @@ namespace Barotrauma
             
             Vector2 handPos = new Vector2(
                 ladderSimPos.X,
-                Collider.SimPosition.Y + WalkParams.TorsoPosition + movement.Y * 0.1f - ladderSimPos.Y);
+                bottomPos + WalkParams.TorsoPosition + movement.Y * 0.1f - ladderSimPos.Y);
 
-            handPos.Y = Math.Min(-0.2f, handPos.Y) - ColliderHeightFromFloor;
+            //prevent the hands from going above the top of the ladders
+            handPos.Y = Math.Min(-0.2f, handPos.Y);
 
             MoveLimb(leftHand,
                 new Vector2(handPos.X,
@@ -1147,7 +1150,7 @@ namespace Barotrauma
 
             Vector2 footPos = new Vector2(
                 handPos.X - Dir * 0.05f,
-                Collider.SimPosition.Y - ColliderHeightFromFloor * 0.0f - stepHeight * 2.7f - ladderSimPos.Y);
+                bottomPos + ColliderHeightFromFloor - stepHeight * 2.7f - ladderSimPos.Y);
             
             MoveLimb(leftFoot,
                 new Vector2(footPos.X,

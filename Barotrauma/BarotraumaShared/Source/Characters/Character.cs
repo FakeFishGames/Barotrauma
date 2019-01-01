@@ -2418,10 +2418,9 @@ namespace Barotrauma
 
             DisposeProjSpecific();
 
-            if (aiTarget != null) aiTarget.Remove();
-            if (AnimController != null) AnimController.Remove();
-
-            CharacterHealth.Remove();
+            aiTarget?.Remove();
+            AnimController?.Remove();
+            CharacterHealth?.Remove();
 
             foreach (Character c in CharacterList)
             {
