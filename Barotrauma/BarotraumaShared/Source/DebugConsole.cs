@@ -2315,7 +2315,7 @@ namespace Barotrauma
             string[] args = splitCommand.Skip(1).ToArray();
 
             //if an argument is given or the last character is a space, attempt to autocomplete the argument
-            if (args.Length > 0 || (command.Length > 0 && command.Last() == ' '))
+            if (args.Length > 0 || (splitCommand.Length > 0 && command.Last() == ' '))
             {
                 Command matchingCommand = commands.Find(c => c.names.Contains(splitCommand[0]));
                 if (matchingCommand == null || matchingCommand.GetValidArgs == null) return command;
