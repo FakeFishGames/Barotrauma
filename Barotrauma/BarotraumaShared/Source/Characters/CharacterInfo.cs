@@ -246,6 +246,7 @@ namespace Barotrauma
             {
                 if (ragdoll == null)
                 {
+                    //TODO: this doesn't work correctly: the name attribute is the name of the character, not name of the species and the humanoid attribute is saved in the character element, not info element
                     string speciesName = SourceElement.GetAttributeString("name", string.Empty);
                     bool isHumanoid = SourceElement.GetAttributeBool("humanoid", false);
                     ragdoll = isHumanoid 
