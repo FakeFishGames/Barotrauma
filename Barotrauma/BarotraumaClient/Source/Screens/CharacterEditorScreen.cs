@@ -74,7 +74,9 @@ namespace Barotrauma
 
         private bool isEndlessRunner;
 
-        private Rectangle GetSpritesheetRectangle => 
+        private Rectangle spriteSheetRect;
+
+        private Rectangle CalculateSpritesheetRectangle() => 
             new Rectangle(
                 spriteSheetOffsetX, 
                 spriteSheetOffsetY, 
@@ -180,6 +182,7 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
+            spriteSheetRect = CalculateSpritesheetRectangle();
             // Handle shortcut keys
             if (GUI.KeyboardDispatcher.Subscriber == null)
             {
@@ -403,7 +406,7 @@ namespace Barotrauma
                     Vector2 center = limbScreenPos + offset;
                     corners = MathUtils.GetImaginaryRect(corners, up, center, size);
                     // Select limbs on ragdoll
-                    if (MathUtils.RectangleContainsPoint(corners, PlayerInput.MousePosition))
+                    if (!spriteSheetRect.Contains(PlayerInput.MousePosition) && MathUtils.RectangleContainsPoint(corners, PlayerInput.MousePosition))
                     {
                         HandleLimbSelection(limb);
                     }
@@ -497,7 +500,7 @@ namespace Barotrauma
                 if (selectedJoint != null)
                 {
                     GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 120, GameMain.GraphicsHeight / 5), "Creating a new joint", Color.White, font: GUI.LargeFont);
-                    if (GetSpritesheetRectangle.Contains(PlayerInput.MousePosition))
+                    if (spriteSheetRect.Contains(PlayerInput.MousePosition))
                     {
                         var startPos = GetLimbSpritesheetRect(selectedJoint.LimbB).Center.ToVector2();
                         var offset = ConvertUnits.ToDisplayUnits(selectedJoint.LocalAnchorB) * spriteSheetZoom;
@@ -516,7 +519,7 @@ namespace Barotrauma
                 if (selectedLimb != null)
                 {
                     GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 120, GameMain.GraphicsHeight / 5), "Creating a new joint", Color.White, font: GUI.LargeFont);
-                    if (GetSpritesheetRectangle.Contains(PlayerInput.MousePosition))
+                    if (spriteSheetRect.Contains(PlayerInput.MousePosition))
                     {
                         var startPos = GetLimbSpritesheetRect(selectedLimb).Center.ToVector2();
                         if (anchor1Pos.HasValue)
@@ -617,7 +620,7 @@ namespace Barotrauma
                 var selectedJoint = selectedJoints.FirstOrDefault();
                 if (selectedJoint != null)
                 {
-                    if (GetSpritesheetRectangle.Contains(PlayerInput.MousePosition))
+                    if (spriteSheetRect.Contains(PlayerInput.MousePosition))
                     {
                         targetLimb = GetClosestLimbOnSpritesheet(PlayerInput.MousePosition, l => l != null && l != selectedJoint.LimbB && l.ActiveSprite != null);
                         if (targetLimb != null && PlayerInput.LeftButtonClicked())
@@ -649,7 +652,7 @@ namespace Barotrauma
                 var selectedLimb = selectedLimbs.FirstOrDefault();
                 if (selectedLimb != null)
                 {
-                    if (GetSpritesheetRectangle.Contains(PlayerInput.MousePosition))
+                    if (spriteSheetRect.Contains(PlayerInput.MousePosition))
                     {
                         if (anchor1Pos == null)
                         {
