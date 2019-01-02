@@ -11,6 +11,7 @@ namespace Barotrauma
     public enum ContentType
     {
         None, 
+        Submarine,
         Jobs, 
         Item, 
         Character,
@@ -65,6 +66,8 @@ namespace Barotrauma
             private set;
         }
 
+        public string SteamWorkshopUrl;
+
         private Md5Hash md5Hash;
         public Md5Hash MD5hash
         {
@@ -81,7 +84,7 @@ namespace Barotrauma
         public bool CorePackage
         {
             get;
-            private set;
+            set;
         }
 
         public List<ContentFile> Files;
@@ -110,8 +113,8 @@ namespace Barotrauma
             }
 
             Name = doc.Root.GetAttributeString("name", "");
-
             CorePackage = doc.Root.GetAttributeBool("corepackage", false);
+            SteamWorkshopUrl = doc.Root.GetAttributeString("steamworkshopurl", "");
 
             foreach (XElement subElement in doc.Root.Elements())
             {
@@ -163,6 +166,11 @@ namespace Barotrauma
                 new XAttribute("name", Name),
                 new XAttribute("path", Path),
                 new XAttribute("corepackage", CorePackage)));
+
+            if (!string.IsNullOrEmpty(SteamWorkshopUrl))
+            {
+                doc.Root.Add(new XAttribute("steamworkshopurl", SteamWorkshopUrl));
+            }
 
             foreach (ContentFile file in Files)
             {
@@ -251,15 +259,22 @@ namespace Barotrauma
             }
         }
 
-        public static bool IsModFilePathAllowed(string path)
+        public static bool IsModFilePathAllowed(ContentFile contentFile)
         {
+            string path = contentFile.Path;
             while (true)
             {
                 string temp = System.IO.Path.GetDirectoryName(path);
                 if (string.IsNullOrEmpty(temp)) { break; }
                 path = temp;
             }
-            return path == "Mods";
+            switch (contentFile.Type)
+            {
+                case ContentType.Submarine:
+                    return path == "Submarines";
+                default:
+                    return path == "Mods";
+            }
         }
 
         /// <summary>

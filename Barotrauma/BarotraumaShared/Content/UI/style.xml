@@ -220,11 +220,12 @@
 
   <ListBoxElement
     textcolor="0.5, 0.55, 0.6, 1.0"    
-    color="0.0,0.0,0.0,0.0"
+    color="1.0,1.0,1.0,0.2"
     hovercolor="1.0,1.0,1.0,1.0"
     selectedcolor="1.0,1.0,1.0,1.0"
     padding="5.0, 5.0, 5.0, 5.0">
 
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="493, 544, 227, 52" slice="494, 552, 718, 584"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="493, 544, 227, 52" slice="494, 552, 718, 584"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Selected"  sourcerect ="493, 490, 227, 52" slice="494, 497, 718, 529"/>
   </ListBoxElement>
