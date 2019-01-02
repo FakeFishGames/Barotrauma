@@ -86,6 +86,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        [Serialize(1000.0f, true)]
+        public float DockingAssistThreshold
+        {
+            get;
+            set;
+        }
+
         public Vector2 TargetVelocity
         {
             get { return targetVelocity;}

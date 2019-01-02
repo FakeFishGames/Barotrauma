@@ -32,8 +32,9 @@ namespace Barotrauma.Items.Components
         private float prevPassivePingRadius;
 
         private Vector2 center;
-        private float displayRadius;
         private float displayScale;
+
+        private float zoomSqrt;
         
         //Vector2 = vector from the ping source to the position of the disruption
         //float = strength of the disruption, between 0-1
@@ -48,10 +49,9 @@ namespace Barotrauma.Items.Components
             new Color(255, 255, 255)
         };
 
-        public float DisplayRadius
-        {
-            get { return displayRadius; }
-        }
+        public Vector2 DisplayOffset { get; private set; }
+
+        public float DisplayRadius { get; private set; }
 
         partial void InitProjSpecific(XElement element)
         {
@@ -180,6 +180,12 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
+            if (sonarView.Rect.Contains(PlayerInput.MousePosition))
+            {
+                zoomSlider.BarScroll += PlayerInput.ScrollWheelSpeed / 1000.0f;
+                zoomSlider.OnMoved(zoomSlider, zoomSlider.BarScroll);
+            }
+
             float distort = 1.0f - item.Condition / 100.0f;
             for (int i = sonarBlips.Count - 1; i >= 0; i--)
             {
@@ -208,6 +214,7 @@ namespace Barotrauma.Items.Components
             }
 
             Vector2 transducerCenter = UseTransducers ? GetTransducerCenter() : item.WorldPosition;
+            transducerCenter += DisplayOffset;
 
             if (Level.Loaded != null)
             {
@@ -260,7 +267,7 @@ namespace Barotrauma.Items.Components
             
             if (IsActive)
             {
-                float pingRadius = displayRadius * pingState / zoom;
+                float pingRadius = DisplayRadius * pingState / zoom;
                 UpdateDisruptions(transducerCenter, pingRadius / displayScale, prevPingRadius / displayScale);
                 Ping(transducerCenter, transducerCenter, 
                     pingRadius, prevPingRadius, displayScale, range / zoom, passive: false, pingStrength: 2.0f);
@@ -291,9 +298,9 @@ namespace Barotrauma.Items.Components
         private void DrawSonar(SpriteBatch spriteBatch, Rectangle rect)
         {
             displayBorderSize = 0.2f;
-               center = new Vector2(rect.X + rect.Width * 0.5f, rect.Center.Y);
-            displayRadius = (rect.Width / 2.0f) * (1.0f - displayBorderSize);
-            displayScale = displayRadius / range * zoom;
+            center = rect.Center.ToVector2();
+            DisplayRadius = (rect.Width / 2.0f) * (1.0f - displayBorderSize);
+            displayScale = DisplayRadius / range * zoom;
 
             if (screenBackground != null)
             {
@@ -306,11 +313,11 @@ namespace Barotrauma.Items.Components
                 {
                     directionalPingCircle.Draw(spriteBatch, center, Color.White * (1.0f - pingState),
                         rotate: MathUtils.VectorToAngle(lastPingDirection),
-                        scale: (displayRadius / directionalPingCircle.size.X) * pingState);
+                        scale: (DisplayRadius / directionalPingCircle.size.X) * pingState);
                 }
                 else
                 {
-                    pingCircle.Draw(spriteBatch, center, Color.White * (1.0f - pingState), 0.0f, (displayRadius * 2 / pingCircle.size.X) * pingState);
+                    pingCircle.Draw(spriteBatch, center, Color.White * (1.0f - pingState), 0.0f, (DisplayRadius * 2 / pingCircle.size.X) * pingState);
                 }
             }
 
@@ -328,54 +335,19 @@ namespace Barotrauma.Items.Components
 
             if (item.Submarine != null && !DetectSubmarineWalls)
             {
-                float simScale = displayScale * Physics.DisplayToSimRation * zoom;
-
-                foreach (Submarine submarine in Submarine.Loaded)
-                {
-                    if (UseTransducers ?
-                        !connectedTransducers.Any(t => submarine == t.Transducer.Item.Submarine || submarine.DockedTo.Contains(t.Transducer.Item.Submarine)) :
-                        submarine != item.Submarine && !submarine.DockedTo.Contains(item.Submarine)) continue;
-                    if (submarine.HullVertices == null) continue;
-
-                    Vector2 offset = ConvertUnits.ToSimUnits(submarine.WorldPosition - transducerCenter);
-
-                    for (int i = 0; i < submarine.HullVertices.Count; i++)
-                    {
-                        Vector2 start = (submarine.HullVertices[i] + offset) * simScale;
-                        start.Y = -start.Y;
-                        Vector2 end = (submarine.HullVertices[(i + 1) % submarine.HullVertices.Count] + offset) * simScale;
-                        end.Y = -end.Y;
-
-                        bool startOutside = start.LengthSquared() > displayRadius * displayRadius;
-                        bool endOutside = end.LengthSquared() > displayRadius * displayRadius;
-                        if (startOutside && endOutside)
-                        {
-                            continue;
-                        }
-                        else if (startOutside)
-                        {
-                            if (MathUtils.GetLineCircleIntersections(Vector2.Zero, DisplayRadius, end, start, true, out Vector2? intersection1, out Vector2? intersection2)==1)
-                            {
-                                GUI.DrawLine(spriteBatch, center + intersection1.Value, center + end, Color.LightBlue * signalStrength, width: 3);
-                            }
-                        }
-                        else if (endOutside)
-                        {
-                            if (MathUtils.GetLineCircleIntersections(Vector2.Zero, DisplayRadius, start, end, true, out Vector2? intersection1, out Vector2? intersection2) == 1)
-                            {
-                                GUI.DrawLine(spriteBatch, center + start, center + intersection1.Value, Color.LightBlue * signalStrength, width: 3);
-                            }
-                        }
-                        else
-                        {
-                            GUI.DrawLine(spriteBatch, center + start, center + end, Color.LightBlue * signalStrength, width: 3);
-                        }
-                    }
-                }
+                DrawDockingPorts(spriteBatch, transducerCenter, signalStrength);
+                transducerCenter += DisplayOffset;
+                DrawOwnSubmarineBorders(spriteBatch, transducerCenter, signalStrength);
             }
+            else
+            {
+                DisplayOffset = Vector2.Zero;
+            }
+
 
             if (sonarBlips.Count > 0)
             {
+                zoomSqrt = (float)Math.Sqrt(zoom);
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive);
 
@@ -390,8 +362,8 @@ namespace Barotrauma.Items.Components
 
             if (useDirectionalPing && IsActive)
             {
-                Vector2 sector1 = MathUtils.RotatePointAroundTarget(pingDirection * displayRadius, Vector2.Zero, DirectionalPingSector * 0.5f);
-                Vector2 sector2 = MathUtils.RotatePointAroundTarget(pingDirection * displayRadius, Vector2.Zero, -DirectionalPingSector * 0.5f);
+                Vector2 sector1 = MathUtils.RotatePointAroundTarget(pingDirection * DisplayRadius, Vector2.Zero, DirectionalPingSector * 0.5f);
+                Vector2 sector2 = MathUtils.RotatePointAroundTarget(pingDirection * DisplayRadius, Vector2.Zero, -DirectionalPingSector * 0.5f);
                 GUI.DrawLine(spriteBatch, center, center + sector1, Color.LightCyan * 0.2f, width: 3);
                 GUI.DrawLine(spriteBatch, center, center + sector2, Color.LightCyan * 0.2f, width: 3);
             }
@@ -457,7 +429,10 @@ namespace Barotrauma.Items.Components
                 if (!sub.OnSonar) continue;
                 if (UseTransducers ?
                     connectedTransducers.Any(t => sub == t.Transducer.Item.Submarine || sub.DockedTo.Contains(t.Transducer.Item.Submarine)) :
-                    sub == item.Submarine && sub.DockedTo.Contains(item.Submarine)) continue;
+                    (sub == item.Submarine || sub.DockedTo.Contains(item.Submarine)))
+                {
+                    continue;
+                }
                 if (sub.WorldPosition.Y > Level.Loaded.Size.Y) continue;
                              
                 DrawMarker(spriteBatch, sub.Name, sub.WorldPosition - transducerCenter, displayScale, center, (rect.Width * 0.45f));
@@ -466,8 +441,137 @@ namespace Barotrauma.Items.Components
             if (GameMain.DebugDraw)
             {
                 var steering = item.GetComponent<Steering>();
-                steering?.DebugDrawHUD(spriteBatch, transducerCenter, displayScale, displayRadius, center);
+                steering?.DebugDrawHUD(spriteBatch, transducerCenter, displayScale, DisplayRadius, center);
             }
+        }
+
+        private void DrawOwnSubmarineBorders(SpriteBatch spriteBatch, Vector2 transducerCenter, float signalStrength)
+        {
+            float simScale = displayScale * Physics.DisplayToSimRation * zoom;
+
+            foreach (Submarine submarine in Submarine.Loaded)
+            {
+                if (UseTransducers ?
+                    !connectedTransducers.Any(t => submarine == t.Transducer.Item.Submarine || submarine.DockedTo.Contains(t.Transducer.Item.Submarine)) :
+                    submarine != item.Submarine && !submarine.DockedTo.Contains(item.Submarine)) continue;
+                if (submarine.HullVertices == null) continue;
+
+                Vector2 offset = ConvertUnits.ToSimUnits(submarine.WorldPosition - transducerCenter);
+
+                for (int i = 0; i < submarine.HullVertices.Count; i++)
+                {
+                    Vector2 start = (submarine.HullVertices[i] + offset) * simScale;
+                    start.Y = -start.Y;
+                    Vector2 end = (submarine.HullVertices[(i + 1) % submarine.HullVertices.Count] + offset) * simScale;
+                    end.Y = -end.Y;
+
+                    DrawLine(spriteBatch, start, end, Color.LightBlue * signalStrength, width: 3);
+                }
+            }
+        }
+
+        private void DrawLine(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Color color, int width)
+        {
+            bool startOutside = start.LengthSquared() > DisplayRadius * DisplayRadius;
+            bool endOutside = end.LengthSquared() > DisplayRadius * DisplayRadius;
+            if (startOutside && endOutside)
+            {
+                return;
+            }
+            else if (startOutside)
+            {
+                if (MathUtils.GetLineCircleIntersections(Vector2.Zero, DisplayRadius, end, start, true, out Vector2? intersection1, out Vector2? intersection2) == 1)
+                {
+                    GUI.DrawLine(spriteBatch, center + intersection1.Value, center + end, color, width: width);
+                }
+            }
+            else if (endOutside)
+            {
+                if (MathUtils.GetLineCircleIntersections(Vector2.Zero, DisplayRadius, start, end, true, out Vector2? intersection1, out Vector2? intersection2) == 1)
+                {
+                    GUI.DrawLine(spriteBatch, center + start, center + intersection1.Value, color, width: width);
+                }
+            }
+            else
+            {
+                GUI.DrawLine(spriteBatch, center + start, center + end, color, width: width);
+            }
+        }
+
+        private void DrawDockingPorts(SpriteBatch spriteBatch, Vector2 transducerCenter, float signalStrength)
+        {
+            float scale = displayScale * zoom;
+
+            Steering steering = item.GetComponent<Steering>();
+            if (steering != null && steering.DockingModeEnabled)
+            {
+                DisplayOffset =
+                    Vector2.Lerp(DisplayOffset,
+                    (steering.DockingSource.Item.WorldPosition + steering.DockingTarget.Item.WorldPosition) / 2.0f - transducerCenter,
+                    0.1f);
+                transducerCenter += DisplayOffset;
+
+                Vector2 sourcePortDiff = (steering.DockingSource.Item.WorldPosition - transducerCenter) * scale;
+                Vector2 sourcePortPos = new Vector2(sourcePortDiff.X, -sourcePortDiff.Y);
+                Vector2 targetPortDiff = (steering.DockingTarget.Item.WorldPosition - transducerCenter) * scale;
+                Vector2 targetPortPos = new Vector2(targetPortDiff.X, -targetPortDiff.Y);
+
+                Vector2 midPos = (sourcePortPos + targetPortPos) / 2.0f;
+
+                System.Diagnostics.Debug.Assert(steering.DockingSource.IsHorizontal == steering.DockingTarget.IsHorizontal);
+
+                float xDist = Math.Abs(steering.DockingSource.Item.WorldPosition.X - steering.DockingTarget.Item.WorldPosition.X);
+                float normalizedXDist = xDist / steering.DockingSource.DistanceTolerance.X;
+                float yDist = Math.Abs(steering.DockingSource.Item.WorldPosition.Y - steering.DockingTarget.Item.WorldPosition.Y);
+                float normalizedYDist = yDist / steering.DockingSource.DistanceTolerance.Y;
+
+                Color xColor = normalizedXDist <= 1.0f ? Color.Lime : Color.Lerp(Color.Orange, Color.Red, normalizedXDist - 1.0f);
+                Color yColor = normalizedYDist <= 1.0f ? Color.Lime : Color.Lerp(Color.Orange, Color.Red, normalizedYDist - 1.0f);
+
+
+                if (steering.DockingSource.IsHorizontal)
+                {
+                    if (yDist < steering.DockingSource.DistanceTolerance.Y)
+                    {
+                        DrawLine(spriteBatch, sourcePortPos, new Vector2(targetPortPos.X, sourcePortPos.Y), xColor, width: 3);
+                    }
+                    else
+                    {
+                        DrawLine(spriteBatch, sourcePortPos, new Vector2(midPos.X, sourcePortPos.Y), xColor, width: 3);
+                        DrawLine(spriteBatch, targetPortPos, new Vector2(midPos.X, targetPortPos.Y), xColor, width: 3);
+                        DrawLine(spriteBatch, new Vector2(midPos.X, sourcePortPos.Y), new Vector2(midPos.X, targetPortPos.Y), yColor, width: 3);
+                    }                        
+                }
+                else
+                {
+                    if (xDist < steering.DockingSource.DistanceTolerance.X)
+                    {
+                        DrawLine(spriteBatch, sourcePortPos, new Vector2(sourcePortPos.X, targetPortPos.Y), yColor, width: 3);
+                    }
+                    else
+                    {
+                        DrawLine(spriteBatch, sourcePortPos, new Vector2(sourcePortPos.X, midPos.Y), yColor, width: 3);
+                        DrawLine(spriteBatch, targetPortPos, new Vector2(targetPortPos.X, midPos.Y), yColor, width: 3);
+                        DrawLine(spriteBatch, new Vector2(sourcePortPos.X, midPos.Y), new Vector2(targetPortPos.X, midPos.Y), xColor, width: 3);
+                    }
+                }
+            }
+            else
+            {
+                DisplayOffset = Vector2.Lerp(DisplayOffset, Vector2.Zero, 0.1f);
+            }
+                
+
+            foreach (DockingPort dockingPort in DockingPort.List)
+            {
+                Vector2 offset = (dockingPort.Item.WorldPosition - transducerCenter) * scale;
+                offset.Y = -offset.Y;
+                if (offset.LengthSquared() > DisplayRadius * DisplayRadius) { continue; }
+                Vector2 size = dockingPort.Item.Rect.Size.ToVector2() * scale;
+
+                GUI.DrawRectangle(spriteBatch, center + offset - size / 2, size, Color.LightGreen, thickness: (int)(zoom));
+            }
+
         }
 
         private void UpdateDisruptions(Vector2 pingSource, float worldPingRadius, float worldPrevPingRadius)
@@ -662,7 +766,7 @@ namespace Barotrauma.Items.Components
                 {
                     float pointDist = ((limb.WorldPosition - pingSource) * displayScale).LengthSquared();
 
-                    if (limb.SimPosition == Vector2.Zero || pointDist > displayRadius * displayRadius) continue;
+                    if (limb.SimPosition == Vector2.Zero || pointDist > DisplayRadius * DisplayRadius) continue;
 
                     if (pointDist > prevPingRadiusSqr && pointDist < pingRadiusSqr)
                     {
@@ -680,6 +784,8 @@ namespace Barotrauma.Items.Components
         private void CreateBlipsForLine(Vector2 point1, Vector2 point2, Vector2 transducerPos, float pingRadius, float prevPingRadius,
             float lineStep, float zStep, float range, float pingStrength, bool passive)
         {
+            lineStep /= zoom;
+            zStep /= zoom;
             range *= displayScale;
             float length = (point1 - point2).Length();
             Vector2 lineDir = (point2 - point1) / length;
@@ -692,7 +798,7 @@ namespace Barotrauma.Items.Components
                 float pointDist = pointDiff.Length();
                 float displayPointDist = pointDist * displayScale;
 
-                if (displayPointDist > displayRadius) continue;
+                if (displayPointDist > DisplayRadius) continue;
                 if (displayPointDist < prevPingRadius || displayPointDist > pingRadius) continue;
 
                 bool disrupted = false;
@@ -708,19 +814,19 @@ namespace Barotrauma.Items.Components
                 if (disrupted) continue;
 
                 float alpha = pingStrength * Rand.Range(1.5f, 2.0f);
-                for (float z = 0; z < displayRadius - displayPointDist; z += zStep)
+                for (float z = 0; z < DisplayRadius - displayPointDist; z += zStep)
                 {
-                    Vector2 pos = point + Rand.Vector(150.0f) + Vector2.Normalize(point - item.WorldPosition) * z / displayScale;
+                    Vector2 pos = point + Rand.Vector(150.0f / zoom) + Vector2.Normalize(point - item.WorldPosition) * z / displayScale;
                     float fadeTimer = alpha * (1.0f - displayPointDist / range);
 
-                    int minDist = 200;
+                    int minDist = (int)(200 / zoom);
                     sonarBlips.RemoveAll(b => b.FadeTimer < fadeTimer && Math.Abs(pos.X - b.Position.X) < minDist && Math.Abs(pos.Y - b.Position.Y) < minDist);
 
-                    var blip = new SonarBlip(pos, fadeTimer, 1.0f + ((displayPointDist + z) / displayRadius));
+                    var blip = new SonarBlip(pos, fadeTimer, 1.0f + ((displayPointDist + z) / DisplayRadius));
                     if (!passive && !CheckBlipVisibility(blip, transducerPos)) continue;
 
                     sonarBlips.Add(blip);
-                    zStep += 0.5f;
+                    zStep += 0.5f / zoom;
 
                     if (z == 0)
                     {
@@ -742,7 +848,7 @@ namespace Barotrauma.Items.Components
             pos.Y = -pos.Y;
 
             float posDistSqr = pos.LengthSquared();
-            if (posDistSqr > displayRadius * displayRadius)
+            if (posDistSqr > DisplayRadius * DisplayRadius)
             {
                 blip.FadeTimer = 0.0f;
                 return false;
@@ -773,7 +879,7 @@ namespace Barotrauma.Items.Components
             if (Rand.Range(0.5f, 2.0f) < distort) pos.Y = -pos.Y;
 
             float posDistSqr = pos.LengthSquared();
-            if (posDistSqr > displayRadius * displayRadius)
+            if (posDistSqr > DisplayRadius * DisplayRadius)
             {
                 blip.FadeTimer = 0.0f;
                 return;
@@ -787,7 +893,7 @@ namespace Barotrauma.Items.Components
 
             Vector2 dir = pos / (float)Math.Sqrt(posDistSqr);
             Vector2 normal = new Vector2(dir.Y, -dir.X);
-            float scale = (strength + 3.0f) * blip.Scale * zoom;
+            float scale = (strength + 3.0f) * blip.Scale * zoomSqrt;
             Color color = ToolBox.GradientLerp(strength, blipColorGradient);
 
             sonarBlip.Draw(spriteBatch, center + pos, color, sonarBlip.Origin, blip.Rotation ?? MathUtils.VectorToAngle(pos),
@@ -802,17 +908,32 @@ namespace Barotrauma.Items.Components
         {
             float dist = position.Length();
 
+            position *= zoom;
             position *= scale;
             position.Y = -position.Y;
 
             float textAlpha = MathHelper.Clamp(1.5f - dist / 50000.0f, 0.5f, 1.0f);
 
             Vector2 dir = Vector2.Normalize(position);
-            Vector2 markerPos = (dist * scale > radius) ? dir * radius : position;
+            Vector2 markerPos = (dist * zoom * scale > radius) ? dir * radius : position;
             markerPos += center;
 
             markerPos.X = (int)markerPos.X;
             markerPos.Y = (int)markerPos.Y;
+
+            float alpha = 1.0f;
+            if (dist * scale < radius)
+            {
+                float normalizedDist = dist * scale / radius;
+                alpha = Math.Max(normalizedDist - 0.4f, 0.0f);
+
+                float mouseDist = Vector2.Distance(PlayerInput.MousePosition, markerPos);
+                float hoverThreshold = 150.0f;
+                if (mouseDist < hoverThreshold)
+                {
+                    alpha += (hoverThreshold - mouseDist) / hoverThreshold;
+                }
+            }
 
             if (!GuiFrame.Children.First().Rect.Contains(markerPos))
             {
@@ -820,7 +941,9 @@ namespace Barotrauma.Items.Components
                 if (intersection.HasValue) markerPos = intersection.Value;                
             }
 
-            GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X, (int)markerPos.Y, 5, 5), Color.LightBlue);
+            GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X - 3, (int)markerPos.Y - 3, 6, 6), Color.Red, thickness: 2);
+
+            if (alpha <= 0.0f) { return; }
 
             string wrappedLabel = ToolBox.WrapText(label, 150, GUI.SmallFont);
             wrappedLabel += "\n" + ((int)(dist * Physics.DisplayToRealWorldRatio) + " m");
@@ -834,7 +957,7 @@ namespace Barotrauma.Items.Components
             GUI.DrawString(spriteBatch,
                 new Vector2(labelPos.X + 10, labelPos.Y),
                 wrappedLabel,
-                Color.LightBlue * textAlpha, Color.Black * textAlpha * 0.8f,
+                Color.LightBlue * textAlpha * alpha, Color.Black * textAlpha * 0.8f * alpha,
                 2, GUI.SmallFont);
         }
         

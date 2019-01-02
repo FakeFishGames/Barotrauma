@@ -181,7 +181,7 @@ namespace Barotrauma.Items.Components
 
             crosshairPointerPos = PlayerInput.MousePosition;
         }
-
+        
         public void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
             Vector2 drawPos = new Vector2(item.Rect.X + transformedBarrelPos.X, item.Rect.Y - transformedBarrelPos.Y);

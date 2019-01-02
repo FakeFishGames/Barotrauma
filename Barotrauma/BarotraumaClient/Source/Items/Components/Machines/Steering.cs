@@ -47,6 +47,14 @@ namespace Barotrauma.Items.Components
             set { maintainPosTickBox.Selected = value; }
         }
 
+        public bool DockingModeEnabled
+        {
+            get;
+            set;
+        }
+
+        public DockingPort DockingSource, DockingTarget;
+
         partial void InitProjSpecific()
         {
             int viewSize = (int)Math.Min(GuiFrame.Rect.Width - 150, GuiFrame.Rect.Height * 0.9f);
@@ -303,9 +311,10 @@ namespace Barotrauma.Items.Components
                 Sonar sonar = item.GetComponent<Sonar>();
                 if (sonar != null && controlledSub != null)
                 {
-                    Vector2 displayPosToMaintain = (posToMaintain.Value - controlledSub.WorldPosition) / sonar.Range * sonar.DisplayRadius;
+                    Vector2 displayPosToMaintain = ((posToMaintain.Value - sonar.DisplayOffset * sonar.Zoom - controlledSub.WorldPosition)) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
+
                     displayPosToMaintain.Y = -displayPosToMaintain.Y;
-                    displayPosToMaintain = displayPosToMaintain.ClampLength(velRect.Width * 0.45f);
+                    displayPosToMaintain = displayPosToMaintain.ClampLength(velRect.Width / 2);
 
                     displayPosToMaintain = velRect.Center.ToVector2() + displayPosToMaintain;
                     
@@ -430,7 +439,9 @@ namespace Barotrauma.Items.Components
                     inputPos.Y = -inputPos.Y;
                     if (AutoPilot && !LevelStartSelected && !LevelEndSelected)
                     {
-                        posToMaintain = controlledSub == null ? item.WorldPosition : controlledSub.WorldPosition + inputPos / sonar.DisplayRadius * sonar.Range;                        
+                        posToMaintain = controlledSub == null ? 
+                            item.WorldPosition : 
+                            controlledSub.WorldPosition + (sonar.DisplayOffset * sonar.Zoom) + inputPos / sonar.DisplayRadius * sonar.Range / sonar.Zoom;                        
                     }
                     else
                     {
@@ -499,6 +510,41 @@ namespace Barotrauma.Items.Components
             {
                 inputCumulation = 0;
                 keyboardInput = Vector2.Zero;
+            }
+
+
+            float closestDist = DockingAssistThreshold * DockingAssistThreshold;
+            DockingModeEnabled = false;
+            DockingSource = null;
+            DockingTarget = null;
+            foreach (DockingPort sourcePort in DockingPort.List)
+            {
+                if (sourcePort.Docked || sourcePort.Item.Submarine == null) { continue; }
+                if (sourcePort.Item.Submarine != controlledSub) { continue; }
+
+                int sourceDir = sourcePort.IsHorizontal ?
+                    Math.Sign(sourcePort.Item.WorldPosition.X - sourcePort.Item.Submarine.WorldPosition.X) :
+                    Math.Sign(sourcePort.Item.WorldPosition.Y - sourcePort.Item.Submarine.WorldPosition.Y);
+
+                foreach (DockingPort targetPort in DockingPort.List)
+                {
+                    if (targetPort.Docked || targetPort.Item.Submarine == null) { continue; }
+                    if (targetPort.Item.Submarine == controlledSub || targetPort.IsHorizontal != sourcePort.IsHorizontal) { continue; }
+
+                    int targetDir = targetPort.IsHorizontal ?
+                        Math.Sign(targetPort.Item.WorldPosition.X - targetPort.Item.Submarine.WorldPosition.X) :
+                        Math.Sign(targetPort.Item.WorldPosition.Y - targetPort.Item.Submarine.WorldPosition.Y);
+
+                    if (sourceDir == targetDir) { continue; }
+
+                    float dist = Vector2.DistanceSquared(sourcePort.Item.WorldPosition, targetPort.Item.WorldPosition);
+                    if (dist < closestDist)
+                    {
+                        DockingModeEnabled = true;
+                        DockingSource = sourcePort;
+                        DockingTarget = targetPort;
+                    }
+                }
             }
         }
 

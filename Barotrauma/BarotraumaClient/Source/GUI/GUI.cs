@@ -112,7 +112,12 @@ namespace Barotrauma
         public static bool SettingsMenuOpen
         {
             get { return settingsMenuOpen; }
-            set { settingsMenuOpen = value; }
+            set
+            {
+                if (value == settingsMenuOpen) { return; }
+                GameMain.Config.ResetSettingsFrame();
+                settingsMenuOpen = value;
+            }
         }
 
         public static bool PauseMenuOpen

@@ -938,12 +938,34 @@ namespace Barotrauma
             bool hideInMenus = hideInMenusTickBox == null ? false : hideInMenusTickBox.Selected;
             
             string saveFolder = Path.Combine("Content", "Items", "Assemblies");
-            XDocument doc = new XDocument(ItemAssemblyPrefab.Save(MapEntity.SelectedList, nameBox.Text, descriptionBox.Text, hideInMenus));
             string filePath = Path.Combine(saveFolder, nameBox.Text + ".xml");
-            doc.Save(filePath);
 
-            new ItemAssemblyPrefab(filePath);
-            UpdateEntityList();
+            if (File.Exists(filePath))
+            {
+                var msgBox = new GUIMessageBox(TextManager.Get("Warning"), TextManager.Get("ItemAssemblyFileExistsWarning"), new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+                {
+                    msgBox.Close();
+                    ItemAssemblyPrefab.Remove(filePath);
+                    Save();
+                    return true;
+                };
+                msgBox.Buttons[1].OnClicked = msgBox.Close;
+            }
+            else
+            {
+                Save();
+            }
+
+            void Save()
+            {
+                XDocument doc = new XDocument(ItemAssemblyPrefab.Save(MapEntity.SelectedList, nameBox.Text, descriptionBox.Text, hideInMenus));
+                doc.Save(filePath);
+
+                new ItemAssemblyPrefab(filePath);
+                UpdateEntityList();
+            }
+
             saveFrame = null;
             return false;
         }
@@ -1173,7 +1195,6 @@ namespace Barotrauma
             characterMode = enabled;
             if (characterMode)
             {
-                entityMenuOpen = false;
                 wiringModeTickBox.Selected = false;
                 wiringMode = false;
             }
@@ -1203,7 +1224,6 @@ namespace Barotrauma
             wiringMode = enabled;
             if (wiringMode)
             {
-                entityMenuOpen = false;
                 characterModeTickBox.Selected = false;
                 characterMode = false;
             }
@@ -1822,7 +1842,7 @@ namespace Barotrauma
                 MapEntity.UpdateEditor(cam);
             }
 
-            entityMenuOpenState = entityMenuOpen ? 
+            entityMenuOpenState = entityMenuOpen && !characterMode & !wiringMode ? 
                 (float)Math.Min(entityMenuOpenState + deltaTime * 5.0f, 1.0f) :
                 (float)Math.Max(entityMenuOpenState - deltaTime * 5.0f, 0.0f);
 
@@ -1834,7 +1854,6 @@ namespace Barotrauma
                 {
                     wiringToolPanel.GetChild<GUIListBox>().Deselect();
                 }
-                //wiringToolPanel.Update((float)deltaTime);
             }
 
             if (PlayerInput.LeftButtonClicked() && !GUI.IsMouseOn(entityFilterBox))
