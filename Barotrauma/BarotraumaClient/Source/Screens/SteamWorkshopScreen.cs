@@ -131,7 +131,18 @@ namespace Barotrauma
             };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), "Published items");
-            publishedItemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), leftColumn.RectTransform));
+            publishedItemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), leftColumn.RectTransform))
+            {
+                OnSelected = (component, userdata) =>
+                {
+                    if (userdata is Facepunch.Steamworks.Workshop.Item item)
+                    {
+                        CreateWorkshopItem(item);
+                        ShowCreateItemFrame();
+                    }
+                    return true;
+                }
+            };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), "Your items");
             myItemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), leftColumn.RectTransform))
@@ -497,6 +508,15 @@ namespace Barotrauma
             itemContentPackage.CorePackage = contentPackage.CorePackage;
             itemContentPackage.Name = contentPackage.Name;
             itemEditor.Title = contentPackage.Name;
+        }
+        private void CreateWorkshopItem(Facepunch.Steamworks.Workshop.Item item)
+        {
+            if (!item.Installed)
+            {
+                new GUIMessageBox("Error", "Cannot edit the workshop item \"" + item.Title + "\" because it has not been installed.");
+                return;
+            }
+            SteamManager.CreateWorkshopItemStaging(item, out itemEditor, out itemContentPackage);
         }
 
         private void ShowCreateItemFrame()

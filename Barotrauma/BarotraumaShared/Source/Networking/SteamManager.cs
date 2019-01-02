@@ -313,9 +313,9 @@ namespace Barotrauma.Steam
 
         public const string WorkshopItemStagingFolder = "NewWorkshopItem";
         public const string WorkshopItemPreviewImageFolder = "Workshop";
-        const string MetadataFileName = "metadata.xml";
         public const string PreviewImageName = "PreviewImage.png";
-        const string DefaultPreviewImagePath = "Content/DefaultWorkshopPreviewImage.png";
+        private const string MetadataFileName = "metadata.xml";
+        private const string DefaultPreviewImagePath = "Content/DefaultWorkshopPreviewImage.png";
 
         private Sprite defaultPreviewImage;
         public Sprite DefaultPreviewImage
@@ -430,7 +430,7 @@ namespace Barotrauma.Steam
         /// <summary>
         /// Creates a new folder, copies the specified files there and creates a metadata file with install instructions.
         /// </summary>
-        public static void CreateWorkshopItemStaging(List<ContentFile> contentFiles, out Workshop.Editor item, out ContentPackage contentPackage)
+        public static void CreateWorkshopItemStaging(List<ContentFile> contentFiles, out Workshop.Editor itemEditor, out ContentPackage contentPackage)
         {
             var stagingFolder = new DirectoryInfo(WorkshopItemStagingFolder);
             if (stagingFolder.Exists)
@@ -445,12 +445,12 @@ namespace Barotrauma.Steam
             Directory.CreateDirectory(Path.Combine(WorkshopItemStagingFolder, "Mods"));
             Directory.CreateDirectory(Path.Combine(WorkshopItemStagingFolder, "Mods", "ModName"));
 
-            item = instance.client.Workshop.CreateItem(Workshop.ItemType.Community);
-            item.Visibility = Workshop.Editor.VisibilityType.Public;
-            item.WorkshopUploadAppId = AppID;
-            item.Folder = stagingFolder.FullName;
+            itemEditor = instance.client.Workshop.CreateItem(Workshop.ItemType.Community);
+            itemEditor.Visibility = Workshop.Editor.VisibilityType.Public;
+            itemEditor.WorkshopUploadAppId = AppID;
+            itemEditor.Folder = stagingFolder.FullName;
 
-            string previewImagePath = Path.GetFullPath(Path.Combine(item.Folder, PreviewImageName));
+            string previewImagePath = Path.GetFullPath(Path.Combine(itemEditor.Folder, PreviewImageName));
             File.Copy("Content/DefaultWorkshopPreviewImage.png", previewImagePath);
 
             //copy content files to the staging folder
@@ -467,13 +467,64 @@ namespace Barotrauma.Steam
             System.Diagnostics.Debug.Assert(copiedFilePaths.Count == contentFiles.Count);
 
             //create a new content package and include the copied files in it
-            contentPackage = ContentPackage.CreatePackage("ContentPackage", Path.Combine(item.Folder, MetadataFileName), false);
+            contentPackage = ContentPackage.CreatePackage("ContentPackage", Path.Combine(itemEditor.Folder, MetadataFileName), false);
             for (int i = 0; i < copiedFilePaths.Count; i++)
             {
                 contentPackage.AddFile(copiedFilePaths[i], contentFiles[i].Type);
             }
 
             contentPackage.Save(Path.Combine(stagingFolder.FullName, MetadataFileName));
+        }
+
+        /// <summary>
+        /// Creates a copy of the specified workshop item in the staging folder and an editor that can be used to edit and update the item
+        /// </summary>
+        public static void CreateWorkshopItemStaging(Workshop.Item existingItem, out Workshop.Editor itemEditor, out ContentPackage contentPackage)
+        {
+            if (!existingItem.Installed)
+            {
+                itemEditor = null;
+                contentPackage = null;
+                DebugConsole.ThrowError("Cannot edit the workshop item \"" + existingItem.Title + "\" because it has not been installed.");
+                return;
+            }
+
+            var stagingFolder = new DirectoryInfo(WorkshopItemStagingFolder);
+            if (stagingFolder.Exists)
+            {
+                SaveUtil.ClearFolder(stagingFolder.FullName);
+            }
+            else
+            {
+                stagingFolder.Create();
+            }
+
+            itemEditor = instance.client.Workshop.EditItem(existingItem.Id);
+            itemEditor.Visibility = Workshop.Editor.VisibilityType.Public;
+            itemEditor.Title = existingItem.Title;
+            itemEditor.Tags = existingItem.Tags.ToList();
+            itemEditor.Description = existingItem.Description;
+            itemEditor.WorkshopUploadAppId = AppID;
+            itemEditor.Folder = stagingFolder.FullName;
+
+            string previewImagePath = Path.GetFullPath(Path.Combine(itemEditor.Folder, PreviewImageName));
+            File.Copy("Content/DefaultWorkshopPreviewImage.png", previewImagePath);
+            
+            ContentPackage tempContentPackage = new ContentPackage(Path.Combine(existingItem.Directory.FullName, MetadataFileName));
+            string newContentPackagePath = Path.Combine(WorkshopItemStagingFolder, MetadataFileName);
+            File.Copy(tempContentPackage.Path, newContentPackagePath, overwrite: true);
+            contentPackage = new ContentPackage(newContentPackagePath);
+
+            foreach (ContentFile contentFile in tempContentPackage.Files)
+            {
+                string sourceFile = Path.Combine(existingItem.Directory.FullName, contentFile.Path);
+                if (!File.Exists(sourceFile)) { continue; }
+                //make sure the destination directory exists
+                string destinationPath = Path.Combine(SteamManager.WorkshopItemStagingFolder, contentFile.Path);
+                Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
+                File.Copy(sourceFile, destinationPath, overwrite: true);
+                contentPackage.AddFile(contentFile.Path, contentFile.Type);
+            }
         }
 
         public static void StartPublishItem(ContentPackage contentPackage, Workshop.Editor item)
@@ -670,7 +721,7 @@ namespace Barotrauma.Steam
             return true;
         }
 
-        private static string GetWorkshopItemContentPackagePath(ContentPackage contentPackage)
+        public static string GetWorkshopItemContentPackagePath(ContentPackage contentPackage)
         {
             string fileName = contentPackage.Name + ".xml";
             string invalidChars = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
