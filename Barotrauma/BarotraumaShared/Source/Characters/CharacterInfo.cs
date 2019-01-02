@@ -364,9 +364,12 @@ namespace Barotrauma
                 string fileName = Path.GetFileNameWithoutExtension(spritePath);
 
                 //go through the files in the directory to find a matching sprite
-                var files = Directory.GetFiles(Path.GetDirectoryName(spritePath)).ToList();
-                foreach (string file in files)
+                foreach (string file in Directory.GetFiles(Path.GetDirectoryName(spritePath)))
                 {
+                    if (!file.EndsWith(".png", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        continue;
+                    }
                     string fileWithoutTags = Path.GetFileNameWithoutExtension(file);
                     fileWithoutTags = fileWithoutTags.Split('[', ']').First();
                     if (fileWithoutTags != fileName) continue;
