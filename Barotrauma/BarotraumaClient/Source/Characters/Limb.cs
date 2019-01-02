@@ -219,7 +219,7 @@ namespace Barotrauma
                 spritePath = spritePath.Replace("[RACE]", character.Info.Race.ToString().ToLowerInvariant());
                 spritePath = spritePath.Replace("[HEADID]", character.Info.HeadSpriteId.ToString());
 
-                if (character.Info.HeadSprite != null && character.Info.SpriteTags.Any())
+                if (character.IsHumanoid && character.Info.HeadSprite != null && character.Info.SpriteTags.Any())
                 {
                     string tags = "";
                     character.Info.SpriteTags.ForEach(tag => tags += "[" + tag + "]");
