@@ -246,7 +246,6 @@ namespace Barotrauma
             {
                 if (ragdoll == null)
                 {
-                    //TODO: this doesn't work correctly: the name attribute is the name of the character, not name of the species and the humanoid attribute is saved in the character element, not info element
                     string speciesName = SourceElement.GetAttributeString("name", string.Empty);
                     bool isHumanoid = SourceElement.GetAttributeBool("humanoid", false);
                     ragdoll = isHumanoid 
@@ -258,18 +257,14 @@ namespace Barotrauma
             set { ragdoll = value; }
         }
 
+        // Used for creating the data
         public CharacterInfo(string file, string name = "", Gender gender = Gender.None, JobPrefab jobPrefab = null, string ragdollFileName = null)
         {
             ID = idCounter;
             idCounter++;
             File = file;
             SpriteTags = new List<string>();
-            if (!cachedConfigs.TryGetValue(file, out XDocument doc))
-            {
-                doc = XMLExtensions.TryLoadXml(file);
-                if (doc == null) { return; }
-                cachedConfigs.Add(file, doc);
-            }
+            XDocument doc = GetConfig(file);
             SourceElement = doc.Root;
             if (doc.Root.GetAttributeBool("genders", false))
             {
@@ -317,18 +312,19 @@ namespace Barotrauma
             LoadHeadAttachments();
         }
 
+        // Used for loading the data
         public CharacterInfo(XElement element, string ragdollFileName = null)
         {
             ID = idCounter;
             idCounter++;
-            SourceElement = element;
             Name = element.GetAttributeString("name", "unnamed");
             string genderStr = element.GetAttributeString("gender", "male").ToLowerInvariant();
             gender = (genderStr == "male") ? Gender.Male : Gender.Female;
             Enum.TryParse(element.GetAttributeString("race", "white"), true, out race);
-            CalculateHeadSpriteRange();
             File = element.GetAttributeString("file", "");
+            SourceElement = GetConfig(File).Root;
             Salary = element.GetAttributeInt("salary", 1000);
+            CalculateHeadSpriteRange();
             HeadSpriteId = element.GetAttributeInt("headspriteid", 1);
             StartItemsGiven = element.GetAttributeBool("startitemsgiven", false);
             string personalityName = element.GetAttributeString("personality", "");
@@ -395,6 +391,17 @@ namespace Barotrauma
         public Gender SetRandomGender() => gender = (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < SourceElement.GetAttributeFloat("femaleratio", 0.5f)) ? Gender.Female : Gender.Male;
         public Race SetRandomRace() => race = new Race[] { Race.White, Race.Black, Race.Asian }.GetRandom(Rand.RandSync.Server);
         public int SetRandomHead() => HeadSpriteId = SetRandomHeadID();
+
+        private XDocument GetConfig(string file)
+        {
+            if (!cachedConfigs.TryGetValue(file, out XDocument doc))
+            {
+                doc = XMLExtensions.TryLoadXml(file);
+                if (doc == null) { return null; }
+                cachedConfigs.Add(file, doc);
+            }
+            return doc;
+        }
 
         private int SetRandomHeadID()
         {
