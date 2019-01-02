@@ -56,13 +56,8 @@ namespace Barotrauma
             ContentType.RuinConfig,
             ContentType.Afflictions
         };
-        
-        private string name;
-        public string Name
-        {
-            get { return name; }
-            set { name = value; }
-        }
+
+        public string Name { get; set; }
 
         public string Path
         {
@@ -114,7 +109,7 @@ namespace Barotrauma
                 return;
             }
 
-            name = doc.Root.GetAttributeString("name", "");
+            Name = doc.Root.GetAttributeString("name", "");
 
             CorePackage = doc.Root.GetAttributeBool("corepackage", false);
 
@@ -122,7 +117,7 @@ namespace Barotrauma
             {
                 if (!Enum.TryParse(subElement.Name.ToString(), true, out ContentType type))
                 {
-                    DebugConsole.ThrowError("Error in content package \"" + name + "\" - \"" + subElement.Name.ToString() + "\" is not a valid content type.");
+                    DebugConsole.ThrowError("Error in content package \"" + Name + "\" - \"" + subElement.Name.ToString() + "\" is not a valid content type.");
                     continue;
                 }
                 Files.Add(new ContentFile(subElement.GetAttributeString("file", ""), type));
@@ -131,15 +126,16 @@ namespace Barotrauma
 
         public override string ToString()
         {
-            return name;
+            return Name;
         }
 
-        public static ContentPackage CreatePackage(string name, string path)
+        public static ContentPackage CreatePackage(string name, string path, bool corePackage)
         {
             ContentPackage newPackage = new ContentPackage()
             {
-                name = name,
-                Path = path
+                Name = name,
+                Path = path,
+                CorePackage = corePackage
             };
 
             return newPackage;
@@ -164,7 +160,7 @@ namespace Barotrauma
         {
             XDocument doc = new XDocument();
             doc.Add(new XElement("contentpackage",
-                new XAttribute("name", name),
+                new XAttribute("name", Name),
                 new XAttribute("path", Path),
                 new XAttribute("corepackage", CorePackage)));
 
@@ -241,6 +237,29 @@ namespace Barotrauma
                 }
             }
             return md5.ComputeHash(data.ToArray());
+        }
+        
+        public static string GetFileExtension(ContentType contentType)
+        {
+            switch (contentType)
+            {
+                case ContentType.Executable:
+                case ContentType.ServerExecutable:
+                    return ".exe";
+                default:
+                    return ".xml";
+            }
+        }
+
+        public static bool IsModFilePathAllowed(string path)
+        {
+            while (true)
+            {
+                string temp = System.IO.Path.GetDirectoryName(path);
+                if (string.IsNullOrEmpty(temp)) { break; }
+                path = temp;
+            }
+            return path == "Mods";
         }
 
         /// <summary>

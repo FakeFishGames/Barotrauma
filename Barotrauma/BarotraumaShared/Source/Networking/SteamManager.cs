@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Facepunch.Steamworks;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -311,8 +312,23 @@ namespace Barotrauma.Steam
         #region Workshop
 
         public const string WorkshopItemStagingFolder = "NewWorkshopItem";
+        public const string WorkshopItemPreviewImageFolder = "Workshop";
         const string MetadataFileName = "metadata.xml";
-        const string PreviewImageName = "PreviewImage.png";
+        public const string PreviewImageName = "PreviewImage.png";
+        const string DefaultPreviewImagePath = "Content/DefaultWorkshopPreviewImage.png";
+
+        private Sprite defaultPreviewImage;
+        public Sprite DefaultPreviewImage
+        {
+            get
+            {
+                if (defaultPreviewImage == null)
+                {
+                    defaultPreviewImage = new Sprite(DefaultPreviewImagePath, sourceRectangle: null);
+                }
+                return defaultPreviewImage;
+            }
+        }
 
         public static void GetWorkshopItems(Action<IList<Workshop.Item>> onItemsFound, List<string> requireTags = null)
         {
@@ -320,6 +336,8 @@ namespace Barotrauma.Steam
 
             var query = instance.client.Workshop.CreateQuery();
             query.Order = Workshop.Order.RankedByTrend;
+            query.UserId = instance.client.SteamId;
+            query.UserQueryType = Workshop.UserQueryType.Subscribed;
             query.UploaderAppId = AppID;
             if (requireTags != null) query.RequireTags = requireTags;
 
@@ -330,28 +348,16 @@ namespace Barotrauma.Steam
             };
         }
 
-        /// <summary>
-        /// Moves a workshop item from the download folder to the game folder and makes it usable in-game
-        /// </summary>
-        private void EnableWorkshopItem(Workshop.Item item)
-        {
-            if (!item.Installed)
-            {
-                DebugConsole.ThrowError("Cannot enable workshop item \"" + item.Title + "\" because it has not been installed.");
-                return;
-            }
-        }
-        
         public static void SaveToWorkshop(Submarine sub)
         {
             if (instance == null || !instance.isInitialized) return;
-            
+
             Workshop.Editor item;
             ContentPackage contentPackage;
             try
             {
                 CreateWorkshopItemStaging(
-                    new List<ContentFile>() { new ContentFile(sub.FilePath, ContentType.None) }, 
+                    new List<ContentFile>() { new ContentFile(sub.FilePath, ContentType.None) },
                     out item, out contentPackage);
             }
             catch (Exception e)
@@ -364,7 +370,7 @@ namespace Barotrauma.Steam
             item.Title = sub.Name;
             item.Tags.Add("Submarine");
 
-            string subPreviewPath =  Path.GetFullPath(Path.Combine(item.Folder, PreviewImageName));
+            string subPreviewPath = Path.GetFullPath(Path.Combine(item.Folder, PreviewImageName));
 #if CLIENT
             try
             {
@@ -495,8 +501,8 @@ namespace Barotrauma.Steam
                 return false;
             }
             
-            string newContentPackagePath = GetWorkshopItemContentPackagePath(item);
             ContentPackage contentPackage = new ContentPackage(Path.Combine(item.Directory.FullName, MetadataFileName));
+            string newContentPackagePath = GetWorkshopItemContentPackagePath(contentPackage);
             
             if (!allowFileOverwrite)
             {
@@ -508,7 +514,8 @@ namespace Barotrauma.Steam
 
                 foreach (ContentFile contentFile in contentPackage.Files)
                 {
-                    if (File.Exists(contentFile.Path))
+                    string sourceFile = Path.Combine(item.Directory.FullName, contentFile.Path);
+                    if (File.Exists(sourceFile) && File.Exists(contentFile.Path))
                     {
                         //TODO: ask the player if they want to let a workshop item overwrite existing files?
                         DebugConsole.ThrowError("Cannot enable workshop item \"" + item.Title + "\". The file \"" + contentFile.Path + "\" would be overwritten by the item.");
@@ -528,7 +535,14 @@ namespace Barotrauma.Steam
 
                 foreach (ContentFile contentFile in contentPackage.Files)
                 {
+
                     string sourceFile = Path.Combine(item.Directory.FullName, contentFile.Path);
+                    if (!File.Exists(sourceFile)) { continue; }
+                    if (!ContentPackage.IsModFilePathAllowed(contentFile.Path))
+                    {
+                        DebugConsole.ThrowError("Workshop items are not allowed to add or modify files in the Content or Data folders.");
+                        continue;
+                    }
                     //make sure the destination directory exists
                     Directory.CreateDirectory(Path.GetDirectoryName(contentFile.Path));
                     File.Copy(sourceFile, contentFile.Path, overwrite: true);
@@ -540,9 +554,15 @@ namespace Barotrauma.Steam
                 return false;
             }
 
-            var newPackage = ContentPackage.CreatePackage(item.Title, newContentPackagePath);
+            var newPackage = ContentPackage.CreatePackage(contentPackage.Name, newContentPackagePath, contentPackage.CorePackage);
             ContentPackage.List.Add(newPackage);
+            if (newPackage.CorePackage)
+            {
+                //if enabling a core package, disable all other core packages
+                GameMain.Config.SelectedContentPackages.RemoveWhere(cp => cp.CorePackage);
+            }
             GameMain.Config.SelectedContentPackages.Add(newPackage);
+            GameMain.Config.Save();
 
             foreach (string tag in item.Tags)
             {
@@ -569,15 +589,24 @@ namespace Barotrauma.Steam
             }
 
             ContentPackage contentPackage = new ContentPackage(Path.Combine(item.Directory.FullName, MetadataFileName));
+            string installedContentPackagePath = GetWorkshopItemContentPackagePath(contentPackage);
 
-            string installedContentPackagePath = GetWorkshopItemContentPackagePath(item);
-            if (File.Exists(installedContentPackagePath)) File.Delete(installedContentPackagePath);
+            if (File.Exists(installedContentPackagePath)) { File.Delete(installedContentPackagePath); }
             try
             {
                 foreach (ContentFile contentFile in contentPackage.Files)
                 {
+                    if (!ContentPackage.IsModFilePathAllowed(contentFile.Path))
+                    {
+                        //Workshop items are not allowed to add or modify files in the Content or Data folders;
+                        continue;
+                    }
+                    if (!File.Exists(contentFile.Path)) { continue; }
                     File.Delete(contentFile.Path);
                 }
+                ContentPackage.List.RemoveAll(cp => System.IO.Path.GetFullPath(cp.Path) == System.IO.Path.GetFullPath(installedContentPackagePath));
+                GameMain.Config.SelectedContentPackages.RemoveWhere(cp => !ContentPackage.List.Contains(cp));
+                GameMain.Config.Save();
             }
             catch (Exception e)
             {
@@ -597,7 +626,7 @@ namespace Barotrauma.Steam
             }
 
             ContentPackage contentPackage = new ContentPackage(metaDataPath);
-            if (!File.Exists(GetWorkshopItemContentPackagePath(item))) return false;
+            if (!File.Exists(GetWorkshopItemContentPackagePath(contentPackage))) return false;
             foreach (ContentFile contentFile in contentPackage.Files)
             {
                 if (!File.Exists(contentFile.Path)) return false;
@@ -606,9 +635,9 @@ namespace Barotrauma.Steam
             return true;
         }
 
-        private static string GetWorkshopItemContentPackagePath(Workshop.Item item)
+        private static string GetWorkshopItemContentPackagePath(ContentPackage contentPackage)
         {
-            string fileName = item.Title + ".xml";
+            string fileName = contentPackage.Name + ".xml";
             string invalidChars = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
             foreach (char c in invalidChars) fileName = fileName.Replace(c.ToString(), "");
             return Path.Combine("Data", "ContentPackages", fileName);

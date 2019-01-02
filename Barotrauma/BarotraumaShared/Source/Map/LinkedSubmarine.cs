@@ -195,7 +195,7 @@ namespace Barotrauma
             MapEntity linkedItem = linkedTo.FirstOrDefault(lt => (lt is Item) && ((Item)lt).GetComponent<DockingPort>() != null);
             if (linkedItem == null)
             {
-                linkedPort = DockingPort.list.Find(dp => dp.DockingTarget != null && dp.DockingTarget.Item.Submarine == sub);
+                linkedPort = DockingPort.List.FirstOrDefault(dp => dp.DockingTarget != null && dp.DockingTarget.Item.Submarine == sub);
             }
             else
             {
@@ -208,7 +208,7 @@ namespace Barotrauma
             }
 
             float closestDistance = 0.0f;
-            foreach (DockingPort port in DockingPort.list)
+            foreach (DockingPort port in DockingPort.List)
             {
                 if (port.Item.Submarine != sub || port.IsHorizontal != linkedPort.IsHorizontal) continue;
 

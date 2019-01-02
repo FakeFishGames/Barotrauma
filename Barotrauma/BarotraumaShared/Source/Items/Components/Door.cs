@@ -66,6 +66,7 @@ namespace Barotrauma.Items.Components
         }
 
         private float stuck;
+        [Serialize(0.0f, false)]
         public float Stuck
         {
             get { return stuck; }
@@ -73,8 +74,8 @@ namespace Barotrauma.Items.Components
             {
                 if (isOpen || isBroken) return;
                 stuck = MathHelper.Clamp(value, 0.0f, 100.0f);
-                if (stuck == 0.0f) isStuck = false;
-                if (stuck == 100.0f) isStuck = true;
+                if (stuck <= 0.0f) isStuck = false;
+                if (stuck >= 100.0f) isStuck = true;
             }
         }
 
