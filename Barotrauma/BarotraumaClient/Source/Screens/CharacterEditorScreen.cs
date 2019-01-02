@@ -388,6 +388,7 @@ namespace Barotrauma
             MapEntity.mapEntityList.ForEach(e => e.IsHighlighted = false);
             // Update widgets
             jointSelectionWidgets.Values.ForEach(w => w.Update((float)deltaTime));
+            limbEditWidgets.Values.ForEach(w => w.Update((float)deltaTime));
             animationWidgets.Values.ForEach(w => w.Update((float)deltaTime));
             // Handle limb selection
             if (editLimbs && PlayerInput.LeftButtonDown() && GUI.MouseOn == null && Widget.selectedWidgets.None())
@@ -1085,6 +1086,7 @@ namespace Barotrauma
             Widget.selectedWidgets.Clear();
             animationWidgets.Clear();
             jointSelectionWidgets.Clear();
+            limbEditWidgets.Clear();
         }
 
         private void ClearSelection()
@@ -3291,70 +3293,113 @@ namespace Barotrauma
                             }
                             if (!lockSpritePosition)
                             {
-                                DrawWidget(spriteBatch, topLeft - new Vector2(halfSize), WidgetType.Rectangle, widgetSize, Color.Yellow, "Position", () =>
+                                var positionWidget = GetLimbEditWidget($"{limb.limbParams.ID}_position", limb, widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                                 {
-                                    // Adjust the source rect location
-                                    var newRect = limb.ActiveSprite.SourceRect;
-                                    newRect.Location = new Point(
-                                        (int)((PlayerInput.MousePosition.X + halfSize - offsetX) / spriteSheetZoom),
-                                        (int)((PlayerInput.MousePosition.Y + halfSize - offsetY) / spriteSheetZoom));
-                                    limb.ActiveSprite.SourceRect = newRect;
-                                    if (limb.DamagedSprite != null)
+                                    w.refresh = () => w.tooltip = $"Position: {limb.ActiveSprite.SourceRect.Location}";
+                                    w.refresh();
+                                    w.MouseHeld += dTime =>
                                     {
-                                        limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
-                                    }
-                                    TryUpdateLimbParam(limb, "sourcerect", newRect);
-                                    GUI.DrawString(spriteBatch, topLeft + new Vector2(stringOffset.X, -stringOffset.Y * 1.5f), limb.ActiveSprite.SourceRect.Location.ToString(), Color.Yellow, Color.Black * 0.5f);
-                                    if (limbPairEditing)
-                                    {
-                                        UpdateOtherLimbs(limb, otherLimb =>
+                                        w.DrawPos = PlayerInput.MousePosition;
+                                        var newRect = limb.ActiveSprite.SourceRect;
+                                        int textureIndex = Textures.IndexOf(limb.ActiveSprite.Texture);
+                                        int height = 0;
+                                        foreach (var t in Textures)
                                         {
-                                            otherLimb.ActiveSprite.SourceRect = newRect;
-                                            if (otherLimb.DamagedSprite != null)
+                                            if (Textures.IndexOf(t) < textureIndex)
                                             {
-                                                otherLimb.DamagedSprite.SourceRect = newRect;
+                                                height += t.Height;
                                             }
-                                            TryUpdateLimbParam(otherLimb, "sourcerect", newRect);
-                                        });
-                                    }
-                                }, autoFreeze: false);
+                                        }
+                                        int offset_y = spriteSheetOffsetY + (int)(height * spriteSheetZoom);
+                                        newRect.Location = new Point(
+                                            (int)((PlayerInput.MousePosition.X + halfSize - spriteSheetOffsetX) / spriteSheetZoom),
+                                            (int)((PlayerInput.MousePosition.Y + halfSize - offset_y) / spriteSheetZoom));
+                                        limb.ActiveSprite.SourceRect = newRect;
+
+                                        if (limb.DamagedSprite != null)
+                                        {
+                                            limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
+                                        }
+                                        TryUpdateLimbParam(limb, "sourcerect", newRect);
+                                        if (limbPairEditing)
+                                        {
+                                            UpdateOtherLimbs(limb, otherLimb =>
+                                            {
+                                                otherLimb.ActiveSprite.SourceRect = newRect;
+                                                if (otherLimb.DamagedSprite != null)
+                                                {
+                                                    otherLimb.DamagedSprite.SourceRect = newRect;
+                                                }
+                                                TryUpdateLimbParam(otherLimb, "sourcerect", newRect);
+                                            });
+                                        };
+                                    };
+                                    w.PreDraw += (sb, dTime) => w.refresh();
+                                });    
+                                if (!positionWidget.IsControlled)
+                                {
+                                    positionWidget.DrawPos = topLeft - new Vector2(halfSize);
+                                }
+                                positionWidget.Draw(spriteBatch, deltaTime);
                             }
                             if (!lockSpriteSize)
                             {
-                                DrawWidget(spriteBatch, bottomRight + new Vector2(halfSize), WidgetType.Rectangle, widgetSize, Color.Yellow, "Size", () =>
+                                var sizeWidget = GetLimbEditWidget($"{limb.limbParams.ID}_size", limb, widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                                 {
-                                    // Adjust the source rect width and height, and the sprite size.
-                                    var newRect = limb.ActiveSprite.SourceRect;
-                                    int width = (int)((PlayerInput.MousePosition.X - rect.X) / spriteSheetZoom);
-                                    int height = (int)((PlayerInput.MousePosition.Y - rect.Y) / spriteSheetZoom);
-                                    int dx = newRect.Width - width;
-                                    newRect.Width = width;
-                                    newRect.Height = height;
-                                    limb.ActiveSprite.SourceRect = newRect;
-                                    limb.ActiveSprite.size = new Vector2(width, height);
-                                    // Refresh the relative origin, so that the origin in pixels will be recalculated
-                                    limb.ActiveSprite.RelativeOrigin = limb.ActiveSprite.RelativeOrigin;
-                                    if (limb.DamagedSprite != null)
+                                    w.refresh = () => w.tooltip = $"Size: {limb.ActiveSprite.SourceRect.Size}";
+                                    w.refresh();
+                                    w.MouseHeld += dTime =>
                                     {
-                                        limb.DamagedSprite.RelativeOrigin = limb.DamagedSprite.RelativeOrigin;
-                                    }
-                                    TryUpdateLimbParam(limb, "sourcerect", newRect);
-                                    GUI.DrawString(spriteBatch, bottomRight + stringOffset, limb.ActiveSprite.size.FormatZeroDecimal(), Color.Yellow, Color.Black * 0.5f);
-                                    if (limbPairEditing)
-                                    {
-                                        UpdateOtherLimbs(limb, otherLimb =>
+                                        w.DrawPos = PlayerInput.MousePosition;
+                                        var newRect = limb.ActiveSprite.SourceRect;
+                                        int width = (int)((PlayerInput.MousePosition.X - halfSize - (limb.ActiveSprite.SourceRect.X * spriteSheetZoom + spriteSheetOffsetX)) / spriteSheetZoom);
+                                        int textureIndex = Textures.IndexOf(limb.ActiveSprite.Texture);
+                                        int textureHeight = 0;
+                                        foreach (var t in Textures)
                                         {
-                                            otherLimb.ActiveSprite.SourceRect = newRect;
-                                            // Refresh the relative origin, so that the origin in pixels will be recalculated
-                                            otherLimb.ActiveSprite.RelativeOrigin = limb.ActiveSprite.RelativeOrigin;
-                                            if (otherLimb.DamagedSprite != null)
+                                            if (Textures.IndexOf(t) < textureIndex)
                                             {
-                                                otherLimb.DamagedSprite.RelativeOrigin = limb.DamagedSprite.RelativeOrigin;
+                                                textureHeight += t.Height;
                                             }
-                                            TryUpdateLimbParam(otherLimb, "sourcerect", newRect);
-                                        });
-                                    }
-                                }, autoFreeze: false);
+                                        }
+                                        int offset_y = spriteSheetOffsetY + (int)((textureHeight + limb.ActiveSprite.SourceRect.Y) * spriteSheetZoom);
+                                        int height = (int)(PlayerInput.MousePosition.Y - halfSize - offset_y / spriteSheetZoom);
+
+                                        newRect.Size = new Point(width, height);
+                                        limb.ActiveSprite.SourceRect = newRect;
+                                        limb.ActiveSprite.size = new Vector2(width, height);
+                                        // TODO: allow to lock the origin
+                                        // Refresh the relative origin, so that the origin in pixels will be recalculated
+                                        limb.ActiveSprite.RelativeOrigin = limb.ActiveSprite.RelativeOrigin;
+
+                                        if (limb.DamagedSprite != null)
+                                        {
+                                            limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
+                                        }
+                                        TryUpdateLimbParam(limb, "sourcerect", newRect);
+                                        if (limbPairEditing)
+                                        {
+                                            UpdateOtherLimbs(limb, otherLimb =>
+                                            {
+                                                otherLimb.ActiveSprite.SourceRect = newRect;
+                                                // TODO: allow to lock the origin
+                                                // Refresh the relative origin, so that the origin in pixels will be recalculated
+                                                otherLimb.ActiveSprite.RelativeOrigin = limb.ActiveSprite.RelativeOrigin;
+                                                if (otherLimb.DamagedSprite != null)
+                                                {
+                                                    otherLimb.DamagedSprite.SourceRect = newRect;
+                                                }
+                                                TryUpdateLimbParam(otherLimb, "sourcerect", newRect);
+                                            });
+                                        };
+                                    };
+                                    w.PreDraw += (sb, dTime) => w.refresh();
+                                });
+                                if (!sizeWidget.IsControlled)
+                                {
+                                    sizeWidget.DrawPos = bottomRight + new Vector2(halfSize);
+                                }
+                                sizeWidget.Draw(spriteBatch, deltaTime);
                             }
                         }
                         else if (isMouseOnRect)
@@ -3669,6 +3714,8 @@ namespace Barotrauma
 
         #region Widgets as classes
         private Dictionary<string, Widget> animationWidgets = new Dictionary<string, Widget>();
+        private Dictionary<string, Widget> jointSelectionWidgets = new Dictionary<string, Widget>();
+        private Dictionary<string, Widget> limbEditWidgets = new Dictionary<string, Widget>();
 
         private Widget GetAnimationWidget(string name, Color color, int size = 10, float sizeMultiplier = 2, Widget.Shape shape = Widget.Shape.Rectangle, Action<Widget> initMethod = null)
         {
@@ -3718,8 +3765,6 @@ namespace Barotrauma
             }
             return widget;
         }
-
-        private Dictionary<string, Widget> jointSelectionWidgets = new Dictionary<string, Widget>();
 
         private Widget GetJointSelectionWidget(string id, LimbJoint joint, string linkedId = null)
         {
@@ -3793,6 +3838,48 @@ namespace Barotrauma
                 widget.tooltip = joint.jointParams.Name;
                 jointSelectionWidgets.Add(ID, widget);
                 return widget;
+            }
+        }
+
+        private Widget GetLimbEditWidget(string ID, Limb limb, int size = 5, Widget.Shape shape = Widget.Shape.Rectangle, Action < Widget> initMethod = null)
+        {
+            if (!limbEditWidgets.TryGetValue(ID, out Widget widget))
+            {
+                widget = CreateLimbEditWidget();
+                limbEditWidgets.Add(ID, widget);
+            }
+            return widget;
+
+            Widget CreateLimbEditWidget()
+            {
+                int normalSize = size;
+                int selectedSize = (int)Math.Round(size * 1.5f);
+                var w = new Widget(ID, size, shape)
+                {
+                    tooltipOffset = new Vector2(selectedSize / 2 + 5, -10),
+                    data = limb,
+                    color = Color.Yellow,
+                    secondaryColor = Color.Gray,
+                    textColor = Color.Yellow
+                };
+                w.PreUpdate += dTime => w.Enabled = editLimbs && selectedLimbs.Contains(limb);
+                w.PostUpdate += dTime =>
+                {
+                    if (w.IsSelected)
+                    {
+                        w.size = selectedSize;
+                        w.inputAreaMargin = 10;
+                    }
+                    else
+                    {
+                        w.size = normalSize;
+                        w.inputAreaMargin = 0;
+                    }
+                    w.isFilled = w.IsControlled;
+                };
+                w.MouseUp += () => RagdollParams.CreateSnapshot();
+                initMethod?.Invoke(w);
+                return w;
             }
         }
         #endregion
