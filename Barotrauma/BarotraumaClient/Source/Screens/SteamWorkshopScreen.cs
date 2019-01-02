@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Windows.Forms;
 
@@ -14,7 +15,9 @@ namespace Barotrauma
     class SteamWorkshopScreen : Screen
     {
         private GUIFrame menu;
-        private GUIListBox installedItemList;
+        private GUIListBox subscribedItemList, topItemList;
+
+        private GUIListBox publishedItemList, myItemList;
 
         //shows information of a selected workshop item
         private GUIFrame itemPreviewFrame;
@@ -24,7 +27,7 @@ namespace Barotrauma
         //listbox that shows the files included in the item being created
         private GUIListBox createItemFileList;
 
-        private HashSet<Facepunch.Steamworks.Workshop.Item> pendingPreviewImageDownloads = new HashSet<Facepunch.Steamworks.Workshop.Item>();
+        private HashSet<string> pendingPreviewImageDownloads = new HashSet<string>();
         private Dictionary<string, Sprite> itemPreviewSprites = new Dictionary<string, Sprite>();
 
         private enum Tab
@@ -83,14 +86,32 @@ namespace Barotrauma
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
-
-
+            
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), listContainer.RectTransform), "Mods");
-            installedItemList = new GUIListBox(new RectTransform(Vector2.One, listContainer.RectTransform))
+            subscribedItemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.7f), listContainer.RectTransform))
             {
                 OnSelected = (GUIComponent component, object userdata) =>
                 {
                     ShowItemPreview(userdata as Facepunch.Steamworks.Workshop.Item);
+                    return true;
+                }
+            };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), listContainer.RectTransform), "Popular Mods");
+            topItemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.3f), listContainer.RectTransform))
+            {
+                OnSelected = (GUIComponent component, object userdata) =>
+                {
+                    ShowItemPreview(userdata as Facepunch.Steamworks.Workshop.Item);
+                    return true;
+                }
+            };
+
+            new GUIButton(new RectTransform(new Vector2(0.5f, 0.05f), listContainer.RectTransform), "Find more mods...")
+            {
+                OnClicked = (btn, userdata) =>
+                {
+                    System.Diagnostics.Process.Start("steam://url/SteamWorkshopPage/" + SteamManager.AppID);
                     return true;
                 }
             };
@@ -110,10 +131,25 @@ namespace Barotrauma
             };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), "Published items");
-            new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), leftColumn.RectTransform));
+            publishedItemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), leftColumn.RectTransform));
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), "Your items");
-            new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), leftColumn.RectTransform));
+            myItemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), leftColumn.RectTransform))
+            {
+                OnSelected = (component, userdata) =>
+                {
+                    if (userdata is Submarine sub)
+                    {
+                        CreateWorkshopItem(sub);
+                    }
+                    else if (userdata is ContentPackage contentPackage)
+                    {
+                        CreateWorkshopItem(contentPackage);
+                    }
+                    ShowCreateItemFrame();
+                    return true;
+                }
+            };
 
             new GUIButton(new RectTransform(new Vector2(0.5f, 0.05f), leftColumn.RectTransform),
                 "Create item")
@@ -134,7 +170,8 @@ namespace Barotrauma
         public override void Select()
         {
             base.Select();
-            RefreshItemList();
+            RefreshItemLists();
+            SelectTab(Tab.Browse);
         }
 
         private void SelectTab(Tab tab)
@@ -145,17 +182,46 @@ namespace Barotrauma
             }
         }
 
-        private void RefreshItemList()
+        private void RefreshItemLists()
         {
-            SteamManager.GetWorkshopItems(OnItemsReceived);
+            SteamManager.GetSubscribedWorkshopItems((items) => { OnItemsReceived(items, subscribedItemList); });
+            SteamManager.GetPopularWorkshopItems((items) => { OnItemsReceived(items, topItemList); }, 5);
+            SteamManager.GetPublishedWorkshopItems((items) => { OnItemsReceived(items, publishedItemList); });
+
+            myItemList.ClearChildren();
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), myItemList.Content.RectTransform), "Submarines", textAlignment: Alignment.Center, font: GUI.LargeFont)
+            {
+                CanBeFocused = false
+            };
+            foreach (Submarine sub in Submarine.SavedSubmarines)
+            {
+                if (sub.HasTag(SubmarineTag.HideInMenus)) { continue; }
+                //ignore subs that are part of some content package
+                string subPath = Path.GetFullPath(sub.FilePath);
+                if (ContentPackage.List.Any(cp => cp.Files.Any(f => f.Type == ContentType.Submarine && Path.GetFullPath(f.Path) == subPath)))
+                {
+                    continue;
+                }
+                CreateMyItemFrame(sub, myItemList);
+            }
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), myItemList.Content.RectTransform), "Content Packages", textAlignment: Alignment.Center, font: GUI.LargeFont)
+            {
+                CanBeFocused = false
+            };
+            foreach (ContentPackage contentPackage in ContentPackage.List)
+            {
+                if (!string.IsNullOrEmpty(contentPackage.SteamWorkshopUrl)) { continue; }
+                CreateMyItemFrame(contentPackage, myItemList);
+            }
         }
         
-        private void OnItemsReceived(IList<Facepunch.Steamworks.Workshop.Item> itemDetails)
+        private void OnItemsReceived(IList<Facepunch.Steamworks.Workshop.Item> itemDetails, GUIListBox listBox)
         {
-            installedItemList.ClearChildren();
+            listBox.ClearChildren();
             foreach (var item in itemDetails)
             {
-                CreateWorkshopItemFrame(item, installedItemList);
+                CreateWorkshopItemFrame(item, listBox);
             }
         }
 
@@ -186,12 +252,12 @@ namespace Barotrauma
                 new GUIImage(new RectTransform(new Point(iconSize), innerFrame.RectTransform), SteamManager.Instance.DefaultPreviewImage, scaleToFit: true);
                 try
                 {
-                    if (!pendingPreviewImageDownloads.Contains(item))
+                    string imagePreviewPath = Path.Combine(SteamManager.WorkshopItemPreviewImageFolder, item.Id + ".png");
+                    if (!pendingPreviewImageDownloads.Contains(item.PreviewImageUrl))
                     {
+                        pendingPreviewImageDownloads.Add(item.PreviewImageUrl);
                         using (WebClient client = new WebClient())
                         {
-                            pendingPreviewImageDownloads.Add(item);
-                            string imagePreviewPath = Path.Combine(SteamManager.WorkshopItemPreviewImageFolder, item.Id + ".png");
                             if (File.Exists(imagePreviewPath))
                             {
                                 File.Delete(imagePreviewPath);
@@ -201,14 +267,18 @@ namespace Barotrauma
                             CoroutineManager.StartCoroutine(WaitForItemPreviewDownloaded(item, listBox, imagePreviewPath));
                             client.DownloadFileCompleted += (sender, args) =>
                             {
-                                pendingPreviewImageDownloads.Remove(item);
+                                pendingPreviewImageDownloads.Remove(item.PreviewImageUrl);
                             };
                         }
-                    }                    
+                    }
+                    else
+                    {
+                        CoroutineManager.StartCoroutine(WaitForItemPreviewDownloaded(item, listBox, imagePreviewPath));
+                    }
                 }
                 catch (Exception e)
                 {
-                    pendingPreviewImageDownloads.Remove(item);
+                    pendingPreviewImageDownloads.Remove(item.PreviewImageUrl);
                     DebugConsole.ThrowError("Downloading the preview image of the Workshop item \"" + item.Title + "\" failed.", e);
                 }
             }
@@ -259,17 +329,59 @@ namespace Barotrauma
             }
         }
 
+        private void CreateMyItemFrame(Submarine submarine, GUIListBox listBox)
+        {
+            var itemFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), listBox.Content.RectTransform, minSize: new Point(0, 80)),
+                    style: "ListBoxElement")
+            {
+                UserData = submarine
+            };
+            var innerFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), itemFrame.RectTransform, Anchor.Center), isHorizontal: true)
+            {
+                RelativeSpacing = 0.1f,
+                Stretch = true
+            };
+            if (submarine.PreviewImage != null)
+            {
+                new GUIImage(new RectTransform(new Point(innerFrame.Rect.Height), innerFrame.RectTransform), submarine.PreviewImage, scaleToFit: true);
+            }
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), innerFrame.RectTransform), submarine.Name, textAlignment: Alignment.CenterLeft);
+        }
+        private void CreateMyItemFrame(ContentPackage contentPackage, GUIListBox listBox)
+        {
+            var itemFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), listBox.Content.RectTransform, minSize: new Point(0, 80)),
+                    style: "ListBoxElement")
+            {
+                UserData = contentPackage
+            };
+            var innerFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), itemFrame.RectTransform, Anchor.Center), isHorizontal: true)
+            {
+                RelativeSpacing = 0.1f,
+                Stretch = true
+            };
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), innerFrame.RectTransform), contentPackage.Name, textAlignment: Alignment.CenterLeft);
+        }
+
         private IEnumerable<object> WaitForItemPreviewDownloaded(Facepunch.Steamworks.Workshop.Item item, GUIListBox listBox, string previewImagePath)
         {
-            while (pendingPreviewImageDownloads.Contains(item))
+            while (pendingPreviewImageDownloads.Contains(item.PreviewImageUrl))
             {
                 yield return CoroutineStatus.Running;
             }
 
             if (File.Exists(previewImagePath))
             {
-                Sprite newSprite = new Sprite(previewImagePath, sourceRectangle: null);
-                itemPreviewSprites.Add(item.PreviewImageUrl, newSprite);
+                Sprite newSprite;
+                if (itemPreviewSprites.ContainsKey(item.PreviewImageUrl))
+                {
+                    newSprite = itemPreviewSprites[item.PreviewImageUrl];
+                }
+                else
+                {
+                    newSprite = new Sprite(previewImagePath, sourceRectangle: null);
+                    itemPreviewSprites.Add(item.PreviewImageUrl, newSprite);
+                }
+
                 CreateWorkshopItemFrame(item, listBox);
                 if (itemPreviewFrame.FindChild(item) != null)
                 {
@@ -341,7 +453,7 @@ namespace Barotrauma
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    System.Diagnostics.Process.Start(item.Url);
+                    System.Diagnostics.Process.Start("steam://url/CommunityFilePage/" + item.Id);
                     return true;
                 }
             };
@@ -350,6 +462,41 @@ namespace Barotrauma
         private void CreateWorkshopItem()
         {
             SteamManager.CreateWorkshopItemStaging(new List<ContentFile>(), out itemEditor, out itemContentPackage);
+        }
+        private void CreateWorkshopItem(Submarine sub)
+        {
+            SteamManager.CreateWorkshopItemStaging(new List<ContentFile>(), out itemEditor, out itemContentPackage);
+            itemContentPackage.AddFile(sub.FilePath, ContentType.Submarine);
+            itemContentPackage.Name = sub.Name;
+            itemEditor.Title = sub.Name;
+            itemEditor.Tags.Add("Submarine");
+            itemEditor.Description = sub.Description;
+
+            string previewImagePath = Path.GetFullPath(Path.Combine(SteamManager.WorkshopItemStagingFolder, SteamManager.PreviewImageName));
+            try
+            {
+                using (Stream s = File.Create(previewImagePath))
+                {
+                    sub.PreviewImage.Texture.SaveAsPng(s, (int)sub.PreviewImage.size.X, (int)sub.PreviewImage.size.Y);
+                    itemEditor.PreviewImage = previewImagePath;
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Saving submarine preview image failed.", e);
+                itemEditor.PreviewImage = null;
+            }
+        }
+        private void CreateWorkshopItem(ContentPackage contentPackage)
+        {
+            SteamManager.CreateWorkshopItemStaging(new List<ContentFile>(), out itemEditor, out itemContentPackage);
+            foreach (ContentFile file in contentPackage.Files)
+            {
+                itemContentPackage.AddFile(file.Path, file.Type);
+            }
+            itemContentPackage.CorePackage = contentPackage.CorePackage;
+            itemContentPackage.Name = contentPackage.Name;
+            itemEditor.Title = contentPackage.Name;
         }
 
         private void ShowCreateItemFrame()
@@ -385,7 +532,7 @@ namespace Barotrauma
             var titleBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.2f), topLeftColumn.RectTransform), itemEditor.Title);
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topLeftColumn.RectTransform), "Description");
-            var descriptionBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), topLeftColumn.RectTransform), itemEditor.Description);
+            var descriptionBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), topLeftColumn.RectTransform), itemEditor.Description, textAlignment: Alignment.TopLeft, wrap: true);
             descriptionBox.OnTextChanged += (textBox, text) => { itemEditor.Description = text; return true; };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topRightColumn.RectTransform), "Preview Icon");
@@ -417,7 +564,17 @@ namespace Barotrauma
                     return true;
                 }
             };
-            
+
+            if (!string.IsNullOrEmpty(itemEditor.PreviewImage))
+            {
+                if (itemPreviewSprites.ContainsKey(itemEditor.PreviewImage))
+                {
+                    itemPreviewSprites[itemEditor.PreviewImage].Remove();
+                }
+                var newPreviewImage = new Sprite(itemEditor.PreviewImage, sourceRectangle: null);
+                previewIcon.Sprite = newPreviewImage;
+                itemPreviewSprites[itemEditor.PreviewImage] = newPreviewImage;
+            }            
 
             var fileListTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), createItemContent.RectTransform), "Files included in the item");
             new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), fileListTitle.RectTransform, Anchor.CenterRight), "Show folder")
@@ -502,8 +659,10 @@ namespace Barotrauma
             
             foreach (ContentFile contentFile in itemContentPackage.Files)
             {
-                bool illegalPath = !ContentPackage.IsModFilePathAllowed(contentFile.Path);
-                string pathInStagingFolder = Path.Combine(SteamManager.WorkshopItemStagingFolder, contentFile.Path);
+                bool illegalPath = !ContentPackage.IsModFilePathAllowed(contentFile);
+                string pathInStagingFolder = contentFile.Type == ContentType.Submarine ?
+                    contentFile.Path :
+                    Path.Combine(SteamManager.WorkshopItemStagingFolder, contentFile.Path);
                 bool fileExists = File.Exists(pathInStagingFolder);
 
                 var fileFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.12f), createItemFileList.Content.RectTransform) { MinSize = new Point(0, 20) },
@@ -523,7 +682,7 @@ namespace Barotrauma
                     Selected = fileExists && !illegalPath,
                     Enabled = false,
                     ToolTip = fileExists ? 
-                        "File is present in the Workshop item folder." : 
+                        "File will be included in the Workshop item." : 
                         "File is not present in the Workshop item folder and will not be included in the Workshop item. This may be desirable if you want the mod to use Vanilla files that the players already have - otherwise you should copy the file to the Workshop item folder."
                 };
 
@@ -532,10 +691,10 @@ namespace Barotrauma
                     ToolTip = contentFile.Path
                 };
                 if (!fileExists) { nameText.TextColor *= 0.8f; }
-                if (illegalPath)
+                if (illegalPath && !ContentPackage.List.Any(cp => cp.Files.Any(f => Path.GetFullPath(f.Path) == Path.GetFullPath(contentFile.Path))))
                 {
                     nameText.TextColor = Color.Red;
-                    tickBox.ToolTip = "Workshop items are not allowed to modify files in the Content, Data or root folder of the game. Please create a separate subfolder for the files.";
+                    tickBox.ToolTip = "Workshop items are only allowed to modify files in the Mod folder or add submarine files to the Submarines folder. Please create a separate subfolder for the files.";
                 }
 
                 var contentTypeSelection = new GUIDropDown(new RectTransform(new Vector2(0.4f, 1.0f), content.RectTransform, Anchor.CenterRight),

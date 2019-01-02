@@ -21,7 +21,7 @@ namespace Barotrauma.Steam
         public const bool USE_STEAM = true;
 #endif
 
-        const uint AppID = 602960;
+        public const uint AppID = 602960;
         
         private Facepunch.Steamworks.Client client;
         private Server server;
@@ -330,7 +330,7 @@ namespace Barotrauma.Steam
             }
         }
 
-        public static void GetWorkshopItems(Action<IList<Workshop.Item>> onItemsFound, List<string> requireTags = null)
+        public static void GetSubscribedWorkshopItems(Action<IList<Workshop.Item>> onItemsFound, List<string> requireTags = null)
         {
             if (instance == null || !instance.isInitialized) return;
 
@@ -340,7 +340,44 @@ namespace Barotrauma.Steam
             query.UserQueryType = Workshop.UserQueryType.Subscribed;
             query.UploaderAppId = AppID;
             if (requireTags != null) query.RequireTags = requireTags;
+            query.Run();
+            query.OnResult += (Workshop.Query q) =>
+            {
+                onItemsFound?.Invoke(q.Items);
+            };
+        }
 
+        public static void GetPopularWorkshopItems(Action<IList<Workshop.Item>> onItemsFound, int amount, List<string> requireTags = null)
+        {
+            if (instance == null || !instance.isInitialized) return;
+
+            var query = instance.client.Workshop.CreateQuery();
+            query.Order = Workshop.Order.RankedByTrend;
+            query.RankedByTrendDays = 30;
+            query.UploaderAppId = AppID;
+            if (requireTags != null) query.RequireTags = requireTags;
+            query.Run();
+            query.OnResult += (Workshop.Query q) =>
+            {
+                var nonSubscribedItems = q.Items.Where(it => !it.Subscribed && !it.Installed);
+                if (nonSubscribedItems.Count() > amount)
+                {
+                    nonSubscribedItems = nonSubscribedItems.Take(amount);
+                }
+                onItemsFound?.Invoke(nonSubscribedItems.ToList());
+            };
+        }
+
+        public static void GetPublishedWorkshopItems(Action<IList<Workshop.Item>> onItemsFound, List<string> requireTags = null)
+        {
+            if (instance == null || !instance.isInitialized) return;
+
+            var query = instance.client.Workshop.CreateQuery();
+            query.Order = Workshop.Order.RankedByPublicationDate;
+            query.UserId = instance.client.SteamId;
+            query.UserQueryType = Workshop.UserQueryType.Published;
+            query.UploaderAppId = AppID;
+            if (requireTags != null) query.RequireTags = requireTags;
             query.Run();
             query.OnResult += (Workshop.Query q) =>
             {
@@ -404,6 +441,9 @@ namespace Barotrauma.Steam
             {
                 stagingFolder.Create();
             }
+            Directory.CreateDirectory(Path.Combine(WorkshopItemStagingFolder, "Submarines"));
+            Directory.CreateDirectory(Path.Combine(WorkshopItemStagingFolder, "Mods"));
+            Directory.CreateDirectory(Path.Combine(WorkshopItemStagingFolder, "Mods", "ModName"));
 
             item = instance.client.Workshop.CreateItem(Workshop.ItemType.Community);
             item.Visibility = Workshop.Editor.VisibilityType.Public;
@@ -526,21 +566,20 @@ namespace Barotrauma.Steam
 
             try
             {
-                //we only need to create a new content package for the item if it contains content with a type other than None
+                //we only need to create a new content package for the item if it contains content with a type other than None or Submarine
                 //e.g. items that are just a sub file are just copied to the game folder
-                if (contentPackage.Files.Any(f => f.Type != ContentType.None))
+                if (contentPackage.Files.Any(f => f.Type != ContentType.None && f.Type != ContentType.Submarine))
                 {
                     File.Copy(contentPackage.Path, newContentPackagePath);
                 }
 
                 foreach (ContentFile contentFile in contentPackage.Files)
                 {
-
                     string sourceFile = Path.Combine(item.Directory.FullName, contentFile.Path);
                     if (!File.Exists(sourceFile)) { continue; }
-                    if (!ContentPackage.IsModFilePathAllowed(contentFile.Path))
+                    if (!ContentPackage.IsModFilePathAllowed(contentFile))
                     {
-                        DebugConsole.ThrowError("Workshop items are not allowed to add or modify files in the Content or Data folders.");
+                        DebugConsole.ThrowError("Workshop items are only allowed to modify files in the Mod folder or add submarine files to the Submarines folder.");
                         continue;
                     }
                     //make sure the destination directory exists
@@ -555,6 +594,7 @@ namespace Barotrauma.Steam
             }
 
             var newPackage = ContentPackage.CreatePackage(contentPackage.Name, newContentPackagePath, contentPackage.CorePackage);
+            newPackage.SteamWorkshopUrl = item.Url;
             ContentPackage.List.Add(newPackage);
             if (newPackage.CorePackage)
             {
@@ -564,14 +604,9 @@ namespace Barotrauma.Steam
             GameMain.Config.SelectedContentPackages.Add(newPackage);
             GameMain.Config.Save();
 
-            foreach (string tag in item.Tags)
+            if (item.Tags.Contains("Submarine") || newPackage.Files.Any(f => f.Type == ContentType.Submarine))
             {
-                switch (tag)
-                {
-                    case "Submarine":
-                        Submarine.RefreshSavedSubs();
-                        break;
-                }
+                Submarine.RefreshSavedSubs();
             }
             
             return true;
@@ -596,7 +631,7 @@ namespace Barotrauma.Steam
             {
                 foreach (ContentFile contentFile in contentPackage.Files)
                 {
-                    if (!ContentPackage.IsModFilePathAllowed(contentFile.Path))
+                    if (!ContentPackage.IsModFilePathAllowed(contentFile))
                     {
                         //Workshop items are not allowed to add or modify files in the Content or Data folders;
                         continue;
