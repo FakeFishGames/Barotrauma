@@ -35,6 +35,11 @@ namespace Barotrauma.Items.Components
         //the angle in which the Character holds the item
         protected float holdAngle;
 
+        public PhysicsBody Body
+        {
+            get { return item.body ?? body; }
+        }
+
         [Serialize(false, true)]
         public bool Attached
         {

@@ -6,7 +6,8 @@
     category="Material"
     Tags="smallitem,plant"
     canbepicked="true"
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate"
+    scale="0.2">
 
     <Deconstruct time="5">
       <Item identifier="organicfiber"/>
@@ -14,14 +15,13 @@
       <Item identifier="organicfiber"/>
     </Deconstruct>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/Materials/LootablePlants.png" sourcerect="118,47,282,416"/>
+    <Sprite texture="Content/Items/Materials/LootablePlants.png" depth="0.2" sourcerect="118,47,282,416" origin="0.5,0.5" />
 
-    <Body width="24" height="12" density="50"/>
+    <Body radius="85" height="170" density="12"/>
 
     <LevelResource deattachduration="1">
-      <Commonness commonness="2"/>
+      <Commonness commonness="8"/>
     </LevelResource>
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
@@ -32,7 +32,8 @@
     category="Material"
     Tags="smallitem,plant"
     canbepicked="true"
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate"
+    scale="0.2">
 
     <Deconstruct time="5">
       <Item identifier="elastin"/>
@@ -40,14 +41,13 @@
       <Item identifier="elastin"/>
     </Deconstruct>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/Materials/LootablePlants.png" sourcerect="586,54,364,373"/>
+    <Sprite texture="Content/Items/Materials/LootablePlants.png" depth="0.2" sourcerect="586,54,364,373" origin="0.5,0.5" />
 
-    <Body width="24" height="12" density="50"/>
+    <Body width="280" height="200" density="12"/>
 
     <LevelResource deattachduration="1">
-      <Commonness commonness="2"/>
+      <Commonness commonness="8"/>
     </LevelResource>
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
@@ -58,7 +58,8 @@
     category="Material"
     Tags="smallitem,plant"
     canbepicked="true"
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate"
+    scale="0.2">
 
     <Deconstruct time="5">
       <Item identifier="opium"/>
@@ -66,14 +67,13 @@
       <Item identifier="opium"/>
     </Deconstruct>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/Materials/LootablePlants.png" sourcerect="103,605,322,319"/>
+    <Sprite texture="Content/Items/Materials/LootablePlants.png" depth="0.2" sourcerect="103,605,322,319" origin="0.5,0.5" />
 
-    <Body width="24" height="12" density="50"/>
+    <Body radius="120" density="12"/>
 
     <LevelResource deattachduration="1">
-      <Commonness commonness="2"/>
+      <Commonness commonness="10"/>
     </LevelResource>
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
@@ -84,7 +84,8 @@
     category="Material"
     Tags="smallitem,plant"
     canbepicked="true"
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate"
+    scale="0.2">
 
     <Deconstruct time="5">
       <Item identifier="ethanol"/>
@@ -92,14 +93,13 @@
       <Item identifier="ethanol"/>
     </Deconstruct>
 
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/Alien/artifact.png" depth="0.2" sourcerect="58,0,60,60" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/Materials/LootablePlants.png" sourcerect="580,618,370,298"/>
+    <Sprite texture="Content/Items/Materials/LootablePlants.png" depth="0.2" sourcerect="580,618,370,298" origin="0.5,0.5" />
 
-    <Body width="24" height="12" density="50"/>
+    <Body radius="100" width="150" density="12"/>
 
     <LevelResource deattachduration="1">
-      <Commonness commonness="2"/>
+      <Commonness commonness="10"/>
     </LevelResource>
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
