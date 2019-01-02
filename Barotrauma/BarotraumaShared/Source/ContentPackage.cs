@@ -276,6 +276,16 @@ namespace Barotrauma
                     return path == "Mods";
             }
         }
+        public static bool IsModFilePathAllowed(string path)
+        {
+            while (true)
+            {
+                string temp = System.IO.Path.GetDirectoryName(path);
+                if (string.IsNullOrEmpty(temp)) { break; }
+                path = temp;
+            }
+            return path == "Mods";
+        }
 
         /// <summary>
         /// Returns all xml files.
