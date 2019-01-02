@@ -584,22 +584,40 @@ namespace Barotrauma.Steam
         /// <summary>
         /// Enables a workshop item by moving it to the game folder.
         /// </summary>
-        public static bool EnableWorkShopItem(Workshop.Item item, bool allowFileOverwrite)
+        public static bool EnableWorkShopItem(Workshop.Item item, bool allowFileOverwrite, out string errorMsg)
         {
             if (!item.Installed)
             {
-                DebugConsole.ThrowError("Cannot enable workshop item \"" + item.Title + "\" because it has not been installed.");
+                errorMsg = TextManager.Get("WorkshopErrorInstallRequiredToEnable").Replace("[itemname]", item.Title);
+                DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
                 return false;
             }
             
             ContentPackage contentPackage = new ContentPackage(Path.Combine(item.Directory.FullName, MetadataFileName));
             string newContentPackagePath = GetWorkshopItemContentPackagePath(contentPackage);
-            
+
+            var allPackageFiles = Directory.GetFiles(item.Directory.FullName, "*", SearchOption.AllDirectories);
+            List<string> nonContentFiles = new List<string>();
+            foreach (string file in allPackageFiles)
+            {
+                if (file == MetadataFileName) { continue; }
+                string relativePath = UpdaterUtil.GetRelativePath(file, item.Directory.FullName);
+                string fullPath = Path.GetFullPath(relativePath);
+                if (contentPackage.Files.Any(f => { string fp = Path.GetFullPath(f.Path); return fp == fullPath; })) { continue; }
+                if (ContentPackage.IsModFilePathAllowed(relativePath))
+                {
+                    nonContentFiles.Add(relativePath);
+                }
+            }
+                        
             if (!allowFileOverwrite)
             {
                 if (File.Exists(newContentPackagePath))
                 {
-                    DebugConsole.ThrowError("Cannot enable workshop item \"" + item.Title + "\". The file \"" + newContentPackagePath + "\" would be overwritten by the item.");
+                    errorMsg = TextManager.Get("WorkshopErrorOverwriteOnEnable")
+                        .Replace("[itemname]", item.Title)
+                        .Replace("[filename]", newContentPackagePath);                        
+                    DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
                     return false;
                 }
 
@@ -608,8 +626,10 @@ namespace Barotrauma.Steam
                     string sourceFile = Path.Combine(item.Directory.FullName, contentFile.Path);
                     if (File.Exists(sourceFile) && File.Exists(contentFile.Path))
                     {
-                        //TODO: ask the player if they want to let a workshop item overwrite existing files?
-                        DebugConsole.ThrowError("Cannot enable workshop item \"" + item.Title + "\". The file \"" + contentFile.Path + "\" would be overwritten by the item.");
+                        errorMsg = TextManager.Get("WorkshopErrorOverwriteOnEnable")
+                            .Replace("[itemname]", item.Title)
+                            .Replace("[filename]", contentFile.Path);
+                        DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
                         return false;
                     }
                 }
@@ -630,17 +650,31 @@ namespace Barotrauma.Steam
                     if (!File.Exists(sourceFile)) { continue; }
                     if (!ContentPackage.IsModFilePathAllowed(contentFile))
                     {
-                        DebugConsole.ThrowError("Workshop items are only allowed to modify files in the Mod folder or add submarine files to the Submarines folder.");
+                        DebugConsole.ThrowError(TextManager.Get("WorkshopErrorIllegalPathOnEnable").Replace("[filename]", contentFile.Path));
                         continue;
                     }
                     //make sure the destination directory exists
                     Directory.CreateDirectory(Path.GetDirectoryName(contentFile.Path));
                     File.Copy(sourceFile, contentFile.Path, overwrite: true);
                 }
+
+                foreach (string nonContentFile in nonContentFiles)
+                {
+                    string sourceFile = Path.Combine(item.Directory.FullName, nonContentFile);
+                    if (!File.Exists(sourceFile)) { continue; }
+                    if (!ContentPackage.IsModFilePathAllowed(nonContentFile))
+                    {
+                        DebugConsole.ThrowError(TextManager.Get("WorkshopErrorIllegalPathOnEnable").Replace("[filename]", nonContentFile));
+                        continue;
+                    }
+                    Directory.CreateDirectory(Path.GetDirectoryName(nonContentFile));
+                    File.Copy(sourceFile, nonContentFile, overwrite: true);
+                }
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Enabling the workshop item \"" + item.Title + "\" failed.", e);
+                errorMsg = TextManager.Get("WorkshopErrorEnableFailed").Replace("[itemname]", item.Title) + " " + e.Message;
+                DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
                 return false;
             }
 
@@ -659,25 +693,42 @@ namespace Barotrauma.Steam
             {
                 Submarine.RefreshSavedSubs();
             }
-            
+
+            errorMsg = "";
             return true;
         }
 
         /// <summary>
         /// Disables a workshop item by removing the files from the game folder.
         /// </summary>
-        public static bool DisableWorkShopItem(Workshop.Item item)
+        public static bool DisableWorkShopItem(Workshop.Item item, out string errorMsg)
         {
             if (!item.Installed)
             {
-                DebugConsole.ThrowError("Cannot disable workshop item \"" + item.Title + "\" because it has not been installed.");
+                errorMsg = "Cannot disable workshop item \"" + item.Title + "\" because it has not been installed.";
+                DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
                 return false;
             }
 
             ContentPackage contentPackage = new ContentPackage(Path.Combine(item.Directory.FullName, MetadataFileName));
             string installedContentPackagePath = GetWorkshopItemContentPackagePath(contentPackage);
 
+            var allPackageFiles = Directory.GetFiles(item.Directory.FullName, "*", SearchOption.AllDirectories);
+            List<string> nonContentFiles = new List<string>();
+            foreach (string file in allPackageFiles)
+            {
+                if (file == MetadataFileName) { continue; }
+                string relativePath = UpdaterUtil.GetRelativePath(file, item.Directory.FullName);
+                string fullPath = Path.GetFullPath(relativePath);
+                if (contentPackage.Files.Any(f => { string fp = Path.GetFullPath(f.Path); return fp == fullPath; })) { continue; }
+                if (ContentPackage.IsModFilePathAllowed(relativePath))
+                {
+                    nonContentFiles.Add(relativePath);
+                }
+            }
             if (File.Exists(installedContentPackagePath)) { File.Delete(installedContentPackagePath); }
+
+            HashSet<string> directories = new HashSet<string>();
             try
             {
                 foreach (ContentFile contentFile in contentPackage.Files)
@@ -689,15 +740,40 @@ namespace Barotrauma.Steam
                     }
                     if (!File.Exists(contentFile.Path)) { continue; }
                     File.Delete(contentFile.Path);
+                    directories.Add(Path.GetDirectoryName(contentFile.Path));
                 }
+                foreach (string nonContentFile in nonContentFiles)
+                {
+                    if (!ContentPackage.IsModFilePathAllowed(nonContentFile))
+                    {
+                        //Workshop items are not allowed to add or modify files in the Content or Data folders;
+                        continue;
+                    }
+                    if (!File.Exists(nonContentFile)) { continue; }
+                    File.Delete(nonContentFile);
+                    directories.Add(Path.GetDirectoryName(nonContentFile));
+                }
+                
+                foreach (string directory in directories)
+                {
+                    if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory)) { continue; }
+                    if (Directory.GetFiles(directory, "*", SearchOption.AllDirectories).Count() == 0)
+                    {
+                        Directory.Delete(directory, recursive: true);
+                    }
+                }
+
                 ContentPackage.List.RemoveAll(cp => System.IO.Path.GetFullPath(cp.Path) == System.IO.Path.GetFullPath(installedContentPackagePath));
                 GameMain.Config.SelectedContentPackages.RemoveWhere(cp => !ContentPackage.List.Contains(cp));
                 GameMain.Config.Save();
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Disabling the workshop item \"" + item.Title + "\" failed.", e);
+                errorMsg = "Disabling the workshop item \"" + item.Title + "\" failed. "+e.Message;
+                DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
+                return false;
             }
+            errorMsg = "";
             return true;
         }
 
@@ -712,7 +788,13 @@ namespace Barotrauma.Steam
             }
 
             ContentPackage contentPackage = new ContentPackage(metaDataPath);
-            if (!File.Exists(GetWorkshopItemContentPackagePath(contentPackage))) return false;
+            //make sure the contentpackage file is present 
+            //(unless the package only contains submarine files, in which case we don't need a content package)
+            if (contentPackage.Files.Any(f => f.Type != ContentType.Submarine) &&
+                !File.Exists(GetWorkshopItemContentPackagePath(contentPackage)))
+            {
+                return false;
+            }
             foreach (ContentFile contentFile in contentPackage.Files)
             {
                 if (!File.Exists(contentFile.Path)) return false;
@@ -728,7 +810,7 @@ namespace Barotrauma.Steam
             foreach (char c in invalidChars) fileName = fileName.Replace(c.ToString(), "");
             return Path.Combine("Data", "ContentPackages", fileName);
         }
-        
+
         #endregion
 
         public static void Update(float deltaTime)

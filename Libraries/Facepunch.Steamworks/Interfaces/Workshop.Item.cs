@@ -14,6 +14,8 @@ namespace Facepunch.Steamworks
         {
             internal Workshop workshop;
 
+            internal Action onInstalled;
+
             public string Description { get; private set; }
             public ulong Id { get; private set; }
             public ulong OwnerId { get; private set; }
@@ -48,7 +50,7 @@ namespace Facepunch.Steamworks
                 return item;
             }
 
-            public bool Download( bool highPriority = true )
+            public bool Download( bool highPriority = true, Action onInstalled = null )
             {
                 if ( Installed ) return true;
                 if ( Downloading ) return true;
@@ -59,6 +61,7 @@ namespace Facepunch.Steamworks
                     return false;
                 }
 
+                this.onInstalled = onInstalled;
                 workshop.OnFileDownloaded += OnFileDownloaded;
                 workshop.OnItemInstalled += OnItemInstalled;
                 return true;
@@ -88,6 +91,7 @@ namespace Facepunch.Steamworks
             {
                 if ( fileid != Id ) return;
 
+                onInstalled?.Invoke();
                 workshop.OnItemInstalled -= OnItemInstalled;
             }
 
