@@ -5,6 +5,7 @@ using System.Xml.Linq;
 using OpenTK.Audio.OpenAL;
 using Microsoft.Xna.Framework;
 using System.Linq;
+using System.IO;
 
 namespace Barotrauma.Sounds
 {
@@ -216,9 +217,9 @@ namespace Barotrauma.Sounds
 
         public Sound LoadSound(string filename, bool stream = false)
         {
-            if (!System.IO.File.Exists(filename))
+            if (!File.Exists(filename))
             {
-                throw new Exception("Sound file \"" + filename + "\" doesn't exist!");
+                throw new FileNotFoundException("Sound file \"" + filename + "\" doesn't exist!");
             }
 
             Sound newSound = new OggSound(this, filename, stream);
@@ -228,11 +229,10 @@ namespace Barotrauma.Sounds
 
         public Sound LoadSound(XElement element, bool stream = false)
         {
-
             string filePath = element.GetAttributeString("file", "");
-            if (!System.IO.File.Exists(filePath))
+            if (!File.Exists(filePath))
             {
-                throw new Exception("Sound file \"" + filePath + "\" doesn't exist!");
+                throw new FileNotFoundException("Sound file \"" + filePath + "\" doesn't exist!");
             }
 
             var newSound = new OggSound(this, filePath, stream);
