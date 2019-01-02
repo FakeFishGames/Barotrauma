@@ -135,6 +135,7 @@ namespace Barotrauma
             {
                 OnSelected = (component, userdata) =>
                 {
+                    myItemList.Deselect();
                     if (userdata is Facepunch.Steamworks.Workshop.Item item)
                     {
                         if (!item.Installed) { return false; }
@@ -150,6 +151,7 @@ namespace Barotrauma
             {
                 OnSelected = (component, userdata) =>
                 {
+                    publishedItemList.Deselect();
                     if (userdata is Submarine sub)
                     {
                         CreateWorkshopItem(sub);
@@ -557,28 +559,35 @@ namespace Barotrauma
                 RelativeSpacing = 0.1f
             };
 
-            var topRightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 0.8f), topPanel.RectTransform))
+            var topLeftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 0.8f), topPanel.RectTransform))
             {
                 Stretch = true,
                 RelativeSpacing = 0.01f
             };
-            var topLeftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 1.0f), topPanel.RectTransform))
+            var topRightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 1.0f), topPanel.RectTransform))
             {
                 Stretch = true,
                 RelativeSpacing = 0.01f
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topLeftColumn.RectTransform), TextManager.Get("WorkshopItemTitle"));
-            var titleBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.2f), topLeftColumn.RectTransform), itemEditor.Title);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topRightColumn.RectTransform), TextManager.Get("WorkshopItemTitle"));
+            var titleBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.15f), topRightColumn.RectTransform), itemEditor.Title);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topLeftColumn.RectTransform), TextManager.Get("WorkshopItemDescription"));
-            var descriptionBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), topLeftColumn.RectTransform), itemEditor.Description, textAlignment: Alignment.TopLeft, wrap: true);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topRightColumn.RectTransform), TextManager.Get("WorkshopItemDescription"));
+            var descriptionBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), topRightColumn.RectTransform), itemEditor.Description, textAlignment: Alignment.TopLeft, wrap: true);
             descriptionBox.OnTextChanged += (textBox, text) => { itemEditor.Description = text; return true; };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topRightColumn.RectTransform), TextManager.Get("WorkshopItemPreviewImage"));
+            new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), topRightColumn.RectTransform), TextManager.Get("WorkshopItemCorePackage"))
+            {
+                ToolTip = TextManager.Get("WorkshopItemCorePackageTooltip"),
+                Selected = itemContentPackage.CorePackage,
+                OnSelected = (tickbox) => { itemContentPackage.CorePackage = tickbox.Selected; return true; }
+            };
 
-            var previewIcon = new GUIImage(new RectTransform(new Vector2(1.0f, 0.7f), topRightColumn.RectTransform), SteamManager.Instance.DefaultPreviewImage, scaleToFit: true);
-            new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), topRightColumn.RectTransform), TextManager.Get("WorkshopItemBrowse"))
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topLeftColumn.RectTransform), TextManager.Get("WorkshopItemPreviewImage"));
+
+            var previewIcon = new GUIImage(new RectTransform(new Vector2(1.0f, 0.7f), topLeftColumn.RectTransform), SteamManager.Instance.DefaultPreviewImage, scaleToFit: true);
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), topLeftColumn.RectTransform), TextManager.Get("WorkshopItemBrowse"))
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -614,8 +623,8 @@ namespace Barotrauma
                 var newPreviewImage = new Sprite(itemEditor.PreviewImage, sourceRectangle: null);
                 previewIcon.Sprite = newPreviewImage;
                 itemPreviewSprites[itemEditor.PreviewImage] = newPreviewImage;
-            }            
-
+            }           
+            
             var fileListTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), createItemContent.RectTransform), TextManager.Get("WorkshopItemFiles"));
             new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), fileListTitle.RectTransform, Anchor.CenterRight), TextManager.Get("WorkshopItemShowFolder"))
             {

@@ -130,6 +130,8 @@
   <WorkshopItemDescription>Description</WorkshopItemDescription>
   <WorkshopItemPreviewImage>Preview Image</WorkshopItemPreviewImage>
   <WorkshopItemBrowse>Browse...</WorkshopItemBrowse>
+  <WorkshopItemCorePackage>Core package</WorkshopItemCorePackage>
+  <WorkshopItemCorePackageTooltip>Core packages are special content packages that contain all the core files (executables, configuration files) the game won't run without. There must always be one (and only one) core package selected. Only select this if you wish to create a mod that replaces all the Vanilla files. Mods that only add things to the Vanilla game (or another core package) should not be marked as core packages.</WorkshopItemCorePackageTooltip>
   <WorkshopItemFiles>Files included in the item</WorkshopItemFiles>
   <WorkshopItemShowFolder>Show folder</WorkshopItemShowFolder>
   <WorkshopItemRefreshFileList>Refresh</WorkshopItemRefreshFileList>
