@@ -4130,6 +4130,7 @@ namespace Barotrauma
                                     colliderHeight = width - radius * 2;
                                 }
                             }
+                            radius = Math.Max(radius, 1);
                         }
                         else if (height > -1 || width > -1)
                         {
@@ -4139,6 +4140,7 @@ namespace Barotrauma
                         var colliderAttributes = new List<XAttribute>() { new XAttribute("radius", radius) };
                         if (colliderHeight > -1)
                         {
+                            colliderHeight = Math.Max(colliderHeight, 1);
                             if (height > width)
                             {
                                 colliderAttributes.Add(new XAttribute("height", colliderHeight));
@@ -4155,13 +4157,14 @@ namespace Barotrauma
                             var secondaryCollider = new XElement("collider", new XAttribute("radius", radius));
                             if (colliderHeight > -1)
                             {
+                                colliderHeight = Math.Max(colliderHeight, 1);
                                 if (height > width)
                                 {
                                     secondaryCollider.Add(new XAttribute("height", colliderHeight * 0.75f));
                                 }
                                 else
                                 {
-                                    colliderAttributes.Add(new XAttribute("width", colliderHeight * 0.75f));
+                                    secondaryCollider.Add(new XAttribute("width", colliderHeight * 0.75f));
                                 }
                             }
                             colliderElements.Add(secondaryCollider);
@@ -4358,23 +4361,22 @@ namespace Barotrauma
                         var colliderAttributes = new List<XAttribute>();
                         if (width == height)
                         {
-                            colliderAttributes.Add(new XAttribute("radius", width / 2));
+                            colliderAttributes.Add(new XAttribute("radius", Math.Max(width / 2, 1)));
                         }
                         else
                         {
                             if (height > width)
                             {
-                                colliderAttributes.Add(new XAttribute("radius", width / 2));
+                                colliderAttributes.Add(new XAttribute("radius", Math.Max(width / 2, 1)));
                                 colliderAttributes.Add(new XAttribute("height", height - width));
                             }
                             else
                             {
-                                colliderAttributes.Add(new XAttribute("radius", height / 2));
+                                colliderAttributes.Add(new XAttribute("radius", Math.Max(height / 2, 1)));
                                 colliderAttributes.Add(new XAttribute("width", width - height));
                             }
                         }
-                        string notes = string.Empty;
-                        idToCodeName.TryGetValue(id, out notes);
+                        idToCodeName.TryGetValue(id, out string notes);
                         LimbXElements.Add(id.ToString(), new XElement("limb",
                             new XAttribute("id", id),
                             new XAttribute("name", limbName),
@@ -4383,8 +4385,8 @@ namespace Barotrauma
                             new XElement("sprite",
                                 new XAttribute("texture", TexturePath),
                                 new XAttribute("sourcerect", $"{rectInputs[0].IntValue}, {rectInputs[1].IntValue}, {width}, {height}")),
-                            new XAttribute("notes", notes)
-                            ));
+                            new XAttribute("notes", null ?? string.Empty)
+                        ));
                     }
                 }
 
