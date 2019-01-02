@@ -213,13 +213,13 @@ namespace Barotrauma
         {
             string spritePath = element.Attribute("texture")?.Value ?? "";
             string spritePathWithTags = spritePath;
-            if (character.Info != null)
+            if (character.Info != null && character.IsHumanoid)
             {
                 spritePath = spritePath.Replace("[GENDER]", (character.Info.Gender == Gender.Female) ? "female" : "male");
                 spritePath = spritePath.Replace("[RACE]", character.Info.Race.ToString().ToLowerInvariant());
                 spritePath = spritePath.Replace("[HEADID]", character.Info.HeadSpriteId.ToString());
 
-                if (character.IsHumanoid && character.Info.HeadSprite != null && character.Info.SpriteTags.Any())
+                if (character.Info.HeadSprite != null && character.Info.SpriteTags.Any())
                 {
                     string tags = "";
                     character.Info.SpriteTags.ForEach(tag => tags += "[" + tag + "]");
