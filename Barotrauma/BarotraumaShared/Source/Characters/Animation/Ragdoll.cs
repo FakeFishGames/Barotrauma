@@ -159,10 +159,24 @@ namespace Barotrauma
             private set;
         }
 
+        private Limb mainLimb;
         public Limb MainLimb
         {
-            get;
-            private set;
+            get
+            {
+                if (mainLimb == null)
+                {
+                    Limb torso = GetLimb(LimbType.Torso);
+                    Limb head = GetLimb(LimbType.Head);
+                    mainLimb = torso ?? head;
+                    if (mainLimb == null)
+                    {
+                        DebugConsole.ThrowError("No head or torso found. Using the first limb as the main limb.");
+                        mainLimb = Limbs.FirstOrDefault();
+                    }
+                }
+                return mainLimb;
+            }
         }
 
         public Vector2 WorldPosition
@@ -317,9 +331,6 @@ namespace Barotrauma
             CreateLimbs();
             CreateJoints();
             UpdateCollisionCategories();
-            Limb torso = GetLimb(LimbType.Torso);
-            Limb head = GetLimb(LimbType.Head);
-            MainLimb = torso ?? head;
             character.LoadHeadAttachments();
             if (items != null)
             {
