@@ -427,7 +427,7 @@ namespace Barotrauma.Steam
             System.Diagnostics.Debug.Assert(copiedFilePaths.Count == contentFiles.Count);
 
             //create a new content package and include the copied files in it
-            contentPackage = ContentPackage.CreatePackage("ContentPackage", Path.Combine(item.Folder, MetadataFileName));
+            contentPackage = ContentPackage.CreatePackage("ContentPackage", Path.Combine(item.Folder, MetadataFileName), false);
             for (int i = 0; i < copiedFilePaths.Count; i++)
             {
                 contentPackage.AddFile(copiedFilePaths[i], contentFiles[i].Type);
