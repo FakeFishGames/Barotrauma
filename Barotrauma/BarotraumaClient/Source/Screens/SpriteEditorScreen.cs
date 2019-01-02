@@ -436,6 +436,7 @@ namespace Barotrauma
                             {
                                 w.DrawPos = PlayerInput.MousePosition;
                                 sprite.SourceRect = new Rectangle(sprite.SourceRect.Location, ((w.DrawPos - new Vector2(w.size) - positionWidget.DrawPos) / zoom).ToPoint());
+                                // TODO: allow to lock the origin
                                 sprite.RelativeOrigin = sprite.RelativeOrigin;
                                 if (spriteList.SelectedComponent is GUITextBlock textBox)
                                 {
@@ -625,6 +626,7 @@ namespace Barotrauma
                         widget.size = size;
                         widget.inputAreaMargin = 5;
                     }
+                    widget.isFilled = widget.IsControlled;
                 };
                 widgets.Add(id, widget);
                 initMethod?.Invoke(widget);
