@@ -98,6 +98,37 @@ namespace Barotrauma.Networking
             return banFrame;
         }
 
+        private bool RemoveBan(GUIButton button, object obj)
+        {
+            BannedPlayer banned = obj as BannedPlayer;
+            if (banned == null) return false;
+
+            localRemovedBans.Add(banned.UniqueIdentifier);
+
+            RecreateBanFrame();
+
+            return true;
+        }
+
+        private bool RangeBan(GUIButton button, object obj)
+        {
+            BannedPlayer banned = obj as BannedPlayer;
+            if (banned == null) return false;
+
+            localRangeBans.Add(banned.UniqueIdentifier);
+
+            RecreateBanFrame();
+
+            return true;
+        }
+
+        private bool CloseFrame(GUIButton button, object obj)
+        {
+            banFrame = null;
+
+            return true;
+        }
+
         public void ClientAdminRead(NetBuffer incMsg)
         {
             bool hasPermission = incMsg.ReadBoolean();
@@ -139,37 +170,6 @@ namespace Barotrauma.Networking
                 parent.RemoveChild(banFrame);
                 CreateBanFrame(parent);
             }
-        }
-
-        private bool RemoveBan(GUIButton button, object obj)
-        {
-            BannedPlayer banned = obj as BannedPlayer;
-            if (banned == null) return false;
-
-            localRemovedBans.Add(banned.UniqueIdentifier);
-
-            RecreateBanFrame();
-
-            return true;
-        }
-
-        private bool RangeBan(GUIButton button, object obj)
-        {
-            BannedPlayer banned = obj as BannedPlayer;
-            if (banned == null) return false;
-
-            localRangeBans.Add(banned.UniqueIdentifier);
-
-            RecreateBanFrame();
-
-            return true;
-        }
-
-        private bool CloseFrame(GUIButton button, object obj)
-        {
-            banFrame = null;
-
-            return true;
         }
 
         public void ClientAdminWrite(NetBuffer outMsg)

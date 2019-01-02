@@ -151,6 +151,7 @@
     <Compile Include="Source\Networking\SteamManager.cs" />
     <Compile Include="Source\Networking\Voip\VoipServer.cs" />
     <Compile Include="Source\Networking\Voting.cs" />
+    <Compile Include="Source\Networking\WhiteList.cs" />
     <Compile Include="Source\PlayerInput.cs" />
     <Compile Include="Source\Program.cs" />
     <Compile Include="Source\Screens\NetLobbyScreen.cs" />
