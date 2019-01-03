@@ -2230,6 +2230,43 @@ namespace Barotrauma
             {
                 Submarine.MainSub?.FlipX();
             }));
+
+            commands.Add(new Command("loadhead", "Load head sprite(s). Required argument: head id. Optional arguments: hair index, beard index, moustache index, face attachment index.", args =>
+            {
+                var character = Character.Controlled;
+                if (character == null)
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+                if (args.Length == 0)
+                {
+                    ThrowError("No head id provided!");
+                    return;
+                }
+                if (int.TryParse(args[0], out int id))
+                {
+                    int hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex;
+                    hairIndex = beardIndex = moustacheIndex = faceAttachmentIndex = -1;
+                    if (args.Length > 1)
+                    {
+                        int.TryParse(args[1], out hairIndex);
+                    }
+                    if (args.Length > 2)
+                    {
+                        int.TryParse(args[2], out beardIndex);
+                    }
+                    if (args.Length > 3)
+                    {
+                        int.TryParse(args[3], out moustacheIndex);
+                    }
+                    if (args.Length > 4)
+                    {
+                        int.TryParse(args[4], out faceAttachmentIndex);
+                    }
+                    character.ReloadHead(id, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
+                }
+            }));
 #endif
             InitProjectSpecific();
 

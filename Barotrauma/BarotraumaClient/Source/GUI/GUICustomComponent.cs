@@ -14,7 +14,7 @@ namespace Barotrauma
 
         public bool HideElementsOutsideFrame;
 
-        public GUICustomComponent(RectTransform rectT, Action<SpriteBatch, GUICustomComponent> onDraw, Action<float, GUICustomComponent> onUpdate) : base(null, rectT)
+        public GUICustomComponent(RectTransform rectT, Action<SpriteBatch, GUICustomComponent> onDraw = null, Action<float, GUICustomComponent> onUpdate = null) : base(null, rectT)
         {
             OnDraw = onDraw;
             OnUpdate = onUpdate;

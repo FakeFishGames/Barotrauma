@@ -56,8 +56,8 @@
   <Character file="Content/Characters/Human/human.xml" />
   <Character file="Content/Characters/Humanhusk/humanhusk.xml" />
   <Character file="Content/Characters/Husk/husk.xml" />
+  <Character file="Content/Characters/Manta/manta.xml" />
   <Character file="Content/Characters/Mantis/mantis.xml" />
-  <Character file="Content/Characters/Mantis2/mantis2.xml" />
   <Character file="Content/Characters/Seamantis/seamantis.xml" />
   <Character file="Content/Characters/Moloch/moloch.xml" />
   <Character file="Content/Characters/Molochboss/molochboss.xml" />
@@ -65,6 +65,9 @@
   <Character file="Content/Characters/Tigerthresherboss/tigerthresherboss.xml" />
   <Character file="Content/Characters/Testhuman/Testhuman.xml" />
   <Character file="Content/Characters/Watcher/watcher.xml" />
+  <Character file="Content/Characters/Testhuman/Testhuman.xml" />
+  <Character file="Content/Characters/Hammerhead/Hammerhead.xml" />
+  <Character file="Content/Characters/Moloch2/Moloch2.xml" />
   <UIStyle file="Content/UI/style.xml"/>  
   <Afflictions file="Content/Afflictions.xml"/>
   <Structure file="Content/Map/StructurePrefabs.xml" />

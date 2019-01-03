@@ -114,7 +114,7 @@ namespace Barotrauma
         /// </summary>
         public static string GetRandomFilePath(IEnumerable<string> filePaths, AnimationType type)
         {
-            return filePaths.GetRandom(f => AnimationPredicate(f, type));
+            return filePaths.GetRandom(f => AnimationPredicate(f, type), Rand.RandSync.Server);
         }
 
         /// <summary>
@@ -140,7 +140,7 @@ namespace Barotrauma
         public static T GetDefaultAnimParams<T>(string speciesName, AnimationType animType) where T : AnimationParams, new() => GetAnimParams<T>(speciesName, animType, GetDefaultFileName(speciesName, animType));
 
         /// <summary>
-        /// If the file name is left null, a random file is selected. If fails, will select the default file. Note: Use the filename without the extensions, don't use the full path!
+        /// If the file name is left null, default file is selected. If fails, will select the default file. Note: Use the filename without the extensions, don't use the full path!
         /// If a custom folder is used, it's defined in the character info file.
         /// </summary>
         public static T GetAnimParams<T>(string speciesName, AnimationType animType, string fileName = null) where T : AnimationParams, new()
@@ -171,8 +171,7 @@ namespace Barotrauma
                     else if (string.IsNullOrEmpty(fileName))
                     {
                         // Files found, but none specified.
-                        DebugConsole.Log($"[AnimationParams] Selecting random animation of type {animType} for {speciesName}");
-                        selectedFile = filteredFiles.GetRandom();
+                        selectedFile = GetDefaultFile(speciesName, animType);
                     }
                     else
                     {
@@ -378,5 +377,22 @@ namespace Barotrauma
                 }
             }
         }
+
+        #region Memento
+        protected void CreateSnapshot<T>() where T : AnimationParams, new()
+        {
+            Serialize();
+            var copy = new T
+            {
+                IsLoaded = true,
+                doc = new XDocument(doc)
+            };
+            copy.Deserialize();
+            copy.Serialize();
+            memento.Store(copy);
+        }
+        public override void Undo() => Deserialize(memento.Undo().MainElement);
+        public override void Redo() => Deserialize(memento.Redo().MainElement);
+        #endregion
     }
 }

@@ -1,10 +1,7 @@
-﻿using Microsoft.Xna.Framework;
-using System.IO;
+﻿using System.IO;
 using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Linq;
-using System.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -35,14 +32,19 @@ namespace Barotrauma
             }
         }
 
-        protected virtual bool Deserialize(XElement element)
+        public XElement MainElement => doc.Root;
+        public XElement OriginalElement { get; protected set; }
+
+        protected virtual bool Deserialize(XElement element = null)
         {
+            element = element ?? MainElement;
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
             return SerializableProperties != null;
         }
 
-        protected virtual bool Serialize(XElement element)
+        protected virtual bool Serialize(XElement element = null)
         {
+            element = element ?? MainElement;
             SerializableProperty.SerializeProperties(this, element, true);
             return true;
         }
@@ -52,7 +54,8 @@ namespace Barotrauma
             UpdatePath(file);
             doc = XMLExtensions.TryLoadXml(FullPath);
             if (doc == null) { return false; }
-            IsLoaded = Deserialize(doc.Root);
+            IsLoaded = Deserialize(MainElement);
+            OriginalElement = new XElement(MainElement);
             return IsLoaded;
         }
 
@@ -70,7 +73,8 @@ namespace Barotrauma
             {
                 Directory.CreateDirectory(Folder);
             }
-            Serialize(Doc.Root);
+            OriginalElement = MainElement;
+            Serialize();
             if (settings == null)
             {
                 settings = new XmlWriterSettings
@@ -92,9 +96,13 @@ namespace Barotrauma
             return true;
         }
 
-        public bool Reset()
+        public virtual bool Reset(bool forceReload = false)
         {
-            return Deserialize(Doc.Root);
+            if (forceReload)
+            {
+                return Load(FullPath);
+            }
+            return Deserialize(OriginalElement);
         }
 
 #if CLIENT
@@ -109,5 +117,13 @@ namespace Barotrauma
             SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, false, true);
         }
 #endif
+
+        #region Memento
+        public readonly Memento<EditableParams> memento = new Memento<EditableParams>();
+        public abstract void CreateSnapshot();
+        public abstract void Undo();
+        public abstract void Redo();
+        public void ClearHistory() => memento.Clear();
+        #endregion
     }
 }

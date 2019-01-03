@@ -103,6 +103,8 @@ namespace Barotrauma
         public int UpdateOrder { get; set; }
 
         public Action<GUIComponent> OnAddedToGUIUpdateList;
+        /// <summary>
+        /// Launched at the beginning of the Draw method. Note: if the method is overridden, the event might not be called!
         
         public enum ComponentState { None, Hover, Pressed, Selected };
 

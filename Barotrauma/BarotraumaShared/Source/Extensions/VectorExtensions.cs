@@ -18,17 +18,17 @@ namespace Barotrauma.Extensions
         /// <summary>
         /// Creates a forward pointing vector based on the rotation (in radians).
         /// </summary>
-        public static Vector2 Forward(float radians, float radius = 1)
+        public static Vector2 Forward(float radians, float length = 1)
         {
-            return new Vector2((float)Math.Sin(radians), (float)Math.Cos(radians)) * radius;
+            return new Vector2((float)Math.Sin(radians), (float)Math.Cos(radians)) * length;
         }
 
         /// <summary>
         /// Creates a backward pointing vector based on the rotation (in radians).
         /// </summary>
-        public static Vector2 Backward(float radians, float radius = 1)
+        public static Vector2 Backward(float radians, float length = 1)
         {
-            return -Forward(radians, radius);
+            return -Forward(radians, length);
         }
 
         /// <summary>

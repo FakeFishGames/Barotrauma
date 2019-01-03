@@ -484,7 +484,9 @@ namespace Barotrauma
                         tempBuffer.Write(((HumanoidAnimController)AnimController).Crouching);
                     }
 
-                    bool hasAttackLimb = AnimController.Limbs.Any(l => l != null && l.attack != null);
+                    AttackContext currentContext = GetAttackContext();
+                    // TODO: do we need to filter the attack target here?
+                    bool hasAttackLimb = AnimController.Limbs.Any(l => l != null && l.attack != null && l.attack.IsValidContext(currentContext));
                     tempBuffer.Write(hasAttackLimb);
                     if (hasAttackLimb) tempBuffer.Write(attack);
 
