@@ -409,6 +409,7 @@ namespace Barotrauma
             
             UnsavedSettings = false;
 
+            bool invalidPackagesFound = false;
             foreach (XElement subElement in doc.Root.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -418,15 +419,29 @@ namespace Barotrauma
                         var matchingContentPackage = ContentPackage.List.Find(cp => System.IO.Path.GetFullPath(cp.Path) == path);
                         if (matchingContentPackage == null)
                         {
-                            DebugConsole.ThrowError("Content package \"" + path + "\" not found!");
+                            DebugConsole.ThrowError(TextManager.Get("ContentPackageNotFound").Replace("[packagepath]", path), createMessageBox: true);
+                        }
+                        else if (!matchingContentPackage.IsCompatible())
+                        {
+                            invalidPackagesFound = true;
+                            DebugConsole.ThrowError(
+                                TextManager.Get(matchingContentPackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage")
+                                    .Replace("[packagename]", matchingContentPackage.Name)
+                                    .Replace("[packageversion]", matchingContentPackage.GameVersion.ToString())
+                                    .Replace("[gameversion]", GameMain.Version.ToString()),
+                                createMessageBox: true);
                         }
                         else
                         {
+                            invalidPackagesFound = true;
                             SelectedContentPackages.Add(matchingContentPackage);
                         }
                         break;
                 }
             }
+
+            //save to get rid of the invalid selected packages in the config file
+            if (invalidPackagesFound) { Save(); }
         }
         
         public void Save()

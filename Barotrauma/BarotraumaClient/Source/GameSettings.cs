@@ -303,12 +303,21 @@ namespace Barotrauma
             
             foreach (ContentPackage contentPackage in ContentPackage.List)
             {
-                new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), contentPackageList.Content.RectTransform, minSize: new Point(0, 15)), contentPackage.Name)
+                var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), contentPackageList.Content.RectTransform, minSize: new Point(0, 15)), contentPackage.Name)
                 {
                     UserData = contentPackage,
                     OnSelected = SelectContentPackage,
                     Selected = SelectedContentPackages.Contains(contentPackage)
                 };
+                if (!contentPackage.IsCompatible())
+                {
+                    tickBox.TextColor = Color.Red;
+                    tickBox.Enabled = false;
+                    tickBox.ToolTip = TextManager.Get(contentPackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage")
+                                    .Replace("[packagename]", contentPackage.Name)
+                                    .Replace("[packageversion]", contentPackage.GameVersion.ToString())
+                                    .Replace("[gameversion]", GameMain.Version.ToString());
+                }
             }
 
             //spacing

@@ -2873,7 +2873,7 @@ namespace Barotrauma
             if (GameSettings.VerboseLogging) NewMessage(message, Color.Gray);
         }
 
-        public static void ThrowError(string error, Exception e = null)
+        public static void ThrowError(string error, Exception e = null, bool createMessageBox = false)
         {
             if (e != null)
             {
@@ -2882,7 +2882,14 @@ namespace Barotrauma
             System.Diagnostics.Debug.WriteLine(error);
             NewMessage(error, Color.Red);
 #if CLIENT
-            isOpen = true;
+            if (createMessageBox)
+            {
+                new GUIMessageBox(TextManager.Get("Error"), error);
+            }
+            else
+            {
+                isOpen = true;
+            }
 #endif
         }
 
