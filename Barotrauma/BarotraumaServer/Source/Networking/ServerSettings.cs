@@ -44,6 +44,7 @@ namespace Barotrauma.Networking
             WriteNetProperties(outMsg);
             WriteMonsterEnabled(outMsg);
             BanList.ServerAdminWrite(outMsg, c);
+            Whitelist.ServerAdminWrite(outMsg, c);
         }
 
         public void ServerWrite(NetBuffer outMsg,Client c)
@@ -107,6 +108,7 @@ namespace Barotrauma.Networking
             changed |= changedMonsterSettings;
             if (changedMonsterSettings) ReadMonsterEnabled(incMsg);
             changed |= BanList.ServerAdminRead(incMsg, c);
+            changed |= Whitelist.ServerAdminRead(incMsg, c);
 
             if (changed) GameMain.NetLobbyScreen.LastUpdateID++;
         }

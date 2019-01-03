@@ -126,6 +126,7 @@ namespace Barotrauma.Networking
 
             ReadMonsterEnabled(incMsg);
             BanList.ClientAdminRead(incMsg);
+            Whitelist.ClientAdminRead(incMsg);
         }
 
         public void ClientRead(NetBuffer incMsg)
@@ -183,6 +184,7 @@ namespace Barotrauma.Networking
             outMsg.Write(changedMonsterSettings); outMsg.WritePadBits();
             if (changedMonsterSettings) WriteMonsterEnabled(outMsg, tempMonsterEnabled);
             BanList.ClientAdminWrite(outMsg);
+            Whitelist.ClientAdminWrite(outMsg);
             
             (GameMain.NetworkMember.NetPeer as NetClient).SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
         }
@@ -675,7 +677,7 @@ namespace Barotrauma.Networking
             //                              whitelist
             //--------------------------------------------------------------------------------
 
-            //Whitelist.CreateWhiteListFrame(settingsTabs[3]); //TODO: fix
+            Whitelist.CreateWhiteListFrame(settingsTabs[3]);
 
         }
 
