@@ -101,6 +101,8 @@ namespace Barotrauma
 
         private Body outsideCollisionBlocker;
 
+        public bool IsStuck => Limbs.Any(l => l.IsStuck);
+
         public PhysicsBody Collider
         {
             get
@@ -159,8 +161,18 @@ namespace Barotrauma
 
         public Limb MainLimb
         {
-            get;
-            private set;
+            get
+            {
+                Limb torso = GetLimb(LimbType.Torso);
+                Limb head = GetLimb(LimbType.Head);
+                var mainLimb = torso ?? head;
+                if (mainLimb == null)
+                {
+                    //DebugConsole.ThrowError("No head or torso found. Using the first limb as the main limb.");
+                    mainLimb = Limbs.FirstOrDefault();
+                }
+                return mainLimb;
+            }
         }
 
         public Vector2 WorldPosition
@@ -226,10 +238,10 @@ namespace Barotrauma
             }
         }
 
-        protected abstract float? HeadPosition { get; }
-        protected abstract float? HeadAngle { get; }
-        protected abstract float? TorsoPosition { get; }
-        protected abstract float? TorsoAngle { get; }
+        public abstract float? HeadPosition { get; }
+        public abstract float? HeadAngle { get; }
+        public abstract float? TorsoPosition { get; }
+        public abstract float? TorsoAngle { get; }
 
         public float ImpactTolerance => RagdollParams.ImpactTolerance;
         public bool Draggable => RagdollParams.Draggable;
@@ -311,12 +323,20 @@ namespace Barotrauma
                 }
             }
             CreateColliders();
+            var items = limbs?.ToDictionary(l => l.limbParams.ID, l => l.WearingItems);
             CreateLimbs();
             CreateJoints();
             UpdateCollisionCategories();
-            Limb torso = GetLimb(LimbType.Torso);
-            Limb head = GetLimb(LimbType.Head);
-            MainLimb = torso ?? head;
+            character.LoadHeadAttachments();
+            if (items != null)
+            {
+                foreach (var kvp in items)
+                {
+                    var limb = limbs[kvp.Key];
+                    var itemList = kvp.Value;
+                    limb.WearingItems.AddRange(itemList);
+                }
+            }
         }
 
         public Ragdoll(Character character, string seed, RagdollParams ragdollParams = null)
@@ -379,12 +399,18 @@ namespace Barotrauma
 
             UpdateCollisionCategories();
 
+            SetInitialLimbPositions();
+        }
+
+        private void SetInitialLimbPositions()
+        {
             foreach (var joint in LimbJoints)
             {
                 if (joint == null) { continue; }
+                float angle = (joint.LowerLimit + joint.UpperLimit) / 2.0f;
                 joint.LimbB?.body?.SetTransform(
-                    joint.BodyA.Position + (joint.LocalAnchorA - joint.LocalAnchorB) * 0.1f,
-                    (joint.LowerLimit + joint.UpperLimit) / 2.0f);
+                    (joint.WorldAnchorA - MathUtils.RotatePointAroundTarget(joint.LocalAnchorB, Vector2.Zero, MathHelper.ToDegrees(joint.BodyA.Rotation + angle), true)),
+                    joint.BodyA.Rotation + angle);
             }
         }
 
@@ -414,6 +440,7 @@ namespace Barotrauma
         public void SaveRagdoll(string fileNameWithoutExtension = null)
         {
             SaveJoints();
+            SaveLimbs();
             RagdollParams.Save(fileNameWithoutExtension);
         }
 
@@ -429,11 +456,21 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Saves the current joint values to the serializable joint params. This method should properly handle character flipping.
+        /// Saves the current joint values to the serializable joint params. This method should properly handle character flipping. 
+        /// NOTE: Currently all the params are handled stored as SubRagdollParams and handled in the RagdollParams Save method. This method does nothing.
         /// </summary>
         public void SaveJoints()
         {
             LimbJoints.ForEach(j => j.SaveParams());
+        }
+
+        /// <summary>
+        /// Handles custom serialization per limb. Currently only the attacks need to be serialized, since they cannot be stored as SubRagdollParams (because they shouldn't be decoupled with ragdolls).
+        /// Note: Saving to file is not handled by this method. Calling RagdollParams.Save() after this method should work.
+        /// </summary>
+        public void SaveLimbs()
+        {
+            Limbs.ForEach(l => l.attack?.Serialize());
         }
 
         /// <summary>
@@ -1752,6 +1789,11 @@ namespace Barotrauma
             return lowestLimb;
         }
 
+        public void ReleaseStuckLimbs()
+        {
+            Limbs.ForEach(l => l.Release());
+        }
+
         public void Remove()
         {
             if (Limbs != null)
@@ -1763,9 +1805,13 @@ namespace Barotrauma
                 limbs = null;
             }
 
-            foreach (PhysicsBody b in collider)
+            if (collider != null)
             {
-                b.Remove();
+                foreach (PhysicsBody b in collider)
+                {
+                    b.Remove();
+                }
+                collider = null;
             }
 
             if (outsideCollisionBlocker != null)

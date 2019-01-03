@@ -93,6 +93,7 @@
       <Skill identifier="electrical" level="10,20"/>
     </Skills>
     <Items>
+      <Item identifier="securityuniform" equip="true"/>
       <Item identifier="idcard" equip="true"/>
       <Item identifier="stunbaton">
         <Item identifier="batterycell"/>

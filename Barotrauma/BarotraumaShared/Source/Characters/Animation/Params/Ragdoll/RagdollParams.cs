@@ -22,10 +22,13 @@ namespace Barotrauma
 
     class RagdollParams : EditableParams
     {
-        public const float MIN_SCALE = 0.2f;
+        public const float MIN_SCALE = 0.1f;
         public const float MAX_SCALE = 2;
 
         public string SpeciesName { get; private set; }
+
+        [Serialize(0f, true), Editable(-360, 360, ToolTip = "Rotation offset (in degrees) used for animations and widgets. If the sprites in the sheet are in different orientations, use the orientation of the torso for the final version of your character (while editing the character in the editor, you can change the orientation freely).")]
+        public float SpritesheetOrientation { get; set; }
 
         [Serialize(1.0f, true), Editable(MIN_SCALE, MAX_SCALE, DecimalCount = 2)]
         public float LimbScale { get; set; }
@@ -59,8 +62,6 @@ namespace Barotrauma
             .Concat(Limbs.Select(j => j as RagdollSubParams)
             .Concat(Joints.Select(j => j as RagdollSubParams)));
 
-        public XElement MainElement => Doc.Root;
-
         public static string GetDefaultFileName(string speciesName) => $"{speciesName.CapitaliseFirstInvariant()}DefaultRagdoll";
         public static string GetDefaultFolder(string speciesName) => $"Content/Characters/{speciesName.CapitaliseFirstInvariant()}/Ragdolls/";
         public static string GetDefaultFile(string speciesName) => $"{GetDefaultFolder(speciesName)}{GetDefaultFileName(speciesName)}.xml";
@@ -91,7 +92,7 @@ namespace Barotrauma
         public static T GetDefaultRagdollParams<T>(string speciesName) where T : RagdollParams, new() => GetRagdollParams<T>(speciesName, GetDefaultFileName(speciesName));
 
         /// <summary>
-        /// If the file name is left null, a random file is selected. If fails, will select the default file.  Note: Use the filename without the extensions, don't use the full path!
+        /// If the file name is left null, default file is selected. If fails, will select the default file.  Note: Use the filename without the extensions, don't use the full path!
         /// If a custom folder is used, it's defined in the character info file.
         /// </summary>
         public static T GetRagdollParams<T>(string speciesName, string fileName = null) where T : RagdollParams, new()
@@ -101,7 +102,7 @@ namespace Barotrauma
                 ragdolls = new Dictionary<string, RagdollParams>();
                 allRagdolls.Add(speciesName, ragdolls);
             }
-            if (fileName == null || !ragdolls.TryGetValue(fileName, out RagdollParams ragdoll))
+            if (string.IsNullOrEmpty(fileName) || !ragdolls.TryGetValue(fileName, out RagdollParams ragdoll))
             {
                 string selectedFile = null;
                 string folder = GetFolder(speciesName);
@@ -116,8 +117,7 @@ namespace Barotrauma
                     else if (string.IsNullOrEmpty(fileName))
                     {
                         // Files found, but none specified
-                        DebugConsole.NewMessage($"[RagdollParams] Selecting random ragdoll for {speciesName}", Color.White);
-                        selectedFile = files.GetRandom();
+                        selectedFile = GetDefaultFile(speciesName);
                     }
                     else
                     {
@@ -216,6 +216,9 @@ namespace Barotrauma
 
         public bool Save(string fileNameWithoutExtension = null)
         {
+            OriginalElement = MainElement;
+            GetAllSubParams().ForEach(p => p.SetCurrentElementAsOriginalElement());
+            Serialize();
             return base.Save(fileNameWithoutExtension, new XmlWriterSettings
             {
                 Indent = true,
@@ -237,13 +240,15 @@ namespace Barotrauma
             return false;
         }
 
-        public bool Reset(bool forceReload = false)
+        public override bool Reset(bool forceReload = false)
         {
             if (forceReload)
             {
                 return Load(FullPath, SpeciesName);
             }
-            return base.Reset();
+            Deserialize(OriginalElement, recursive: true);
+            GetAllSubParams().ForEach(sp => sp.Reset());
+            return true;
         }
 
         protected void CreateColliders()
@@ -276,25 +281,68 @@ namespace Barotrauma
             }
         }
 
-        protected override bool Deserialize(XElement element)
+        protected bool Deserialize(XElement element = null, bool recursive = true)
         {
             if (base.Deserialize(element))
             {
-                GetAllSubParams().ForEach(p => p.Deserialize());
+                if (recursive)
+                {
+                    GetAllSubParams().ForEach(p => p.Deserialize());
+                }
                 return true;
             }
             return false;
         }
 
-        protected override bool Serialize(XElement element)
+        protected bool Serialize(XElement element = null, bool recursive = true)
         {
             if (base.Serialize(element))
             {
-                GetAllSubParams().ForEach(p => p.Serialize());
+                if (recursive)
+                {
+                    GetAllSubParams().ForEach(p => p.Serialize());
+                }
                 return true;
             }
             return false;
         }
+
+        #region Memento
+        public override void CreateSnapshot()
+        {
+            Serialize();
+            var copy = new RagdollParams
+            {
+                IsLoaded = true,
+                doc = new XDocument(doc)
+            };
+            copy.CreateColliders();
+            copy.CreateLimbs();
+            copy.CreateJoints();
+            copy.Deserialize();
+            copy.Serialize();
+            memento.Store(copy);
+        }
+        public override void Undo() => RevertTo(memento.Undo() as RagdollParams);
+        public override void Redo() => RevertTo(memento.Redo() as RagdollParams);
+
+        private void RevertTo(RagdollParams source)
+        {
+            Deserialize(source.MainElement, recursive: false);
+            var sourceSubParams = source.GetAllSubParams().ToList();
+            var subParams = GetAllSubParams().ToList();
+            for (int i = 0; i < subParams.Count; i++)
+            {
+                subParams[i].Deserialize(sourceSubParams[i].Element, recursive: false);
+                var subSubParams = subParams[i].SubParams;
+                for (int j = 0; j < subSubParams.Count; j++)
+                {
+                    subSubParams[j].Deserialize(sourceSubParams[i].SubParams[j].Element, recursive: false);
+                    // Since we cannot use recursion here, we have to go deeper manually, if necessary.
+                }
+            }
+        }
+        #endregion
 
 #if CLIENT
         public override void AddToEditor(ParamsEditor editor)
@@ -363,14 +411,17 @@ namespace Barotrauma
         /// <summary>
         /// In degrees.
         /// </summary>
-        [Serialize(0f, true), Editable(-360f, 360f)]
+        [Serialize(0f, true), Editable]
         public float UpperLimit { get; set; }
 
         /// <summary>
         /// In degrees.
         /// </summary>
-        [Serialize(0f, true), Editable(-360f, 360f)]
+        [Serialize(0f, true), Editable]
         public float LowerLimit { get; set; }
+
+        [Serialize(0.25f, true), Editable]
+        public float Stiffness { get; set; }
     }
 
     class LimbParams : RagdollSubParams
@@ -537,7 +588,8 @@ namespace Barotrauma
     {
         public virtual string Name { get; set; }
         public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
-        public XElement Element { get; private set; }
+        public XElement Element { get; set; }
+        public XElement OriginalElement { get; protected set; }
         public List<RagdollSubParams> SubParams { get; set; } = new List<RagdollSubParams>();
         public RagdollParams Ragdoll { get; private set; }
 
@@ -546,22 +598,43 @@ namespace Barotrauma
         public RagdollSubParams(XElement element, RagdollParams ragdoll)
         {
             Element = element;
+            OriginalElement = new XElement(element);
             Ragdoll = ragdoll;
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
         }
 
-        public virtual bool Deserialize()
+        public virtual bool Deserialize(XElement element = null, bool recursive = true)
         {
-            SerializableProperties = SerializableProperty.DeserializeProperties(this, Element);
-            SubParams.ForEach(sp => sp.Deserialize());
+            element = element ?? Element;
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            if (recursive)
+            {
+                SubParams.ForEach(sp => sp.Deserialize());
+            }
             return SerializableProperties != null;
         }
 
-        public virtual bool Serialize()
+        public virtual bool Serialize(XElement element = null, bool recursive = true)
         {
-            SerializableProperty.SerializeProperties(this, Element, true);
-            SubParams.ForEach(sp => sp.Serialize());
+            element = element ?? Element;
+            SerializableProperty.SerializeProperties(this, element, true);
+            if (recursive)
+            {
+                SubParams.ForEach(sp => sp.Serialize());
+            }
             return true;
+        }
+
+        public void SetCurrentElementAsOriginalElement()
+        {
+            OriginalElement = Element;
+            SubParams.ForEach(sp => sp.SetCurrentElementAsOriginalElement());
+        }
+
+        public void Reset()
+        {
+            Deserialize(OriginalElement, false);
+            SubParams.ForEach(sp => sp.Reset());
         }
 
      #if CLIENT

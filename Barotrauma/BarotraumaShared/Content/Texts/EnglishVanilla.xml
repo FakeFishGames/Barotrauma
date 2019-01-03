@@ -113,7 +113,7 @@
   <PopularMods>Popular mods</PopularMods>
   <FindModsButton>Find more mods...</FindModsButton>
   <PublishedWorkshopItems>Published items</PublishedWorkshopItems>
-  <YourWorkshopItems>You items</YourWorkshopItems>
+  <YourWorkshopItems>Your items</YourWorkshopItems>
   <CreateWorkshopItem>Create a new item</CreateWorkshopItem>
   <WorkshopLabelSubmarines>Submarines</WorkshopLabelSubmarines>
   <WorkshopLabelContentPackages>Content packages</WorkshopLabelContentPackages>
@@ -121,13 +121,14 @@
   <WorkshopItemDownloading>Downloading...</WorkshopItemDownloading>
   <WorkshopShowItemInSteam>Show in Steam</WorkshopShowItemInSteam>
   <WorkshopItemScore>Score</WorkshopItemScore>
-  <WorkshopItemUpvotes>Upvotes</WorkshopItemUpvotes>
-  <WorkshopItemDownvotes>Downvotes</WorkshopItemDownvotes>
+  <WorkshopItemVotes>[votecount] votes</WorkshopItemVotes>
   <WorkshopItemCreator>Creator</WorkshopItemCreator>
   <WorkshopItemCreationDate>Created</WorkshopItemCreationDate>
   <WorkshopItemModificationDate>Modified</WorkshopItemModificationDate>
+  <WorkshopItemFileSize>File size</WorkshopItemFileSize>
   <WorkshopItemTitle>Title</WorkshopItemTitle>
   <WorkshopItemDescription>Description</WorkshopItemDescription>
+  <WorkshopItemTags>Tags</WorkshopItemTags>
   <WorkshopItemPreviewImage>Preview Image</WorkshopItemPreviewImage>
   <WorkshopItemBrowse>Browse...</WorkshopItemBrowse>
   <WorkshopItemCorePackage>Core package</WorkshopItemCorePackage>
@@ -313,6 +314,7 @@
   <No>No</No>
   <OK>OK</OK>
   <Skills>Skills</Skills>
+  <PersonalityTrait>Trait</PersonalityTrait>
   <Male>Male</Male>
   <Female>Female</Female>
   <Order>Order</Order>

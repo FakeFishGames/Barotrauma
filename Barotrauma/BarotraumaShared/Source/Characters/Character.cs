@@ -623,6 +623,11 @@ namespace Barotrauma
                 Spawner.CreateNetworkEvent(newCharacter, false);
             }
 
+            if (characterInfo != null)
+            {
+               newCharacter.LoadHeadAttachments();
+            }
+
             return newCharacter;
         }
 
@@ -736,6 +741,47 @@ namespace Barotrauma
             Enabled = GameMain.NetworkMember == null;
         }
         partial void InitProjSpecific(XDocument doc);
+
+        public void ReloadHead(int? headId = null, int? hairIndex = null, int? beardIndex = null, int? moustacheIndex = null, int? faceAttachmentIndex = null)
+        {
+            if (Info == null) { return; }
+            var head = AnimController.GetLimb(LimbType.Head);
+            if (head == null) { return; }
+            if (headId.HasValue)
+            {
+                Info.HeadSpriteId = headId.Value;
+                Info.LoadHeadSprite();
+                Info.HairIndex = hairIndex ?? -1;
+                Info.BeardIndex = beardIndex ?? -1;
+                Info.MoustacheIndex = moustacheIndex ?? -1;
+                Info.FaceAttachmentIndex = faceAttachmentIndex ?? -1;
+                Info.LoadHeadAttachments();
+            }
+#if CLIENT
+            head.RecreateSprite();
+#endif
+            LoadHeadAttachments();
+        }
+
+        public void LoadHeadAttachments()
+        {
+            if (AnimController == null) { return; }
+            var head = AnimController.GetLimb(LimbType.Head);
+            if (head == null) { return; }
+            // Note that if there are any other wearables on the head, they are removed here.
+            head.OtherWearables.ForEach(w => w.Sprite.Remove());
+            head.OtherWearables.Clear();
+
+            //if the element has not been set at this point, the character has no hair and the index should be zero (= no hair)
+            if (info.FaceAttachment == null) { info.FaceAttachmentIndex = 0; }
+            Info.FaceAttachment?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.FaceAttachment)));
+            if (info.BeardElement == null) { info.BeardIndex = 0; }
+            Info.BeardElement?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.Beard)));
+            if (info.MoustacheElement == null) { info.MoustacheIndex = 0; }
+            Info.MoustacheElement?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.Moustache)));
+            if (info.HairElement == null) { info.HairIndex = 0; }
+            Info.HairElement?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.Hair)));
+        }
 
         private static string humanConfigFile;
         public static string HumanConfigFile
@@ -1027,18 +1073,29 @@ namespace Barotrauma
                 }
             }
 
+            // TODO: remove, dev test only
+            if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.F))
+            {
+                AnimController.ReleaseStuckLimbs();
+            }
+
             if (attackCoolDown > 0.0f)
             {
                 attackCoolDown -= deltaTime;
             }
             else if (IsKeyDown(InputType.Attack))
             {
-                var attackLimb = AnimController.Limbs.FirstOrDefault(l => l.attack != null);
+                AttackContext currentContext = GetAttackContext();
+                var attackLimb = AnimController.Limbs
+                    .Where(l => !l.IsSevered && !l.IsStuck && l.attack != null && l.attack.IsValidContext(currentContext))
+                    // TODO: remove this and use the distance
+                    .OrderByDescending(l => l.attack.Priority)
+                    //.OrderBy(l => Vector2.DistanceSquared(ConvertUnits.ToDisplayUnits(l.SimPosition), cursorPosition))
+                    .FirstOrDefault();
 
                 if (attackLimb != null)
                 {
-                    Vector2 attackPos =
-                        attackLimb.SimPosition + Vector2.Normalize(cursorPosition - attackLimb.Position) * ConvertUnits.ToSimUnits(attackLimb.attack.Range);
+                    Vector2 attackPos = attackLimb.SimPosition + Vector2.Normalize(cursorPosition - attackLimb.Position) * ConvertUnits.ToSimUnits(attackLimb.attack.Range);
 
                     List<Body> ignoredBodies = AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
                     ignoredBodies.Add(AnimController.Collider.FarseerBody);
@@ -1085,7 +1142,7 @@ namespace Barotrauma
 
                     if (attackLimb.AttackTimer > attackLimb.attack.Duration)
                     {
-                        attackLimb.AttackTimer = 0.0f;
+                        attackLimb.ResetAttack();
                         attackCoolDown = 1.0f;
                     }
                 }
@@ -2361,10 +2418,9 @@ namespace Barotrauma
 
             DisposeProjSpecific();
 
-            if (aiTarget != null) aiTarget.Remove();
-            if (AnimController != null) AnimController.Remove();
-
-            CharacterHealth.Remove();
+            aiTarget?.Remove();
+            AnimController?.Remove();
+            CharacterHealth?.Remove();
 
             foreach (Character c in CharacterList)
             {
@@ -2399,5 +2455,7 @@ namespace Barotrauma
                 }
             }
         }
+
+        public AttackContext GetAttackContext() => AnimController.CurrentAnimationParams.IsGroundedAnimation ? AttackContext.Ground : AttackContext.Water;
     }
 }

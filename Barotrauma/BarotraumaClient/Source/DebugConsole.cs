@@ -850,8 +850,9 @@ namespace Barotrauma
                         limb.Sprite?.ReloadTexture();
                         limb.DamagedSprite?.ReloadTexture();
                         limb.DeformSprite?.Sprite.ReloadTexture();
-                        // update specular
+                        // TODO: update specular
                         limb.WearingItems.ForEach(i => i.Sprite.ReloadTexture());
+                        limb.OtherWearables.ForEach(w => w.Sprite.ReloadTexture());
                     }
                 }
                 else
@@ -959,6 +960,21 @@ namespace Barotrauma
                     return;
                 }
                 character.AnimController.ResetRagdoll();
+            }, isCheat: true));
+
+            commands.Add(new Command("reloadwearables|reloadxml", "Reload the wearable sprites (clothing) of a character.", args =>
+            {
+                var character = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, true);
+                if (character == null)
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+                foreach (var limb in character.AnimController.Limbs)
+                {
+                    limb.WearingItems.ForEach(i => i.Sprite.ReloadXML());
+                    limb.OtherWearables.ForEach(w => w.Sprite.ReloadXML());
+                }
             }, isCheat: true));
         }
     }

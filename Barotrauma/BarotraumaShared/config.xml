@@ -30,7 +30,7 @@
     Down="S"
     Left="A"
     Right="D"
-    Attack="F"
+    Attack="R"
     Run="LeftShift"
     Crouch="LeftControl"
     Chat="Tab"

@@ -353,6 +353,20 @@
     <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" tile="false" maintainaspectratio="true" sourcerect ="1001, 627, 10, 12"/>
   </GUIServerListRoundStartedTickBox>
 
+  <GUIStarIconDark
+    color="0.5,0.5,0.5,1.0"
+    hovercolor="0.5,0.5,0.5,1.0"
+    selectedcolor="0.5,0.5,0.5,1.0">
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect ="999, 902, 24, 23"/>
+  </GUIStarIconDark>
+  
+  <GUIStarIconBright
+    color="1.0,1.0,1.0,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0">
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect ="999, 950, 24, 23"/>
+  </GUIStarIconBright>
+  
   <GUIMessageBox    
     color="0.0, 0.0, 0.0, 0.8"
     hovercolor="0.0, 0.0, 0.0, 0.8"
