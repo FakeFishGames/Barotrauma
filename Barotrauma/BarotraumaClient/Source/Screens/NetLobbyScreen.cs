@@ -753,7 +753,7 @@ namespace Barotrauma
             }
 
             new GUICustomComponent(new RectTransform(new Vector2(0.3f, 1.0f), headContainer.RectTransform), 
-                onDraw: (sb, component) => characterInfo.DrawIcon(sb, component.Rect.Center.ToVector2(), component.Rect.Width));
+                onDraw: (sb, component) => characterInfo.DrawIcon(sb, component.Rect.Center.ToVector2(), targetAreaSize: component.Rect.Size.ToVector2()));
 
             if (allowEditing)
             {

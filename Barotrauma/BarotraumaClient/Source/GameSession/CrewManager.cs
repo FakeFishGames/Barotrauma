@@ -379,7 +379,7 @@ namespace Barotrauma
             }
 
             var characterImage = new GUICustomComponent(new RectTransform(new Point(characterArea.Rect.Height, characterArea.Rect.Height), characterArea.RectTransform, Anchor.CenterLeft),
-                onDraw: (sb, component) => character.Info.DrawIcon(sb, component.Rect.Center.ToVector2(), targetWidth: component.Rect.Width))
+                onDraw: (sb, component) => character.Info.DrawIcon(sb, component.Rect.Center.ToVector2(), targetAreaSize: component.Rect.Size.ToVector2()))
             {
                 CanBeFocused = false,
                 HoverColor = Color.White,
