@@ -354,9 +354,9 @@
   </GUIServerListRoundStartedTickBox>
 
   <GUIStarIconDark
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0">
+    color="0.5,0.5,0.5,1.0"
+    hovercolor="0.5,0.5,0.5,1.0"
+    selectedcolor="0.5,0.5,0.5,1.0">
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect ="999, 902, 24, 23"/>
   </GUIStarIconDark>
   
