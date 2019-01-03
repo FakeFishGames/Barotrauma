@@ -12,7 +12,7 @@
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Carrier\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Charybdis\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Coelanth\Animations\" />
-    <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler\Animations\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycrawler\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Endworm\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Fractalguardian2\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Fractalguardian\Animations\" />
@@ -53,28 +53,28 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Coelanth\Ragdolls\CoelanthDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler2\Animations\Crawler2Run.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler\Animations\CrawlerRun.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler2\Animations\Crawler2SwimFast.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler\Animations\CrawlerSwimFast.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler2\Animations\Crawler2SwimSlow.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler\Animations\CrawlerSwimSlow.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler2\Animations\Crawler2Walk.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler\Animations\CrawlerWalk.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler2\crawler2.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler\crawler.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler2\crawler2.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler2\Ragdolls\Crawler2DefaultRagdoll.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler\crawler.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler\Ragdolls\CrawlerDefaultRagdoll.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycrawler\Ragdolls\LegacycrawlerDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Endworm\Ragdolls\EndwormDefaultRagdoll.xml">
@@ -593,22 +593,22 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Coelanth\coelanth.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler\crawler.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycrawler\legacycrawler.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler\crawler.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycrawler\legacycrawler.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler\Animations\CrawlerRun.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycrawler\Animations\LegacycrawlerRun.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler\Animations\CrawlerSwimFast.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycrawler\Animations\LegacycrawlerSwimFast.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler\Animations\CrawlerSwimSlow.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycrawler\Animations\LegacycrawlerSwimSlow.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler\Animations\CrawlerWalk.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycrawler\Animations\LegacycrawlerWalk.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Endworm\Animations\EndwormSwimFast.xml">
@@ -1755,16 +1755,16 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Characters\Coelanth\idle2.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler\attack1.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycrawler\attack1.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler\attack2.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycrawler\attack2.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler\idle1.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycrawler\idle1.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler\idle2.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycrawler\idle2.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Characters\Endworm\endwormattack1.ogg">
