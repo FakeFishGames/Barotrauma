@@ -553,21 +553,21 @@ namespace Barotrauma
                 RelativeSpacing = 0.02f
             };
             
-            var topPanel = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), createItemContent.RectTransform), isHorizontal: true)
+            var topPanel = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.4f), createItemContent.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
                 RelativeSpacing = 0.1f
             };
 
-            var topLeftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 0.8f), topPanel.RectTransform))
+            var topLeftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 1.0f), topPanel.RectTransform))
             {
                 Stretch = true,
-                RelativeSpacing = 0.01f
+                RelativeSpacing = 0.02f
             };
             var topRightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 1.0f), topPanel.RectTransform))
             {
                 Stretch = true,
-                RelativeSpacing = 0.01f
+                RelativeSpacing = 0.02f
             };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topRightColumn.RectTransform), TextManager.Get("WorkshopItemTitle"));
@@ -672,10 +672,23 @@ namespace Barotrauma
                 }
             };
 
-            new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), createItemContent.RectTransform, Anchor.BottomRight),
-                TextManager.Get("WorkshopItemPublish"))
+            //the item has been already published if it has a non-zero ID -> allow adding a changenote
+            if (itemEditor.Id > 0)
             {
-                IgnoreLayoutGroups = true,
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), createItemContent.RectTransform), TextManager.Get("WorkshopItemChangenote"))
+                {
+                    ToolTip = TextManager.Get("WorkshopItemChangenoteTooltip")
+                };
+                var changenoteBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.2f), createItemContent.RectTransform))
+                {
+                    ToolTip = TextManager.Get("WorkshopItemChangenoteTooltip")
+                };
+                changenoteBox.OnTextChanged += (textbox, text) => { itemEditor.ChangeNote = text; return true; };
+            }
+           
+            new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), createItemContent.RectTransform, Anchor.BottomRight),
+                TextManager.Get(itemEditor.Id > 0 ? "WorkshopItemUpdate" : "WorkshopItemPublish"))
+            {
                 ToolTip = TextManager.Get("WorkshopItemPublishTooltip"),
                 OnClicked = (btn, userData) => 
                 {
