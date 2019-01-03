@@ -242,7 +242,8 @@ namespace Barotrauma
                 CollideConnected = false,
             };
 
-            Vector2 colliderFront = collider.GetFrontLocal() * attachLimb.character.AnimController.RagdollParams.LimbScale;
+            // Limb scale is already taken into account when creating the collider.
+            Vector2 colliderFront = collider.GetLocalFront(MathHelper.ToRadians(attachLimb.ragdoll.RagdollParams.SpritesheetOrientation));
             if (jointDir < 0.0f) colliderFront.X = -colliderFront.X;
             collider.SetTransform(attachPos + attachSurfaceNormal * colliderFront.Length(), angle);
 

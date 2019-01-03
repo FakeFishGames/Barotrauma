@@ -236,6 +236,14 @@ namespace Barotrauma
             {
                 CreateWorkshopItemFrame(item, listBox);
             }
+
+            if (itemDetails.Count == 0 && listBox == subscribedItemList)
+            {
+                new GUITextBox(new RectTransform(new Vector2(0.9f, 0.9f), listBox.Content.RectTransform, Anchor.Center), TextManager.Get("NoSubscribedMods"), wrap: true)
+                {
+                    CanBeFocused = false
+                };
+            }
         }
 
         private void CreateWorkshopItemFrame(Facepunch.Steamworks.Workshop.Item item, GUIListBox listBox)
@@ -457,7 +465,7 @@ namespace Barotrauma
                 RelativeSpacing = 0.02f
             };
 
-            var headerArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), content.RectTransform, maxSize: new Point(int.MaxValue, 150)), isHorizontal: true)
+            var headerArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), content.RectTransform, maxSize: new Point(int.MaxValue, 150)), isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
                 Stretch = true,
                 RelativeSpacing = 0.05f
@@ -471,15 +479,58 @@ namespace Barotrauma
             {
                 new GUIImage(new RectTransform(new Point(headerArea.Rect.Height), headerArea.RectTransform), SteamManager.Instance.DefaultPreviewImage, scaleToFit: true);
             }
-            new GUITextBlock(new RectTransform(new Vector2(0.75f, 1.0f), headerArea.RectTransform), item.Title, textAlignment: Alignment.CenterLeft, font: GUI.LargeFont);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), item.Description, wrap: true);
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemScore") + ": " + item.Score);
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemUpvotes") + ": " + item.VotesUp);
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemDownvotes") + ": " + item.VotesDown);
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemCreator") + ": " + item.OwnerName);
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemCreationDate") + ": " + item.Created);
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemModificationDate") + ": " + item.Modified);
+            var titleArea = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.75f), headerArea.RectTransform))
+            {
+                RelativeSpacing = 0.05f
+            };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), titleArea.RectTransform), item.Title, textAlignment: Alignment.TopLeft, font: GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), titleArea.RectTransform), TextManager.Get("WorkshopItemCreator") + ": " + item.OwnerName, textAlignment: Alignment.TopLeft);
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemDescription"));
+            var descriptionContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), content.RectTransform));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), descriptionContainer.Content.RectTransform), item.Description, wrap: true);
+
+
+            //score -------------------------------------
+            var scoreContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            {
+                RelativeSpacing = 0.02f
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 0.0f), scoreContainer.RectTransform), TextManager.Get("WorkshopItemScore") + ": ");
+            int starCount = (int)Math.Round(item.Score * 5);
+            for (int i = 0; i < 5; i++)
+            {
+                new GUIImage(new RectTransform(new Point(scoreContainer.Rect.Height), scoreContainer.RectTransform),
+                    i < starCount ? "GUIStarIconBright" : "GUIStarIconDark");
+            }
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 0.0f), scoreContainer.RectTransform), TextManager.Get("WorkshopItemVotes").Replace("[votecount]", (item.VotesUp + item.VotesDown).ToString()));
+            
+            //tags ------------------------------------
+            var tagContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            {
+                RelativeSpacing = 0.02f
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), tagContainer.RectTransform), TextManager.Get("WorkshopItemTags")+": ");
+            if (!item.Tags.Any(t => !string.IsNullOrEmpty(t)))
+            {
+                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), tagContainer.RectTransform), TextManager.Get("None"));
+            }
+            for (int i = 0; i < item.Tags.Length && i < 5; i++)
+            {
+                if (string.IsNullOrEmpty(item.Tags[i])) { continue; }
+                new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), tagContainer.RectTransform), item.Tags[i].CapitaliseFirstInvariant(), style: "ListBoxElement");
+            }
+            
+            var creationDate = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemCreationDate") +": ");
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), creationDate.RectTransform, Anchor.TopRight), item.Created.ToString(), textAlignment: Alignment.TopRight);
+
+            var modificationDate = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemModificationDate") + ": ");
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), modificationDate.RectTransform, Anchor.TopRight), item.Modified.ToString(), textAlignment: Alignment.TopRight);
+            
+            var fileSize = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemFileSize") + ": ");
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), fileSize.RectTransform, Anchor.TopRight), MathUtils.GetBytesReadable((long)item.Size), textAlignment: Alignment.TopRight);
 
             new GUIButton(new RectTransform(new Vector2(0.2f, 0.05f), content.RectTransform), TextManager.Get("WorkshopShowItemInSteam"))
             {
@@ -570,19 +621,59 @@ namespace Barotrauma
                 RelativeSpacing = 0.02f
             };
 
+            // top right column --------------------------------------------------------------------------------------
+
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topRightColumn.RectTransform), TextManager.Get("WorkshopItemTitle"));
             var titleBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.15f), topRightColumn.RectTransform), itemEditor.Title);
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topRightColumn.RectTransform), TextManager.Get("WorkshopItemDescription"));
-            var descriptionBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), topRightColumn.RectTransform), itemEditor.Description, textAlignment: Alignment.TopLeft, wrap: true);
+            var descriptionBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.4f), topRightColumn.RectTransform), itemEditor.Description, textAlignment: Alignment.TopLeft, wrap: true);
             descriptionBox.OnTextChanged += (textBox, text) => { itemEditor.Description = text; return true; };
 
-            new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), topRightColumn.RectTransform), TextManager.Get("WorkshopItemCorePackage"))
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topRightColumn.RectTransform), TextManager.Get("WorkshopItemTags"));
+            var tagHolder = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.17f), topRightColumn.RectTransform), isHorizontal: true)
             {
-                ToolTip = TextManager.Get("WorkshopItemCorePackageTooltip"),
-                Selected = itemContentPackage.CorePackage,
-                OnSelected = (tickbox) => { itemContentPackage.CorePackage = tickbox.Selected; return true; }
+                Spacing = 5
             };
+
+            HashSet<string> availableTags = new HashSet<string>();
+            foreach (string tag in itemEditor.Tags)
+            {
+                if (!string.IsNullOrEmpty(tag)) { availableTags.Add(tag.ToLowerInvariant()); }
+            }
+            foreach (string tag in SteamManager.PopularTags)
+            {
+                if (!string.IsNullOrEmpty(tag)) { availableTags.Add(tag.ToLowerInvariant()); }
+                if (availableTags.Count > 10) { break; }
+            }
+
+            foreach (string tag in availableTags)
+            {
+                var tagBtn = new GUIButton(new RectTransform(new Vector2(0.25f, 0.8f), tagHolder.Content.RectTransform, anchor: Anchor.CenterLeft), tag.CapitaliseFirstInvariant());
+                tagBtn.TextBlock.AutoScale = true;
+                tagBtn.Color *= 0.5f;
+                tagBtn.SelectedColor = Color.LightGreen;
+                tagBtn.Selected = itemEditor.Tags.Any(t => t.ToLowerInvariant() == tag);
+
+                tagBtn.OnClicked = (btn, userdata) =>
+                {
+                    if (!tagBtn.Selected)
+                    {
+                        if (!itemEditor.Tags.Any(t => t.ToLowerInvariant() == tag)) { itemEditor.Tags.Add(tagBtn.Text); }
+                        tagBtn.Selected = true;
+                        tagBtn.TextBlock.TextColor = Color.LightGreen;
+                    }
+                    else
+                    {
+                        itemEditor.Tags.RemoveAll(t => t.ToLowerInvariant() == tagBtn.Text.ToLowerInvariant());
+                        tagBtn.Selected = false;
+                        tagBtn.TextBlock.TextColor = tagBtn.TextColor;
+                    }
+                    return true;
+                };
+            }
+
+            // top left column --------------------------------------------------------------------------------------
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topLeftColumn.RectTransform), TextManager.Get("WorkshopItemPreviewImage"));
 
@@ -623,8 +714,15 @@ namespace Barotrauma
                 var newPreviewImage = new Sprite(itemEditor.PreviewImage, sourceRectangle: null);
                 previewIcon.Sprite = newPreviewImage;
                 itemPreviewSprites[itemEditor.PreviewImage] = newPreviewImage;
-            }           
-            
+            }
+
+            new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), topLeftColumn.RectTransform), TextManager.Get("WorkshopItemCorePackage"))
+            {
+                ToolTip = TextManager.Get("WorkshopItemCorePackageTooltip"),
+                Selected = itemContentPackage.CorePackage,
+                OnSelected = (tickbox) => { itemContentPackage.CorePackage = tickbox.Selected; return true; }
+            };
+
             var fileListTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), createItemContent.RectTransform), TextManager.Get("WorkshopItemFiles"));
             new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), fileListTitle.RectTransform, Anchor.CenterRight), TextManager.Get("WorkshopItemShowFolder"))
             {
@@ -713,6 +811,7 @@ namespace Barotrauma
                     return true;
                 }
             };
+
         }
         
         private void RefreshCreateItemFileList()

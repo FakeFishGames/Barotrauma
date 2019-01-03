@@ -1,6 +1,5 @@
 ﻿using FarseerPhysics;
 using Microsoft.Xna.Framework;
-using System.Xml.Linq;
 using System.Collections.Generic;
 using System;
 
@@ -32,6 +31,10 @@ namespace Barotrauma
         {
             get
             {
+                if (ForceSelectAnimationType != AnimationType.NotDefined)
+                {
+                    return GetAnimationParamsFromType(ForceSelectAnimationType) as GroundedMovementParams;
+                }
                 if (!CanWalk)
                 {
                     DebugConsole.ThrowError($"{character.SpeciesName} cannot walk!");
@@ -43,7 +46,20 @@ namespace Barotrauma
                 }
             }
         }
-        public SwimParams CurrentSwimParams => IsMovingFast ? SwimFastParams : SwimSlowParams;
+        public SwimParams CurrentSwimParams
+        {
+            get
+            {
+                if (ForceSelectAnimationType != AnimationType.NotDefined)
+                {
+                    return GetAnimationParamsFromType(ForceSelectAnimationType) as SwimParams;
+                }
+                else
+                {
+                    return IsMovingFast? SwimFastParams : SwimSlowParams;
+                }
+            }
+        }
 
         public bool CanWalk => CanEnterSubmarine;
         public bool IsMovingBackwards => !InWater && Math.Sign(targetMovement.X) == -Math.Sign(Dir);
@@ -101,11 +117,17 @@ namespace Barotrauma
             if (!MathUtils.IsValid(v.Value)) { return null; }
             return v.Value;
         }
+        protected Vector2? GetValidOrNull(AnimationParams p, Vector2 v)
+        {
+            if (p == null) { return null; }
+            return v;
+        }
 
-        protected override float? HeadPosition => GetValidOrNull(CurrentGroundedParams, CurrentGroundedParams?.HeadPosition * RagdollParams.JointScale);
-        protected override float? TorsoPosition => GetValidOrNull(CurrentGroundedParams, CurrentGroundedParams?.TorsoPosition * RagdollParams.JointScale);
-        protected override float? HeadAngle => GetValidOrNull(CurrentAnimationParams, CurrentAnimationParams?.HeadAngleInRadians);
-        protected override float? TorsoAngle => GetValidOrNull(CurrentAnimationParams, CurrentAnimationParams?.TorsoAngleInRadians);
+        public override float? HeadPosition => GetValidOrNull(CurrentGroundedParams, CurrentGroundedParams?.HeadPosition * RagdollParams.JointScale);
+        public override float? TorsoPosition => GetValidOrNull(CurrentGroundedParams, CurrentGroundedParams?.TorsoPosition * RagdollParams.JointScale);
+        public override float? HeadAngle => GetValidOrNull(CurrentAnimationParams, CurrentAnimationParams?.HeadAngleInRadians);
+        public override float? TorsoAngle => GetValidOrNull(CurrentAnimationParams, CurrentAnimationParams?.TorsoAngleInRadians);
+        public virtual Vector2? StepSize => GetValidOrNull(CurrentGroundedParams, CurrentGroundedParams.StepSize * RagdollParams.JointScale);
 
         public bool AnimationTestPose { get; set; }
 

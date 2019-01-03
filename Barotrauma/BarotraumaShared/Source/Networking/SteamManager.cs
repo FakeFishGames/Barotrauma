@@ -26,6 +26,26 @@ namespace Barotrauma.Steam
         private Facepunch.Steamworks.Client client;
         private Server server;
 
+        private Dictionary<string, int> tagCommonness = new Dictionary<string, int>()
+        {
+            { "submarine", 10 },
+            { "item", 10 },
+            { "monster", 8 },
+            { "art", 8 },
+            { "mission", 8 },
+            { "environment", 5 }
+        };
+
+        private List<string> popularTags = new List<string>();
+        public static IEnumerable<string> PopularTags
+        {
+            get
+            {
+                if (instance == null || !instance.isInitialized) { return Enumerable.Empty<string>(); }
+                return instance.popularTags;
+            }
+        }
+
         private static SteamManager instance;
         public static SteamManager Instance
         {
@@ -359,6 +379,36 @@ namespace Barotrauma.Steam
             query.Run();
             query.OnResult += (Workshop.Query q) =>
             {
+                //count the number of each unique tag
+                foreach (var item in q.Items)
+                {
+                    foreach (string tag in item.Tags)
+                    {
+                        if (string.IsNullOrEmpty(tag)) { continue; }
+                        string caseInvariantTag = tag.ToLowerInvariant();
+                        if (!instance.tagCommonness.ContainsKey(caseInvariantTag))
+                        {
+                            instance.tagCommonness[caseInvariantTag] = 1;
+                        }
+                        else
+                        {
+                            instance.tagCommonness[caseInvariantTag]++;
+                        }
+                    }
+                }
+                //populate the popularTags list with tags sorted by commonness
+                instance.popularTags.Clear();
+                foreach (KeyValuePair<string, int> tagCommonness in instance.tagCommonness)
+                {
+                    int i = 0;
+                    while (i < instance.popularTags.Count && 
+                            instance.tagCommonness[instance.popularTags[i]] > tagCommonness.Value)
+                    {
+                        i++;
+                    }
+                    instance.popularTags.Insert(i, tagCommonness.Key);
+                }
+
                 var nonSubscribedItems = q.Items.Where(it => !it.Subscribed && !it.Installed);
                 if (nonSubscribedItems.Count() > amount)
                 {
@@ -423,7 +473,7 @@ namespace Barotrauma.Steam
                 item.PreviewImage = null;
             }
 #endif
-
+            
             StartPublishItem(contentPackage, item);
         }
 

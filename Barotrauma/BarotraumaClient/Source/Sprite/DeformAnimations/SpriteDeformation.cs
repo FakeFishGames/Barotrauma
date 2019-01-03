@@ -37,6 +37,17 @@ namespace Barotrauma.SpriteDeformations
 
         public string Name => GetType().Name;
 
+        [Serialize(false, true)]
+        public bool UseMovementSine { get; set; }
+
+        /// <summary>
+        /// Only used if UseMovementSine is enabled. Multiplier for Pi.
+        /// </summary>
+        [Serialize(0f, true)]
+        public float SineOffset { get; set; }
+
+        public virtual float Frequency { get; set; } = 1;
+
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
             get;
@@ -78,6 +89,8 @@ namespace Barotrauma.SpriteDeformations
             Multiply,
             Override
         }
+
+        public virtual float Phase { get; set; }
 
         protected Vector2[,] Deformation { get; private set; }
 

@@ -2390,19 +2390,25 @@ namespace Barotrauma.Networking
             }
 
             Gender gender = Gender.Male;
+            Race race = Race.White;
             int headSpriteId = 0;
             try
             {
                 gender = message.ReadBoolean() ? Gender.Male : Gender.Female;
+                race = (Race)message.ReadByte();
                 headSpriteId = message.ReadByte();
             }
             catch (Exception e)
             {
-                gender = Gender.Male;
-                headSpriteId = 0;
-
+                //gender = Gender.Male;
+                //race = Race.White;
+                //headSpriteId = 0;
                 DebugConsole.Log("Received invalid characterinfo from \"" + sender.Name + "\"! { " + e.Message + " }");
             }
+            int hairIndex = message.ReadByte();
+            int beardIndex = message.ReadByte();
+            int moustacheIndex = message.ReadByte();
+            int faceAttachmentIndex = message.ReadByte();
 
             List<JobPrefab> jobPreferences = new List<JobPrefab>();
             int count = message.ReadByte();
@@ -2416,8 +2422,15 @@ namespace Barotrauma.Networking
 
             sender.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, sender.Name, gender)
             {
-                HeadSpriteId = headSpriteId
+                Race = race,
+                HeadSpriteId = headSpriteId,
+                HairIndex = hairIndex,
+                BeardIndex = beardIndex,
+                MoustacheIndex = moustacheIndex,
+                FaceAttachmentIndex = faceAttachmentIndex
             };
+            // Need to reload the attachments because the indices may have changed
+            sender.CharacterInfo.LoadHeadAttachments();
 
             //if the client didn't provide job preferences, we'll use the preferences that are randomly assigned in the Client constructor
             Debug.Assert(sender.JobPreferences.Count > 0);
