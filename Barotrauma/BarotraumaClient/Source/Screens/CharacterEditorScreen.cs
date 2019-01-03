@@ -3241,7 +3241,6 @@ namespace Barotrauma
                     }
                     if (editLimbs)
                     {
-                        // Draw the source rect widgets
                         int widgetSize = 8;
                         int halfSize = widgetSize / 2;
                         Vector2 stringOffset = new Vector2(5, 14);
@@ -3261,34 +3260,14 @@ namespace Barotrauma
                                     w.tooltip = $"Origin: {sprite.RelativeOrigin.FormatDoubleDecimal()}";
                                     w.MouseHeld += dTime =>
                                     {
-                                        int textureIndex = Textures.IndexOf(limb.ActiveSprite.Texture);
-                                        int height = 0;
-                                        foreach (var t in Textures)
-                                        {
-                                            if (Textures.IndexOf(t) < textureIndex)
-                                            {
-                                                height += t.Height;
-                                            }
-                                        }
-                                        int offset_y = spriteSheetOffsetY + (int)(height * spriteSheetZoom);
-                                        var spritePos = new Vector2(spriteSheetOffsetX, offset_y);
+                                        var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(limb));
                                         w.DrawPos = PlayerInput.MousePosition.Clamp(spritePos + GetTopLeft() * spriteSheetZoom, spritePos + GetBottomRight() * spriteSheetZoom);
                                         sprite.Origin = (w.DrawPos - spritePos - sprite.SourceRect.Location.ToVector2() * spriteSheetZoom) / spriteSheetZoom;
                                         w.tooltip = $"Origin: {sprite.RelativeOrigin.FormatDoubleDecimal()}";
                                     };
                                     w.PreDraw += (sb, dTime) =>
                                     {
-                                        int textureIndex = Textures.IndexOf(limb.ActiveSprite.Texture);
-                                        int height = 0;
-                                        foreach (var t in Textures)
-                                        {
-                                            if (Textures.IndexOf(t) < textureIndex)
-                                            {
-                                                height += t.Height;
-                                            }
-                                        }
-                                        int offset_y = spriteSheetOffsetY + (int)(height * spriteSheetZoom);
-                                        var spritePos = new Vector2(spriteSheetOffsetX, offset_y);
+                                        var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(limb));
                                         w.DrawPos = (spritePos + (sprite.Origin + sprite.SourceRect.Location.ToVector2()) * spriteSheetZoom)
                                             .Clamp(spritePos + GetTopLeft() * spriteSheetZoom, spritePos + GetBottomRight() * spriteSheetZoom);
                                     };
@@ -3305,19 +3284,9 @@ namespace Barotrauma
                                     {
                                         w.DrawPos = PlayerInput.MousePosition;
                                         var newRect = limb.ActiveSprite.SourceRect;
-                                        int textureIndex = Textures.IndexOf(limb.ActiveSprite.Texture);
-                                        int height = 0;
-                                        foreach (var t in Textures)
-                                        {
-                                            if (Textures.IndexOf(t) < textureIndex)
-                                            {
-                                                height += t.Height;
-                                            }
-                                        }
-                                        int offset_y = spriteSheetOffsetY + (int)(height * spriteSheetZoom);
                                         newRect.Location = new Point(
                                             (int)((PlayerInput.MousePosition.X + halfSize - spriteSheetOffsetX) / spriteSheetZoom),
-                                            (int)((PlayerInput.MousePosition.Y + halfSize - offset_y) / spriteSheetZoom));
+                                            (int)((PlayerInput.MousePosition.Y + halfSize - GetOffsetY(limb)) / spriteSheetZoom));
                                         limb.ActiveSprite.SourceRect = newRect;
 
                                         if (limb.DamagedSprite != null)
@@ -3356,26 +3325,16 @@ namespace Barotrauma
                                     {
                                         w.DrawPos = PlayerInput.MousePosition;
                                         var newRect = limb.ActiveSprite.SourceRect;
-                                        int width = (int)((PlayerInput.MousePosition.X - halfSize - (limb.ActiveSprite.SourceRect.X * spriteSheetZoom + spriteSheetOffsetX)) / spriteSheetZoom);
-                                        int textureIndex = Textures.IndexOf(limb.ActiveSprite.Texture);
-                                        int textureHeight = 0;
-                                        foreach (var t in Textures)
-                                        {
-                                            if (Textures.IndexOf(t) < textureIndex)
-                                            {
-                                                textureHeight += t.Height;
-                                            }
-                                        }
-                                        int offset_y = spriteSheetOffsetY + (int)((textureHeight + limb.ActiveSprite.SourceRect.Y) * spriteSheetZoom);
-                                        int height = (int)(PlayerInput.MousePosition.Y - halfSize - offset_y / spriteSheetZoom);
-
+                                        float offset_y = limb.ActiveSprite.SourceRect.Y * spriteSheetZoom + GetOffsetY(limb);
+                                        float offset_x = limb.ActiveSprite.SourceRect.X * spriteSheetZoom + spriteSheetOffsetX;
+                                        int width = (int)((PlayerInput.MousePosition.X - halfSize - offset_x) / spriteSheetZoom);
+                                        int height = (int)((PlayerInput.MousePosition.Y - halfSize - offset_y) / spriteSheetZoom);
                                         newRect.Size = new Point(width, height);
                                         limb.ActiveSprite.SourceRect = newRect;
                                         limb.ActiveSprite.size = new Vector2(width, height);
                                         // TODO: allow to lock the origin
                                         // Refresh the relative origin, so that the origin in pixels will be recalculated
                                         limb.ActiveSprite.RelativeOrigin = limb.ActiveSprite.RelativeOrigin;
-
                                         if (limb.DamagedSprite != null)
                                         {
                                             limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
@@ -3408,12 +3367,29 @@ namespace Barotrauma
                         }
                         else if (rect.Contains(PlayerInput.MousePosition) && GUI.MouseOn == null && Widget.selectedWidgets.None())
                         {
+                            // TODO: only one limb name should be displayed (needs to be done in a separate loop)
                             GUI.DrawString(spriteBatch, limbScreenPos + new Vector2(10, -10), limb.Name, Color.White, Color.Black * 0.5f);
                         }
                     }
                 }
                 offsetY += (int)(texture.Height * spriteSheetZoom);
             }
+
+            int GetTextureHeight(Limb limb)
+            {
+                int textureIndex = Textures.IndexOf(limb.ActiveSprite.Texture);
+                int height = 0;
+                foreach (var t in Textures)
+                {
+                    if (Textures.IndexOf(t) < textureIndex)
+                    {
+                        height += t.Height;
+                    }
+                }
+                return (int)(height * spriteSheetZoom);
+            }
+
+            int GetOffsetY(Limb limb) => spriteSheetOffsetY + GetTextureHeight(limb);
         }
 
         private void DrawSpritesheetJointEditor(SpriteBatch spriteBatch, float deltaTime, Limb limb, Vector2 limbScreenPos, float spriteRotation = 0)
