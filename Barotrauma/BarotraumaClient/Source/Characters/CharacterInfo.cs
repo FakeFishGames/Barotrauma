@@ -10,50 +10,69 @@ namespace Barotrauma
     {
         public GUIFrame CreateInfoFrame(GUIFrame frame)
         {
-            GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), frame.RectTransform, Anchor.Center), null);
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.7f), frame.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.1f) })
+            {
+                Stretch = true,
+                RelativeSpacing = 0.03f
+            };
 
-            new GUICustomComponent(new RectTransform(new Point(30, 30), paddedFrame.RectTransform), 
-                onDraw: (sb, component) => DrawIcon(sb, component.Rect.Center.ToVector2(), targetWidth: component.Rect.Width));
+            var headerArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.4f), paddedFrame.RectTransform), isHorizontal: true)
+            {
+                RelativeSpacing = 0.05f,
+                Stretch = true
+            };
 
-            ScalableFont font = frame.Rect.Width < 280 ? GUI.SmallFont : GUI.Font;
+            new GUICustomComponent(new RectTransform(new Vector2(0.25f, 1.0f), headerArea.RectTransform), 
+                onDraw: (sb, component) => DrawIcon(sb, component.Rect.Center.ToVector2(), targetAreaSize: component.Rect.Size.ToVector2()));
 
-            int x = 0, y = 0;
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x + 60, y) }, 
-                Name, font: font);            
-            y += 20;
+            ScalableFont font = paddedFrame.Rect.Width < 280 ? GUI.SmallFont : GUI.Font;
+
+            var headerTextArea = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 1.0f), headerArea.RectTransform))
+            {
+                RelativeSpacing = 0.05f,
+                Stretch = true
+            };
+
+            Color? nameColor = null;
+            if (Job != null) { nameColor = Job.Prefab.UIColor; }
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), headerTextArea.RectTransform),
+                Name, textColor: nameColor, font: GUI.LargeFont)
+            {
+                Padding = Vector4.Zero,
+                AutoScale = true
+            };
 
             if (Job != null)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x + 60, y) }, 
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), headerTextArea.RectTransform),
                     Job.Name, textColor: Job.Prefab.UIColor, font: font);
-                y += 25;
             }
 
             if (personalityTrait != null)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x + 60, y) },
-                    "Trait: " + personalityTrait.Name, font: font);
-                y += 25;
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), headerTextArea.RectTransform),
+                    TextManager.Get("PersonalityTrait") + ": " + personalityTrait.Name, font: font);
             }
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform), style: null);
 
             if (Job != null)
             {
                 var skills = Job.Skills;
                 skills.Sort((s1, s2) => -s1.Level.CompareTo(s2.Level));
 
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y) },
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
                     TextManager.Get("Skills") + ":", font: font);
                 
-                y += 20;
                 foreach (Skill skill in skills)
                 {
                     Color textColor = Color.White * (0.5f + skill.Level / 200.0f);
 
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y) },
+                    var skillName = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
                         TextManager.Get("SkillName." + skill.Identifier), textColor: textColor, font: font);
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(x, y) },
-                        ((int)skill.Level).ToString(), textColor: textColor, font: font, textAlignment: Alignment.TopRight);
-                    y += 20;
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), skillName.RectTransform),
+                        ((int)skill.Level).ToString(), textColor: textColor, font: font, textAlignment: Alignment.CenterRight);
                 }
             }
 
@@ -67,9 +86,12 @@ namespace Barotrauma
                 UserData = userData
             };
 
-            GUITextBlock textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(40, 0) }, text, font: GUI.SmallFont);
+            Color? textColor = null;
+            if (Job != null) { textColor = Job.Prefab.UIColor; }
+
+            GUITextBlock textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(40, 0) }, text, textColor: textColor, font: GUI.SmallFont);
             new GUICustomComponent(new RectTransform(new Point(frame.Rect.Height, frame.Rect.Height), frame.RectTransform, Anchor.CenterLeft) { IsFixedSize = false }, 
-                onDraw: (sb, component) => DrawIcon(sb, component.Rect.Center.ToVector2(), targetWidth: component.Rect.Width));
+                onDraw: (sb, component) => DrawIcon(sb, component.Rect.Center.ToVector2(), targetAreaSize: component.Rect.Size.ToVector2()));
             return frame;
         }
 
@@ -145,12 +167,12 @@ namespace Barotrauma
                 }
             }
         }
-
-        public void DrawIcon(SpriteBatch spriteBatch, Vector2 screenPos, float targetWidth)
+        
+        public void DrawIcon(SpriteBatch spriteBatch, Vector2 screenPos, Vector2 targetAreaSize)
         {
             if (HeadSprite != null)
             {
-                float scale = targetWidth / HeadSprite.size.X;
+                float scale = Math.Min(targetAreaSize.X / HeadSprite.size.X, targetAreaSize.Y / HeadSprite.size.Y);
                 HeadSprite.Draw(spriteBatch, screenPos, scale: scale);
                 if (AttachmentsSprites != null)
                 {
@@ -163,7 +185,7 @@ namespace Barotrauma
                 }
             }
         }
-
+        
         private void DrawAttachmentSprite(SpriteBatch spriteBatch, WearableSprite attachment, Sprite head, Vector2 drawPos, float scale, float depthStep, SpriteEffects spriteEffects = SpriteEffects.None)
         {
             if (attachment.InheritSourceRect)
