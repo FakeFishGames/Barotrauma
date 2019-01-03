@@ -438,6 +438,23 @@ namespace Barotrauma
                     throw new NotImplementedException();
             }
         }
+
+        public Vector2 GetSize()
+        {
+            switch (bodyShape)
+            {
+                case Shape.Capsule:
+                    return new Vector2(radius * 2, height + radius * 2);
+                case Shape.HorizontalCapsule:
+                    return new Vector2(width + radius * 2, radius * 2);
+                case Shape.Circle:
+                    return new Vector2(radius * 2);
+                case Shape.Rectangle:
+                    return new Vector2(width, height);
+                default:
+                    throw new NotImplementedException();
+            }
+        }
         
         public bool IsValidValue(float value, string valueName, float? minValue = null, float? maxValue = null)
         {
