@@ -3248,48 +3248,52 @@ namespace Barotrauma
                         var topLeft = rect.Location.ToVector2();
                         var topRight = new Vector2(topLeft.X + rect.Width, topLeft.Y);
                         var bottomRight = new Vector2(topRight.X, topRight.Y + rect.Height);
-                        bool isMouseOnRect = rect.Contains(PlayerInput.MousePosition);
                         if (selectedLimbs.Contains(limb))
                         {
-                            // Draw the sprite origins
-                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.White, width: 3);
-                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.White, width: 3);
-                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.Yellow);
-                            GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.Yellow);
-
-                            if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld() && isMouseOnRect && GUI.MouseOn == null && Widget.selectedWidgets.None())
+                            if (!lockSpriteOrigin)
                             {
-                                var input = scaledMouseSpeed / spriteSheetZoom;
-                                input.X *= character.AnimController.Dir;
-                                // Adjust the sprite origin
-                                origin += input;
                                 var sprite = limb.ActiveSprite;
-                                var sourceRect = sprite.SourceRect;
-                                var max = new Vector2(sourceRect.Width, sourceRect.Height);
-                                sprite.Origin = origin.Clamp(Vector2.Zero, max);
-                                if (limb.DamagedSprite != null)
+                                Vector2 GetTopLeft() => sprite.SourceRect.Location.ToVector2();
+                                Vector2 GetTopRight() => new Vector2(GetTopLeft().X + sprite.SourceRect.Width, GetTopLeft().Y);
+                                Vector2 GetBottomRight() => new Vector2(GetTopRight().X, GetTopRight().Y + sprite.SourceRect.Height);
+                                var originWidget = GetLimbEditWidget($"{limb.limbParams.ID}_origin", limb, widgetSize, Widget.Shape.Cross, initMethod: w =>
                                 {
-                                    limb.DamagedSprite.Origin = limb.ActiveSprite.Origin;
-                                }
-                                if (character.AnimController.IsFlipped)
-                                {
-                                    origin.X = Math.Abs(origin.X - sourceRect.Width);
-                                }
-                                var relativeOrigin = new Vector2(origin.X / sourceRect.Width, origin.Y / sourceRect.Height);
-                                TryUpdateLimbParam(limb, "origin", relativeOrigin);
-                                GUI.DrawString(spriteBatch, limbScreenPos + new Vector2(10, -10), relativeOrigin.FormatDoubleDecimal(), Color.Yellow, Color.Black * 0.5f);
-                                if (limbPairEditing)
-                                {
-                                    UpdateOtherLimbs(limb, otherLimb =>
+                                    w.tooltip = $"Origin: {sprite.RelativeOrigin.FormatDoubleDecimal()}";
+                                    w.MouseHeld += dTime =>
                                     {
-                                        otherLimb.ActiveSprite.Origin = sprite.Origin;
-                                        if (otherLimb.DamagedSprite != null)
+                                        int textureIndex = Textures.IndexOf(limb.ActiveSprite.Texture);
+                                        int height = 0;
+                                        foreach (var t in Textures)
                                         {
-                                            otherLimb.DamagedSprite.Origin = sprite.Origin;
+                                            if (Textures.IndexOf(t) < textureIndex)
+                                            {
+                                                height += t.Height;
+                                            }
                                         }
-                                        TryUpdateLimbParam(otherLimb, "origin", relativeOrigin);
-                                    });
-                                }
+                                        int offset_y = spriteSheetOffsetY + (int)(height * spriteSheetZoom);
+                                        var spritePos = new Vector2(spriteSheetOffsetX, offset_y);
+                                        w.DrawPos = PlayerInput.MousePosition.Clamp(spritePos + GetTopLeft() * spriteSheetZoom, spritePos + GetBottomRight() * spriteSheetZoom);
+                                        sprite.Origin = (w.DrawPos - spritePos - sprite.SourceRect.Location.ToVector2() * spriteSheetZoom) / spriteSheetZoom;
+                                        w.tooltip = $"Origin: {sprite.RelativeOrigin.FormatDoubleDecimal()}";
+                                    };
+                                    w.PreDraw += (sb, dTime) =>
+                                    {
+                                        int textureIndex = Textures.IndexOf(limb.ActiveSprite.Texture);
+                                        int height = 0;
+                                        foreach (var t in Textures)
+                                        {
+                                            if (Textures.IndexOf(t) < textureIndex)
+                                            {
+                                                height += t.Height;
+                                            }
+                                        }
+                                        int offset_y = spriteSheetOffsetY + (int)(height * spriteSheetZoom);
+                                        var spritePos = new Vector2(spriteSheetOffsetX, offset_y);
+                                        w.DrawPos = (spritePos + (sprite.Origin + sprite.SourceRect.Location.ToVector2()) * spriteSheetZoom)
+                                            .Clamp(spritePos + GetTopLeft() * spriteSheetZoom, spritePos + GetBottomRight() * spriteSheetZoom);
+                                    };
+                                });
+                                originWidget.Draw(spriteBatch, deltaTime);
                             }
                             if (!lockSpritePosition)
                             {
@@ -3402,7 +3406,7 @@ namespace Barotrauma
                                 sizeWidget.Draw(spriteBatch, deltaTime);
                             }
                         }
-                        else if (isMouseOnRect)
+                        else if (rect.Contains(PlayerInput.MousePosition) && GUI.MouseOn == null && Widget.selectedWidgets.None())
                         {
                             GUI.DrawString(spriteBatch, limbScreenPos + new Vector2(10, -10), limb.Name, Color.White, Color.Black * 0.5f);
                         }
