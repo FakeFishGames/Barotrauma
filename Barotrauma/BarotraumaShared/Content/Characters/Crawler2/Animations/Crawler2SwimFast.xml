@@ -15,4 +15,6 @@
   footangle="0"
   cyclespeed="5"
   animationtype="SwimFast"
-  footangles="10: -2.91298" />
+  footangles="10: -2.91298"
+  usesinemovement="False"
+  tailangle="NaN" />

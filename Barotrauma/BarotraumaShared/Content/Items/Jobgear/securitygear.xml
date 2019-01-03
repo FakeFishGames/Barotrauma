@@ -1,5 +1,44 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Items>
+    <Item
+    name="Security Officer's Uniform"
+    identifier="securityuniform"
+    category="Equipment"    
+    tags="smallitem"
+    fireproof="false"
+    cargocontaineridentifier="metalcrate"
+    description="Obey my authority!"
+    scale="0.5">
+
+    <Price locationtype="Military" buyprice="50" />
+    <Price locationtype="City" buyprice="50" />
+    <Price locationtype="Outpost" buyprice="100" />
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,320,64,64"/>
+    <Sprite texture="clothes.png" sourcerect="49,133,195,78" depth="0.6"/>
+
+    <Body width="52" height="17" density="30" />
+
+    <Wearable slots="Any,InnerClothes">
+      <sprite name="Security Officer's Uniform Torso" texture="NewHuman_SecOfficer_NO_SKIN_torso.png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      
+      <sprite name="Security Officer's Uniform Left Arm" texture="NewHuman_SecOfficer_NO_SKIN_torso.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Security Officer's Uniform Right Arm" texture="NewHuman_SecOfficer_NO_SKIN_torso.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+
+      <sprite name="Security Officer's Uniform Waist" texture="NewHuman_SecOfficer_legs.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Security Officer's Uniform Right Thigh" texture="NewHuman_SecOfficer_legs.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Security Officer's Uniform Left Thigh" texture="NewHuman_SecOfficer_legs.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+
+      <sprite name="Security Officer's Uniform Right Leg" texture="NewHuman_SecOfficer_legs.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Security Officer's Uniform Left Leg" texture="NewHuman_SecOfficer_legs.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+
+      <sprite name="Security Officer's Uniform Right Shoe" texture="NewHuman_SecOfficer_legs.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Security Officer's Uniform Left Shoe" texture="NewHuman_SecOfficer_legs.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      
+      <damagemodifier armorsector="0.0,360.0" afflictiontypes="bleeding" damagemultiplier="0.9" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictiontypes="burn" damagemultiplier="0.7" damagesound="LimbArmor" deflectprojectiles="true"/>
+    </Wearable>
+  </Item>  
   <Item name="Body Armor" identifier="bodyarmor" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="While the body armor won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.">
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="City" buyprice="200" />
@@ -9,14 +48,14 @@
       <Item identifier="ballisticfiber" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,256,64,64" />
-    <Sprite texture="securitygear.png" sourcerect="68,0,60,31" depth="0.6" origin="0.5,0.5" />
+    <Sprite texture="securitygear.png" sourcerect="68,0,60,31" depth="0.6" />
     <Body width="52" height="17" density="40" />
     <Wearable slots="Any,OuterClothes">
       <damagemodifier damagetype="Burn" armorsector="0.0,360.0" damagemultiplier="0.9" />
       <damagemodifier damagetype="Blunt" armorsector="0.0,360.0" damagemultiplier="0.3" bleedingmultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="true" />
       <damagemodifier damagetype="Slash" armorsector="0.0,360.0" damagemultiplier="0.1" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
-      <sprite texture="securitygear.png" limb="Torso" sourcerect="0,0,38,58" origin="0.52,0.48" depthlimb="Head" />
-      <sprite texture="securitygear.png" limb="RightArm" sourcerect="41,0,21,21" origin="0.5,1" />
+      <sprite texture="securitygear.png" limb="Torso" sourcerect="0,0,38,58" origin="0.52,0.48" />
+      <sprite texture="securitygear.png" limb="RightArm" sourcerect="41,0,21,21" origin="0.5,1.1" />
     </Wearable>
   </Item>
   <Item name="Ballistic Helmet" identifier="ballistichelmet" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="While the helmet won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.">
@@ -27,7 +66,7 @@
       <Item identifier="ballisticfiber" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,0,64,64" />
-    <Sprite texture="securitygear.png" sourcerect="40,26,30,27" depth="0.6" origin="0.5,0.5" />
+    <Sprite texture="securitygear.png" sourcerect="39,22,32,31" depth="0.6" />
     <Body radius="12" density="50" />
     <Wearable slots="Any,Head" armorvalue="20.0">
       <damagemodifier damagetype="Blunt" armorsector="0.0,360.0" damagemultiplier="0.2" bleedingmultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
@@ -43,11 +82,11 @@
       <Item identifier="steel" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,0,64,64" />
-    <Sprite texture="securitygear.png" sourcerect="0,59,30,23" depth="0.6" origin="0.5,0.5" />
+    <Sprite texture="securitygear.png" sourcerect="0,59,33,24" depth="0.6" />
     <Body width="30" height="12" density="30" />
     <Wearable slots="Any,RightHand+LeftHand">
-      <sprite texture="securitygear.png" limb="RightHand" sourcerect="32,62,16,16" origin="0.5,0" depth="0.01" />
-      <sprite texture="securitygear.png" limb="LeftHand" sourcerect="32,62,16,16" origin="0.5,0" depth="0.01" />
+      <sprite texture="securitygear.png" limb="RightHand" sourcerect="32,62,16,16" origin="0.5,-0.5" depth="0.01" />
+      <sprite texture="securitygear.png" limb="LeftHand" sourcerect="32,62,16,16" origin="0.5,-0.5" depth="0.01" />
       <StatusEffect type="OnWearing" target="Character" lockhands="true" setvalue="true" />
     </Wearable>
   </Item>

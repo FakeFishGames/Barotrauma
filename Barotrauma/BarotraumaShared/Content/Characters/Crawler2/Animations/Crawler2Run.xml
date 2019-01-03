@@ -1,13 +1,13 @@
 ﻿<CrawlerRun
-  movementspeed="3.816794"
+  movementspeed="5.024437"
   stepsize="0.778822,0.3536411"
   legtorque="0"
   colliderstandangle="90"
   flip="True"
-  headposition="0.6084577"
-  torsoposition="0.6989191"
-  headangle="33.94417"
-  torsoangle="-0.7290271"
+  headposition="0.7636754"
+  torsoposition="0.8132901"
+  headangle="16.72254"
+  torsoangle="352.9614"
   footmoveforce="8"
   torsomoveforce="15"
   torsotorque="150"
@@ -18,4 +18,6 @@
   cyclespeed="3.150937"
   animationtype="Run"
   foottorque="25"
-  footangles="10: -0.08004291" />
+  footangles="10: -0.08004291"
+  tailtorque="50"
+  tailangle="NaN" />

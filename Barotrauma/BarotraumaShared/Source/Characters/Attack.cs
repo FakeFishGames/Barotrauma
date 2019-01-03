@@ -1,9 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-
 
 namespace Barotrauma
 {    
@@ -11,6 +9,20 @@ namespace Barotrauma
     {
         Distance,
         Contact
+    }
+
+    public enum AttackContext
+    {
+        NotDefined,
+        Water,
+        Ground
+    }
+
+    public enum AttackTarget
+    {
+        Any,
+        Character,
+        Structure
     }
 
     struct AttackResult
@@ -46,73 +58,116 @@ namespace Barotrauma
         }
     }
     
-    partial class Attack
+    partial class Attack : ISerializableEntity
     {
-        [Serialize(HitDetection.Distance, false)]
+        public readonly XElement SourceElement;
+
+        [Serialize(AttackContext.NotDefined, true), Editable]
+        public AttackContext Context { get; private set; }
+
+        [Serialize(AttackTarget.Any, true), Editable]
+        public AttackTarget TargetType { get; private set; }
+
+        [Serialize(HitDetection.Distance, true), Editable]
         public HitDetection HitDetectionType { get; private set; }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
         public float Range { get; private set; }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
         public float DamageRange { get; set; }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, DecimalCount = 2)]
         public float Duration { get; private set; }
-        
-        [Serialize(0.0f, false)]
+
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
         public float StructureDamage { get; private set; }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float ItemDamage { get; private set; }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 30.0f)]
         public float Stun { get; private set; }
 
-        [Serialize(false, false)]
+        [Serialize(false, true), Editable]
         public bool OnlyHumans { get; private set; }
+
+        [Serialize("", true), Editable]
+        public string ApplyForceOnLimbs
+        {
+            get
+            {
+                return string.Join(", ", ForceOnLimbIndices);
+            }
+            set
+            {
+                ForceOnLimbIndices.Clear();
+                if (string.IsNullOrEmpty(value)) { return; }
+                foreach (string limbIndexStr in value.Split(','))
+                {
+                    if (int.TryParse(limbIndexStr.Trim(), out int limbIndex))
+                    {
+                        ForceOnLimbIndices.Add(limbIndex);
+                    }
+                }
+            }
+        }
 
         //force applied to the attacking limb (or limbs defined using ApplyForceOnLimbs)
         //the direction of the force is towards the target that's being attacked
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
         public float Force { get; private set; }
 
         //torque applied to the attacking limb
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
         public float Torque { get; private set; }
+
+        [Serialize(false, true), Editable]
+        public bool ApplyForcesOnlyOnce { get; private set; }
 
         //impulse applied to the target the attack hits
         //the direction of the impulse is from this limb towards the target (use negative values to pull the target closer)
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
         public float TargetImpulse { get; private set; }
 
         //impulse applied to the target, in world space coordinates (i.e. 0,-1 pushes the target downwards)
-        [Serialize("0.0, 0.0", false)]
+        [Serialize("0.0, 0.0", true), Editable]
         public Vector2 TargetImpulseWorld { get; private set; }
 
         //force applied to the target the attack hits 
         //the direction of the force is from this limb towards the target (use negative values to pull the target closer)
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, true), Editable(-1000.0f, 1000.0f)]
         public float TargetForce { get; private set; }
 
         //force applied to the target, in world space coordinates (i.e. 0,-1 pushes the target downwards)
-        [Serialize("0.0, 0.0", false)]
+        [Serialize("0.0, 0.0", true), Editable]
         public Vector2 TargetForceWorld { get; private set; }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float SeverLimbsProbability { get; set; }
 
-        [Serialize(0.0f, false)]
-        public float Priority { get; private set; }
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
+        public float StickChance { get; set; }
 
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
+        public float Priority { get; private set; }
+             
         public IEnumerable<StatusEffect> StatusEffects
         {
             get { return statusEffects; }
         }
 
+        public string Name => "Attack";
+
+        public Dictionary<string, SerializableProperty> SerializableProperties
+        {
+            get;
+            private set;
+        } = new Dictionary<string, SerializableProperty>();
+
         //the indices of the limbs Force is applied on 
         //(if none, force is applied only to the limb the attack is attached to)
-        public readonly List<int> ApplyForceOnLimbs;
+        public readonly List<int> ForceOnLimbIndices = new List<int>();
 
         public readonly List<Affliction> Afflictions = new List<Affliction>();
 
@@ -161,7 +216,8 @@ namespace Barotrauma
 
         public Attack(XElement element, string parentDebugName)
         {
-            SerializableProperty.DeserializeProperties(this, element);
+            SourceElement = element;
+            Deserialize();
 
             if (element.Attribute("damage") != null ||
                 element.Attribute("bluntdamage") != null ||
@@ -171,22 +227,9 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - Define damage as afflictions instead of using the damage attribute (e.g. <Affliction identifier=\"internaldamage\" strength=\"10\" />).");
             }
 
-            DamageRange = element.GetAttributeFloat("damagerange", Range);
+            DamageRange = element.GetAttributeFloat("damagerange", 0f);
 
             InitProjSpecific(element);
-
-            string limbIndicesStr = element.GetAttributeString("applyforceonlimbs", "");
-            if (!string.IsNullOrWhiteSpace(limbIndicesStr))
-            {
-                ApplyForceOnLimbs = new List<int>();
-                foreach (string limbIndexStr in limbIndicesStr.Split(','))
-                {
-                    if (int.TryParse(limbIndexStr, out int limbIndex))
-                    {
-                        ApplyForceOnLimbs.Add(limbIndex);
-                    }
-                }
-            }
 
             foreach (XElement subElement in element.Elements())
             {
@@ -229,6 +272,18 @@ namespace Barotrauma
             }
         }
         partial void InitProjSpecific(XElement element);
+
+        public void Serialize()
+        {
+            if (SourceElement == null) { return; }
+            SerializableProperty.SerializeProperties(this, SourceElement, true);
+        }
+
+        public void Deserialize()
+        {
+            if (SourceElement == null) { return; }
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, SourceElement);
+        }
         
         public AttackResult DoDamage(Character attacker, IDamageable target, Vector2 worldPosition, float deltaTime, bool playSound = true)
         {
@@ -314,5 +369,23 @@ namespace Barotrauma
         }
 
         partial void DamageParticles(float deltaTime, Vector2 worldPosition);
+
+        public bool IsValidContext(AttackContext context) => Context == context || Context == AttackContext.NotDefined;
+
+        public bool IsValidTarget(AttackTarget targetType) => TargetType == AttackTarget.Any || TargetType == targetType;
+
+        public bool IsValidTarget(Entity target)
+        {
+            switch (TargetType)
+            {
+                case AttackTarget.Character:
+                    return target is Character;
+                case AttackTarget.Structure:
+                    return target is Structure;
+                case AttackTarget.Any:
+                default:
+                    return true;
+            }
+        }
     }
 }

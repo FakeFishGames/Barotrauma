@@ -4,46 +4,90 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Items.Components;
+
+namespace Barotrauma
+{
+    public enum WearableType
+    {
+        Item,
+        Hair,
+        Beard,
+        Moustache,
+        FaceAttachment
+    }
+
+    class WearableSprite
+    {
+        public WearableType Type { get; private set; }
+        public Sprite Sprite { get; private set; }
+        public LimbType Limb { get; private set; }
+        public bool HideLimb { get; private set; }
+        public bool HideOtherWearables { get; private set; }
+        public bool InheritLimbDepth { get; private set; }
+        public bool InheritTextureScale { get; private set; }
+        public bool InheritOrigin { get; private set; }
+        public bool InheritSourceRect { get; private set; }
+        public LimbType DepthLimb { get; private set; }
+        public Wearable WearableComponent { get; private set; }
+        public string Sound { get; private set; }
+        public Point? SheetIndex { get; private set; }
+
+        public LightComponent LightComponent { get; set; }
+
+        public WearableSprite(XElement subElement, WearableType type)
+        {
+            Type = type;
+            Init(subElement, subElement.Attribute("texture").Value);
+            switch (type)
+            {
+                case WearableType.Hair:
+                case WearableType.Beard:
+                case WearableType.Moustache:
+                case WearableType.FaceAttachment:
+                    Limb = LimbType.Head;
+                    HideLimb = false;
+                    HideOtherWearables = false;
+                    InheritLimbDepth = true;
+                    InheritTextureScale = true;
+                    InheritOrigin = true;
+                    InheritSourceRect = true;
+                    break;
+            }
+        }
+
+        public WearableSprite(XElement subElement, Wearable item)
+        {
+            Type = WearableType.Item;
+            WearableComponent = item;
+            string texturePath = subElement.GetAttributeString("texture", string.Empty);
+            string path = texturePath.Contains("/") ? texturePath : $"{Path.GetDirectoryName(item.Item.Prefab.ConfigFile)}/{texturePath}";
+            Init(subElement, path);
+        }
+
+        private void Init(XElement subElement, string spritePath)
+        {
+            Sprite = new Sprite(subElement, "", spritePath);
+            Limb = (LimbType)Enum.Parse(typeof(LimbType), subElement.GetAttributeString("limb", "Head"), true);
+            HideLimb = subElement.GetAttributeBool("hidelimb", false);
+            HideOtherWearables = subElement.GetAttributeBool("hideotherwearables", false);
+            InheritLimbDepth = subElement.GetAttributeBool("inheritlimbdepth", true);
+            InheritTextureScale = subElement.GetAttributeBool("inherittexturescale", false);
+            InheritOrigin = subElement.GetAttributeBool("inheritorigin", false);
+            InheritSourceRect = subElement.GetAttributeBool("inheritsourcerect", false);
+            DepthLimb = (LimbType)Enum.Parse(typeof(LimbType), subElement.GetAttributeString("depthlimb", "None"), true);
+            Sound = subElement.GetAttributeString("sound", "");
+            var index = subElement.GetAttributePoint("sheetindex", new Point(-1, -1));
+            if (index.X > -1 && index.Y > -1)
+            {
+                SheetIndex = index;
+            }
+        }
+    }
+}
 
 namespace Barotrauma.Items.Components
 {
-    class WearableSprite
-    {
-        public readonly Sprite Sprite;
-        public readonly LimbType Limb;
-        public readonly bool HideLimb;
-        public readonly bool HideOtherWearables;
-        public readonly bool InheritLimbDepth;
-        public readonly bool InheritTextureScale;
-        public readonly bool InheritOrigin;
-        public readonly bool InheritSourceRect;
-        public readonly LimbType DepthLimb;
-
-        public LightComponent LightComponent;
-
-        public readonly Wearable WearableComponent;
-        public readonly string Sound;
-
-        public WearableSprite(Wearable item, XElement subElement)
-        {
-            WearableComponent = item;
-
-            string spritePath = subElement.Attribute("texture").Value;
-            spritePath = Path.GetDirectoryName(item.Item.Prefab.ConfigFile) + "/" + spritePath;
-            Sprite = new Sprite(subElement, "", spritePath);
-
-            Limb                    = (LimbType)Enum.Parse(typeof(LimbType), subElement.GetAttributeString("limb", "Head"), true);
-            HideLimb                = subElement.GetAttributeBool("hidelimb", false);
-            HideOtherWearables      = subElement.GetAttributeBool("hideotherwearables", false);
-            InheritLimbDepth        = subElement.GetAttributeBool("inheritlimbdepth", true);
-            InheritTextureScale     = subElement.GetAttributeBool("inherittexturescale", false);
-            InheritOrigin           = subElement.GetAttributeBool("inheritorigin", false);
-            InheritSourceRect       = subElement.GetAttributeBool("inheritsourcerect", false);
-            DepthLimb               = (LimbType)Enum.Parse(typeof(LimbType), subElement.GetAttributeString("depthlimb", "None"), true);
-            Sound                   = subElement.GetAttributeString("sound", "");
-        }
-    }
-
     class Wearable : Pickable
     {
         private WearableSprite[] wearableSprites;
@@ -84,7 +128,7 @@ namespace Barotrauma.Items.Components
                         limbType[i] = (LimbType)Enum.Parse(typeof(LimbType),
                             subElement.GetAttributeString("limb", "Head"), true);
 
-                        wearableSprites[i] = new WearableSprite(this, subElement);
+                        wearableSprites[i] = new WearableSprite(subElement, this);
 
                         foreach (XElement lightElement in subElement.Elements())
                         {

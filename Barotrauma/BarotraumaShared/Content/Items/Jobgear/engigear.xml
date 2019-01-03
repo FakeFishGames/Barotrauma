@@ -6,7 +6,8 @@
     tags="smallitem"
     fireproof="true"
     cargocontaineridentifier="metalcrate"
-    description="The fire-resistant fabric offers some protection against fires.">
+    description="The fire-resistant fabric offers some protection against fires."
+    scale="0.5">
 
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="Military" buyprice="50"/>
@@ -14,19 +15,28 @@
     <Price locationtype="Outpost" buyprice="100"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,320,64,64"/>
-    <Sprite texture="engigear.png" sourcerect="0,52,50,25" depth="0.6"/>
+    <Sprite texture="clothes.png" sourcerect="264,36,183,67" depth="0.6"/>
 
     <Body width="50" height="17" density="20"/>
 
     <Wearable slots="Any,InnerClothes">
-      <sprite texture="engigear.png" limb="Torso" sourcerect="0,0,32,51" origin="0.5,0.48" depth="0.01"/>
+      <sprite name="Engineer Torso" texture="NewHuman_Engineer_torso.png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      
+      <sprite name="Engineer Left Upper Arm" texture="NewHuman_Engineer_torso.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Engineer Right Upper Arm" texture="NewHuman_Engineer_torso.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
 
-      <sprite texture="engigear.png" limb="Waist" sourcerect="81,0,30,26" origin="0.5,0.45" hidelimb="true"/>
-      <sprite texture="engigear.png" limb="RightThigh" sourcerect="53,0,27,49" origin="0.5,0.5" depth="0.10" hidelimb="true"/>
-      <sprite texture="engigear.png" limb="LeftThigh" sourcerect="53,0,27,49" origin="0.5,0.5" depth="0.14" hidelimb="true"/>
+      <sprite name="Engineer Left Lower Arm" texture="NewHuman_Engineer_torso.png" limb="LeftHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Engineer Right Upper Arm" texture="NewHuman_Engineer_torso.png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
 
-      <sprite texture="engigear.png" limb="RightLeg" sourcerect="33,0,20,51" origin="0.5,0.5" depth="0.11" hidelimb="true"/>
-      <sprite texture="engigear.png" limb="LeftLeg" sourcerect="33,0,20,51" origin="0.5,0.5" depth="0.15" hidelimb="true"/>
+      <sprite name="Engineer Waist" texture="NewHuman_Engineer_legs.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Engineer Right Thigh" texture="NewHuman_Engineer_legs.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Engineer Left Thigh" texture="NewHuman_Engineer_legs.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+
+      <sprite name="Engineer Right Leg" texture="NewHuman_Engineer_legs.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Engineer Left Leg" texture="NewHuman_Engineer_legs.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+
+      <sprite name="Engineer Right Shoe" texture="NewHuman_Engineer_legs.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Engineer Left Shoe" texture="NewHuman_Engineer_legs.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
       
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="bleeding" damagemultiplier="0.9" damagesound="LimbArmor" deflectprojectiles="true"/>
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="burn" damagemultiplier="0.7" damagesound="LimbArmor" deflectprojectiles="true"/>
@@ -40,7 +50,8 @@
     tags="smallitem"
     fireproof="true"
     cargocontaineridentifier="metalcrate"
-    description="The fire-resistant fabric offers some protection against fires.">
+    description="The fire-resistant fabric offers some protection against fires."
+    scale="0.5">
 
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="Military" buyprice="50"/>
@@ -48,19 +59,28 @@
     <Price locationtype="Outpost" buyprice="100"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,320,64,64"/>
-    <Sprite texture="engigear.png" sourcerect="53,50,51,25" depth="0.6"/>
+    <Sprite texture="clothes.png" sourcerect="270,242,177,67" depth="0.6"/>
 
     <Body width="50" height="17" density="20"/>
 
     <Wearable slots="Any,InnerClothes">
-      <sprite texture="engigear.png" limb="Torso" sourcerect="0,77,32,51" origin="0.5,0.48" depth="0.01"/>
+      <sprite name="Mechanic Torso" texture="NewHuman_Mechanic_torso.png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
 
-      <sprite texture="engigear.png" limb="Waist" sourcerect="81,77,30,26" origin="0.5,0.45" hidelimb="true"/>
-      <sprite texture="engigear.png" limb="RightThigh" sourcerect="53,77,27,49" origin="0.5,0.5" depth="0.10" hidelimb="true"/>
-      <sprite texture="engigear.png" limb="LeftThigh" sourcerect="53,77,27,49" origin="0.5,0.5" depth="0.14" hidelimb="true"/>
+      <sprite name="Mechanic Left Upper Arm" texture="NewHuman_Mechanic_torso.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Mechanic Right Upper Arm" texture="NewHuman_Mechanic_torso.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
 
-      <sprite texture="engigear.png" limb="RightLeg" sourcerect="33,77,20,51" origin="0.5,0.5" depth="0.11" hidelimb="true"/>
-      <sprite texture="engigear.png" limb="LeftLeg" sourcerect="33,77,20,51" origin="0.5,0.5" depth="0.15" hidelimb="true"/>
+      <sprite name="Mechanic Left Lower Arm" texture="NewHuman_Mechanic_torso.png" limb="LeftHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Mechanic Right Lower Arm" texture="NewHuman_Mechanic_torso.png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+
+      <sprite name="Mechanic Waist" texture="NewHuman_Mechanic_legs.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Mechanic Right Thigh" texture="NewHuman_Mechanic_legs.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Mechanic Left Thigh" texture="NewHuman_Mechanic_legs.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+
+      <sprite name="Mechanic Right Leg" texture="NewHuman_Mechanic_legs.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Mechanic Left Leg" texture="NewHuman_Mechanic_legs.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+
+      <sprite name="Mechanic Right Shoe" texture="NewHuman_Mechanic_legs.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Mechanic Left Shoe" texture="NewHuman_Mechanic_legs.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
 
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="bleeding" damagemultiplier="0.9" damagesound="LimbArmor" deflectprojectiles="true"/>
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="burn" damagemultiplier="0.7" damagesound="LimbArmor" deflectprojectiles="true"/>

@@ -1,4 +1,8 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -8,8 +12,9 @@ namespace Barotrauma
         {
             GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), frame.RectTransform, Anchor.Center), null);
 
-            new GUIImage(new RectTransform(new Point(30, 30), paddedFrame.RectTransform), HeadSprite);
-            
+            new GUICustomComponent(new RectTransform(new Point(30, 30), paddedFrame.RectTransform), 
+                onDraw: (sb, component) => DrawIcon(sb, component.Rect.Center.ToVector2(), targetWidth: component.Rect.Width));
+
             ScalableFont font = frame.Rect.Width < 280 ? GUI.SmallFont : GUI.Font;
 
             int x = 0, y = 0;
@@ -52,7 +57,6 @@ namespace Barotrauma
                 }
             }
 
-
             return frame;
         }
 
@@ -64,8 +68,8 @@ namespace Barotrauma
             };
 
             GUITextBlock textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(40, 0) }, text, font: GUI.SmallFont);
-            new GUIImage(new RectTransform(new Point(frame.Rect.Height, frame.Rect.Height), frame.RectTransform, Anchor.CenterLeft) { IsFixedSize = false }, HeadSprite);            
-
+            new GUICustomComponent(new RectTransform(new Point(frame.Rect.Height, frame.Rect.Height), frame.RectTransform, Anchor.CenterLeft) { IsFixedSize = false }, 
+                onDraw: (sb, component) => DrawIcon(sb, component.Rect.Center.ToVector2(), targetWidth: component.Rect.Width));
             return frame;
         }
 
@@ -97,6 +101,100 @@ namespace Barotrauma
                         .Replace("[newlevel]", ((int)newLevel).ToString()),
                     Color.Green);
             }
+        }
+
+        partial void LoadAttachmentSprites()
+        {
+            if (attachmentSprites == null)
+            {
+                attachmentSprites = new List<WearableSprite>();
+            }
+            if (!IsAttachmentsLoaded)
+            {
+                LoadHeadAttachments();
+            }
+            FaceAttachment?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.FaceAttachment)));
+            BeardElement?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.Beard)));
+            MoustacheElement?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.Moustache)));
+            HairElement?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.Hair)));
+            // TODO load class specific wearables
+        }
+
+        public void DrawPortrait(SpriteBatch spriteBatch, Vector2 screenPos, float targetWidth)
+        {
+            float backgroundScale = 1;
+            if (PortraitBackground != null)
+            {
+                backgroundScale = targetWidth / PortraitBackground.size.X;
+                PortraitBackground.Draw(spriteBatch, screenPos, scale: backgroundScale);
+            }
+            if (Portrait != null)
+            {
+                // Scale down the head sprite 10%
+                float scale = targetWidth * 0.9f / Portrait.size.X;
+                Vector2 offset = Portrait.size * backgroundScale / 4;
+                Portrait.Draw(spriteBatch, screenPos + offset, scale: scale, spriteEffect: SpriteEffects.FlipHorizontally);
+                if (AttachmentsSprites != null)
+                {
+                    float depthStep = 0.000001f;
+                    foreach (var attachment in AttachmentsSprites)
+                    {
+                        DrawAttachmentSprite(spriteBatch, attachment, Portrait, screenPos + offset, scale, depthStep, SpriteEffects.FlipHorizontally);
+                        depthStep += 0.000001f;
+                    }
+                }
+            }
+        }
+
+        public void DrawIcon(SpriteBatch spriteBatch, Vector2 screenPos, float targetWidth)
+        {
+            if (HeadSprite != null)
+            {
+                float scale = targetWidth / HeadSprite.size.X;
+                HeadSprite.Draw(spriteBatch, screenPos, scale: scale);
+                if (AttachmentsSprites != null)
+                {
+                    float depthStep = 0.000001f;
+                    foreach (var attachment in AttachmentsSprites)
+                    {
+                        DrawAttachmentSprite(spriteBatch, attachment, HeadSprite, screenPos, scale, depthStep);
+                        depthStep += 0.000001f;
+                    }
+                }
+            }
+        }
+
+        private void DrawAttachmentSprite(SpriteBatch spriteBatch, WearableSprite attachment, Sprite head, Vector2 drawPos, float scale, float depthStep, SpriteEffects spriteEffects = SpriteEffects.None)
+        {
+            if (attachment.InheritSourceRect)
+            {
+                if (attachment.SheetIndex.HasValue)
+                {
+                    Point location = (head.SourceRect.Location + head.SourceRect.Size) * attachment.SheetIndex.Value;
+                    attachment.Sprite.SourceRect = new Rectangle(location, head.SourceRect.Size);
+                }
+                else
+                {
+                    attachment.Sprite.SourceRect = head.SourceRect;
+                }
+            }
+            Vector2 origin = attachment.Sprite.Origin;
+            if (attachment.InheritOrigin)
+            {
+                origin = head.Origin;
+                attachment.Sprite.Origin = origin;
+            }
+            else
+            {
+                origin = attachment.Sprite.Origin;
+            }
+            float depth = attachment.Sprite.Depth;
+            if (attachment.InheritLimbDepth)
+            {
+                depth = head.Depth - depthStep;
+
+            }
+            attachment.Sprite.Draw(spriteBatch, drawPos, Color.White, origin, rotate: 0, scale: scale, depth: depth, spriteEffect: spriteEffects);
         }
     }
 }
