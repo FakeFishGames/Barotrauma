@@ -312,7 +312,7 @@ namespace Barotrauma
             }
 
             Rectangle pathBorders = borders;
-            pathBorders.Inflate(-minWidth * 2, -minWidth * 2);
+            pathBorders.Inflate(-minWidth * 2, -minWidth);
 
             Debug.Assert(pathBorders.Width > 0 && pathBorders.Height > 0, "The size of the level's path area was negative.");
 
