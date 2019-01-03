@@ -29,7 +29,7 @@
   </Item>
   <Item name="Windowed Door" identifier="windoweddoor" tags="door" scale="0.5">
     <Sprite texture="door.png" sourcerect="0,0,98,416" depth="0.01" origin="0.5,0.5" />
-    <Door window="0,0,50,153" canbepicked="true" canbeselected="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="10.0">
+    <Door window="0,0,50,227" canbepicked="true" canbeselected="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="10.0">
       <RequiredItem identifier="crowbar" type="Equipped" />
       <Sprite texture="door.png" sourcerect="106,0,50,416" depth="0.05" origin="0.5,0.0" />
       <WeldedSprite texture="door.png" sourcerect="203,0,65,377" depth="0.0" origin="0.5,0.5" />
