@@ -40,7 +40,7 @@ namespace Barotrauma
         public static string Folder = "Data/ContentPackages/";
 
         public static List<ContentPackage> List = new List<ContentPackage>();
-
+        
         //these types of files are included in the MD5 hash calculation,
         //meaning that the players must have the exact same files to play together
         private static HashSet<ContentType> multiplayerIncompatibleContent = new HashSet<ContentType>
@@ -87,6 +87,11 @@ namespace Barotrauma
             set;
         }
 
+        public Version GameVersion
+        {
+            get; private set;
+        }
+
         public List<ContentFile> Files;
 
         public bool HasMultiplayerIncompatibleContent
@@ -115,6 +120,14 @@ namespace Barotrauma
             Name = doc.Root.GetAttributeString("name", "");
             CorePackage = doc.Root.GetAttributeBool("corepackage", false);
             SteamWorkshopUrl = doc.Root.GetAttributeString("steamworkshopurl", "");
+            GameVersion = new Version(doc.Root.GetAttributeString("gameversion", "0.0.0.0"));
+
+            //don't load the rest if the package is not compatible with this version
+            //(loading a package with unsupported content file types may cause unnecessary console errors)
+            if (!IsCompatible())
+            {
+                return;
+            }
 
             foreach (XElement subElement in doc.Root.Elements())
             {
@@ -132,13 +145,28 @@ namespace Barotrauma
             return Name;
         }
 
+        public bool IsCompatible()
+        {
+            //content package compatibility checks were added in 0.9
+            //0.9 is not compatible with older content packages
+            if (GameVersion < new Version(0, 9))
+            {
+                return false;
+            }
+
+            //do additional checks here if later versions add changes that break compatibility
+
+            return true;
+        }
+
         public static ContentPackage CreatePackage(string name, string path, bool corePackage)
         {
             ContentPackage newPackage = new ContentPackage()
             {
                 Name = name,
                 Path = path,
-                CorePackage = corePackage
+                CorePackage = corePackage,
+                GameVersion = GameMain.Version
             };
 
             return newPackage;
@@ -165,7 +193,8 @@ namespace Barotrauma
             doc.Add(new XElement("contentpackage",
                 new XAttribute("name", Name),
                 new XAttribute("path", Path),
-                new XAttribute("corepackage", CorePackage)));
+                new XAttribute("corepackage", CorePackage)),
+                new XAttribute("gameversion", GameVersion.ToString()));
 
             if (!string.IsNullOrEmpty(SteamWorkshopUrl))
             {
@@ -327,7 +356,7 @@ namespace Barotrauma
             foreach (string filePath in files)
             {
                 ContentPackage package = new ContentPackage(filePath);
-                List.Add(package);
+                List.Add(package);                               
             }
         }
     }

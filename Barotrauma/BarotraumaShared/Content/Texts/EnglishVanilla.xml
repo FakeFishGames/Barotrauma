@@ -195,6 +195,9 @@
   <RestartRequiredLabel>Restart required</RestartRequiredLabel>
   <RestartRequiredResolution>You need to restart the game for the resolution changes to take effect.</RestartRequiredResolution>
   <RestartRequiredLanguage>You need to restart the game for the language change to take effect.</RestartRequiredLanguage>
+  <ContentPackageNotFound>Content package "[packagepath]" not found.</ContentPackageNotFound>
+  <IncompatibleContentPackage>Content package "[packagename]" is not compatible with this version of Barotrauma. The package was made for the version [packageversion], your game version is [gameversion].</IncompatibleContentPackage>
+  <IncompatibleContentPackageUnknownVersion>Content package "[packagename]" is not compatible with this version of Barotrauma. The package was made for an unknown version, your game version is [gameversion].</IncompatibleContentPackageUnknownVersion>
 
   <InputType.Select>Select</InputType.Select>
   <InputType.Use>Use</InputType.Use>
