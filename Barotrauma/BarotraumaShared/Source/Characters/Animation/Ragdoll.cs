@@ -159,21 +159,17 @@ namespace Barotrauma
             private set;
         }
 
-        private Limb mainLimb;
         public Limb MainLimb
         {
             get
             {
+                Limb torso = GetLimb(LimbType.Torso);
+                Limb head = GetLimb(LimbType.Head);
+                var mainLimb = torso ?? head;
                 if (mainLimb == null)
                 {
-                    Limb torso = GetLimb(LimbType.Torso);
-                    Limb head = GetLimb(LimbType.Head);
-                    mainLimb = torso ?? head;
-                    if (mainLimb == null)
-                    {
-                        DebugConsole.ThrowError("No head or torso found. Using the first limb as the main limb.");
-                        mainLimb = Limbs.FirstOrDefault();
-                    }
+                    //DebugConsole.ThrowError("No head or torso found. Using the first limb as the main limb.");
+                    mainLimb = Limbs.FirstOrDefault();
                 }
                 return mainLimb;
             }
