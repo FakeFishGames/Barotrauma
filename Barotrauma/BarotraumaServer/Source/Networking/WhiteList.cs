@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -154,13 +155,20 @@ namespace Barotrauma.Networking
                 bool enabled = incMsg.ReadBoolean(); incMsg.ReadPadBits();
                 UInt16 removeCount = incMsg.ReadUInt16();
                 incMsg.Position += removeCount * 4 * 8;
+                UInt16 addCount = incMsg.ReadUInt16();
+                for (int i = 0; i < addCount; i++)
+                {
+                    incMsg.ReadString(); //skip name
+                    incMsg.ReadString(); //skip ip
+                }
                 return false;
             }
             else
             {
+                bool prevEnabled = Enabled;
                 bool enabled = incMsg.ReadBoolean(); incMsg.ReadPadBits();
                 Enabled = enabled;
-
+                
                 UInt16 removeCount = incMsg.ReadUInt16();
                 for (int i = 0; i < removeCount; i++)
                 {
@@ -178,9 +186,12 @@ namespace Barotrauma.Networking
                 {
                     string name = incMsg.ReadString();
                     string ip = incMsg.ReadString();
+
+                    GameServer.Log(c.Name + " added " + name + " to whitelist (" + ip + ")", ServerLog.MessageType.ConsoleUsage);
+                    AddToWhiteList(name, ip);
                 }
                 
-                return removeCount > 0 || addCount > 0;
+                return removeCount > 0 || addCount > 0 || prevEnabled!=enabled;
             }
         }
     }
