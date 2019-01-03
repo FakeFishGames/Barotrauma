@@ -49,13 +49,13 @@
   <Character file="Content/Characters/Charybdis/charybdis.xml" />
   <Character file="Content/Characters/Coelanth/coelanth.xml" />
   <Character file="Content/Characters/Crawler/crawler.xml" />
-  <Character file="Content/Characters/Crawler2/crawler2.xml" />
   <Character file="Content/Characters/Endworm/endworm.xml" />
   <Character file="Content/Characters/Fractalguardian/fractalguardian.xml" />
   <Character file="Content/Characters/Fractalguardian2/fractalguardian2.xml" /> 
   <Character file="Content/Characters/Human/human.xml" />
   <Character file="Content/Characters/Humanhusk/humanhusk.xml" />
   <Character file="Content/Characters/Husk/husk.xml" />
+  <Character file="Content/Characters/Legacycrawler/legacycrawler.xml" />
   <Character file="Content/Characters/Mantis/mantis.xml" />
   <Character file="Content/Characters/Mantis2/mantis2.xml" />
   <Character file="Content/Characters/Seamantis/seamantis.xml" />
