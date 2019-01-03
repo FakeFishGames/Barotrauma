@@ -176,7 +176,7 @@ namespace Barotrauma
 
         public float HeadLeanAmount => CurrentGroundedParams.HeadLeanAmount;
         public float TorsoLeanAmount => CurrentGroundedParams.TorsoLeanAmount;
-        public Vector2 FootMoveOffset => CurrentGroundedParams.FootMoveOffset * RagdollParams.JointScale;
+        public Vector2 FootMoveOffset => (Crouching ? CurrentGroundedParams.CrouchingFootMoveOffset : CurrentGroundedParams.FootMoveOffset) * RagdollParams.JointScale;
         public float LegBendTorque => CurrentGroundedParams.LegBendTorque * RagdollParams.JointScale;
         public Vector2 HandMoveOffset => CurrentGroundedParams.HandMoveOffset * RagdollParams.JointScale;
 
@@ -474,23 +474,16 @@ namespace Barotrauma
             Limb leftLeg = GetLimb(LimbType.LeftLeg);
             Limb rightLeg = GetLimb(LimbType.RightLeg);
             
-            float getUpForce = CurrentGroundedParams.GetUpForce / RagdollParams.JointScale;
             float walkCycleMultiplier = 1.0f;
             if (Stairs != null)
             {
                 //TODO: allow editing these values in character editor?
                 bool running = Math.Abs(targetMovement.X) > 2.0f;
-                TargetMovement = new Vector2(MathHelper.Clamp(TargetMovement.X, -1.7f, 1.7f), TargetMovement.Y);
-
-                if (running)
-                {
-                    TargetMovement *= 1.7f;
-                }
-                else
-                {
-                    walkCycleMultiplier *= 1.5f;
-                }
+                TargetMovement = new Vector2(MathHelper.Clamp(TargetMovement.X, -1.7f, 1.7f), TargetMovement.Y);                
+                walkCycleMultiplier *= 1.5f;                
             }
+
+            float getUpForce = CurrentGroundedParams.GetUpForce / RagdollParams.JointScale;
 
             Vector2 colliderPos = GetColliderBottom();
             if (Math.Abs(TargetMovement.X) > 1.0f)
@@ -735,18 +728,12 @@ namespace Barotrauma
                     if (!foot.Disabled)
                     {
                         MoveLimb(foot, footPos, Math.Abs(foot.SimPosition.X - footPos.X) * 100.0f, true);
+                        float angle = (MathHelper.PiOver2 + CurrentGroundedParams.FootAngleInRadians);
+                        if (Crouching && Math.Sign(stepSize.X * i) < 0) { angle -= MathHelper.PiOver2; }
+                        foot.body.SmoothRotate(Dir * angle, 50.0f);
                     }
                 }
-
-                if (!leftFoot.Disabled)
-                {
-                    leftFoot.body.SmoothRotate(Dir * (MathHelper.PiOver2 + CurrentGroundedParams.FootAngleInRadians), 50.0f);
-                }
-                if (!rightFoot.Disabled)
-                {
-                    rightFoot.body.SmoothRotate(Dir * (MathHelper.PiOver2 + CurrentGroundedParams.FootAngleInRadians), 50.0f);
-                }
-
+                
                 if (!rightHand.Disabled)
                 {
                     rightHand.body.SmoothRotate(0.0f, 5.0f);
@@ -1133,7 +1120,7 @@ namespace Barotrauma
                 bottomPos + WalkParams.TorsoPosition + movement.Y * 0.1f - ladderSimPos.Y);
 
             //prevent the hands from going above the top of the ladders
-            handPos.Y = Math.Min(-0.2f, handPos.Y);
+            handPos.Y = Math.Min(-0.5f, handPos.Y);
 
             MoveLimb(leftHand,
                 new Vector2(handPos.X,
@@ -1176,7 +1163,7 @@ namespace Barotrauma
                 ? Vector2.Zero : character.SelectedConstruction.Submarine.Velocity;
 
             Vector2 climbForce = new Vector2(0.0f, movement.Y + 0.3f) * movementFactor;
-            //if (climbForce.Y > 0.5f) climbForce.Y = Math.Max(climbForce.Y, 1.3f);
+            if (character.SimPosition.Y > ladderSimPos.Y) { climbForce.Y = 0.0f; }
 
             //apply forces to the collider to move the Character up/down
             Collider.ApplyForce((climbForce * 20.0f + subSpeed * 50.0f) * Collider.Mass);
