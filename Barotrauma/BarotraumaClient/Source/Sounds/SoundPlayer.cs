@@ -138,42 +138,49 @@ namespace Barotrauma
             {
                 yield return CoroutineStatus.Running;
 
-                switch (soundElement.Name.ToString().ToLowerInvariant())
+                try
                 {
-                    case "music":
-                        musicClips.Add(new BackgroundMusic(soundElement));
-                        break;
-                    case "splash":
-                        SplashSounds.Add(GameMain.SoundManager.LoadSound(soundElement, false));
-                        break;
-                    case "flow":
-                        FlowSounds.Add(GameMain.SoundManager.LoadSound(soundElement, false));
-                        break;
-                    case "waterambience":
-                        waterAmbiences.Add(GameMain.SoundManager.LoadSound(soundElement, false));
-                        break;
-                    case "damagesound":
-                        Sound damageSound = GameMain.SoundManager.LoadSound(soundElement, false);
-                        if (damageSound == null) continue;
+                    switch (soundElement.Name.ToString().ToLowerInvariant())
+                    {
+                        case "music":
+                            musicClips.Add(new BackgroundMusic(soundElement));
+                            break;
+                        case "splash":
+                            SplashSounds.Add(GameMain.SoundManager.LoadSound(soundElement, false));
+                            break;
+                        case "flow":
+                            FlowSounds.Add(GameMain.SoundManager.LoadSound(soundElement, false));
+                            break;
+                        case "waterambience":
+                            waterAmbiences.Add(GameMain.SoundManager.LoadSound(soundElement, false));
+                            break;
+                        case "damagesound":
+                            Sound damageSound = GameMain.SoundManager.LoadSound(soundElement, false);
+                            if (damageSound == null) continue;
                     
-                        string damageSoundType = soundElement.GetAttributeString("damagesoundtype", "None");
+                            string damageSoundType = soundElement.GetAttributeString("damagesoundtype", "None");
 
-                        damageSounds.Add(new DamageSound(
-                            damageSound, 
-                            soundElement.GetAttributeVector2("damagerange", new Vector2(0.0f, 100.0f)), 
-                            damageSoundType, 
-                            soundElement.GetAttributeString("requiredtag", "")));
+                            damageSounds.Add(new DamageSound(
+                                damageSound, 
+                                soundElement.GetAttributeVector2("damagerange", new Vector2(0.0f, 100.0f)), 
+                                damageSoundType, 
+                                soundElement.GetAttributeString("requiredtag", "")));
 
-                        break;
-                    default:
-                        Sound sound = GameMain.SoundManager.LoadSound(soundElement, false);
-                        if (sound != null)
-                        {
-                            miscSoundList.Add(new KeyValuePair<string, Sound>(soundElement.Name.ToString().ToLowerInvariant(), sound));
-                        }
+                            break;
+                        default:
+                            Sound sound = GameMain.SoundManager.LoadSound(soundElement, false);
+                            if (sound != null)
+                            {
+                                miscSoundList.Add(new KeyValuePair<string, Sound>(soundElement.Name.ToString().ToLowerInvariant(), sound));
+                            }
 
-                        break;
+                            break;
+                    }
                 }
+                catch (FileNotFoundException e)
+                {
+                    DebugConsole.ThrowError("Error while initializing SoundPlayer.", e);
+                }                
             }
 
             flowSoundChannels = new SoundChannel[FlowSounds.Count];
@@ -285,6 +292,8 @@ namespace Barotrauma
 
         private static void UpdateWaterFlowSounds(float deltaTime)
         {
+            if (FlowSounds.Count == 0) { return; }
+
             float[] targetFlowLeft = new float[FlowSounds.Count];
             float[] targetFlowRight = new float[FlowSounds.Count];
 
@@ -678,8 +687,8 @@ namespace Barotrauma
 
         public static void PlaySplashSound(Vector2 worldPosition, float strength)
         {
+            if (SplashSounds.Count == 0) { return; }
             int splashIndex = MathHelper.Clamp((int)(strength + Rand.Range(-2, 2)), 0, SplashSounds.Count - 1);
-
             float range = 800.0f;
             var channel = SplashSounds[splashIndex].Play(1.0f, range, worldPosition, muffle: ShouldMuffleSound(Character.Controlled, worldPosition, range, null));
         }

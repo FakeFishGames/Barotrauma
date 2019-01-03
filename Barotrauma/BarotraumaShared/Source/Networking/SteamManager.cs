@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Facepunch.Steamworks;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,10 +21,30 @@ namespace Barotrauma.Steam
         public const bool USE_STEAM = true;
 #endif
 
-        const uint AppID = 602960;
+        public const uint AppID = 602960;
         
         private Facepunch.Steamworks.Client client;
         private Server server;
+
+        private Dictionary<string, int> tagCommonness = new Dictionary<string, int>()
+        {
+            { "submarine", 10 },
+            { "item", 10 },
+            { "monster", 8 },
+            { "art", 8 },
+            { "mission", 8 },
+            { "environment", 5 }
+        };
+
+        private List<string> popularTags = new List<string>();
+        public static IEnumerable<string> PopularTags
+        {
+            get
+            {
+                if (instance == null || !instance.isInitialized) { return Enumerable.Empty<string>(); }
+                return instance.popularTags;
+            }
+        }
 
         private static SteamManager instance;
         public static SteamManager Instance
@@ -311,18 +332,34 @@ namespace Barotrauma.Steam
         #region Workshop
 
         public const string WorkshopItemStagingFolder = "NewWorkshopItem";
-        const string MetadataFileName = "metadata.xml";
-        const string PreviewImageName = "PreviewImage.png";
+        public const string WorkshopItemPreviewImageFolder = "Workshop";
+        public const string PreviewImageName = "PreviewImage.png";
+        private const string MetadataFileName = "metadata.xml";
+        private const string DefaultPreviewImagePath = "Content/DefaultWorkshopPreviewImage.png";
 
-        public static void GetWorkshopItems(Action<IList<Workshop.Item>> onItemsFound, List<string> requireTags = null)
+        private Sprite defaultPreviewImage;
+        public Sprite DefaultPreviewImage
+        {
+            get
+            {
+                if (defaultPreviewImage == null)
+                {
+                    defaultPreviewImage = new Sprite(DefaultPreviewImagePath, sourceRectangle: null);
+                }
+                return defaultPreviewImage;
+            }
+        }
+
+        public static void GetSubscribedWorkshopItems(Action<IList<Workshop.Item>> onItemsFound, List<string> requireTags = null)
         {
             if (instance == null || !instance.isInitialized) return;
 
             var query = instance.client.Workshop.CreateQuery();
             query.Order = Workshop.Order.RankedByTrend;
+            query.UserId = instance.client.SteamId;
+            query.UserQueryType = Workshop.UserQueryType.Subscribed;
             query.UploaderAppId = AppID;
             if (requireTags != null) query.RequireTags = requireTags;
-
             query.Run();
             query.OnResult += (Workshop.Query q) =>
             {
@@ -330,28 +367,84 @@ namespace Barotrauma.Steam
             };
         }
 
-        /// <summary>
-        /// Moves a workshop item from the download folder to the game folder and makes it usable in-game
-        /// </summary>
-        private void EnableWorkshopItem(Workshop.Item item)
+        public static void GetPopularWorkshopItems(Action<IList<Workshop.Item>> onItemsFound, int amount, List<string> requireTags = null)
         {
-            if (!item.Installed)
+            if (instance == null || !instance.isInitialized) return;
+
+            var query = instance.client.Workshop.CreateQuery();
+            query.Order = Workshop.Order.RankedByTrend;
+            query.RankedByTrendDays = 30;
+            query.UploaderAppId = AppID;
+            if (requireTags != null) query.RequireTags = requireTags;
+            query.Run();
+            query.OnResult += (Workshop.Query q) =>
             {
-                DebugConsole.ThrowError("Cannot enable workshop item \"" + item.Title + "\" because it has not been installed.");
-                return;
-            }
+                //count the number of each unique tag
+                foreach (var item in q.Items)
+                {
+                    foreach (string tag in item.Tags)
+                    {
+                        if (string.IsNullOrEmpty(tag)) { continue; }
+                        string caseInvariantTag = tag.ToLowerInvariant();
+                        if (!instance.tagCommonness.ContainsKey(caseInvariantTag))
+                        {
+                            instance.tagCommonness[caseInvariantTag] = 1;
+                        }
+                        else
+                        {
+                            instance.tagCommonness[caseInvariantTag]++;
+                        }
+                    }
+                }
+                //populate the popularTags list with tags sorted by commonness
+                instance.popularTags.Clear();
+                foreach (KeyValuePair<string, int> tagCommonness in instance.tagCommonness)
+                {
+                    int i = 0;
+                    while (i < instance.popularTags.Count && 
+                            instance.tagCommonness[instance.popularTags[i]] > tagCommonness.Value)
+                    {
+                        i++;
+                    }
+                    instance.popularTags.Insert(i, tagCommonness.Key);
+                }
+
+                var nonSubscribedItems = q.Items.Where(it => !it.Subscribed && !it.Installed);
+                if (nonSubscribedItems.Count() > amount)
+                {
+                    nonSubscribedItems = nonSubscribedItems.Take(amount);
+                }
+                onItemsFound?.Invoke(nonSubscribedItems.ToList());
+            };
         }
-        
+
+        public static void GetPublishedWorkshopItems(Action<IList<Workshop.Item>> onItemsFound, List<string> requireTags = null)
+        {
+            if (instance == null || !instance.isInitialized) return;
+
+            var query = instance.client.Workshop.CreateQuery();
+            query.Order = Workshop.Order.RankedByPublicationDate;
+            query.UserId = instance.client.SteamId;
+            query.UserQueryType = Workshop.UserQueryType.Published;
+            query.UploaderAppId = AppID;
+            if (requireTags != null) query.RequireTags = requireTags;
+            query.Run();
+            query.OnResult += (Workshop.Query q) =>
+            {
+                onItemsFound?.Invoke(q.Items);
+            };
+        }
+
         public static void SaveToWorkshop(Submarine sub)
         {
             if (instance == null || !instance.isInitialized) return;
-            
+
             Workshop.Editor item;
             ContentPackage contentPackage;
             try
             {
                 CreateWorkshopItemStaging(
-                    new List<ContentFile>() { new ContentFile(sub.FilePath, ContentType.None) }, 
+                    new List<ContentFile>() { new ContentFile(sub.FilePath, ContentType.None) },
                     out item, out contentPackage);
             }
             catch (Exception e)
@@ -364,7 +457,7 @@ namespace Barotrauma.Steam
             item.Title = sub.Name;
             item.Tags.Add("Submarine");
 
-            string subPreviewPath =  Path.GetFullPath(Path.Combine(item.Folder, PreviewImageName));
+            string subPreviewPath = Path.GetFullPath(Path.Combine(item.Folder, PreviewImageName));
 #if CLIENT
             try
             {
@@ -380,14 +473,14 @@ namespace Barotrauma.Steam
                 item.PreviewImage = null;
             }
 #endif
-
+            
             StartPublishItem(contentPackage, item);
         }
 
         /// <summary>
         /// Creates a new folder, copies the specified files there and creates a metadata file with install instructions.
         /// </summary>
-        public static void CreateWorkshopItemStaging(List<ContentFile> contentFiles, out Workshop.Editor item, out ContentPackage contentPackage)
+        public static void CreateWorkshopItemStaging(List<ContentFile> contentFiles, out Workshop.Editor itemEditor, out ContentPackage contentPackage)
         {
             var stagingFolder = new DirectoryInfo(WorkshopItemStagingFolder);
             if (stagingFolder.Exists)
@@ -398,13 +491,16 @@ namespace Barotrauma.Steam
             {
                 stagingFolder.Create();
             }
+            Directory.CreateDirectory(Path.Combine(WorkshopItemStagingFolder, "Submarines"));
+            Directory.CreateDirectory(Path.Combine(WorkshopItemStagingFolder, "Mods"));
+            Directory.CreateDirectory(Path.Combine(WorkshopItemStagingFolder, "Mods", "ModName"));
 
-            item = instance.client.Workshop.CreateItem(Workshop.ItemType.Community);
-            item.Visibility = Workshop.Editor.VisibilityType.Public;
-            item.WorkshopUploadAppId = AppID;
-            item.Folder = stagingFolder.FullName;
+            itemEditor = instance.client.Workshop.CreateItem(Workshop.ItemType.Community);
+            itemEditor.Visibility = Workshop.Editor.VisibilityType.Public;
+            itemEditor.WorkshopUploadAppId = AppID;
+            itemEditor.Folder = stagingFolder.FullName;
 
-            string previewImagePath = Path.GetFullPath(Path.Combine(item.Folder, PreviewImageName));
+            string previewImagePath = Path.GetFullPath(Path.Combine(itemEditor.Folder, PreviewImageName));
             File.Copy("Content/DefaultWorkshopPreviewImage.png", previewImagePath);
 
             //copy content files to the staging folder
@@ -421,13 +517,64 @@ namespace Barotrauma.Steam
             System.Diagnostics.Debug.Assert(copiedFilePaths.Count == contentFiles.Count);
 
             //create a new content package and include the copied files in it
-            contentPackage = ContentPackage.CreatePackage("ContentPackage", Path.Combine(item.Folder, MetadataFileName));
+            contentPackage = ContentPackage.CreatePackage("ContentPackage", Path.Combine(itemEditor.Folder, MetadataFileName), false);
             for (int i = 0; i < copiedFilePaths.Count; i++)
             {
                 contentPackage.AddFile(copiedFilePaths[i], contentFiles[i].Type);
             }
 
             contentPackage.Save(Path.Combine(stagingFolder.FullName, MetadataFileName));
+        }
+
+        /// <summary>
+        /// Creates a copy of the specified workshop item in the staging folder and an editor that can be used to edit and update the item
+        /// </summary>
+        public static void CreateWorkshopItemStaging(Workshop.Item existingItem, out Workshop.Editor itemEditor, out ContentPackage contentPackage)
+        {
+            if (!existingItem.Installed)
+            {
+                itemEditor = null;
+                contentPackage = null;
+                DebugConsole.ThrowError("Cannot edit the workshop item \"" + existingItem.Title + "\" because it has not been installed.");
+                return;
+            }
+
+            var stagingFolder = new DirectoryInfo(WorkshopItemStagingFolder);
+            if (stagingFolder.Exists)
+            {
+                SaveUtil.ClearFolder(stagingFolder.FullName);
+            }
+            else
+            {
+                stagingFolder.Create();
+            }
+
+            itemEditor = instance.client.Workshop.EditItem(existingItem.Id);
+            itemEditor.Visibility = Workshop.Editor.VisibilityType.Public;
+            itemEditor.Title = existingItem.Title;
+            itemEditor.Tags = existingItem.Tags.ToList();
+            itemEditor.Description = existingItem.Description;
+            itemEditor.WorkshopUploadAppId = AppID;
+            itemEditor.Folder = stagingFolder.FullName;
+
+            string previewImagePath = Path.GetFullPath(Path.Combine(itemEditor.Folder, PreviewImageName));
+            File.Copy("Content/DefaultWorkshopPreviewImage.png", previewImagePath);
+            
+            ContentPackage tempContentPackage = new ContentPackage(Path.Combine(existingItem.Directory.FullName, MetadataFileName));
+            string newContentPackagePath = Path.Combine(WorkshopItemStagingFolder, MetadataFileName);
+            File.Copy(tempContentPackage.Path, newContentPackagePath, overwrite: true);
+            contentPackage = new ContentPackage(newContentPackagePath);
+
+            foreach (ContentFile contentFile in tempContentPackage.Files)
+            {
+                string sourceFile = Path.Combine(existingItem.Directory.FullName, contentFile.Path);
+                if (!File.Exists(sourceFile)) { continue; }
+                //make sure the destination directory exists
+                string destinationPath = Path.Combine(SteamManager.WorkshopItemStagingFolder, contentFile.Path);
+                Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
+                File.Copy(sourceFile, destinationPath, overwrite: true);
+                contentPackage.AddFile(contentFile.Path, contentFile.Type);
+            }
         }
 
         public static void StartPublishItem(ContentPackage contentPackage, Workshop.Editor item)
@@ -487,31 +634,52 @@ namespace Barotrauma.Steam
         /// <summary>
         /// Enables a workshop item by moving it to the game folder.
         /// </summary>
-        public static bool EnableWorkShopItem(Workshop.Item item, bool allowFileOverwrite)
+        public static bool EnableWorkShopItem(Workshop.Item item, bool allowFileOverwrite, out string errorMsg)
         {
             if (!item.Installed)
             {
-                DebugConsole.ThrowError("Cannot enable workshop item \"" + item.Title + "\" because it has not been installed.");
+                errorMsg = TextManager.Get("WorkshopErrorInstallRequiredToEnable").Replace("[itemname]", item.Title);
+                DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
                 return false;
             }
             
-            string newContentPackagePath = GetWorkshopItemContentPackagePath(item);
             ContentPackage contentPackage = new ContentPackage(Path.Combine(item.Directory.FullName, MetadataFileName));
-            
+            string newContentPackagePath = GetWorkshopItemContentPackagePath(contentPackage);
+
+            var allPackageFiles = Directory.GetFiles(item.Directory.FullName, "*", SearchOption.AllDirectories);
+            List<string> nonContentFiles = new List<string>();
+            foreach (string file in allPackageFiles)
+            {
+                if (file == MetadataFileName) { continue; }
+                string relativePath = UpdaterUtil.GetRelativePath(file, item.Directory.FullName);
+                string fullPath = Path.GetFullPath(relativePath);
+                if (contentPackage.Files.Any(f => { string fp = Path.GetFullPath(f.Path); return fp == fullPath; })) { continue; }
+                if (ContentPackage.IsModFilePathAllowed(relativePath))
+                {
+                    nonContentFiles.Add(relativePath);
+                }
+            }
+                        
             if (!allowFileOverwrite)
             {
                 if (File.Exists(newContentPackagePath))
                 {
-                    DebugConsole.ThrowError("Cannot enable workshop item \"" + item.Title + "\". The file \"" + newContentPackagePath + "\" would be overwritten by the item.");
+                    errorMsg = TextManager.Get("WorkshopErrorOverwriteOnEnable")
+                        .Replace("[itemname]", item.Title)
+                        .Replace("[filename]", newContentPackagePath);                        
+                    DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
                     return false;
                 }
 
                 foreach (ContentFile contentFile in contentPackage.Files)
                 {
-                    if (File.Exists(contentFile.Path))
+                    string sourceFile = Path.Combine(item.Directory.FullName, contentFile.Path);
+                    if (File.Exists(sourceFile) && File.Exists(contentFile.Path))
                     {
-                        //TODO: ask the player if they want to let a workshop item overwrite existing files?
-                        DebugConsole.ThrowError("Cannot enable workshop item \"" + item.Title + "\". The file \"" + contentFile.Path + "\" would be overwritten by the item.");
+                        errorMsg = TextManager.Get("WorkshopErrorOverwriteOnEnable")
+                            .Replace("[itemname]", item.Title)
+                            .Replace("[filename]", contentFile.Path);
+                        DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
                         return false;
                     }
                 }
@@ -519,9 +687,9 @@ namespace Barotrauma.Steam
 
             try
             {
-                //we only need to create a new content package for the item if it contains content with a type other than None
+                //we only need to create a new content package for the item if it contains content with a type other than None or Submarine
                 //e.g. items that are just a sub file are just copied to the game folder
-                if (contentPackage.Files.Any(f => f.Type != ContentType.None))
+                if (contentPackage.Files.Any(f => f.Type != ContentType.None && f.Type != ContentType.Submarine))
                 {
                     File.Copy(contentPackage.Path, newContentPackagePath);
                 }
@@ -529,60 +697,133 @@ namespace Barotrauma.Steam
                 foreach (ContentFile contentFile in contentPackage.Files)
                 {
                     string sourceFile = Path.Combine(item.Directory.FullName, contentFile.Path);
+                    if (!File.Exists(sourceFile)) { continue; }
+                    if (!ContentPackage.IsModFilePathAllowed(contentFile))
+                    {
+                        DebugConsole.ThrowError(TextManager.Get("WorkshopErrorIllegalPathOnEnable").Replace("[filename]", contentFile.Path));
+                        continue;
+                    }
                     //make sure the destination directory exists
                     Directory.CreateDirectory(Path.GetDirectoryName(contentFile.Path));
                     File.Copy(sourceFile, contentFile.Path, overwrite: true);
                 }
+
+                foreach (string nonContentFile in nonContentFiles)
+                {
+                    string sourceFile = Path.Combine(item.Directory.FullName, nonContentFile);
+                    if (!File.Exists(sourceFile)) { continue; }
+                    if (!ContentPackage.IsModFilePathAllowed(nonContentFile))
+                    {
+                        DebugConsole.ThrowError(TextManager.Get("WorkshopErrorIllegalPathOnEnable").Replace("[filename]", nonContentFile));
+                        continue;
+                    }
+                    Directory.CreateDirectory(Path.GetDirectoryName(nonContentFile));
+                    File.Copy(sourceFile, nonContentFile, overwrite: true);
+                }
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Enabling the workshop item \"" + item.Title + "\" failed.", e);
+                errorMsg = TextManager.Get("WorkshopErrorEnableFailed").Replace("[itemname]", item.Title) + " " + e.Message;
+                DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
                 return false;
             }
 
-            var newPackage = ContentPackage.CreatePackage(item.Title, newContentPackagePath);
+            var newPackage = ContentPackage.CreatePackage(contentPackage.Name, newContentPackagePath, contentPackage.CorePackage);
+            newPackage.SteamWorkshopUrl = item.Url;
             ContentPackage.List.Add(newPackage);
-            GameMain.Config.SelectedContentPackages.Add(newPackage);
-
-            foreach (string tag in item.Tags)
+            if (newPackage.CorePackage)
             {
-                switch (tag)
-                {
-                    case "Submarine":
-                        Submarine.RefreshSavedSubs();
-                        break;
-                }
+                //if enabling a core package, disable all other core packages
+                GameMain.Config.SelectedContentPackages.RemoveWhere(cp => cp.CorePackage);
             }
-            
+            GameMain.Config.SelectedContentPackages.Add(newPackage);
+            GameMain.Config.Save();
+
+            if (item.Tags.Contains("Submarine") || newPackage.Files.Any(f => f.Type == ContentType.Submarine))
+            {
+                Submarine.RefreshSavedSubs();
+            }
+
+            errorMsg = "";
             return true;
         }
 
         /// <summary>
         /// Disables a workshop item by removing the files from the game folder.
         /// </summary>
-        public static bool DisableWorkShopItem(Workshop.Item item)
+        public static bool DisableWorkShopItem(Workshop.Item item, out string errorMsg)
         {
             if (!item.Installed)
             {
-                DebugConsole.ThrowError("Cannot disable workshop item \"" + item.Title + "\" because it has not been installed.");
+                errorMsg = "Cannot disable workshop item \"" + item.Title + "\" because it has not been installed.";
+                DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
                 return false;
             }
 
             ContentPackage contentPackage = new ContentPackage(Path.Combine(item.Directory.FullName, MetadataFileName));
+            string installedContentPackagePath = GetWorkshopItemContentPackagePath(contentPackage);
 
-            string installedContentPackagePath = GetWorkshopItemContentPackagePath(item);
-            if (File.Exists(installedContentPackagePath)) File.Delete(installedContentPackagePath);
+            var allPackageFiles = Directory.GetFiles(item.Directory.FullName, "*", SearchOption.AllDirectories);
+            List<string> nonContentFiles = new List<string>();
+            foreach (string file in allPackageFiles)
+            {
+                if (file == MetadataFileName) { continue; }
+                string relativePath = UpdaterUtil.GetRelativePath(file, item.Directory.FullName);
+                string fullPath = Path.GetFullPath(relativePath);
+                if (contentPackage.Files.Any(f => { string fp = Path.GetFullPath(f.Path); return fp == fullPath; })) { continue; }
+                if (ContentPackage.IsModFilePathAllowed(relativePath))
+                {
+                    nonContentFiles.Add(relativePath);
+                }
+            }
+            if (File.Exists(installedContentPackagePath)) { File.Delete(installedContentPackagePath); }
+
+            HashSet<string> directories = new HashSet<string>();
             try
             {
                 foreach (ContentFile contentFile in contentPackage.Files)
                 {
+                    if (!ContentPackage.IsModFilePathAllowed(contentFile))
+                    {
+                        //Workshop items are not allowed to add or modify files in the Content or Data folders;
+                        continue;
+                    }
+                    if (!File.Exists(contentFile.Path)) { continue; }
                     File.Delete(contentFile.Path);
+                    directories.Add(Path.GetDirectoryName(contentFile.Path));
                 }
+                foreach (string nonContentFile in nonContentFiles)
+                {
+                    if (!ContentPackage.IsModFilePathAllowed(nonContentFile))
+                    {
+                        //Workshop items are not allowed to add or modify files in the Content or Data folders;
+                        continue;
+                    }
+                    if (!File.Exists(nonContentFile)) { continue; }
+                    File.Delete(nonContentFile);
+                    directories.Add(Path.GetDirectoryName(nonContentFile));
+                }
+                
+                foreach (string directory in directories)
+                {
+                    if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory)) { continue; }
+                    if (Directory.GetFiles(directory, "*", SearchOption.AllDirectories).Count() == 0)
+                    {
+                        Directory.Delete(directory, recursive: true);
+                    }
+                }
+
+                ContentPackage.List.RemoveAll(cp => System.IO.Path.GetFullPath(cp.Path) == System.IO.Path.GetFullPath(installedContentPackagePath));
+                GameMain.Config.SelectedContentPackages.RemoveWhere(cp => !ContentPackage.List.Contains(cp));
+                GameMain.Config.Save();
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Disabling the workshop item \"" + item.Title + "\" failed.", e);
+                errorMsg = "Disabling the workshop item \"" + item.Title + "\" failed. "+e.Message;
+                DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
+                return false;
             }
+            errorMsg = "";
             return true;
         }
 
@@ -597,7 +838,13 @@ namespace Barotrauma.Steam
             }
 
             ContentPackage contentPackage = new ContentPackage(metaDataPath);
-            if (!File.Exists(GetWorkshopItemContentPackagePath(item))) return false;
+            //make sure the contentpackage file is present 
+            //(unless the package only contains submarine files, in which case we don't need a content package)
+            if (contentPackage.Files.Any(f => f.Type != ContentType.Submarine) &&
+                !File.Exists(GetWorkshopItemContentPackagePath(contentPackage)))
+            {
+                return false;
+            }
             foreach (ContentFile contentFile in contentPackage.Files)
             {
                 if (!File.Exists(contentFile.Path)) return false;
@@ -606,14 +853,14 @@ namespace Barotrauma.Steam
             return true;
         }
 
-        private static string GetWorkshopItemContentPackagePath(Workshop.Item item)
+        public static string GetWorkshopItemContentPackagePath(ContentPackage contentPackage)
         {
-            string fileName = item.Title + ".xml";
+            string fileName = contentPackage.Name + ".xml";
             string invalidChars = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
             foreach (char c in invalidChars) fileName = fileName.Replace(c.ToString(), "");
             return Path.Combine("Data", "ContentPackages", fileName);
         }
-        
+
         #endregion
 
         public static void Update(float deltaTime)

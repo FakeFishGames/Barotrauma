@@ -26,10 +26,10 @@ namespace Barotrauma.Items.Components
         private void UpdateConvexHulls()
         {
             doorRect = new Rectangle(
-                item.Rect.Center.X - (int)(doorSprite.size.X / 2),
-                item.Rect.Y - item.Rect.Height / 2 + (int)(doorSprite.size.Y / 2.0f),
-                (int)doorSprite.size.X,
-                (int)doorSprite.size.Y);
+                item.Rect.Center.X - (int)(doorSprite.size.X / 2 * item.Scale),
+                item.Rect.Y - item.Rect.Height / 2 + (int)(doorSprite.size.Y / 2.0f * item.Scale),
+                (int)(doorSprite.size.X * item.Scale),
+                (int)(doorSprite.size.Y * item.Scale));
 
             Rectangle rect = doorRect;
             if (isHorizontal)
@@ -43,7 +43,7 @@ namespace Barotrauma.Items.Components
 
             if (window.Height > 0 && window.Width > 0)
             {
-                rect.Height = -window.Y;
+                rect.Height = -(int)(window.Y * item.Scale);
 
                 rect.Y += (int)(doorRect.Height * openState);
                 rect.Height = Math.Max(rect.Height - (rect.Y - doorRect.Y), 0);
@@ -52,12 +52,11 @@ namespace Barotrauma.Items.Components
                 if (convexHull2 != null)
                 {
                     Rectangle rect2 = doorRect;
-                    rect2.Y = rect2.Y + window.Y - window.Height;
+                    rect2.Y = rect2.Y + (int)((window.Y * item.Scale - window.Height * item.Scale));
 
                     rect2.Y += (int)(doorRect.Height * openState);
                     rect2.Y = Math.Min(doorRect.Y, rect2.Y);
                     rect2.Height = rect2.Y - (doorRect.Y - (int)(doorRect.Height * (1.0f - openState)));
-                    //convexHull2.SetVertices(GetConvexHullCorners(rect2));
 
                     if (rect2.Height == 0)
                     {
@@ -101,7 +100,7 @@ namespace Barotrauma.Items.Components
                 weldSpritePos.Y = -weldSpritePos.Y;
 
                 weldedSprite.Draw(spriteBatch,
-                    weldSpritePos, Color.White * (stuck / 100.0f), 0.0f, 1.0f);
+                    weldSpritePos, Color.White * (stuck / 100.0f), scale: item.Scale);
             }
 
             if (openState == 1.0f)
@@ -122,7 +121,7 @@ namespace Barotrauma.Items.Components
                         new Rectangle((int) (doorSprite.SourceRect.X + doorSprite.size.X * openState),
                             (int) doorSprite.SourceRect.Y,
                             (int) (doorSprite.size.X * (1.0f - openState)), (int) doorSprite.size.Y),
-                        color, 0.0f, doorSprite.Origin, 1.0f, SpriteEffects.None, doorSprite.Depth);
+                        color, 0.0f, doorSprite.Origin, item.Scale, SpriteEffects.None, doorSprite.Depth);
                 }
 
                 if (brokenSprite != null && item.Health < item.Prefab.Health)
@@ -132,7 +131,7 @@ namespace Barotrauma.Items.Components
                     spriteBatch.Draw(brokenSprite.Texture, pos,
                         new Rectangle((int)(brokenSprite.SourceRect.X + brokenSprite.size.X * openState), brokenSprite.SourceRect.Y,
                             (int)(brokenSprite.size.X * (1.0f - openState)), (int)brokenSprite.size.Y),
-                        color * alpha, 0.0f, brokenSprite.Origin, scale, SpriteEffects.None,
+                        color * alpha, 0.0f, brokenSprite.Origin, scale * item.Scale, SpriteEffects.None,
                         brokenSprite.Depth);
                 }
             }
@@ -148,7 +147,7 @@ namespace Barotrauma.Items.Components
                         new Rectangle(doorSprite.SourceRect.X,
                             (int) (doorSprite.SourceRect.Y + doorSprite.size.Y * openState),
                             (int) doorSprite.size.X, (int) (doorSprite.size.Y * (1.0f - openState))),
-                        color, 0.0f, doorSprite.Origin, 1.0f, SpriteEffects.None, doorSprite.Depth);
+                        color, 0.0f, doorSprite.Origin, item.Scale, SpriteEffects.None, doorSprite.Depth);
                 }
 
                 if (brokenSprite != null && item.Health < item.Prefab.Health)
@@ -158,7 +157,7 @@ namespace Barotrauma.Items.Components
                     spriteBatch.Draw(brokenSprite.Texture, pos,
                         new Rectangle(brokenSprite.SourceRect.X, (int)(brokenSprite.SourceRect.Y + brokenSprite.size.Y * openState),
                             (int)brokenSprite.size.X, (int)(brokenSprite.size.Y * (1.0f - openState))),
-                        color * alpha, 0.0f, brokenSprite.Origin, scale, SpriteEffects.None, brokenSprite.Depth);
+                        color * alpha, 0.0f, brokenSprite.Origin, scale * item.Scale, SpriteEffects.None, brokenSprite.Depth);
                 }
 
             }

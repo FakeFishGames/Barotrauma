@@ -414,8 +414,8 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "contentpackage":
-                        string path = subElement.GetAttributeString("path", "");
-                        var matchingContentPackage = ContentPackage.List.Find(cp => cp.Path == path);
+                        string path = System.IO.Path.GetFullPath(subElement.GetAttributeString("path", ""));
+                        var matchingContentPackage = ContentPackage.List.Find(cp => System.IO.Path.GetFullPath(cp.Path) == path);
                         if (matchingContentPackage == null)
                         {
                             DebugConsole.ThrowError("Content package \"" + path + "\" not found!");

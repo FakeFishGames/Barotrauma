@@ -201,8 +201,16 @@ namespace Barotrauma
             if (element.Attribute("size") == null)
             {
                 sp.size = Vector2.Zero;
-                sp.size.X = element.GetAttributeFloat("width", 0.0f);
-                sp.size.Y = element.GetAttributeFloat("height", 0.0f);
+                if (element.Attribute("width") == null && element.Attribute("height") == null)
+                {
+                    sp.size.X = sp.sprite.SourceRect.Width * sp.Scale;
+                    sp.size.Y = sp.sprite.SourceRect.Height * sp.Scale;
+                }
+                else
+                {
+                    sp.size.X = element.GetAttributeFloat("width", 0.0f);
+                    sp.size.Y = element.GetAttributeFloat("height", 0.0f);
+                }
             }
 
             if (!category.HasFlag(MapEntityCategory.Legacy) && string.IsNullOrEmpty(sp.identifier))

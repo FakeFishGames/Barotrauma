@@ -371,7 +371,7 @@ namespace Barotrauma
             var serverContent = serverFrame.Children.First();
             serverContent.ClearChildren();
 
-                var compatibleBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[0], 0.5f), serverContent.RectTransform, Anchor.Center), label: "", style: "GUIServerListCompatibleTickBox")
+            var compatibleBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[0], 0.5f), serverContent.RectTransform, Anchor.Center), label: "", style: "GUIServerListCompatibleTickBox")
             {
                 Selected =
                     serverInfo.GameVersion == GameMain.Version.ToString() &&

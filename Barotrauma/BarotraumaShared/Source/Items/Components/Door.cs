@@ -111,10 +111,12 @@ namespace Barotrauma.Items.Components
                     rect.Width += 10;
                 }
 
-                linkedGap = new Gap(rect, !isHorizontal, Item.Submarine);
-                linkedGap.Submarine = item.Submarine;
-                linkedGap.PassAmbientLight = window != Rectangle.Empty;
-                linkedGap.Open = openState;
+                linkedGap = new Gap(rect, !isHorizontal, Item.Submarine)
+                {
+                    Submarine = item.Submarine,
+                    PassAmbientLight = window != Rectangle.Empty,
+                    Open = openState
+                };
                 item.linkedTo.Add(linkedGap);
                 createdNewGap = true;
                 return linkedGap;
@@ -187,24 +189,25 @@ namespace Barotrauma.Items.Components
             }
 
             doorRect = new Rectangle(
-                item.Rect.Center.X - (int)(doorSprite.size.X / 2),
-                item.Rect.Y - item.Rect.Height/2 + (int)(doorSprite.size.Y / 2.0f),
-                (int)doorSprite.size.X,
-                (int)doorSprite.size.Y);
+                item.Rect.Center.X - (int)(doorSprite.size.X / 2 * item.Scale),
+                item.Rect.Y - item.Rect.Height/2 + (int)(doorSprite.size.Y / 2.0f * item.Scale),
+                (int)(doorSprite.size.X * item.Scale),
+                (int)(doorSprite.size.Y * item.Scale));
 
             body = new PhysicsBody(
                 ConvertUnits.ToSimUnits(Math.Max(doorRect.Width, 1)),
                 ConvertUnits.ToSimUnits(Math.Max(doorRect.Height, 1)),
                 0.0f,
-                1.5f);
-
-            body.UserData = item;
-            body.CollisionCategories = Physics.CollisionWall;
-            body.BodyType = BodyType.Static;
+                1.5f)
+            {
+                UserData = item,
+                CollisionCategories = Physics.CollisionWall,
+                BodyType = BodyType.Static,
+                Friction = 0.5f
+            };
             body.SetTransform(
                 ConvertUnits.ToSimUnits(new Vector2(doorRect.Center.X, doorRect.Y - doorRect.Height / 2)),
                 0.0f);
-            body.Friction = 0.5f;
             
             IsActive = true;
         }
@@ -382,8 +385,8 @@ namespace Barotrauma.Items.Components
             Vector2 simPos = ConvertUnits.ToSimUnits(new Vector2(item.Rect.X, item.Rect.Y));
 
             Vector2 currSize = isHorizontal ?
-                new Vector2(item.Rect.Width * (1.0f - openState), doorSprite.size.Y) :
-                new Vector2(doorSprite.size.X, item.Rect.Height * (1.0f - openState));
+                new Vector2(item.Rect.Width * (1.0f - openState), doorSprite.size.Y * item.Scale) :
+                new Vector2(doorSprite.size.X * item.Scale, item.Rect.Height * (1.0f - openState));
 
             Vector2 simSize = ConvertUnits.ToSimUnits(currSize);
 
