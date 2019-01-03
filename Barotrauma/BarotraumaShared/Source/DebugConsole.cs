@@ -2127,7 +2127,7 @@ namespace Barotrauma
                     }
                 }
 
-                SteamManager.GetWorkshopItems(itemsReceived);
+                SteamManager.GetSubscribedWorkshopItems(itemsReceived);
             },
             null, null));
 

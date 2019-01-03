@@ -258,6 +258,7 @@ namespace Barotrauma
                 {
                     ChangeSliderText(scrollBar, scroll);
                     HUDScale = MathHelper.Lerp(MinHUDScale, MaxHUDScale, scroll);
+                    UnsavedSettings = true;
                     OnHUDScaleChanged?.Invoke();
                     return true;
                 },
@@ -277,6 +278,7 @@ namespace Barotrauma
                 {
                     ChangeSliderText(scrollBar, scroll);
                     InventoryScale = MathHelper.Lerp(MinInventoryScale, MaxInventoryScale, scroll);
+                    UnsavedSettings = true;
                     return true;
                 },
                 Step = 0.05f
@@ -478,6 +480,7 @@ namespace Barotrauma
                     //core packages cannot be deselected, only switched by selecting another core package
                     new GUIMessageBox(TextManager.Get("Warning"), TextManager.Get("CorePackageRequiredWarning"));
                     tickBox.Selected = true;
+                    return true;
                 }
             }
             else
@@ -491,6 +494,7 @@ namespace Barotrauma
                     SelectedContentPackages.Remove(contentPackage);
                 }
             }
+            UnsavedSettings = true;
             return true;
         }
 

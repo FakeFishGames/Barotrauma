@@ -1,12 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Door" identifier="door" tags="door">
-    <Sprite texture="door.png" sourcerect="1,0,48,208" depth="0.01" origin="0.5,0.5" />
+  <Item 
+    name="Door" identifier="door" tags="door" scale="0.5">
+    <Sprite texture="door.png" sourcerect="0,0,98,416" depth="0.01" origin="0.5,0.5" />
     <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="10.0">
       <RequiredItem identifier="crowbar" type="Equipped" />
-      <Sprite texture="door.png" sourcerect="80,0,19,208" depth="0.05" origin="0.5,0.0" />
-      <WeldedSprite texture="door.png" sourcerect="99,0,32,188" depth="0.0" origin="0.5,0.5" />
-      <BrokenSprite texture="door.png" sourcerect="133,0,58,208" depth="0.051" origin="0.5,0.0" scale="true" />
+      <Sprite texture="door.png" sourcerect="158,0,42,416" depth="0.05" origin="0.5,0.0" />
+      <WeldedSprite texture="door.png" sourcerect="203,0,65,377" depth="0.0" origin="0.5,0.5" />
+      <BrokenSprite texture="door.png" sourcerect="271,0,121,416" depth="0.051" origin="0.5,0.0" scale="true" />
       <sound file="Content/Items/Door/door.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0" />
       <sound file="Content/Items/Door/doorBreak1.ogg" type="OnBroken" selectionmode="Random" range="3000" />
@@ -26,13 +27,13 @@
       <output name="state_out" />
     </ConnectionPanel>
   </Item>
-  <Item name="Windowed Door" identifier="windoweddoor" tags="door">
-    <Sprite texture="door.png" sourcerect="1,0,48,208" depth="0.01" origin="0.5,0.5" />
-    <Door window="0,0,10,107" canbepicked="true" canbeselected="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="10.0">
+  <Item name="Windowed Door" identifier="windoweddoor" tags="door" scale="0.5">
+    <Sprite texture="door.png" sourcerect="0,0,98,416" depth="0.01" origin="0.5,0.5" />
+    <Door window="0,0,50,227" canbepicked="true" canbeselected="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="10.0">
       <RequiredItem identifier="crowbar" type="Equipped" />
-      <Sprite texture="door.png" sourcerect="56,0,19,208" depth="0.05" origin="0.5,0.0" />
-      <WeldedSprite texture="door.png" sourcerect="9,0,32,188" depth="0.0" origin="0.5,0.5" />
-      <BrokenSprite texture="door.png" sourcerect="192,0,40,208" depth="0.051" origin="0.5,0.0" scale="true" />
+      <Sprite texture="door.png" sourcerect="106,0,50,416" depth="0.05" origin="0.5,0.0" />
+      <WeldedSprite texture="door.png" sourcerect="203,0,65,377" depth="0.0" origin="0.5,0.5" />
+      <BrokenSprite texture="door.png" sourcerect="392,0,120,416" depth="0.051" origin="0.5,0.0" scale="true" />
       <sound file="Content/Items/Door/door.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0" />
       <sound file="Content/Items/Door/doorBreak1.ogg" type="OnBroken" selectionmode="Random" range="3000" />
@@ -52,13 +53,13 @@
       <output name="state_out" />
     </ConnectionPanel>
   </Item>
-  <Item name="Hatch" identifier="hatch" allowedlinks="gap, hull" tags="door">
-    <Sprite texture="hatch.png" sourcerect="0,0,128,49" depth="0.01" origin="0.5,0.5" />
+  <Item name="Hatch" identifier="hatch" allowedlinks="gap, hull" tags="door" scale="0.5">
+    <Sprite texture="hatch.png" sourcerect="0,0,256,98" depth="0.01" origin="0.5,0.5" />
     <Door canbeselected="true" canbepicked="true" horizontal="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="10.0">
       <RequiredItem identifier="crowbar" type="Equipped" />
-      <Sprite texture="hatch.png" sourcerect="128,0,128,19" depth="0.05" origin="0.0,0.5" />
-      <WeldedSprite texture="hatch.png" sourcerect="0,56,108,33" depth="0.0" origin="0.5,0.5" />
-      <BrokenSprite texture="hatch.png" sourcerect="128,21,128,58" depth="0.051" origin="0.0,0.5" scale="true" />
+      <Sprite texture="hatch.png" sourcerect="256,0,256,38" depth="0.05" origin="0.0,0.5" />
+      <WeldedSprite texture="hatch.png" sourcerect="0,100,227,75" depth="0.0" origin="0.5,0.5" />
+      <BrokenSprite texture="hatch.png" sourcerect="256,45,256,114" depth="0.051" origin="0.0,0.5" scale="true" />
       <sound file="Content/Items/Door/door.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0" />
       <sound file="Content/Items/Door/doorBreak1.ogg" type="OnBroken" selectionmode="Random" range="3000" />

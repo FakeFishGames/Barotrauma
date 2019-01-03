@@ -373,7 +373,7 @@ namespace Barotrauma
         yield return CoroutineStatus.Running;
 
             ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
-            TitleScreen.LoadState = 30.0f;
+            TitleScreen.LoadState = 25.0f;
         yield return CoroutineStatus.Running;
 
             JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
@@ -386,15 +386,20 @@ namespace Barotrauma
             NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
 
             ItemAssemblyPrefab.LoadAll();
-            TitleScreen.LoadState = 35.0f;
+            TitleScreen.LoadState = 30.0f;
         yield return CoroutineStatus.Running;
 
             Debug.WriteLine("sounds");
-            CoroutineManager.StartCoroutine(SoundPlayer.Init());
+            var soundLoadingCoroutine = CoroutineManager.StartCoroutine(SoundPlayer.Init());
 
             int i = 0;
             while (!SoundPlayer.Initialized)
             {
+                if (soundLoadingCoroutine.Exception != null)
+                {
+                    throw soundLoadingCoroutine.Exception;
+                }
+
                 i++;
                 TitleScreen.LoadState = SoundPlayer.SoundCount == 0 ? 
                     30.0f :
