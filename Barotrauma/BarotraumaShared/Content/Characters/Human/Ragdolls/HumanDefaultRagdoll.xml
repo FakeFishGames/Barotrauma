@@ -72,10 +72,10 @@
   <joint limb1="4" limb1anchor="0.931749,-15.46985" limb2="5" limb2anchor="0.07820337,12.94498" lowerlimit="5" upperlimit="170" canbesevered="True" name="Joint 4 - 5" limitenabled="True" stiffness="0.25" />
   <!-- body to left leg -->
   <joint limb1="12" limb1anchor="1.803198,-6.885391" limb2="6" limb2anchor="-0.8503575,18.79904" lowerlimit="-30" upperlimit="107.245" canbesevered="True" name="Joint 12 - 6" limitenabled="True" stiffness="0.25" />
-  <joint limb1="6" limb1anchor="-2.659554,-16.87968" limb2="7" limb2anchor="0.1114249,13.57194" lowerlimit="-120" upperlimit="0" canbesevered="True" name="Joint 6 - 7" limitenabled="True" stiffness="0.25" />
+  <joint limb1="6" limb1anchor="-2.659554,-16.87968" limb2="7" limb2anchor="0.1114249,13.57194" lowerlimit="-120" upperlimit="-5" canbesevered="True" name="Joint 6 - 7" limitenabled="True" stiffness="0.25" />
   <joint limb1="7" limb1anchor="-1.347388,-15.52455" limb2="8" limb2anchor="6.409738,7.088852" lowerlimit="20" upperlimit="90" canbesevered="True" name="Joint 7 - 8" limitenabled="True" stiffness="0.25" />
   <!-- body to right leg -->
   <joint limb1="12" limb1anchor="0.6738557,-6.158801" limb2="9" limb2anchor="-0.8503575,18.79904" lowerlimit="-30" upperlimit="120" canbesevered="True" name="Joint 12 - 9" limitenabled="True" stiffness="0.25" />
-  <joint limb1="9" limb1anchor="-2.659554,-16.87968" limb2="10" limb2anchor="0.1114249,13.57194" lowerlimit="-120" upperlimit="0" canbesevered="True" name="Joint 9 - 10" limitenabled="True" stiffness="0.25" />
+  <joint limb1="9" limb1anchor="-2.659554,-16.87968" limb2="10" limb2anchor="0.1114249,13.57194" lowerlimit="-120" upperlimit="-5" canbesevered="True" name="Joint 9 - 10" limitenabled="True" stiffness="0.25" />
   <joint limb1="10" limb1anchor="-1.347388,-15.52455" limb2="11" limb2anchor="6.409738,7.088852" lowerlimit="20" upperlimit="90" canbesevered="True" name="Joint 10 - 11" limitenabled="True" stiffness="0.25" />
 </Ragdoll>

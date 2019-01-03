@@ -125,6 +125,9 @@ namespace Barotrauma
         [Serialize("0.0, 0.0", true), Editable(DecimalCount = 2, ToolTip = "Added to the calculated foot positions, e.g. a value of {-1.0, 0.0f} would make the character \"drag\" their feet one unit behind them.")]
         public Vector2 FootMoveOffset { get; set; }
 
+        [Serialize("0.0, 0.0", true), Editable(DecimalCount = 2, ToolTip = "Added to the calculated foot positions, e.g. a value of {-1.0, 0.0f} would make the character \"drag\" their feet one unit behind them.")]
+        public Vector2 CrouchingFootMoveOffset { get; set; }
+
         [Serialize(10.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 100, ToolTip = "How much torque is used to bend the characters legs when taking a step.")]
         public float LegBendTorque { get; set; }
 
