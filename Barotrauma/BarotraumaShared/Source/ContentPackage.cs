@@ -89,7 +89,7 @@ namespace Barotrauma
 
         public Version GameVersion
         {
-            get; private set;
+            get; set;
         }
 
         public List<ContentFile> Files;
@@ -121,20 +121,24 @@ namespace Barotrauma
             CorePackage = doc.Root.GetAttributeBool("corepackage", false);
             SteamWorkshopUrl = doc.Root.GetAttributeString("steamworkshopurl", "");
             GameVersion = new Version(doc.Root.GetAttributeString("gameversion", "0.0.0.0"));
-
-            //don't load the rest if the package is not compatible with this version
-            //(loading a package with unsupported content file types may cause unnecessary console errors)
-            if (!IsCompatible())
-            {
-                return;
-            }
-
+            
+            bool compatible = IsCompatible();
             foreach (XElement subElement in doc.Root.Elements())
             {
                 if (!Enum.TryParse(subElement.Name.ToString(), true, out ContentType type))
                 {
-                    DebugConsole.ThrowError("Error in content package \"" + Name + "\" - \"" + subElement.Name.ToString() + "\" is not a valid content type.");
-                    continue;
+                    if (!compatible)
+                    {
+                        //If we know that the package is not compatible, don't throw an error and just mark the content type as none.
+                        //This way the file is still visible when editing the package in the workshop menu, and the user can fix the
+                        //issue by correcting the type or removing the file.
+                        type = ContentType.None;
+                    }
+                    else
+                    {
+                        DebugConsole.ThrowError("Error in content package \"" + Name + "\" - \"" + subElement.Name.ToString() + "\" is not a valid content type.");
+                        continue;
+                    }
                 }
                 Files.Add(new ContentFile(subElement.GetAttributeString("file", ""), type));
             }
@@ -147,6 +151,11 @@ namespace Barotrauma
 
         public bool IsCompatible()
         {
+            if (Files.All(f => f.Type == ContentType.Submarine))
+            {
+                return true;
+            }
+
             //content package compatibility checks were added in 0.9
             //0.9 is not compatible with older content packages
             if (GameVersion < new Version(0, 9))
@@ -193,8 +202,10 @@ namespace Barotrauma
             doc.Add(new XElement("contentpackage",
                 new XAttribute("name", Name),
                 new XAttribute("path", Path),
-                new XAttribute("corepackage", CorePackage)),
-                new XAttribute("gameversion", GameVersion.ToString()));
+                new XAttribute("corepackage", CorePackage)));
+
+
+            doc.Root.Add(new XAttribute("gameversion", GameVersion.ToString()));
 
             if (!string.IsNullOrEmpty(SteamWorkshopUrl))
             {

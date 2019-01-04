@@ -593,6 +593,8 @@ namespace Barotrauma.Steam
             }
 
             contentPackage.Name = item.Title;
+            contentPackage.GameVersion = GameMain.Version;
+            contentPackage.Save(Path.Combine(WorkshopItemStagingFolder, MetadataFileName));
 
             if (File.Exists(PreviewImageName)) File.Delete(PreviewImageName);
             //move the preview image out of the staging folder, it does not need to be included in the folder sent to Workshop
@@ -825,6 +827,23 @@ namespace Barotrauma.Steam
             }
             errorMsg = "";
             return true;
+        }
+
+        /// <summary>
+        /// Is the item compatible with this version of Barotrauma. Returns null if compatibility couldn't be determined (item not installed)
+        /// </summary>
+        public static bool? CheckWorkshopItemCompatibility(Workshop.Item item)
+        {
+            if (!item.Installed) { return null; }
+
+            string metaDataPath = Path.Combine(item.Directory.FullName, MetadataFileName);
+            if (!File.Exists(metaDataPath))
+            {
+                throw new FileNotFoundException("Metadata file for the Workshop item \"" + item.Title + "\" not found. The file may be corrupted.");
+            }
+
+            ContentPackage contentPackage = new ContentPackage(metaDataPath);
+            return contentPackage.IsCompatible();
         }
 
         public static bool CheckWorkshopItemEnabled(Workshop.Item item)

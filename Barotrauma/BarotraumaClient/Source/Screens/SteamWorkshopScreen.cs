@@ -183,6 +183,12 @@ namespace Barotrauma
         public override void Select()
         {
             base.Select();
+
+            itemPreviewFrame.ClearChildren();
+            createItemFrame.ClearChildren();
+            itemContentPackage = null;
+            itemEditor = null;
+
             RefreshItemLists();
             SelectTab(Tab.Browse);
         }
@@ -323,30 +329,41 @@ namespace Barotrauma
             };
 
             var titleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), rightColumn.RectTransform), item.Title, textAlignment: Alignment.CenterLeft);
-            /*new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.75f), itemFrame.RectTransform, Anchor.BottomLeft), item.Description,
-                wrap: true, font: GUI.SmallFont);*/
-                
+
             if (item.Installed)
             {
-                var enabledTickBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 0.5f), rightColumn.RectTransform), TextManager.Get("WorkshopItemEnabled"))
-                {
-                    UserData = item,
-                };
+                GUITickBox enabledTickBox = null;
                 try
                 {
-                    enabledTickBox.Selected = SteamManager.CheckWorkshopItemEnabled(item);
+                    bool? compatible = SteamManager.CheckWorkshopItemCompatibility(item);
+                    if (compatible.HasValue && !compatible.Value)
+                    {
+                        new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.5f), rightColumn.RectTransform),
+                            TextManager.Get("WorkshopItemIncompatible"), textColor: Color.Red)
+                        {
+                            ToolTip = TextManager.Get("WorkshopItemIncompatibleTooltip")
+                        };
+                    }
+                    else
+                    {
+                        enabledTickBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 0.5f), rightColumn.RectTransform), TextManager.Get("WorkshopItemEnabled"))
+                        {
+                            UserData = item,
+                        };
+                        enabledTickBox.Selected = SteamManager.CheckWorkshopItemEnabled(item);
+                        enabledTickBox.OnSelected = ToggleItemEnabled;
+                    }
                 }
                 catch (Exception e)
                 {
                     new GUIMessageBox(TextManager.Get("Error"), e.Message);
-                    enabledTickBox.Enabled = false;
+                    if (enabledTickBox != null) { enabledTickBox.Enabled = false; }
                     itemFrame.CanBeFocused = false;
                     itemFrame.Color = Color.Red;
                     itemFrame.HoverColor = Color.Red;
                     itemFrame.SelectedColor = Color.Red;
                     titleText.TextColor = Color.Red;
                 }
-                enabledTickBox.OnSelected = ToggleItemEnabled;
             }
             else if (item.Downloading)
             {
@@ -909,17 +926,18 @@ namespace Barotrauma
                 {
                     UserData = contentFile,
                 };
+                foreach (ContentType contentType in contentTypes)
+                {
+                    contentTypeSelection.AddItem(contentType.ToString(), contentType);
+                }
+                contentTypeSelection.SelectItem(contentFile.Type);
+
                 contentTypeSelection.OnSelected = (GUIComponent selected, object userdata) =>
                 {
                     ((ContentFile)contentTypeSelection.UserData).Type = (ContentType)userdata;
                     itemContentPackage.Save(itemContentPackage.Path);
                     return true;
                 };
-                foreach (ContentType contentType in contentTypes)
-                {
-                    contentTypeSelection.AddItem(contentType.ToString(), contentType);
-                }
-                contentTypeSelection.SelectItem(contentFile.Type);
 
                 new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), content.RectTransform), TextManager.Get("Delete"))
                 {
