@@ -136,12 +136,11 @@
     name="Ethanol"    
     identifier="ethanol"
     category="Material"
-    spritecolor="0.0,0.9,0.1,1.0"    
-    containercolor="0.0,0.9,0.1,1.0"
     cargocontaineridentifier="chemicalcrate"
     description="Medical alcohol used as an ingredient in the manufacture of various medicines. Drinking while on duty is not adviced."    
     Tags="smallitem,chem,medical"
-    useinhealthinterface="true">
+    useinhealthinterface="true"
+    scale="0.5">
     
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="15"/>
@@ -149,11 +148,10 @@
     <Price locationtype="City" buyprice="20"/>
     <Price locationtype="Outpost" buyprice="50"/>
     
-    <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,768,64,64"/>
-    <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6"/>
+    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="271,770,31,59" depth="0.6"/>
 
-    <Body width="8" height="7" density="20"/>
+    <Body width="31" height="59" density="20"/>
 
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
@@ -171,21 +169,19 @@
     name="Adrenaline"
     identifier="adrenaline"
     category="Material"
-    spritecolor="0.5,0.0,0.0,1.0"
-    containercolor="0.5,0.0,0.0,1.0"
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
-    useinhealthinterface="true">
+    useinhealthinterface="true"
+    scale="0.5">
     
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="Military" buyprice="60"/>
 
-    <!-- TODO: sprite and inventory icons -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="388,768,64,64"/>
-    <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6"/>
+    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="399,771,30,58" depth="0.6"/>
 
-    <Body width="8" height="17" density="20"/>
+    <Body width="30" height="58" density="20"/>
 
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
@@ -202,22 +198,20 @@
     name="Sulphuric Acid"
     identifier="sulphuricacid"
     category="Material"
-    spritecolor="0.5,0.0,0.0,1.0"
-    containercolor="0.5,0.0,0.0,1.0"
     cargocontaineridentifier="chemicalcrate"
     description="A strong acid that causes burns when in contact with skin. Used as an ingredient in several poisons."
     Tags="smallitem,chem,medical"
-    useinhealthinterface="true">
+    useinhealthinterface="true"
+    scale="0.5">
     
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="Military" buyprice="60"/>
 
-    <!-- TODO: sprite and inventory icons -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,768,64,64"/>
-    <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6"/>
+    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="336,770,32,59" depth="0.6"/>
 
-    <Body width="8" height="17" density="20"/>
+    <Body width="32" height="59" density="15"/>
 
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
@@ -442,12 +436,11 @@
     name="Saline"
     identifier="antibloodloss1"
     category="Material"
-    spritecolor="0.255, 0.79, 0.158"
-    containercolor="0.255, 0.79, 0.158"
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
     useinhealthinterface="true"
-    description="A sodium chloride infusion mildly useful in the treatment of blood loss.">
+    description="A sodium chloride infusion mildly useful in the treatment of blood loss."
+    scale="0.5">
 
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="50"/>
@@ -457,11 +450,10 @@
 
     <SuitableTreatment identifier="bloodloss" suitability="30"/>
 
-    <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,640,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="973,642,33,58" depth="0.6"/>
 
-    <Body width="8" height="16" density="20"/>
+    <Body radius="12" height="30" density="11"/>
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0">
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
@@ -479,12 +471,12 @@
     name="Blood Pack"
     identifier="antibloodloss2"
     category="Material"
-    spritecolor="0.255, 0.79, 0.158"
-    containercolor="0.255, 0.79, 0.158"
+    containercolor="255,0,0,255"
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
     useinhealthinterface="true"
-    description="A pack of blood substitute for the treatment of blood loss.">
+    description="A pack of blood substitute for the treatment of blood loss."
+    scale="0.5">
 
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="50"/>
@@ -494,11 +486,10 @@
 
     <SuitableTreatment identifier="bloodloss" suitability="50"/>
 
-    <!-- TODO: sprite  -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,640,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="910,643,34,58" depth="0.6"/>
 
-    <Body width="8" height="16" density="20"/>
+    <Body radius="12" height="30" density="11"/>
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0">
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
@@ -757,15 +748,16 @@
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
     description="A medical solution that's mildy effective as a treatment for internal damage, but most commonly used as an ingredient in more complex medical compounds."
-    useinhealthinterface="true">
+    useinhealthinterface="true"
+    scale="0.5">
 
     <SuitableTreatment identifier="internaldamage" suitability="10"/>
 
     <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,448,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="79,450,33,60" depth="0.6"/>
 
-    <Body width="8" height="16" density="20"/>
+    <Body radius="15" height="30" density="9"/>
 
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
@@ -860,8 +852,8 @@
     <Price locationtype="Research" buyprice="60"/>
     <Price locationtype="Military" buyprice="80"/>
 
-    <!-- TODO: sprite and inventory icons -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,192,64,64"/>
+    <!-- TODO: sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,448,64,64"/>
     <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="15"/>
@@ -920,8 +912,6 @@
     name="Chloral Hydrate"
     identifier="chloralhydrate"
     category="Material"
-    spritecolor="1.0,1.0,1.0,0.8"
-    containercolor="1.0,1.0,1.0,0.8"
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
     description="A sedative that can be used to knock someone out for a short period of time."
