@@ -33,15 +33,8 @@ namespace Barotrauma
         }
 
         public override void DrawPlacing(SpriteBatch spriteBatch, Rectangle placeRect, float scale = 1.0f)
-        {           
-            if (ResizeHorizontal || ResizeVertical)
-            {
-                sprite.DrawTiled(spriteBatch, new Vector2(placeRect.X, -placeRect.Y), new Vector2(placeRect.Width, placeRect.Height), textureScale: TextureScale * Scale);
-            }
-            else
-            {
-                sprite.Draw(spriteBatch, new Vector2(placeRect.X, -placeRect.Y), Color.White, Vector2.Zero, 0, Scale);
-            }
+        {
+            sprite.DrawTiled(spriteBatch, new Vector2(placeRect.X, -placeRect.Y), new Vector2(placeRect.Width, placeRect.Height), textureScale: TextureScale * Scale);
         }
     }
 }
