@@ -160,6 +160,8 @@
   <WorkshopErrorOverwriteOnEnable>Cannot enable workshop item "[itemname]". The file "[filename]" would be overwritten by the item.</WorkshopErrorOverwriteOnEnable>
   <WorkshopErrorIllegalPathOnEnable>Could not install the file "[filename]". Workshop items are only allowed to modify files in the Mod folder or add submarine files to the Submarines folder.</WorkshopErrorIllegalPathOnEnable>
   <WorkshopErrorEnableFailed>Enabling the workshop item "[itemname]" failed.</WorkshopErrorEnableFailed>
+  <WorkshopItemIncompatible>Incompatible</WorkshopItemIncompatible>
+  <WorkshopItemIncompatibleTooltip>This Workshop item is not compatible with your version of Barotrauma.</WorkshopItemIncompatibleTooltip>
   
   <!-- Settings menu -->
   <Settings>Settings</Settings>
