@@ -8,7 +8,7 @@ namespace Barotrauma
         public override void DrawPlacing(SpriteBatch spriteBatch, Camera cam)
         {
             Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
-            Rectangle newRect = new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y);
+            Rectangle newRect = new Rectangle((int)position.X, (int)position.Y, (int)ScaledSize.X, (int)ScaledSize.Y);
 
             if (placePosition == Vector2.Zero)
             {
@@ -27,15 +27,28 @@ namespace Barotrauma
                 newRect = Submarine.AbsRect(placePosition, placeSize);
             }
 
-            sprite.DrawTiled(spriteBatch, new Vector2(newRect.X, -newRect.Y), new Vector2(newRect.Width, newRect.Height));
-            
-            GUI.DrawRectangle(spriteBatch, new Rectangle(newRect.X - GameMain.GraphicsWidth, -newRect.Y, newRect.Width + GameMain.GraphicsWidth * 2, newRect.Height), Color.White);
-            GUI.DrawRectangle(spriteBatch, new Rectangle(newRect.X, -newRect.Y - GameMain.GraphicsHeight, newRect.Width, newRect.Height + GameMain.GraphicsHeight * 2), Color.White);
+            if (ResizeHorizontal || ResizeVertical)
+            {
+                sprite.DrawTiled(spriteBatch, new Vector2(newRect.X, -newRect.Y), new Vector2(newRect.Width, newRect.Height), textureScale: TextureScale * Scale);
+                GUI.DrawRectangle(spriteBatch, new Rectangle(newRect.X - GameMain.GraphicsWidth, -newRect.Y, newRect.Width + GameMain.GraphicsWidth * 2, newRect.Height), Color.White);
+                GUI.DrawRectangle(spriteBatch, new Rectangle(newRect.X, -newRect.Y - GameMain.GraphicsHeight, newRect.Width, newRect.Height + GameMain.GraphicsHeight * 2), Color.White);
+            }
+            else
+            {
+                sprite.Draw(spriteBatch, new Vector2(newRect.X, -newRect.Y), Color.White, Vector2.Zero, 0, Scale);
+            }
         }
 
         public override void DrawPlacing(SpriteBatch spriteBatch, Rectangle placeRect, float scale = 1.0f)
         {           
-            sprite.DrawTiled(spriteBatch, new Vector2(placeRect.X, -placeRect.Y), new Vector2(placeRect.Width, placeRect.Height));
+            if (ResizeHorizontal || ResizeVertical)
+            {
+                sprite.DrawTiled(spriteBatch, new Vector2(placeRect.X, -placeRect.Y), new Vector2(placeRect.Width, placeRect.Height), textureScale: TextureScale * Scale);
+            }
+            else
+            {
+                sprite.Draw(spriteBatch, new Vector2(placeRect.X, -placeRect.Y), Color.White, Vector2.Zero, 0, Scale);
+            }
         }
     }
 }
