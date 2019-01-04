@@ -2,15 +2,15 @@
 <prefabs>
   <!-- SHUTTLE EXTERIOR WALLS -->
   <ShuttleWallTopLeft1 identifier="shuttlewalltopleft1" description=""
-    width="108" height="95" resizehorizontal="false" body="true" castshadow="true" health="500">
+    width="108" height="95" resizehorizontal="false" body="true" castshadow="true" health="500" scale="0.5" texturescale="0.5,0.5">
     <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="6,19,108,95" />
   </ShuttleWallTopLeft1>
   <ShuttleWallTopLeft2 identifier="shuttlewalltopleft2" description=""
-    width="216" height="95" resizehorizontal="false" body="true" castshadow="true" health="500">
+    width="216" height="95" resizehorizontal="false" body="true" castshadow="true" health="500" scale="2" texturescale="2,2">
     <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="161,19,216,95" />
   </ShuttleWallTopLeft2>
   <ShuttleWallTopLeft3 identifier="shuttlewalltopleft3" description=""
-    width="107" height="50" resizehorizontal="false" body="true" castshadow="true" health="500">
+    width="107" height="50" resizehorizontal="false" body="true" castshadow="true" health="500" scale="0.5" texturescale="2,2">
     <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="391,26,107,50" />
   </ShuttleWallTopLeft3>
   <ShuttleWallTopLeft4 identifier="shuttlewalltopleft4" description=""
@@ -106,7 +106,7 @@
     <sprite texture="Content/Map/ShuttleExterior.png" depth="0.05" sourcerect="850,553,65,109" />
   </ShuttleWallBottomRight2>
   <!-- INTERIOR WALLS FF -->
-  <ff_x_wall identifier="ff_x_wall" description="A vertical wall with collision detection" width="512" height="48" resizehorizontal="true" body="true" castshadow="true" health="500">
+  <ff_x_wall identifier="ff_x_wall" description="A vertical wall with collision detection" width="512" height="48" resizehorizontal="true" body="true" castshadow="true" health="500" texturescale="2,2" scale="0.5">
     <sprite texture="Content/Map/FF_inWall_X.png" depth="0.05" sourcerect="0,0,512,48" />
   </ff_x_wall>
   <ff_x_wall_cables identifier="ff_x_wall_cables" description="A vertical wall with collision detection" width="512" height="73" resizehorizontal="true" body="true" castshadow="true" health="500">
