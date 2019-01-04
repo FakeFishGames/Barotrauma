@@ -193,6 +193,15 @@ namespace Barotrauma
             {
                 tabs[i].Visible = i == (int)tab;
             }
+
+            if (createItemFrame.CountChildren == 0)
+            {
+                new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.9f), createItemFrame.RectTransform, Anchor.Center), 
+                    TextManager.Get("WorkshopItemCreateHelpText"), wrap: true)
+                {
+                    CanBeFocused = false
+                };
+            }
         }
 
         private void RefreshItemLists()
