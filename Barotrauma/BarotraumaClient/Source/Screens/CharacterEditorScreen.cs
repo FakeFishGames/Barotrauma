@@ -61,8 +61,6 @@ namespace Barotrauma
         private Vector2? anchor1Pos;
 
         private float spriteSheetZoom = 1;
-        private float textureMinScale = 0.1f;
-        private float textureMaxScale = 2;
         private float spriteSheetMinZoom = 0.25f;
         private float spriteSheetMaxZoom = 1;
         private int spriteSheetOffsetY = 100;
