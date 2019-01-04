@@ -34,6 +34,7 @@ namespace Barotrauma
 
         public override void DrawPlacing(SpriteBatch spriteBatch, Rectangle placeRect, float scale = 1.0f)
         {
+            // TODO: the scale property is not used
             sprite.DrawTiled(spriteBatch, new Vector2(placeRect.X, -placeRect.Y), new Vector2(placeRect.Width, placeRect.Height), textureScale: TextureScale * Scale);
         }
     }
