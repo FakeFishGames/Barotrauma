@@ -364,19 +364,18 @@ namespace Barotrauma
 
         private void UpdateServerInfo(ServerInfo serverInfo)
         {
-
             var serverFrame = serverList.Content.FindChild(serverInfo);
             if (serverFrame == null) return;
 
             var serverContent = serverFrame.Children.First();
             serverContent.ClearChildren();
 
-            var compatibleBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[0], 0.5f), serverContent.RectTransform, Anchor.Center), label: "", style: "GUIServerListCompatibleTickBox")
+            var compatibleBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[0], 0.5f), serverContent.RectTransform, Anchor.Center), label: "")
             {
+                Enabled = false,
                 Selected =
                     serverInfo.GameVersion == GameMain.Version.ToString() &&
                     serverInfo.ContentPackagesMatch(GameMain.SelectedPackages),
-                Enabled = false,
                 UserData = "compatible"
             };
             
@@ -427,6 +426,7 @@ namespace Barotrauma
 
 			if (string.IsNullOrEmpty(serverInfo.GameVersion) || !serverInfo.ContentPackageHashes.Any())
             {
+                compatibleBox.Selected = false;
                 new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.8f), compatibleBox.Box.RectTransform, Anchor.Center), " ? ", Color.Yellow * 0.85f, textAlignment: Alignment.Center)
                 {
                     ToolTip = TextManager.Get(string.IsNullOrEmpty(serverInfo.GameVersion) ?
