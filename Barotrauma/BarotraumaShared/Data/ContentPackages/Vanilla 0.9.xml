@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<contentpackage name="Vanilla 0.9" path="Data/ContentPackages/Vanilla 0.9" corepackage="true" gameversion="0.9.0.0">
+<contentpackage name="Vanilla 0.9" path="Data/ContentPackages/Vanilla 0.9" corepackage="true" hideinworkshopmenu="true" gameversion="0.9.0.0">
   <Item file="Content/Items/idcard.xml" />
   <Item file="Content/Items/Alien/alienitems.xml" />
   <Item file="Content/Items/Button/button.xml" />

@@ -68,6 +68,12 @@ namespace Barotrauma
 
         public string SteamWorkshopUrl;
 
+        public bool HideInWorkshopMenu
+        {
+            get;
+            private set;
+        }
+
         private Md5Hash md5Hash;
         public Md5Hash MD5hash
         {
@@ -118,6 +124,7 @@ namespace Barotrauma
             }
 
             Name = doc.Root.GetAttributeString("name", "");
+            HideInWorkshopMenu = doc.Root.GetAttributeBool("hideinworkshopmenu", false);
             CorePackage = doc.Root.GetAttributeBool("corepackage", false);
             SteamWorkshopUrl = doc.Root.GetAttributeString("steamworkshopurl", "");
             GameVersion = new Version(doc.Root.GetAttributeString("gameversion", "0.0.0.0"));

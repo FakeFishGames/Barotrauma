@@ -239,7 +239,7 @@ namespace Barotrauma
             };
             foreach (ContentPackage contentPackage in ContentPackage.List)
             {
-                if (!string.IsNullOrEmpty(contentPackage.SteamWorkshopUrl)) { continue; }
+                if (!string.IsNullOrEmpty(contentPackage.SteamWorkshopUrl) || contentPackage.HideInWorkshopMenu) { continue; }
                 CreateMyItemFrame(contentPackage, myItemList);
             }
         }
@@ -254,7 +254,7 @@ namespace Barotrauma
 
             if (itemDetails.Count == 0 && listBox == subscribedItemList)
             {
-                new GUITextBox(new RectTransform(new Vector2(0.9f, 0.9f), listBox.Content.RectTransform, Anchor.Center), TextManager.Get("NoSubscribedMods"), wrap: true)
+                new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.9f), listBox.Content.RectTransform, Anchor.Center), TextManager.Get("NoSubscribedMods"), wrap: true)
                 {
                     CanBeFocused = false
                 };
@@ -446,6 +446,7 @@ namespace Barotrauma
         private bool DownloadItem(GUIButton btn, object userdata)
         {
             var item = (Facepunch.Steamworks.Workshop.Item)userdata;
+            if (!item.Subscribed) { item.Subscribe(); }
             item.Download(onInstalled: RefreshItemLists);
             RefreshItemLists();
             return true;
