@@ -68,10 +68,10 @@
   <Character file="Content/Characters/Watcher/watcher.xml" />
   <Character file="Content/Characters/Testhuman/Testhuman.xml" />
   <Character file="Content/Characters/Hammerhead/Hammerhead.xml" />
-  <Submarine file="Content/Submarines/Turso.sub" />
-  <Submarine file="Content/Submarines/Polaris.sub" />
-  <Submarine file="Content/Submarines/The Nibbler.sub" />
-  <Submarine file="Content/Submarines/The Blind Carp.sub" />
+  <Submarine file="Submarines/Turso.sub" />
+  <Submarine file="Submarines/Polaris.sub" />
+  <Submarine file="Submarines/The Nibbler.sub" />
+  <Submarine file="Submarines/The Blind Carp.sub" />
   <UIStyle file="Content/UI/style.xml"/>  
   <Afflictions file="Content/Afflictions.xml"/>
   <Structure file="Content/Map/StructurePrefabs.xml" />
