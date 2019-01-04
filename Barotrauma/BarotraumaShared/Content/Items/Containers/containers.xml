@@ -139,9 +139,10 @@
     identifier="toxcabinet"
     linkable="true"
     pickdistance="150"
-    waterproof="true">
+    waterproof="true"
+    scale="0.4">
 
-    <Sprite texture="FF_poisonCabinette.png" depth="0.84" sourcerect="0,0,159,190" canflipx="false"/>
+    <Sprite texture="ToxicCabinet.png" depth="0.84" sourcerect="0,0,146,231" canflipx="false"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,chem,medical"/>
