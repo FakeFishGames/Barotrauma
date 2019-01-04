@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Barotrauma.Extensions;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
@@ -255,6 +256,7 @@ namespace Barotrauma
 
             rect = rectangle;
             prefab = sp;
+            TextureScale = sp.TextureScale;
 
             spriteColor = prefab.SpriteColor;
             if (ResizeHorizontal && !ResizeVertical)

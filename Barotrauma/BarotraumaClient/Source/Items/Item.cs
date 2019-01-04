@@ -169,11 +169,9 @@ namespace Barotrauma
                     if (prefab.ResizeHorizontal || prefab.ResizeVertical)
                     {
                         activeSprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color,
-                            depth: depth,
-                            scaleMultiplier: Scale);
+                            depth: depth);
                         fadeInBrokenSprite?.Sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color * fadeInBrokenSpriteAlpha,
-                            depth: depth - 0.000001f,
-                            scaleMultiplier: Scale);
+                            depth: depth - 0.000001f);
                         foreach (var decorativeSprite in Prefab.DecorativeSprites)
                         {
                             if (!spriteAnimState[decorativeSprite].IsActive) { continue; }                            
@@ -181,8 +179,7 @@ namespace Barotrauma
                             decorativeSprite.Sprite.DrawTiled(spriteBatch, 
                                 new Vector2(DrawPosition.X + offset.X - rect.Width / 2, -(DrawPosition.Y + offset.Y + rect.Height / 2)), 
                                 new Vector2(rect.Width, rect.Height), color: color,
-                                depth: depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth),
-                                scaleMultiplier: Scale);
+                                depth: depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth));
                         }
                     }
                     else

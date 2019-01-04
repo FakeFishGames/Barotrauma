@@ -27,8 +27,13 @@ namespace Barotrauma
             }
         }
 
+        // Only for testing in the debug build. Not saved.
         protected Vector2 textureScale = Vector2.One;
-        [Editable(DecimalCount = 3), Serialize("1.0, 1.0", true)]
+        [Editable(DecimalCount = 3),
+#if DEBUG
+            Serialize("1.0, 1.0", false)]
+#endif
+
         public Vector2 TextureScale
         {
             get { return textureScale; }
@@ -201,15 +206,26 @@ namespace Barotrauma
                         MathUtils.PositiveModulo((int)-textureOffset.X, prefab.BackgroundSprite.SourceRect.Width),
                         MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.BackgroundSprite.SourceRect.Height));
 
-                    prefab.BackgroundSprite.DrawTiled(
-                        spriteBatch,
-                        new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
-                        new Vector2(rect.Width, rect.Height),
-                        color: color,
-                        textureScale: TextureScale,
-                        startOffset: backGroundOffset,
-                        scaleMultiplier: Scale);
-
+                    if (prefab.ResizeHorizontal || prefab.ResizeVertical)
+                    {
+                        prefab.BackgroundSprite.DrawTiled(
+                            spriteBatch,
+                            new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
+                            new Vector2(rect.Width, rect.Height),
+                            color: color,
+                            textureScale: TextureScale * Scale,
+                            startOffset: backGroundOffset);
+                    }
+                    else
+                    {
+                        prefab.BackgroundSprite.Draw(
+                            spriteBatch,
+                            new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
+                            color,
+                            Vector2.Zero,
+                            0,
+                            scale: Scale);
+                    }
                     prefab.BackgroundSprite.effects = oldEffects;
                 }
             }
@@ -239,25 +255,37 @@ namespace Barotrauma
                         }
                     }
 
-                    Point sectionOffset = new Point(
-                        Math.Abs(rect.Location.X - Sections[i].rect.Location.X),
-                        Math.Abs(rect.Location.Y - Sections[i].rect.Location.Y));
-                    
-                    if (FlippedX && IsHorizontal) sectionOffset.X = Sections[i].rect.Right - rect.Right;
-                    if (FlippedY && !IsHorizontal) sectionOffset.Y = (rect.Y - rect.Height) - (Sections[i].rect.Y - Sections[i].rect.Height);
-                    
-                    sectionOffset.X += MathUtils.PositiveModulo((int)-textureOffset.X, prefab.sprite.SourceRect.Width);
-                    sectionOffset.Y += MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.sprite.SourceRect.Height);
+                    if (prefab.ResizeHorizontal || prefab.ResizeVertical)
+                    {
+                        Point sectionOffset = new Point(
+                            Math.Abs(rect.Location.X - Sections[i].rect.Location.X),
+                            Math.Abs(rect.Location.Y - Sections[i].rect.Location.Y));
 
-                    prefab.sprite.DrawTiled(
-                        spriteBatch,
-                        new Vector2(Sections[i].rect.X + drawOffset.X, -(Sections[i].rect.Y + drawOffset.Y)),
-                        new Vector2(Sections[i].rect.Width, Sections[i].rect.Height),
-                        color: color,
-                        startOffset: sectionOffset,
-                        depth: depth,
-                        textureScale: TextureScale,
-                        scaleMultiplier: Scale);
+                        if (FlippedX && IsHorizontal) sectionOffset.X = Sections[i].rect.Right - rect.Right;
+                        if (FlippedY && !IsHorizontal) sectionOffset.Y = (rect.Y - rect.Height) - (Sections[i].rect.Y - Sections[i].rect.Height);
+
+                        sectionOffset.X += MathUtils.PositiveModulo((int)-textureOffset.X, prefab.sprite.SourceRect.Width);
+                        sectionOffset.Y += MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.sprite.SourceRect.Height);
+
+                        prefab.sprite.DrawTiled(
+                            spriteBatch,
+                            new Vector2(Sections[i].rect.X + drawOffset.X, -(Sections[i].rect.Y + drawOffset.Y)),
+                            new Vector2(Sections[i].rect.Width, Sections[i].rect.Height),
+                            color: color,
+                            startOffset: sectionOffset,
+                            depth: depth,
+                            textureScale: TextureScale * Scale);
+                    }
+                    else
+                    {
+                        prefab.sprite.Draw(
+                            spriteBatch,
+                            new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
+                            color,
+                            Vector2.Zero,
+                            0,
+                            scale: Scale);
+                    }
                 }
                 prefab.sprite.effects = oldEffects;
             }
