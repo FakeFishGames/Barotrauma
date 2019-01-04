@@ -129,6 +129,7 @@
   <WorkshopItemTitle>Title</WorkshopItemTitle>
   <WorkshopItemDescription>Description</WorkshopItemDescription>
   <WorkshopItemTags>Tags</WorkshopItemTags>
+  <WorkshopItemCreateHelpText>You can use this tab to publish new items in the Steam Workshop. You can either select an existing submarine or a content package from the "Your items" menu at the left, or create an entirely new item by clicking the "Create a new item" button.</WorkshopItemCreateHelpText>
   <WorkshopItemPreviewImage>Preview Image</WorkshopItemPreviewImage>
   <WorkshopItemBrowse>Browse...</WorkshopItemBrowse>
   <WorkshopItemCorePackage>Core package</WorkshopItemCorePackage>
