@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Xml.Linq;
 
 namespace Barotrauma.Steam
@@ -558,8 +559,17 @@ namespace Barotrauma.Steam
             itemEditor.Folder = stagingFolder.FullName;
 
             string previewImagePath = Path.GetFullPath(Path.Combine(itemEditor.Folder, PreviewImageName));
-            File.Copy("Content/DefaultWorkshopPreviewImage.png", previewImagePath);
-            
+            itemEditor.PreviewImage = previewImagePath;
+
+            using (WebClient client = new WebClient())
+            {
+                if (File.Exists(previewImagePath))
+                {
+                    File.Delete(previewImagePath);
+                }
+                client.DownloadFile(new Uri(existingItem.PreviewImageUrl), previewImagePath);
+            }
+
             ContentPackage tempContentPackage = new ContentPackage(Path.Combine(existingItem.Directory.FullName, MetadataFileName));
             string newContentPackagePath = Path.Combine(WorkshopItemStagingFolder, MetadataFileName);
             File.Copy(tempContentPackage.Path, newContentPackagePath, overwrite: true);

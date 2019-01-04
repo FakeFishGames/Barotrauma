@@ -717,7 +717,10 @@ namespace Barotrauma
                     if (ofd.ShowDialog() == DialogResult.OK)
                     {
                         string previewImagePath = Path.GetFullPath(Path.Combine(SteamManager.WorkshopItemStagingFolder, SteamManager.PreviewImageName));
-                        File.Copy(ofd.FileName, previewImagePath, overwrite: true);
+                        if (ofd.FileName != previewImagePath)
+                        {
+                            File.Copy(ofd.FileName, previewImagePath, overwrite: true);
+                        }
 
                         if (itemPreviewSprites.ContainsKey(previewImagePath))
                         {
@@ -726,11 +729,12 @@ namespace Barotrauma
                         var newPreviewImage = new Sprite(previewImagePath, sourceRectangle: null);
                         previewIcon.Sprite = newPreviewImage;
                         itemPreviewSprites[previewImagePath] = newPreviewImage;
+                        itemEditor.PreviewImage = previewImagePath;
                     }
                     return true;
                 }
             };
-
+            
             if (!string.IsNullOrEmpty(itemEditor.PreviewImage))
             {
                 if (itemPreviewSprites.ContainsKey(itemEditor.PreviewImage))
