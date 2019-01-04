@@ -256,8 +256,9 @@ namespace Barotrauma
 
             rect = rectangle;
             prefab = sp;
+#if CLIENT
             TextureScale = sp.TextureScale;
-
+#endif
             spriteColor = prefab.SpriteColor;
             if (ResizeHorizontal && !ResizeVertical)
             {
