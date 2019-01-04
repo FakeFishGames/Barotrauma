@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using SteamNative;
 
 namespace Facepunch.Steamworks
@@ -20,6 +22,12 @@ namespace Facepunch.Steamworks
     /// </summary>
     public partial class Workshop : IDisposable
     {
+        static Workshop()
+        {
+            Debug.Assert( Marshal.SizeOf( typeof(PublishedFileId_t) ) == Marshal.SizeOf( typeof(ulong) ),
+                $"sizeof({nameof(PublishedFileId_t)}) != sizeof({nameof(UInt64)})" );
+        }
+
         internal const ulong InvalidHandle = 0xffffffffffffffff;
 
         internal SteamNative.SteamUGC ugc;
@@ -77,6 +85,60 @@ namespace Facepunch.Steamworks
         }
 
         /// <summary>
+        /// Get the IDs of all subscribed workshop items. Not all items may be currently installed.
+        /// </summary>
+        public unsafe ulong[] GetSubscribedItemIds()
+        {
+            var count = ugc.GetNumSubscribedItems();
+            var array = new ulong[count];
+
+            fixed ( ulong* ptr = array )
+            {
+                ugc.GetSubscribedItems( (PublishedFileId_t*) ptr, count );
+            }
+
+            return array;
+        }
+
+        [ThreadStatic]
+        private static ulong[] _sSubscribedItemBuffer;
+
+        /// <summary>
+        /// Get the IDs of all subscribed workshop items, avoiding repeated allocations.
+        /// Not all items may be currently installed.
+        /// </summary>
+        public unsafe int GetSubscribedItemIds( List<ulong> destList )
+        {
+            const int bufferSize = 1024;
+
+            var count = ugc.GetNumSubscribedItems();
+
+            if ( count >= bufferSize )
+            {
+                // Fallback for exceptional cases
+                destList.AddRange( GetSubscribedItemIds() );
+                return (int) count;
+            }
+
+            if ( _sSubscribedItemBuffer == null )
+            {
+                _sSubscribedItemBuffer = new ulong[bufferSize];
+            }
+
+            fixed ( ulong* ptr = _sSubscribedItemBuffer)
+            {
+                count = ugc.GetSubscribedItems( (PublishedFileId_t*) ptr, bufferSize );
+            }
+
+            for ( var i = 0; i < count; ++i )
+            {
+                destList.Add( _sSubscribedItemBuffer[i] );
+            }
+
+            return (int) count;
+        }
+
+        /// <summary>
         /// Creates a query object, which is used to get a list of items.
         /// 
         /// This could be a list of the most popular items, or a search, 
@@ -96,7 +158,7 @@ namespace Facepunch.Steamworks
         /// Create a new Editor object with the intention of creating a new item.
         /// Your item won't actually be created until you call Publish() on the object.
         /// </summary>
-        public Editor CreateItem( ItemType type )
+        public Editor CreateItem( ItemType type = ItemType.Community )
         {
         	return CreateItem(this.steamworks.AppId, type);
         }
@@ -107,7 +169,7 @@ namespace Facepunch.Steamworks
         /// Your item will be published to the provided appId.
         /// </summary>
         /// <remarks>You need to add app publish permissions for cross app uploading to work.</remarks> 
-        public Editor CreateItem( uint workshopUploadAppId, ItemType type )
+        public Editor CreateItem( uint workshopUploadAppId, ItemType type = ItemType.Community )
         {
         	return new Editor() { workshop = this, WorkshopUploadAppId = workshopUploadAppId, Type = type };
         }
@@ -119,7 +181,7 @@ namespace Facepunch.Steamworks
         /// </summary>
         public Editor EditItem( ulong itemId )
         {
-            return new Editor() { workshop = this, Id = itemId };
+            return new Editor() { workshop = this, Id = itemId, WorkshopUploadAppId = steamworks.AppId };
         }
 
         /// <summary>
