@@ -598,7 +598,7 @@ namespace Barotrauma
 
             if (itemEditor == null) return;
 
-            var createItemContent = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), createItemFrame.RectTransform, Anchor.Center))
+            var createItemContent = new GUILayoutGroup(new RectTransform(new Vector2(0.92f, 0.92f), createItemFrame.RectTransform, Anchor.Center))
             {
                 Stretch = true,
                 RelativeSpacing = 0.02f
@@ -631,7 +631,7 @@ namespace Barotrauma
             descriptionBox.OnTextChanged += (textBox, text) => { itemEditor.Description = text; return true; };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topRightColumn.RectTransform), TextManager.Get("WorkshopItemTags"));
-            var tagHolder = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.17f), topRightColumn.RectTransform), isHorizontal: true)
+            var tagHolder = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.17f), topRightColumn.RectTransform) { MinSize=new Point(0,50) }, isHorizontal: true)
             {
                 Spacing = 5
             };
@@ -723,13 +723,18 @@ namespace Barotrauma
                 OnSelected = (tickbox) => { itemContentPackage.CorePackage = tickbox.Selected; return true; }
             };
 
+            // file list --------------------------------------------------------------------------------------
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), createItemContent.RectTransform), style: null);
+
             var fileListTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), createItemContent.RectTransform), TextManager.Get("WorkshopItemFiles"));
             new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), fileListTitle.RectTransform, Anchor.CenterRight), TextManager.Get("WorkshopItemShowFolder"))
             {
                 IgnoreLayoutGroups = true,
                 OnClicked = (btn, userdata) => { System.Diagnostics.Process.Start(Path.GetFullPath(SteamManager.WorkshopItemStagingFolder)); return true; }
             };
-            createItemFileList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), createItemContent.RectTransform));
+            createItemFileList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.35f), createItemContent.RectTransform));
             RefreshCreateItemFileList();
 
             var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), createItemContent.RectTransform), isHorizontal: true)
@@ -783,8 +788,38 @@ namespace Barotrauma
                 };
                 changenoteBox.OnTextChanged += (textbox, text) => { itemEditor.ChangeNote = text; return true; };
             }
-           
-            new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), createItemContent.RectTransform, Anchor.BottomRight),
+
+            var bottomButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.08f), createItemContent.RectTransform), isHorizontal: true)
+            {
+                RelativeSpacing = 0.05f
+            };
+
+            if (itemEditor.Id > 0)
+            {
+                new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), bottomButtonContainer.RectTransform),
+                    TextManager.Get("WorkshopItemDelete"))
+                {
+                    ToolTip = TextManager.Get("WorkshopItemDeleteTooltip"),
+                    TextColor = Color.Red,
+                    OnClicked = (btn, userData) =>
+                    {
+                        var deleteVerification = new GUIMessageBox("", TextManager.Get("WorkshopItemDeleteVerification").Replace("[itemname]", itemEditor.Title),
+                            new string[] {  TextManager.Get("Yes"), TextManager.Get("No") });
+                        deleteVerification.Buttons[0].OnClicked = (yesBtn, userdata) =>
+                        {
+                            itemEditor.Delete();
+                            itemEditor = null;
+                            RefreshItemLists();
+                            SelectTab(Tab.Browse);
+                            deleteVerification.Close();
+                            return true;
+                        };
+                        deleteVerification.Buttons[1].OnClicked = deleteVerification.Close;
+                        return true;
+                    }
+                };
+            }
+            new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), bottomButtonContainer.RectTransform),
                 TextManager.Get(itemEditor.Id > 0 ? "WorkshopItemUpdate" : "WorkshopItemPublish"))
             {
                 ToolTip = TextManager.Get("WorkshopItemPublishTooltip"),
