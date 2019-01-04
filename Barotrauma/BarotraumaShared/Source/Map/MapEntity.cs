@@ -153,6 +153,7 @@ namespace Barotrauma
         public MapEntity(MapEntityPrefab prefab, Submarine submarine) : base(submarine) 
         {
             this.prefab = prefab;
+            Scale = prefab != null ? prefab.Scale : 1;
         }
 
         public virtual void Move(Vector2 amount) 
@@ -512,8 +513,11 @@ namespace Barotrauma
             }
         }
 
-        // TODO: use for scaling the whole entity (physics, source rect etc). Turn saveable, when done.
-        [Serialize(1f, false), Editable(0.1f, 10f, DecimalCount = 3)]
+        // The value should always be copied from the prefab. Editing is enabled only for testing the scale in the sub editor (changes are not saved).
+        [Serialize(1f, false),
+#if DEBUG
+        Editable(0.1f, 10f, DecimalCount = 3)]
+#endif
         public float Scale { get; set; } = 1;
         #endregion
     }
