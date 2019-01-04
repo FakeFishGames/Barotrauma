@@ -171,8 +171,7 @@ namespace Barotrauma
                         secRect.X += value.X; secRect.Y += value.Y;
                         sec.rect = secRect;
                     }
-                }
-                
+                }          
             }
         }
 
@@ -205,7 +204,6 @@ namespace Barotrauma
         {
             get
             {
-
                 Vector2 bodyOffset = prefab.BodyOffset;
                 if (FlippedX) { bodyOffset.X = -bodyOffset.X; }
                 if (FlippedY) { bodyOffset.Y = -bodyOffset.Y; }
