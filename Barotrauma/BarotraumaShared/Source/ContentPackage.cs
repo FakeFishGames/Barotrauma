@@ -122,25 +122,25 @@ namespace Barotrauma
             SteamWorkshopUrl = doc.Root.GetAttributeString("steamworkshopurl", "");
             GameVersion = new Version(doc.Root.GetAttributeString("gameversion", "0.0.0.0"));
             
-            bool compatible = IsCompatible();
+            List<string> errorMsgs = new List<string>();
             foreach (XElement subElement in doc.Root.Elements())
             {
                 if (!Enum.TryParse(subElement.Name.ToString(), true, out ContentType type))
                 {
-                    if (!compatible)
-                    {
-                        //If we know that the package is not compatible, don't throw an error and just mark the content type as none.
-                        //This way the file is still visible when editing the package in the workshop menu, and the user can fix the
-                        //issue by correcting the type or removing the file.
-                        type = ContentType.None;
-                    }
-                    else
-                    {
-                        DebugConsole.ThrowError("Error in content package \"" + Name + "\" - \"" + subElement.Name.ToString() + "\" is not a valid content type.");
-                        continue;
-                    }
+                    errorMsgs.Add("Error in content package \"" + Name + "\" - \"" + subElement.Name.ToString() + "\" is not a valid content type.");
+                    type = ContentType.None;                    
                 }
                 Files.Add(new ContentFile(subElement.GetAttributeString("file", ""), type));
+            }
+
+            bool compatible = IsCompatible();
+            //If we know that the package is not compatible, don't display error messages.
+            if (compatible)
+            {
+                foreach (string errorMsg in errorMsgs)
+                {
+                    DebugConsole.ThrowError(errorMsg);
+                }
             }
         }
 
