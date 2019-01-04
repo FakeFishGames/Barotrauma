@@ -1,22 +1,22 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <backgroundcreatures>
-  <Fish1 speed ="200.0" wanderamount="3.0" wanderzamount="0.1" swarmmin="2" swarmmax="10" swarmradius="500" scale="0.5">
-    <Sprite texture="Content/BackgroundCreatures/bgFish1.png" sourcerect="0,0,119,61"/>
+  <Fish1 speed ="200.0" wanderamount="3.0" wanderzamount="0.1" swarmmin="2" swarmmax="10" swarmradius="500" scale="0.25">
+    <Sprite texture="Content/BackgroundCreatures/bgFish1.png" sourcerect="0,0,256,171"/>
   </Fish1>
 
-  <Fish2 speed="80.0" wanderamount="0.2" wanderzamount="0.1" swarmmin="1" swarmmax="3" swarmradius="300" scale="0.5">
-    <Sprite texture="Content/BackgroundCreatures/bgFish1.png" sourcerect="1,65,113,64"/>
+  <Fish2 speed="80.0" wanderamount="0.2" wanderzamount="0.1" swarmmin="1" swarmmax="3" swarmradius="300" scale="0.25">
+    <Sprite texture="Content/BackgroundCreatures/bgFish1.png" sourcerect="256,0,256,171"/>
   </Fish2>
 
-  <Fish3 speed="40.0" wanderamount="3.0" wanderzamount="0.1" swarmmin="3" swarmmax="6" swarmradius="300" disablerotation="true">
-    <Sprite texture="Content/BackgroundCreatures/bgFish1.png" sourcerect="135,0,117,70"/>
+  <Fish3 speed="40.0" wanderamount="3.0" wanderzamount="0.1" swarmmin="3" swarmmax="6" swarmradius="300" scale="0.25" disablerotation="true">
+    <Sprite texture="Content/BackgroundCreatures/bgFish1.png" sourcerect="0,341,512,171"/>
   </Fish3>
 
-  <Fish4 speed="200.0" wanderamount="3.0" wanderzamount="0.1" swarmmin="1" swarmmax="3" swarmradius="300" scale="0.5">
-    <Sprite texture="Content/BackgroundCreatures/bgFish1.png" sourcerect="117,70,139,64"/>
+  <Fish4 speed="200.0" wanderamount="3.0" wanderzamount="0.1" swarmmin="1" swarmmax="3" swarmradius="300" scale="0.25">
+    <Sprite texture="Content/BackgroundCreatures/bgFish1.png" sourcerect="0,171,256,171"/>
   </Fish4>
 
-  <Fish5 speed="80.0" wanderamount="0.1" wanderzamount="0.1" swarmmin="1" swarmmax="3" swarmradius="300" scale="0.5">
-    <Sprite texture="Content/BackgroundCreatures/bgFish1.png" sourcerect="0,130,159,50"/>
+  <Fish5 speed="80.0" wanderamount="0.1" wanderzamount="0.1" swarmmin="1" swarmmax="3" swarmradius="300" scale="0.25">
+    <Sprite texture="Content/BackgroundCreatures/bgFish1.png" sourcerect="256,171,256,171"/>
   </Fish5> 
 </backgroundcreatures>
