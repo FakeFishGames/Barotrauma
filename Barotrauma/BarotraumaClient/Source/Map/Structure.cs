@@ -223,8 +223,9 @@ namespace Barotrauma
                             new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
                             color,
                             Vector2.Zero,
-                            0,
-                            scale: Scale);
+                            scale: Scale,
+                            rotate: 0,
+                            spriteEffect: SpriteEffects);
                     }
                     prefab.BackgroundSprite.effects = oldEffects;
                 }
@@ -283,8 +284,9 @@ namespace Barotrauma
                             new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
                             color,
                             Vector2.Zero,
-                            0,
-                            scale: Scale);
+                            scale: Scale,
+                            rotate: 0,
+                            spriteEffect: SpriteEffects);
                     }
                 }
                 prefab.sprite.effects = oldEffects;
