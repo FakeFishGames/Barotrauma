@@ -740,8 +740,11 @@ namespace Barotrauma.Steam
                 return false;
             }
 
-            var newPackage = ContentPackage.CreatePackage(contentPackage.Name, newContentPackagePath, contentPackage.CorePackage);
-            newPackage.SteamWorkshopUrl = item.Url;
+            var newPackage = new ContentPackage(newContentPackagePath)
+            {
+                SteamWorkshopUrl = item.Url
+            };
+            newPackage.Save(newContentPackagePath);
             ContentPackage.List.Add(newPackage);
             if (newPackage.CorePackage)
             {
