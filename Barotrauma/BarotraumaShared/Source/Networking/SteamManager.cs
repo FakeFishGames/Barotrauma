@@ -185,8 +185,11 @@ namespace Barotrauma.Steam
                 {
                     if (s.Rules.ContainsKey("message")) serverInfo.ServerMessage = s.Rules["message"];
                     if (s.Rules.ContainsKey("version")) serverInfo.GameVersion = s.Rules["version"];
+
                     if (s.Rules.ContainsKey("contentpackage")) serverInfo.ContentPackageNames.AddRange(s.Rules["contentpackage"].Split(','));
                     if (s.Rules.ContainsKey("contentpackagehash")) serverInfo.ContentPackageHashes.AddRange(s.Rules["contentpackagehash"].Split(','));
+                    if (s.Rules.ContainsKey("contentpackageurl")) serverInfo.ContentPackageWorkshopUrls.AddRange(s.Rules["contentpackageurl"].Split(','));
+
                     if (s.Rules.ContainsKey("usingwhitelist")) serverInfo.UsingWhiteList = s.Rules["usingwhitelist"]=="True";
                     if (s.Rules.ContainsKey("modeselectionmode"))
                     {
@@ -203,7 +206,8 @@ namespace Barotrauma.Steam
                         if (Enum.TryParse(s.Rules["traitors"], out YesNoMaybe traitorsEnabled)) serverInfo.TraitorsEnabled = traitorsEnabled;
                     }
 
-                    if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count)
+                    if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count ||
+                        serverInfo.ContentPackageHashes.Count != serverInfo.ContentPackageWorkshopUrls.Count)
                     {
                         //invalid contentpackage info
                         serverInfo.ContentPackageNames.Clear();
@@ -289,6 +293,7 @@ namespace Barotrauma.Steam
             Instance.server.SetKey("version", GameMain.Version.ToString());
             Instance.server.SetKey("contentpackage", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.Name)));
             Instance.server.SetKey("contentpackagehash", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.MD5hash.Hash)));
+            Instance.server.SetKey("contentpackageurl", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.SteamWorkshopUrl ?? "")));
             Instance.server.SetKey("usingwhitelist", (server.WhiteList != null && server.WhiteList.Enabled).ToString());
             Instance.server.SetKey("modeselectionmode", server.ModeSelectionMode.ToString());
             Instance.server.SetKey("subselectionmode", server.SubSelectionMode.ToString());
@@ -715,6 +720,7 @@ namespace Barotrauma.Steam
                         DebugConsole.ThrowError(TextManager.Get("WorkshopErrorIllegalPathOnEnable").Replace("[filename]", contentFile.Path));
                         continue;
                     }
+                    
                     //make sure the destination directory exists
                     Directory.CreateDirectory(Path.GetDirectoryName(contentFile.Path));
                     File.Copy(sourceFile, contentFile.Path, overwrite: true);
