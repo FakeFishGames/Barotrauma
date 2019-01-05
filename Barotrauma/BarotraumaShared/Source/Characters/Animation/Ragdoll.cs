@@ -1743,7 +1743,7 @@ namespace Barotrauma
                 float sin = (float)Math.Sin(mouthLimb.Rotation);
                 mouthPos += new Vector2(
                      mouthLimb.MouthPos.Value.X * cos - mouthLimb.MouthPos.Value.Y * sin,
-                     mouthLimb.MouthPos.Value.X * sin + mouthLimb.MouthPos.Value.Y * cos);
+                     mouthLimb.MouthPos.Value.X * sin + mouthLimb.MouthPos.Value.Y * cos) * RagdollParams.LimbScale;
             }
             return mouthPos;
         }
