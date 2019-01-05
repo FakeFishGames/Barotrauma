@@ -210,6 +210,15 @@ namespace Barotrauma
             }
         }
 
+        public void SubscribeToPackages(List<string> packageUrls)
+        {
+            foreach (string url in packageUrls)
+            {
+                SteamManager.SubscribeToWorkshopItem(url);
+            }
+            GameMain.SteamWorkshopScreen.Select();
+        }
+
         private void RefreshItemLists()
         {
             SteamManager.GetSubscribedWorkshopItems((items) => { OnItemsReceived(items, subscribedItemList); });

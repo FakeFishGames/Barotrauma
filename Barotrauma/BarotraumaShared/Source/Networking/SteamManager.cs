@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Networking;
 using Facepunch.Steamworks;
 using Microsoft.Xna.Framework;
+using RestSharp.Extensions.MonoHttp;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -124,6 +125,25 @@ namespace Barotrauma.Steam
                 return 0;
             }
             return instance.client.SteamId;
+        }
+
+        public static ulong GetWorkshopItemIDFromUrl(string url)
+        {
+            try
+            {
+                Uri uri = new Uri(url);
+                string idStr = HttpUtility.ParseQueryString(uri.Query).Get("id");
+                if (ulong.TryParse(idStr, out ulong id))
+                {
+                    return id;
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Failed to get Workshop item ID from the url \""+url+"\"!", e);
+            }
+
+            return 0;
         }
         
         public static bool UnlockAchievement(string achievementName)
@@ -439,6 +459,24 @@ namespace Barotrauma.Steam
             {
                 onItemsFound?.Invoke(q.Items);
             };
+        }
+
+        public static void SubscribeToWorkshopItem(string itemUrl)
+        {
+            if (instance == null || !instance.isInitialized) return;
+
+            ulong id = GetWorkshopItemIDFromUrl(itemUrl);
+            if (id == 0) { return; }
+
+            var item = instance.client.Workshop.GetItem(id);
+            if (item == null)
+            {
+                DebugConsole.ThrowError("Failed to find a Steam Workshop item with the ID " + id + ".");
+                return;
+            }
+
+            item.Subscribe();
+            item.Download();
         }
 
         public static void SaveToWorkshop(Submarine sub)

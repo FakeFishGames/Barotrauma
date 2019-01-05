@@ -435,6 +435,11 @@
   <ServerListUnknownContentPackage>Could not determine compatibility (unknown content package)</ServerListUnknownContentPackage>
   <ServerListIncompatibleVersion>This server is not compatible with your version of Barotrauma [version] required).</ServerListIncompatibleVersion>
   <ServerListIncompatibleContentPackage>Content package "[contentpackage]" (MD5: [hash]) required to play on this server.</ServerListIncompatibleContentPackage>
+  <ServerListContentPackageNotEnabled>You need to enable the content package in the game's settings "[contentpackage]" to play on this server.</ServerListContentPackageNotEnabled>
+  <ServerListIncompatibleContentPackageWorkshopAvailable>Content package "[contentpackage]" required to play on this server. You can install the package from the Steam Workshop.</ServerListIncompatibleContentPackageWorkshopAvailable>
+  <ServerListSubscribeMissingPackages>Get missing packages from Workshop</ServerListSubscribeMissingPackages>
+  <ServerListSubscribeMissingPackagesTooltip>Subscribe to the missing content packages in the Steam Workshop and open the Workshop menu where you can download and enable them.</ServerListSubscribeMissingPackagesTooltip>
+  <ServerListSubscribeMissingPackagesTooltipNoSteam>The missing content packages are available in the Steam Workshop, but Steam features are not available if you don't own Barotrauma on Steam.</ServerListSubscribeMissingPackagesTooltipNoSteam>
   <FilterServers>Filter servers</FilterServers>
   <FilterPassword>No password required</FilterPassword>
   <FilterIncompatibleServers>Hide incompatible servers</FilterIncompatibleServers>
