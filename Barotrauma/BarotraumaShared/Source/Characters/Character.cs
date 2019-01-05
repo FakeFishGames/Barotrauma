@@ -2416,6 +2416,14 @@ namespace Barotrauma
 
             CharacterList.Remove(this);
 
+            if (Inventory != null)
+            {
+                foreach (Item item in Inventory.Items)
+                {
+                    if (item != null) { Spawner.AddToRemoveQueue(item); }
+                }
+            }
+
             DisposeProjSpecific();
 
             aiTarget?.Remove();
