@@ -247,12 +247,18 @@ namespace Barotrauma
                 {
                     file1WriteTime = File.GetLastWriteTime(file1);
                 }
-                catch { };
+                catch
+                { 
+                    //do nothing - DateTime.MinValue will be used and the element will get sorted at the bottom of the list 
+                };
                 try
                 {
                     file1WriteTime = File.GetLastWriteTime(file2);
                 }
-                catch { };
+                catch
+                {
+                    //do nothing - DateTime.MinValue will be used and the element will get sorted at the bottom of the list 
+                };
                 return file2WriteTime.CompareTo(file1WriteTime);
             });
 
