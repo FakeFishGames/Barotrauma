@@ -94,11 +94,6 @@ namespace Barotrauma.Networking
 
         public void ClientAdminRead(NetBuffer incMsg)
         {
-            //isPublic = incMsg.ReadBoolean();
-            //EnableUPnP = incMsg.ReadBoolean();
-            //incMsg.ReadPadBits();
-            //QueryPort = incMsg.ReadUInt16();
-
             int count = incMsg.ReadUInt16();
             for (int i = 0; i < count; i++)
             {
@@ -146,45 +141,56 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ClientAdminWrite()
+        public void ClientAdminWrite(NetFlags dataToSend)
         {
             if (!GameMain.Client.HasPermission(Networking.ClientPermissions.ManageSettings)) return;
-
-            if (GameMain.NetLobbyScreen.ServerName.Text != ServerName)
-            {
-                ServerName = GameMain.NetLobbyScreen.ServerName.Text;
-            }
-            if (GameMain.NetLobbyScreen.ServerMessage.Text != ServerMessageText)
-            {
-                ServerMessageText = GameMain.NetLobbyScreen.ServerMessage.Text;
-            }
 
             NetOutgoingMessage outMsg = GameMain.NetworkMember.NetPeer.CreateMessage();
 
             outMsg.Write((byte)ClientPacketHeader.SERVER_SETTINGS);
 
-            outMsg.Write(ServerName);
-            outMsg.Write(ServerMessageText);
+            outMsg.Write((byte)dataToSend);
 
-            WriteExtraCargo(outMsg);
-
-            IEnumerable<KeyValuePair<UInt32, NetPropertyData>> changedProperties = netProperties.Where(kvp => kvp.Value.ChangedLocally);
-            UInt32 count = (UInt32)changedProperties.Count();
-            bool changedMonsterSettings = tempMonsterEnabled!=null && tempMonsterEnabled.Any(p => p.Value != MonsterEnabled[p.Key]);
-            
-            outMsg.Write(count);
-            DebugConsole.NewMessage("COUNT: " + count.ToString(), Color.Yellow);
-            foreach (KeyValuePair<UInt32,NetPropertyData> prop in changedProperties)
+            if (dataToSend.HasFlag(NetFlags.Name))
             {
-                DebugConsole.NewMessage(prop.Value.Name, Color.Lime);
-                outMsg.Write(prop.Key);
-                prop.Value.Write(outMsg,prop.Value.GUIComponentValue);
+                if (GameMain.NetLobbyScreen.ServerName.Text != ServerName)
+                {
+                    ServerName = GameMain.NetLobbyScreen.ServerName.Text;
+                }
+                outMsg.Write(ServerName);
             }
 
-            outMsg.Write(changedMonsterSettings); outMsg.WritePadBits();
-            if (changedMonsterSettings) WriteMonsterEnabled(outMsg, tempMonsterEnabled);
-            BanList.ClientAdminWrite(outMsg);
-            Whitelist.ClientAdminWrite(outMsg);
+            if (dataToSend.HasFlag(NetFlags.Message))
+            {
+                if (GameMain.NetLobbyScreen.ServerMessage.Text != ServerMessageText)
+                {
+                    ServerMessageText = GameMain.NetLobbyScreen.ServerMessage.Text;
+                }
+                outMsg.Write(ServerMessageText);
+            }
+
+            if (dataToSend.HasFlag(NetFlags.Properties))
+            {
+                //TODO: split this up?
+                WriteExtraCargo(outMsg);
+
+                IEnumerable<KeyValuePair<UInt32, NetPropertyData>> changedProperties = netProperties.Where(kvp => kvp.Value.ChangedLocally);
+                UInt32 count = (UInt32)changedProperties.Count();
+                bool changedMonsterSettings = tempMonsterEnabled != null && tempMonsterEnabled.Any(p => p.Value != MonsterEnabled[p.Key]);
+
+                outMsg.Write(count);
+                foreach (KeyValuePair<UInt32, NetPropertyData> prop in changedProperties)
+                {
+                    DebugConsole.NewMessage(prop.Value.Name, Color.Lime);
+                    outMsg.Write(prop.Key);
+                    prop.Value.Write(outMsg, prop.Value.GUIComponentValue);
+                }
+
+                outMsg.Write(changedMonsterSettings); outMsg.WritePadBits();
+                if (changedMonsterSettings) WriteMonsterEnabled(outMsg, tempMonsterEnabled);
+                BanList.ClientAdminWrite(outMsg);
+                Whitelist.ClientAdminWrite(outMsg);
+            }
             
             (GameMain.NetworkMember.NetPeer as NetClient).SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
         }
@@ -717,7 +723,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                ClientAdminWrite();
+                ClientAdminWrite(NetFlags.Properties);
                 foreach (NetPropertyData prop in netProperties.Values)
                 {
                     prop.GUIComponent = null;

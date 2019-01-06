@@ -16,6 +16,8 @@ namespace Barotrauma.Networking
         UPDATE_INGAME,  //update state ingame
 
         SERVER_SETTINGS, //change server settings
+        
+        CAMPAIGN_SETUP_INFO,
 
         FILE_REQUEST,   //request a (submarine) file from the server
 
@@ -52,6 +54,8 @@ namespace Barotrauma.Networking
         PERMISSIONS,        //tell the client which special permissions they have (if any)
         ACHIEVEMENT,        //give the client a steam achievement
 
+        CAMPAIGN_SETUP_INFO,
+
         FILE_TRANSFER,
 
         VOICE,
@@ -65,7 +69,6 @@ namespace Barotrauma.Networking
         END_OF_MESSAGE,
         SYNC_IDS,
         CHAT_MESSAGE,
-        VOICE,
         VOTE,
         CLIENT_LIST,
         ENTITY_POSITION,

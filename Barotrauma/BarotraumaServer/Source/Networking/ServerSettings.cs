@@ -74,42 +74,54 @@ namespace Barotrauma.Networking
         {
             if (!c.HasPermission(Networking.ClientPermissions.ManageSettings)) return;
 
+            NetFlags flags = (NetFlags)incMsg.ReadByte();
+
             bool changed = false;
-
-            string serverName = incMsg.ReadString();
-            if (ServerName != serverName) changed = true;
-            ServerName = serverName;
-            string serverMessageText = incMsg.ReadString();
-            if (ServerMessageText != serverMessageText) changed = true;
-            ServerMessageText = serverMessageText;
-
-            changed |= ReadExtraCargo(incMsg);
-
-            UInt32 count = incMsg.ReadUInt32();
-
-            for (int i=0;i<count;i++)
+            
+            if (flags.HasFlag(NetFlags.Name))
             {
-                UInt32 key = incMsg.ReadUInt32();
-                
-                if (netProperties.ContainsKey(key))
-                {
-                    netProperties[key].Read(incMsg);
-                    GameServer.Log(c.Name + " changed " + netProperties[key].Name + " to " + netProperties[key].Value.ToString(),ServerLog.MessageType.ServerMessage);
-                    changed = true;
-                }
-                else
-                {
-                    UInt32 size = incMsg.ReadVariableUInt32();
-                    incMsg.Position += 8 * size;
-                }
+                string serverName = incMsg.ReadString();
+                if (ServerName != serverName) changed = true;
+                ServerName = serverName;
             }
+            
+            if (flags.HasFlag(NetFlags.Message))
+            {
+                string serverMessageText = incMsg.ReadString();
+                if (ServerMessageText != serverMessageText) changed = true;
+                ServerMessageText = serverMessageText;
+            }
+            
+            if (flags.HasFlag(NetFlags.Properties))
+            {
+                changed |= ReadExtraCargo(incMsg);
 
-            bool changedMonsterSettings = incMsg.ReadBoolean(); incMsg.ReadPadBits();
-            changed |= changedMonsterSettings;
-            if (changedMonsterSettings) ReadMonsterEnabled(incMsg);
-            changed |= BanList.ServerAdminRead(incMsg, c);
-            changed |= Whitelist.ServerAdminRead(incMsg, c);
+                UInt32 count = incMsg.ReadUInt32();
 
+                for (int i = 0; i < count; i++)
+                {
+                    UInt32 key = incMsg.ReadUInt32();
+
+                    if (netProperties.ContainsKey(key))
+                    {
+                        netProperties[key].Read(incMsg);
+                        GameServer.Log(c.Name + " changed " + netProperties[key].Name + " to " + netProperties[key].Value.ToString(), ServerLog.MessageType.ServerMessage);
+                        changed = true;
+                    }
+                    else
+                    {
+                        UInt32 size = incMsg.ReadVariableUInt32();
+                        incMsg.Position += 8 * size;
+                    }
+                }
+
+                bool changedMonsterSettings = incMsg.ReadBoolean(); incMsg.ReadPadBits();
+                changed |= changedMonsterSettings;
+                if (changedMonsterSettings) ReadMonsterEnabled(incMsg);
+                changed |= BanList.ServerAdminRead(incMsg, c);
+                changed |= Whitelist.ServerAdminRead(incMsg, c);
+            }
+            
             if (changed) GameMain.NetLobbyScreen.LastUpdateID++;
         }
 

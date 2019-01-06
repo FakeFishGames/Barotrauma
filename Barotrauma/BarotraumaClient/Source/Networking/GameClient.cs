@@ -696,6 +696,16 @@ namespace Barotrauma.Networking
                                 }
                                 CoroutineManager.StartCoroutine(EndGame(endMessage));
                                 break;
+                            case ServerPacketHeader.CAMPAIGN_SETUP_INFO:
+                                UInt16 saveCount = inc.ReadUInt16();
+                                List<string> saveFiles = new List<string>();
+                                for (int i=0;i<saveCount;i++)
+                                {
+                                    saveFiles.Add(inc.ReadString());
+                                }
+                                
+                                GameMain.NetLobbyScreen.CampaignSetupUI = MultiPlayerCampaign.StartCampaignSetup(saveFiles);
+                                break;
                             case ServerPacketHeader.PERMISSIONS:
                                 ReadPermissions(inc);
                                 break;
@@ -1769,7 +1779,7 @@ namespace Barotrauma.Networking
         public void RequestSelectMode(int modeIndex)
         {
             if (!HasPermission(ClientPermissions.SelectMode)) return;
-            if (modeIndex < 0 || modeIndex >= GameMain.NetLobbyScreen.ModeList.CountChildren)
+            if (modeIndex < 0 || modeIndex >= GameMain.NetLobbyScreen.ModeList.Content.CountChildren)
             {
                 DebugConsole.ThrowError("Gamemode index out of bounds (" + modeIndex + ")\n" + Environment.StackTrace);
                 return;
@@ -1782,6 +1792,34 @@ namespace Barotrauma.Networking
             msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        public void SetupNewCampaign(Submarine sub, string savePath, string mapSeed)
+        {
+            NetOutgoingMessage msg = client.CreateMessage();
+            msg.Write((byte)ClientPacketHeader.CAMPAIGN_SETUP_INFO);
+
+            msg.Write(true); msg.WritePadBits();
+            msg.Write(savePath);
+            msg.Write(mapSeed);
+            msg.Write(sub.FilePath);
+
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+
+            GameMain.NetLobbyScreen.CampaignSetupUI = null;
+        }
+
+        public void SetupLoadCampaign(string saveName)
+        {
+            NetOutgoingMessage msg = client.CreateMessage();
+            msg.Write((byte)ClientPacketHeader.CAMPAIGN_SETUP_INFO);
+
+            msg.Write(false); msg.WritePadBits();
+            msg.Write(saveName);
+            
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+
+            GameMain.NetLobbyScreen.CampaignSetupUI = null;
         }
 
         /// <summary>

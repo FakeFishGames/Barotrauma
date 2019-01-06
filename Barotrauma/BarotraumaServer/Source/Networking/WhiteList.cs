@@ -182,7 +182,7 @@ namespace Barotrauma.Networking
                 }
 
                 UInt16 addCount = incMsg.ReadUInt16();
-                for  (int i = 0; i < addCount; i++)
+                for (int i = 0; i < addCount; i++)
                 {
                     string name = incMsg.ReadString();
                     string ip = incMsg.ReadString();

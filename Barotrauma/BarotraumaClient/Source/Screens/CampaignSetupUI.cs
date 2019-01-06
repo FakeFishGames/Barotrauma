@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -22,7 +23,7 @@ namespace Barotrauma
 
         private bool isMultiplayer;
 
-        public CampaignSetupUI(bool isMultiplayer, GUIComponent newGameContainer, GUIComponent loadGameContainer)
+        public CampaignSetupUI(bool isMultiplayer, GUIComponent newGameContainer, GUIComponent loadGameContainer, IEnumerable<string> saveFiles=null)
         {
             this.isMultiplayer = isMultiplayer;
             this.newGameContainer = newGameContainer;
@@ -124,7 +125,7 @@ namespace Barotrauma
                 }
             };
 
-            UpdateLoadMenu();
+            UpdateLoadMenu(saveFiles);
         }
 
         public void CreateDefaultSaveName()
@@ -194,11 +195,11 @@ namespace Barotrauma
             }
         }
 
-        public void UpdateLoadMenu()
+        public void UpdateLoadMenu(IEnumerable<string> saveFiles=null)
         {
             loadGameContainer.ClearChildren();
 
-            string[] saveFiles = SaveUtil.GetSaveFiles(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer);
+            if (saveFiles==null) saveFiles = SaveUtil.GetSaveFiles(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer);
 
             saveList = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), loadGameContainer.RectTransform, Anchor.CenterLeft))
             {

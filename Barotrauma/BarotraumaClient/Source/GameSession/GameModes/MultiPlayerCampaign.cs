@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     partial class MultiPlayerCampaign : CampaignMode
     {
-        public static GUIComponent StartCampaignSetup()
+        public static GUIComponent StartCampaignSetup(IEnumerable<string> saveFiles)
         {
             GUIFrame background = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
 
@@ -31,7 +31,7 @@ namespace Barotrauma
             var newCampaignContainer = new GUIFrame(new RectTransform(Vector2.One, campaignContainer.RectTransform, Anchor.BottomLeft), style: null);
             var loadCampaignContainer = new GUIFrame(new RectTransform(Vector2.One, campaignContainer.RectTransform, Anchor.BottomLeft), style: null);
 
-            var campaignSetupUI = new CampaignSetupUI(true, newCampaignContainer, loadCampaignContainer);
+            var campaignSetupUI = new CampaignSetupUI(true, newCampaignContainer, loadCampaignContainer, saveFiles);
 
             var newCampaignButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonContainer.RectTransform),
                 TextManager.Get("NewCampaign"))
@@ -57,53 +57,16 @@ namespace Barotrauma
 
             loadCampaignContainer.Visible = false;
 
-            campaignSetupUI.StartNewGame = (Submarine sub, string saveName, string mapSeed) =>
-            {
-                GameMain.GameSession = new GameSession(new Submarine(sub.FilePath, ""), saveName, GameModePreset.list.Find(g => g.Name == "Campaign"));
-                var campaign = ((MultiPlayerCampaign)GameMain.GameSession.GameMode);
-                campaign.GenerateMap(mapSeed);
-                campaign.SetDelegates(); //TODO: remove?
+            campaignSetupUI.StartNewGame = GameMain.Client.SetupNewCampaign;
 
-                background.Visible = false;
-
-                GameMain.NetLobbyScreen.ToggleCampaignMode(true);
-                campaign.Map.SelectRandomLocation(true);
-                SaveUtil.SaveGame(GameMain.GameSession.SavePath);
-                campaign.LastSaveID++;
-            };
-
-            campaignSetupUI.LoadGame = (string fileName) =>
-            {
-                SaveUtil.LoadGame(fileName);
-                if (!(GameMain.GameSession.GameMode is MultiPlayerCampaign))
-                {
-                    DebugConsole.ThrowError("Failed to load the campaign. The save file appears to be for a single player campaign.");
-                    return;
-                }
-
-                var campaign = ((MultiPlayerCampaign)GameMain.GameSession.GameMode);
-                campaign.LastSaveID++;
-
-                background.Visible = false;
-
-                GameMain.NetLobbyScreen.ToggleCampaignMode(true);
-                campaign.Map.SelectRandomLocation(true);
-            };
+            campaignSetupUI.LoadGame = GameMain.Client.SetupLoadCampaign;
 
             var cancelButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.05f), paddedFrame.RectTransform, Anchor.BottomLeft), TextManager.Get("Cancel"))
             {
                 OnClicked = (btn, obj) =>
                 {
-                    //find the first mode that's not multiplayer campaign and switch to that
                     background.Visible = false;
-                    int otherModeIndex = 0;
-                    for (otherModeIndex = 0; otherModeIndex < GameMain.NetLobbyScreen.ModeList.Content.CountChildren; otherModeIndex++)
-                    {
-                        if (GameMain.NetLobbyScreen.ModeList.Content.GetChild(otherModeIndex).UserData is MultiPlayerCampaign) continue;
-                        break;
-                    }
 
-                    GameMain.NetLobbyScreen.SelectMode(otherModeIndex);
                     return true;
                 }
             };
