@@ -240,7 +240,7 @@ namespace Barotrauma
             saveList.Content.RectTransform.SortChildren((c1, c2) =>
             {
                 string file1 = c1.GUIComponent.UserData as string;
-                string file2 = c1.GUIComponent.UserData as string;
+                string file2 = c2.GUIComponent.UserData as string;
                 DateTime file1WriteTime = DateTime.MinValue;
                 DateTime file2WriteTime = DateTime.MinValue;
                 try
@@ -253,7 +253,7 @@ namespace Barotrauma
                 };
                 try
                 {
-                    file1WriteTime = File.GetLastWriteTime(file2);
+                    file2WriteTime = File.GetLastWriteTime(file2);
                 }
                 catch
                 {
