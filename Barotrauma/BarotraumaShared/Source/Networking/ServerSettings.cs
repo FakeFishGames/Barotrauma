@@ -27,9 +27,18 @@ namespace Barotrauma.Networking
     {
         Normal, Fill
     }
-
+    
     partial class ServerSettings : ISerializableEntity
     {
+        [Flags]
+        public enum NetFlags : byte
+        {
+            Name = 0x1,
+            Message = 0x2,
+            Properties = 0x4,
+            GameMode = 0x8
+        }
+
         public string Name
         {
             get { return "ServerSettings"; }

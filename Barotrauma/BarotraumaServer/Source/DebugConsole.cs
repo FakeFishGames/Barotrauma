@@ -766,31 +766,39 @@ namespace Barotrauma
             commands.Add(new Command("gamemode", "gamemode [name]/[index]: Select the game mode for the next round. The parameter can either be the name or the index number of the game mode (0 = sandbox, 1 = mission, etc).", (string[] args) =>
             {
                 int index = -1;
-                if (int.TryParse(string.Join(" ", args), out index))
+                if (string.Join("", args).Trim().Length > 0)
                 {
-                    if (index > 0 && index < GameMain.NetLobbyScreen.GameModes.Length && 
-                        GameMain.NetLobbyScreen.GameModes[index].Name == "Campaign")
+                    if (int.TryParse(string.Join(" ", args), out index))
                     {
-                        MultiPlayerCampaign.StartCampaignSetup();
+                        if (index > 0 && index < GameMain.NetLobbyScreen.GameModes.Length &&
+                            GameMain.NetLobbyScreen.GameModes[index].Name == "Campaign")
+                        {
+                            MultiPlayerCampaign.StartCampaignSetup();
+                        }
+                        else
+                        {
+                            GameMain.NetLobbyScreen.SelectedModeIndex = index;
+                            NewMessage("Set gamemode to " + GameMain.NetLobbyScreen.SelectedModeName, Color.Cyan);
+                        }
                     }
                     else
                     {
-                        GameMain.NetLobbyScreen.SelectedModeIndex = index;
+                        string modeName = string.Join(" ", args);
+                        if (modeName.ToLowerInvariant() == "campaign")
+                        {
+                            MultiPlayerCampaign.StartCampaignSetup();
+                        }
+                        else
+                        {
+                            GameMain.NetLobbyScreen.SelectedModeName = modeName;
+                            NewMessage("Set gamemode to " + GameMain.NetLobbyScreen.SelectedModeName, Color.Cyan);
+                        }
                     }
                 }
                 else
                 {
-                    string modeName = string.Join(" ", args);
-                    if (modeName.ToLowerInvariant() == "campaign")
-                    {
-                        MultiPlayerCampaign.StartCampaignSetup();
-                    }
-                    else
-                    {
-                        GameMain.NetLobbyScreen.SelectedModeName = modeName;
-                    }
+                    NewMessage("Current gamemode is " + GameMain.NetLobbyScreen.SelectedModeName, Color.Cyan);
                 }
-                NewMessage("Set gamemode to " + GameMain.NetLobbyScreen.SelectedModeName, Color.Cyan);
             },
             () =>
             {

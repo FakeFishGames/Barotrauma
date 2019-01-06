@@ -10,6 +10,35 @@ namespace Barotrauma
 {
     partial class MultiPlayerCampaign : CampaignMode
     {
+        public static void StartNewCampaign(string savePath, string subName, string seed)
+        {
+            if (string.IsNullOrWhiteSpace(savePath)) return;
+
+            GameMain.GameSession = new GameSession(new Submarine(subName, ""), savePath, GameModePreset.list.Find(g => g.Name == "Campaign"));
+            var campaign = ((MultiPlayerCampaign)GameMain.GameSession.GameMode);
+            campaign.GenerateMap(seed);
+            campaign.SetDelegates();
+
+            GameMain.NetLobbyScreen.ToggleCampaignMode(true);
+            GameMain.GameSession.Map.SelectRandomLocation(true);
+            SaveUtil.SaveGame(GameMain.GameSession.SavePath);
+            campaign.LastSaveID++;
+
+            DebugConsole.NewMessage("Campaign started!", Color.Cyan);
+            DebugConsole.NewMessage(GameMain.GameSession.Map.CurrentLocation.Name + " -> " + GameMain.GameSession.Map.SelectedLocation.Name, Color.Cyan);
+        }
+
+        public static void LoadCampaign(string selectedSave)
+        {
+            SaveUtil.LoadGame(selectedSave);
+            ((MultiPlayerCampaign)GameMain.GameSession.GameMode).LastSaveID++;
+            GameMain.NetLobbyScreen.ToggleCampaignMode(true);
+            GameMain.GameSession.Map.SelectRandomLocation(true);
+
+            DebugConsole.NewMessage("Campaign loaded!", Color.Cyan);
+            DebugConsole.NewMessage(GameMain.GameSession.Map.CurrentLocation.Name + " -> " + GameMain.GameSession.Map.SelectedLocation.Name, Color.Cyan);
+        }
+
         public static void StartCampaignSetup()
         {
             DebugConsole.NewMessage("********* CAMPAIGN SETUP *********", Color.White);
@@ -19,21 +48,7 @@ namespace Barotrauma
                 {
                     DebugConsole.ShowQuestionPrompt("Enter a save name for the campaign:", (string saveName) =>
                     {
-                        if (string.IsNullOrWhiteSpace(saveName)) return;
-
-                        string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer, saveName);
-                        GameMain.GameSession = new GameSession(new Submarine(GameMain.NetLobbyScreen.SelectedSub.FilePath, ""), savePath, GameModePreset.list.Find(g => g.Name == "Campaign"));
-                        var campaign = ((MultiPlayerCampaign)GameMain.GameSession.GameMode);
-                        campaign.GenerateMap(GameMain.NetLobbyScreen.LevelSeed);
-                        campaign.SetDelegates();
-
-                        GameMain.NetLobbyScreen.ToggleCampaignMode(true);
-                        GameMain.GameSession.Map.SelectRandomLocation(true);
-                        SaveUtil.SaveGame(GameMain.GameSession.SavePath);
-                        campaign.LastSaveID++;
-
-                        DebugConsole.NewMessage("Campaign started!", Color.Cyan);
-                        DebugConsole.NewMessage(GameMain.GameSession.Map.CurrentLocation.Name + " -> " + GameMain.GameSession.Map.SelectedLocation.Name, Color.Cyan);
+                        StartNewCampaign(saveName, GameMain.NetLobbyScreen.SelectedSub.FilePath, GameMain.NetLobbyScreen.LevelSeed);
                     });
                 }
                 else
@@ -49,13 +64,7 @@ namespace Barotrauma
                         int saveIndex = -1;
                         if (!int.TryParse(selectedSave, out saveIndex)) return;
 
-                        SaveUtil.LoadGame(saveFiles[saveIndex]);
-                        ((MultiPlayerCampaign)GameMain.GameSession.GameMode).LastSaveID++;
-                        GameMain.NetLobbyScreen.ToggleCampaignMode(true);
-                        GameMain.GameSession.Map.SelectRandomLocation(true);
-
-                        DebugConsole.NewMessage("Campaign loaded!", Color.Cyan);
-                        DebugConsole.NewMessage(GameMain.GameSession.Map.CurrentLocation.Name + " -> " + GameMain.GameSession.Map.SelectedLocation.Name, Color.Cyan);
+                        LoadCampaign(saveFiles[saveIndex]);
                     });
                 }
             });

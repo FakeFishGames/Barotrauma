@@ -67,7 +67,7 @@ namespace Barotrauma
         private GUITickBox shuttleTickBox;
 
         private CampaignUI campaignUI;
-        private GUIComponent campaignSetupUI;
+        public GUIComponent CampaignSetupUI;
 
         private Sprite backgroundSprite;
         
@@ -340,7 +340,7 @@ namespace Barotrauma
             ServerName = new GUITextBox(new RectTransform(new Vector2(0.3f, 0.05f), defaultModeContainer.RectTransform));
             ServerName.OnDeselected += (textBox, key) =>
             {
-                GameMain.Client.ServerSettings.ClientAdminWrite();
+                GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Name);
             };
             clientDisabledElements.Add(ServerName);
 
@@ -350,7 +350,7 @@ namespace Barotrauma
             };
             ServerMessage.OnDeselected += (textBox, key) =>
             {
-                GameMain.Client.ServerSettings.ClientAdminWrite();
+                GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Message);
             };
             clientDisabledElements.Add(ServerMessage);
             
@@ -1162,16 +1162,17 @@ namespace Barotrauma
             }
             else if (component.Parent == GameMain.NetLobbyScreen.ModeList.Content)
             {
-                if (!((GameModePreset)userData).Votable) return false;
                 if (!GameMain.Client.ServerSettings.Voting.AllowModeVoting)
                 {
                     if (GameMain.Client.HasPermission(ClientPermissions.SelectMode))
                     {
                         GameMain.Client.RequestSelectMode(component.Parent.GetChildIndex(component));
-                        return true;
+                        string presetName = ((GameModePreset)(component.UserData)).Name;
+                        return (presetName.ToLowerInvariant() != "campaign");
                     }
                     return false;
                 }
+                else if (!((GameModePreset)userData).Votable) return false;
 
                 voteType = VoteType.Mode;
             }
@@ -1459,7 +1460,7 @@ namespace Barotrauma
               
             menu.AddToGUIUpdateList();              
             playerFrame?.AddToGUIUpdateList();  
-            campaignSetupUI?.AddToGUIUpdateList();
+            CampaignSetupUI?.AddToGUIUpdateList();
             jobInfoFrame?.AddToGUIUpdateList();
         }
         
@@ -1478,9 +1479,9 @@ namespace Barotrauma
         {
             base.Update(deltaTime);
                         
-            if (campaignSetupUI != null)
+            if (CampaignSetupUI != null)
             {
-                if (!campaignSetupUI.Visible) campaignSetupUI = null;                
+                if (!CampaignSetupUI.Visible) CampaignSetupUI = null;                
             }
 
             if (autoRestartTimer != 0.0f && autoRestartBox.Selected)
@@ -1551,15 +1552,7 @@ namespace Barotrauma
         {
             if (modeIndex < 0 || modeIndex >= modeList.Content.CountChildren || modeList.SelectedIndex == modeIndex) return;
 
-            if (((GameModePreset)modeList.Content.GetChild(modeIndex).UserData).Name == "Campaign")
-            {
-                /*if (GameMain.Server != null)
-                {
-                    campaignSetupUI = MultiPlayerCampaign.StartCampaignSetup();
-                    return;
-                }*/
-            }
-            else
+            if (((GameModePreset)modeList.Content.GetChild(modeIndex).UserData).Name != "Campaign")
             {
                 ToggleCampaignMode(false);
             }

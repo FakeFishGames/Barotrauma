@@ -624,6 +624,23 @@ namespace Barotrauma.Networking
 
                     ClientReadIngame(inc);
                     break;
+                case ClientPacketHeader.CAMPAIGN_SETUP_INFO:
+                    bool isNew = inc.ReadBoolean(); inc.ReadPadBits();
+                    if (isNew)
+                    {
+                        string savePath = inc.ReadString();
+                        string seed = inc.ReadString();
+                        string subName = inc.ReadString();
+                        
+                        MultiPlayerCampaign.StartNewCampaign(savePath, subName, seed);
+                    }
+                    else
+                    {
+                        string saveName = inc.ReadString();
+
+                        MultiPlayerCampaign.LoadCampaign(saveName);
+                    }
+                    break;
                 case ClientPacketHeader.VOICE:
                     byte id = inc.ReadByte();
                     if (connectedClient.ID != id)
@@ -917,7 +934,24 @@ namespace Barotrauma.Networking
                     break;
                 case ClientPermissions.SelectMode:
                     UInt16 modeIndex = inc.ReadUInt16();
-                    var modeList = GameMain.NetLobbyScreen.SelectedModeIndex = modeIndex;
+                    if (GameMain.NetLobbyScreen.GameModes[modeIndex].Name.ToLowerInvariant() == "campaign")
+                    {
+                        NetOutgoingMessage msg = server.CreateMessage();
+                        msg.Write((byte)ServerPacketHeader.CAMPAIGN_SETUP_INFO);
+                        string[] saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Multiplayer);
+                        msg.Write((UInt16)saveFiles.Count());
+                        foreach (string saveFile in saveFiles)
+                        {
+                            msg.Write(saveFile);
+                        }
+                            
+                        server.SendMessage(msg, sender.Connection, NetDeliveryMethod.ReliableUnordered);
+                    }
+                    else
+                    {
+                        GameMain.NetLobbyScreen.SelectedModeIndex = modeIndex;
+                        Log("Gamemode changed to " + GameMain.NetLobbyScreen.SelectedModeName, ServerLog.MessageType.ServerMessage);
+                    }
                     break;
                 case ClientPermissions.ManageCampaign:
                     MultiPlayerCampaign campaign = GameMain.GameSession.GameMode as MultiPlayerCampaign;
