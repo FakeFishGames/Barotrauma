@@ -14,6 +14,7 @@ namespace Barotrauma
         Submarine,
         Jobs, 
         Item, 
+        ItemAssembly,
         Character,
         Structure,
         Executable,
