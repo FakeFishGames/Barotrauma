@@ -32,7 +32,7 @@ namespace Barotrauma
 
 #if DEBUG
         [Editable(DecimalCount = 3), Serialize("1.0, 1.0", false)]
-else
+#else
         [Editable(DecimalCount = 3)]
 #endif
 
