@@ -29,9 +29,11 @@ namespace Barotrauma
 
         // Only for testing in the debug build. Not saved.
         protected Vector2 textureScale = Vector2.One;
-        [Editable(DecimalCount = 3),
+
 #if DEBUG
-            Serialize("1.0, 1.0", false)]
+        [Editable(DecimalCount = 3), Serialize("1.0, 1.0", false)]
+else
+        [Editable(DecimalCount = 3)]
 #endif
 
         public Vector2 TextureScale
