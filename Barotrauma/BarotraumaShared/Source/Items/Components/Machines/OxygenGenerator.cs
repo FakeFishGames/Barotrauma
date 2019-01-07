@@ -44,6 +44,11 @@ namespace Barotrauma.Items.Components
             //consume more power when in a bad condition
             currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / 100.0f);
 
+            if (powerConsumption <= 0.0f)
+            {
+                voltage = 1.0f;
+            }
+
             if (item.CurrentHull == null) return;
 
             if (voltage < minVoltage)
