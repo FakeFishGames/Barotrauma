@@ -722,6 +722,22 @@ namespace Barotrauma
                             structure.Indestructible = true;
                         }
                     }
+
+                    WayPoint watchmanSpawnpoint = WayPoint.WayPointList.Find(wp => wp.Submarine == outpost);
+                    if (watchmanSpawnpoint == null)
+                    {
+                        DebugConsole.ThrowError("Failed to spawn a watchman at the outpost. No spawnpoints found inside the outpost.");
+                    }
+                    else
+                    {
+                        JobPrefab watchmanJob = JobPrefab.List.Find(jp => jp.Identifier == "watchman");
+                        CharacterInfo characterInfo = new CharacterInfo(Character.HumanConfigFile, jobPrefab: watchmanJob);
+                        var spawnedCharacter = Character.Create(characterInfo, watchmanSpawnpoint.WorldPosition, ToolBox.RandomSeed(8));
+                        if (watchmanJob != null)
+                        {
+                            spawnedCharacter.GiveJobItems();
+                        }
+                    }
                 }
             }
 
