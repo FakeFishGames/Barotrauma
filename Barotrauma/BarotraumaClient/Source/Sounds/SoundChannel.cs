@@ -5,6 +5,78 @@ using System.Collections.Generic;
 
 namespace Barotrauma.Sounds
 {
+    public class SoundSourcePool : IDisposable
+    {
+        public uint[] ALSources
+        {
+            get;
+            private set;
+        }
+
+        public SoundSourcePool(int sourceCount=SoundManager.SOURCE_COUNT)
+        {
+            ALError alError = ALError.NoError;
+
+            ALSources = new uint[sourceCount];
+            for (int i = 0; i < sourceCount; i++)
+            {
+                AL.GenSource(out ALSources[i]);
+                alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Error generating alSource[" + i.ToString() + "]: " + AL.GetErrorString(alError));
+                }
+
+                if (!AL.IsSource(ALSources[i]))
+                {
+                    throw new Exception("Generated alSource[" + i.ToString() + "] is invalid!");
+                }
+
+                AL.SourceStop(ALSources[i]);
+                alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Error stopping newly generated alSource[" + i.ToString() + "]: " + AL.GetErrorString(alError));
+                }
+
+                AL.Source(ALSources[i], ALSourcef.MinGain, 0.0f);
+                alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Error setting min gain: " + AL.GetErrorString(alError));
+                }
+
+                AL.Source(ALSources[i], ALSourcef.MaxGain, 1.0f);
+                alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Error setting max gain: " + AL.GetErrorString(alError));
+                }
+
+                AL.Source(ALSources[i], ALSourcef.RolloffFactor, 1.0f);
+                alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Error setting rolloff factor: " + AL.GetErrorString(alError));
+                }
+            }
+        }
+
+        public void Dispose()
+        {
+            for (int i = 0; i < ALSources.Length; i++)
+            {
+                AL.DeleteSource(ref ALSources[i]);
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Failed to delete ALSources[" + i.ToString() + "]: " + AL.GetErrorString(alError));
+                }
+            }
+            ALSources = null;
+        }
+    }
+
     public class SoundChannel : IDisposable
     {
         private const int STREAM_BUFFER_SIZE = 65536;
@@ -22,7 +94,7 @@ namespace Barotrauma.Sounds
 
                 if (position != null)
                 {
-                    uint alSource = Sound.Owner.GetSourceFromIndex(ALSourceIndex);
+                    uint alSource = Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex);
                     AL.Source(alSource, ALSourceb.SourceRelative, false);
                     ALError alError = AL.GetError();
                     if (alError != ALError.NoError)
@@ -39,7 +111,7 @@ namespace Barotrauma.Sounds
                 }
                 else
                 {
-                    uint alSource = Sound.Owner.GetSourceFromIndex(ALSourceIndex);
+                    uint alSource = Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex);
                     AL.Source(alSource, ALSourceb.SourceRelative, true);
                     ALError alError = AL.GetError();
                     if (alError != ALError.NoError)
@@ -67,7 +139,7 @@ namespace Barotrauma.Sounds
 
                 if (ALSourceIndex < 0) return;
 
-                uint alSource = Sound.Owner.GetSourceFromIndex(ALSourceIndex);
+                uint alSource = Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex);
                 AL.Source(alSource, ALSourcef.ReferenceDistance, near);
                 
                 ALError alError = AL.GetError();
@@ -88,7 +160,7 @@ namespace Barotrauma.Sounds
 
                 if (ALSourceIndex < 0) return;
 
-                uint alSource = Sound.Owner.GetSourceFromIndex(ALSourceIndex);
+                uint alSource = Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex);
                 AL.Source(alSource, ALSourcef.MaxDistance, far);
                 ALError alError = AL.GetError();
                 if (alError != ALError.NoError)
@@ -108,7 +180,7 @@ namespace Barotrauma.Sounds
 
                 if (ALSourceIndex < 0) return;
 
-                uint alSource = Sound.Owner.GetSourceFromIndex(ALSourceIndex);
+                uint alSource = Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex);
 
                 float effectiveGain = gain;
                 if (category != null) effectiveGain *= Sound.Owner.GetCategoryGainMultiplier(category);
@@ -134,7 +206,7 @@ namespace Barotrauma.Sounds
 
                 if (!IsStream)
                 {
-                    uint alSource = Sound.Owner.GetSourceFromIndex(ALSourceIndex);
+                    uint alSource = Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex);
                     AL.Source(alSource, ALSourceb.Looping, looping);
                     ALError alError = AL.GetError();
                     if (alError != ALError.NoError)
@@ -167,7 +239,7 @@ namespace Barotrauma.Sounds
 
                 if (!IsStream)
                 {
-                    uint alSource = Sound.Owner.GetSourceFromIndex(ALSourceIndex);
+                    uint alSource = Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex);
                     int playbackPos; AL.GetSource(alSource, ALGetSourcei.SampleOffset, out playbackPos);
                     ALError alError = AL.GetError();
                     if (alError != ALError.NoError)
@@ -250,7 +322,7 @@ namespace Barotrauma.Sounds
             {
                 if (ALSourceIndex < 0) return false;
                 if (IsStream && !reachedEndSample) return true;
-                bool playing = AL.GetSourceState(Sound.Owner.GetSourceFromIndex(ALSourceIndex)) == ALSourceState.Playing;
+                bool playing = AL.GetSourceState(Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex)) == ALSourceState.Playing;
                 ALError alError = AL.GetError();
                 if (alError != ALError.NoError)
                 {
@@ -277,7 +349,7 @@ namespace Barotrauma.Sounds
             {
                 if (!IsStream)
                 {
-                    AL.BindBufferToSource(sound.Owner.GetSourceFromIndex(ALSourceIndex), 0);
+                    AL.BindBufferToSource(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex), 0);
                     ALError alError = AL.GetError();
                     if (alError != ALError.NoError)
                     {
@@ -290,14 +362,14 @@ namespace Barotrauma.Sounds
                     }
 
                     uint alBuffer = sound.Owner.GetCategoryMuffle(category) || muffle ? sound.ALMuffledBuffer : sound.ALBuffer;
-                    AL.BindBufferToSource(sound.Owner.GetSourceFromIndex(ALSourceIndex), alBuffer);
+                    AL.BindBufferToSource(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex), alBuffer);
                     alError = AL.GetError();
                     if (alError != ALError.NoError)
                     {
-                        throw new Exception("Failed to bind buffer to source (" +ALSourceIndex.ToString()+":"+sound.Owner.GetSourceFromIndex(ALSourceIndex)+"," +sound.ALBuffer.ToString()+"): " + AL.GetErrorString(alError));
+                        throw new Exception("Failed to bind buffer to source (" +ALSourceIndex.ToString()+":"+sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex) +"," +sound.ALBuffer.ToString()+"): " + AL.GetErrorString(alError));
                     }
 
-                    AL.SourcePlay(sound.Owner.GetSourceFromIndex(ALSourceIndex));
+                    AL.SourcePlay(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex));
                     alError = AL.GetError();
                     if (alError != ALError.NoError)
                     {
@@ -306,14 +378,14 @@ namespace Barotrauma.Sounds
                 }
                 else
                 {
-                    AL.BindBufferToSource(sound.Owner.GetSourceFromIndex(ALSourceIndex), (uint)sound.ALBuffer);
+                    AL.BindBufferToSource(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex), (uint)sound.ALBuffer);
                     ALError alError = AL.GetError();
                     if (alError != ALError.NoError)
                     {
                         throw new Exception("Failed to reset source buffer: " + AL.GetErrorString(alError));
                     }
                 
-                    AL.Source(sound.Owner.GetSourceFromIndex(ALSourceIndex), ALSourceb.Looping, false);
+                    AL.Source(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex), ALSourceb.Looping, false);
                     alError = AL.GetError();
                     if (alError != ALError.NoError)
                     {
@@ -358,7 +430,7 @@ namespace Barotrauma.Sounds
             {
                 if (ALSourceIndex >= 0)
                 {
-                    AL.SourceStop(Sound.Owner.GetSourceFromIndex(ALSourceIndex));
+                    AL.SourceStop(Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex));
                     ALError alError = AL.GetError();
                     if (alError != ALError.NoError)
                     {
@@ -367,7 +439,7 @@ namespace Barotrauma.Sounds
                 
                     if (IsStream)
                     {
-                        uint alSource = Sound.Owner.GetSourceFromIndex(ALSourceIndex);
+                        uint alSource = Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex);
 
                         AL.SourceStop(alSource);
                         alError = AL.GetError();
@@ -416,7 +488,7 @@ namespace Barotrauma.Sounds
                     }
                     else
                     {
-                        AL.BindBufferToSource(Sound.Owner.GetSourceFromIndex(ALSourceIndex), 0);
+                        AL.BindBufferToSource(Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex), 0);
                         alError = AL.GetError();
                         if (alError != ALError.NoError)
                         {
@@ -437,7 +509,7 @@ namespace Barotrauma.Sounds
             {
                 if (!reachedEndSample)
                 {
-                    uint alSource = Sound.Owner.GetSourceFromIndex(ALSourceIndex);
+                    uint alSource = Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex);
 
                     bool playing = AL.GetSourceState(alSource) == ALSourceState.Playing;
                     ALError alError = AL.GetError();

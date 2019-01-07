@@ -15,6 +15,14 @@ namespace Barotrauma.Sounds
 {
     public class VoipSound : Sound
     {
+        public override SoundManager.SourcePoolIndex SourcePoolIndex
+        {
+            get
+            {
+                return SoundManager.SourcePoolIndex.Voice;
+            }
+        }
+
         private VoipQueue queue;
         public int bufferID = 0;
         

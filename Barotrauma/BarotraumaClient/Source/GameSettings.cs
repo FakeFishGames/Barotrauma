@@ -316,8 +316,8 @@ namespace Barotrauma
             };
             soundScrollBar.OnMoved(soundScrollBar, soundScrollBar.BarScroll);
 
-            GUITextBlock musicVolumeText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), audioSliders.RectTransform), TextManager.Get("MusicVolume"));
-            GUIScrollBar musicScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.2f), audioSliders.RectTransform),
+            GUITextBlock musicVolumeText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.18f), audioSliders.RectTransform), TextManager.Get("MusicVolume"));
+            GUIScrollBar musicScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.18f), audioSliders.RectTransform),
                 barSize: 0.1f)
             {
                 UserData = musicVolumeText,
@@ -332,7 +332,7 @@ namespace Barotrauma
             };
             musicScrollBar.OnMoved(musicScrollBar, musicScrollBar.BarScroll);
 
-            GUITickBox muteOnFocusLostBox = new GUITickBox(new RectTransform(new Vector2(0.95f, 0.2f), audioSliders.RectTransform), TextManager.Get("MuteOnFocusLost"));
+            GUITickBox muteOnFocusLostBox = new GUITickBox(new RectTransform(new Vector2(0.95f, 0.15f), audioSliders.RectTransform), TextManager.Get("MuteOnFocusLost"));
             muteOnFocusLostBox.Selected = MuteOnFocusLost;
             muteOnFocusLostBox.OnSelected = (tickBox) =>
             {
