@@ -101,16 +101,16 @@
     Tags="smallitem,chem,medical"  
     cargocontaineridentifier="chemicalcrate"   
     description="Used as an ingredient in the manufacture of various medicines. On its own, can be mildly useful in the treatment of internal damage, burns and oxygen deprivation."
-    useinhealthinterface="true">
+    useinhealthinterface="true"
+    scale="0.3">
     
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="10"/>
     <Price locationtype="Military" buyprice="20"/>
     <Price locationtype="City" buyprice="30"/>
 
-    <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,640,64,64"/>
-    <Sprite texture="med.png" sourcerect="15,15,8,17" depth="0.6" />
+    <Sprite texture="Medicines.png" sourcerect="435,122,62,115" depth="0.6" />
 
     <Body width="8" height="17" density="20"/>
 
@@ -296,14 +296,14 @@
   </Item>
   
   <Item name="Antibiotic Glue" identifier="antibleeding3" category="Equipment" Tags="smallitem,medical" cargocontaineridentifier="chemicalcrate" 
-        description="An antibiotic glue with hemostatic properties. Seals bleeding wounds almost immediately and treats burns very effectively." useinhealthinterface="true">
+        description="An antibiotic glue with hemostatic properties. Seals bleeding wounds almost immediately and treats burns very effectively." useinhealthinterface="true" scale="0.3">
     <!-- TODO: adjust prices -->
     <Price locationtype="Military" buyprice="20" />
     <Price locationtype="Research" buyprice="20" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="50" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,448,64,64"/>
-    <InventoryIcon texture="Bandages_temp_01.png" />
+    <Sprite texture="Medicines.png" sourcerect="20,765,110,40" depth="0.6"/>
     <Body width="11" height="16" density="20" />
     <SuitableTreatment identifier="bleeding" suitability="80"/>
     <SuitableTreatment identifier="gunshotwound" suitability="80"/>
@@ -332,7 +332,8 @@
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
     description="A powerful opiate for treating pain associated with internal injuries, but will cause shortness of breath and eventual dependency with overuse."
-    useinhealthinterface="true">
+    useinhealthinterface="true"
+    scale="0.3">
 
     <SuitableTreatment identifier="internaldamage" suitability="50"/>
     <SuitableTreatment identifier="opiatewithdrawal" suitability="50"/>
@@ -348,7 +349,7 @@
 
     <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,448,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <Sprite texture="Medicines.png" sourcerect="0,0,62,115" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
 
@@ -385,7 +386,8 @@
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
     description="A powerful opiate for treating pain associated with burns and internal injuries, but will cause significant shortness of breath and eventual dependency with overuse."
-    useinhealthinterface="true">
+    useinhealthinterface="true"
+    scale="0.3">
 
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="50"/>
@@ -402,7 +404,7 @@
 
     <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,448,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <Sprite texture="Medicines.png" sourcerect="62,0,62,115" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
 
@@ -440,7 +442,7 @@
     Tags="smallitem,chem,medical"
     useinhealthinterface="true"
     description="A sodium chloride infusion mildly useful in the treatment of blood loss."
-    scale="0.5">
+    scale="0.3">
 
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="50"/>
@@ -451,7 +453,7 @@
     <SuitableTreatment identifier="bloodloss" suitability="30"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,640,64,64"/>
-    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="973,642,33,58" depth="0.6"/>
+    <Sprite texture="Medicines.png" sourcerect="0,437,133,70" depth="0.6"/>
 
     <Body radius="12" height="30" density="11"/>
 
@@ -476,7 +478,7 @@
     Tags="smallitem,chem,medical"
     useinhealthinterface="true"
     description="A pack of blood substitute for the treatment of blood loss."
-    scale="0.5">
+    scale="0.3">
 
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="50"/>
@@ -487,7 +489,7 @@
     <SuitableTreatment identifier="bloodloss" suitability="50"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,640,64,64"/>
-    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="910,643,34,58" depth="0.6"/>
+    <Sprite texture="Medicines.png" sourcerect="0,365,133,70" depth="0.6"/>
 
     <Body radius="12" height="30" density="11"/>
 
@@ -517,9 +519,9 @@
     <Price locationtype="Research" buyprice="150" />
     <Price locationtype="Military" buyprice="200" />
 
-    <!-- TODO: sprite and inventory icons -->
+    <!-- TODO: inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,192,64,64" />
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6" />
+    <Sprite texture="Medicines.png" sourcerect="378,515,62,115" depth="0.6" />
     
     <Body width="8" height="16" density="20" />
 
@@ -554,7 +556,8 @@
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
     description="An antiparasitic drug used in the treatment of husk parasite infections. Might require higher dosage to cure the infection at later stages."
-    useinhealthinterface="true">
+    useinhealthinterface="true"
+    scale="0.3">
 
     <Price locationtype="Research" buyprice="375"/>
     <Price locationtype="Military" buyprice="350"/>
@@ -562,9 +565,8 @@
 
     <SuitableTreatment identifier="huskinfection" suitability="100"/>
 
-    <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,448,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <Sprite texture="Medicines.png" sourcerect="372,122,62,115" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
 
@@ -599,7 +601,8 @@
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
     useinhealthinterface="true"
-    description="A strong antipsychotic drug.">
+    description="A strong antipsychotic drug."
+    scale="0.3">
 
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="50"/>
@@ -609,9 +612,8 @@
 
     <SuitableTreatment identifier="psychosis" suitability="100"/>
 
-    <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,640,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <Sprite texture="Medicines.png" sourcerect="64,235,62,115" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
 
@@ -636,7 +638,8 @@
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
     useinhealthinterface="true"
-    description="An opioid antagonist for the treatment of opiate based withdrawal and overdose.">
+    description="An opioid antagonist for the treatment of opiate based withdrawal and overdose."
+    scale="0.3">
 
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="Military" buyprice="80"/>
@@ -647,9 +650,8 @@
     <SuitableTreatment identifier="opiatewithdrawal" suitability="100"/>
     <SuitableTreatment identifier="opiateoverdose" suitability="100"/>
 
-    <!-- TODO: sprite -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,384,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,448,64,64"/>
+    <Sprite texture="Medicines.png" sourcerect="311,0,62,115" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
 
@@ -677,13 +679,13 @@
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
     description="An antidote for acute morbusine poisoning."
-    useinhealthinterface="true">
+    useinhealthinterface="true"
+    scale="0.3">
 
     <SuitableTreatment identifier="morbusinepoisoning" suitability="100"/>
 
-    <!-- TODO: sprite and inventory icons -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,192,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="65,705,64,64"/>
+    <Sprite texture="Medicines.png" sourcerect="315,515,62,115" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
 
@@ -709,14 +711,14 @@
     Tags="smallitem,chem,medical"
     impacttolerance="8"
     description="A mildy toxic solution that slowly releases oxygen into the bloodstream when injected. Avoid dropping."
-    useinhealthinterface="true">
+    useinhealthinterface="true"
+    scale="0.3">
 
     <SuitableTreatment identifier="internaldamage" suitability="-20"/>
     <SuitableTreatment identifier="oxygenloss" suitability="50"/>
 
-    <!-- TODO: sprite and inventory icons -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,192,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="705,640,64,64"/>
+    <Sprite texture="Medicines.png" sourcerect="311,235,62,115" depth="0.6" />
 
     <Body width="8" height="16" density="20"/>
 
@@ -778,14 +780,15 @@
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
     description="A potent nervous system stimulant."
-    useinhealthinterface="true">
+    useinhealthinterface="true"
+    scale="0.3">
 
     <Price locationtype="Research" buyprice="60"/>
     <Price locationtype="Military" buyprice="80"/>
 
     <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,448,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <Sprite texture="Medicines.png" sourcerect="124,0,62,115" depth="0.6"/>
 
     <Body width="8" height="16" density="15"/>
 
@@ -812,14 +815,15 @@
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
     description="Temporarily increases muscular strength and physical performance."
-    useinhealthinterface="true">
+    useinhealthinterface="true"
+    scale="0.3">
 
     <Price locationtype="Research" buyprice="60"/>
     <Price locationtype="Military" buyprice="80"/>
 
     <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,448,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <Sprite texture="Medicines.png" sourcerect="187,0,62,115" depth="0.6"/>
 
     <Body width="8" height="16" density="15"/>
 
@@ -847,14 +851,15 @@
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
     description="An extremely potent muscle stimulant for those moments when you gotta go fast."
-    useinhealthinterface="true">
+    useinhealthinterface="true"
+    scale="0.3">
 
     <Price locationtype="Research" buyprice="60"/>
     <Price locationtype="Military" buyprice="80"/>
 
     <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,448,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <Sprite texture="Medicines.png" sourcerect="249,0,62,115" depth="0.6"/>
 
     <Body width="8" height="16" density="15"/>
 
@@ -885,14 +890,14 @@
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
     description="A highly potent neurotoxin."
-    useinhealthinterface="true">
+    useinhealthinterface="true"
+    scale="0.3">
     
     <Price locationtype="Research" buyprice="450"/>
     <Price locationtype="Military" buyprice="1000"/>
 
-    <!-- TODO: sprite and inventory icons -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,192,64,64"/>
-    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,640,64,64"/>
+    <Sprite texture="Medicines.png" sourcerect="311,120,62,115" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
     
