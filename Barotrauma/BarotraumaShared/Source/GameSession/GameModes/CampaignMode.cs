@@ -52,17 +52,12 @@ namespace Barotrauma
             return Submarine.Loaded.FindAll(s =>
                 s != leavingSub &&
                 !leavingSub.DockedTo.Contains(s) &&
+                s != Level.Loaded.StartOutpost && s != Level.Loaded.EndOutpost &&
                 (s.AtEndPosition != leavingSub.AtEndPosition || s.AtStartPosition != leavingSub.AtStartPosition));
         }
-
-        public override void End(string endMessage = "")
-        {
-            base.End(endMessage);
-        }
-
+        
         public abstract void Save(XElement element);
-
-
+        
         public void LogState()
         {
             DebugConsole.NewMessage("********* CAMPAIGN STATUS *********", Color.White);

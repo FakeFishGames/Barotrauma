@@ -894,13 +894,17 @@ namespace Barotrauma
             //Level.Loaded.Move(-amount);
         }
 
-        public static Submarine FindClosest(Vector2 worldPosition)
+        public static Submarine FindClosest(Vector2 worldPosition, bool ignoreOutposts = false)
         {
             Submarine closest = null;
             float closestDist = 0.0f;
             foreach (Submarine sub in loaded)
             {
-                float dist = Vector2.Distance(worldPosition, sub.WorldPosition);
+                if (ignoreOutposts && (sub == Level.Loaded?.StartOutpost || sub == Level.Loaded?.EndOutpost))
+                {
+                    continue;
+                }
+                float dist = Vector2.DistanceSquared(worldPosition, sub.WorldPosition);
                 if (closest == null || dist < closestDist)
                 {
                     closest = sub;
