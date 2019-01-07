@@ -3252,14 +3252,14 @@ namespace Barotrauma
                             Vector2 GetBottomRight() => new Vector2(GetTopRight().X, GetTopRight().Y + sprite.SourceRect.Height);
                             var originWidget = GetLimbEditWidget($"{limb.limbParams.ID}_origin", limb, widgetSize, Widget.Shape.Cross, initMethod: w =>
                             {
-                                w.tooltip = $"Origin: {sprite.RelativeOrigin.FormatDoubleDecimal()}";
+                                w.refresh = () => w.tooltip = $"Origin: {sprite.RelativeOrigin.FormatDoubleDecimal()}";
+                                w.refresh();
                                 w.MouseHeld += dTime =>
                                 {
                                     var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(limb));
                                     w.DrawPos = PlayerInput.MousePosition.Clamp(spritePos + GetTopLeft() * spriteSheetZoom, spritePos + GetBottomRight() * spriteSheetZoom);
                                     sprite.Origin = (w.DrawPos - spritePos - sprite.SourceRect.Location.ToVector2() * spriteSheetZoom) / spriteSheetZoom;
                                     // TODO: limb pair editing
-                                    w.tooltip = $"Origin: {sprite.RelativeOrigin.FormatDoubleDecimal()}";
                                 };
                                 w.PreUpdate += dTime =>
                                 {
@@ -3274,6 +3274,7 @@ namespace Barotrauma
                                     var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(limb));
                                     w.DrawPos = (spritePos + (sprite.Origin + sprite.SourceRect.Location.ToVector2()) * spriteSheetZoom)
                                         .Clamp(spritePos + GetTopLeft() * spriteSheetZoom, spritePos + GetBottomRight() * spriteSheetZoom);
+                                    w.refresh();
                                 };
                             });
                             originWidget.Draw(spriteBatch, deltaTime);
@@ -3355,7 +3356,6 @@ namespace Barotrauma
                                             RecalculateCollider(limb);
                                         }
                                         RecalculateOrigin(limb);
-                                        // TODO: refresh the origin tooltip
                                         if (limb.DamagedSprite != null)
                                         {
                                             limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
