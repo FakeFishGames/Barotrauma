@@ -631,14 +631,14 @@ namespace Barotrauma.Networking
                         string savePath = inc.ReadString();
                         string seed = inc.ReadString();
                         string subName = inc.ReadString();
-                        
-                        MultiPlayerCampaign.StartNewCampaign(savePath, subName, seed);
+
+                        if (connectedClient.HasPermission(ClientPermissions.SelectMode)) MultiPlayerCampaign.StartNewCampaign(savePath, subName, seed);
                     }
                     else
                     {
                         string saveName = inc.ReadString();
 
-                        MultiPlayerCampaign.LoadCampaign(saveName);
+                        if (connectedClient.HasPermission(ClientPermissions.SelectMode)) MultiPlayerCampaign.LoadCampaign(saveName);
                     }
                     break;
                 case ClientPacketHeader.VOICE:
