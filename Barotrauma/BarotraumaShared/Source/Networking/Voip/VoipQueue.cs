@@ -58,6 +58,12 @@ namespace Barotrauma.Networking
             protected set;
         }
 
+        public DateTime LastReadTime
+        {
+            get;
+            private set;
+        }
+
         public VoipQueue(byte id, bool canSend, bool canReceive)
         {
             BufferToQueue = new byte[VoipConfig.MAX_COMPRESSED_SIZE];
@@ -73,6 +79,8 @@ namespace Barotrauma.Networking
             CanReceive = canReceive;
             LatestBufferID = BUFFER_COUNT-1;
             firstRead = true;
+
+            LastReadTime = DateTime.Now;
         }
 
         public void EnqueueBuffer(int length)
@@ -119,7 +127,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public virtual void Read(NetBuffer msg)
+        public virtual bool Read(NetBuffer msg)
         {
             if (!CanReceive) throw new Exception("Called Read on a VoipQueue not set up for receiving");
 
@@ -134,6 +142,8 @@ namespace Barotrauma.Networking
                 }
                 newestBufferInd = BUFFER_COUNT - 1;
                 LatestBufferID = incLatestBufferID;
+                LastReadTime = DateTime.Now;
+                return true;
             }
             else
             {
@@ -142,6 +152,7 @@ namespace Barotrauma.Networking
                     byte len = msg.ReadByte();
                     msg.Position += len * 8;
                 }
+                return false;
             }
         }
 
