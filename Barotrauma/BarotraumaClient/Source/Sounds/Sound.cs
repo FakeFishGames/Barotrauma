@@ -31,6 +31,14 @@ namespace Barotrauma.Sounds
             protected set;
         }
 
+        public virtual SoundManager.SourcePoolIndex SourcePoolIndex
+        {
+            get
+            {
+                return SoundManager.SourcePoolIndex.Default;
+            }
+        }
+
         private uint alBuffer;
         public uint ALBuffer
         {
