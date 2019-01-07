@@ -471,7 +471,7 @@ namespace Barotrauma
                     width = Math.Max(size.X - size.Y, 0);
                     break;
                 case Shape.Circle:
-                    radius = Math.Max(new Vector2(size.X, size.Y).Length() / 2, 0);
+                    radius = Math.Max(Math.Min(size.X, size.Y) / 2, 0);
                     break;
                 case Shape.Rectangle:
                     width = Math.Max(size.X, 0);
