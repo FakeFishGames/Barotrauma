@@ -733,6 +733,11 @@ namespace Barotrauma
                         JobPrefab watchmanJob = JobPrefab.List.Find(jp => jp.Identifier == "watchman");
                         CharacterInfo characterInfo = new CharacterInfo(Character.HumanConfigFile, jobPrefab: watchmanJob);
                         var spawnedCharacter = Character.Create(characterInfo, watchmanSpawnpoint.WorldPosition, ToolBox.RandomSeed(8));
+                        spawnedCharacter.CharacterHealth.Unkillable = true;
+                        spawnedCharacter.CharacterHealth.UseHealthWindow = false;
+                        spawnedCharacter.SetCustomInteract(
+                            (character) => { /*TODO: talk*/ }, 
+                            hudText: TextManager.Get("TalkHint").Replace("[key]", GameMain.Config.KeyBind(InputType.Select).ToString()));
                         if (watchmanJob != null)
                         {
                             spawnedCharacter.GiveJobItems();
