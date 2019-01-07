@@ -2864,7 +2864,7 @@ namespace Barotrauma
                 {
                     GUI.DrawRectangle(spriteBatch, corners, Color.White, thickness: 3);
                 }
-                if (GUI.MouseOn == null && Widget.selectedWidgets.None() && MathUtils.RectangleContainsPoint(corners, PlayerInput.MousePosition))
+                if (GUI.MouseOn == null && Widget.selectedWidgets.None() && !spriteSheetRect.Contains(PlayerInput.MousePosition) && MathUtils.RectangleContainsPoint(corners, PlayerInput.MousePosition))
                 {
                     if (isSelected)
                     {
