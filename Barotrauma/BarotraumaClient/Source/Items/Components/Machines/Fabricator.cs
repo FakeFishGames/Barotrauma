@@ -110,7 +110,7 @@ namespace Barotrauma.Items.Components
 
         partial void SelectProjSpecific(Character character)
         {
-            var nonItems = itemList.Content.Children.Where(c => !(c.UserData is FabricableItem));
+            var nonItems = itemList.Content.Children.Where(c => !(c.UserData is FabricableItem)).ToList();
             nonItems.ForEach(i => itemList.Content.RemoveChild(i));
 
             itemList.Content.RectTransform.SortChildren((c1, c2) =>
