@@ -455,6 +455,35 @@ namespace Barotrauma
                     throw new NotImplementedException();
             }
         }
+
+        public void SetSize(Vector2 size)
+        {
+            switch (bodyShape)
+            {
+                case Shape.Capsule:
+                    radius = Math.Max(size.X / 2, 0);
+                    width = Math.Max(size.X, 0);
+                    height = Math.Max(size.Y - size.X, 0);
+                    break;
+                case Shape.HorizontalCapsule:
+                    radius = Math.Max(size.Y / 2, 0);
+                    height = Math.Max(size.Y, 0);
+                    width = Math.Max(size.X - size.Y, 0);
+                    break;
+                case Shape.Circle:
+                    radius = Math.Max(new Vector2(size.X, size.Y).Length() / 2, 0);
+                    break;
+                case Shape.Rectangle:
+                    width = Math.Max(size.X, 0);
+                    height = Math.Max(size.Y, 0);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+#if CLIENT
+            bodyShapeTexture = null;
+#endif
+        }
         
         public bool IsValidValue(float value, string valueName, float? minValue = null, float? maxValue = null)
         {
