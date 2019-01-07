@@ -50,7 +50,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                if (VoipCapture.Instance == null) VoipCapture.Create(storedBufferID);
+                if (VoipCapture.Instance == null) VoipCapture.Create(null,storedBufferID);
                 if (VoipCapture.Instance.EnqueuedTotalLength == 0) return;
             }
 
