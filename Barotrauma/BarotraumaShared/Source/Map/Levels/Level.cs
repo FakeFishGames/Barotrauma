@@ -139,6 +139,9 @@ namespace Barotrauma
             get { return positionsOfInterest; }
         }
 
+        public Submarine StartOutpost { get; private set; }
+        public Submarine EndOutpost { get; private set; }
+
         public string Seed
         {
             get { return seed; }
@@ -593,6 +596,7 @@ namespace Barotrauma
                 GenerateRuin(mainPath, this, mirror);
             }
 
+
             //----------------------------------------------------------------------------------
             // create floating ice chunks
             //----------------------------------------------------------------------------------
@@ -664,6 +668,44 @@ namespace Barotrauma
             renderer.SetBodyVertices(CaveGenerator.GenerateRenderVerticeList(triangles).ToArray(), generationParams.WallColor);
             renderer.SetWallVertices(CaveGenerator.GenerateWallShapes(cellsWithBody, this), generationParams.WallColor);
 #endif
+
+
+            //----------------------------------------------------------------------------------
+            // create (placeholder) outposts at the start and end of the level
+            //----------------------------------------------------------------------------------
+
+            var outpostFiles = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Outpost);
+            if (outpostFiles.Count() == 0)
+            {
+                DebugConsole.ThrowError("No outpost files found in the selected content packages");
+            }
+            else
+            {
+                for (int i = 0; i < 2; i++)
+                {
+                    string outpostFile = outpostFiles.GetRandom(Rand.RandSync.Server);
+                    var outpost = new Submarine(outpostFile, tryLoad: false);
+                    outpost.Load(unloadPrevious: false);
+                    outpost.PhysicsBody.FarseerBody.IsStatic = true;
+                    foreach (MapEntity me in MapEntity.mapEntityList)
+                    {
+                        //TODO: make everything in the outpost indestructible and non-interactable (for now)
+                    }
+                    outpost.SetPosition(outpost.FindSpawnPos(i == 0 ? StartPosition : EndPosition));
+                    if (i == 0)
+                    {
+                        StartOutpost = outpost;
+                    }
+                    else
+                    {
+                        EndOutpost = outpost;
+                    }
+                }
+            }
+
+            //----------------------------------------------------------------------------------
+            // top barrier & sea floor
+            //----------------------------------------------------------------------------------
 
             TopBarrier = BodyFactory.CreateEdge(GameMain.World, 
                 ConvertUnits.ToSimUnits(new Vector2(borders.X, 0)), 
